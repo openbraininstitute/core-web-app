@@ -118,7 +118,7 @@ describe('readRow and rowsField', () => {
       scales: [0.25, 1, 1],
     } as unknown as LfpAxis;
     const request = { url: 'u', headers: {} };
-    const rows = await Promise.all([3, 1].map((c) => readRow(request, index, axis, 0, c)));
+    const rows = await Promise.all([3, 1].map((c) => readRow(request, index, axis, 0, c, null)));
     const field = rowsField(index, axis.scales[0], rows);
     expect(Array.from(field.data)).toEqual([
       1030, 1030, 1030, 1030, 1030, 1010, 1010, 1010, 1010, 1010,

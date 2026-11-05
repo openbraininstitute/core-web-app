@@ -1,6 +1,7 @@
 import { maxBy } from 'es-toolkit';
 
 import { extentOf } from '@/features/circuit-viewer/morphologies/extent';
+import { binMiddle } from '@/features/lfp-viewer/summary';
 
 import type { FieldPlotMode } from '@/features/lfp-viewer/field-plot';
 import type { LfpField } from '@/features/lfp-viewer/summary';
@@ -62,13 +63,7 @@ function measuredValues(field: LfpField): { values: Float32Array; bins: number }
       const from = Math.floor((b * field.bins) / bins);
       const to = Math.floor(((b + 1) * field.bins) / bins);
       let sum = 0;
-      for (let i = from; i < to; i++) {
-        const at = c * field.bins + i;
-        sum +=
-          field.kind !== 'min_max'
-            ? field.data[at]
-            : (field.data[at * 2] + field.data[at * 2 + 1]) / 2;
-      }
+      for (let i = from; i < to; i++) sum += binMiddle(field, c * field.bins + i);
       values[c * bins + b] = (sum / (to - from)) * field.scale;
     }
   }
@@ -117,7 +112,7 @@ export function leadingVector(values: Float32Array, contacts: number, bins: numb
   return Float32Array.from(vector, (v) => v * sign);
 }
 
-export function describeField(field: LfpField): FieldStructure {
+function measuredSharedSignal(field: LfpField) {
   const { contacts } = field;
   const { values, bins } = measuredValues(field);
   let grand = 0;
@@ -135,7 +130,15 @@ export function describeField(field: LfpField): FieldStructure {
   }
   let common = 0;
   for (const v of shared) common += contacts * (v - grand) ** 2;
+  return { values, bins, shared, total, sharedShare: total === 0 ? 1 : common / total };
+}
 
+/** The part of a field's variance that every contact shares. */
+export const sharedShareOf = (field: LfpField) => measuredSharedSignal(field).sharedShare;
+
+export function describeField(field: LfpField): FieldStructure {
+  const { contacts } = field;
+  const { values, bins, shared, total, sharedShare } = measuredSharedSignal(field);
   const residual = new Float32Array(values.length);
   let left = 0;
   for (let c = 0; c < contacts; c++) {
@@ -146,7 +149,7 @@ export function describeField(field: LfpField): FieldStructure {
     }
   }
   return {
-    sharedShare: total === 0 ? 1 : common / total,
+    sharedShare,
     mode:
       left <= total * ROUNDING_SHARE
         ? new Float32Array(contacts)

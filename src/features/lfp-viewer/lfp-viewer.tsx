@@ -20,13 +20,13 @@ import {
   MAX_TRACES,
   openingOrder,
   openingView,
+  sharedShareOf,
   tracedContacts,
   withoutShared,
 } from '@/features/lfp-viewer/field-structure';
 import { LfpScene } from '@/features/lfp-viewer/lfp-scene';
 import { LfpStatistics } from '@/features/lfp-viewer/lfp-statistics';
 import {
-  isTotalField,
   TOTAL_FIELD,
   useChosenField,
   useContactPositions,
@@ -230,11 +230,7 @@ function LfpReportView({
       ? traces
       : []
   ).field;
-  const sharedShare = useMemo(
-    () =>
-      isTotalField(chosen.choice) ? structure.sharedShare : describeField(chosen.field).sharedShare,
-    [chosen, structure]
-  );
+  const sharedShare = useMemo(() => sharedShareOf(chosen.field), [chosen.field]);
   const sharedPercent = Math.round(sharedShare * 100);
 
   // The player: one clock, moving every view's cursor outside React.

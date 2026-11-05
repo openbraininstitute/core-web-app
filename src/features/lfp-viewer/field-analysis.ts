@@ -4,6 +4,7 @@ import {
   leadingVector,
   signOfLargest,
 } from '@/features/lfp-viewer/field-structure';
+import { binMiddle } from '@/features/lfp-viewer/summary';
 import { median } from '@/features/viewer-3d/engine/motion-quality';
 
 import type { Vec3 } from '@/features/circuit-viewer/morphologies/types';
@@ -89,6 +90,24 @@ export function fft(re: Float64Array, im: Float64Array): void {
   }
 }
 
+/** What a squared FFT magnitude is multiplied by for a density in µV²/Hz, under a window. */
+function densityNorm(window: Float64Array, scale: number, fs: number): number {
+  let squares = 0;
+  for (const w of window) squares += w * w;
+  return (scale * scale) / (fs * squares);
+}
+
+function oneSidedDensity(
+  re: Float64Array,
+  im: Float64Array,
+  band: number,
+  bands: number,
+  norm: number
+): number {
+  const edge = band === 0 || band === bands - 1;
+  return (re[band] * re[band] + im[band] * im[band]) * norm * (edge ? 1 : 2);
+}
+
 function hann(n: number): Float64Array {
   return Float64Array.from({ length: n }, (_, i) => 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / n));
 }
@@ -143,9 +162,7 @@ export function spectrogram(
   const bands = segment / 2 + 1;
   const fs = 1000 / dtMs;
   const window = hann(segment);
-  let squares = 0;
-  for (const w of window) squares += w * w;
-  const norm = (scale * scale) / (fs * squares);
+  const norm = densityNorm(window, scale, fs);
 
   const re = new Float64Array(segment);
   const im = new Float64Array(segment);
@@ -154,9 +171,8 @@ export function spectrogram(
     loadSegment(row, column * hop, window, re, im);
     fft(re, im);
     for (let band = 0; band < bands; band++) {
-      const edge = band === 0 || band === bands - 1;
-      const density = (re[band] * re[band] + im[band] * im[band]) * norm * (edge ? 1 : 2);
-      decibels[band * columns + column] = 10 * Math.log10(Math.max(density, 1e-30));
+      const power = oneSidedDensity(re, im, band, bands, norm);
+      decibels[band * columns + column] = 10 * Math.log10(Math.max(power, 1e-30));
     }
   }
   return {
@@ -183,9 +199,7 @@ export function rowSpectra(field: LfpField): { frequencies: number[]; psd: Float
   const bands = n / 2 + 1;
   const fs = 1000 / field.binMs;
   const window = hann(n);
-  let squares = 0;
-  for (const w of window) squares += w * w;
-  const norm = (field.scale * field.scale) / (fs * squares);
+  const norm = densityNorm(window, field.scale, fs);
   const re = new Float64Array(n);
   const im = new Float64Array(n);
   const psd = new Float32Array(field.contacts * bands);
@@ -197,9 +211,7 @@ export function rowSpectra(field: LfpField): { frequencies: number[]; psd: Float
       loadSegment(row, s * hop, window, re, im);
       fft(re, im);
       for (let band = 0; band < bands; band++) {
-        const edge = band === 0 || band === bands - 1;
-        const density = (re[band] * re[band] + im[band] * im[band]) * norm * (edge ? 1 : 2);
-        psd[r * bands + band] += density / segments;
+        psd[r * bands + band] += oneSidedDensity(re, im, band, bands, norm) / segments;
       }
     }
   }
@@ -570,14 +582,11 @@ export function profileAlong(
 }
 
 function rowSignals(field: LfpField, rows: readonly FieldRow[]): Float64Array[] {
-  const { bins, kind, data } = field;
+  const { bins } = field;
   return rows.map((row) => {
     const signal = new Float64Array(bins);
     for (const contact of row.contacts) {
-      for (let b = 0; b < bins; b++) {
-        const at = contact * bins + b;
-        signal[b] += kind === 'min_max' ? (data[at * 2] + data[at * 2 + 1]) / 2 : data[at];
-      }
+      for (let b = 0; b < bins; b++) signal[b] += binMiddle(field, contact * bins + b);
     }
     return signal;
   });

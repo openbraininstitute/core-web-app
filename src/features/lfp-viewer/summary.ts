@@ -65,6 +65,9 @@ export type LfpField = {
   scale: number;
 };
 
+/** Per contact: the index's `stats` columns, and the power at each of the axis's `psd_frequencies`, in µV²/Hz. */
+export type GroupStats = { stats: Float32Array; psd: Float32Array };
+
 export function datasetOf(index: LfpSummaryIndex, name: string): LfpDataset {
   const entry = index.datasets[name];
   if (!entry) throw new Error(`The LFP summary has no dataset ${name}`);
@@ -163,12 +166,11 @@ export async function inflateRow(chunk: ArrayBuffer): Promise<Int16Array> {
 export async function readChunkTable(
   request: LfpSummaryRequest,
   index: LfpSummaryIndex,
-  axis: LfpAxis,
-  signal?: AbortSignal
+  axis: LfpAxis
 ): Promise<BigUint64Array | null> {
   const { chunks } = axis.levels[0];
   if (!chunks) return null;
-  return new BigUint64Array(await readSlice(request, datasetOf(index, chunks), [], signal));
+  return new BigUint64Array(await readSlice(request, datasetOf(index, chunks)));
 }
 
 /** The level an axis is overviewed at: its coarsest, at most the format's 2,048 bins. */
@@ -198,6 +200,21 @@ export async function readField(
   };
 }
 
+/** A group's stats and spectra, each per contact. */
+export async function readGroupStats(
+  request: LfpSummaryRequest,
+  index: LfpSummaryIndex,
+  axis: LfpAxis,
+  group: number,
+  signal?: AbortSignal
+): Promise<GroupStats> {
+  const [stats, psd] = await Promise.all([
+    readSlice(request, datasetOf(index, axis.stats), [group], signal),
+    readSlice(request, datasetOf(index, axis.psd), [group], signal),
+  ]);
+  return { stats: new Float32Array(stats), psd: new Float32Array(psd) };
+}
+
 /** A contact's full-resolution values, with one range request. */
 export async function readRow(
   request: LfpSummaryRequest,
@@ -205,7 +222,7 @@ export async function readRow(
   axis: LfpAxis,
   group: number,
   contact: number,
-  table: BigUint64Array | null = null,
+  table: BigUint64Array | null,
   signal?: AbortSignal
 ): Promise<Int16Array> {
   if (table) {
@@ -252,7 +269,9 @@ export function sumFields(fields: readonly LfpField[]): LfpField {
   let peak = 0;
   for (const value of sum) peak = Math.max(peak, Math.abs(value));
   const scale = peak > 0 ? peak / 32767 : 1;
-  return { ...fields[0], scale, data: Int16Array.from(sum, (value) => Math.round(value / scale)) };
+  const data = new Int16Array(sum.length);
+  for (let i = 0; i < sum.length; i++) data[i] = Math.round(sum[i] / scale);
+  return { ...fields[0], scale, data };
 }
 
 /** A field's stats, per contact in the order of `names`, from its values as they stand. */
@@ -265,7 +284,7 @@ export function fieldStats(field: LfpField, names: readonly string[]): Float32Ar
     let sum = 0;
     let squares = 0;
     for (let b = 0; b < field.bins; b++) {
-      const value = field.data[c * field.bins + b] * field.scale;
+      const value = fieldValue(field, c, b);
       if (value < low) {
         low = value;
         lowest = b;
@@ -296,6 +315,11 @@ export function fieldValue(field: LfpField, contact: number, bin: number): numbe
   const low = field.data[at * 2];
   const high = field.data[at * 2 + 1];
   return (Math.abs(high) > Math.abs(low) ? high : low) * field.scale;
+}
+
+/** A bin's value as stored, by the field's scale: of a min/max bin, the middle of the two. */
+export function binMiddle({ kind, data }: LfpField, at: number): number {
+  return kind === 'min_max' ? (data[at * 2] + data[at * 2 + 1]) / 2 : data[at];
 }
 
 /** The bin a time falls in, clamped to the run. */

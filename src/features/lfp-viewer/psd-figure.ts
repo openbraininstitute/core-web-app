@@ -9,6 +9,23 @@ import {
 import type { Data } from 'plotly.js-dist-min';
 import type { Figure } from '@/features/spike-viewer/spike-statistics/figures';
 
+function meanTrace(psd: Float32Array, bands: number, from: number, x: readonly number[]) {
+  const total = psd.length / bands;
+  return {
+    type: 'scatter',
+    mode: 'lines',
+    name: `Mean of ${total.toLocaleString()} contacts`,
+    x,
+    y: x.map((_, i) => {
+      let sum = 0;
+      for (let c = 0; c < total; c++) sum += psd[c * bands + from + i];
+      return sum / total;
+    }),
+    line: { color: MEAN_INK, width: 2 },
+    hovertemplate: '%{x:.1f} Hz · %{y:.3g} µV²/Hz<extra>mean</extra>',
+  };
+}
+
 /**
  * Welch power spectra on log axes: the mean over every contact in slate, and
  * each of `contacts` in a colour of its own. 0 Hz is left out, as a log axis
@@ -30,31 +47,13 @@ export function psdFigure({
   onlyTheseRows?: boolean;
 }): Figure {
   const bands = frequencies.length;
-  const total = psd.length / bands;
   const from = frequencies[0] === 0 ? 1 : 0;
   const x = frequencies.slice(from);
   const row = (r: number) => Array.from(psd.subarray(r * bands + from, (r + 1) * bands));
-  const mean = x.map((_, i) => {
-    let sum = 0;
-    for (let c = 0; c < total; c++) sum += psd[c * bands + from + i];
-    return sum / total;
-  });
   const nyquist = 1000 / dtMs / 2;
 
   const data = [
-    ...(onlyTheseRows
-      ? []
-      : [
-          {
-            type: 'scatter',
-            mode: 'lines',
-            name: `Mean of ${total.toLocaleString()} contacts`,
-            x,
-            y: mean,
-            line: { color: MEAN_INK, width: 2 },
-            hovertemplate: '%{x:.1f} Hz · %{y:.3g} µV²/Hz<extra>mean</extra>',
-          },
-        ]),
+    ...(onlyTheseRows ? [] : [meanTrace(psd, bands, from, x)]),
     ...contacts.map((c, i) =>
       contactTrace(
         c,
