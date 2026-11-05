@@ -22,11 +22,36 @@ import {
   resolveWorkflowConfigureHrefForEntity,
   WorkflowConfigureOutcomeDict,
 } from '@/ui/segments/workflows/config/entity-entry';
+import { parseYouTubeId, youTubeEmbedUrl } from '@/utils/youtube';
 
 import type { WorkspaceContext } from '@/types/common';
 
 function CardMedia({ card }: { card: TProjectHomeGetStartedCard }) {
   if (card.thumbnailType === 'video' && card.video) {
+    const youTubeId = parseYouTubeId(card.video);
+    if (youTubeId) {
+      // a silent looping preview like the file below: muted (so autoplay is allowed), no controls, not clickable
+      return (
+        <iframe
+          className="pointer-events-none h-full w-full rounded-lg"
+          src={youTubeEmbedUrl(youTubeId, {
+            autoplay: '1',
+            mute: '1',
+            loop: '1',
+            playlist: youTubeId,
+            controls: '0',
+            disablekb: '1',
+          })}
+          title={card.title}
+          allow="autoplay; encrypted-media"
+          loading="lazy"
+          tabIndex={-1}
+          aria-hidden
+        />
+      );
+    }
+
+    // file URLs keep playing until Sanity holds only YouTube links
     return (
       <video
         src={card.video}

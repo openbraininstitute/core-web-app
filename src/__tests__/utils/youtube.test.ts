@@ -1,6 +1,19 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseYouTubeId } from '@/utils/youtube';
+import { parseYouTubeId, youTubeEmbedUrl } from '@/utils/youtube';
+
+describe('youTubeEmbedUrl', () => {
+  it('keeps the defaults and adds the given params', () => {
+    const url = new URL(youTubeEmbedUrl('dQw4w9WgXcQ', { autoplay: '1', mute: '1' }));
+    expect(url.origin + url.pathname).toBe('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ');
+    expect(Object.fromEntries(url.searchParams)).toEqual({
+      rel: '0',
+      playsinline: '1',
+      autoplay: '1',
+      mute: '1',
+    });
+  });
+});
 
 describe('parseYouTubeId', () => {
   it.each([

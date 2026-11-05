@@ -30,7 +30,7 @@ export function VideoPlayer({ url, title }: { url?: string; title?: string }) {
   return (
     <iframe
       className="h-full w-full rounded-xl bg-primary-9"
-      src={youTubeEmbedUrl(id, true)}
+      src={youTubeEmbedUrl(id, { autoplay: '1' })}
       title={title ?? 'Tutorial video'}
       allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
       allowFullScreen
