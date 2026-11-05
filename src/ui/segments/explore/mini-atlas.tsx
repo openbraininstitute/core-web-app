@@ -4,7 +4,7 @@ import { useAtomValue } from 'jotai';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useMemo, useState, ViewTransition } from 'react';
+import { useMemo, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import { Loader } from '@/components/loader';
@@ -21,13 +21,18 @@ import { SPECIES_IMAGE_MAP, SpeciesSelectionMode } from '@/features/brain-region
 import { CARD_EDGE_CLASS } from '@/features/data-grid/react/molecules-theme';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
-import { ATLAS_VIEW_TRANSITION } from '@/ui/segments/explore/atlas';
-import { ATLAS_ZOOM, morphAtlasOnCompositor } from '@/ui/segments/explore/atlas-morph';
+import { AtlasMorph } from '@/ui/segments/explore/atlas';
 import { cn } from '@/utils/css-class';
 import { logError } from '@/utils/logger';
 
 import type { CSSProperties, PointerEvent, ReactNode } from 'react';
 import type { SpeciesRuntimeHierarchy } from '@/features/brain-atlas-viewer/all-species/helpers';
+
+/** The card holding the atlas and the selector under it, edged like the entity selector. */
+const CARD_CLASS = `mx-1 mt-1 mb-1 shrink-0 rounded-3xl ${CARD_EDGE_CLASS}`;
+/** The navy atlas box at the top of the card, shorter on short screens. */
+const ATLAS_BOX_CLASS =
+  'bg-primary-9 relative h-40 shrink-0 overflow-hidden rounded-t-3xl [@media(max-height:760px)]:h-28';
 
 /** Back to the big atlas, with the same query. */
 function AtlasExpandLink({ href }: { href: string }) {
@@ -148,12 +153,8 @@ export function MiniAtlas({ children }: { children?: (inCard: boolean) => ReactN
   if (isAllSpeciesMode) {
     return (
       // with no species chosen, every species' brain side by side
-      <div className={`mx-1 mt-1 mb-1 shrink-0 rounded-3xl ${CARD_EDGE_CLASS}`}>
-        <div
-          id="mini-atlas-all"
-          data-testid="mini-atlas-all"
-          className="bg-primary-9 relative isolate h-40 shrink-0 overflow-hidden rounded-t-3xl [@media(max-height:760px)]:h-28"
-        >
+      <div className={CARD_CLASS}>
+        <div id="mini-atlas-all" data-testid="mini-atlas-all" className={cn(ATLAS_BOX_CLASS, 'isolate')}>
           <AllSpeciesBrains />
           <AtlasExpandLink href={atlasHref} />
         </div>
@@ -173,21 +174,9 @@ export function MiniAtlas({ children }: { children?: (inCard: boolean) => ReactN
   );
 
   return (
-    // the atlas and the selector under it make one card, edged like the entity selector
-    <div className={`mx-1 mt-1 mb-1 shrink-0 rounded-3xl ${CARD_EDGE_CLASS}`}>
-      <ViewTransition
-        name={ATLAS_VIEW_TRANSITION}
-        share="atlas-morph"
-        default="none"
-        onShare={(morph) =>
-          morphAtlasOnCompositor(morph, { from: ATLAS_ZOOM.mini, to: ATLAS_ZOOM.full })
-        }
-      >
-        <div
-          id="mini-atlas"
-          data-testid="mini-atlas"
-          className="group bg-primary-9 relative h-40 shrink-0 overflow-hidden rounded-t-3xl [@media(max-height:760px)]:h-28"
-        >
+    <div className={CARD_CLASS}>
+      <AtlasMorph view="mini">
+        <div id="mini-atlas" data-testid="mini-atlas" className={cn(ATLAS_BOX_CLASS, 'group')}>
           {hasAtlas ? (
             <ErrorBoundary
               fallback={picture ?? null}
@@ -216,7 +205,7 @@ export function MiniAtlas({ children }: { children?: (inCard: boolean) => ReactN
           )}
           <AtlasExpandLink href={atlasHref} />
         </div>
-      </ViewTransition>
+      </AtlasMorph>
       {children?.(true)}
     </div>
   );

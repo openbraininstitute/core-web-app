@@ -290,7 +290,7 @@ export function SpaceSwitcher({ className }: Props) {
     setIsExpanded(false);
   }, []);
 
-  useOpenSpaceSwitcherEvent(useCallback(() => setIsExpanded(true), []));
+  useOpenSpaceSwitcherEvent(() => setIsExpanded(true));
 
   const onTogglePanel = (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation();

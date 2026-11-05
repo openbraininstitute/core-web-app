@@ -4,7 +4,7 @@ import {
   RiExpandUpDownLine,
   RiFilter3Fill,
 } from '@remixicon/react';
-import { useState } from 'react';
+import { createElement, useState } from 'react';
 
 import { GridActionType, SortDirection, summarizeFilter } from '@/features/data-grid/core';
 import { FilterEditor } from '@/features/data-grid/react/filters/filter-editor';
@@ -39,15 +39,22 @@ interface HeaderParams {
  */
 export function AgHeader(props: CustomHeaderProps) {
   const ctx = props.context as IAgGridContext;
-  const { columnId, unit, sortable, filter, headerNode, headerRenderer } =
-    props as CustomHeaderProps & HeaderParams;
+  const { columnId, headerRenderer } = props as CustomHeaderProps & HeaderParams;
+  // a registered header replaces the default one; the registry hands out stable components
+  const registered = headerRenderer ? ctx.cellRenderers.getHeader(headerRenderer) : undefined;
+  if (registered) {
+    return createElement(registered, { columnId, label: props.displayName ?? '', ctx });
+  }
+  return <DefaultHeader {...props} />;
+}
+
+/** The label, sort toggle and filter popover of a column with no registered header. */
+function DefaultHeader(props: CustomHeaderProps) {
+  const ctx = props.context as IAgGridContext;
+  const { columnId, unit, sortable, filter, headerNode } = props as CustomHeaderProps &
+    HeaderParams;
   const state = useGridState(ctx.controller);
   const [open, setOpen] = useState(false);
-
-  const CustomHeader = headerRenderer ? ctx.cellRenderers.getHeader(headerRenderer) : undefined;
-  if (CustomHeader) {
-    return <CustomHeader columnId={columnId} label={props.displayName ?? ''} ctx={ctx} />;
-  }
 
   const entry = state.sort.find((s) => s.columnId === columnId);
   const rank = entry ? state.sort.findIndex((s) => s.columnId === columnId) : -1;

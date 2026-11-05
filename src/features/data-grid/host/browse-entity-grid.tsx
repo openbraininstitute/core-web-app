@@ -44,7 +44,6 @@ import {
 } from '@/features/data-grid/core';
 import { GridSearch } from '@/features/data-grid/host/grid-search';
 import { gridFilteredTotalAtom } from '@/features/data-grid/host/grid-total';
-import { listingScope } from '@/features/data-grid/host/listing-scope';
 import { gridQueryKey } from '@/features/data-grid/listing-queries';
 import {
   createDefaultPersistence,
@@ -72,7 +71,11 @@ import {
 import { keyBuilder as workspaceKeyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
-import { getWorkspaceScopeFilters, isProjectPrivateRecord } from '@/utils/workspace-scope';
+import {
+  getWorkspaceScopeFilters,
+  isProjectPrivateRecord,
+  listingScope,
+} from '@/utils/workspace-scope';
 
 import type { FC, ReactNode } from 'react';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';

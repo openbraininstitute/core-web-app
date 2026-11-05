@@ -13,6 +13,7 @@ import type {
   IFilterEntry,
   IGridQuery,
   IGridSchema,
+  IGridWorkspace,
   TFilterModel,
   TSortModel,
 } from '@/features/data-grid/core';
@@ -23,7 +24,7 @@ export interface ISerializeOptions {
   /** how the free-text search maps to the API (entitycore `ilike_search` vs `search`) */
   searchMode?: 'ilike' | 'plain';
   /** for columns whose filter needs it to build their params (`toParams`) */
-  workspace?: { projectId?: string };
+  workspace?: IGridWorkspace;
 }
 
 /** "contains" ilike: escape `%`/`_`, then wrap the term in `%…%`. */

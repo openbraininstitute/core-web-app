@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatCompactNumber, formatDurationFromSeconds } from './format';
+import { formatCompactNumber, formatCount, formatDurationFromSeconds } from './format';
 
 describe('formatDurationFromSeconds', () => {
   it('formats mixed remainders with compact units', () => {
@@ -32,5 +32,13 @@ describe('formatCompactNumber precision', () => {
   it('keeps one decimal when asked', () => {
     expect(formatCompactNumber(33_198, 'en-US', 1)).toBe('33.2K');
     expect(formatCompactNumber(30_000, 'en-US', 1)).toBe('30K');
+  });
+});
+
+describe('formatCount', () => {
+  it('keeps counts under ten thousand whole, and shortens larger ones', () => {
+    expect(formatCount(9_999)).toBe('9999');
+    expect(formatCount(33_198)).toBe('33.2k');
+    expect(formatCount(1_200_000)).toBe('1.2m');
   });
 });

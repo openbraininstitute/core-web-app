@@ -32,7 +32,7 @@ import { makeSelectContributionEntityClickEvent } from '@/ui/segments/contribute
 import { getEntityTypeFromUrlOnEntityScope } from '@/ui/segments/explore/helpers';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { cn } from '@/utils/css-class';
-import { formatCompactNumber } from '@/utils/format';
+import { formatCount } from '@/utils/format';
 import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 
@@ -69,11 +69,6 @@ type BrowseLinkContentProps = {
   testIdKey: string;
   onNavigate?: (event: MouseEvent<HTMLElement>) => void;
 };
-
-/** A count, shortened from ten thousand up (33198 → 33.2k) so the row keeps room for its title. */
-function formatCount(value: number) {
-  return value < 10_000 ? String(value) : formatCompactNumber(value, 'en-US', 1).toLowerCase();
-}
 
 export function BrowseLinkContent({
   isLoading,

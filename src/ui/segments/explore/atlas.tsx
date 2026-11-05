@@ -13,7 +13,24 @@ import { cn } from '@/utils/css-class';
 import type { ReactNode } from 'react';
 
 /** Shared by the full atlas and the mini atlas, so navigating between them morphs one into the other. */
-export const ATLAS_VIEW_TRANSITION = 'data-atlas';
+const ATLAS_VIEW_TRANSITION = 'data-atlas';
+
+/** The atlas box on one side of the full/mini morph; `view` is the side it wraps. */
+export function AtlasMorph({ view, children }: { view: 'full' | 'mini'; children: ReactNode }) {
+  const other = view === 'full' ? 'mini' : 'full';
+  return (
+    <ViewTransition
+      name={ATLAS_VIEW_TRANSITION}
+      share="atlas-morph"
+      default="none"
+      onShare={(morph) =>
+        morphAtlasOnCompositor(morph, { from: ATLAS_ZOOM[view], to: ATLAS_ZOOM[other] })
+      }
+    >
+      {children}
+    </ViewTransition>
+  );
+}
 
 type Props = {
   children: ReactNode;
@@ -24,14 +41,7 @@ export function Atlas({ children }: Props) {
   const viewer = useAtlasViewer();
 
   return (
-    <ViewTransition
-      name={ATLAS_VIEW_TRANSITION}
-      share="atlas-morph"
-      default="none"
-      onShare={(morph) =>
-        morphAtlasOnCompositor(morph, { from: ATLAS_ZOOM.full, to: ATLAS_ZOOM.mini })
-      }
-    >
+    <AtlasMorph view="full">
       <div
         id="three-d-area"
         data-testid="three-d-area"
@@ -57,6 +67,6 @@ export function Atlas({ children }: Props) {
           )}
         </div>
       </div>
-    </ViewTransition>
+    </AtlasMorph>
   );
 }

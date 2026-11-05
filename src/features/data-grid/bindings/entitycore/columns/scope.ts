@@ -1,8 +1,10 @@
-import { SCOPE_RENDERER } from '@/features/data-grid/bindings/entitycore/renderers/scope-cell';
-import { SCOPE_HEADER_RENDERER } from '@/features/data-grid/bindings/entitycore/renderers/scope-header';
+import {
+  SCOPE_HEADER_RENDERER,
+  SCOPE_RENDERER,
+} from '@/features/data-grid/bindings/entitycore/renderers/scope-cells';
 import {
   SCOPE_COLUMN_ID,
-  SCOPE_SORT_ORDERS,
+  SCOPE_KINDS,
   ScopeFilter,
   scopeFilterExcept,
   scopeFilterParams,
@@ -32,7 +34,7 @@ export function scopeColumn<Row>(): IColumnModel<Row> {
     order: FIRST_COLUMN_ORDER,
     sortable: true,
     // the API cannot order by scope, so each kind is listed first in turn
-    sortOrders: SCOPE_SORT_ORDERS.map((kind) => ({
+    sortOrders: SCOPE_KINDS.map((kind) => ({
       id: kind,
       groups: ({ projectId }) => scopeSortGroups(kind, projectId),
     })),
@@ -83,35 +85,38 @@ const WITHOUT_SCOPE_COLUMN = new WeakMap<TAnyEntityGridDefinition, TAnyEntityGri
 const hasScopeColumn = (definition: TAnyEntityGridDefinition) =>
   definition.schema.columns.some((c) => c.id === SCOPE_COLUMN_ID);
 
-/** The definition with {@link scopeColumn} added, cached so every mount sees one object. */
-export function withScopeColumn(definition: TAnyEntityGridDefinition): TAnyEntityGridDefinition {
-  if (hasScopeColumn(definition)) return definition;
-  let extended = WITH_SCOPE_COLUMN.get(definition);
-  if (!extended) {
-    extended = {
+/**
+ * `definition` with its columns replaced, memoised per definition so every mount sees one
+ * object (a new one would rebuild the grid's columns and renderer registry).
+ */
+function withColumns(
+  cache: WeakMap<TAnyEntityGridDefinition, TAnyEntityGridDefinition>,
+  definition: TAnyEntityGridDefinition,
+  columns: (current: TAnyEntityGridDefinition['schema']['columns']) => typeof current
+): TAnyEntityGridDefinition {
+  let variant = cache.get(definition);
+  if (!variant) {
+    variant = {
       ...definition,
-      schema: { ...definition.schema, columns: [scopeColumn(), ...definition.schema.columns] },
+      schema: { ...definition.schema, columns: columns(definition.schema.columns) },
     };
-    WITH_SCOPE_COLUMN.set(definition, extended);
+    cache.set(definition, variant);
   }
-  return extended;
+  return variant;
 }
 
-/** The definition less {@link scopeColumn}, for a listing that shows no scope; cached too. */
+/** The definition with {@link scopeColumn} added first. */
+export function withScopeColumn(definition: TAnyEntityGridDefinition): TAnyEntityGridDefinition {
+  if (hasScopeColumn(definition)) return definition;
+  return withColumns(WITH_SCOPE_COLUMN, definition, (columns) => [scopeColumn(), ...columns]);
+}
+
+/** The definition less {@link scopeColumn}, for a listing that shows no scope. */
 export function withoutScopeColumn(
   definition: TAnyEntityGridDefinition
 ): TAnyEntityGridDefinition {
   if (!hasScopeColumn(definition)) return definition;
-  let reduced = WITHOUT_SCOPE_COLUMN.get(definition);
-  if (!reduced) {
-    reduced = {
-      ...definition,
-      schema: {
-        ...definition.schema,
-        columns: definition.schema.columns.filter((c) => c.id !== SCOPE_COLUMN_ID),
-      },
-    };
-    WITHOUT_SCOPE_COLUMN.set(definition, reduced);
-  }
-  return reduced;
+  return withColumns(WITHOUT_SCOPE_COLUMN, definition, (columns) =>
+    columns.filter((c) => c.id !== SCOPE_COLUMN_ID)
+  );
 }

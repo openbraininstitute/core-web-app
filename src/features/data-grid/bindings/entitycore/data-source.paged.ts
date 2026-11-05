@@ -11,6 +11,7 @@ import type {
   IGridPage,
   IGridQuery,
   IGridSchema,
+  IGridWorkspace,
   IRowGroup,
   TFacets,
 } from '@/features/data-grid/core';
@@ -39,7 +40,7 @@ export interface IEntitycorePagedDataSourceOptions<Row> {
 export function groupsInForce<Row>(
   query: IGridQuery,
   schema: IGridSchema<Row>,
-  workspace: { projectId?: string }
+  workspace: IGridWorkspace
 ): ReadonlyArray<IRowGroup> | null {
   for (const entry of query.sort) {
     const column = schema.columns.find((c) => c.id === entry.columnId);
@@ -53,7 +54,7 @@ export function groupsInForce<Row>(
 export function exceptInForce<Row>(
   query: IGridQuery,
   schema: IGridSchema<Row>,
-  workspace: { projectId?: string }
+  workspace: IGridWorkspace
 ): Record<string, unknown> | undefined {
   for (const entry of Object.values(query.filters)) {
     const toExcept = schema.columns.find((c) => c.id === entry.columnId)?.filter?.toExcept;
@@ -85,7 +86,7 @@ export function serializeEntitycoreQuery<Row>(
   dataType: TExtendedEntitiesTypeDict,
   schema: IGridSchema<Row>,
   query: IGridQuery,
-  workspace?: { projectId?: string }
+  workspace?: IGridWorkspace
 ): TEntitycoreParams {
   const ilike = getEntityByExtendedType({ type: dataType })?.api?.config?.ilikeSearchEnabled;
   return serializeQuery(query, schema, { searchMode: ilike ? 'ilike' : 'plain', workspace });

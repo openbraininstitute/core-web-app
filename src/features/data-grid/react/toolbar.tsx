@@ -23,8 +23,6 @@ export interface IDataGridToolbarSlots {
 
 export interface IDataGridToolbarProps {
   slots?: IDataGridToolbarSlots;
-  /** the selection and its actions — the exact middle, when the grid puts them up here */
-  bulkActions?: ReactNode;
   /** the selection's actions kept in place — left cluster, right after the call to action */
   selection?: ReactNode;
   /** the advanced/active filters control — right cluster, after the search */
@@ -37,12 +35,10 @@ export interface IDataGridToolbarProps {
 /**
  * Thin toolbar shell: one row, two clusters — what you are looking at on the left, what
  * you do to it on the right. `flex-wrap` drops the right cluster to its own line when
- * narrow rather than crushing the left pickers. The selection sits between them, centred
- * the way the footer centres its pager.
+ * narrow rather than crushing the left pickers.
  */
 export function DataGridToolbar({
   slots,
-  bulkActions,
   selection,
   filters,
   columnChooser,
@@ -56,21 +52,15 @@ export function DataGridToolbar({
     slots?.brainRegion ||
     slots?.left;
   const hasRight = slots?.search || filters || columnChooser;
-  const centred = Boolean(bulkActions);
-  if (!hasLeft && !hasRight && !centred) return null;
+  if (!hasLeft && !hasRight) return null;
 
   return (
     <div
       className={cn('flex min-h-10 w-full flex-wrap items-center gap-2 px-1 py-2', className)}
       data-testid="data-grid-toolbar"
     >
-      {hasLeft || centred ? (
-        <div
-          className={cn(
-            'flex items-center gap-2',
-            centred ? 'min-w-fit flex-1 basis-0' : 'min-w-0 flex-wrap'
-          )}
-        >
+      {hasLeft ? (
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           {slots?.action}
           {selection}
           {slots?.entityType}
@@ -79,14 +69,8 @@ export function DataGridToolbar({
           {slots?.left}
         </div>
       ) : null}
-      {bulkActions}
-      {hasRight || centred ? (
-        <div
-          className={cn(
-            'flex items-center gap-2',
-            centred ? 'min-w-fit flex-1 basis-0 justify-end' : 'ml-auto shrink-0'
-          )}
-        >
+      {hasRight ? (
+        <div className="ml-auto flex shrink-0 items-center gap-2">
           {slots?.search}
           {filters}
           {columnChooser}

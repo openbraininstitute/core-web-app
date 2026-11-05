@@ -82,6 +82,11 @@ export interface IFilterTarget {
   available?: TContextualValue<boolean>;
 }
 
+/** The workspace a column's params depend on: the scope filter and orders name its project. */
+export interface IGridWorkspace {
+  projectId?: string;
+}
+
 export interface IColumnFilter {
   /** ordered operator ids; index 0 is the default. Each must exist in the operator registry. */
   operators: string[];
@@ -101,14 +106,14 @@ export interface IColumnFilter {
    * Turns an Eq value into request params itself, for a filter no single field
    * expresses; `projectId` is the workspace's.
    */
-  toParams?: (value: string, workspace: { projectId?: string }) => Record<string, unknown>;
+  toParams?: (value: string, workspace: IGridWorkspace) => Record<string, unknown>;
   /**
    * Rows an Eq value leaves out that no param can, as a filter of their own; the data
    * source passes over them in the listing `toParams` gives.
    */
   toExcept?: (
     value: string,
-    workspace: { projectId?: string }
+    workspace: IGridWorkspace
   ) => Record<string, unknown> | undefined;
 }
 
@@ -125,7 +130,7 @@ export interface IColumnSortOrder {
    * The groups listed one after the other, together every row; null when the order means
    * nothing in the workspace (`projectId` is its project).
    */
-  groups: (workspace: { projectId?: string }) => ReadonlyArray<IRowGroup> | null;
+  groups: (workspace: IGridWorkspace) => ReadonlyArray<IRowGroup> | null;
 }
 
 /**

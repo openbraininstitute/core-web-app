@@ -96,6 +96,7 @@ export type {
   IColumnModel,
   IColumnSortOrder,
   IFilterTarget,
+  IGridWorkspace,
   IRowGroup,
   IWidthSpec,
   TAlign,

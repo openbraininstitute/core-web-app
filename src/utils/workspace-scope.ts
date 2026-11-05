@@ -24,3 +24,15 @@ export function isProjectPrivateRecord(
 ): boolean {
   return !record.authorized_public && record.authorized_project_id === projectId;
 }
+
+/** Both scopes for a listing with a selector (`scope` then only names its state), else `scope`. */
+export function listingScope({
+  scope,
+  requireScopeSelector,
+}: {
+  scope?: TWorkspaceScope;
+  requireScopeSelector?: boolean;
+}) {
+  if (requireScopeSelector) return scope ?? WorkspaceScope.Combined;
+  return scope ?? WorkspaceScope.Public;
+}

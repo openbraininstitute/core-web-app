@@ -55,6 +55,11 @@ export function formatCompactNumber(
   return formatter.format(value);
 }
 
+/** A count, shortened from ten thousand up (33198 → 33.2k) so a narrow row keeps room. */
+export function formatCount(value: number): string {
+  return value < 10_000 ? String(value) : formatCompactNumber(value, 'en-US', 1).toLowerCase();
+}
+
 const SECONDS_PER_MINUTE = 60;
 const SECONDS_PER_HOUR = 3_600;
 const SECONDS_PER_DAY = 86_400;

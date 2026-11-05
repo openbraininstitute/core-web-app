@@ -8,13 +8,11 @@ import {
 } from '@/features/data-grid/bindings/entitycore/renderers/lifecycle-status-cell';
 import { registerSharedRenderers } from '@/features/data-grid/bindings/entitycore/renderers/register';
 import {
+  SCOPE_HEADER_RENDERER,
   SCOPE_RENDERER,
   ScopeCell,
-} from '@/features/data-grid/bindings/entitycore/renderers/scope-cell';
-import {
-  SCOPE_HEADER_RENDERER,
   ScopeHeader,
-} from '@/features/data-grid/bindings/entitycore/renderers/scope-header';
+} from '@/features/data-grid/bindings/entitycore/renderers/scope-cells';
 import { CellRendererRegistry } from '@/features/data-grid/react';
 
 import type { TAnyEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';

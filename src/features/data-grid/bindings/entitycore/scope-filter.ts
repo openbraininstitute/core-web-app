@@ -60,17 +60,34 @@ export const SCOPE_COLUMN_ID = 'scope';
 
 /** Public data from elsewhere, the project's private data, or the project's made public. */
 export type TScopeKind = 'public' | 'project' | 'published';
+/** Every kind, in the order the header toggles show them and the column's sort cycles them. */
 export const SCOPE_KINDS: TScopeKind[] = ['public', 'project', 'published'];
+
+/** Each kind's name, for labels and screen readers. */
+export const SCOPE_LABELS: Record<TScopeKind, string> = {
+  public: 'Public',
+  project: 'Project',
+  published: 'Project, made public',
+};
+
+/** The fields a row's scope is read from. */
+export interface IScopeRow {
+  authorized_public?: boolean | null;
+  authorized_project_id?: string | null;
+  /** false on a hierarchy row shown only for its matching children */
+  isFiltered?: boolean;
+}
+
+/** Which kind a row is: only the project's own records come back private. */
+export function scopeKindOf(row: IScopeRow, projectId?: string): TScopeKind | null {
+  if (typeof row.authorized_public !== 'boolean') return null;
+  if (!row.authorized_public) return 'project';
+  return projectId && row.authorized_project_id === projectId ? 'published' : 'public';
+}
 
 export function isScopeKind(value: string | undefined): value is TScopeKind {
   return SCOPE_KINDS.includes(value as TScopeKind);
 }
-
-/**
- * The scope column's orders, each named by the kind it lists first and cycled through in
- * this order: public data from elsewhere, the project's private data, its made-public data.
- */
-export const SCOPE_SORT_ORDERS: TScopeKind[] = ['public', 'project', 'published'];
 
 /**
  * The groups each order lists: its kind, then every other row. Without a project nothing

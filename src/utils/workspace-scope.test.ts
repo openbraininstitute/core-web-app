@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { WorkspaceScope } from '@/constants';
-import { listingScope } from '@/features/data-grid/host/listing-scope';
+import { listingScope } from '@/utils/workspace-scope';
 
 describe('listingScope', () => {
   it('fetches both scopes for a listing with a scope selector', () => {

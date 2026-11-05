@@ -61,21 +61,6 @@ describe('DataGridToolbar', () => {
     );
   });
 
-  it('centres the bulk actions between two equal clusters', () => {
-    render(
-      <DataGridToolbar
-        slots={{ action: <div data-testid="action" />, search: <div data-testid="search" /> }}
-        bulkActions={<div data-testid="bulk" />}
-      />
-    );
-
-    expect(order(['action', 'bulk', 'search'])).toEqual(['action', 'bulk', 'search']);
-    const left = screen.getByTestId('action').parentElement;
-    const right = screen.getByTestId('search').parentElement;
-    expect(screen.getByTestId('bulk').parentElement).toBe(left?.parentElement);
-    for (const side of [left, right]) expect(side).toHaveClass('flex-1', 'basis-0');
-  });
-
   it('puts the entity-type selector FIRST in the left cluster, ahead of the scope tabs', () => {
     render(
       <DataGridToolbar

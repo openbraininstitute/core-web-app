@@ -11,13 +11,11 @@ import {
 import { serializeQuery } from '@/features/data-grid/bindings/entitycore/query-serializer';
 import { getEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
 import {
+  SCOPE_HEADER_RENDERER,
   SCOPE_RENDERER,
   ScopeCell,
-} from '@/features/data-grid/bindings/entitycore/renderers/scope-cell';
-import {
-  SCOPE_HEADER_RENDERER,
   ScopeHeader,
-} from '@/features/data-grid/bindings/entitycore/renderers/scope-header';
+} from '@/features/data-grid/bindings/entitycore/renderers/scope-cells';
 import { ScopeFilter } from '@/features/data-grid/bindings/entitycore/scope-filter';
 import {
   createDefaultOperatorRegistry,

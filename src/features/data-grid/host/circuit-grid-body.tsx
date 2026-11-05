@@ -13,7 +13,6 @@ import {
 import { getCellRenderers } from '@/features/data-grid/bindings/entitycore/cell-renderers';
 import { Align } from '@/features/data-grid/core';
 import { EntityDataGrid } from '@/features/data-grid/host/browse-entity-grid';
-import { listingScope } from '@/features/data-grid/host/listing-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 import {
@@ -29,6 +28,7 @@ import {
   circuitRepresentationViewAtom,
 } from '@/ui/segments/explore/circuit/helpers';
 import { makeSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
+import { listingScope } from '@/utils/workspace-scope';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
