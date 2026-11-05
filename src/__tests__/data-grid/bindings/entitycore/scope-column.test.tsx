@@ -109,9 +109,7 @@ describe('scope column', () => {
     const published = { authorized_public: 'true', authorized_project_id: PROJECT };
     expect(filter?.toExcept?.(ScopeFilter.PublicOnly, { projectId: PROJECT })).toEqual(published);
     expect(filter?.toExcept?.(ScopeFilter.Public, { projectId: PROJECT })).toBeUndefined();
-    expect(filter?.toExcept?.(ScopeFilter.NotPublished, { projectId: PROJECT })).toEqual(
-      published
-    );
+    expect(filter?.toExcept?.(ScopeFilter.NotPublished, { projectId: PROJECT })).toEqual(published);
     expect(filter?.toExcept?.(ScopeFilter.PublicOnly, {})).toBeUndefined();
   });
 
@@ -162,33 +160,35 @@ describe('scope header', () => {
   });
 
   it.each([
-    ['public', ScopeFilter.Project],
-    ['project', ScopeFilter.Public],
-    ['published', ScopeFilter.NotPublished],
-  ])('a click on %s switches only that kind off', (kind, expected) => {
+    ['public', ScopeFilter.PublicOnly],
+    ['project', ScopeFilter.Private],
+    ['published', ScopeFilter.Published],
+  ])('with all on, a click on %s keeps only that kind', (kind, expected) => {
     const { filter, pressed } = renderHeader();
     fireEvent.click(screen.getByTestId(`scope-header-${kind}`));
     expect(filter()).toBe(expected);
     for (const other of ['public', 'project', 'published']) {
-      expect(pressed(`scope-header-${other}`)).toBe(String(other !== kind));
+      expect(pressed(`scope-header-${other}`)).toBe(String(other === kind));
     }
   });
 
-  it('switches each kind back on alone, and back to everything', () => {
+  it('then switches each kind alone, and back to everything', () => {
     const { filter } = renderHeader();
     fireEvent.click(screen.getByTestId('scope-header-public'));
+    expect(filter()).toBe(ScopeFilter.PublicOnly);
     fireEvent.click(screen.getByTestId('scope-header-project'));
-    expect(filter()).toBe(ScopeFilter.Published);
+    expect(filter()).toBe(ScopeFilter.NotPublished);
     fireEvent.click(screen.getByTestId('scope-header-public'));
-    expect(filter()).toBe(ScopeFilter.Public);
-    fireEvent.click(screen.getByTestId('scope-header-project'));
+    expect(filter()).toBe(ScopeFilter.Private);
+    fireEvent.click(screen.getByTestId('scope-header-published'));
+    expect(filter()).toBe(ScopeFilter.Project);
+    fireEvent.click(screen.getByTestId('scope-header-public'));
     expect(filter()).toBeUndefined();
   });
 
   it('keeps the last kind on', () => {
     const { filter, pressed } = renderHeader();
-    fireEvent.click(screen.getByTestId('scope-header-public'));
-    fireEvent.click(screen.getByTestId('scope-header-published'));
+    fireEvent.click(screen.getByTestId('scope-header-project'));
     expect(filter()).toBe(ScopeFilter.Private);
     fireEvent.click(screen.getByTestId('scope-header-project'));
     expect(filter()).toBe(ScopeFilter.Private);

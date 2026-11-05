@@ -228,8 +228,9 @@ export function ScopeCell({ row }: ICellRendererProps<IScopeRow>): ReactNode | n
  * A toggle per kind of row, and no more than these three, in place of the scope column's
  * label and filter: the globe for public data from other projects, the people for the
  * project's private data, and the globe with a badge for the project's data made public.
- * Each is coloured when its rows are shown and grey when not, and a click switches it alone.
- * All on (the default) filters nothing; the last one on stays on.
+ * Each is coloured when its rows are shown and grey when not. All on (the default) filters
+ * nothing, and a click then keeps only that kind. After that a click switches a kind alone,
+ * and the last one on stays on.
  */
 export function ScopeHeader({ columnId, ctx }: IHeaderRendererProps) {
   const state = useGridState(ctx.controller);

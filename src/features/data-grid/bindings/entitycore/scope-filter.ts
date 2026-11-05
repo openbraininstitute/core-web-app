@@ -138,8 +138,12 @@ export function filterShowing(kinds: Set<TScopeKind>): TScopeFilter | null {
   return (match?.[0] as TScopeFilter | undefined) ?? null;
 }
 
-/** What a click on `kind` shows: that kind switched alone, or null for the last one on. */
+/**
+ * What a click on `kind` shows. With everything on, only that kind; after that, that kind
+ * switched alone, or null for the last one on.
+ */
 export function toggled(shown: Set<TScopeKind>, kind: TScopeKind): Set<TScopeKind> | null {
+  if (shown.size === SCOPE_KINDS.length) return new Set([kind]);
   const next = new Set(shown);
   if (!next.delete(kind)) next.add(kind);
   return next.size ? next : null;
