@@ -76,6 +76,19 @@ describe('the cell table', () => {
     expect(texel(table, 1)).toEqual([16, 32, 48, 255]);
   });
 
+  it('marks a cell in its own colour for the blue ramp, but not one given that colour by name', () => {
+    const table = new CellTable(2);
+    const onRamp = (cell: number) => table.shadeTexture.image.data?.[2 * cell + 1];
+
+    table.paint({ palette: ['#ff0000'], columnByCell: Uint16Array.of(0, 7) }, OWN);
+    expect(onRamp(0)).toBe(0);
+    expect(onRamp(1)).toBe(255);
+
+    table.paint({ palette: [OWN], columnByCell: Uint16Array.of(0, 0) }, OWN);
+    expect(onRamp(1)).toBe(0);
+    expect(texel(table, 1)).toEqual([16, 32, 48, 255]);
+  });
+
   it("falls back on the view's own colour for a cell or a column that is not there, and for no colour at all", () => {
     const table = new CellTable(3);
     table.paint({ palette: ['not a colour'], columnByCell: Uint16Array.of(0, 7) }, OWN);

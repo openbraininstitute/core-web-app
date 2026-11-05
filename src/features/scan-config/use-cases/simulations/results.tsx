@@ -21,7 +21,7 @@ import { resolveSimulationLaunchTarget } from '@/entity-configuration/domain/sim
 import { NodesTableKeeper } from '@/features/circuit-nodes/components/kept-nodes-grid';
 import { NodesSessionKeeper } from '@/features/circuit-nodes/hooks/nodes-session-keeper';
 import { useFlag } from '@/features/feature-flags';
-import { smallScalesViaLaunchSystemFlag } from '@/features/feature-flags/flags';
+import { lfpViewerFlag, smallScalesViaLaunchSystemFlag } from '@/features/feature-flags/flags';
 import { isLowCreditsError, useLowCredits } from '@/features/low-credits';
 import {
   OfflineTokenConsentModal,
@@ -29,7 +29,11 @@ import {
 } from '@/features/offline-auth-management';
 import { useModelQuery } from '@/features/scan-config/components/atoms';
 import { useCostConfirmation } from '@/features/scan-config/components/cost-confirmation-modal';
-import { FileViewer, hasStatistics } from '@/features/scan-config/components/file-viewer';
+import {
+  FileViewer,
+  hasStatistics,
+  isSpikeFile,
+} from '@/features/scan-config/components/file-viewer';
 import {
   SimulationFiles,
   useSimulationResultFiles,
@@ -247,8 +251,9 @@ export function SimulationsTab({
     !!activeSimulationExecStatus &&
       [ActivityStatus.ERROR, ActivityStatus.DONE].includes(activeSimulationExecStatus)
   );
+  const lfpViewer = useFlag(lfpViewerFlag.key) === true;
   const shownReport =
-    selectedFile && isAssetBackedFile(selectedFile) && hasStatistics(selectedFile)
+    selectedFile && isAssetBackedFile(selectedFile) && hasStatistics(selectedFile, lfpViewer)
       ? selectedFile
       : undefined;
   const reportFiles = useMemo(() => {
@@ -261,11 +266,14 @@ export function SimulationsTab({
             renderer: ActivityCustomFileRenderer.Default,
           }))
       : [];
-    const reports = [...resultFiles.filter((f) => hasStatistics(f)), ...inputs].sort(byReportKind);
+    const reports = [...resultFiles.filter((f) => hasStatistics(f, lfpViewer)), ...inputs].sort(
+      byReportKind
+    );
     return shownReport && !reports.some((f) => f.asset.id === shownReport.asset.id)
       ? [shownReport, ...reports]
       : reports;
-  }, [resultFiles, activeSimulation, shownReport]);
+  }, [resultFiles, activeSimulation, shownReport, lfpViewer]);
+  const spikeFiles = useMemo(() => reportFiles.filter(isSpikeFile), [reportFiles]);
   const activeSimulationJobIdFromLaunch = activeSimulation
     ? jobIdMap.get(activeSimulation.id)
     : undefined;
@@ -544,6 +552,7 @@ export function SimulationsTab({
                     neuronSets={neuronSets}
                     simulationPicker={simulationPicker}
                     timeline={timeline}
+                    spikeFiles={spikeFiles}
                   >
                     <FileViewer
                       file={selectedFile}

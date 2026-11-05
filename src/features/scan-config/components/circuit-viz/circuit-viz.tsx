@@ -149,6 +149,7 @@ function CircuitVizView({
   spin,
   signals,
   overlays,
+  voxels,
   overlaysInteractive = false,
   onOverlayTransform,
   highlightedOverlayId = null,
@@ -289,6 +290,7 @@ function CircuitVizView({
           // recolouring the scene and swapping the nodes table under the user. The checklist still changes population.
           onCellClick={pickMode ? undefined : onCellClick}
           electrodes={overlays}
+          voxels={voxels}
           electrodeRadius={electrodeRadius}
           selectedElectrode={highlightedOverlayId}
           onElectrodeTransform={overlaysInteractive ? onOverlayTransform : undefined}

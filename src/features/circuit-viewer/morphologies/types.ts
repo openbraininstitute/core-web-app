@@ -212,6 +212,35 @@ export interface ElectrodeTransform {
   rotation: { x: number; y: number; z: number };
 }
 
+/**
+ * How a layer's boxes nest, for drawing them far to near: planes of rows of boxes, each ascending along its axis. No
+ * two boxes overlap, as far as the order is to hold.
+ */
+export interface VoxelLattice {
+  /** The axes along which the planes follow each other, the rows of a plane, and the boxes of a row. */
+  axes: Vec3;
+  /** The first row of each plane, then the number of rows. */
+  planes: Uint32Array;
+  /** The first box of each row, then the number of boxes. */
+  rows: Uint32Array;
+}
+
+/** Where a layer's x, y and z point in the circuit's frame: unit vectors at right angles, right-handed. */
+export type VoxelFrame = readonly [Vec3, Vec3, Vec3];
+
+/** Boxes drawn through the cells, each with its own size, colour and opacity. */
+export interface VoxelLayer {
+  /** Three floats each: x, y and z in µm in the layer's frame. */
+  centres: Float32Array;
+  /** Three floats each: its width along x, y and z of the layer's frame in µm. */
+  sizes: Float32Array;
+  /** Four floats each: its colour in sRGB and its opacity. */
+  looks: Float32Array;
+  lattice: VoxelLattice;
+  /** How the layer's frame is turned from the circuit's, which it is otherwise. */
+  frame?: VoxelFrame | null;
+}
+
 /** Synapses in one colour: three floats each, x, y and z in µm in the circuit's frame. */
 export interface SynapseGroup {
   color: string;
@@ -322,10 +351,15 @@ export interface CircuitMorphologyView extends ViewControls {
   markerAt(x: number, y: number): ({ index: number } & MarkerOnScreen) | null;
   /** Told where each marker is drawn after every frame, null for one that is not; a frame is drawn for a new listener. */
   onMarkersOnScreen(listener: (markers: readonly (MarkerOnScreen | null)[]) => void): () => void;
-  /** Draw these electrodes in front of the cells, whatever is nearer the eye; the array `highlighted` larger and lighter. */
+  /**
+   * Draw these electrodes in front of the cells, whatever is nearer the eye, or `among` them, faint where they are
+   * hidden; the array `highlighted` larger and lighter.
+   */
   setElectrodes(electrodes: readonly ElectrodeGroup[], highlighted: string | null): void;
   /** A contact's radius, in µm. */
   setElectrodeRadius(radius: number): void;
+  /** Draw these boxes through the cells and under the electrodes, in place of any drawn before; null for none. */
+  setVoxels(voxels: VoxelLayer | null): void;
   /**
    * Draw these synapses on the cells, a dot 0.5 µm round and 2 device pixels at the least each, hidden by what is nearer
    * the eye. Other groups are drawn again; the same ones, nothing.

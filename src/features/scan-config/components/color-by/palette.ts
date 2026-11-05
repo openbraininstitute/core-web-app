@@ -10,6 +10,8 @@ import type { CategoricalLegendEntry, ColorMapping, ContinuousLegend } from './t
  * random) and aligned with the viewer's native blue look.
  */
 export const DEFAULT_NEURON_COLOR = '#2b5cd9';
+/** For cells under a colour scale of their host's, so that their colour is not read as a value on it. */
+export const NEUTRAL_NEURON_COLOR = '#a8adb5';
 
 /**
  * Per-section-type neuron colors, for a cell shown on its own.

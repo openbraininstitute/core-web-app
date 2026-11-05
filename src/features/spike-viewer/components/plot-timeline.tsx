@@ -3,14 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { TIME_CURSOR_COLOR } from '@/features/sonata-viewer/time-cursor';
-import { TimelineCard } from '@/features/spike-viewer/components/timeline-card';
-import {
-  drawEventMarks,
-  EVENT_BOTTOM_ZONE_PX,
-  EVENT_HIT_PX,
-  EVENT_TOP_ZONE_PX,
-  TIMELINE_COLORS,
-} from '@/features/spike-viewer/renderer/axis-overlay';
+import { nextEventsHover, TimelineCard } from '@/features/spike-viewer/components/timeline-card';
+import { drawTimelineMarks, markerGroupAt } from '@/features/spike-viewer/renderer/axis-overlay';
 
 import type { TimeCursor } from '@/features/sonata-viewer/time-cursor';
 import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
@@ -99,40 +93,12 @@ export function PlotTimeline({
     }
     const { l, t, w, h } = layout._size;
     const [xMin, xMax] = layout.xaxis.range;
-    const dpr = window.devicePixelRatio || 1;
     canvas.style.display = 'block';
     canvas.style.left = `${l}px`;
     canvas.style.top = `${t}px`;
     canvas.style.width = `${w}px`;
     canvas.style.height = `${h}px`;
-    canvas.width = Math.round(w * dpr);
-    canvas.height = Math.round(h * dpr);
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, w, h);
-    // A dashed rule from each synaptic change's onset, as behind the raster's spikes.
-    ctx.save();
-    ctx.strokeStyle = TIMELINE_COLORS.manipulation;
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([4, 3]);
-    ctx.beginPath();
-    for (const e of events) {
-      if (e.kind !== 'manipulation') continue;
-      const x = Math.round(((e.start - xMin) / (xMax - xMin)) * w) + 0.5;
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, h);
-    }
-    ctx.stroke();
-    ctx.restore();
-    groupsRef.current = drawEventMarks(
-      ctx,
-      { xMin, xMax, yMin: 0, yMax: 1 },
-      w,
-      h,
-      events,
-      hovered
-    );
+    groupsRef.current = drawTimelineMarks(canvas, xMin, xMax, w, h, events, hovered);
   }, [graph, events, hovered]);
 
   // After every draw of the plot - a zoom, a resize, new lines - both are placed anew.
@@ -164,37 +130,16 @@ export function PlotTimeline({
       const layout = (graph as DrawnGraph)._fullLayout;
       if (!layout) return undefined;
       const box = graph.getBoundingClientRect();
-      const x = clientX - box.left - layout._size.l;
-      const y = clientY - box.top - layout._size.t;
-      if (x < 0 || x > layout._size.w || y < 0 || y > layout._size.h) return undefined;
-      const inTop = y <= EVENT_TOP_ZONE_PX;
-      const inBottom = y >= layout._size.h - EVENT_BOTTOM_ZONE_PX;
-      const groups = groupsRef.current;
-      return (
-        groups.find((g) => {
-          if (g.top ? !inTop : !inBottom) return false;
-          const named = g.label !== undefined && x >= g.label.x && x <= g.label.x + g.label.width;
-          return named || Math.abs(x - g.x) <= EVENT_HIT_PX;
-        }) ??
-        groups.find(
-          (g) =>
-            g.edge === 'start' &&
-            Math.abs(x - g.x) <= 4 &&
-            g.events.some((e) => e.kind === 'manipulation')
-        )
+      return markerGroupAt(
+        groupsRef.current,
+        clientX - box.left - layout._size.l,
+        clientY - box.top - layout._size.t,
+        { width: layout._size.w, height: layout._size.h }
       );
     };
     const onMove = (e: PointerEvent) => {
       const group = groupAt(e.clientX, e.clientY);
-      setHover((previous) => {
-        if (!group) return previous === null ? previous : null;
-        // The same markers keep their group, so the bands are not drawn again as the pointer moves.
-        const same =
-          previous !== null &&
-          previous.group.events.length === group.events.length &&
-          previous.group.events.every((event, i) => event === group.events[i]);
-        return { group: same ? previous.group : group, clientX: e.clientX, clientY: e.clientY };
-      });
+      setHover((previous) => nextEventsHover(previous, group, e.clientX, e.clientY));
     };
     const onLeave = () => setHover(null);
     graph.addEventListener('pointermove', onMove);

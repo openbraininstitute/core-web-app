@@ -3,9 +3,9 @@ import {
   AxisOverlay,
   drawEventMarks,
   EVENT_BOTTOM_ZONE_PX,
-  EVENT_HIT_PX,
   EVENT_TOP_ZONE_PX,
   MARGIN,
+  markerGroupAt,
 } from '@/features/spike-viewer/renderer/axis-overlay';
 import { InteractionManager } from '@/features/spike-viewer/renderer/interaction';
 import { WebGLPoints } from '@/features/spike-viewer/renderer/webgl-points';
@@ -709,28 +709,14 @@ export class RasterRenderer {
     return group !== undefined;
   }
 
-  /**
-   * The group of markers at a point: by its marker or name along the top or
-   * bottom, or - with `alongRules` - anywhere along a synaptic change's rule.
-   */
   private markerGroupAt(info: HoverInfo, alongRules: boolean): MarkerGroup | undefined {
     const { plotRect } = this;
-    const x = info.pixelX - plotRect.x;
-    const inTop = info.pixelY >= plotRect.y && info.pixelY <= plotRect.y + EVENT_TOP_ZONE_PX;
-    const inBottom =
-      info.pixelY <= plotRect.y + plotRect.height &&
-      info.pixelY >= plotRect.y + plotRect.height - EVENT_BOTTOM_ZONE_PX;
-    const marked = this.markerGroups.find((g) => {
-      if (g.top ? !inTop : !inBottom) return false;
-      const named = g.label !== undefined && x >= g.label.x && x <= g.label.x + g.label.width;
-      return named || Math.abs(x - g.x) <= EVENT_HIT_PX;
-    });
-    if (marked || !alongRules) return marked;
-    return this.markerGroups.find(
-      (g) =>
-        g.edge === 'start' &&
-        Math.abs(x - g.x) <= 4 &&
-        g.events.some((e) => e.kind === 'manipulation')
+    return markerGroupAt(
+      this.markerGroups,
+      info.pixelX - plotRect.x,
+      info.pixelY - plotRect.y,
+      plotRect,
+      alongRules
     );
   }
 

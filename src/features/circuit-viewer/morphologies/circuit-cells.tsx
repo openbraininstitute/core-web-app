@@ -40,6 +40,7 @@ import type {
   LocationMarker,
   SynapseGroup,
   ViewLocations,
+  VoxelLayer,
 } from './types';
 
 const CircuitDebug = dynamic(() => import('./debug/circuit-debug').then((m) => m.CircuitDebug), {
@@ -79,6 +80,8 @@ export interface CircuitCellsProps {
   onEmptyClick?: () => void;
   /** Electrode arrays drawn in front of the cells, in the colours the host gives them. */
   electrodes?: readonly ElectrodeGroup[];
+  /** Boxes of a field, drawn through the cells and under the electrodes. */
+  voxels?: VoxelLayer | null;
   /** A contact's radius, in µm. */
   electrodeRadius: number;
   /** The array the form has selected, drawn larger and lighter. */
@@ -133,6 +136,7 @@ export function CircuitCells({
   onCellClick,
   onEmptyClick,
   electrodes = NO_ELECTRODES,
+  voxels = null,
   electrodeRadius,
   selectedElectrode = null,
   onElectrodeTransform,
@@ -259,6 +263,7 @@ export function CircuitCells({
   const {
     data: spikeData,
     timeInMs,
+    timeCursor,
     playing = false,
     speed = DEFAULT_SPIKE_SPEED,
     afterglowInSeconds = DEFAULT_SPIKE_AFTERGLOW_IN_SECONDS,
@@ -272,6 +277,13 @@ export function CircuitCells({
     if (timeInMs !== undefined) viewer?.seekSpikes(timeInMs);
   }, [viewer, timeInMs]);
   useEffect(() => viewer?.setSpikesPlaying(playing), [viewer, playing]);
+  // After the spikes are handed over, as they start the replay again: subscribing brings it back to the cursor.
+  useEffect(() => {
+    if (!viewer || !timeCursor || !spikeData) return;
+    return timeCursor.subscribe((t) => {
+      if (t !== null) viewer.seekSpikes(t);
+    });
+  }, [viewer, timeCursor, spikeData]);
 
   const [electrodeTracker, setElectrodeTracker] = useState<ElectrodeTracker | null>(null);
   const transformed = useLatest(onElectrodeTransform);
@@ -294,6 +306,8 @@ export function CircuitCells({
     () => electrodeTracker?.show(electrodes, selectedElectrode),
     [electrodeTracker, electrodes, selectedElectrode]
   );
+
+  useEffect(() => viewer?.setVoxels(voxels), [viewer, voxels]);
 
   const markers = locations?.markers ?? NO_MARKERS;
   const markerRadius = locations?.radius;

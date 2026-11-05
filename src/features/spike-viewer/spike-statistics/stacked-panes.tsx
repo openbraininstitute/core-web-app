@@ -193,12 +193,16 @@ export function StackedPanes({
 export function LoadingFilePanes({
   title,
   panelTitles,
+  tableTitle,
 }: {
   /** What the plot over the table is called, for its bar if it is shut. */
   title: string;
   panelTitles: readonly string[];
+  /** A table that is not over the nodes, so no nodes table is kept. */
+  tableTitle?: string;
 }) {
   const sidePanel = useResultsSidePanel();
+  const tableSkeleton = <Skeleton className="my-2 min-h-0 flex-1 rounded-lg" />;
   return (
     <StackedPanes
       split="file"
@@ -220,13 +224,9 @@ export function LoadingFilePanes({
         ),
       }}
       bottom={{
-        title: 'Neuron Table',
+        title: tableTitle ?? 'Neuron Table',
         boxClassName: 'px-3 pt-1 pb-2',
-        content: (
-          <KeptNodesGridPlaceholder
-            fallback={<Skeleton className="my-2 min-h-0 flex-1 rounded-lg" />}
-          />
-        ),
+        content: tableTitle ? tableSkeleton : <KeptNodesGridPlaceholder fallback={tableSkeleton} />,
       }}
     />
   );
