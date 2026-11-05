@@ -99,31 +99,12 @@ describe('readSlice', () => {
   });
 });
 
-describe('readRow and rowsField', () => {
-  afterEach(() => vi.unstubAllGlobals());
-
-  it('reads each contact by its own range and packs them in the order given', async () => {
-    const fetchMock = vi.fn(async (_url: string, init: RequestInit) => {
-      const range = (init.headers as Record<string, string>).Range;
-      const offset = Number(range.slice('bytes='.length).split('-')[0]);
-      return new Response(new Int16Array(5).fill(offset).buffer, { status: 206 });
-    });
-    vi.stubGlobal('fetch', fetchMock);
-    const index = {
-      time: { start: 0, dt: 0.5, steps: 5 },
-      datasets: { '/lfp/total/level0': level0 },
-    } as unknown as LfpSummaryIndex;
-    const axis = {
-      levels: [{ step: 1, kind: 'value', dataset: '/lfp/total/level0' }],
-      scales: [0.25, 1, 1],
-    } as unknown as LfpAxis;
-    const request = { url: 'u', headers: {} };
-    const rows = await Promise.all([3, 1].map((c) => readRow(request, index, axis, 0, c, null)));
-    const field = rowsField(index, axis.scales[0], rows);
-    expect(Array.from(field.data)).toEqual([
-      1030, 1030, 1030, 1030, 1030, 1010, 1010, 1010, 1010, 1010,
-    ]);
-    expect(field).toMatchObject({ contacts: 2, bins: 5, binMs: 0.5, kind: 'value', scale: 0.25 });
+describe('rowsField', () => {
+  it('packs rows in the order given', () => {
+    const index = { time: { start: 0, dt: 0.5, steps: 2 } } as unknown as LfpSummaryIndex;
+    const field = rowsField(index, 0.25, [Int16Array.of(3, 4), Int16Array.of(1, 2)]);
+    expect(Array.from(field.data)).toEqual([3, 4, 1, 2]);
+    expect(field).toMatchObject({ contacts: 2, bins: 2, binMs: 0.5, kind: 'value', scale: 0.25 });
   });
 });
 
@@ -187,7 +168,7 @@ describe('rows in chunks', () => {
     });
     vi.stubGlobal('fetch', fetchMock);
 
-    const row = await readRow(request, index, axis, 1, 1, table);
+    const row = await readRow(request, index, 1, 1, table);
 
     expect(Array.from(row)).toEqual([7, 8, 9]);
     expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -196,7 +177,7 @@ describe('rows in chunks', () => {
     });
   });
 
-  it('reads the table once, and none for an axis of plain rows', async () => {
+  it('reads the table once, and refuses an axis of plain rows', async () => {
     const fetchMock = vi.fn(async () => new Response(table.buffer, { status: 206 }));
     vi.stubGlobal('fetch', fetchMock);
 
@@ -206,7 +187,7 @@ describe('rows in chunks', () => {
       expect.objectContaining({ headers: { Range: 'bytes=40-103' } }),
     ]);
     const plain = { ...axis, levels: [{ step: 1, kind: 'value', dataset: 'x' }] } as LfpAxis;
-    expect(await readChunkTable(request, index, plain)).toBeNull();
+    await expect(readChunkTable(request, index, plain)).rejects.toThrow();
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
@@ -281,13 +262,15 @@ describe('the index', () => {
         name: 'total',
         groups: ['total'],
         scales: [1],
+        shares: [1],
         levels: [
-          { step: 1, kind: 'value', dataset: '/lfp/total/level0' },
+          { step: 1, kind: 'value', dataset: '/lfp/total/level0', chunks: '/lfp/total/chunks' },
           { step: 16, kind: 'min_max', dataset: '/lfp/total/level4' },
         ],
         stats: '/lfp/total/stats',
         psd: '/lfp/total/psd',
-        psd_frequencies: [0, 1],
+        psd_frequencies: [1, 2],
+        correlation: { dataset: '/lfp/total/correlation', scale: 1 / 32767 },
       },
       {
         name: 'mtype',

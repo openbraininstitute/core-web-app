@@ -21,12 +21,10 @@ const AXIS_LABELS: Record<string, string> = {
 
 /** An axis's groups, those that make the most of the total first. */
 export function groupsByShare(axis: LfpAxis): number[] {
-  const shares = axis.shares ?? [];
-  return axis.groups.map((_, group) => group).sort((a, b) => (shares[b] ?? 0) - (shares[a] ?? 0));
+  return axis.groups.map((_, group) => group).sort((a, b) => axis.shares[b] - axis.shares[a]);
 }
 
-const percent = (share: number | undefined) =>
-  share === undefined ? '' : `${Math.round(share * 100)}%`;
+const percent = (share: number) => `${Math.round(share * 100)}%`;
 
 /** Which cells' field is drawn: the total, or some of the groups of an axis, added up. */
 export function FieldFromControls({
@@ -76,7 +74,7 @@ function GroupPicker({
   const listed = useMemo(() => groupsByShare(axis), [axis]);
   const ticked = listed.filter((group) => choice.groups.includes(group));
   const baseId = useId();
-  const shareTogether = ticked.reduce((sum, group) => sum + (axis.shares?.[group] ?? 0), 0);
+  const shareTogether = ticked.reduce((sum, group) => sum + axis.shares[group], 0);
   return (
     <Popover>
       <PopoverTrigger
@@ -121,7 +119,7 @@ function GroupPicker({
                 {axis.groups[group]}
               </label>
               <span className="shrink-0 text-xs text-neutral-400">
-                {percent(axis.shares?.[group])}
+                {percent(axis.shares[group])}
               </span>
             </div>
           );

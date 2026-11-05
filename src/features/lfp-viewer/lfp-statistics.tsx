@@ -32,7 +32,7 @@ import { coordinatesAlong } from '@/features/lfp-viewer/field-structure';
 import { psdFigure } from '@/features/lfp-viewer/psd-figure';
 import { binAt, fieldValue } from '@/features/lfp-viewer/summary';
 import {
-  isTotalField,
+  hasStoredCorrelation,
   statsFromOverview,
   useContactRows,
   useStoredCorrelation,
@@ -484,8 +484,8 @@ function CorrelationPlot({
   visible,
 }: PlotProps) {
   const { index } = summary;
-  const useStored = !removeShared && !!index.correlation && isTotalField(chosen.choice);
-  const stored = useStoredCorrelation(source, summary, useStored);
+  const useStored = !removeShared && hasStoredCorrelation(index, chosen.choice);
+  const stored = useStoredCorrelation(source, summary, chosen.choice, useStored);
   const matrix = useMemo(() => {
     if (useStored) {
       return stored.data

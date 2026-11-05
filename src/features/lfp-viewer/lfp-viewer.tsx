@@ -347,8 +347,7 @@ function LfpReportView({
                   ` · along (${direction.axis.map((d) => d.toFixed(2)).join(', ')})`}
                 {statsFromOverview(chosen) &&
                   ` · table over ${Number(chosen.field.binMs.toFixed(2))} ms means, so peaks read lower`}
-                {traceRows.problem === 'too-many' &&
-                  ' · traces from the overview: tick fewer contacts or groups for their full rows'}
+                {traceRows.problem === 'too-many' && ' · overview traces: tick fewer for full rows'}
                 {loading && ' · reading the field'}
                 {(failed || lastUnread) && ' · that field could not be read'}
               </span>

@@ -15,16 +15,16 @@ const axisSchema = z.object({
   groups: z.array(z.string()).min(1),
   /** µV per int16 unit, one per group. */
   scales: z.array(z.number()),
-  /** A group's part in the total's variance; only groups have it. */
-  shares: z.array(z.number()).optional(),
-  /** Full resolution first, then the overview: the total's by min/max over ever more steps, a group's by means, which add up. */
+  /** A group's part in the total's variance. */
+  shares: z.array(z.number()),
+  /** Full resolution, then the overview if that is too long: the total's by min/max, a group's by means, which add up. */
   levels: z
     .array(
       z.object({
         step: z.number().int().positive(),
         kind: z.enum(['value', 'mean', 'min_max']),
         dataset: z.string(),
-        /** Where its rows lie, each deflated in a chunk of its own, if they are. */
+        /** Where its rows lie, each deflated in a chunk of its own: only with an overview to read them for. */
         chunks: z.string().optional(),
       })
     )
@@ -32,6 +32,8 @@ const axisSchema = z.object({
   stats: z.string(),
   psd: z.string(),
   psd_frequencies: z.array(z.number()),
+  /** Group × contact × contact, if it is stored. */
+  correlation: z.object({ dataset: z.string(), scale: z.number() }).optional(),
 });
 
 export const lfpSummaryIndexSchema = z.object({
@@ -43,7 +45,6 @@ export const lfpSummaryIndexSchema = z.object({
   contacts: z.number().int().nonnegative(),
   stats: z.array(z.string()),
   axes: z.array(axisSchema).min(1),
-  correlation: z.object({ dataset: z.string(), scale: z.number() }).optional(),
   datasets: z.record(z.string(), datasetSchema),
 });
 
@@ -162,14 +163,14 @@ export async function inflateRow(chunk: ArrayBuffer): Promise<Int16Array> {
   return row;
 }
 
-/** Where an axis's rows lie: group × contact × (offset, size). Null if they are not in chunks. */
+/** Where an axis's rows lie: group × contact × (offset, size). */
 export async function readChunkTable(
   request: LfpSummaryRequest,
   index: LfpSummaryIndex,
   axis: LfpAxis
-): Promise<BigUint64Array | null> {
+): Promise<BigUint64Array> {
   const { chunks } = axis.levels[0];
-  if (!chunks) return null;
+  if (!chunks) throw new Error(`The rows of ${axis.name} are not in chunks`);
   return new BigUint64Array(await readSlice(request, datasetOf(index, chunks)));
 }
 
@@ -219,19 +220,14 @@ export async function readGroupStats(
 export async function readRow(
   request: LfpSummaryRequest,
   index: LfpSummaryIndex,
-  axis: LfpAxis,
   group: number,
   contact: number,
-  table: BigUint64Array | null,
+  table: BigUint64Array,
   signal?: AbortSignal
 ): Promise<Int16Array> {
-  if (table) {
-    const at = (group * index.contacts + contact) * 2;
-    const chunk = await readRange(request, Number(table[at]), Number(table[at + 1]), signal);
-    return inflateRow(chunk);
-  }
-  const entry = datasetOf(index, axis.levels[0].dataset);
-  return new Int16Array(await readSlice(request, entry, [group, contact], signal));
+  const at = (group * index.contacts + contact) * 2;
+  const chunk = await readRange(request, Number(table[at]), Number(table[at + 1]), signal);
+  return inflateRow(chunk);
 }
 
 /** Contacts' full-resolution rows as one field, a row each in the order given. */

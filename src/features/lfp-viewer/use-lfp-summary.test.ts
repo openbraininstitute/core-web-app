@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { LfpSummaryChangedError } from './summary';
 import {
   askStatusIfChanged,
+  hasStoredCorrelation,
   MAX_ROW_READS,
   overRowLimit,
   statsFromOverview,
@@ -15,6 +16,7 @@ import type {
   LfpSummaryStatus,
 } from '@/api/small-scale-simulator/simulation-result/lfp-summary';
 import type { WorkspaceContext } from '@/types/common';
+import type { LfpSummaryIndex } from './summary';
 import type { ChosenField } from './use-lfp-summary';
 
 const source: LfpSummarySource = {
@@ -67,6 +69,21 @@ describe('statsFromOverview', () => {
 
   it('is not so where the stats were stored at full resolution', () => {
     expect(statsFromOverview(chosenField('mean', [0], spectra))).toBe(false);
+  });
+});
+
+describe('hasStoredCorrelation', () => {
+  const index = {
+    axes: [{ correlation: { dataset: 'c', scale: 1 } }, {}],
+  } as unknown as LfpSummaryIndex;
+
+  it('goes by the axis, for one group', () => {
+    expect(hasStoredCorrelation(index, { axis: 0, groups: [0] })).toBe(true);
+    expect(hasStoredCorrelation(index, { axis: 1, groups: [0] })).toBe(false);
+  });
+
+  it('is not so for groups added up', () => {
+    expect(hasStoredCorrelation(index, { axis: 0, groups: [0, 1] })).toBe(false);
   });
 });
 

@@ -195,7 +195,7 @@ const rowQuery = (at: AxisRead, group: number, contact: number) => ({
         gcTime: 60_000,
         queryFn: () => readChunkTable(request, at.index, at.axis),
       });
-      return readRow(request, at.index, at.axis, group, contact, table, signal);
+      return readRow(request, at.index, group, contact, table, signal);
     }),
 });
 
@@ -328,25 +328,31 @@ export function useContactRows(
   }, [overview, read, contacts, index, tooMany]);
 }
 
+/** Whether the field chosen has its correlation stored: groups added up have none. */
+export const hasStoredCorrelation = (index: LfpSummaryIndex, { axis, groups }: FieldChoice) =>
+  groups.length === 1 && !!index.axes[axis].correlation;
+
 export function useStoredCorrelation(
   source: LfpSummarySource,
   summary: LfpSummary,
+  { axis: axisAt, groups: [group] }: FieldChoice,
   enabled: boolean
 ) {
   const { index, sha256 } = summary;
+  const axis = index.axes[axisAt];
   const queryClient = useQueryClient();
   return useQuery({
-    queryKey: summaryKey(source, 'correlation', sha256),
+    queryKey: summaryKey(source, 'correlation', sha256, axis.name, group),
     enabled,
     staleTime: Infinity,
     gcTime: 60_000,
     queryFn: async ({ signal }) => {
-      const stored = index.correlation;
+      const stored = axis.correlation;
       if (!stored) throw new Error('The LFP summary has no correlation');
       const bytes = await readSlice(
         await buildLfpSummaryRequest(source, sha256),
         datasetOf(index, stored.dataset),
-        [],
+        [group],
         signal
       ).catch(askStatusIfChanged(queryClient, source, sha256));
       return { values: new Int16Array(bytes), scale: stored.scale };
