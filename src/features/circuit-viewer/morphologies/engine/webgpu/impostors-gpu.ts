@@ -417,7 +417,8 @@ function impostorOf(
   u: GpuUniforms,
   glowing: boolean,
   inputs: SegmentInputs,
-  litOnly = false
+  litOnly = false,
+  everyCell = false
 ) {
   const { word } = inputs;
   const cell = word.bitAnd(uint(CELL_MASK));
@@ -426,7 +427,8 @@ function impostorOf(
   const glow = glowing
     ? typed<'float'>(cellGlow({ cell, highlighted: u.highlighted, glowTexel: u.glow.load(xy) }))
     : float(0);
-  const shown = litOnly ? select(glow.greaterThan(0), texel.a, float(0)) : texel.a;
+  const drawn = everyCell ? float(1) : texel.a;
+  const shown = litOnly ? select(glow.greaterThan(0), drawn, float(0)) : drawn;
   const least = float(MIN_RADIUS).mul(glow.add(1));
   let quad: Node<'mat4'>;
   let shape: Node;
@@ -688,10 +690,11 @@ function idMaterial(
 function depthMaterial(
   kind: 'segment' | 'tube',
   u: GpuUniforms,
-  inputs: SegmentInputs
+  inputs: SegmentInputs,
+  everyCell = false
 ): THREE.MeshBasicNodeMaterial {
   const material = new THREE.MeshBasicNodeMaterial();
-  const { position, surface, depth } = impostorOf(kind, u, true, inputs);
+  const { position, surface, depth } = impostorOf(kind, u, true, inputs, false, everyCell);
   material.positionNode = position;
   material.maskNode = col(surface, 0).w.greaterThan(0.5);
   if (kind === 'tube') material.depthNode = depth;
@@ -737,6 +740,7 @@ export function arenaMaterials(u: GpuUniforms, look: Look, arena: ArenaStorage) 
     ids: segments((kind) => idMaterial(kind, u, false, fromArena(u, arena, kind, 'seen'))),
     kept: segments((kind) => depthMaterial(kind, u, fromArena(u, arena, kind, 'kept'))),
     seenDepth: segments((kind) => depthMaterial(kind, u, fromArena(u, arena, kind, 'seen'))),
+    keptWhole: segments((kind) => depthMaterial(kind, u, fromArena(u, arena, kind, 'kept'), true)),
     through: segments((kind) => throughMaterial(kind, u, fromArena(u, arena, kind, 'kept'))),
   };
 }
