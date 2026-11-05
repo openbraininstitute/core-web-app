@@ -41,6 +41,9 @@ import type { WorkspaceContext } from '@/types/common';
 /** How often a summary being built is asked after. */
 const BUILDING_POLL_MS = 5000;
 
+/** The rows one view may ask for: each takes a request, and a server answers about 5 a second. */
+export const MAX_ROW_READS = 64;
+
 export type LfpSummary = GroupStats & {
   sha256: string;
   index: LfpSummaryIndex;
@@ -65,6 +68,14 @@ export type ChosenField = {
   /** Per contact, stored for one group: the power of a sum is not the sum of the powers. */
   spectra: { frequencies: readonly number[]; psd: Float32Array } | null;
 };
+
+/** Whether a chosen field's table is worked out from its overview's bins, not its full rows. */
+export const statsFromOverview = ({ spectra, field }: ChosenField) =>
+  !spectra && field.kind !== 'value';
+
+/** Whether its contacts' rows are more than a view may ask for. */
+export const overRowLimit = ({ choice, field }: ChosenField, contacts: number) =>
+  field.kind !== 'value' && contacts * choice.groups.length > MAX_ROW_READS;
 
 const summaryKey = (
   { resultId, assetId }: LfpSummarySource,
@@ -250,27 +261,33 @@ export function useChosenField(
   return { chosen: wanted ?? shown, loading: !wanted && !failed, failed };
 }
 
+export type RowsProblem = 'failed' | 'too-many';
+
 type ContactRows = {
   /** A row per contact asked for, in that order, once every one is in. */
   field: LfpField | null;
-  failed: boolean;
+  problem: RowsProblem | null;
 };
 
-const NO_ROWS: ContactRows = { field: null, failed: false };
+const NO_ROWS: ContactRows = { field: null, problem: null };
+const TOO_MANY_ROWS: ContactRows = { field: null, problem: 'too-many' };
 
 /**
  * Contacts at full resolution: from the overview where it is already that,
- * else each contact's own row of each group chosen, read by range once and kept, while `enabled`.
+ * else each contact's own row of each group chosen, read by range once and kept, while `enabled`,
+ * unless that is over the limit.
  */
 export function useContactRows(
   source: LfpSummarySource,
   summary: LfpSummary,
-  { choice, field: overview }: ChosenField,
+  chosen: ChosenField,
   contacts: readonly number[],
   enabled = true
 ): ContactRows {
   const { index, sha256 } = summary;
+  const { choice, field: overview } = chosen;
   const axis = index.axes[choice.axis];
+  const tooMany = overRowLimit(chosen, contacts.length);
   const queryClient = useQueryClient();
   const combine = useCallback(
     (results: UseQueryResult<Int16Array>[]): ContactRows => ({
@@ -286,14 +303,14 @@ export function useContactRows(
               )
             )
           : null,
-      failed: results.some((r) => r.isError),
+      problem: results.some((r) => r.isError) ? 'failed' : null,
     }),
     [index, axis, choice, contacts]
   );
   const at = { queryClient, source, sha256, index, axis };
   const read = useQueries({
     queries:
-      overview.kind === 'value'
+      overview.kind === 'value' || tooMany
         ? []
         : contacts.flatMap((contact) =>
             choice.groups.map((group) => ({ ...rowQuery(at, group, contact), enabled }))
@@ -301,13 +318,14 @@ export function useContactRows(
     combine,
   });
   return useMemo(() => {
+    if (tooMany) return TOO_MANY_ROWS;
     if (overview.kind !== 'value') return read;
     if (contacts.length === 0) return NO_ROWS;
     const rows = contacts.map((c) =>
       overview.data.subarray(c * overview.bins, (c + 1) * overview.bins)
     );
-    return { field: rowsField(index, overview.scale, rows), failed: false };
-  }, [overview, read, contacts, index]);
+    return { field: rowsField(index, overview.scale, rows), problem: null };
+  }, [overview, read, contacts, index, tooMany]);
 }
 
 export function useStoredCorrelation(

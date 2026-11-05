@@ -33,6 +33,7 @@ import { psdFigure } from '@/features/lfp-viewer/psd-figure';
 import { binAt, fieldValue } from '@/features/lfp-viewer/summary';
 import {
   isTotalField,
+  statsFromOverview,
   useContactRows,
   useStoredCorrelation,
 } from '@/features/lfp-viewer/use-lfp-summary';
@@ -48,7 +49,7 @@ import type { ContactGrid } from '@/features/lfp-viewer/contact-grid';
 import type { ContactLine } from '@/features/lfp-viewer/field-analysis';
 import type { FieldDirection, FieldRow } from '@/features/lfp-viewer/field-structure';
 import type { LfpField } from '@/features/lfp-viewer/summary';
-import type { ChosenField, LfpSummary } from '@/features/lfp-viewer/use-lfp-summary';
+import type { ChosenField, LfpSummary, RowsProblem } from '@/features/lfp-viewer/use-lfp-summary';
 import type { TAssetBackedFile } from '@/features/scan-config/types';
 import type { TimeCursor } from '@/features/sonata-viewer/time-cursor';
 import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
@@ -244,6 +245,10 @@ export function LfpStatistics(props: StatisticsProps) {
 type PlotProps = StatisticsProps & { picker: ReactNode };
 
 const FAILED = 'The summary could not be read';
+const ROWS_PROBLEMS: Record<RowsProblem, string> = {
+  failed: FAILED,
+  'too-many': 'That is too many rows to read at once: tick fewer contacts or groups',
+};
 const PICK_A_CONTACT = 'Pick a contact in the table';
 const NO_POSITIONS = 'Needs the contacts’ positions';
 const NO_LINE = 'Needs contacts evenly spaced on a line';
@@ -278,7 +283,7 @@ function SpectrumPlot({
     [ticked, selectedContact]
   );
   // Groups added up have no stored spectrum, so their contacts' are worked out from their rows.
-  const { field, failed } = useContactRows(source, summary, chosen, spectra ? [] : contacts, open);
+  const { field, problem } = useContactRows(source, summary, chosen, spectra ? [] : contacts, open);
   const figure = useMemo(() => {
     const dtMs = index.time.dt;
     if (spectra) return psdFigure({ ...spectra, contacts, dtMs });
@@ -291,7 +296,13 @@ function SpectrumPlot({
       help="Power at each frequency over the whole run: the mean of all contacts, and the selected contact or those ticked, as recorded. Groups added up show only the selected or ticked, as spectra don't add"
       visible={visible}
       figure={figure}
-      empty={!spectra && contacts.length === 0 ? PICK_A_CONTACT : failed ? FAILED : undefined}
+      empty={
+        !spectra && contacts.length === 0
+          ? PICK_A_CONTACT
+          : problem
+            ? ROWS_PROBLEMS[problem]
+            : undefined
+      }
     />
   );
 }
@@ -312,7 +323,7 @@ function SpectrogramPlot({
     () => (selectedContact === null ? [] : [selectedContact]),
     [selectedContact]
   );
-  const { field, failed } = useContactRows(source, summary, chosen, contacts, open);
+  const { field, problem } = useContactRows(source, summary, chosen, contacts, open);
   const result = useMemo(
     () => (field ? spectrogram(field.data, field.scale, field.binMs, field.start) : null),
     [field]
@@ -321,8 +332,8 @@ function SpectrogramPlot({
   const empty =
     selectedContact === null
       ? PICK_A_CONTACT
-      : failed
-        ? FAILED
+      : problem
+        ? ROWS_PROBLEMS[problem]
         : field && !result
           ? 'This run is too short for a spectrogram'
           : undefined;
@@ -412,7 +423,7 @@ function TriggeredFigure({
     if (selectedContact === null) return ticked.slice(0, MAX_COMPARED);
     return [selectedContact, ...ticked.filter((c) => c !== selectedContact)].slice(0, MAX_COMPARED);
   }, [selectedContact, ticked]);
-  const { field, failed } = useContactRows(source, summary, chosen, contacts, open);
+  const { field, problem } = useContactRows(source, summary, chosen, contacts, open);
   const triggers = useMemo(() => {
     if (!spikes) return null;
     const populations = spikes.populations.map((p) => p.timestamps);
@@ -438,8 +449,8 @@ function TriggeredFigure({
       ? PICK_A_CONTACT
       : spikesError
         ? 'These spikes could not be read'
-        : failed
-          ? FAILED
+        : problem
+          ? ROWS_PROBLEMS[problem]
           : result && result.triggers === 0
             ? 'No spikes fall with their whole window inside the recording'
             : undefined;
@@ -540,7 +551,7 @@ function CoherencePlot({
     () => (selectedContact === null ? [] : [selectedContact, ...others]),
     [selectedContact, others]
   );
-  const { field, failed } = useContactRows(source, summary, chosen, contacts, open);
+  const { field, problem } = useContactRows(source, summary, chosen, contacts, open);
   const result = useMemo(() => {
     if (!field || others.length === 0) return null;
     const row = (r: number) => field.data.subarray(r * field.bins, (r + 1) * field.bins);
@@ -562,8 +573,8 @@ function CoherencePlot({
       ? PICK_A_CONTACT
       : others.length === 0
         ? 'Needs another contact'
-        : failed
-          ? FAILED
+        : problem
+          ? ROWS_PROBLEMS[problem]
           : field && !result
             ? 'This run is too short for coherence'
             : undefined;
@@ -656,9 +667,9 @@ function ProfilePlot({
           ? removeShared
             ? 'shared signal removed'
             : undefined
-          : chosen.spectra
-            ? 'as recorded'
-            : 'from the overview'
+          : statsFromOverview(chosen)
+            ? 'from the overview'
+            : 'as recorded'
       }
       help="A value against position along the field's direction, or the array's longest axis where no line follows the field, a grid's own if it is one. Many contacts are averaged into stretches of the axis"
       visible={visible}
@@ -691,7 +702,7 @@ function CsdPlot({
       summary.index.time.steps *
       Int16Array.BYTES_PER_ELEMENT >
       MAX_LINE_READ_BYTES;
-  const { field, failed } = useContactRows(
+  const { field, problem } = useContactRows(
     source,
     summary,
     chosen,
@@ -727,8 +738,8 @@ function CsdPlot({
       empty={
         tooLong
           ? `${line.contacts.length} contacts of ${summary.index.time.steps.toLocaleString()} steps are too much to read here`
-          : failed
-            ? FAILED
+          : problem
+            ? ROWS_PROBLEMS[problem]
             : line
               ? undefined
               : NO_LINE

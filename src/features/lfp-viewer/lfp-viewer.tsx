@@ -27,6 +27,7 @@ import {
 import { LfpScene } from '@/features/lfp-viewer/lfp-scene';
 import { LfpStatistics } from '@/features/lfp-viewer/lfp-statistics';
 import {
+  statsFromOverview,
   TOTAL_FIELD,
   useChosenField,
   useContactPositions,
@@ -64,7 +65,11 @@ import type { IAsset } from '@/api/entitycore/types/shared/global';
 import type { LfpSummarySource } from '@/api/small-scale-simulator/simulation-result/lfp-summary';
 import type { FieldPlotMode } from '@/features/lfp-viewer/field-plot';
 import type { RowOrder } from '@/features/lfp-viewer/field-structure';
-import type { ContactPositions, LfpSummary } from '@/features/lfp-viewer/use-lfp-summary';
+import type {
+  ContactPositions,
+  FieldChoice,
+  LfpSummary,
+} from '@/features/lfp-viewer/use-lfp-summary';
 import type { SimulationReport } from '@/features/sonata-viewer/simulation-reports-context';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -183,6 +188,16 @@ function LfpReportView({
 
   const [choice, setChoice] = useState(TOTAL_FIELD);
   const { chosen, loading, failed } = useChosenField(source, summary, choice);
+  // The controls name what the panes draw: a field that can't be read is let go of, to be read again if picked again.
+  const [lastUnread, setLastUnread] = useState(false);
+  if (failed && chosen.choice !== choice) {
+    setChoice(chosen.choice);
+    setLastUnread(true);
+  }
+  const pickField = (next: FieldChoice) => {
+    setLastUnread(false);
+    setChoice(next);
+  };
   const [removeShared, setRemoveShared] = useState(false);
   const field = useMemo(
     () => (removeShared ? withoutShared(chosen.field) : chosen.field),
@@ -219,7 +234,7 @@ function LfpReportView({
   const traces = useMemo(() => tracedContacts(rows, ticked), [rows, ticked]);
   // Read only while drawn, and once positions are in, as they can change which contacts are traced.
   // A contact's row at full resolution holds nothing of the mean to take off.
-  const traceField = useContactRows(
+  const traceRows = useContactRows(
     source,
     summary,
     chosen,
@@ -229,7 +244,7 @@ function LfpReportView({
       contacts.state !== 'loading'
       ? traces
       : []
-  ).field;
+  );
   const sharedShare = useMemo(() => sharedShareOf(chosen.field), [chosen.field]);
   const sharedPercent = Math.round(sharedShare * 100);
 
@@ -330,10 +345,12 @@ function LfpReportView({
                 {order === 'along' &&
                   direction &&
                   ` · along (${direction.axis.map((d) => d.toFixed(2)).join(', ')})`}
-                {!chosen.spectra &&
+                {statsFromOverview(chosen) &&
                   ` · table over ${Number(chosen.field.binMs.toFixed(2))} ms means, so peaks read lower`}
+                {traceRows.problem === 'too-many' &&
+                  ' · traces from the overview: tick fewer contacts or groups for their full rows'}
                 {loading && ' · reading the field'}
-                {failed && ' · that field could not be read'}
+                {(failed || lastUnread) && ' · that field could not be read'}
               </span>
               <PlotHelp>
                 Drag to zoom · Double-click to reset · Click to move the player there; in the map,
@@ -345,7 +362,7 @@ function LfpReportView({
             </>
           }
         >
-          <FieldFromControls index={index} choice={choice} onChange={setChoice} />
+          <FieldFromControls index={index} choice={choice} onChange={pickField} />
           <PillSelect
             label="View"
             value={mode}
@@ -424,7 +441,7 @@ function LfpReportView({
         scale={scale}
         rows={rows}
         traces={traces}
-        traceField={traceField}
+        traceField={traceRows.field}
         gain={gain}
         window={shownWindow}
         onWindowChange={setTimeWindow}
