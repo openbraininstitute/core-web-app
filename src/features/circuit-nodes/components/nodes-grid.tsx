@@ -1039,19 +1039,19 @@ export function NodesGrid({
     if (toAutoSize.length > 0) api.autoSizeColumns(toAutoSize, false);
   }, [columns, visibleColumns]);
 
-  // The header: a row of its own over the rows, or the host's slot, where the count stacks.
-  const stacked = headerSlot !== undefined;
+  // The header: a row of its own over the rows, or the host's slot. The two counts stack, so
+  // they sit in the least room beside whatever narrows to fit there, such as the population.
+  const stacked = pickColumn || headerSlot !== undefined;
   const count = (
     <span className={cn(styles.gridStat, 'shrink-0', stacked && styles.gridStatStacked)}>
       {pickColumn ? (
         // Ticks and the filter each narrow what is drawn, ticks first, so both are told.
         <>
           <span>
-            {stacked ? null : 'Nodes: '}
             <span className={selectedNodeIds.size > 0 ? styles.gridStatHighlight : undefined}>
               {selectedNodeIds.size.toLocaleString()}
             </span>
-            /{total.toLocaleString()} selected{stacked ? null : ', '}
+            /{total.toLocaleString()} selected
           </span>
           <span>
             <span className={filteredCount !== null ? styles.gridStatHighlight : undefined}>

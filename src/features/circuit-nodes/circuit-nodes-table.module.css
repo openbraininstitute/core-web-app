@@ -45,6 +45,7 @@
 }
 
 .viewSelect {
+  flex-shrink: 0;
   min-width: 84px;
 }
 
