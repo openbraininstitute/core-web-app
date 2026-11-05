@@ -18,6 +18,7 @@ import {
 import { isExpanderClick } from '@/features/data-grid/renderers/aggrid/expand-cell';
 import { isInteractiveClick } from '@/features/data-grid/renderers/aggrid/interactive-target';
 import { registerDataGridModules } from '@/features/data-grid/renderers/aggrid/register-modules';
+import { useRowClassRedraw } from '@/features/data-grid/renderers/aggrid/row-class-redraw';
 import { mergePageSelection } from '@/features/data-grid/renderers/aggrid/selection';
 import {
   DATA_GRID_LOCALE_TEXT,
@@ -365,11 +366,17 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
   );
 
   // Optional per-row class (e.g. hierarchy gray-out); never applied to detail rows.
-  const rowClass = useCallback(
-    (p: RowClassParams<TDisplayRow<Row>>): string | undefined =>
-      getRowClass && p.data != null && !isDetailRow(p.data) ? getRowClass(p.data) : undefined,
+  const rowClassOf = useMemo(
+    () =>
+      getRowClass &&
+      ((data: TDisplayRow<Row>) => (isDetailRow(data) ? undefined : getRowClass(data))),
     [getRowClass]
   );
+  const rowClass = useCallback(
+    (p: RowClassParams<TDisplayRow<Row>>) => (p.data == null ? undefined : rowClassOf?.(p.data)),
+    [rowClassOf]
+  );
+  const redrawChangedRowClasses = useRowClassRedraw(apiRef, rowClassOf);
 
   if (!mounted) return <div className="ag-data-grid h-full min-h-0 w-full" />;
 
@@ -410,8 +417,12 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
         onGridReady={(e: GridReadyEvent<TDisplayRow<Row>>) => {
           apiRef.current = e.api;
           applySelection();
+          redrawChangedRowClasses();
         }}
-        onRowDataUpdated={applySelection}
+        onRowDataUpdated={() => {
+          applySelection();
+          redrawChangedRowClasses();
+        }}
         onColumnMoved={onColumnMoved}
         onColumnResized={onColumnResized}
         onCellClicked={onCellClicked}
