@@ -212,6 +212,11 @@ export type ParsedCircuitConfig = {
 
 export type ViewMode = 'nodes' | 'connectivity' | 'edges';
 
+/** What a table's pane says on its bar once it is shut: what it shows. */
+export function tablePaneTitle(view: ViewMode): string {
+  return view === 'connectivity' ? 'Connectivity' : 'Neuron Table';
+}
+
 export const CIRCUIT_H5_CACHE = 'obi-circuit-h5-v1';
 
 export type PreferredColumn = {

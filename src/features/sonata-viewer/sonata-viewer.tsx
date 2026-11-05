@@ -6,9 +6,10 @@ import { createPortal } from 'react-dom';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
+import { useReportTableView } from '@/features/circuit-nodes/connectivity/report-table-view';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
-import { NEURON_HEADING } from '@/features/circuit-nodes/types';
+import { NEURON_HEADING, tablePaneTitle } from '@/features/circuit-nodes/types';
 import { PaneResizeHandle, ShutPaneBar } from '@/features/circuit-viewer/pane-resize-handle';
 import { useResultsSidePanel } from '@/features/scan-config/components/shared/results-layout';
 import { compartmentsOf } from '@/features/sonata-viewer/compartment-rows';
@@ -187,6 +188,7 @@ export function SonataReportView({
   withStatistics?: boolean;
 }) {
   const { simulationPicker, timeline, compartmentSets } = useSimulation();
+  const tableTitle = tablePaneTitle(useReportTableView(circuit));
   const populationNames = useMemo(() => metadata.populations.map((p) => p.name), [metadata]);
   const [chosenPopulation, setChosenPopulation] = useReportPopulation(
     reportPath,
@@ -1003,7 +1005,7 @@ export function SonataReportView({
             ),
           }}
           bottom={{
-            title: 'Neuron Table',
+            title: tableTitle,
             boxClassName: 'px-3 pt-1 pb-2',
             content: (
               <ReportStatisticsPanel
@@ -1075,7 +1077,7 @@ export function SonataReportView({
           createPortal(
             <ShutPaneBar
               upright
-              title={[tracesTitle, 'Neuron Table']}
+              title={[tracesTitle, tableTitle]}
               onOpen={sidePanel.openColumns}
             />,
             sidePanel.fileStrip

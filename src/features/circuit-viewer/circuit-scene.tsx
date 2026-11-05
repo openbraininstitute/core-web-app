@@ -391,6 +391,11 @@ export function CircuitScene({
   const [tablePathway, setTablePathway] = useState<TablePathway | null>(null);
   // Whether the table shows the matrix, whose hovered pathway the key explains.
   const [tableView, setTableView] = useState<ViewMode>('nodes');
+  const setPaneView = paneTable?.setView;
+  useEffect(() => {
+    setPaneView?.(tableView);
+    return () => setPaneView?.('nodes');
+  }, [setPaneView, tableView]);
   const narrowed =
     tableDriven &&
     tableCells?.circuitId === circuit?.id &&

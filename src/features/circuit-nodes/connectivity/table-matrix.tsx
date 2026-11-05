@@ -1,12 +1,16 @@
 'use client';
 
-import { atom, useAtom } from 'jotai';
+import { useSetAtom } from 'jotai';
 import { useEffect, useState } from 'react';
 
 import { NodesViewSelect } from '@/features/circuit-nodes/components/nodes-toolbar';
 import { PopulationSelect } from '@/features/circuit-nodes/components/population-select';
 import { connectsItself } from '@/features/circuit-nodes/connectivity/connectivity-groups';
 import { ConnectivityView } from '@/features/circuit-nodes/connectivity/connectivity-view';
+import {
+  reportTableViewAtom,
+  useReportTableView,
+} from '@/features/circuit-nodes/connectivity/report-table-view';
 import {
   connectivityAsset,
   useConnectivityEntries,
@@ -18,18 +22,11 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TablePathway } from '@/features/circuit-nodes/circuit-nodes-table';
 import type { NodeColumns } from '@/features/circuit-nodes/connectivity/connectivity-view';
 import type { MatrixPin } from '@/features/circuit-nodes/connectivity/use-matrix-pin';
-import type { ViewMode } from '@/features/circuit-nodes/types';
 
 import styles from '@/features/circuit-nodes/circuit-nodes-table.module.css';
 
 /** What a scene beside a report's table takes from its matrix: the pathway under the pointer. */
 export type SceneMatrix = { pathway: TablePathway | null };
-
-/**
- * What a report's table shows, kept with its circuit: the next report or simulation over the
- * same cells stays on it, as their ticks and filters do.
- */
-const viewAtom = atom<{ circuitId: string; view: ViewMode } | undefined>(undefined);
 
 export type TableMatrixView = {
   /** The matrix is up, in the rows' place. */
@@ -40,9 +37,9 @@ export type TableMatrixView = {
 
 /** Whether a report's table shows its rows or the circuit's connectivity matrix, by a menu. */
 export function useTableMatrixView(circuit: ICircuit): TableMatrixView {
-  const [stored, setStored] = useAtom(viewAtom);
+  const setStored = useSetAtom(reportTableViewAtom);
   const available = connectivityAsset(circuit) !== undefined;
-  const view = available && stored?.circuitId === circuit.id ? stored.view : 'nodes';
+  const view = useReportTableView(circuit);
   return {
     on: view === 'connectivity',
     menu: (

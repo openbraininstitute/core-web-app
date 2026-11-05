@@ -1,11 +1,16 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { createStore, Provider } from 'jotai';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  reportTableViewAtom,
+  useReportTableView,
+} from '@/features/circuit-nodes/connectivity/report-table-view';
+import {
   TableOrMatrix,
   useTableMatrixView,
 } from '@/features/circuit-nodes/connectivity/table-matrix';
+import { tablePaneTitle } from '@/features/circuit-nodes/types';
 
 import type { ComponentProps } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -184,5 +189,31 @@ describe('a report’s table and its matrix', () => {
 
     fireEvent.click(screen.getAllByRole('button', { name: 'view: connectivity' })[0]);
     expect(onMatrixChange).toHaveBeenLastCalledWith(undefined);
+  });
+});
+
+describe('what a report table’s pane is told it shows', () => {
+  function viewOf(circuit: ICircuit | undefined, chosenOn = WITH_MATRIX) {
+    const store = createStore();
+    store.set(reportTableViewAtom, { circuitId: chosenOn.id, view: 'connectivity' });
+    const { result } = renderHook(() => useReportTableView(circuit), {
+      wrapper: ({ children }) => <Provider store={store}>{children}</Provider>,
+    });
+    return result.current;
+  }
+
+  it('is the matrix on the circuit it was chosen for', () => {
+    expect(viewOf(WITH_MATRIX)).toBe('connectivity');
+  });
+
+  it('is the nodes on another circuit, or one with no matrix, or with no circuit', () => {
+    expect(viewOf(ANOTHER_WITH_MATRIX)).toBe('nodes');
+    expect(viewOf(WITHOUT_MATRIX, WITHOUT_MATRIX)).toBe('nodes');
+    expect(viewOf(undefined)).toBe('nodes');
+  });
+
+  it('names the pane’s bar by it', () => {
+    expect(tablePaneTitle('connectivity')).toBe('Connectivity');
+    expect(tablePaneTitle('nodes')).toBe('Neuron Table');
   });
 });

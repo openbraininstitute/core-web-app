@@ -6,9 +6,11 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { createPortal } from 'react-dom';
 
 import { PopulationSelect } from '@/features/circuit-nodes/components/population-select';
+import { useReportTableView } from '@/features/circuit-nodes/connectivity/report-table-view';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 import { hasPositions } from '@/features/circuit-nodes/population-utils';
+import { tablePaneTitle } from '@/features/circuit-nodes/types';
 import { CircuitScene } from '@/features/circuit-viewer/circuit-scene';
 import {
   PaneResizeHandle,
@@ -145,6 +147,7 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
 
   const circuit = subject?.circuit;
   const memodel = subject?.memodel;
+  const tableTitle = tablePaneTitle(useReportTableView(circuit));
   const drawsEachCell = useCircuitDrawsEachCell(circuit);
   const {
     config: circuitConfig,
@@ -762,7 +765,7 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
             }}
             bottom={
               statistics && {
-                title: 'Neuron Table',
+                title: tableTitle,
                 boxClassName: 'px-3 pt-1 pb-2',
                 content: statistics,
               }
@@ -810,11 +813,7 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
           {/* With the rule shut over either column, one bar naming its panes, in the strip it leaves */}
           {sidePanel.fileStrip &&
             createPortal(
-              <ShutPaneBar
-                upright
-                title={['Raster', 'Neuron Table']}
-                onOpen={sidePanel.openColumns}
-              />,
+              <ShutPaneBar upright title={['Raster', tableTitle]} onOpen={sidePanel.openColumns} />,
               sidePanel.fileStrip
             )}
           {sidePanel.panelStrip &&

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 
+import { tablePaneTitle } from '@/features/circuit-nodes/types';
 import { PaneSideResizeHandle, ShutPaneBar } from '@/features/circuit-viewer/pane-resize-handle';
 import {
   SceneTablePaneProvider,
@@ -154,7 +155,7 @@ export function PreviewColumn({
           bottom={
             table.shown
               ? {
-                  title: 'Neuron Table',
+                  title: tablePaneTitle(table.view),
                   boxClassName: 'px-3 pt-1 pb-2',
                   content: <div ref={table.setTarget} className="flex h-full min-h-0 flex-col" />,
                 }
