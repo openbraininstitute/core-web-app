@@ -782,7 +782,7 @@ describe('the circuit morphology viewer', () => {
   });
 
   describe('boxes among the cells', () => {
-    const layer = (boxes: number, among: boolean): VoxelLayer => ({
+    const layer = (boxes: number): VoxelLayer => ({
       centres: new Float32Array(3 * boxes).fill(100),
       sizes: new Float32Array(3 * boxes).fill(10),
       looks: new Float32Array(4 * boxes).fill(0.5),
@@ -791,7 +791,6 @@ describe('the circuit morphology viewer', () => {
         planes: Uint32Array.of(0, boxes),
         rows: Uint32Array.from({ length: boxes + 1 }, (_, i) => i),
       },
-      among,
     });
     const hiddenOf = (inner: Internals) => inner.scene.getObjectByName('hidden voxels') as Quads;
     const boxesOf = (inner: Internals) => inner.scene.getObjectByName('voxels') as Quads;
@@ -799,7 +798,7 @@ describe('the circuit morphology viewer', () => {
     it('draws them whole where nothing is nearer, fainter first where something is, in one order', () => {
       const { viewer, inner } = make();
       viewer.setData(circuit());
-      viewer.setVoxels(layer(2, true));
+      viewer.setVoxels(layer(2));
 
       const whole = boxesOf(inner);
       const hidden = hiddenOf(inner);
@@ -821,13 +820,13 @@ describe('the circuit morphology viewer', () => {
     it('follows the boxes into a larger mesh, and turns with them', () => {
       const { viewer, inner } = make();
       viewer.setData(circuit());
-      viewer.setVoxels(layer(1, true));
+      viewer.setVoxels(layer(1));
       const frame: VoxelFrame = [
         [0, 1, 0],
         [-1, 0, 0],
         [0, 0, 1],
       ];
-      viewer.setVoxels({ ...layer(3, true), frame });
+      viewer.setVoxels({ ...layer(3), frame });
 
       expect(hiddenOf(inner).geometry).toBe(boxesOf(inner).geometry);
       expect(hiddenOf(inner).geometry.instanceCount).toBe(3);
@@ -835,18 +834,14 @@ describe('the circuit morphology viewer', () => {
       expect(hiddenOf(inner).quaternion.w).not.toBe(1);
     });
 
-    it('stops with them, and draws a layer that is not among the cells over them all alike', () => {
+    it('stops with them', () => {
       const { viewer, inner } = make();
       viewer.setData(circuit());
-      viewer.setVoxels(layer(1, true));
+      viewer.setVoxels(layer(1));
       const hidden = hiddenOf(inner);
 
       viewer.setVoxels(null);
       expect([boxesOf(inner).visible, hidden.visible]).toEqual([false, false]);
-
-      viewer.setVoxels(layer(1, false));
-      expect(hidden.visible).toBe(false);
-      expect((boxesOf(inner).material as THREE.ShaderMaterial).depthTest).toBe(false);
     });
   });
 

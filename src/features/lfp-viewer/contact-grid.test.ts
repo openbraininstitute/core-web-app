@@ -404,11 +404,6 @@ describe('voxelsOf', () => {
   if (!grid) throw new Error('no grid');
   const contacts = positions.length / 3;
 
-  it('draws them among the cells', () => {
-    const levels = new Uint8Array(contacts);
-    expect(voxelsOf(placeVoxels(grid, null), levels).among).toBe(true);
-  });
-
   it('draws every contact where it is, more opaque the larger |V|', () => {
     const levels = new Uint8Array(contacts).fill(levelOf(0));
     levels[0] = SCENE_LEVELS - 1;

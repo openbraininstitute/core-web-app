@@ -1,11 +1,11 @@
 /**
- * Draws boxes of a field through the cells: each has its own size, colour and opacity, is drawn over what is nearer the
- * eye, and is blended over what is behind it. A box with no opacity draws nothing. Unlike the dots of `electrodes.ts`,
- * a box has its size in µm whatever the zoom, and only the faces towards the eye are drawn, so that a box counts once.
+ * Draws boxes of a field among the cells: each has its own size, colour and opacity, and is blended over what is behind
+ * it. A box with no opacity draws nothing. Unlike the dots of `electrodes.ts`, a box has its size in µm whatever the
+ * zoom, and only the faces towards the eye are drawn, so that a box counts once.
  *
- * A layer may be drawn among the cells instead, in two passes whose depth tests are each other's opposite: a face at its
- * own opacity where nothing is nearer the eye, and fainter where something is. The hidden pass goes first, which keeps
- * the blending far to near: at any pixel, what is hidden lies behind the surface there, and the rest in front of it.
+ * There are two passes, whose depth tests are each other's opposite: a face at its own opacity where nothing is nearer
+ * the eye, and fainter where something is. The hidden pass goes first, which keeps the blending far to near: at any
+ * pixel, what is hidden lies behind the surface there, and the rest in front of it.
  */
 
 import * as THREE from 'three';
@@ -61,18 +61,15 @@ export function voxelMaterial(share = 1): THREE.ShaderMaterial {
 }
 
 /**
- * The boxes' materials, each made by the tier's `make`: through the cells, and among them where nothing is nearer the
- * eye and where something is.
+ * The boxes' materials, each made by the tier's `make`: where nothing is nearer the eye and where something is.
  */
 export function voxelMaterials<M extends THREE.Material>(make: (share?: number) => M) {
   const voxel = make();
   blendOver(voxel);
-  const voxelAmong = make();
-  blendOver(voxelAmong);
-  voxelAmong.depthTest = true;
+  voxel.depthTest = true;
   const voxelHidden = make(HIDDEN_SHARE);
   drawWhereHidden(voxelHidden);
-  return { voxel, voxelAmong, voxelHidden };
+  return { voxel, voxelHidden };
 }
 
 /** One box, `instances` times; the shaders place each by the attributes `writeVoxels` fills. */

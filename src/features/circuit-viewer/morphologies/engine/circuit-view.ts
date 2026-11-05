@@ -335,9 +335,8 @@ export interface CircuitMaterials {
   contactHidden: THREE.Material;
   /** A contact among the cells where those are morphologies. */
   contactOver: THREE.Material;
+  /** Boxes where nothing is nearer the eye and where something is. */
   voxel: THREE.Material;
-  /** Boxes among the cells, where nothing is nearer the eye and where something is. */
-  voxelAmong: THREE.Material;
   voxelHidden: THREE.Material;
   synapse: THREE.Material;
   marker: THREE.Material;
@@ -1729,35 +1728,28 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     const layer = set?.layer ?? null;
     const count = layer ? layer.centres.length / 3 : 0;
     if (count === 0 && !this.voxels?.visible) return;
-    const among = layer?.among === true;
-    const material = among ? this.materials.voxelAmong : this.materials.voxel;
-    const changed =
-      !this.voxels ||
-      count !== this.voxels.geometry.instanceCount ||
-      material !== this.voxels.material;
+    const changed = !this.voxels || count !== this.voxels.geometry.instanceCount;
     const mesh = this.fitted(this.voxels, 'aCentre', count, () => voxelGeometry(count), {
-      material,
+      material: this.materials.voxel,
       name: 'voxels',
       order: 0.75,
     });
-    mesh.material = material;
     this.voxels = mesh;
     turnToVoxelFrame(mesh, layer?.frame);
-    this.drawHiddenVoxels(mesh, among, layer);
+    this.drawHiddenVoxels(mesh, layer);
     set?.order.seenFrom(this.voxelEye());
     const written = set && writeVoxels(set.layer, this.centre, set.order.boxes, mesh.geometry);
     if (written || changed) this.invalidate();
   }
 
   /** Draws the boxes of `mesh`, in the order written there, before it, where something nearer the eye hides them. */
-  private drawHiddenVoxels(mesh: Quads, among: boolean, layer: VoxelLayer | null): void {
-    if (!among && !this.hiddenVoxels) return;
+  private drawHiddenVoxels(mesh: Quads, layer: VoxelLayer | null): void {
     const hidden = this.drawnAgain(this.hiddenVoxels, mesh, {
       material: this.materials.voxelHidden,
       name: 'hidden voxels',
       order: 0.7,
     });
-    hidden.visible = among && mesh.visible;
+    hidden.visible = mesh.visible;
     turnToVoxelFrame(hidden, layer?.frame);
     this.hiddenVoxels = hidden;
   }
