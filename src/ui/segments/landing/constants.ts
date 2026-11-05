@@ -73,7 +73,6 @@ export const MENU_ITEMS: MenuItem[] = [
     slug: '/pricing',
     submenu: [
       { caption: 'Features', slug: '/features', index: EnumSection.Features },
-      { caption: 'Showcases', slug: '/showcases', index: EnumSection.Showcases },
       { caption: 'Pricing', slug: '/pricing', index: EnumSection.Pricing },
     ],
   },

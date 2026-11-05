@@ -2,7 +2,7 @@
 
 import { LivingHero } from '@/ui/segments/landing/living-hero';
 import { OriginalHomePage } from '@/ui/segments/project/original-home';
-import { FadingStage } from '@/ui/segments/project/walkthrough/stage';
+import { SlidingStage } from '@/ui/segments/project/walkthrough/sliding-stage';
 import { Walkthrough } from '@/ui/segments/project/walkthrough/walkthrough';
 
 import { AgentReady } from './agent-ready';
@@ -101,8 +101,9 @@ export function BrainsWalkthroughPage({
       pager={false}
       footer="clamp(64px,9.5vh,88px)"
       stage={(chapter) => (
-        <FadingStage
+        <SlidingStage
           scene={chapter.scene}
+          order={BRAIN_CHAPTERS.map((chapter) => chapter.scene)}
           // The first screen, on its grid.
           full={(scene) => CNS_ON_FIRST_SCREEN && scene === 'opening'}
           // The first screen's fly brain, under its recording, is turned by hand through it.
