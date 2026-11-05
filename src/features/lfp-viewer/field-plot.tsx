@@ -79,6 +79,14 @@ function extent(field: LfpField, contact: number, from: number, to: number): [nu
   return [low * field.scale, high * field.scale];
 }
 
+/** A pixel's span, stretched to meet the pixel's before it: a line moving fast skips between them. */
+export function reachingPrevious(
+  [low, high]: [number, number],
+  [previousLow, previousHigh]: [number, number]
+): [number, number] {
+  return [Math.min(low, previousHigh), Math.max(high, previousLow)];
+}
+
 function rowValue(field: LfpField, row: FieldRow, bin: number): number {
   let sum = 0;
   for (const contact of row.contacts) sum += fieldValue(field, contact, bin);
@@ -265,12 +273,15 @@ export function FieldPlot({
             g.lineTo(x, base - low * pxPerUv);
           }
         } else {
+          let previous: [number, number] = [-Infinity, Infinity];
           for (let px = 0; px < plotWidth; px++) {
             const b0 = first + Math.floor(px * binsPerPx);
             const b1 = Math.min(last, Math.max(b0 + 1, first + Math.floor((px + 1) * binsPerPx)));
-            const [low, high] = extent(source, at, b0, b1);
+            const span = extent(source, at, b0, b1);
+            const [low, high] = reachingPrevious(span, previous);
             g.moveTo(plot.left + px + 0.5, base - high * pxPerUv);
             g.lineTo(plot.left + px + 0.5, base - low * pxPerUv + 0.5);
+            previous = span;
           }
         }
         g.stroke();
