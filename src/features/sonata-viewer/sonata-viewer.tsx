@@ -1063,7 +1063,7 @@ export function SonataReportView({
                   ? {
                       title: '3D Player',
                       keepsSize: true,
-                      boxClassName: 'px-2 pt-2',
+                      boxClassName: 'overflow-hidden',
                       content: scene,
                     }
                   : plotsPane
