@@ -314,6 +314,16 @@ export class NodesSession {
     return this.resolveView(viewKey, [], entries).slice();
   }
 
+  /** The rows a sort and filter show, by node id in their order; null when that is every row in node order. */
+  getRowOrder(sort: SortItem[], filter: FilterModel): Uint32Array | null {
+    const sortItems = sort.filter((s) => this.columnIndex.has(s.column));
+    const filterEntries = Object.entries(filter).filter(([col]) => this.columnIndex.has(col));
+    const viewKey = this.buildViewKey(sortItems, filterEntries);
+    if (viewKey === null) return null;
+    // A copy, so the caller can transfer it without detaching the cached view.
+    return this.resolveView(viewKey, sortItems, filterEntries).slice();
+  }
+
   /** Where a node falls among the rows a sort and filter show; -1 where the filter leaves it out. */
   getRowIndex(nodeId: number, sort: SortItem[], filter: FilterModel): number {
     const sortItems = sort.filter((s) => this.columnIndex.has(s.column));
@@ -717,11 +727,23 @@ function identityIndices(n: number): Uint32Array {
   return arr;
 }
 
+/** What h5wasm reads an integer column of up to 32 bits into: every value fits a JS number. */
+function isSmallIntegerArray(
+  raw: unknown
+): raw is Int8Array | Uint8Array | Int16Array | Uint16Array | Int32Array | Uint32Array {
+  return (
+    raw instanceof Int8Array ||
+    raw instanceof Uint8Array ||
+    raw instanceof Int16Array ||
+    raw instanceof Uint16Array ||
+    raw instanceof Int32Array ||
+    raw instanceof Uint32Array
+  );
+}
+
 function ensureUint32(raw: unknown): Uint32Array {
   if (raw instanceof Uint32Array) return raw;
-  if (raw instanceof Int32Array || raw instanceof Uint16Array || raw instanceof Int16Array) {
-    return Uint32Array.from(raw as ArrayLike<number>);
-  }
+  if (isSmallIntegerArray(raw)) return Uint32Array.from(raw);
   if (raw instanceof BigUint64Array || raw instanceof BigInt64Array) {
     const out = new Uint32Array(raw.length);
     for (let i = 0; i < raw.length; i++) out[i] = Number(raw[i]);
@@ -735,14 +757,7 @@ function ensureUint32(raw: unknown): Uint32Array {
 function ensureNumericArray(raw: unknown): NumericColumn {
   if (raw instanceof Float64Array) return raw;
   if (raw instanceof Float32Array) return raw;
-  if (
-    raw instanceof Int32Array ||
-    raw instanceof Uint32Array ||
-    raw instanceof Int16Array ||
-    raw instanceof Uint16Array
-  ) {
-    return Float64Array.from(raw as ArrayLike<number>);
-  }
+  if (isSmallIntegerArray(raw)) return Float64Array.from(raw);
   if (raw instanceof BigInt64Array || raw instanceof BigUint64Array) {
     const out = new Float64Array(raw.length);
     for (let i = 0; i < raw.length; i++) {
@@ -993,14 +1008,7 @@ function decodeSliceForPage(handle: ColumnHandle, sliced: unknown): (string | nu
       // Exact text, which a number past 2^53 would round.
       return Array.from(sliced, (v) => v.toString());
     }
-    if (
-      sliced instanceof Int32Array ||
-      sliced instanceof Uint32Array ||
-      sliced instanceof Int16Array ||
-      sliced instanceof Uint16Array
-    ) {
-      return Array.from(sliced);
-    }
+    if (isSmallIntegerArray(sliced)) return Array.from(sliced);
     if (Array.isArray(sliced)) return sliced.map((v) => Number(v));
     return [];
   }

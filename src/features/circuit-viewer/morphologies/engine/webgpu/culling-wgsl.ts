@@ -4,7 +4,7 @@
  * `segmentEnds` places a segment as its draw does.
  */
 
-import { QUAD_REACH } from '../impostors';
+import { CELL_MASK, QUAD_REACH } from '../impostors';
 
 /** A segment is taken to be nearer than it is by this many µm plus this share of its distance, to cover rounding. */
 export const NEAR_UM = 0.02;
@@ -27,7 +27,8 @@ struct View {
   vp: vec4f,
   // xyz: what the arena's positions are moved by; w: the near plane's distance.
   shift: vec4f,
-  // x: the far plane's distance; y: the least radius of a tube, px; z: the least radius of any, px; w: a soma's, µm.
+  // x: the far plane's distance; y: the least radius of a tube, px; z: the least radius of any, px; w: a soma's, µm, or
+  // for the segments which test this is (\`CullTest\`): 0 of every cell, 1 of those on show, 2 of every cell for the kept list.
   more: vec4f,
   // x: the pyramid's levels; y: the blocks; z: the arena's capacity; w: the somas, or for the segments the type not
   // drawn, as segmentEnds takes it.
@@ -181,6 +182,12 @@ export const ARGS = /* wgsl */ `
  * one. A segment as wide on screen as a tube (\`GpuUniforms.tubeFrom\`) goes in the tubes' part of the lists. Each list
  * is as long as the arena, so no frame can overfill it. A block with a kept segment is marked, a bit a block
  * (\`marked\`), so that the boxes seen can be read back.
+ *
+ * While the cell table hides cells, two tests take the place of the one. One, over the depth of the cells on show,
+ * fills the seen list from those cells alone and marks the blocks of what it sees: a hidden cell draws nothing, so it
+ * hides nothing, and with nothing to hide it, it would count as seen. The other, over the depth of every cell, fills
+ * only the kept list and marks nothing. So the kept list stays that of the whole circuit in this view, to hide the
+ * cells that come back, which would otherwise all be drawn in one frame, more than a GPU may take.
  */
 export const SEGMENTS = /* wgsl */ `
 ${VIEW}${BLOCK}${FARTHEST}${DRAW_ARGS}
@@ -195,6 +202,7 @@ struct Draws { keptFlat: Args, keptTubes: Args, seenFlat: Args, seenTubes: Args 
 @group(0) @binding(8) var<storage, read_write> lists: array<u32>;
 @group(0) @binding(9) var<storage, read_write> draws: Draws;
 @group(0) @binding(10) var<storage, read_write> marked: array<atomic<u32>>;
+@group(0) @binding(11) var cells: texture_2d<f32>;
 
 // 0 out of view, 1 hidden as a whole, 2 hidden texel by texel, 3 seen, 4 hidden by little enough to be kept. a, b:
 // its ends on screen, px; r: how far it reaches from the line between them, px; near: its nearest, µm from the eye.
@@ -272,9 +280,13 @@ fn seen(a: vec2f, b: vec2f, r: f32, near: f32) -> u32 {
 fn listed(i: u32) -> bool {
   let A = ends[2u * i];
   let B = ends[2u * i + 1u];
-  let e = segmentEnds(words[i], view.counts.w, 1.0, view.more.z, A, B, A, B, 0.0, view.shift.xyz, view.view,
+  let onShow = view.more.w == 1.0;
+  let keptOnly = view.more.w == 2.0;
+  var shown = 1.0;
+  if (onShow) { shown = textureLoad(cells, cellXY(words[i] & ${CELL_MASK}u), 0).a; }
+  let e = segmentEnds(words[i], view.counts.w, shown, view.more.z, A, B, A, B, 0.0, view.shift.xyz, view.view,
                       view.projection, view.vp, view.shift.w);
-  // A hole, a hidden segment, or one behind the eye: it is drawn neither to be seen nor to hide others.
+  // A hole, a segment of a hidden type or cell, or one behind the eye: it is drawn neither to be seen nor to hide others.
   if (e[3].w < 0.5) { return false; }
   let radii = e[2].xy;
   let near = nearer(min(-e[0].z - e[0].w, -e[1].z - e[1].w));
@@ -282,12 +294,15 @@ fn listed(i: u32) -> bool {
   if (v < 3u) { return false; }
   let tube = max(radii.x, radii.y) >= view.more.y;
   let cap = view.counts.z;
-  if (tube) {
-    lists[cap - 1u - atomicAdd(&draws.keptTubes.instances, 1u)] = i;
-  } else {
-    lists[atomicAdd(&draws.keptFlat.instances, 1u)] = i;
+  if (!onShow) {
+    if (tube) {
+      lists[cap - 1u - atomicAdd(&draws.keptTubes.instances, 1u)] = i;
+    } else {
+      lists[atomicAdd(&draws.keptFlat.instances, 1u)] = i;
+    }
   }
-  if (v != 3u) { return true; }
+  if (keptOnly) { return false; }
+  if (v != 3u) { return !onShow; }
   if (tube) {
     lists[2u * cap - 1u - atomicAdd(&draws.seenTubes.instances, 1u)] = i;
   } else {
