@@ -1,4 +1,5 @@
 import { isNil } from 'es-toolkit/compat';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
@@ -24,13 +25,22 @@ import {
 import SynaptomeConfig from '@/features/entities/single-neuron-synaptome/detail-view/configuration';
 import SynapseGroupList from '@/features/entities/single-neuron-synaptome/detail-view/elements/list-synapses-configuration';
 import { ScanConfiguration } from '@/features/scan-config';
-import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
+import {
+  ScanConfigCampaignOriginActionDict,
+  ScanConfigConfigSearchParam,
+} from '@/features/scan-config/helpers';
 import { ExtractScanConfigTabs, ScanConfigActivity } from '@/features/scan-config/types';
 import { extractEFeaturesWorkflow } from '@/features/scan-config/workflow/definitions/extract-efeatures';
+import { Button } from '@/ui/molecules/button';
 import { detailViewVariantFromGroup } from '@/ui/segments/detail-view/variant-styles';
 import { WorkflowConfigFile } from '@/ui/segments/detail-view/workflow-config-file';
 import { findScanConfigRegistryByTargetType } from '@/ui/segments/workflows/config/scan-config-registry';
+import {
+  buildWorkflowActivityConfigurationHref,
+  buildWorkflowActivityResultsHref,
+} from '@/ui/segments/workflows/elements/workflow-activity-actions';
 
+import type { ReactNode } from 'react';
 import type {
   IMEModel,
   ISingleNeuronSimulation,
@@ -166,14 +176,7 @@ export default async function Configuration({
     const { data: workflow } = await tryCatch(
       resolveGeneratingWorkflow(entity.id, context.virtualLabId, context.projectId)
     );
-    const asset = workflow
-      ? getAsset({
-          assets: workflow.coordinateConfig.assets,
-          label: AssetLabel.task_config,
-        }).getOneOrNull()
-      : null;
-
-    if (!workflow || !asset) {
+    if (!workflow) {
       return (
         <div className="flex h-full w-full items-center justify-center">
           No configuration found for this {entityType.title.toLowerCase()}.
@@ -181,8 +184,36 @@ export default async function Configuration({
       );
     }
 
+    const linkOptions = {
+      activity: workflow.workflowActivity,
+      listEntityType: workflow.workflow.targetType,
+      workspace: context,
+      row: workflow.campaign,
+    };
+    const configHref = buildWorkflowActivityConfigurationHref(linkOptions);
+    const outputHref = buildWorkflowActivityResultsHref({
+      ...linkOptions,
+      query: { [ScanConfigConfigSearchParam]: workflow.coordinateConfig.id },
+    });
+    const asset = getAsset({
+      assets: workflow.coordinateConfig.assets,
+      label: AssetLabel.task_config,
+    }).getOneOrNull();
+
     return (
-      <WorkflowConfigFile config={workflow.coordinateConfig} asset={asset} context={context} />
+      <div className="flex w-full flex-col gap-4">
+        <div className="flex justify-end gap-2">
+          {configHref && <WorkflowLink href={configHref}>Workflow config</WorkflowLink>}
+          {outputHref && <WorkflowLink href={outputHref}>Workflow output</WorkflowLink>}
+        </div>
+        {asset ? (
+          <WorkflowConfigFile config={workflow.coordinateConfig} asset={asset} context={context} />
+        ) : (
+          <div className="flex items-center justify-center py-20">
+            The configuration file of this {entityType.title.toLowerCase()} is missing.
+          </div>
+        )}
+      </div>
     );
   }
 
@@ -255,4 +286,12 @@ export default async function Configuration({
   }
 
   notFound();
+}
+
+function WorkflowLink({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <Button asChild variant="outline" size="sm" rounded>
+      <Link href={href}>{children}</Link>
+    </Button>
+  );
 }

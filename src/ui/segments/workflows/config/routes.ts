@@ -398,8 +398,6 @@ type TDataViewLaunchAction = {
  * The workflows an entity detail page can start with the entity as an input, one action each
  * (Simulate first). A workflow that produced the entity is not an input to it, so workflows
  * without input types (e-model optimization) never match.
- *
- * Circuits ignore feature flags; every other type needs the activity's and workflow's flags.
  */
 export function listLaunchActionsFromDataViewEntity({
   workspace,
@@ -432,7 +430,7 @@ export function listLaunchActionsFromDataViewEntity({
   return activities.flatMap((activity) => {
     const isSimulate = activity.value === WorkflowActivityDictValue.simulate;
     if (activity.disabled || (isSimulate && !isSimulatable)) return [];
-    if (!isCircuit && !featuresSatisfied(activity.requiredFeatures, flags)) return [];
+    if (!featuresSatisfied(activity.requiredFeatures, flags)) return [];
 
     const type = isSimulate
       ? resolveSimulateSourceTypeFromDataView(extendedType, entity as { scale?: ICircuit['scale'] })
@@ -442,7 +440,7 @@ export function listLaunchActionsFromDataViewEntity({
       .filter(
         (workflow) =>
           !workflow.disabled &&
-          (isCircuit || featuresSatisfied(workflow.requiredFeatures, flags)) &&
+          featuresSatisfied(workflow.requiredFeatures, flags) &&
           (workflow.configurationInputs?.some((input) => input.type === type) ||
             (workflow.sourceType === type && workflow.sourceType !== workflow.targetType)) &&
           (workflow.acceptsInput?.(entity) ?? true)

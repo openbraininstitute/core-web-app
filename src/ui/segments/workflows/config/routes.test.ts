@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { emodelValidationFlag } from '@/features/feature-flags/flags';
+import {
+  emodelValidationFlag,
+  extracellularRecordingArrayBuildFlag,
+  extractionActivityFlag,
+} from '@/features/feature-flags/flags';
 import {
   readWorkflowSessionSelection,
   WorkflowSessionSelectionMode,
@@ -137,12 +141,11 @@ describe('listLaunchActionsFromDataViewEntity', () => {
     expect(labels(ExtendedEntitiesTypeDict.SynthesizedCellMorphology)).toEqual([]);
   });
 
-  const all = [
-    'Simulate',
-    'Create extracellular recording array',
-    'Parameterize synapse physiology',
-    'Extract',
-  ];
+  const flagsOn = {
+    [extractionActivityFlag.key]: true,
+    [extracellularRecordingArrayBuildFlag.key]: true,
+  } as never;
+  const all = ['Simulate', 'Recording array', 'Synapse physiology', 'Extract'];
   it.each([
     [ExtendedEntitiesTypeDict.Circuit, CircuitScaleDictionary.Microcircuit, all.toSpliced(2, 1)],
     [
@@ -158,20 +161,38 @@ describe('listLaunchActionsFromDataViewEntity', () => {
       ['Simulate', 'Extract'],
     ],
     [ExtendedEntitiesTypeDict.SingleNeuronCircuit, CircuitScaleDictionary.Single, all],
-  ])('lists the circuit workflows for %s (%s) with every feature flag off', (type, scale, expected) => {
+  ])('lists the circuit workflows for %s (%s) with their flags on', (type, scale, expected) => {
     expect(
-      labels(type, { scale, number_neurons: 1000, has_electrical_cell_models: true }, {} as never)
+      labels(type, { scale, number_neurons: 1000, has_electrical_cell_models: true }, flagsOn)
     ).toEqual(expected);
+  });
+
+  it('hides flagged circuit workflows while their flags are off', () => {
+    expect(
+      labels(
+        ExtendedEntitiesTypeDict.SmallMicrocircuit,
+        {
+          scale: CircuitScaleDictionary.SmallMicrocircuit,
+          number_neurons: 1000,
+          has_electrical_cell_models: true,
+        },
+        {} as never
+      )
+    ).toEqual(['Simulate', 'Synapse physiology']);
   });
 
   it('omits the recording array for circuits over its neuron limit', () => {
     expect(
-      labels(ExtendedEntitiesTypeDict.Microcircuit, {
-        scale: CircuitScaleDictionary.Microcircuit,
-        number_neurons: 500_000,
-        has_electrical_cell_models: true,
-      })
-    ).not.toContain('Create extracellular recording array');
+      labels(
+        ExtendedEntitiesTypeDict.Microcircuit,
+        {
+          scale: CircuitScaleDictionary.Microcircuit,
+          number_neurons: 500_000,
+          has_electrical_cell_models: true,
+        },
+        flagsOn
+      )
+    ).not.toContain('Recording array');
   });
 
   it('picks the simulate workflow of a base circuit by scale', () => {

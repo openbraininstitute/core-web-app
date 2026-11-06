@@ -322,7 +322,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     sourceType: ExtendedEntitiesTypeDict.Circuit,
     targetType: ExtendedEntitiesTypeDict.ExtracellularRecordingArrayCampaign,
     label: 'Extracellular recording array',
-    verb: 'Create extracellular recording array',
+    verb: 'Recording array',
     breadcrumb: {
       root: 'Extracellular recording array build',
       steps: {
@@ -348,7 +348,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     sourceType: ExtendedEntitiesTypeDict.Circuit,
     targetType: ExtendedEntitiesTypeDict.CircuitSynapticPhysiologyCampaign,
     label: 'Circuit synaptic physiology',
-    verb: 'Parameterize synapse physiology',
+    verb: 'Synapse physiology',
     breadcrumb: {
       root: 'Circuit synaptic physiology build',
       steps: {
