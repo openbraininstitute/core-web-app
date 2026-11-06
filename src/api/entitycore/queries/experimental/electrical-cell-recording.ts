@@ -1,5 +1,6 @@
 import z from 'zod';
 
+import { toExpandQueryParam } from '@/api/entitycore/types/shared/expand';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
 
@@ -7,6 +8,7 @@ import type {
   ElectricalCellRecordingFilter,
   IElectricalCellRecording,
 } from '@/api/entitycore/types/entities/electrical-cell-recording';
+import type { EntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -22,14 +24,18 @@ export async function getElectricalCellRecordings({
   withFacets,
   filters,
   context,
+  expand,
 }: {
   withFacets?: boolean;
   filters?: ElectricalCellRecordingFilter;
   context?: WorkspaceContext | null;
+  /** entitycore `expand` values, sent as repeated `expand=` params. */
+  expand?: ReadonlyArray<EntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IElectricalCellRecording>>(baseUri, {
     queryParams: compactRecord({
+      expand: toExpandQueryParam(expand),
       ...filters,
       with_facets: withFacets,
     }),
@@ -51,16 +57,16 @@ export async function getElectricalCellRecordings({
 export async function getElectricalCellRecording({
   id,
   context,
+  expand,
 }: {
   id: string;
   context?: WorkspaceContext | null;
+  /** entitycore `expand` values, sent as repeated `expand=` params. */
+  expand?: ReadonlyArray<EntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<IElectricalCellRecording>(`${baseUri}/${id}`, {
-    // TODO: add expand parameter if/when supported by the API
-    // queryParams: {
-    //   expand,
-    // },
+    queryParams: { expand: toExpandQueryParam(expand) },
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',

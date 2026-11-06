@@ -1,13 +1,14 @@
 import z from 'zod';
 
+import { toExpandQueryParam } from '@/api/entitycore/types/shared/expand';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 
 import type {
   CellMorphologyFilter,
-  ExpandCellMorphologyParm,
   ICellMorphology,
   ICellMorphologyExpanded,
 } from '@/api/entitycore/types/entities/cell-morphology';
+import type { TMeasurableEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -23,14 +24,18 @@ export async function getCellMorphologies({
   withFacets,
   filters,
   context,
+  expand,
 }: {
   withFacets?: boolean;
   filters?: CellMorphologyFilter;
   context?: WorkspaceContext | null;
+  /** entitycore `expand` values, sent as repeated `expand=` params. */
+  expand?: ReadonlyArray<TMeasurableEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<ICellMorphology | ICellMorphologyExpanded>>(baseUri, {
     queryParams: {
+      expand: toExpandQueryParam(expand),
       ...filters,
       with_facets: withFacets,
     },
@@ -47,7 +52,7 @@ export async function getCellMorphologies({
  *
  * @param {Object} params - The parameters object
  * @param {string} params.id - The unique identifier of the cell morphology to retrieve
- * @param {ExpandCellMorphologyParm} params.expand - Parameter to specify if the morphology should be expanded
+ * @param params.expand - entitycore expand values, sent as repeated `expand=` params
  * @returns {Promise<ICellMorphology | ICellMorphologyExpanded>} A promise that resolves to the requested cell morphology
  */
 export async function getCellMorphology({
@@ -56,13 +61,13 @@ export async function getCellMorphology({
   context,
 }: {
   id: string;
-  expand?: ExpandCellMorphologyParm;
+  expand?: ReadonlyArray<TMeasurableEntityExpandParam>;
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
   return await api.get<ICellMorphology | ICellMorphologyExpanded>(`${baseUri}/${id}`, {
     queryParams: {
-      expand,
+      expand: toExpandQueryParam(expand),
     },
     headers: {
       accept: 'application/json',

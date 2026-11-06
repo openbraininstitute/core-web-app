@@ -3,6 +3,7 @@ import some from 'es-toolkit/compat/some';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
+import { toExpandQueryParam } from '@/api/entitycore/types/shared/expand';
 import { entityCoreApi, getAssetElement, getEntityCoreContext } from '@/api/entitycore/utils';
 import { tryCatch } from '@/api/utils';
 import { SingleNeuronSimulation } from '@/entity-configuration/domain/simulation';
@@ -13,6 +14,7 @@ import type {
   ISingleNeuronSimulationFilter,
   TCreateSingleNeuronSimulation,
 } from '@/api/entitycore/types/entities/single-neuron-simulation';
+import type { EntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 import type { SimulationPayload } from '@/types/small-scale-simulator/single-neuron';
@@ -27,15 +29,19 @@ const baseUri = '/single-neuron-simulation';
 export async function getSingleNeuronSimulation({
   id,
   context,
+  expand,
 }: {
   id: string;
   context?: WorkspaceContext | null;
   options?: {
     next?: NextFetchRequestConfig;
   };
+  /** entitycore `expand` values, sent as repeated `expand=` params. */
+  expand?: ReadonlyArray<EntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<ISingleNeuronSimulation>(`${baseUri}/${id}`, {
+    queryParams: { expand: toExpandQueryParam(expand) },
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',
@@ -61,14 +67,18 @@ export async function getSingleNeuronSimulations({
   withFacets,
   filters,
   context,
+  expand,
 }: {
   withFacets?: boolean;
   filters?: Partial<ISingleNeuronSimulationFilter>;
   context?: WorkspaceContext | null;
+  /** entitycore `expand` values, sent as repeated `expand=` params. */
+  expand?: ReadonlyArray<EntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<ISingleNeuronSimulation>>(baseUri, {
     queryParams: compactRecord({
+      expand: toExpandQueryParam(expand),
       ...filters,
       with_facets: withFacets,
     }),

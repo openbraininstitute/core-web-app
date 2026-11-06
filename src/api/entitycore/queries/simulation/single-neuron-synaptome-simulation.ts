@@ -2,6 +2,7 @@ import { some, startsWith } from 'es-toolkit/compat';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
+import { toExpandQueryParam } from '@/api/entitycore/types/shared/expand';
 import { entityCoreApi, getAssetElement, getEntityCoreContext } from '@/api/entitycore/utils';
 import { tryCatch } from '@/api/utils';
 import { SingleNeuronSynaptomeSimulation } from '@/entity-configuration/domain/simulation';
@@ -11,6 +12,7 @@ import type {
   ISingleNeuronSynaptomeSimulationFilter,
   TCreateSingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types/entities/single-neuron-synaptome-simulation';
+import type { EntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 import type { SimulationPayload } from '@/types/small-scale-simulator/single-neuron';
@@ -27,12 +29,16 @@ const baseUri = '/single-neuron-synaptome-simulation';
 export async function getSingleNeuronSynaptomeSimulation({
   id,
   context,
+  expand,
 }: {
   id: string;
   context?: WorkspaceContext | null;
+  /** entitycore `expand` values, sent as repeated `expand=` params. */
+  expand?: ReadonlyArray<EntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<ISingleNeuronSynaptomeSimulation>(`${baseUri}/${id}`, {
+    queryParams: { expand: toExpandQueryParam(expand) },
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',
@@ -57,14 +63,18 @@ export async function getSingleNeuronSynaptomeSimulations({
   withFacets,
   filters,
   context,
+  expand,
 }: {
   withFacets?: boolean;
   filters?: Partial<ISingleNeuronSynaptomeSimulationFilter>;
   context?: WorkspaceContext | null;
+  /** entitycore `expand` values, sent as repeated `expand=` params. */
+  expand?: ReadonlyArray<EntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<ISingleNeuronSynaptomeSimulation>>(baseUri, {
     queryParams: {
+      expand: toExpandQueryParam(expand),
       ...filters,
       with_facets: withFacets,
     },

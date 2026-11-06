@@ -1,3 +1,4 @@
+import { toExpandQueryParam } from '@/api/entitycore/types/shared/expand';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
 
@@ -6,6 +7,7 @@ import type {
   ISimulationCampaignFilter,
   TCreateCircuitSimulation,
 } from '@/api/entitycore/types/entities/simulation-campaign';
+import type { EntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -19,12 +21,16 @@ const baseUri = '/simulation-campaign';
 export async function getSimulationCampaign({
   id,
   context,
+  expand,
 }: {
   id: string;
   context?: WorkspaceContext | null;
+  /** entitycore `expand` values, sent as repeated `expand=` params. */
+  expand?: ReadonlyArray<EntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<ICircuitSimulationCampaign>(`${baseUri}/${id}`, {
+    queryParams: { expand: toExpandQueryParam(expand) },
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',
@@ -49,14 +55,18 @@ export async function getSimulationCampaigns({
   withFacets,
   filters,
   context,
+  expand,
 }: {
   withFacets?: boolean;
   filters?: Partial<ISimulationCampaignFilter>;
   context?: WorkspaceContext | null;
+  /** entitycore `expand` values, sent as repeated `expand=` params. */
+  expand?: ReadonlyArray<EntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<ICircuitSimulationCampaign>>(baseUri, {
     queryParams: compactRecord({
+      expand: toExpandQueryParam(expand),
       ...filters,
       with_facets: withFacets,
     }),

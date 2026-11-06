@@ -1,3 +1,4 @@
+import { toExpandQueryParam } from '@/api/entitycore/types/shared/expand';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 
 import type {
@@ -6,6 +7,7 @@ import type {
   IBrainAtlasRegion,
   IBrainAtlasRegionFilter,
 } from '@/api/entitycore/types/entities/brain-atlas';
+import type { EntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { WorkspaceContext } from '@/types/common';
 import type { EntityCoreResponse } from '../../types/shared/response';
 
@@ -22,13 +24,17 @@ const baseUri = '/brain-atlas';
 export async function getBrainAtlases({
   filters,
   context,
+  expand,
 }: {
   filters?: Partial<IBrainAtlasFilter>;
   context?: WorkspaceContext | null;
+  /** entitycore `expand` values, sent as repeated `expand=` params. */
+  expand?: ReadonlyArray<EntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IBrainAtlas>>(baseUri, {
     queryParams: {
+      expand: toExpandQueryParam(expand),
       ...filters,
     },
     headers: {
@@ -50,12 +56,16 @@ export async function getBrainAtlases({
 export async function getBrainAtlas({
   id,
   context,
+  expand,
 }: {
   id: string;
   context?: WorkspaceContext | null;
+  /** entitycore `expand` values, sent as repeated `expand=` params. */
+  expand?: ReadonlyArray<EntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<IBrainAtlas>(`${baseUri}/${id}`, {
+    queryParams: { expand: toExpandQueryParam(expand) },
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',
