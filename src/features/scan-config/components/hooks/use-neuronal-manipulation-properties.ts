@@ -46,6 +46,27 @@ export function selectMechanismVariablesRoot(
   return (root as MechanismVariablesRoot | undefined) ?? {};
 }
 
+/** Mechanism variables plus the endpoint's warnings (e.g. why the variables are empty). */
+export type TNeuronalManipulationProperties = {
+  variables: MechanismVariablesRoot;
+  warnings: string[];
+};
+
+/**
+ * Selects the variables and the string warnings from a neuronal-manipulation properties response.
+ *
+ * @param resp - Raw endpoint response.
+ * @returns The mechanism-variables map and the warnings (`[]` when absent or not a list).
+ */
+export function selectNeuronalManipulationProperties(
+  resp: TNeuronalManipulationPropertiesResponse
+): TNeuronalManipulationProperties {
+  const warnings = Array.isArray(resp.warnings)
+    ? resp.warnings.filter((warning): warning is string => typeof warning === 'string')
+    : [];
+  return { variables: selectMechanismVariablesRoot(resp), warnings };
+}
+
 /**
  * Loads mechanism variables for neuronal manipulation blocks.
  *
@@ -53,7 +74,7 @@ export function selectMechanismVariablesRoot(
  * (including `null` for the default target). MEModel callers omit both.
  *
  * @param params - Workspace, entity, endpoint, and optional neuron-set scope.
- * @returns React Query result with selected {@link MechanismVariablesRoot}.
+ * @returns React Query result with selected {@link TNeuronalManipulationProperties}.
  */
 export function useNeuronalManipulationProperties({
   workspace,
@@ -80,6 +101,6 @@ export function useNeuronalManipulationProperties({
     enabled: enabled && !!entityId && !!endpoint,
     refetchOnWindowFocus: false,
     staleTime: STALE_TIME_MS,
-    select: selectMechanismVariablesRoot,
+    select: selectNeuronalManipulationProperties,
   });
 }

@@ -3,12 +3,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ApiError } from '@/api/error';
 
-import type { MechanismVariablesRoot } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
+import type { TNeuronalManipulationProperties } from '@/features/scan-config/components/hooks/use-neuronal-manipulation-properties';
 import type { Config, ConfigValue } from '@/features/scan-config/types';
 
 const queryResult = vi.hoisted(() => ({
   value: {
-    data: undefined as MechanismVariablesRoot | undefined,
+    data: undefined as TNeuronalManipulationProperties | undefined,
     isLoading: false,
     isError: false,
     error: undefined as unknown,
@@ -114,7 +114,12 @@ describe('useCircuitManipulationData', () => {
   });
 
   it('shows the empty-state note when the endpoint returns no variables', () => {
-    queryResult.value = { data: {}, isLoading: false, isError: false, error: undefined };
+    queryResult.value = {
+      data: { variables: {}, warnings: [] },
+      isLoading: false,
+      isError: false,
+      error: undefined,
+    };
     render(
       <Harness config={makeConfig([1])} state={{ neuron_set: REFERENCE }} setState={vi.fn()} />
     );
@@ -124,9 +129,32 @@ describe('useCircuitManipulationData', () => {
     ).toBeInTheDocument();
   });
 
+  it('shows the endpoint warning instead of the empty-state note', () => {
+    const warning =
+      "The neuron set selects no neurons in circuit 'c1' (population 'S1'; node sets SO_BS), so there are no mechanism variables to list.";
+    queryResult.value = {
+      data: { variables: {}, warnings: [warning] },
+      isLoading: false,
+      isError: false,
+      error: undefined,
+    };
+    render(
+      <Harness config={makeConfig([1])} state={{ neuron_set: REFERENCE }} setState={vi.fn()} />
+    );
+
+    expect(screen.getByText('Nothing to tune here')).toBeInTheDocument();
+    expect(screen.getByText(warning)).toBeInTheDocument();
+    expect(
+      screen.queryByText('No ion-channel variables are available for the selected neuron set.')
+    ).not.toBeInTheDocument();
+  });
+
   it('exposes data and no reason once variables resolve', () => {
     queryResult.value = {
-      data: { NaTg: { section_lists: ['somatic'], entity_id: 'ic', variables: {} } },
+      data: {
+        variables: { NaTg: { section_lists: ['somatic'], entity_id: 'ic', variables: {} } },
+        warnings: [],
+      },
       isLoading: false,
       isError: false,
       error: undefined,
