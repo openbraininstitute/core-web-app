@@ -2,10 +2,12 @@ import { isNil } from 'es-toolkit/compat';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
 import { getTaskActivities } from '@/api/entitycore/queries/task';
 import { getAsset } from '@/api/entitycore/selectors/assets';
 import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { tryCatch } from '@/api/utils';
@@ -32,8 +34,8 @@ import {
 import { ExtractScanConfigTabs, ScanConfigActivity } from '@/features/scan-config/types';
 import { extractEFeaturesWorkflow } from '@/features/scan-config/workflow/definitions/extract-efeatures';
 import { Button } from '@/ui/molecules/button';
+import { JsonView } from '@/ui/segments/detail-view/json-view';
 import { detailViewVariantFromGroup } from '@/ui/segments/detail-view/variant-styles';
-import { WorkflowConfigFile } from '@/ui/segments/detail-view/workflow-config-file';
 import { findScanConfigRegistryByTargetType } from '@/ui/segments/workflows/config/scan-config-registry';
 import {
   buildWorkflowActivityConfigurationHref,
@@ -54,6 +56,7 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 import type { TRetrieveEntityOutput } from '@/entity-configuration/domain/requests';
 import type { AwaitedType, WorkspaceContext } from '@/types/common';
 import type { SimulationPayload } from '@/types/small-scale-simulator/single-neuron';
+import type { Json } from '@/ui/segments/detail-view/json-view';
 import type { Prettify } from '@/utils/type';
 
 /** Models whose Configuration tab shows the task config of the workflow that generated them. */
@@ -199,6 +202,18 @@ export default async function Configuration({
       assets: workflow.coordinateConfig.assets,
       label: AssetLabel.task_config,
     }).getOneOrNull();
+    // the download redirects to S3, which serves it as binary/octet-stream, so parse it here
+    const { data: config } = asset
+      ? await tryCatch(
+          downloadAsset({
+            ctx: context,
+            entityType: EntityTypeDict.TaskConfig,
+            entityId: workflow.coordinateConfig.id,
+            id: asset.id,
+            asRawResponse: true,
+          }).then((response) => response.json() as Promise<Json>)
+        )
+      : { data: null };
 
     return (
       <div className="flex w-full flex-col gap-4">
@@ -206,8 +221,8 @@ export default async function Configuration({
           {configHref && <WorkflowLink href={configHref}>Workflow config</WorkflowLink>}
           {outputHref && <WorkflowLink href={outputHref}>Workflow output</WorkflowLink>}
         </div>
-        {asset ? (
-          <WorkflowConfigFile config={workflow.coordinateConfig} asset={asset} context={context} />
+        {config ? (
+          <JsonView value={config} variant={fieldVariant} />
         ) : (
           <div className="flex items-center justify-center py-20">
             The configuration file of this {entityType.title.toLowerCase()} is missing.
