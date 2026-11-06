@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { defaultVisibleColumnSet, NodesGrid } from '@/features/circuit-nodes/components/nodes-grid';
+import { NodesGrid } from '@/features/circuit-nodes/components/nodes-grid';
 import { combinedTest, numberTest, textTest } from '@/features/circuit-nodes/row-filters';
 import { ColumnKindDict } from '@/features/circuit-nodes/types';
 
@@ -211,8 +211,17 @@ export function ElectrodesTable({
     });
   }, [contacts, statNames, stats, shares, positions, blocks]);
 
-  const [visibleColumns, setVisibleColumns] = useState(() => defaultVisibleColumnSet(columns));
-  useEffect(() => setVisibleColumns(defaultVisibleColumnSet(columns)), [columns]);
+  // The columns hidden, so that those that come in later, as positions do, are shown.
+  const [hiddenColumns, setHiddenColumns] = useState<ReadonlySet<string>>(() => new Set());
+  const visibleColumns = useMemo(
+    () => new Set(columns.map((c) => c.name).filter((name) => !hiddenColumns.has(name))),
+    [columns, hiddenColumns]
+  );
+  const showColumns = useCallback(
+    (shown: Set<string>) =>
+      setHiddenColumns(new Set(columns.map((c) => c.name).filter((name) => !shown.has(name)))),
+    [columns]
+  );
   const [filteredCount, setFilteredCount] = useState<number | null>(null);
   const query = useMemo(() => contactQuery(rows), [rows]);
   const datasource = useMemo<IDatasource>(
@@ -253,7 +262,7 @@ export function ElectrodesTable({
         filteredCount={filteredCount}
         datasource={datasource}
         visibleColumns={visibleColumns}
-        onVisibleColumnsChange={setVisibleColumns}
+        onVisibleColumnsChange={showColumns}
         pinnedColumns={pinnedColumns}
         pinnedVersion={rows}
         pickColumn

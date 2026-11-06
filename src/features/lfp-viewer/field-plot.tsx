@@ -35,6 +35,8 @@ const HOVER_WASH = 'rgba(255, 255, 255, 0.6)';
 const HOVERED_WIDTH = 2.5;
 /** A drag shorter than this is a click. */
 const DRAG_PX = 4;
+/** A click this soon after another is a double-click's second, which zooms back out. */
+const DOUBLE_CLICK_MS = 500;
 /** A trace's label needs this much height; in lanes lower, only every few are labelled. */
 const LABEL_PX = 11;
 const NO_EVENTS: readonly TimelineEvent[] = [];
@@ -289,16 +291,17 @@ export function FieldPlot({
       width: plot.width,
     };
   };
-  const rowOf = (y: number) =>
-    Math.min(
-      rowCount - 1,
-      Math.max(
-        0,
-        mode === 'traces'
-          ? Math.floor((y - plot.top + scroll) / lane)
-          : Math.floor(((y - plot.top) / plot.height) * rowCount)
-      )
-    );
+  // None below the last lane, where lanes of a fixed height leave the plot empty.
+  const rowOf = (y: number): number | null => {
+    if (mode === 'map') {
+      return Math.min(
+        rowCount - 1,
+        Math.max(0, Math.floor(((y - plot.top) / plot.height) * rowCount))
+      );
+    }
+    const r = Math.floor((y - plot.top + scroll) / lane);
+    return r >= 0 && r < rowCount ? r : null;
+  };
 
   useEffect(() => {
     const box = boxRef.current;
@@ -480,7 +483,9 @@ export function FieldPlot({
     const g = clearedCanvas(canvas, size);
     if (!g) return;
     const row = mode === 'traces' && hoveredContact !== null ? traces.indexOf(hoveredContact) : -1;
-    if (row < 0) return;
+    // Nor while its lane is scrolled out of view, which would wash over the traces and show none.
+    const y = laneY(row);
+    if (row < 0 || y + lane / 2 <= plot.top || y - lane / 2 >= plot.bottom) return;
     g.save();
     g.beginPath();
     g.rect(plot.left, clipTop, plot.width, clipHeight);
@@ -511,7 +516,13 @@ export function FieldPlot({
   ]);
 
   const hoverContact = hover?.contact ?? null;
-  useEffect(() => onContactHover?.(hoverContact), [hoverContact, onContactHover]);
+  // Taken back once it moves on, or the plot goes from under the pointer.
+  useEffect(() => {
+    if (hoverContact === null) return;
+    onContactHover?.(hoverContact);
+    return () => onContactHover?.(null);
+  }, [hoverContact, onContactHover]);
+  const lastClickRef = useRef(Number.NEGATIVE_INFINITY);
 
   // On a canvas of their own: a hover draws their bands anew, which needn't draw the traces.
   // biome-ignore lint/correctness/useExhaustiveDependencies: the plot's edges follow from size
@@ -568,17 +579,14 @@ export function FieldPlot({
             ? undefined
             : markerGroupAt(groupsRef.current, x - plot.left, y - plot.top, plot);
           setEventsHover((previous) => nextEventsHover(previous, group, e.clientX, e.clientY));
-          if (
-            x < plot.left ||
-            x > plot.right ||
-            y < plot.top ||
-            y > plot.bottom ||
-            rowCount === 0
-          ) {
+          const r =
+            x < plot.left || x > plot.right || y < plot.top || y > plot.bottom || rowCount === 0
+              ? null
+              : rowOf(y);
+          if (r === null) {
             setHover(null);
             return;
           }
-          const r = rowOf(y);
           const time = timeOf(x);
           const at = { clientX: e.clientX, clientY: e.clientY, time };
           if (mode === 'map') {
@@ -618,8 +626,14 @@ export function FieldPlot({
           const x1 = inPlot(localX(e));
           if (Math.abs(x1 - drag.x0) < DRAG_PX) {
             const y = localY(e);
-            if (rowCount === 0 || y < plot.top || y > plot.bottom) return;
-            const r = rowOf(y);
+            const r = rowCount === 0 || y < plot.top || y > plot.bottom ? null : rowOf(y);
+            if (r === null) return;
+            // The second of a double-click would take back what the first selected.
+            if (e.timeStamp - lastClickRef.current < DOUBLE_CLICK_MS) {
+              lastClickRef.current = Number.NEGATIVE_INFINITY;
+              return;
+            }
+            lastClickRef.current = e.timeStamp;
             onContactClick(mode === 'map' ? rows[r].lead : traces[r]);
             return;
           }

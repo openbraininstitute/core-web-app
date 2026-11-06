@@ -460,7 +460,12 @@ function SharedTracesPlot({
 
   const [tip, setTip] = useState<TraceHover>();
   const tipCell = tip ? (population.traces[tip.traceIndex]?.nodeId ?? null) : null;
-  useEffect(() => onCellHover?.(tipCell), [tipCell, onCellHover]);
+  // Taken back once it moves on, or the plot goes from under the pointer.
+  useEffect(() => {
+    if (tipCell === null) return;
+    onCellHover?.(tipCell);
+    return () => onCellHover?.(null);
+  }, [tipCell, onCellHover]);
   // The graph once drawn, for the timings over it; a timing's card over a line's, which gives way.
   const [graph, setGraph] = useState<HTMLElement | null>(null);
   const [timingHovered, setTimingHovered] = useState(false);
