@@ -17,7 +17,7 @@ import {
 } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
-import { contactMaterials, FRONT_DEPTH, RING_PX } from '../electrodes';
+import { BAND_PX, contactMaterials, FRONT_DEPTH, RING_PX } from '../electrodes';
 import { LEAST_OPACITY, SHADE_LEAST, SHADED_FROM, voxelMaterials } from '../voxels';
 import { col, typed, VIEW } from './cells-wgsl';
 
@@ -26,33 +26,35 @@ import type { DotUniforms, GpuUniforms } from './gpu-uniforms';
 
 /**
  * A dot's corner in clip space, as `electrodes.ts` places it; the second column holds where its ring starts, as a share
- * of the whole radius, its opacity, and where its halo starts.
+ * of the whole radius, its opacity, where its band starts, and where its halo starts.
  */
 const dotQuad = wgslFn(
   /* wgsl */ `
 fn dotQuad(contact: vec3f, look: vec4f, corner: vec2f, modelView: mat4x4f, projection: mat4x4f, vp: vec4f,
-           radius: f32, minRadius: f32, ring: f32, lift: f32, scale: f32, fade: vec4f, halo: f32,
+           radius: f32, minRadius: f32, ring: f32, band: f32, lift: f32, scale: f32, fade: vec4f, halo: f32,
            opacities: vec2f, sizes: vec2f, front: f32) -> mat4x4f {
   let c = (modelView * vec4f(contact, 1.0)).xyz;
   let um = pixelUm(c.z, projection, vp) * scale;
   let away = clamp(0.5 + ((modelView * vec4f(fade.xyz, 1.0)).z - c.z) / (2.0 * fade.w), 0.0, 1.0);
   let r = max(radius * look.a, minRadius * um) * mix(sizes.x, sizes.y, away);
-  let outer = r + (ring + halo) * um;
+  let outer = r + (ring + band + halo) * um;
   let opacity = mix(opacities.x, opacities.y, away);
   let place = projection * vec4f(c.xy + corner * outer, c.z + lift * r, 1.0);
   // Clip z runs from 0 to w here: to just past 0, keeping the order among the contacts.
   let z = place.z * mix(1.0, ${FRONT_DEPTH.toFixed(4)}, front);
-  return mat4x4f(vec4f(place.x, place.y, z, place.w), vec4f(r / outer, opacity, (r + ring * um) / outer, 0.0),
+  return mat4x4f(vec4f(place.x, place.y, z, place.w),
+                 vec4f(r / outer, opacity, (r + ring * um) / outer, (r + (ring + band) * um) / outer),
                  vec4f(0.0), vec4f(0.0));
 }`,
   [VIEW]
 );
 
 const dotColour = wgslFn(/* wgsl */ `
-fn dotColour(corner: vec2f, inner: f32, ringEnd: f32, colour: vec3f, ringColour: vec3f, haloColour: vec3f,
-             opacity: f32) -> vec4f {
+fn dotColour(corner: vec2f, inner: f32, ringEnd: f32, bandEnd: f32, colour: vec3f, ringColour: vec3f,
+             band: vec3f, haloColour: vec3f, opacity: f32) -> vec4f {
   let d = length(corner);
-  return vec4f(select(select(colour, ringColour, d > inner), haloColour, d > ringEnd), opacity);
+  let banded = select(select(colour, ringColour, d > inner), band, d > ringEnd);
+  return vec4f(select(banded, haloColour, d > bandEnd), opacity);
 }`);
 
 /**
@@ -73,6 +75,7 @@ function dotMaterial(
   }: DotOptions = {}
 ): THREE.MeshBasicNodeMaterial {
   const look = attribute('aLook', 'vec4');
+  const band = attribute('aBand', 'vec4');
   const quad = typed<'mat4'>(
     dotQuad({
       contact: attribute('aContact', 'vec3'),
@@ -84,6 +87,7 @@ function dotMaterial(
       radius: dots.radius,
       minRadius: dots.minRadius,
       ring: ringed ? RING_PX * pixelRatio : 0,
+      band: band.w.mul(ringed ? BAND_PX * pixelRatio : 0),
       lift: among ? 1 : 0,
       scale: u.dotScale,
       fade: dots.fade,
@@ -102,8 +106,10 @@ function dotMaterial(
       corner,
       inner: varying(col(quad, 1).x),
       ringEnd: varying(col(quad, 1).z),
+      bandEnd: varying(col(quad, 1).w),
       colour: varying(look.xyz),
       ringColour: u.ringColour,
+      band: varying(band.xyz),
       haloColour: u.haloColour,
       opacity: varying(col(quad, 1).y),
     })

@@ -1493,7 +1493,8 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
         point.applyMatrix4(camera.matrixWorldInverse);
         const depth = -point.z;
         if (perspective && depth <= camera.near) continue;
-        const drawn = drawnRadius(radius, lit, perspective ? span * depth : span, this.pixelRatio);
+        const um = perspective ? span * depth : span;
+        const drawn = drawnRadius(radius, lit, um, this.pixelRatio, group.band !== undefined);
         const reach = Math.max(drawn, CONTACT_REACH);
         point.applyMatrix4(camera.projectionMatrix);
         const away = Math.hypot(((point.x + 1) / 2) * width - x, ((1 - point.y) / 2) * height - y);
@@ -1846,24 +1847,28 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
             'aContact',
             new THREE.InstancedBufferAttribute(new Float32Array(3 * count), 3)
           )
+          .setAttribute('aLook', new THREE.InstancedBufferAttribute(new Float32Array(4 * count), 4))
           .setAttribute(
-            'aLook',
+            'aBand',
             new THREE.InstancedBufferAttribute(new Float32Array(4 * count), 4)
           ),
       { material, name, order }
     );
     const contacts = dots.geometry.getAttribute('aContact') as THREE.InstancedBufferAttribute;
     const looks = dots.geometry.getAttribute('aLook') as THREE.InstancedBufferAttribute;
+    const bands = dots.geometry.getAttribute('aBand') as THREE.InstancedBufferAttribute;
     const written = writeDots(
       groups,
       highlighted,
       this.centre,
       contacts.array as Float32Array,
-      looks.array as Float32Array
+      looks.array as Float32Array,
+      bands.array as Float32Array
     );
     if (written) {
       contacts.needsUpdate = true;
       looks.needsUpdate = true;
+      bands.needsUpdate = true;
     }
     if (written || changed) this.invalidate();
     return dots;

@@ -13,6 +13,7 @@ import {
   SCALE_GRADIENT,
   SCENE_LEVELS,
 } from '@/features/lfp-viewer/colour-scale';
+import { SELECTED_COLOUR } from '@/features/lfp-viewer/contact-colours';
 import {
   gridAxisNames,
   openingSliceAxis,
@@ -42,7 +43,6 @@ import type { WorkspaceContext } from '@/types/common';
 const SCENE_FEATURES: Partial<IEntityViewerFeatures> = { nodesTable: false };
 /** Colours change at most this often while playing. */
 const RECOLOR_MS = 50;
-const SELECTED_COLOR = '#000000';
 const HOVERED_COLOR = '#8c8c8c';
 /** Shorter than a replay's: at the usual fade, most cells of a busy circuit are lit at any moment, hiding the field. */
 const SPIKE_AFTERGLOW_IN_SECONDS = 0.1;
@@ -67,6 +67,21 @@ function levelsAt(field: LfpField, scale: ColourScale, bin: number, hideBelow: n
 
 function sameLevels(a: Uint8Array, b: Uint8Array): boolean {
   return a.length === b.length && a.every((level, c) => level === b[c]);
+}
+
+/** The colour of the band round each contact that has one: its trace's, as the traces draw it, or grey under the pointer. */
+function bandsOf(
+  colours: ReadonlyMap<number, string>,
+  selected: number | null,
+  hovered: number | null
+): Map<number, string> {
+  const bands = new Map(colours);
+  if (selected !== null && !bands.has(selected)) bands.set(selected, SELECTED_COLOUR);
+  if (hovered !== null) {
+    bands.delete(hovered);
+    bands.set(hovered, HOVERED_COLOR);
+  }
+  return bands;
 }
 
 type SpikeRead = { spikes: CircuitSpikes | null; problem: string | null };
@@ -189,66 +204,53 @@ export function LfpScene({
   }, [active, timeCursor, field, scale, hideBelow]);
 
   const fieldLevels = levels?.length === field.contacts ? levels : null;
-  const coloured = fieldLevels !== null;
-  // Points alone take their groups from the levels, so voxels and slices keep the same groups as they recolour.
-  const pointLevels = view === 'points' ? fieldLevels : null;
+  const bands = useMemo(
+    () => bandsOf(colours, selectedContact, hoveredContact),
+    [colours, selectedContact, hoveredContact]
+  );
   const drawn = useMemo<ICircuitOverlayGroup[] | undefined>(() => {
-    if (!positions || !coloured) return undefined;
-    const byLevel: number[][] = LEVEL_COLORS.map(() => []);
-    const selected: number[] = [];
-    const hovered: number[] = [];
-    const byColour = new Map<string, number[]>();
-    for (let c = 0; c < field.contacts; c++) {
-      const xyz = [positions[c * 3], positions[c * 3 + 1], positions[c * 3 + 2]];
-      const colour = colours.get(c);
-      if (c === selectedContact) selected.push(...xyz);
-      else if (c === hoveredContact) hovered.push(...xyz);
-      else if (colour) byColour.set(colour, [...(byColour.get(colour) ?? []), ...xyz]);
-      else if (pointLevels) byLevel[pointLevels[c]].push(...xyz);
+    if (!positions || !fieldLevels) return undefined;
+    const xyzOf = (c: number) => [positions[c * 3], positions[c * 3 + 1], positions[c * 3 + 2]];
+    const groups: ICircuitOverlayGroup[] = [];
+    // Voxels and slices show the rest.
+    if (view === 'points') {
+      const byLevel: number[][] = LEVEL_COLORS.map(() => []);
+      for (let c = 0; c < field.contacts; c++) {
+        if (!bands.has(c)) byLevel[fieldLevels[c]].push(...xyzOf(c));
+      }
+      byLevel.forEach((coordinates, level) => {
+        if (coordinates.length === 0) return;
+        groups.push({
+          name: `level ${level}`,
+          id: `lfp-level-${level}`,
+          color: LEVEL_COLORS[level],
+          coordinates: Float32Array.from(coordinates),
+          among: true,
+        });
+      });
     }
-    const groups: ICircuitOverlayGroup[] = byLevel.flatMap((coordinates, level) =>
-      coordinates.length === 0
-        ? []
-        : [
-            {
-              name: `level ${level}`,
-              id: `lfp-level-${level}`,
-              color: LEVEL_COLORS[level],
-              coordinates: Float32Array.from(coordinates),
-              among: true,
-            },
-          ]
-    );
-    // In the colour of their traces, so that a trace is found in the scene by its colour.
-    for (const [colour, coordinates] of byColour) {
+    // Filled by the field as the rest are, in a band of their trace's colour, so that a trace is found in the scene.
+    const banded = new Map<string, { level: number; band: string; coordinates: number[] }>();
+    for (const [c, band] of bands) {
+      if (c >= field.contacts) continue;
+      const level = fieldLevels[c];
+      const key = `${level} ${band}`;
+      const group = banded.get(key) ?? { level, band, coordinates: [] };
+      group.coordinates.push(...xyzOf(c));
+      banded.set(key, group);
+    }
+    for (const { level, band, coordinates } of banded.values()) {
       groups.push({
         name: 'ticked',
-        id: `lfp-ticked-${colour}`,
-        color: colour,
+        id: `lfp-band-${level}-${band}`,
+        color: LEVEL_COLORS[level],
+        band,
         coordinates: Float32Array.from(coordinates),
         halo: true,
       });
     }
-    if (hovered.length > 0) {
-      groups.push({
-        name: 'hovered',
-        id: 'lfp-hovered',
-        color: HOVERED_COLOR,
-        coordinates: Float32Array.from(hovered),
-        halo: true,
-      });
-    }
-    if (selected.length > 0) {
-      groups.push({
-        name: 'selected',
-        id: 'lfp-selected',
-        color: SELECTED_COLOR,
-        coordinates: Float32Array.from(selected),
-        halo: true,
-      });
-    }
     return groups;
-  }, [positions, field.contacts, coloured, pointLevels, selectedContact, colours, hoveredContact]);
+  }, [positions, field.contacts, fieldLevels, view, bands]);
   const placement = useMemo(
     () => (grid && view !== 'points' ? placeVoxels(grid, slice) : null),
     [grid, view, slice]

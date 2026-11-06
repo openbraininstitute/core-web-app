@@ -5,6 +5,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 
 import { CircuitMorphologyViewer } from '@/features/circuit-viewer/morphologies/engine/circuit-morphology-viewer';
 import {
+  BAND_PX,
   HALO_PX,
   HALOED_LEAST_PX,
   minRadius,
@@ -898,6 +899,24 @@ describe('the circuit morphology viewer', () => {
     const plain = [...sRGB('#1b6ef3'), 1];
     const lighter = rounded(rgb('#12a150').map((c) => c / 255 + (1 - c / 255) * 0.55));
     expect(looks).toEqual([...plain, ...plain, ...lighter, 1.55]);
+  });
+
+  it('draws a band round the contacts of a group that has one, in its colour, and none round the rest', () => {
+    const { viewer, inner } = make();
+    viewer.setData(circuit());
+    const [a, b] = arrays();
+    viewer.setElectrodes([a, { ...b, band: '#ff0000' }], null);
+
+    const bands = rounded(inner.electrodes?.geometry.getAttribute('aBand').array ?? []);
+    expect(bands).toEqual([...[0, 0, 0, 0], ...[0, 0, 0, 0], ...[1, 0, 0, 1]]);
+    expect(rounded(looksOf(inner) ?? []).slice(8)).toEqual([...sRGB('#12a150'), 1]);
+    const material = inner.materials.electrode as THREE.ShaderMaterial;
+    expect(material.uniforms.uBand.value).toBe(BAND_PX * inner.pixelRatio);
+
+    viewer.setElectrodes(arrays(), null);
+    expect(rounded(inner.electrodes?.geometry.getAttribute('aBand').array ?? [])).toEqual(
+      Array(12).fill(0)
+    );
   });
 
   it('draws a contact in grey where its colour cannot be read', () => {
