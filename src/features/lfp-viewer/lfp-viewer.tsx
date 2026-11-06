@@ -8,12 +8,14 @@ import { createPortal } from 'react-dom';
 
 import { ShutPaneBar } from '@/features/circuit-viewer/pane-resize-handle';
 import { colourScale, fieldLimit, formatUv } from '@/features/lfp-viewer/colour-scale';
+import { lineColour, pickColours } from '@/features/lfp-viewer/contact-colours';
 import { contactGrid } from '@/features/lfp-viewer/contact-grid';
 import { recordingArrayId } from '@/features/lfp-viewer/contacts';
 import { ElectrodesTable } from '@/features/lfp-viewer/electrodes-table';
 import { FieldFromControls } from '@/features/lfp-viewer/field-from';
 import { FieldPlot } from '@/features/lfp-viewer/field-plot';
 import {
+  coordinatesAlong,
   describeField,
   fieldDirection,
   fieldRows,
@@ -22,6 +24,7 @@ import {
   openingView,
   sharedShareOf,
   tracedContacts,
+  traceLabels,
   withoutShared,
 } from '@/features/lfp-viewer/field-structure';
 import { LfpScene } from '@/features/lfp-viewer/lfp-scene';
@@ -40,6 +43,7 @@ import {
   SceneSpeedSelect,
 } from '@/features/sonata-viewer/components/voltage-scene';
 import { createTimeCursor } from '@/features/sonata-viewer/time-cursor';
+import { togglePickIn } from '@/features/sonata-viewer/trace-picks';
 import { CollapsingControls } from '@/features/spike-viewer/components/collapsing-controls';
 import { PlotHelp } from '@/features/spike-viewer/components/raster-plot-controls';
 import { useSimulation } from '@/features/spike-viewer/simulation-context';
@@ -71,6 +75,7 @@ import type {
   LfpSummary,
 } from '@/features/lfp-viewer/use-lfp-summary';
 import type { SimulationReport } from '@/features/sonata-viewer/simulation-reports-context';
+import type { Pick } from '@/features/sonata-viewer/trace-picks';
 import type { WorkspaceContext } from '@/types/common';
 
 /** "Hide below" in 3D, as shares of the scale's limit. */
@@ -221,7 +226,11 @@ function LfpReportView({
   );
   const [gain, setGain] = useState(1);
   const [timeWindow, setTimeWindow] = useState<[number, number] | null>(null);
-  const [ticked, setTicked] = useState<number[]>([]);
+  // Each with a colour of its own, kept while others are ticked and unticked, as a voltage report's cells.
+  const [picks, setPicks] = useState<Pick[]>([]);
+  const ticked = useMemo(() => picks.map((p) => p.nodeId), [picks]);
+  const colours = useMemo(() => pickColours(picks), [picks]);
+  const [hoveredContact, setHoveredContact] = useState<number | null>(null);
   // At first the contact the field swings most at.
   const [selectedContact, setSelectedContact] = useState<number | null>(() =>
     ptp < 0
@@ -232,6 +241,15 @@ function LfpReportView({
         ) ?? null)
   );
   const traces = useMemo(() => tracedContacts(rows, ticked), [rows, ticked]);
+  const along = useMemo(
+    () => (positions && direction ? coordinatesAlong(positions, direction.axis) : null),
+    [positions, direction]
+  );
+  const labels = useMemo(() => traceLabels(traces, along), [traces, along]);
+  const colourOfLine = useMemo(
+    () => lineColour(colours, selectedContact),
+    [colours, selectedContact]
+  );
   // Read only while drawn, and once positions are in, as they can change which contacts are traced.
   // A contact's row at full resolution holds nothing of the mean to take off.
   const traceRows = useContactRows(
@@ -440,12 +458,15 @@ function LfpReportView({
         scale={scale}
         rows={rows}
         traces={traces}
+        traceLabels={labels}
+        colours={colours}
         traceField={traceRows.field}
         gain={gain}
         window={shownWindow}
         onWindowChange={setTimeWindow}
         selectedContact={selectedContact}
         onContactClick={setSelectedContact}
+        onContactHover={setHoveredContact}
         onSeek={moveTo}
         timeCursor={timeCursor}
         events={timeline}
@@ -463,14 +484,9 @@ function LfpReportView({
       positions={positions}
       blocks={blocks}
       ticked={ticked}
-      onTick={(contact) =>
-        setTicked((shown) =>
-          shown.includes(contact)
-            ? shown.filter((c) => c !== contact)
-            : [...shown, contact].sort((a, b) => a - b)
-        )
-      }
-      onReset={() => setTicked([])}
+      onTick={(contact) => setPicks((shown) => togglePickIn(shown, contact))}
+      onReset={() => setPicks([])}
+      onContactHover={setHoveredContact}
       selectedContact={selectedContact}
       onContactClick={setSelectedContact}
     />
@@ -518,6 +534,8 @@ function LfpReportView({
                   grid={grid}
                   hideBelow={hideBelowShare * scale.limit}
                   selectedContact={selectedContact}
+                  colours={colours}
+                  hoveredContact={hoveredContact}
                   timeCursor={timeCursor}
                   speed={speed}
                   spikeFiles={spikeFiles}
@@ -542,6 +560,7 @@ function LfpReportView({
                   direction={direction}
                   selectedContact={selectedContact}
                   ticked={ticked}
+                  lineColour={colourOfLine}
                   spikeFiles={spikeFiles}
                   timeline={timeline}
                   timeCursor={timeCursor}

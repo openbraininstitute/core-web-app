@@ -265,6 +265,12 @@ export function fieldRows(
   return buildRows(mode.length, order === 'similar' ? mode : null, 'place', swing);
 }
 
+/** What each trace is called: where it lies along the field, unless two traced lie alike. */
+export function traceLabels(traces: readonly number[], along: Float32Array | null): string[] {
+  const microns = along && traces.map((c) => signedMicrons(along[c]));
+  return microns && new Set(microns).size === microns.length ? microns : traces.map((c) => `e${c}`);
+}
+
 // In the rows' order, so that both views read from top to bottom alike.
 export function tracedContacts(rows: readonly FieldRow[], ticked: readonly number[]): number[] {
   const ordered = rows.flatMap((row) => row.contacts);

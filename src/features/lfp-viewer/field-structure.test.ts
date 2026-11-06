@@ -9,6 +9,7 @@ import {
   openingOrder,
   openingView,
   tracedContacts,
+  traceLabels,
   withoutShared,
 } from './field-structure';
 import { fieldValue } from './summary';
@@ -296,6 +297,17 @@ describe('tracedContacts', () => {
     expect(traced).toHaveLength(32);
     expect(traced[0]).toBe(0);
     expect(traced[31]).toBe(99);
+  });
+});
+
+describe('traceLabels', () => {
+  it('names each trace by where it lies along the field', () => {
+    expect(traceLabels([2, 0], Float32Array.of(-40, 0, 40.4))).toEqual(['+40 µm', '−40 µm']);
+  });
+
+  it('names them by contact where two lie alike, or the field has no line', () => {
+    expect(traceLabels([0, 1], Float32Array.of(10, 10))).toEqual(['e0', 'e1']);
+    expect(traceLabels([3], null)).toEqual(['e3']);
   });
 });
 

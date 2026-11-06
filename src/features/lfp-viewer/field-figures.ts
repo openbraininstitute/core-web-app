@@ -1,4 +1,5 @@
 import { DIVERGING_COLOURS } from '@/features/lfp-viewer/colour-scale';
+import { byPlace } from '@/features/lfp-viewer/contact-colours';
 import { CONDUCTIVITY } from '@/features/lfp-viewer/field-analysis';
 import { PICK_COLORS } from '@/features/sonata-viewer/constants';
 import {
@@ -11,6 +12,7 @@ import {
 
 import type { Data } from 'plotly.js-dist-min';
 import type { ColourStops } from '@/features/lfp-viewer/colour-scale';
+import type { LineColour } from '@/features/lfp-viewer/contact-colours';
 import type {
   Coherence,
   CurrentSourceDensity,
@@ -32,10 +34,10 @@ const POWER_COLOURS: ColourStops = [
 /** The range of power a spectrogram shows below its strongest. */
 const SPECTROGRAM_RANGE_DB = 50;
 const MATRIX_TICKS = 12;
-/** A contact's line, in its place among the contacts picked. */
+/** A contact's line, in its colour. */
 export function contactTrace(
   contact: number,
-  place: number,
+  colour: string,
   x: number[],
   y: ArrayLike<number>,
   hovertemplate: string,
@@ -47,7 +49,7 @@ export function contactTrace(
     name: `e${contact}`,
     x,
     y,
-    line: { color: PICK_COLORS[place % PICK_COLORS.length], width },
+    line: { color: colour, width },
     hovertemplate,
   };
 }
@@ -175,17 +177,19 @@ export function coherenceFigure({
   result,
   contacts,
   reference,
+  colourOf = byPlace,
 }: {
   result: Coherence;
   contacts: readonly number[];
   reference: number;
+  colourOf?: LineColour;
 }): Figure {
   const x = Array.from(result.frequencies);
   return {
     data: contacts.map((contact, i) =>
       contactTrace(
         contact,
-        i,
+        colourOf(contact, i),
         x,
         Array.from(result.values[i]),
         `%{x:.1f} Hz · %{y:.3f}<extra>e${contact} with e${reference}</extra>`
@@ -290,12 +294,14 @@ export function csdFigure({
 export function triggeredFigure({
   result,
   contacts,
+  colourOf = byPlace,
 }: {
   result: TriggeredAverage;
   contacts: readonly number[];
+  colourOf?: LineColour;
 }): Figure {
   const x = Array.from(result.lags);
-  const firstColour = PICK_COLORS[0];
+  const firstColour = colourOf(contacts[0], 0);
   return {
     data: [
       {
@@ -315,7 +321,7 @@ export function triggeredFigure({
       ...contacts.map((contact, i) =>
         contactTrace(
           contact,
-          i,
+          colourOf(contact, i),
           x,
           Array.from(result.means[i]),
           `%{x:.1f} ms · %{y:.3g} µV<extra>e${contact}</extra>`,

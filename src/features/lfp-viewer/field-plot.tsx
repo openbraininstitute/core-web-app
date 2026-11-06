@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { COLOUR_TABLE } from '@/features/lfp-viewer/colour-scale';
+import { SELECTED_COLOUR } from '@/features/lfp-viewer/contact-colours';
 import { binAt, fieldValue } from '@/features/lfp-viewer/summary';
 import { TIME_CURSOR_COLOR } from '@/features/sonata-viewer/time-cursor';
 import { nextEventsHover, TimelineCard } from '@/features/spike-viewer/components/timeline-card';
@@ -28,7 +29,7 @@ const MARGIN = { left: 52, right: 10, top: 6, bottom: 22 };
 const INK = '#002766';
 const AXIS = '#bfbfbf';
 const LABEL = '#8c8c8c';
-const SELECTED = '#f5222d';
+const SELECTED = SELECTED_COLOUR;
 /** A drag shorter than this is a click. */
 const DRAG_PX = 4;
 const NO_EVENTS: readonly TimelineEvent[] = [];
@@ -41,6 +42,10 @@ type Props = {
   rows: readonly FieldRow[];
   /** The contacts drawn as traces, top to bottom. */
   traces: readonly number[];
+  /** What each trace is called, in the order of `traces`. */
+  traceLabels: readonly string[];
+  /** The ticked contacts' colours, which their traces are drawn in. */
+  colours: ReadonlyMap<number, string>;
   /** The traced contacts at full resolution, a row each in the order of `traces`, once read. */
   traceField: LfpField | null;
   /** How many times the shared gain the traces are drawn at. */
@@ -49,6 +54,8 @@ type Props = {
   onWindowChange: (window: [number, number] | null) => void;
   selectedContact: number | null;
   onContactClick: (contact: number) => void;
+  /** The contact under the pointer: a trace's, or a map row's lead; null once it leaves. */
+  onContactHover?: (contact: number | null) => void;
   onSeek: (timeInMs: number) => void;
   timeCursor: TimeCursor;
   /** When the simulation's stimuli, recordings and synaptic changes happen. */
@@ -114,12 +121,15 @@ export function FieldPlot({
   scale,
   rows,
   traces,
+  traceLabels,
+  colours,
   traceField,
   gain,
   window: [from, to],
   onWindowChange,
   selectedContact,
   onContactClick,
+  onContactHover,
   onSeek,
   timeCursor,
   events,
@@ -247,9 +257,11 @@ export function FieldPlot({
       const binsPerPx = (last - first) / plotWidth;
       g.textAlign = 'right';
       g.textBaseline = 'middle';
+      const inkOf = (contact: number, otherwise: string) =>
+        colours.get(contact) ?? (contact === selectedContact ? SELECTED : otherwise);
       traces.forEach((contact, row) => {
-        g.fillStyle = contact === selectedContact ? SELECTED : LABEL;
-        g.fillText(`e${contact}`, plot.left - 6, plot.top + (row + 0.5) * rowHeight);
+        g.fillStyle = inkOf(contact, LABEL);
+        g.fillText(traceLabels[row], plot.left - 6, plot.top + (row + 0.5) * rowHeight);
       });
       // A window can fall between two bin centres: the bins either side carry the line across it.
       const lineFrom = Math.max(0, first - 1);
@@ -258,11 +270,16 @@ export function FieldPlot({
       g.beginPath();
       g.rect(plot.left, 0, plotWidth, size.height);
       g.clip();
-      traces.forEach((contact, row) => {
+      // The ticked last, so that they lie over the others where gain makes them meet.
+      const drawOrder = traces
+        .map((_, row) => row)
+        .sort((a, b) => Number(colours.has(traces[a])) - Number(colours.has(traces[b])));
+      for (const row of drawOrder) {
+        const contact = traces[row];
         const base = plot.top + (row + 0.5) * rowHeight;
         const at = traceField ? row : contact;
-        g.strokeStyle = contact === selectedContact ? SELECTED : INK;
-        g.lineWidth = 1;
+        g.strokeStyle = inkOf(contact, INK);
+        g.lineWidth = colours.has(contact) ? 1.5 : 1;
         g.beginPath();
         if (binsPerPx <= 1) {
           for (let b = lineFrom; b < lineEnd; b++) {
@@ -285,7 +302,7 @@ export function FieldPlot({
           }
         }
         g.stroke();
-      });
+      }
       g.restore();
     }
 
@@ -320,12 +337,21 @@ export function FieldPlot({
     field,
     scale,
     traces,
+    traceLabels,
+    colours,
     traceField,
     gain,
     from,
     to,
     selectedContact,
   ]);
+
+  const hoveredRef = useRef<number | null>(null);
+  const hoverContact = (contact: number | null) => {
+    if (hoveredRef.current === contact) return;
+    hoveredRef.current = contact;
+    onContactHover?.(contact);
+  };
 
   // On a canvas of their own: a hover draws their bands anew, which needn't draw the traces.
   // biome-ignore lint/correctness/useExhaustiveDependencies: the plot's edges follow from size
@@ -390,6 +416,7 @@ export function FieldPlot({
             rowCount === 0
           ) {
             setHover(null);
+            hoverContact(null);
             return;
           }
           const r = rowOf(y);
@@ -403,8 +430,11 @@ export function FieldPlot({
                 ? `${row.label} · ${row.contacts.length} contacts`
                 : row.label;
             uv = rowValue(field, row, binAt(field, t));
+            hoverContact(row.lead);
           } else {
-            name = `e${traces[r]}`;
+            const label = traceLabels[r];
+            name = label === `e${traces[r]}` ? label : `e${traces[r]} · ${label}`;
+            hoverContact(traces[r]);
             uv = traceField
               ? fieldValue(traceField, r, binAt(traceField, t))
               : fieldValue(field, traces[r], binAt(field, t));
@@ -414,6 +444,7 @@ export function FieldPlot({
         onPointerLeave={() => {
           setHover(null);
           setEventsHover(null);
+          hoverContact(null);
         }}
         onPointerUp={(e) => {
           if (!drag) return;

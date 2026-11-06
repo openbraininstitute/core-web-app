@@ -1,3 +1,4 @@
+import { byPlace } from '@/features/lfp-viewer/contact-colours';
 import { contactTrace } from '@/features/lfp-viewer/field-figures';
 import {
   axis,
@@ -7,6 +8,7 @@ import {
 } from '@/features/spike-viewer/spike-statistics/figure-kit';
 
 import type { Data } from 'plotly.js-dist-min';
+import type { LineColour } from '@/features/lfp-viewer/contact-colours';
 import type { Figure } from '@/features/spike-viewer/spike-statistics/figures';
 
 function meanTrace(psd: Float32Array, bands: number, from: number, x: readonly number[]) {
@@ -38,6 +40,7 @@ export function psdFigure({
   contacts,
   dtMs,
   onlyTheseRows = false,
+  colourOf = byPlace,
 }: {
   frequencies: readonly number[];
   /** Contact × frequency, µV²/Hz. */
@@ -45,6 +48,7 @@ export function psdFigure({
   contacts: readonly number[];
   dtMs: number;
   onlyTheseRows?: boolean;
+  colourOf?: LineColour;
 }): Figure {
   const bands = frequencies.length;
   const from = frequencies[0] === 0 ? 1 : 0;
@@ -57,7 +61,7 @@ export function psdFigure({
     ...contacts.map((c, i) =>
       contactTrace(
         c,
-        i,
+        colourOf(c, i),
         x,
         row(onlyTheseRows ? i : c),
         `%{x:.1f} Hz · %{y:.3g} µV²/Hz<extra>e${c}</extra>`

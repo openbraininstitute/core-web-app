@@ -45,6 +45,7 @@ import { PillSelect } from '@/ui/molecules/select/pill-select';
 
 import type { ReactNode } from 'react';
 import type { LfpSummarySource } from '@/api/small-scale-simulator/simulation-result/lfp-summary';
+import type { LineColour } from '@/features/lfp-viewer/contact-colours';
 import type { ContactGrid } from '@/features/lfp-viewer/contact-grid';
 import type { ContactLine } from '@/features/lfp-viewer/field-analysis';
 import type { FieldDirection, FieldRow } from '@/features/lfp-viewer/field-structure';
@@ -94,6 +95,8 @@ type StatisticsProps = {
   direction: FieldDirection | null;
   selectedContact: number | null;
   ticked: readonly number[];
+  /** A contact's line's colour: a ticked one's own, as its trace has it. */
+  lineColour: LineColour;
   spikeFiles: readonly TAssetBackedFile[];
   timeline: readonly TimelineEvent[];
   timeCursor: TimeCursor;
@@ -268,6 +271,7 @@ function SpectrumPlot({
   chosen,
   selectedContact,
   ticked,
+  lineColour,
   visible,
   open,
 }: PlotProps) {
@@ -286,9 +290,17 @@ function SpectrumPlot({
   const { field, problem } = useContactRows(source, summary, chosen, spectra ? [] : contacts, open);
   const figure = useMemo(() => {
     const dtMs = index.time.dt;
-    if (spectra) return psdFigure({ ...spectra, contacts, dtMs });
-    return field ? psdFigure({ ...rowSpectra(field), contacts, dtMs, onlyTheseRows: true }) : null;
-  }, [index, spectra, field, contacts]);
+    if (spectra) return psdFigure({ ...spectra, contacts, dtMs, colourOf: lineColour });
+    return field
+      ? psdFigure({
+          ...rowSpectra(field),
+          contacts,
+          dtMs,
+          onlyTheseRows: true,
+          colourOf: lineColour,
+        })
+      : null;
+  }, [index, spectra, field, contacts, lineColour]);
   return (
     <PlotFrame
       picker={picker}
@@ -407,6 +419,7 @@ function TriggeredFigure({
   chosen,
   selectedContact,
   ticked,
+  lineColour,
   visible,
   open,
   file,
@@ -441,8 +454,11 @@ function TriggeredFigure({
     [field, triggers, halfWindow]
   );
   const figure = useMemo(
-    () => (result && result.triggers > 0 ? triggeredFigure({ result, contacts }) : null),
-    [result, contacts]
+    () =>
+      result && result.triggers > 0
+        ? triggeredFigure({ result, contacts, colourOf: lineColour })
+        : null,
+    [result, contacts, lineColour]
   );
   const empty =
     contacts.length === 0
@@ -540,6 +556,7 @@ function CoherencePlot({
   rows,
   selectedContact,
   ticked,
+  lineColour,
   visible,
   open,
 }: PlotProps) {
@@ -564,9 +581,14 @@ function CoherencePlot({
   const figure = useMemo(
     () =>
       result && selectedContact !== null
-        ? coherenceFigure({ result, contacts: others, reference: selectedContact })
+        ? coherenceFigure({
+            result,
+            contacts: others,
+            reference: selectedContact,
+            colourOf: lineColour,
+          })
         : null,
-    [result, others, selectedContact]
+    [result, others, selectedContact, lineColour]
   );
   const empty =
     selectedContact === null

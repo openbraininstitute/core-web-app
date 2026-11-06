@@ -43,6 +43,7 @@ const SCENE_FEATURES: Partial<IEntityViewerFeatures> = { nodesTable: false };
 /** Colours change at most this often while playing. */
 const RECOLOR_MS = 50;
 const SELECTED_COLOR = '#000000';
+const HOVERED_COLOR = '#8c8c8c';
 /** Shorter than a replay's: at the usual fade, most cells of a busy circuit are lit at any moment, hiding the field. */
 const SPIKE_AFTERGLOW_IN_SECONDS = 0.1;
 const CONTACT_VIEWS = [
@@ -112,6 +113,10 @@ type Props = {
   /** Below this |V|, in µV, a contact is drawn as at zero. */
   hideBelow: number;
   selectedContact: number | null;
+  /** The ticked contacts' colours, which their traces are drawn in. */
+  colours: ReadonlyMap<number, string>;
+  /** The contact under the pointer in the traces or the table. */
+  hoveredContact: number | null;
   timeCursor: TimeCursor;
   speed: number;
   spikeFiles: readonly TAssetBackedFile[];
@@ -133,6 +138,8 @@ export function LfpScene({
   grid,
   hideBelow,
   selectedContact,
+  colours,
+  hoveredContact,
   timeCursor,
   speed,
   spikeFiles,
@@ -189,9 +196,14 @@ export function LfpScene({
     if (!positions || !coloured) return undefined;
     const byLevel: number[][] = LEVEL_COLORS.map(() => []);
     const selected: number[] = [];
+    const hovered: number[] = [];
+    const byColour = new Map<string, number[]>();
     for (let c = 0; c < field.contacts; c++) {
       const xyz = [positions[c * 3], positions[c * 3 + 1], positions[c * 3 + 2]];
+      const colour = colours.get(c);
       if (c === selectedContact) selected.push(...xyz);
+      else if (c === hoveredContact) hovered.push(...xyz);
+      else if (colour) byColour.set(colour, [...(byColour.get(colour) ?? []), ...xyz]);
       else if (pointLevels) byLevel[pointLevels[c]].push(...xyz);
     }
     const groups: ICircuitOverlayGroup[] = byLevel.flatMap((coordinates, level) =>
@@ -207,6 +219,25 @@ export function LfpScene({
             },
           ]
     );
+    // In the colour of their traces, so that a trace is found in the scene by its colour.
+    for (const [colour, coordinates] of byColour) {
+      groups.push({
+        name: 'ticked',
+        id: `lfp-ticked-${colour}`,
+        color: colour,
+        coordinates: Float32Array.from(coordinates),
+        halo: true,
+      });
+    }
+    if (hovered.length > 0) {
+      groups.push({
+        name: 'hovered',
+        id: 'lfp-hovered',
+        color: HOVERED_COLOR,
+        coordinates: Float32Array.from(hovered),
+        halo: true,
+      });
+    }
     if (selected.length > 0) {
       groups.push({
         name: 'selected',
@@ -217,7 +248,7 @@ export function LfpScene({
       });
     }
     return groups;
-  }, [positions, field.contacts, coloured, pointLevels, selectedContact]);
+  }, [positions, field.contacts, coloured, pointLevels, selectedContact, colours, hoveredContact]);
   const placement = useMemo(
     () => (grid && view !== 'points' ? placeVoxels(grid, slice) : null),
     [grid, view, slice]
