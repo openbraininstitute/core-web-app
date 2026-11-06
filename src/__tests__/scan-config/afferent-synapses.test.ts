@@ -129,7 +129,7 @@ function harness(
     openEdgesFile,
     run: (edges: Array<{ file: string; populations: string[] }>) =>
       loadAfferentSynapses({
-        report: new Report(),
+        report: new Report(false),
         edges,
         openEdgesFile,
         placementOf: overrides.placementOf ?? (() => AT_ORIGIN),
@@ -137,6 +137,18 @@ function harness(
       }),
   };
 }
+
+describe('the report of a load', () => {
+  it('goes to the console only with the debug flag on', () => {
+    const debug = vi.spyOn(console, 'debug').mockImplementation(() => {});
+    new Report(false).logTask('read').debug();
+    expect(debug).not.toHaveBeenCalled();
+
+    new Report(true).logTask('read').debug();
+    expect(debug).toHaveBeenCalledOnce();
+    debug.mockRestore();
+  });
+});
 
 /** Read one synapse back out of a flat `[x, y, z, …]` group. */
 function pointAt(coordinates: Float32Array, index: number) {

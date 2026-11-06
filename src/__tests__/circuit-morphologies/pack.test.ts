@@ -120,6 +120,17 @@ describe('a level read box by box', () => {
     await expect(readPack(pack('small'), 3)).rejects.toThrow('without a level 3');
   });
 
+  it('reads a pack of the coarser two levels as those levels of a pack of three', async () => {
+    const coarser = withIndex(pack('small'), (index) => {
+      index.levels.shift();
+      for (const level of index.levels) if (level.base !== null) level.base -= 1;
+    });
+    for (const number of [0, 1]) {
+      const { segments } = await readPack(pack('small'), number + 1);
+      expect((await readPack(coarser, number)).segments).toEqual(segments);
+    }
+  });
+
   it('reads streams three and four bytes wide', async () => {
     const want = expected('wide');
     const data = await readPack(pack('wide'));

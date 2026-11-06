@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { NodePopulationType } from '@/api/entitycore/types/entities/circuit';
+import { MorphologyPackState } from '@/api/small-scale-simulator/circuit/morphology-pack';
 import { CircuitNodesTable } from '@/features/circuit-nodes';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { NO_NAMES, resolvePopulation } from '@/features/circuit-nodes/population-utils';
@@ -13,7 +14,7 @@ import {
   morphologyPackNote,
   useMorphologyPackStatus,
 } from '@/features/circuit-viewer/morphologies/use-morphology-pack-status';
-import { circuitMorphologiesFlag, useFlag } from '@/features/feature-flags';
+import { circuitMorphologiesFlag, debugFlag, useFlag } from '@/features/feature-flags';
 import {
   CircuitVisualization,
   MemodelVisualization,
@@ -39,9 +40,9 @@ import {
   hasAnyLocation,
   hasGeneratedBlock,
   type IFormBindingOptions,
+  isStoredLocationsBlockOpen,
   morphologyLocationPickMode,
   morphologyLocationsHintHoveredAtom,
-  supportsMorphologyLocationPicking,
 } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import {
   electrodeBlockPath,
@@ -260,7 +261,8 @@ export function CircuitScene({
     selectedRootElement,
     selectedEntry,
     onCreateEntry,
-    supportsExplicitLocations,
+    explicitLocationsBlockTypes,
+    singleMorphology,
   } = form ?? {};
   const { arrayEntity, visibleIds: visibleOverlayIds } = electrodes ?? {};
   const enableElectrodes = features?.electrodes ?? false;
@@ -279,7 +281,7 @@ export function CircuitScene({
   const packStatus = useMorphologyPackStatus(drawnLarge ? circuit : undefined, {
     poll: !smallForThePack,
   });
-  const pack = packStatus?.state === 'ready' ? packStatus : null;
+  const pack = packStatus?.state === MorphologyPackState.Ready ? packStatus : null;
   const [fellBackFor, setFellBackFor] = useState<string | null>(null);
   const largeCircuit = drawnLarge && fellBackFor !== circuit?.id;
 
@@ -330,6 +332,8 @@ export function CircuitScene({
   const chromeColorBy = enableColorBy && !subjectUnplaceable;
   // The chrome's place for the scene's legends; state, so the legends move in once it mounts.
   const [legendSlot, setLegendSlot] = useState<HTMLElement | null>(null);
+  const debug = !!useFlag(debugFlag.key);
+  const [debugTarget, setDebugTarget] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
     onPopulationChange?.(population);
@@ -410,19 +414,20 @@ export function CircuitScene({
       selectedEntry,
       onConfigChange: setConfig,
       onCreateEntry,
-      supportsExplicitLocations,
+      explicitLocationsBlockTypes,
+      singleMorphology,
     }) !== null;
   // Gated on markers, not on picking, so the menu stays out of blocks with nothing to show.
   const hasMorphologyLocationsOnScreen =
     !largeCircuit &&
-    (supportsMorphologyLocationPicking({
+    (isStoredLocationsBlockOpen({
       config: scanConfig,
       selectedRootElement,
       selectedEntry,
     }) ||
       hasAnyLocation(scanConfig) ||
       // The flag that turns the preview on, so the controls show only with generated markers.
-      (Boolean(supportsExplicitLocations) && hasGeneratedBlock(scanConfig)));
+      (Boolean(singleMorphology) && hasGeneratedBlock(scanConfig)));
 
   const {
     overlays,
@@ -660,6 +665,7 @@ export function CircuitScene({
       // Subscribed only while the slider is shown: the viewer reports every zoom change, and
       // with the slider off that is a render per frame of a scroll-zoom for nothing on screen.
       onZoomChange: config.showZoomSlider ? zoom.onZoomChange : undefined,
+      debugTarget,
     }),
     [
       config.showAxons,
@@ -679,6 +685,7 @@ export function CircuitScene({
       emptyHeard,
       handleEmptyClick,
       zoom.onZoomChange,
+      debugTarget,
     ]
   );
   const cellsProps = useMemo(
@@ -728,7 +735,8 @@ export function CircuitScene({
         selectedRootElement,
         selectedEntry,
         onCreateEntry,
-        supportsExplicitLocations,
+        explicitLocationsBlockTypes,
+        singleMorphology,
         markerRadius: config.morphologyLocationRadius,
         showLabels: config.showMorphologyLocationLabels,
       },
@@ -742,7 +750,8 @@ export function CircuitScene({
       selectedRootElement,
       selectedEntry,
       onCreateEntry,
-      supportsExplicitLocations,
+      explicitLocationsBlockTypes,
+      singleMorphology,
       config.morphologyLocationRadius,
       config.showMorphologyLocationLabels,
     ]
@@ -815,6 +824,7 @@ export function CircuitScene({
         colorByTarget={colorByTarget}
         colorByNoneLabel={colorByNoneLabel}
         legendSlotRef={setLegendSlot}
+        debugSlotRef={debug ? setDebugTarget : undefined}
         selection={sceneSelection}
         viz={{
           // A replay's afterglow and glow are set with the rest of how the scene is drawn; the menu leaves out a

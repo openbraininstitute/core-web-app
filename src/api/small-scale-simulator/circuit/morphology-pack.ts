@@ -5,14 +5,28 @@ import { config } from '@/config';
 
 import type { WorkspaceContext } from '@/types/common';
 
-export type MorphologyPackNoPackReason = 'single_neuron' | 'too_large' | 'no_morphologies';
+export const MorphologyPackNoPackReason = {
+  SingleNeuron: 'single_neuron',
+  TooLarge: 'too_large',
+  NoMorphologies: 'no_morphologies',
+} as const;
+
+export type TMorphologyPackNoPackReason =
+  (typeof MorphologyPackNoPackReason)[keyof typeof MorphologyPackNoPackReason];
+
+export const MorphologyPackState = {
+  Ready: 'ready',
+  Building: 'building',
+  Refused: 'refused',
+  Failed: 'failed',
+} as const;
 
 /** Where Bluenaas has the circuit's morphology pack, which it builds the first time it is asked. */
 export type MorphologyPackStatus =
-  | { state: 'ready'; size: number; sha256: string }
-  | { state: 'building'; queue_position?: number | null }
-  | { state: 'refused'; reason: MorphologyPackNoPackReason }
-  | { state: 'failed' };
+  | { state: typeof MorphologyPackState.Ready; size: number; sha256: string }
+  | { state: typeof MorphologyPackState.Building; queue_position?: number | null }
+  | { state: typeof MorphologyPackState.Refused; reason: TMorphologyPackNoPackReason }
+  | { state: typeof MorphologyPackState.Failed };
 
 const packPath = (circuitId: string) => `/circuit/${encodeURIComponent(circuitId)}/morphology-pack`;
 

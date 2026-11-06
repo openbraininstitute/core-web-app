@@ -11,6 +11,7 @@ import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
 import { useLowCredits } from '@/features/low-credits';
 import {
+  getNotebookProfiles,
   type NotebookStartResponse,
   startEmptyNotebook,
   startNotebook,
@@ -62,6 +63,20 @@ export function buildRunTargets(deploymentEnv: string): NotebookRunTarget[] {
  * deployments it also exposes the single-pod AWS run target. `openJupyterHub` opens a bare
  * JupyterHub session (used by the Results "Open notebook" action).
  */
+export function useNotebookProfiles(enabled = true) {
+  const { data } = useQuery({
+    queryKey: ['notebook-profiles'],
+    queryFn: () => getNotebookProfiles(),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    select: (response) => ({
+      profiles: response.profiles ?? [],
+      defaultProfile: response.default_profile ?? null,
+    }),
+  });
+  return data ?? { profiles: [], defaultProfile: null };
+}
+
 export function useRunNotebook({
   id,
   assets,
@@ -85,9 +100,11 @@ export function useRunNotebook({
     enabled: Boolean(virtualLabId) && enabled,
   });
 
+  const { profiles, defaultProfile } = useNotebookProfiles(enabled);
+
   const runTargets = buildRunTargets(config.DEPLOYMENT_ENV);
 
-  async function run(target: NotebookRunTarget = DEFAULT_RUN_TARGET) {
+  async function run(target: NotebookRunTarget = DEFAULT_RUN_TARGET, profile?: string) {
     if (runningTarget) return;
     const asset = getAsset({
       assets,
@@ -105,7 +122,9 @@ export function useRunNotebook({
         virtualLabId,
         projectId,
         cloud,
-        0
+        0,
+        undefined,
+        profile
       );
       notification.success({
         message: 'Notebook starting',
@@ -159,5 +178,7 @@ export function useRunNotebook({
     openJupyterHub,
     opening,
     creditsModal,
+    profiles,
+    defaultProfile,
   };
 }

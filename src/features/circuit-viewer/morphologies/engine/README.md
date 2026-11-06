@@ -45,7 +45,7 @@ A WebGL 2 view whose context the browser takes back, most often the oldest where
 
 ## Detail
 
-A pack holds three levels; each box of space is drawn at one of them, or not at all. `chooseDetail` ([detail.ts](detail.ts)) chooses, box by box:
+A pack holds three levels, or the coarser two for a circuit whose three are too many; each box of space is drawn at one of them, or not at all. `chooseDetail` ([detail.ts](detail.ts)) chooses, box by box:
 
 1. The box, grown by a quarter of its side (`REACH`), as a box holds segments whose far end it holds, is tested against the frustum.
 2. In view, the µm a device pixel spans where the box comes nearest the eye picks the coarsest level whose tolerance is within 2 of them (`DETAIL_PIXELS`).

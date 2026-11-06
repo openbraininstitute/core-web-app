@@ -5,10 +5,12 @@ import {
   type ICircuit,
   type TCircuitScaleDictionary,
 } from '@/api/entitycore/types/entities/circuit';
+import {
+  MorphologyPackState,
+  type MorphologyPackStatus,
+} from '@/api/small-scale-simulator/circuit/morphology-pack';
 import { useMorphologyPackStatus } from '@/features/circuit-viewer/morphologies/use-morphology-pack-status';
 import { circuitMorphologiesFlag, useFlag } from '@/features/feature-flags';
-
-import type { MorphologyPackStatus } from '@/api/small-scale-simulator/circuit/morphology-pack';
 
 /**
  * Whether a circuit is drawn a morphology per cell, or by
@@ -37,7 +39,7 @@ export function circuitDrawsEachCell(
   if (circuit.scale === CircuitScaleDictionary.Single) return true;
   if (!circuitSmallForThePack(circuit.scale)) return false;
   if (!packMorphologies) return true;
-  return pack === undefined ? undefined : pack?.state !== 'ready';
+  return pack === undefined ? undefined : pack?.state !== MorphologyPackState.Ready;
 }
 
 /**
