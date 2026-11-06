@@ -1,3 +1,4 @@
+import { toExpandQueryParam } from '@/api/entitycore/types/shared/expand';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
 
@@ -40,7 +41,7 @@ export async function getCircuits({
   return await api.get<EntityCoreResponse<ICircuit>>(baseUri, {
     queryParams: compactRecord({
       ...filters,
-      expand: expand && [...expand],
+      expand: toExpandQueryParam(expand),
       with_facets: withFacets,
     }),
     headers: {
@@ -65,12 +66,16 @@ export async function getCircuits({
 export async function getCircuit({
   id,
   context,
+  expand,
 }: {
   id: string;
   context?: WorkspaceContext | null;
+  /** entitycore `expand` values, sent as repeated `expand=` params. */
+  expand?: ReadonlyArray<EntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<ICircuit>(`${baseUri}/${id}`, {
+    queryParams: { expand: toExpandQueryParam(expand) },
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',

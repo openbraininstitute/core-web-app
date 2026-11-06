@@ -1,5 +1,6 @@
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { EntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { AssetLabel, EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { TDetailViewSectionDict } from '@/entity-configuration/definitions/types';
@@ -22,6 +23,7 @@ export type EntityCoreTypeConfig<
   T extends EntityCoreIdentifiable,
   S = never, // single endpoint
   L = never, // List endpoint
+  E extends string = EntityExpandParam, // `expand` values the endpoint accepts
 > = {
   group: TEntityTypeGroup;
   extendedType: TExtendedEntitiesTypeDict;
@@ -44,19 +46,28 @@ export type EntityCoreTypeConfig<
       // include it in the query key (consistency and debugging)
       extraQueryKeyBuilder?: Record<string, any>;
       ilikeSearchEnabled?: boolean;
+      /**
+       * entitycore `expand` paths requested when a detail page loads one entity (sent as repeated
+       * `expand` params). Inlines related data in the same request instead of a follow-up fetch;
+       * set it only when `query.one` forwards `expand`.
+       */
+      entityExpand?: ReadonlyArray<E>;
     };
     query: {
       list?: (query: any) => Promise<EntityCoreResponse<T> | L>;
       count?: (query: any) => Promise<number>;
-      one: (
+      // method syntax (bivariant): configs with different `E` still share one registry type
+      one(
         query: {
           id: string;
           context?: WorkspaceContext | null;
+          /** entitycore `expand` paths; see `config.entityExpand`. */
+          expand?: ReadonlyArray<E>;
           options?: {
             next?: NextFetchRequestConfig;
           };
         } & Record<string, any>
-      ) => Promise<T>;
+      ): Promise<T>;
       resolve?: (
         query: {
           id: string;

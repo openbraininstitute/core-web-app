@@ -1,3 +1,4 @@
+import { toExpandQueryParam } from '@/api/entitycore/types/shared/expand';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 
 import type {
@@ -5,6 +6,7 @@ import type {
   IMEModelFilter,
   TCreateMEModel,
 } from '@/api/entitycore/types/entities/me-model';
+import type { EntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -20,14 +22,18 @@ export async function getMEModels({
   withFacets,
   filters,
   context,
+  expand,
 }: {
   withFacets?: boolean;
   filters?: Partial<IMEModelFilter>;
   context?: WorkspaceContext | null;
+  /** entitycore `expand` values, sent as repeated `expand=` params. */
+  expand?: ReadonlyArray<EntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IMEModel>>(baseUri, {
     queryParams: {
+      expand: toExpandQueryParam(expand),
       ...filters,
       with_facets: withFacets,
     },
@@ -49,12 +55,16 @@ export async function getMEModels({
 export async function getMEModel({
   id,
   context,
+  expand,
 }: {
   id: string;
   context?: WorkspaceContext | null;
+  /** entitycore `expand` values, sent as repeated `expand=` params. */
+  expand?: ReadonlyArray<EntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   const result = await api.get<IMEModel>(`${baseUri}/${id}`, {
+    queryParams: { expand: toExpandQueryParam(expand) },
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',

@@ -20,6 +20,7 @@ import type {
 } from '@/api/entitycore/types/entities/cell-morphology-protocol';
 import type { EntityDerivationFilter } from '@/api/entitycore/types/entities/derivation';
 import type { MeasurementAnnotation } from '@/api/entitycore/types/entities/measurement-annotation';
+import type { TMeasurableEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type {
   EntityAuthorization,
   EntityCoreBaseAsset,
@@ -118,7 +119,11 @@ export interface ICellMorphology
 }
 
 export interface ICellMorphologyExpanded extends ICellMorphology {
-  measurement_annotation: MeasurementAnnotation;
+  /** `null` when expanded but the morphology has no annotation. */
+  measurement_annotation: MeasurementAnnotation | null;
 }
 
-export type ExpandCellMorphologyParm = 'measurement_annotation';
+/** Detail-page expand: Morphometrics reads the annotation from the entity, saving a request. */
+export const CellMorphologyEntityExpand: ReadonlyArray<TMeasurableEntityExpandParam> = [
+  'measurement_annotation',
+];
