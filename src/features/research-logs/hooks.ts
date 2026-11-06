@@ -9,6 +9,7 @@ import {
   createResearchLog,
   deleteResearchLog,
   downloadResearchLogDocument,
+  downloadResearchLogFile,
   getResearchLog,
   getResearchLogs,
   saveResearchLogDocument,
@@ -82,6 +83,24 @@ export function useResearchLogDocument(
       doc
         ? downloadResearchLogDocument({ logId: id, assetId: doc.id, context: ctx, signal })
         : Promise.resolve(''),
+  });
+}
+
+/** The text of a markdown file kept in the log's files folder. */
+export function useResearchLogFile(logId: string, filesAssetId: string | undefined, path: string) {
+  const ctx = useWorkspace();
+  return useQuery({
+    queryKey: [KEY, 'file', logId, filesAssetId, path],
+    enabled: !!filesAssetId,
+    retry: false,
+    queryFn: ({ signal }) =>
+      downloadResearchLogFile({
+        logId,
+        filesAssetId: filesAssetId as string,
+        path,
+        context: ctx,
+        signal,
+      }),
   });
 }
 

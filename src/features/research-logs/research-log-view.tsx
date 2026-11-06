@@ -19,10 +19,12 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip'
 import { cn } from '@/utils/css-class';
 
 import { joinBlocks, splitBlocks } from './blocks';
+import { dirOf } from './files';
 import {
   useDeleteResearchLog,
   useResearchLog,
   useResearchLogDocument,
+  useResearchLogFile,
   useResearchLogHref,
   useSaveResearchLog,
 } from './hooks';
@@ -55,6 +57,10 @@ function Loaded({ log }: { log: IResearchLog }) {
   const save = useSaveResearchLog(log.id);
   const remove = useDeleteResearchLog();
 
+  // a markdown file kept beside the log, which a link in the log opened in place of it
+  const filePath = params.get('file');
+  const openFile = (path: string) =>
+    router.push(`${href(log.id)}?file=${encodeURIComponent(path)}`);
   const [editing, setEditing] = useState(params.get('edit') === '1');
   const [name, setName] = useState(log.name);
   const [description, setDescription] = useState(log.description);
@@ -173,7 +179,7 @@ function Loaded({ log }: { log: IResearchLog }) {
                   <CheckOutlined />
                 </IconAction>
               </>
-            ) : (
+            ) : !filePath ? (
               <IconAction
                 label="Edit"
                 onClick={() => setEditing(true)}
@@ -182,7 +188,7 @@ function Loaded({ log }: { log: IResearchLog }) {
               >
                 <EditOutlined />
               </IconAction>
-            )}
+            ) : null}
             {!editing && (
               <IconAction
                 label="Delete"
@@ -218,64 +224,125 @@ function Loaded({ log }: { log: IResearchLog }) {
             </div>
           )}
         </div>
-        <article className="mx-auto max-w-3xl">
-          <div className="pr-28">
-            {editing ? (
-              <GrowingField
-                value={name}
-                onChange={setName}
-                placeholder="Name"
-                label="Name"
-                className="text-primary-9 text-3xl font-bold"
-              />
-            ) : (
-              <h1 className="text-primary-9 text-3xl font-bold">{log.name}</h1>
-            )}
-            {editing ? (
-              <GrowingField
-                value={description}
-                onChange={setDescription}
-                placeholder="Add a one-line summary"
-                label="Summary"
-                className="text-primary-9 mt-2 text-lg"
-              />
-            ) : log.description ? (
-              <p className="text-primary-9 mt-2 text-lg">{log.description}</p>
-            ) : null}
-          </div>
-          <p className="text-neutral-4 border-neutral-2 mt-1 mb-4 border-b pb-4 text-xs">
-            {log.created_by?.pref_label ?? 'Unknown author'} · updated{' '}
-            {new Date(log.update_date).toLocaleString()}
-          </p>
-
-          {isLoading ? (
-            <Skeleton className="h-48 w-full rounded-xl" />
-          ) : editing ? (
-            <>
-              {current.map((source, i) => (
-                <EditableBlock
-                  // biome-ignore lint/suspicious/noArrayIndexKey: blocks have no identity beyond position
-                  key={i}
-                  source={source}
-                  active={active === i}
-                  onActivate={() => {
-                    setActive(i);
-                    setAnchor(i);
-                  }}
-                  onCommit={(draft) => commit(i, draft)}
-                  logId={log.id}
-                  filesAssetId={filesAssetId}
+        {filePath && !editing ? (
+          <LogFile
+            logName={log.name}
+            logId={log.id}
+            path={filePath}
+            filesAssetId={filesAssetId}
+            onBack={() => router.push(href(log.id))}
+            onOpen={openFile}
+          />
+        ) : (
+          <article className="mx-auto max-w-3xl">
+            <div className="pr-28">
+              {editing ? (
+                <GrowingField
+                  value={name}
+                  onChange={setName}
+                  placeholder="Name"
+                  label="Name"
+                  className="text-primary-9 text-3xl font-bold"
                 />
-              ))}
-            </>
-          ) : (
-            <ResearchLogMarkdown markdown={markdown} logId={log.id} filesAssetId={filesAssetId} />
-          )}
-        </article>
+              ) : (
+                <h1 className="text-primary-9 text-3xl font-bold">{log.name}</h1>
+              )}
+              {editing ? (
+                <GrowingField
+                  value={description}
+                  onChange={setDescription}
+                  placeholder="Add a one-line summary"
+                  label="Summary"
+                  className="text-primary-9 mt-2 text-lg"
+                />
+              ) : log.description ? (
+                <p className="text-primary-9 mt-2 text-lg">{log.description}</p>
+              ) : null}
+            </div>
+            <p className="text-neutral-4 border-neutral-2 mt-1 mb-4 border-b pb-4 text-xs">
+              {log.created_by?.pref_label ?? 'Unknown author'} · updated{' '}
+              {new Date(log.update_date).toLocaleString()}
+            </p>
+
+            {isLoading ? (
+              <Skeleton className="h-48 w-full rounded-xl" />
+            ) : editing ? (
+              <>
+                {current.map((source, i) => (
+                  <EditableBlock
+                    // biome-ignore lint/suspicious/noArrayIndexKey: blocks have no identity beyond position
+                    key={i}
+                    source={source}
+                    active={active === i}
+                    onActivate={() => {
+                      setActive(i);
+                      setAnchor(i);
+                    }}
+                    onCommit={(draft) => commit(i, draft)}
+                    logId={log.id}
+                    filesAssetId={filesAssetId}
+                  />
+                ))}
+              </>
+            ) : (
+              <ResearchLogMarkdown
+                markdown={markdown}
+                logId={log.id}
+                filesAssetId={filesAssetId}
+                onOpenFile={openFile}
+              />
+            )}
+          </article>
+        )}
       </div>
 
       {linkOpen && <LinkEntitiesWindow onAdd={linkEntities} onClose={() => setLinkOpen(false)} />}
     </div>
+  );
+}
+
+/** A markdown file from the log's files folder, shown in place of the log, with the way back. */
+function LogFile({
+  logName,
+  logId,
+  path,
+  filesAssetId,
+  onBack,
+  onOpen,
+}: {
+  logName: string;
+  logId: string;
+  path: string;
+  filesAssetId?: string;
+  onBack: () => void;
+  onOpen: (path: string) => void;
+}) {
+  const { data, isLoading, isError } = useResearchLogFile(logId, filesAssetId, path);
+  return (
+    <article className="mx-auto max-w-3xl">
+      <nav className="border-neutral-2 text-neutral-5 mb-4 flex items-center gap-2 border-b pb-4 pr-28 text-sm">
+        <button type="button" onClick={onBack} className="text-primary-7 hover:underline">
+          {logName}
+        </button>
+        <span aria-hidden>›</span>
+        <span className="truncate font-mono">{path}</span>
+      </nav>
+      {!filesAssetId ? (
+        <p className="text-neutral-5">This log has no files folder to read {path} from.</p>
+      ) : isLoading ? (
+        <Skeleton className="h-48 w-full rounded-xl" />
+      ) : isError ? (
+        <p className="text-neutral-5">{path} was not found in this log&apos;s files.</p>
+      ) : (
+        <ResearchLogMarkdown
+          markdown={data ?? ''}
+          logId={logId}
+          filesAssetId={filesAssetId}
+          basePath={dirOf(path)}
+          onOpenFile={onOpen}
+        />
+      )}
+    </article>
   );
 }
 

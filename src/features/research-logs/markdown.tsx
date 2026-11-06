@@ -8,6 +8,7 @@ import { entityAssetsPath, entityCoreApi, getEntityCoreContext } from '@/api/ent
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 import { EntityCard, entityIdFromHref } from './entity-card';
+import { isRelativeMarkdownLink, resolveLogPath } from './files';
 
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
 import type { Components } from 'react-markdown';
@@ -22,16 +23,18 @@ function LogImage({
   alt,
   logId,
   filesAssetId,
+  basePath,
 }: {
   src?: string;
   alt?: string;
   logId?: string;
   filesAssetId?: string;
+  basePath: string;
 }) {
   const ctx = useWorkspace();
   const relative = !!src && !isExternal(src) && !src.startsWith('data:');
   const { data } = useQuery({
-    queryKey: ['research-log-file', logId, filesAssetId, src],
+    queryKey: ['research-log-file', logId, filesAssetId, basePath, src],
     enabled: relative && !!logId && !!filesAssetId,
     staleTime: Infinity,
     queryFn: async () => {
@@ -40,7 +43,7 @@ function LogImage({
         `${entityAssetsPath('research_log', logId!)}/${filesAssetId}/download`,
         {
           headers: getEntityCoreContext(ctx).headers,
-          queryParams: { asset_path: src!.replace(/^\.?\//, '') },
+          queryParams: { asset_path: resolveLogPath(basePath, src!) },
         },
         { asRawResponse: true }
       );
@@ -72,10 +75,16 @@ export function ResearchLogMarkdown({
   markdown,
   logId,
   filesAssetId,
+  basePath = '',
+  onOpenFile,
 }: {
   markdown: string;
   logId?: string;
   filesAssetId?: string;
+  /** The folder, inside the files folder, of the file being shown; the log itself is the root. */
+  basePath?: string;
+  /** Opens a markdown file of the log's files folder, for a link that points at one. */
+  onOpenFile?: (path: string) => void;
 }) {
   const components: Components = {
     p({ children }) {
@@ -85,6 +94,22 @@ export function ResearchLogMarkdown({
       return <p>{children}</p>;
     },
     a({ href, children }) {
+      if (onOpenFile && isRelativeMarkdownLink(href)) {
+        const path = resolveLogPath(basePath, href);
+        return (
+          <a
+            href={`?file=${encodeURIComponent(path)}`}
+            title={path}
+            onClick={(event) => {
+              event.preventDefault();
+              onOpenFile(path);
+            }}
+            className="text-primary-7 underline"
+          >
+            {children}
+          </a>
+        );
+      }
       const external = !!href && isExternal(href);
       return (
         <a
@@ -103,6 +128,7 @@ export function ResearchLogMarkdown({
         alt={alt}
         logId={logId}
         filesAssetId={filesAssetId}
+        basePath={basePath}
       />
     ),
     table: ({ children }) => (

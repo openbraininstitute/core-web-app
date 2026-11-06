@@ -104,6 +104,33 @@ export async function downloadResearchLogDocument({
   return await response.text();
 }
 
+/** Reads one file of the log's `research_log_files` folder as text. */
+export async function downloadResearchLogFile({
+  logId,
+  filesAssetId,
+  path,
+  context,
+  signal,
+}: {
+  logId: string;
+  filesAssetId: string;
+  path: string;
+  context?: WorkspaceContext | null;
+  signal?: AbortSignal;
+}): Promise<string> {
+  const api = await entityCoreApi();
+  const response = await api.get<Response>(
+    `${entityAssetsPath(ENTITY_TYPE, logId)}/${filesAssetId}/download`,
+    {
+      headers: getEntityCoreContext(context).headers,
+      queryParams: { asset_path: path },
+      signal,
+    },
+    { asRawResponse: true, retryOnError: false }
+  );
+  return await response.text();
+}
+
 /**
  * Stores new markdown as the log's document. Assets cannot be overwritten and a path can only
  * be used once, so the new file gets a name of its own and the previous document is deleted
