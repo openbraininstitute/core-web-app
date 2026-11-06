@@ -28,7 +28,7 @@ import type { EventsHover } from '@/features/spike-viewer/renderer/raster-render
 export type FieldPlotMode = 'traces' | 'map';
 
 /** The traces' lanes on show, [first, end), and the plot's width in px. */
-export type LanesInView = { first: number; end: number; width: number };
+export type LanesInView = { first: number; perScreen: number; width: number };
 
 const MARGIN = { left: 52, right: 10, top: 6, bottom: 22 };
 const INK = '#002766';
@@ -61,7 +61,7 @@ type Props = {
   traceRows: TraceRows | null;
   /** The shortest window a drag zooms to. */
   minSpanMs: number;
-  onLanesInView?: (lanes: LanesInView) => void;
+  onLanesInView: (lanes: LanesInView) => void;
   /** How many times the shared gain the traces are drawn at. */
   gain: number;
   /** Each trace's height in px, the pane scrolling through them where they don't fit; null fits them all. */
@@ -287,6 +287,7 @@ export function FieldPlot({
   const laneY = (row: number) => plot.top + (row + 0.5) * lane - scroll;
   const firstLane = Math.max(0, Math.floor(scroll / lane) - 1);
   const endLane = Math.min(traces.length, Math.ceil((scroll + plot.height) / lane) + 1);
+  const perScreen = Math.max(1, Math.ceil(plot.height / lane));
   const traceDrawing = (source: LfpField): TraceDrawing => {
     const [first, last] = binRange(source, from, to);
     return {
@@ -300,26 +301,27 @@ export function FieldPlot({
       width: plot.width,
     };
   };
-  /** Strokes a contact's lane from its row read over the window where it is in, else the overview's. */
+  /** A contact's lane: its row read over the window where it is in, else the overview's. */
+  const laneSource = (contact: number): [LfpField, number] => {
+    const at = traceRows?.rows.get(contact);
+    return traceRows && at !== undefined ? [traceRows.field, at] : [field, contact];
+  };
   const laneStroker = () => {
     const overview = traceDrawing(field);
     const read = traceRows && traceDrawing(traceRows.field);
     return (g: CanvasRenderingContext2D, contact: number, y: number) => {
-      const at = traceRows?.rowOf(contact);
-      if (read && at !== undefined) strokeTrace(g, read, at, y);
-      else strokeTrace(g, overview, contact, y);
+      const [source, at] = laneSource(contact);
+      strokeTrace(g, read && source !== field ? read : overview, at, y);
     };
   };
   const laneValue = (contact: number, time: number) => {
-    const at = traceRows?.rowOf(contact);
-    return traceRows && at !== undefined
-      ? fieldValue(traceRows.field, at, binAt(traceRows.field, time))
-      : fieldValue(field, contact, binAt(field, time));
+    const [source, at] = laneSource(contact);
+    return fieldValue(source, at, binAt(source, time));
   };
 
   useEffect(() => {
-    if (mode === 'traces') onLanesInView?.({ first: firstLane, end: endLane, width: plot.width });
-  }, [mode, firstLane, endLane, plot.width, onLanesInView]);
+    if (mode === 'traces') onLanesInView({ first: firstLane, perScreen, width: plot.width });
+  }, [mode, firstLane, perScreen, plot.width, onLanesInView]);
 
   // None below the last lane, where lanes of a fixed height leave the plot empty.
   const rowOf = (y: number): number | null => {

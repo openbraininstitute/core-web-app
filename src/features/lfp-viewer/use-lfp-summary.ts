@@ -52,11 +52,11 @@ import type { WorkspaceContext } from '@/types/common';
 const BUILDING_POLL_MS = 5000;
 const REGROUP_POLL_MS = 60_000;
 
-/** The rows one view may ask for: read together, so what they cost is their bytes, about 35 KB each on a long run. */
+/** The rows one view may ask for: read together, so what they cost is their bytes, 2 a step. */
 export const MAX_ROW_READS = 256;
 
 /** The bytes a window of traces may hold at once, decoded: past it the overview is drawn. */
-export const MAX_WINDOW_BYTES = 64 * 2 ** 20;
+const MAX_WINDOW_BYTES = 64 * 2 ** 20;
 
 export type LfpSummary = GroupStats & {
   sha256: string;
@@ -245,92 +245,80 @@ function rangesOf(at: SummaryRead, signal: AbortSignal): ReadRange {
 const groupQuery = <T>(
   at: AxisRead,
   kind: string,
-  group: number,
-  read: (read: ReadRange) => Promise<T>
+  key: readonly number[],
+  read: (read: ReadRange) => Promise<T>,
+  gcTime = 5 * 60_000
 ) => ({
-  queryKey: summaryKey(at.source, kind, at.sha256, at.axis.name, group),
+  queryKey: summaryKey(at.source, kind, at.sha256, at.axis.name, ...key),
   staleTime: Infinity,
-  gcTime: 5 * 60_000,
+  gcTime,
   queryFn: ({ signal }: { signal: AbortSignal }) => read(rangesOf(at, signal)),
 });
 
 const groupFieldQuery = (at: AxisRead, group: number) =>
-  groupQuery(at, 'group', group, (read) =>
+  groupQuery(at, 'group', [group], (read) =>
     readField(read, at.index, at.axis, group, overviewLevel(at.axis))
   );
 
 const groupStatsQuery = (at: AxisRead, group: number) =>
-  groupQuery(at, 'group-stats', group, (read) => readGroupStats(read, at.index, at.axis, group));
+  groupQuery(at, 'group-stats', [group], (read) => readGroupStats(read, at.index, at.axis, group));
 
 const groupSharesQuery = (at: AxisRead, group: number) =>
-  groupQuery(at, 'group-shares', group, (read) =>
+  groupQuery(at, 'group-shares', [group], (read) =>
     readContactShares(read, at.index, at.axis, group)
   );
 
-const chunkTable = (at: AxisRead, group: number) =>
-  at.queryClient.fetchQuery(
-    groupQuery(at, 'chunks', group, (read) => readChunkTable(read, at.index, at.axis, group))
-  );
+/** A group's chunk table and block scales, read once and kept. */
+const blocksIndex = (at: AxisRead, group: number) =>
+  Promise.all([
+    at.queryClient.fetchQuery(
+      groupQuery(at, 'chunks', [group], (read) => readChunkTable(read, at.index, at.axis, group))
+    ),
+    at.queryClient.fetchQuery(
+      groupQuery(at, 'block-scales', [group], (read) =>
+        readBlockScales(read, at.index, at.axis, group)
+      )
+    ),
+  ]);
 
-const blockScales = (at: AxisRead, group: number) =>
-  at.queryClient.fetchQuery(
-    groupQuery(at, 'block-scales', group, (read) => readBlockScales(read, at.index, at.axis, group))
-  );
-
-/** A contact's block at full resolution: its group's chunk table and block scales read first. */
-const blockQuery = (at: AxisRead, group: number, contact: number, block: number) => ({
-  queryKey: summaryKey(at.source, 'block', at.sha256, at.axis.name, group, contact, block),
-  staleTime: Infinity,
-  gcTime: 60_000,
-  queryFn: async ({ signal }: { signal: AbortSignal }) => {
-    const [table, scales] = await Promise.all([chunkTable(at, group), blockScales(at, group)]);
-    const read = rangesOf(at, signal);
-    return readBlock(read, at.index, at.axis, { group, contact, block }, table, scales);
-  },
-});
+const ROWS_GC_MS = 60_000;
 
 /** A contact's whole row, its blocks one after another. */
-export const rowQuery = (at: AxisRead, group: number, contact: number) => ({
-  queryKey: summaryKey(at.source, 'row', at.sha256, at.axis.name, group, contact),
-  staleTime: Infinity,
-  gcTime: 60_000,
-  queryFn: async () => {
-    const { count } = blocksOf(at.index, at.axis);
-    const blocks = await Promise.all(
-      Array.from({ length: count }, (_, block) =>
-        at.queryClient.fetchQuery(blockQuery(at, group, contact, block))
-      )
-    );
-    if (blocks.length === 1) return blocks[0];
-    const row = new Int16Array(at.index.time.steps);
-    blocks.reduce((start, block) => {
-      row.set(block, start);
-      return start + block.length;
-    }, 0);
-    return row;
-  },
-});
+export const rowQuery = (at: AxisRead, group: number, contact: number) =>
+  groupQuery(
+    at,
+    'row',
+    [group, contact],
+    async (read) => {
+      const [table, scales] = await blocksIndex(at, group);
+      const { length, count } = blocksOf(at.index, at.axis);
+      const blocks = await Promise.all(
+        Array.from({ length: count }, (_, block) =>
+          readBlock(read, at.index, at.axis, { group, contact, block }, table, scales)
+        )
+      );
+      const row = new Int16Array(at.index.time.steps);
+      blocks.forEach((block, b) => {
+        row.set(block, b * length);
+      });
+      return row;
+    },
+    ROWS_GC_MS
+  );
 
 /** A contact's tile of a level: a block at full resolution, else bins of an overview. */
 const tileQuery = (at: AxisRead, group: number, contact: number, levelAt: number, tile: number) =>
-  levelAt === 0
-    ? blockQuery(at, group, contact, tile)
-    : {
-        queryKey: summaryKey(
-          at.source,
-          'tile',
-          at.sha256,
-          at.axis.name,
-          group,
-          contact,
-          levelAt,
-          tile
-        ),
-        staleTime: Infinity,
-        gcTime: 60_000,
-        queryFn: ({ signal }: { signal: AbortSignal }) =>
-          readTile(rangesOf(at, signal), at.index, at.axis, { group, contact, levelAt, tile }),
-      };
+  groupQuery(
+    at,
+    'tile',
+    [group, contact, levelAt, tile],
+    async (read) => {
+      if (levelAt > 0) return readTile(read, at.index, at.axis, { group, contact, levelAt, tile });
+      const [table, scales] = await blocksIndex(at, group);
+      return readBlock(read, at.index, at.axis, { group, contact, block: tile }, table, scales);
+    },
+    ROWS_GC_MS
+  );
 
 const oneGroup = (
   index: LfpSummaryIndex,
@@ -481,12 +469,12 @@ export function useContactRows(
   }, [overview, read, contacts, index, tooMany]);
 }
 
-/** Contacts' rows over a window, a row each in the order asked for. */
-export type TraceRows = { field: LfpField; rowOf: (contact: number) => number | undefined };
+/** Contacts' rows over a window: `rows` has each contact's row of `field`. */
+export type TraceRows = { field: LfpField; rows: ReadonlyMap<number, number> };
 
-type WindowRows = { rows: TraceRows | null; problem: RowsProblem | null };
+type WindowRows = { rows: TraceRows | null; tooMany: boolean };
 
-const NO_WINDOW_ROWS: WindowRows = { rows: null, problem: null };
+const NO_WINDOW_ROWS: WindowRows = { rows: null, tooMany: false };
 
 /**
  * Contacts over a window of time, at the coarsest level with a bin for each of `width` pixels: read
@@ -506,11 +494,13 @@ export function useWindowRows(
   const { choice, field: overview } = chosen;
   const axis = index.axes[choice.axis];
   const levelAt = windowLevel(axis, (to - from) / index.time.dt, width);
-  const fromOverview =
-    !enabled || width === 0 || overview.kind === 'value' || levelAt === axis.levels.length - 1;
+  const fromOverview = !enabled || levelAt === axis.levels.length - 1;
+  // Kept while the window moves within the same tiles, so the field isn't put together again
+  const inWindow = fromOverview ? [] : windowTiles(index, axis, levelAt, [from, to]);
+  const [firstTile, tileCount] = [inWindow[0], inWindow.length];
   const tiles = useMemo(
-    () => (fromOverview ? [] : windowTiles(index, axis, levelAt, [from, to])),
-    [fromOverview, index, axis, levelAt, from, to]
+    () => Array.from({ length: tileCount }, (_, t) => firstTile + t),
+    [firstTile, tileCount]
   );
   const { tileBins, width: values } = levelTiling(index, axis, levelAt);
   const tooMany =
@@ -543,15 +533,14 @@ export function useWindowRows(
         contacts.map((_, c) => tiles.map((_, t) => data[c * perContact + g * tiles.length + t]))
       )
     );
-    const rowOf = new Map(contacts.map((contact, row) => [contact, row]));
-    return { field: sumFields(fields), rowOf: (contact: number) => rowOf.get(contact) };
+    const rows = new Map(contacts.map((contact, row) => [contact, row]));
+    return { field: sumFields(fields), rows };
   }, [read.data, choice.groups, tiles, index, axis, levelAt, contacts]);
   const [shown, setShown] = useState<{ of: LfpField; rows: TraceRows } | null>(null);
   if (wanted && shown?.rows !== wanted) setShown({ of: overview, rows: wanted });
   if (fromOverview) return NO_WINDOW_ROWS;
-  if (tooMany) return { rows: null, problem: 'too-many' };
-  const rows = wanted ?? (shown?.of === overview ? shown.rows : null);
-  return { rows, problem: read.failed ? 'failed' : null };
+  if (tooMany) return { rows: null, tooMany };
+  return { rows: wanted ?? (shown?.of === overview ? shown.rows : null), tooMany };
 }
 
 /** Whether the field chosen has its correlation stored: groups added up have none. */
@@ -569,14 +558,19 @@ export function useStoredCorrelation(
   const queryClient = useQueryClient();
   const at = { queryClient, source, sha256, index, axis };
   return useQuery({
-    ...groupQuery(at, 'correlation', group, async (read) => {
-      const stored = axis.correlation;
-      if (!stored) throw new Error('The LFP summary has no correlation');
-      const bytes = await readSlice(read, datasetOf(index, stored.dataset), [group]);
-      return { values: new Int16Array(bytes), scale: stored.scale };
-    }),
+    ...groupQuery(
+      at,
+      'correlation',
+      [group],
+      async (read) => {
+        const stored = axis.correlation;
+        if (!stored) throw new Error('The LFP summary has no correlation');
+        const bytes = await readSlice(read, datasetOf(index, stored.dataset), [group]);
+        return { values: new Int16Array(bytes), scale: stored.scale };
+      },
+      60_000
+    ),
     enabled,
-    gcTime: 60_000,
   });
 }
 

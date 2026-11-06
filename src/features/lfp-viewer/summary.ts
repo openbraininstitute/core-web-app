@@ -229,9 +229,10 @@ export async function readRanges(
 export async function readSlice(
   read: ReadRange,
   entry: LfpDataset,
-  leading: readonly number[] = []
+  leading: readonly number[] = [],
+  count = 1
 ): Promise<ArrayBuffer> {
-  const { offset, length } = sliceOf(entry, leading);
+  const { offset, length } = sliceOf(entry, leading, count);
   return (await read({ offset, length })).slice().buffer;
 }
 
@@ -419,12 +420,9 @@ export async function readTile(
   const { level, bins, tileBins } = levelTiling(index, axis, at.levelAt);
   const first = at.tile * tileBins;
   const entry = datasetOf(index, level.dataset);
-  const { offset, length } = sliceOf(
-    entry,
-    [at.group, at.contact, first],
-    Math.min(tileBins, bins - first)
+  return new Int16Array(
+    await readSlice(read, entry, [at.group, at.contact, first], Math.min(tileBins, bins - first))
   );
-  return new Int16Array((await read({ offset, length })).slice().buffer);
 }
 
 /**

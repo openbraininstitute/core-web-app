@@ -300,13 +300,15 @@ function LfpReportView({
   );
   // The lanes on show and a screen of them either side are read over the window, finer than the
   // overview: only while drawn, and once positions are in, as they can change which contacts are
-  // traced. A contact's row read so holds nothing of the mean to take off.
+  // traced. A contact's row read so holds nothing of the mean to take off. They move a screen at a
+  // time, so that a scroll of a lane doesn't put the window's field together again.
   const [lanesInView, setLanesInView] = useState<LanesInView | null>(null);
-  const readTraces = useMemo(() => {
-    if (!lanesInView) return [];
-    const margin = lanesInView.end - lanesInView.first;
-    return traces.slice(Math.max(0, lanesInView.first - margin), lanesInView.end + margin);
-  }, [traces, lanesInView]);
+  const screen = lanesInView?.perScreen ?? 0;
+  const readFrom = lanesInView ? Math.floor(lanesInView.first / screen) * screen - screen : 0;
+  const readTraces = useMemo(
+    () => (screen ? traces.slice(Math.max(0, readFrom), readFrom + 4 * screen) : []),
+    [traces, screen, readFrom]
+  );
   const readsTraces = mode === 'traces' && !removeShared && contacts.state !== 'loading';
   const traceRows = useWindowRows(
     source,
@@ -415,8 +417,7 @@ function LfpReportView({
                   ` · along (${direction.axis.map((d) => d.toFixed(2)).join(', ')})`}
                 {statsFromOverview(chosen) &&
                   ` · table over ${Number(chosen.field.binMs.toFixed(2))} ms means, so peaks read lower`}
-                {traceRows.problem === 'too-many' &&
-                  ' · overview traces: too many rows for full resolution'}
+                {traceRows.tooMany && ' · overview traces: too many rows for full resolution'}
                 {loading && ' · reading the field'}
                 {(failed || lastUnread) && ' · that field could not be read'}
               </span>
