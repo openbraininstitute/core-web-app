@@ -241,14 +241,21 @@ function LfpReportView({
   const ticked = useMemo(() => picks.map((p) => p.nodeId), [picks]);
   const colours = useMemo(() => pickColours(picks), [picks]);
   const [hoveredContact, setHoveredContact] = useState<number | null>(null);
-  // At first the contact the field swings most at.
-  const [selectedContact, setSelectedContact] = useState<number | null>(() =>
+  // The contact the statistics are about, at first and after a reset the one the field swings most at.
+  const [defaultContact] = useState<number | null>(() =>
     ptp < 0
       ? null
       : (maxBy(
           Array.from({ length: index.contacts }, (_, c) => c),
           swing
         ) ?? null)
+  );
+  const [selectedContact, setSelectedContact] = useState(defaultContact);
+  // Clicked again, a contact gives the selection back, as a voltage report's trace gives back every cell.
+  const toggleSelected = useCallback(
+    (contact: number) =>
+      setSelectedContact((selected) => (selected === contact ? defaultContact : contact)),
+    [defaultContact]
   );
   const traces = useMemo(
     () => (tracedOnly ? tracedContacts(rows, ticked) : rows.flatMap((row) => row.contacts)),
@@ -385,13 +392,14 @@ function LfpReportView({
                 {(failed || lastUnread) && ' · that field could not be read'}
               </span>
               <PlotHelp>
-                Drag to zoom · Double-click to reset · Click to move the player there; in the map,
-                to pick the row&apos;s contact · Tick contacts in the table to draw their traces in
-                a colour of their own, there and in the 3D player; Show ticked draws those alone ·
-                Scroll through traces that don&apos;t fit · Removing the shared signal leaves the
-                table and spectra as recorded · A group of cells&apos; overview holds means over its
-                bins, the total&apos;s their extremes, so zoomed out the total&apos;s peaks read
-                higher
+                Drag to zoom · Double-click to reset · Click a trace to select its contact for the
+                statistics, again to go back to the one the field swings most at; in the map, the
+                row&apos;s contact · The player moves with the bar below · Tick contacts in the
+                table to draw their traces in a colour of their own, there and in the 3D player;
+                Show ticked draws those alone · Scroll through traces that don&apos;t fit · Removing
+                the shared signal leaves the table and spectra as recorded · A group of cells&apos;
+                overview holds means over its bins, the total&apos;s their extremes, so zoomed out
+                the total&apos;s peaks read higher
               </PlotHelp>
             </>
           }
@@ -512,9 +520,8 @@ function LfpReportView({
         window={shownWindow}
         onWindowChange={setTimeWindow}
         selectedContact={selectedContact}
-        onContactClick={setSelectedContact}
+        onContactClick={toggleSelected}
         onContactHover={setHoveredContact}
-        onSeek={moveTo}
         timeCursor={timeCursor}
         events={timeline}
         footer={transport}
@@ -532,10 +539,16 @@ function LfpReportView({
       blocks={blocks}
       ticked={ticked}
       onTick={(contact) => setPicks((shown) => togglePickIn(shown, contact))}
-      onReset={() => setPicks([])}
+      reset={{
+        picked: picks.length > 0 || timeWindow !== null || selectedContact !== defaultContact,
+        onReset: () => {
+          setPicks([]);
+          setTimeWindow(null);
+          setSelectedContact(defaultContact);
+        },
+      }}
       onContactHover={setHoveredContact}
       selectedContact={selectedContact}
-      onContactClick={setSelectedContact}
     />
   );
 

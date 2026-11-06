@@ -57,10 +57,10 @@ type Props = {
   window: [number, number];
   onWindowChange: (window: [number, number] | null) => void;
   selectedContact: number | null;
+  /** A trace clicked, or a map row's lead. */
   onContactClick: (contact: number) => void;
   /** The contact under the pointer: a trace's, or a map row's lead; null once it leaves. */
   onContactHover?: (contact: number | null) => void;
-  onSeek: (timeInMs: number) => void;
   timeCursor: TimeCursor;
   /** When the simulation's stimuli, recordings and synaptic changes happen. */
   events: readonly TimelineEvent[];
@@ -116,8 +116,8 @@ function binRange(field: LfpField, from: number, to: number): [number, number] {
  * The field over time: stacked traces of a few contacts, each drawn as its
  * lowest-to-highest value per pixel so no peak is lost, or rows of colour, each
  * a contact or the mean of several. Dragging zooms into a span of time, a
- * double-click zooms back out, and a click moves the player there, and in the
- * map picks the row's contact.
+ * double-click zooms back out, and a click picks the trace's contact, or the
+ * map row's.
  */
 export function FieldPlot({
   mode,
@@ -135,7 +135,6 @@ export function FieldPlot({
   selectedContact,
   onContactClick,
   onContactHover,
-  onSeek,
   timeCursor,
   events,
   footer,
@@ -512,9 +511,10 @@ export function FieldPlot({
           // From the event, as the last move may not have been drawn yet.
           const x1 = inPlot(localX(e));
           if (Math.abs(x1 - drag.x0) < DRAG_PX) {
-            onSeek(timeOf(drag.x0));
-            const row = mode === 'map' ? rows[rowOf(localY(e))] : undefined;
-            if (row) onContactClick(row.lead);
+            const y = localY(e);
+            if (rowCount === 0 || y < plot.top || y > plot.bottom) return;
+            const r = rowOf(y);
+            onContactClick(mode === 'map' ? rows[r].lead : traces[r]);
             return;
           }
           const a = timeOf(Math.min(drag.x0, x1));

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defaultVisibleColumnSet, NodesGrid } from '@/features/circuit-nodes/components/nodes-grid';
 import { numberTest, textTest } from '@/features/circuit-nodes/row-filters';
@@ -71,7 +71,8 @@ function queryContacts(
 
 /**
  * The report's contacts, one a row, in the grid the simulations' cells are in: where each is and
- * its field's statistics over the run. A click on a row ticks its contact and picks it.
+ * its field's statistics over the run. A click on a row ticks its contact, as a voltage report's
+ * rows tick their cells; the selected contact's row is marked and brought into view.
  */
 export function ElectrodesTable({
   contacts,
@@ -82,9 +83,8 @@ export function ElectrodesTable({
   blocks,
   ticked,
   onTick,
-  onReset,
+  reset,
   selectedContact,
-  onContactClick,
   onContactHover,
 }: {
   contacts: number;
@@ -97,9 +97,9 @@ export function ElectrodesTable({
   blocks: readonly ContactBlock[] | null;
   ticked: readonly number[];
   onTick: (contact: number) => void;
-  onReset: () => void;
+  /** Lit while anything the reset gives back was changed: ticks, a zoom, the selection. */
+  reset: { picked: boolean; onReset: () => void };
   selectedContact: number | null;
-  onContactClick: (contact: number) => void;
   onContactHover?: (contact: number | null) => void;
 }) {
   const manyBlocks = !!blocks && blocks.length > 1;
@@ -192,19 +192,12 @@ export function ElectrodesTable({
   );
   const selected = useMemo(() => new Set(ticked), [ticked]);
 
-  // A contact picked elsewhere, in the traces or the map, is brought into view; one clicked here isn't.
-  const clickedRef = useRef<number | null>(null);
+  // Selected in the traces or the map, so brought into view here.
   const [focusRow, setFocusRow] = useState<{ nodeId: number; key: number }>();
   useEffect(() => {
-    if (selectedContact === null || selectedContact === clickedRef.current) return;
-    clickedRef.current = null;
+    if (selectedContact === null) return;
     setFocusRow((last) => ({ nodeId: selectedContact, key: (last?.key ?? 0) + 1 }));
   }, [selectedContact]);
-  const onRowClick = (contact: number) => {
-    clickedRef.current = contact;
-    onTick(contact);
-    onContactClick(contact);
-  };
 
   return (
     <div className={styles.root}>
@@ -219,12 +212,12 @@ export function ElectrodesTable({
         pinnedVersion={rows}
         pickColumn
         selectedNodeIds={selected}
-        onRowClick={onRowClick}
+        onRowClick={onTick}
         onRowHover={onContactHover}
         markedNodeId={selectedContact}
         focusRow={focusRow}
         rowIndexOf={rowIndexOf}
-        reset={{ picked: ticked.length > 0, onReset }}
+        reset={reset}
         rowsName="Contacts"
       />
     </div>
