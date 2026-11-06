@@ -208,6 +208,8 @@ export function LfpScene({
     () => bandsOf(colours, selectedContact, hoveredContact),
     [colours, selectedContact, hoveredContact]
   );
+  const bandLevels = fieldLevels && [...bands.keys()].map((c) => fieldLevels[c]).join();
+  // biome-ignore lint/correctness/useExhaustiveDependencies: outside the points view, only the banded contacts' levels are drawn
   const drawn = useMemo<ICircuitOverlayGroup[] | undefined>(() => {
     if (!positions || !fieldLevels) return undefined;
     const xyzOf = (c: number) => [positions[c * 3], positions[c * 3 + 1], positions[c * 3 + 2]];
@@ -250,7 +252,7 @@ export function LfpScene({
       });
     }
     return groups;
-  }, [positions, field.contacts, fieldLevels, view, bands]);
+  }, [positions, field.contacts, view === 'points' ? fieldLevels : bandLevels, view, bands]);
   const placement = useMemo(
     () => (grid && view !== 'points' ? placeVoxels(grid, slice) : null),
     [grid, view, slice]

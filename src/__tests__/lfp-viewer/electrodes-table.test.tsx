@@ -75,7 +75,7 @@ describe('contactCardRows', () => {
     });
 
     expect(rows).toEqual([
-      { label: 'x, y, z', value: '4214, -1310, -2110 µm' },
+      { label: 'Position (µm)', value: '4214, -1310, -2110' },
       { label: 'Share', value: '25 %' },
       { label: 'Min', value: '-0.4 µV' },
       { label: 'P–p', value: '1.3 µV' },

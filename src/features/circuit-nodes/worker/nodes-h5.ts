@@ -1,7 +1,12 @@
 import { Dataset, File, Group } from 'h5wasm';
 import { match } from 'ts-pattern';
 
-import { listedValues, numberTest, textTest } from '@/features/circuit-nodes/row-filters';
+import {
+  combinedTest,
+  listedValues,
+  numberTest,
+  textTest,
+} from '@/features/circuit-nodes/row-filters';
 import {
   type ColumnFilter,
   type ColumnKind,
@@ -795,18 +800,10 @@ function compareAt(handle: ColumnHandle, data: LoadedColumn, a: number, b: numbe
 /** A filter as a test on a row, with its bounds parsed and its comparison chosen once, not per row. */
 function rowTest(handle: ColumnHandle, data: LoadedColumn, filter: GenericFilter): RowTest {
   if ('operator' in filter) {
-    const tests = filter.conditions.map((c) => rowTest(handle, data, c));
-    if (tests.length === 0) return () => true;
-    if (filter.operator === 'OR') {
-      return (row) => {
-        for (const test of tests) if (test(row)) return true;
-        return false;
-      };
-    }
-    return (row) => {
-      for (const test of tests) if (!test(row)) return false;
-      return true;
-    };
+    return combinedTest(
+      filter.operator,
+      filter.conditions.map((c) => rowTest(handle, data, c))
+    );
   }
   if (filter.filterType === 'text') {
     const test = textTest(filter);

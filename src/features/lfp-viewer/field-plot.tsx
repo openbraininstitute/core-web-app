@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { COLOUR_TABLE } from '@/features/lfp-viewer/colour-scale';
-import { SELECTED_COLOUR } from '@/features/lfp-viewer/contact-colours';
+import { contactColour, SELECTED_COLOUR } from '@/features/lfp-viewer/contact-colours';
 import { binAt, fieldValue } from '@/features/lfp-viewer/summary';
 import { TIME_CURSOR_COLOR } from '@/features/sonata-viewer/time-cursor';
 import { nextEventsHover, TimelineCard } from '@/features/spike-viewer/components/timeline-card';
@@ -30,7 +30,6 @@ const MARGIN = { left: 52, right: 10, top: 6, bottom: 22 };
 const INK = '#002766';
 const AXIS = '#bfbfbf';
 const LABEL = '#8c8c8c';
-const SELECTED = SELECTED_COLOUR;
 /** Over the other traces while a row of the table is hovered, as a voltage report mutes its other lines. */
 const HOVER_WASH = 'rgba(255, 255, 255, 0.6)';
 const HOVERED_WIDTH = 2.5;
@@ -114,14 +113,21 @@ function rowValue(field: LfpField, row: FieldRow, bin: number): number {
   return sum / row.contacts.length;
 }
 
-/** A trace's colour: a ticked contact's own, the selected one's, or `otherwise`. */
-function inkOf(
-  colours: ReadonlyMap<number, string>,
-  selected: number | null,
-  contact: number,
-  otherwise: string
-): string {
-  return colours.get(contact) ?? (contact === selected ? SELECTED : otherwise);
+/** A canvas cleared for drawing at `size`, its backing store reallocated only when the size changed. */
+function clearedCanvas(
+  canvas: HTMLCanvasElement,
+  size: { width: number; height: number }
+): CanvasRenderingContext2D | null {
+  const dpr = window.devicePixelRatio || 1;
+  const width = Math.floor(size.width * dpr);
+  const height = Math.floor(size.height * dpr);
+  if (canvas.width !== width) canvas.width = width;
+  if (canvas.height !== height) canvas.height = height;
+  const g = canvas.getContext('2d');
+  if (!g) return null;
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, size.width, size.height);
+  return g;
 }
 
 /** How the traces are drawn across the plot: from which field and bins, at what scale, between which x. */
@@ -339,13 +345,8 @@ export function FieldPlot({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || size.width === 0) return;
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = size.width * dpr;
-    canvas.height = size.height * dpr;
-    const g = canvas.getContext('2d');
+    const g = clearedCanvas(canvas, size);
     if (!g) return;
-    g.setTransform(dpr, 0, 0, dpr, 0, 0);
-    g.clearRect(0, 0, size.width, size.height);
     g.font = '10px sans-serif';
     const { width: plotWidth, height: plotHeight } = plot;
 
@@ -383,7 +384,7 @@ export function FieldPlot({
           : rows.findIndex((row) => row.contacts.includes(selectedContact));
       if (selectedRow >= 0) {
         const y = rowY(selectedRow);
-        g.fillStyle = SELECTED;
+        g.fillStyle = SELECTED_COLOUR;
         g.beginPath();
         g.moveTo(plot.left - 4, y);
         g.lineTo(plot.left, y - 4);
@@ -405,7 +406,7 @@ export function FieldPlot({
       g.clip();
       for (let row = firstLane; row < endLane; row++) {
         if (row % labelEvery !== 0) continue;
-        g.fillStyle = inkOf(colours, selectedContact, traces[row], LABEL);
+        g.fillStyle = contactColour(colours, selectedContact, traces[row]) ?? LABEL;
         g.fillText(traceLabels[row], plot.left - 6, laneY(row));
       }
       g.restore();
@@ -421,7 +422,7 @@ export function FieldPlot({
         .sort((a, b) => Number(colours.has(traces[a])) - Number(colours.has(traces[b])));
       for (const row of drawOrder) {
         const contact = traces[row];
-        g.strokeStyle = inkOf(colours, selectedContact, contact, INK);
+        g.strokeStyle = contactColour(colours, selectedContact, contact) ?? INK;
         g.lineWidth = colours.has(contact) ? 1.5 : 1;
         strokeTrace(g, drawing, traceField ? row : contact, laneY(row));
       }
@@ -476,13 +477,8 @@ export function FieldPlot({
   useEffect(() => {
     const canvas = hoverCanvasRef.current;
     if (!canvas || size.width === 0) return;
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = size.width * dpr;
-    canvas.height = size.height * dpr;
-    const g = canvas.getContext('2d');
+    const g = clearedCanvas(canvas, size);
     if (!g) return;
-    g.setTransform(dpr, 0, 0, dpr, 0, 0);
-    g.clearRect(0, 0, size.width, size.height);
     const row = mode === 'traces' && hoveredContact !== null ? traces.indexOf(hoveredContact) : -1;
     if (row < 0) return;
     g.save();
@@ -492,7 +488,7 @@ export function FieldPlot({
     // Over the plot alone, not its time axis, though the trace may reach past it as on the traces' canvas.
     g.fillStyle = HOVER_WASH;
     g.fillRect(plot.left, plot.top, plot.width, plot.height);
-    g.strokeStyle = inkOf(colours, selectedContact, hoveredContact as number, INK);
+    g.strokeStyle = contactColour(colours, selectedContact, hoveredContact as number) ?? INK;
     g.lineWidth = HOVERED_WIDTH;
     strokeTrace(g, traceDrawing(), traceField ? row : (hoveredContact as number), laneY(row));
     g.restore();
@@ -514,12 +510,8 @@ export function FieldPlot({
     to,
   ]);
 
-  const hoveredRef = useRef<number | null>(null);
-  const hoverContact = (contact: number | null) => {
-    if (hoveredRef.current === contact) return;
-    hoveredRef.current = contact;
-    onContactHover?.(contact);
-  };
+  const hoverContact = hover?.contact ?? null;
+  useEffect(() => onContactHover?.(hoverContact), [hoverContact, onContactHover]);
 
   // On a canvas of their own: a hover draws their bands anew, which needn't draw the traces.
   // biome-ignore lint/correctness/useExhaustiveDependencies: the plot's edges follow from size
@@ -584,7 +576,6 @@ export function FieldPlot({
             rowCount === 0
           ) {
             setHover(null);
-            hoverContact(null);
             return;
           }
           const r = rowOf(y);
@@ -592,7 +583,6 @@ export function FieldPlot({
           const at = { clientX: e.clientX, clientY: e.clientY, time };
           if (mode === 'map') {
             const row = rows[r];
-            hoverContact(row.lead);
             setHover({
               ...at,
               title: row.label,
@@ -604,12 +594,11 @@ export function FieldPlot({
           } else {
             const contact = traces[r];
             const label = traceLabels[r];
-            hoverContact(contact);
             setHover({
               ...at,
               title: `e${contact}`,
               subtitle: label === `e${contact}` ? undefined : label,
-              swatch: inkOf(colours, selectedContact, contact, INK),
+              swatch: contactColour(colours, selectedContact, contact) ?? INK,
               uv: traceField
                 ? fieldValue(traceField, r, binAt(traceField, time))
                 : fieldValue(field, contact, binAt(field, time)),
@@ -621,7 +610,6 @@ export function FieldPlot({
         onPointerLeave={() => {
           setHover(null);
           setEventsHover(null);
-          hoverContact(null);
         }}
         onPointerUp={(e) => {
           if (!drag) return;

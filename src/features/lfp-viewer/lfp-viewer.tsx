@@ -279,10 +279,12 @@ function LfpReportView({
           : 'Selected',
     [selectedContact, defaultContact]
   );
-  const traces = useMemo(
-    () => (tracedOnly ? tracedContacts(rows, ticked) : rows.flatMap((row) => row.contacts)),
+  const allContacts = useMemo(() => rows.flatMap((row) => row.contacts), [rows]);
+  const tracedOnes = useMemo(
+    () => (tracedOnly ? tracedContacts(rows, ticked) : null),
     [tracedOnly, rows, ticked]
   );
+  const traces = tracedOnes ?? allContacts;
   const along = useMemo(
     () => (positions && direction ? coordinatesAlong(positions, direction.axis) : null),
     [positions, direction]

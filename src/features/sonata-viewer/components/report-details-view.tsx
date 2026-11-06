@@ -3,7 +3,7 @@ import Plotly from 'plotly.js-dist-min';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import createPlotlyComponent from 'react-plotly.js/factory';
 
-import { CHART_LINE_COLOR, TRACE_COLORS } from '@/features/sonata-viewer/constants';
+import { CHART_LINE_COLOR, slotColour } from '@/features/sonata-viewer/constants';
 import { usePlotListeners } from '@/features/sonata-viewer/hooks/use-plot-listeners';
 import { TIME_CURSOR_COLOR } from '@/features/sonata-viewer/time-cursor';
 import { useCellRow } from '@/features/spike-viewer/cell-row';
@@ -377,7 +377,7 @@ function SharedTracesPlot({
 
       let color: string = CHART_LINE_COLOR;
       if (line.preview) color = picking ? PREVIEW_COLOR : CHART_LINE_COLOR;
-      else if (colored) color = TRACE_COLORS[(line.slot as number) % TRACE_COLORS.length];
+      else if (colored) color = slotColour(line.slot as number);
       else if (line.slot !== null) color = OTHER_COLOR;
       // every cell drawn in one colour: the hovered one keeps it, the rest step back
       else if (emphasis && !isHovered) color = MUTED_COLOR;
@@ -459,12 +459,8 @@ function SharedTracesPlot({
   }, [x, y, size, legend, timeUnits, units, valueLabel]);
 
   const [tip, setTip] = useState<TraceHover>();
-  const hoveredCellRef = useRef<number | null>(null);
-  const hoverCell = (nodeId: number | null) => {
-    if (hoveredCellRef.current === nodeId) return;
-    hoveredCellRef.current = nodeId;
-    onCellHover?.(nodeId);
-  };
+  const tipCell = tip ? (population.traces[tip.traceIndex]?.nodeId ?? null) : null;
+  useEffect(() => onCellHover?.(tipCell), [tipCell, onCellHover]);
   // The graph once drawn, for the timings over it; a timing's card over a line's, which gives way.
   const [graph, setGraph] = useState<HTMLElement | null>(null);
   const [timingHovered, setTimingHovered] = useState(false);
@@ -584,17 +580,10 @@ function SharedTracesPlot({
       onPointerMove={(e) => {
         const line = lineUnder(e.clientX, e.clientY);
         setTip(line ? { ...line, clientX: e.clientX, clientY: e.clientY } : undefined);
-        hoverCell(line ? (population.traces[line.traceIndex]?.nodeId ?? null) : null);
       }}
       // Not while a zoom is dragged out, which Plotly follows over a cover of its own.
-      onPointerDown={() => {
-        setTip(undefined);
-        hoverCell(null);
-      }}
-      onPointerLeave={() => {
-        setTip(undefined);
-        hoverCell(null);
-      }}
+      onPointerDown={() => setTip(undefined)}
+      onPointerLeave={() => setTip(undefined)}
       onClick={(e) => {
         // A click on the plot itself, which Plotly passes on when nothing was dragged.
         if (!(e.target instanceof Element) || !e.target.closest('.nsewdrag')) return;

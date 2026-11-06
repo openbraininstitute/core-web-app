@@ -43,3 +43,5 @@ export const TRACE_COLORS: readonly string[] = [
   '#998de4',
   '#ed8988',
 ];
+
+export const slotColour = (slot: number): string => TRACE_COLORS[slot % TRACE_COLORS.length];

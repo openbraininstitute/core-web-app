@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defaultVisibleColumnSet, NodesGrid } from '@/features/circuit-nodes/components/nodes-grid';
-import { numberTest, textTest } from '@/features/circuit-nodes/row-filters';
+import { combinedTest, numberTest, textTest } from '@/features/circuit-nodes/row-filters';
 import { ColumnKindDict } from '@/features/circuit-nodes/types';
 
 import type { IDatasource } from 'ag-grid-community';
@@ -21,14 +21,13 @@ import styles from '@/features/circuit-nodes/circuit-nodes-table.module.css';
 /** A row of the grid, which goes by its node id: here the contact it is. */
 type ContactRow = Record<string, string | number | null> & { node_id: number };
 
-const STAT_COLUMNS: { key: string; title: string; short: string; unit: string; digits: number }[] =
-  [
-    { key: 'min', title: 'Min (µV)', short: 'Min', unit: 'µV', digits: 1 },
-    { key: 'max', title: 'Max (µV)', short: 'Max', unit: 'µV', digits: 1 },
-    { key: 'ptp', title: 'P–p (µV)', short: 'P–p', unit: 'µV', digits: 1 },
-    { key: 'rms', title: 'RMS (µV)', short: 'RMS', unit: 'µV', digits: 1 },
-    { key: 'trough_ms', title: 'Trough (ms)', short: 'Trough', unit: 'ms', digits: 0 },
-  ];
+const STAT_COLUMNS: { key: string; short: string; unit: string; digits: number }[] = [
+  { key: 'min', short: 'Min', unit: 'µV', digits: 1 },
+  { key: 'max', short: 'Max', unit: 'µV', digits: 1 },
+  { key: 'ptp', short: 'P–p', unit: 'µV', digits: 1 },
+  { key: 'rms', short: 'RMS', unit: 'µV', digits: 1 },
+  { key: 'trough_ms', short: 'Trough', unit: 'ms', digits: 0 },
+];
 
 const fixed = (digits: number) => (value: number) => value.toFixed(digits);
 
@@ -50,7 +49,7 @@ export function contactCardRows(
   const rows: { label: string; value: string }[] = [];
   if (positions) {
     const at = [0, 1, 2].map((k) => Math.round(positions[contact * 3 + k])).join(', ');
-    rows.push({ label: 'x, y, z', value: `${at} µm` });
+    rows.push({ label: 'Position (µm)', value: at });
   }
   if (shares) rows.push({ label: 'Share', value: `${fixed(0)(shares[contact] * 100)} %` });
   for (const s of STAT_COLUMNS) {
@@ -62,14 +61,22 @@ export function contactCardRows(
   return rows;
 }
 
-function matches(filter: ColumnFilter, value: string | number | null | undefined): boolean {
+type Value = string | number | null | undefined;
+
+function valueTest(filter: ColumnFilter): (value: Value) => boolean {
   if ('operator' in filter) {
-    const results = filter.conditions.map((condition) => matches(condition, value));
-    return filter.operator === 'OR' ? results.some(Boolean) : results.every(Boolean);
+    return combinedTest(filter.operator, filter.conditions.map(valueTest));
   }
-  if (filter.filterType === 'set') return filter.values.includes(String(value ?? ''));
-  if (filter.filterType === 'text') return textTest(filter)(String(value ?? ''));
-  return value !== null && value !== undefined && numberTest(filter)(Number(value));
+  if (filter.filterType === 'set') {
+    const values = new Set(filter.values);
+    return (value) => values.has(String(value ?? ''));
+  }
+  if (filter.filterType === 'text') {
+    const test = textTest(filter);
+    return (value) => test(String(value ?? ''));
+  }
+  const test = numberTest(filter);
+  return (value) => value !== null && value !== undefined && test(Number(value));
 }
 
 function compare(a: string | number | null, b: string | number | null): number {
@@ -85,10 +92,8 @@ function queryContacts(
   sort: readonly SortItem[],
   filter: FilterModel
 ): ContactRow[] {
-  const filters = Object.entries(filter);
-  const kept = rows.filter((row) =>
-    filters.every(([column, columnFilter]) => matches(columnFilter, row[column]))
-  );
+  const tests = Object.entries(filter).map(([column, f]) => [column, valueTest(f)] as const);
+  const kept = rows.filter((row) => tests.every(([column, test]) => test(row[column])));
   if (sort.length === 0) return kept;
   return kept.sort((a, b) => {
     for (const { column, direction } of sort) {
@@ -97,6 +102,16 @@ function queryContacts(
     }
     return a.node_id - b.node_id;
   });
+}
+
+/** `queryContacts` over `rows`, keeping the last query's rows for the next block the grid asks for. */
+function contactQuery(rows: readonly ContactRow[]) {
+  let last: { key: string; kept: ContactRow[] } | null = null;
+  return (sort: readonly SortItem[], filter: FilterModel): ContactRow[] => {
+    const key = JSON.stringify([sort, filter]);
+    if (last?.key !== key) last = { key, kept: queryContacts(rows, sort, filter) };
+    return last.kept;
+  };
 }
 
 /**
@@ -170,7 +185,7 @@ export function ElectrodesTable({
         : []),
       ...STAT_COLUMNS.filter((s) => statNames.includes(s.key)).map((s) => ({
         name: s.key,
-        headerName: s.title,
+        headerName: `${s.short} (${s.unit})`,
         short: { headerName: s.short, unit: s.unit },
         format: fixed(s.digits),
       })),
@@ -199,6 +214,7 @@ export function ElectrodesTable({
   const [visibleColumns, setVisibleColumns] = useState(() => defaultVisibleColumnSet(columns));
   useEffect(() => setVisibleColumns(defaultVisibleColumnSet(columns)), [columns]);
   const [filteredCount, setFilteredCount] = useState<number | null>(null);
+  const query = useMemo(() => contactQuery(rows), [rows]);
   const datasource = useMemo<IDatasource>(
     () => ({
       rowCount: rows.length,
@@ -208,17 +224,17 @@ export function ElectrodesTable({
           column: item.colId,
           direction: item.sort,
         }));
-        const kept = queryContacts(rows, sort, filter);
+        const kept = query(sort, filter);
         setFilteredCount(Object.keys(filter).length > 0 ? kept.length : null);
         params.successCallback(kept.slice(params.startRow, params.endRow), kept.length);
       },
     }),
-    [rows]
+    [rows, query]
   );
   const rowIndexOf = useCallback(
     async (contact: number, sort: SortItem[], filter: FilterModel) =>
-      queryContacts(rows, sort, filter).findIndex((row) => row.node_id === contact),
-    [rows]
+      query(sort, filter).findIndex((row) => row.node_id === contact),
+    [query]
   );
   const selected = useMemo(() => new Set(ticked), [ticked]);
 

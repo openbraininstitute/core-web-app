@@ -1,6 +1,6 @@
 import { match } from 'ts-pattern';
 
-import type { NumberFilter, TextFilter } from '@/features/circuit-nodes/types';
+import type { FilterOperator, NumberFilter, TextFilter } from '@/features/circuit-nodes/types';
 
 /** The values of an Equals filter, which matches any of them: "3, 5, 9" for numbers. */
 export function listedValues(text: string, separator: RegExp = /[\s,;]+/): string[] {
@@ -8,6 +8,24 @@ export function listedValues(text: string, separator: RegExp = /[\s,;]+/): strin
     .split(separator)
     .map((v) => v.trim())
     .filter((v) => v !== '');
+}
+
+/** Tests joined as a filter's conditions are; none passes everything. */
+export function combinedTest<T>(
+  operator: FilterOperator,
+  tests: readonly ((value: T) => boolean)[]
+): (value: T) => boolean {
+  if (tests.length === 0) return () => true;
+  if (operator === 'OR') {
+    return (value) => {
+      for (const test of tests) if (test(value)) return true;
+      return false;
+    };
+  }
+  return (value) => {
+    for (const test of tests) if (!test(value)) return false;
+    return true;
+  };
 }
 
 export function textTest(f: TextFilter): (value: string) => boolean {
