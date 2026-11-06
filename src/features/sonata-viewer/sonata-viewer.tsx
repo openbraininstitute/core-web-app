@@ -79,6 +79,8 @@ const ErrorFallback = SimpleErrorComponent as unknown as ComponentType<FallbackP
 
 const NO_TRACES: number[] = [];
 
+type HoveredCell = { population: string; nodeId: number };
+
 /** Group by nothing: every trace on the one plot. */
 const ALL = '__all__';
 
@@ -314,27 +316,22 @@ export function SonataReportView({
   );
 
   // The row under the pointer in the table, which the plot shows for as long as it is there.
-  const [hovered, setHovered] = useState<{ population: string; nodeId: number } | null>(null);
-  const handleCellHover = useCallback(
-    (nodeId: number | null) => {
-      setHovered(
-        nodeId === null || !populationName ? null : { population: populationName, nodeId }
-      );
-    },
+  const [hovered, setHovered] = useState<HoveredCell | null>(null);
+  const inPopulation = useCallback(
+    (nodeId: number | null): HoveredCell | null =>
+      nodeId === null || !populationName ? null : { population: populationName, nodeId },
     [populationName]
+  );
+  const handleCellHover = useCallback(
+    (nodeId: number | null) => setHovered(inPopulation(nodeId)),
+    [inPopulation]
   );
   // The cell of the line under the pointer in the traces, which the scene alone shows: the lines
   // drawn follow `hovered`, and would be drawn anew at every move.
-  const [lineHovered, setLineHovered] = useState<{ population: string; nodeId: number } | null>(
-    null
-  );
+  const [lineHovered, setLineHovered] = useState<HoveredCell | null>(null);
   const handleLineHover = useCallback(
-    (nodeId: number | null) => {
-      setLineHovered(
-        nodeId === null || !populationName ? null : { population: populationName, nodeId }
-      );
-    },
-    [populationName]
+    (nodeId: number | null) => setLineHovered(inPopulation(nodeId)),
+    [inPopulation]
   );
   const hoveredTraces = useMemo(() => {
     if (!population || hovered?.population !== populationName) return NO_TRACES;
@@ -581,11 +578,7 @@ export function SonataReportView({
         units={population.dataUnits}
         timeCursor={timeCursor}
         highlightedCell={
-          hovered?.population === populationName
-            ? hovered.nodeId
-            : lineHovered?.population === populationName
-              ? lineHovered.nodeId
-              : held
+          [hovered, lineHovered].find((h) => h?.population === populationName)?.nodeId ?? held
         }
         shownCells={sceneCells ?? undefined}
         selection={sceneSelection}
