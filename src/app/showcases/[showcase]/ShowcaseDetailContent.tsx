@@ -5,11 +5,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import { Button } from '@/ui/molecules/button';
-import DescriptionSection from '@/ui/segments/reports/obi-showcases/description';
+import DescriptionSection from '@/ui/segments/showcases/description';
 
-import { buildPlatformLoginUrl } from '../build-platform-login-url';
-
-import type { SanityShowcaseType } from '@/ui/segments/reports/obi-showcases/types';
+import type { SanityShowcaseType } from '@/ui/segments/showcases/types';
 
 export default function ShowcaseDetailContent({ project }: { project: SanityShowcaseType }) {
   return (
@@ -28,21 +26,6 @@ export default function ShowcaseDetailContent({ project }: { project: SanityShow
               <RightOutlined className="ml-auto text-current" />
             </Button>
 
-            <Link
-              href={buildPlatformLoginUrl(project.slug, 'artifacts')}
-              className="relative flex flex-col rounded-full border px-6 py-2 transition-colors hover:bg-neutral-1"
-            >
-              <span className="font-bold">Check Artifacts</span>
-              <span className="relative -top-1.5 text-sm text-neutral-4">on the platform</span>
-            </Link>
-
-            <Link
-              href={buildPlatformLoginUrl(project.slug, 'notebooks')}
-              className="relative flex flex-col rounded-full border px-6 py-2 transition-colors hover:bg-neutral-1"
-            >
-              <span className="font-bold">Check Notebooks</span>
-              <span className="relative -top-1.5 text-sm text-neutral-4">on the platform</span>
-            </Link>
           </aside>
 
           <main className="w-full overflow-y-auto">

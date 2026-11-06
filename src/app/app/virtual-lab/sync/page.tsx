@@ -13,7 +13,7 @@ export default async function Page({
   searchParams,
 }: ServerSideComponentProp<
   null,
-  { redirectUrl?: string; showcaseSlug?: string; showcaseSection?: string }
+  { redirectUrl?: string; showcaseSlug?: string }
 >) {
   const queryParams = await searchParams;
   const session = await getSession();
@@ -31,11 +31,8 @@ export default async function Page({
 
   if (virtualLab && project) {
     if (queryParams.showcaseSlug) {
-      const section = queryParams.showcaseSection ?? 'description';
-      redirect(
-        `${config.ROOT_ROUTE}/${virtualLab.id}/${project.id}/reports/obi-showcase/${queryParams.showcaseSlug}?section=${section}`,
-        RedirectType.replace
-      );
+      // Showcases no longer have a view inside a project: older links go to the public page.
+      redirect(`/showcases/${encodeURIComponent(queryParams.showcaseSlug)}`, RedirectType.replace);
     } else if (queryParams.redirectUrl) {
       redirect(queryParams.redirectUrl, RedirectType.replace);
     } else {

@@ -4,7 +4,7 @@ import { PortableText, type PortableTextReactComponents } from 'next-sanity';
 
 import VideoBlocks from '../video-blocks';
 
-import type { SanityShowcaseType } from '@/ui/segments/reports/obi-showcases/types';
+import type { SanityShowcaseType } from '@/ui/segments/showcases/types';
 
 import styles from './portable-text.module.css';
 
