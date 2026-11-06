@@ -94,7 +94,10 @@ export type {
 export type {
   IColumnFilter,
   IColumnModel,
+  IColumnSortOrder,
   IFilterTarget,
+  IGridWorkspace,
+  IRowGroup,
   IWidthSpec,
   TAlign,
   TCellValue,

@@ -13,9 +13,12 @@ import { classNames } from '@/util/utils';
 
 type Props = {
   dataKey: string;
+  /** pinned to the flat list and greyed out, as for a single scale */
+  disabled?: boolean;
 };
-export function CircuitViewToggle({ dataKey }: Props) {
-  const [view, updateView] = useAtom(circuitRepresentationViewAtom);
+export function CircuitViewToggle({ dataKey, disabled }: Props) {
+  const [selectedView, updateView] = useAtom(circuitRepresentationViewAtom);
+  const view = disabled ? CircuitRepresentationView.Flat : selectedView;
   const { sync: runStorageSync } = useDataListStateSnapshotActions({
     dataKey,
     dataType: ExtendedEntitiesTypeDict.Circuit,
@@ -32,7 +35,12 @@ export function CircuitViewToggle({ dataKey }: Props) {
   };
 
   return (
-    <div className="relative flex flex-row items-center gap-x-2">
+    <div
+      className={classNames(
+        'relative flex flex-row items-center gap-x-2',
+        disabled && 'opacity-40'
+      )}
+    >
       <div className="text-primary-9 text-base font-medium">View:</div>
       <div className="relative flex flex-row items-center gap-x-2">
         <Tooltip title="Hierarchical view">
@@ -45,8 +53,9 @@ export function CircuitViewToggle({ dataKey }: Props) {
         </Tooltip>
         <button
           type="button"
-          className="relative h-6 w-12 rounded-xl border border-solid border-gray-200"
+          className="relative h-6 w-12 rounded-xl border border-solid border-gray-200 disabled:cursor-not-allowed"
           onClick={handleViewChange}
+          disabled={disabled}
           aria-label="Toggle view"
           data-testid="view-toggle"
           id="toggle-view"

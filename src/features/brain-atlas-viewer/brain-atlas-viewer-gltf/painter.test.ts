@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const h = vi.hoisted(() => ({
   resolveParse: null as null | ((asset: unknown) => void),
   rejectParse: null as null | ((reason: unknown) => void),
+  parseCalls: 0,
   xrayContexts: [] as Array<{ id: number; deleted: boolean }>,
   logError: vi.fn(),
   /** When set, the camera's `fitToBounds` throws it. See the auto-fit failure test. */
@@ -40,6 +41,7 @@ vi.mock('@tolokoban/tgd', () => {
   }
   const TgdDataGlb = {
     parse() {
+      h.parseCalls += 1;
       return new Promise((resolve, reject) => {
         h.resolveParse = resolve;
         h.rejectParse = reject;
@@ -169,6 +171,7 @@ function startMeshLoad() {
 beforeEach(() => {
   h.resolveParse = null;
   h.rejectParse = null;
+  h.parseCalls = 0;
   h.xrayContexts.length = 0;
   h.logError.mockClear();
   h.fitToBoundsError = null;
@@ -270,5 +273,27 @@ describe('Painter.setRegions — camera auto-fit failure', () => {
 
     expect(getCachedBrainRegionMeshArrayBuffer).toHaveBeenCalledTimes(1);
     expect(painter.isLoading).toBe(false);
+  });
+});
+
+describe('Painter.setRegions — decoded mesh reuse', () => {
+  it('decodes a downloaded mesh once for every viewer that shows it', async () => {
+    const glb = new ArrayBuffer(8);
+    vi.mocked(getCachedBrainRegionMeshArrayBuffer)
+      .mockResolvedValueOnce(glb)
+      .mockResolvedValueOnce(glb);
+
+    const mini = new Painter('atlas-2', {} as never);
+    mini.start({} as HTMLCanvasElement);
+    const loading = mini.setRegions([region], 'access-token');
+    await settleParseWith(assetWithBounds);
+    await loading;
+
+    const full = new Painter('atlas-2', {} as never);
+    full.start({} as HTMLCanvasElement);
+    await full.setRegions([region], 'access-token');
+
+    expect(h.parseCalls).toBe(1);
+    expect(h.xrayContexts).toHaveLength(2);
   });
 });
