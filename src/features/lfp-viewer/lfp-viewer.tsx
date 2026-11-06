@@ -11,7 +11,7 @@ import { colourScale, fieldLimit, formatUv } from '@/features/lfp-viewer/colour-
 import { lineColour, pickColours } from '@/features/lfp-viewer/contact-colours';
 import { contactGrid } from '@/features/lfp-viewer/contact-grid';
 import { recordingArrayId } from '@/features/lfp-viewer/contacts';
-import { ElectrodesTable } from '@/features/lfp-viewer/electrodes-table';
+import { contactCardRows, ElectrodesTable } from '@/features/lfp-viewer/electrodes-table';
 import { FieldFromControls } from '@/features/lfp-viewer/field-from';
 import { FieldPlot } from '@/features/lfp-viewer/field-plot';
 import {
@@ -240,7 +240,10 @@ function LfpReportView({
   const [picks, setPicks] = useState<Pick[]>([]);
   const ticked = useMemo(() => picks.map((p) => p.nodeId), [picks]);
   const colours = useMemo(() => pickColours(picks), [picks]);
-  const [hoveredContact, setHoveredContact] = useState<number | null>(null);
+  // Under the pointer in the table, which the traces and the 3D player show, or in the traces,
+  // which the player shows, as a voltage report's are.
+  const [rowHovered, setRowHovered] = useState<number | null>(null);
+  const [traceHovered, setTraceHovered] = useState<number | null>(null);
   // The contact the statistics are about, at first and after a reset the one the field swings most at.
   const [defaultContact] = useState<number | null>(() =>
     ptp < 0
@@ -256,6 +259,25 @@ function LfpReportView({
     (contact: number) =>
       setSelectedContact((selected) => (selected === contact ? defaultContact : contact)),
     [defaultContact]
+  );
+  const contactRows = useCallback(
+    (contact: number) =>
+      contactCardRows(contact, {
+        statNames: index.stats,
+        stats: chosen.stats,
+        shares: chosen.shares,
+        positions,
+      }),
+    [index.stats, chosen.stats, chosen.shares, positions]
+  );
+  const clickHint = useCallback(
+    (contact: number) =>
+      contact !== selectedContact
+        ? 'Click to select this contact'
+        : contact !== defaultContact && defaultContact !== null
+          ? `Click to go back to e${defaultContact}`
+          : 'Selected',
+    [selectedContact, defaultContact]
   );
   const traces = useMemo(
     () => (tracedOnly ? tracedContacts(rows, ticked) : rows.flatMap((row) => row.contacts)),
@@ -521,7 +543,10 @@ function LfpReportView({
         onWindowChange={setTimeWindow}
         selectedContact={selectedContact}
         onContactClick={toggleSelected}
-        onContactHover={setHoveredContact}
+        onContactHover={setTraceHovered}
+        hoveredContact={rowHovered}
+        contactRows={contactRows}
+        clickHint={clickHint}
         timeCursor={timeCursor}
         events={timeline}
         footer={transport}
@@ -547,7 +572,7 @@ function LfpReportView({
           setSelectedContact(defaultContact);
         },
       }}
-      onContactHover={setHoveredContact}
+      onContactHover={setRowHovered}
       selectedContact={selectedContact}
     />
   );
@@ -595,7 +620,7 @@ function LfpReportView({
                   hideBelow={hideBelowShare * scale.limit}
                   selectedContact={selectedContact}
                   colours={colours}
-                  hoveredContact={hoveredContact}
+                  hoveredContact={rowHovered ?? traceHovered}
                   timeCursor={timeCursor}
                   speed={speed}
                   spikeFiles={spikeFiles}

@@ -13,6 +13,7 @@ import {
   formatTick,
   markerGroupAt,
 } from '@/features/spike-viewer/renderer/axis-overlay';
+import { TooltipCard } from '@/features/spike-viewer/spike-statistics/plot-tooltip';
 
 import type { ReactNode } from 'react';
 import type { ColourScale } from '@/features/lfp-viewer/colour-scale';
@@ -30,6 +31,9 @@ const INK = '#002766';
 const AXIS = '#bfbfbf';
 const LABEL = '#8c8c8c';
 const SELECTED = SELECTED_COLOUR;
+/** Over the other traces while a row of the table is hovered, as a voltage report mutes its other lines. */
+const HOVER_WASH = 'rgba(255, 255, 255, 0.6)';
+const HOVERED_WIDTH = 2.5;
 /** A drag shorter than this is a click. */
 const DRAG_PX = 4;
 /** A trace's label needs this much height; in lanes lower, only every few are labelled. */
@@ -61,6 +65,12 @@ type Props = {
   onContactClick: (contact: number) => void;
   /** The contact under the pointer: a trace's, or a map row's lead; null once it leaves. */
   onContactHover?: (contact: number | null) => void;
+  /** The contact whose row of the table is hovered, its trace drawn over the rest. */
+  hoveredContact: number | null;
+  /** A contact's row of the table, as its hover card lists it. */
+  contactRows: (contact: number) => { label: string; value: string }[];
+  /** What a click on a contact's trace does, said at the foot of its card. */
+  clickHint: (contact: number) => string;
   timeCursor: TimeCursor;
   /** When the simulation's stimuli, recordings and synaptic changes happen. */
   events: readonly TimelineEvent[];
@@ -104,6 +114,77 @@ function rowValue(field: LfpField, row: FieldRow, bin: number): number {
   return sum / row.contacts.length;
 }
 
+/** A trace's colour: a ticked contact's own, the selected one's, or `otherwise`. */
+function inkOf(
+  colours: ReadonlyMap<number, string>,
+  selected: number | null,
+  contact: number,
+  otherwise: string
+): string {
+  return colours.get(contact) ?? (contact === selected ? SELECTED : otherwise);
+}
+
+/** How the traces are drawn across the plot: from which field and bins, at what scale, between which x. */
+type TraceDrawing = {
+  source: LfpField;
+  first: number;
+  last: number;
+  pxPerUv: number;
+  xOf: (t: number) => number;
+  left: number;
+  width: number;
+};
+
+/**
+ * Strokes row `at` of the drawing's field about `base`: through each bin where bins are wider than
+ * pixels, else as each pixel's lowest to highest, so no peak is lost.
+ */
+function strokeTrace(g: CanvasRenderingContext2D, d: TraceDrawing, at: number, base: number) {
+  const { source, first, last, pxPerUv, xOf, left, width } = d;
+  const binsPerPx = (last - first) / width;
+  // A window can fall between two bin centres: the bins either side carry the line across it.
+  const lineFrom = Math.max(0, first - 1);
+  const lineEnd = Math.min(source.bins, last + 1);
+  g.beginPath();
+  if (binsPerPx <= 1) {
+    for (let b = lineFrom; b < lineEnd; b++) {
+      const [low, high] = extent(source, at, b, b + 1);
+      const x = xOf(source.start + (b + 0.5) * source.binMs);
+      if (b === lineFrom) g.moveTo(x, base - high * pxPerUv);
+      else g.lineTo(x, base - high * pxPerUv);
+      g.lineTo(x, base - low * pxPerUv);
+    }
+  } else {
+    let previous: [number, number] = [-Infinity, Infinity];
+    for (let px = 0; px < width; px++) {
+      const b0 = first + Math.floor(px * binsPerPx);
+      const b1 = Math.min(last, Math.max(b0 + 1, first + Math.floor((px + 1) * binsPerPx)));
+      const span = extent(source, at, b0, b1);
+      const [low, high] = reachingPrevious(span, previous);
+      g.moveTo(left + px + 0.5, base - high * pxPerUv);
+      g.lineTo(left + px + 0.5, base - low * pxPerUv + 0.5);
+      previous = span;
+    }
+  }
+  g.stroke();
+}
+
+/** Where the pointer is over the plot, and what its card says there. */
+type PlotHover = {
+  clientX: number;
+  clientY: number;
+  title: string;
+  subtitle?: string;
+  note?: string;
+  swatch?: string;
+  time: number;
+  uv: number;
+  /** The trace's contact, or the map row's lead. */
+  contact: number;
+  /** Whether the card lists the contact's row of the table: not for a map row of several. */
+  listed: boolean;
+};
+
 /** The bins of a field over [from, to) ms, clamped to the run. */
 function binRange(field: LfpField, from: number, to: number): [number, number] {
   return [
@@ -135,16 +216,20 @@ export function FieldPlot({
   selectedContact,
   onContactClick,
   onContactHover,
+  hoveredContact,
+  contactRows,
+  clickHint,
   timeCursor,
   events,
   footer,
 }: Props) {
   const boxRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const hoverCanvasRef = useRef<HTMLCanvasElement>(null);
   const cursorRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [drag, setDrag] = useState<{ x0: number; x1: number } | null>(null);
-  const [hover, setHover] = useState<string | null>(null);
+  const [hover, setHover] = useState<PlotHover | null>(null);
   const marksRef = useRef<HTMLCanvasElement>(null);
   const groupsRef = useRef<MarkerGroup[]>([]);
   const [eventsHover, setEventsHover] = useState<EventsHover | null>(null);
@@ -179,6 +264,25 @@ export function FieldPlot({
   const maxScroll = mode === 'traces' ? Math.max(0, lanesHeight - plot.height) : 0;
   const [chosenScroll, setScroll] = useState(0);
   const scroll = Math.min(chosenScroll, maxScroll);
+  // Scrolling, the lanes are cut at the plot's edges; all on show, gain may take them past.
+  const clipTop = maxScroll > 0 ? plot.top : 0;
+  const clipHeight = maxScroll > 0 ? plot.height : size.height;
+  const laneY = (row: number) => plot.top + (row + 0.5) * lane - scroll;
+  const traceDrawing = (): TraceDrawing => {
+    // The traced rows at full resolution where they are in, else the overview's.
+    const source = traceField ?? field;
+    const [first, last] = binRange(source, from, to);
+    return {
+      source,
+      first,
+      last,
+      // The scale's limit spans most of a row; more gain lets traces overlap, as raw data does.
+      pxPerUv: (lane * 0.45 * gain) / scale.limit,
+      xOf,
+      left: plot.left,
+      width: plot.width,
+    };
+  };
   const rowOf = (y: number) =>
     Math.min(
       rowCount - 1,
@@ -289,38 +393,23 @@ export function FieldPlot({
     }
 
     if (mode === 'traces' && traces.length > 0) {
-      const rowHeight = lane;
-      const laneY = (row: number) => plot.top + (row + 0.5) * rowHeight - scroll;
-      const firstLane = Math.max(0, Math.floor(scroll / rowHeight) - 1);
-      const endLane = Math.min(traces.length, Math.ceil((scroll + plotHeight) / rowHeight) + 1);
+      const firstLane = Math.max(0, Math.floor(scroll / lane) - 1);
+      const endLane = Math.min(traces.length, Math.ceil((scroll + plotHeight) / lane) + 1);
       const inView = (row: number) => row >= firstLane && row < endLane;
-      // Scrolling, the lanes are cut at the plot's edges; all on show, gain may take them past.
-      const clipTop = maxScroll > 0 ? plot.top : 0;
-      const clipHeight = maxScroll > 0 ? plotHeight : size.height;
-      // The scale's limit spans most of a row; more gain lets traces overlap, as raw data does.
-      const pxPerUv = (rowHeight * 0.45 * gain) / scale.limit;
-      // The traced rows at full resolution where they are in, else the overview's.
-      const source = traceField ?? field;
-      const [first, last] = binRange(source, from, to);
-      const binsPerPx = (last - first) / plotWidth;
       g.textAlign = 'right';
       g.textBaseline = 'middle';
-      const inkOf = (contact: number, otherwise: string) =>
-        colours.get(contact) ?? (contact === selectedContact ? SELECTED : otherwise);
-      const labelEvery = Math.max(1, Math.ceil(LABEL_PX / rowHeight));
+      const labelEvery = Math.max(1, Math.ceil(LABEL_PX / lane));
       g.save();
       g.beginPath();
       g.rect(0, clipTop, plot.left, clipHeight);
       g.clip();
       for (let row = firstLane; row < endLane; row++) {
         if (row % labelEvery !== 0) continue;
-        g.fillStyle = inkOf(traces[row], LABEL);
+        g.fillStyle = inkOf(colours, selectedContact, traces[row], LABEL);
         g.fillText(traceLabels[row], plot.left - 6, laneY(row));
       }
       g.restore();
-      // A window can fall between two bin centres: the bins either side carry the line across it.
-      const lineFrom = Math.max(0, first - 1);
-      const lineEnd = Math.min(source.bins, last + 1);
+      const drawing = traceDrawing();
       g.save();
       g.beginPath();
       g.rect(plot.left, clipTop, plotWidth, clipHeight);
@@ -332,32 +421,9 @@ export function FieldPlot({
         .sort((a, b) => Number(colours.has(traces[a])) - Number(colours.has(traces[b])));
       for (const row of drawOrder) {
         const contact = traces[row];
-        const base = laneY(row);
-        const at = traceField ? row : contact;
-        g.strokeStyle = inkOf(contact, INK);
+        g.strokeStyle = inkOf(colours, selectedContact, contact, INK);
         g.lineWidth = colours.has(contact) ? 1.5 : 1;
-        g.beginPath();
-        if (binsPerPx <= 1) {
-          for (let b = lineFrom; b < lineEnd; b++) {
-            const [low, high] = extent(source, at, b, b + 1);
-            const x = xOf(source.start + (b + 0.5) * source.binMs);
-            if (b === lineFrom) g.moveTo(x, base - high * pxPerUv);
-            else g.lineTo(x, base - high * pxPerUv);
-            g.lineTo(x, base - low * pxPerUv);
-          }
-        } else {
-          let previous: [number, number] = [-Infinity, Infinity];
-          for (let px = 0; px < plotWidth; px++) {
-            const b0 = first + Math.floor(px * binsPerPx);
-            const b1 = Math.min(last, Math.max(b0 + 1, first + Math.floor((px + 1) * binsPerPx)));
-            const span = extent(source, at, b0, b1);
-            const [low, high] = reachingPrevious(span, previous);
-            g.moveTo(plot.left + px + 0.5, base - high * pxPerUv);
-            g.lineTo(plot.left + px + 0.5, base - low * pxPerUv + 0.5);
-            previous = span;
-          }
-        }
-        g.stroke();
+        strokeTrace(g, drawing, traceField ? row : contact, laneY(row));
       }
       g.restore();
     }
@@ -403,6 +469,48 @@ export function FieldPlot({
     from,
     to,
     selectedContact,
+  ]);
+
+  // On a canvas of its own, so that hovering rows of the table doesn't draw every trace anew.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: the drawing and the lanes follow from these
+  useEffect(() => {
+    const canvas = hoverCanvasRef.current;
+    if (!canvas || size.width === 0) return;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = size.width * dpr;
+    canvas.height = size.height * dpr;
+    const g = canvas.getContext('2d');
+    if (!g) return;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, size.width, size.height);
+    const row = mode === 'traces' && hoveredContact !== null ? traces.indexOf(hoveredContact) : -1;
+    if (row < 0) return;
+    g.save();
+    g.beginPath();
+    g.rect(plot.left, clipTop, plot.width, clipHeight);
+    g.clip();
+    g.fillStyle = HOVER_WASH;
+    g.fillRect(plot.left, clipTop, plot.width, clipHeight);
+    g.strokeStyle = inkOf(colours, selectedContact, hoveredContact as number, INK);
+    g.lineWidth = HOVERED_WIDTH;
+    strokeTrace(g, traceDrawing(), traceField ? row : (hoveredContact as number), laneY(row));
+    g.restore();
+  }, [
+    hoveredContact,
+    size,
+    mode,
+    traces,
+    colours,
+    selectedContact,
+    traceField,
+    field,
+    gain,
+    scale,
+    lane,
+    scroll,
+    maxScroll,
+    from,
+    to,
   ]);
 
   const hoveredRef = useRef<number | null>(null);
@@ -479,26 +587,35 @@ export function FieldPlot({
             return;
           }
           const r = rowOf(y);
-          const t = timeOf(x);
-          let name: string;
-          let uv: number;
+          const time = timeOf(x);
+          const at = { clientX: e.clientX, clientY: e.clientY, time };
           if (mode === 'map') {
             const row = rows[r];
-            name =
-              row.contacts.length > 1
-                ? `${row.label} · ${row.contacts.length} contacts`
-                : row.label;
-            uv = rowValue(field, row, binAt(field, t));
             hoverContact(row.lead);
+            setHover({
+              ...at,
+              title: row.label,
+              note: row.contacts.length > 1 ? `${row.contacts.length} contacts` : undefined,
+              uv: rowValue(field, row, binAt(field, time)),
+              contact: row.lead,
+              listed: row.contacts.length === 1,
+            });
           } else {
+            const contact = traces[r];
             const label = traceLabels[r];
-            name = label === `e${traces[r]}` ? label : `e${traces[r]} · ${label}`;
-            hoverContact(traces[r]);
-            uv = traceField
-              ? fieldValue(traceField, r, binAt(traceField, t))
-              : fieldValue(field, traces[r], binAt(field, t));
+            hoverContact(contact);
+            setHover({
+              ...at,
+              title: `e${contact}`,
+              subtitle: label === `e${contact}` ? undefined : label,
+              swatch: inkOf(colours, selectedContact, contact, INK),
+              uv: traceField
+                ? fieldValue(traceField, r, binAt(traceField, time))
+                : fieldValue(field, contact, binAt(field, time)),
+              contact,
+              listed: true,
+            });
           }
-          setHover(`${name} · ${t.toFixed(1)} ms · ${uv.toFixed(1)} µV`);
         }}
         onPointerLeave={() => {
           setHover(null);
@@ -524,6 +641,10 @@ export function FieldPlot({
         onDoubleClick={() => onWindowChange(null)}
       >
         <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
+        <canvas
+          ref={hoverCanvasRef}
+          className="pointer-events-none absolute inset-0 h-full w-full"
+        />
         <canvas
           ref={marksRef}
           className="pointer-events-none absolute"
@@ -565,10 +686,23 @@ export function FieldPlot({
           />
         )}
         {eventsHover && <TimelineCard hover={eventsHover} />}
-        {hover && !eventsHover && (
-          <div className="pointer-events-none absolute top-1 right-3 rounded bg-white/90 px-1.5 py-0.5 text-[11px] text-neutral-600 tabular-nums shadow-sm">
-            {hover}
-          </div>
+        {hover && !eventsHover && !drag && (
+          <TooltipCard
+            clientX={hover.clientX}
+            clientY={hover.clientY}
+            card={{
+              title: hover.title,
+              note: hover.note,
+              subtitle: hover.subtitle,
+              swatch: hover.swatch,
+              rows: [
+                { label: 'Time', value: `${hover.time.toFixed(2)} ms` },
+                { label: 'Field', value: `${hover.uv.toFixed(2)} µV`, strong: true },
+                ...(hover.listed ? contactRows(hover.contact) : []),
+              ],
+              hint: clickHint(hover.contact),
+            }}
+          />
         )}
       </div>
       {size.width > 0 && footer(plot.left, plot.right)}

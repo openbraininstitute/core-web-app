@@ -17,7 +17,7 @@ vi.mock('@/features/circuit-nodes/components/nodes-grid', () => ({
   defaultVisibleColumnSet: (columns: { name: string }[]) => new Set(columns.map((c) => c.name)),
 }));
 
-import { ElectrodesTable } from '@/features/lfp-viewer/electrodes-table';
+import { contactCardRows, ElectrodesTable } from '@/features/lfp-viewer/electrodes-table';
 
 const lastGrid = () => fixtures.grid.mock.calls.at(-1)?.[0] as GridProps;
 
@@ -62,5 +62,34 @@ describe('ElectrodesTable', () => {
 
     expect(lastGrid().focusRow?.nodeId).toBe(2);
     expect(lastGrid().focusRow?.key).not.toBe(first?.key);
+  });
+});
+
+describe('contactCardRows', () => {
+  it("lists a contact's row of the table: where it is, its share and its statistics, in the table's order", () => {
+    const rows = contactCardRows(1, {
+      statNames: ['ptp', 'min'],
+      stats: Float32Array.of(9, -9, 1.26, -0.44),
+      shares: Float32Array.of(0.1, 0.25),
+      positions: Float32Array.of(0, 0, 0, 4214.4, -1309.6, -2110),
+    });
+
+    expect(rows).toEqual([
+      { label: 'x, y, z', value: '4214, -1310, -2110 µm' },
+      { label: 'Share', value: '25 %' },
+      { label: 'Min', value: '-0.4 µV' },
+      { label: 'P–p', value: '1.3 µV' },
+    ]);
+  });
+
+  it('leaves out what the report does not hold', () => {
+    expect(
+      contactCardRows(0, {
+        statNames: [],
+        stats: new Float32Array(0),
+        shares: null,
+        positions: null,
+      })
+    ).toEqual([]);
   });
 });

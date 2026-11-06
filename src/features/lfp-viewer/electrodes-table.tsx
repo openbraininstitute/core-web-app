@@ -32,6 +32,36 @@ const STAT_COLUMNS: { key: string; title: string; short: string; unit: string; d
 
 const fixed = (digits: number) => (value: number) => value.toFixed(digits);
 
+/** A contact's row of the table, as a hover card lists it: where it is, its share and its statistics. */
+export function contactCardRows(
+  contact: number,
+  {
+    statNames,
+    stats,
+    shares,
+    positions,
+  }: {
+    statNames: readonly string[];
+    stats: Float32Array;
+    shares: Float32Array | null;
+    positions: Float32Array | null;
+  }
+): { label: string; value: string }[] {
+  const rows: { label: string; value: string }[] = [];
+  if (positions) {
+    const at = [0, 1, 2].map((k) => Math.round(positions[contact * 3 + k])).join(', ');
+    rows.push({ label: 'x, y, z', value: `${at} µm` });
+  }
+  if (shares) rows.push({ label: 'Share', value: `${fixed(0)(shares[contact] * 100)} %` });
+  for (const s of STAT_COLUMNS) {
+    const i = statNames.indexOf(s.key);
+    if (i < 0) continue;
+    const value = stats[contact * statNames.length + i];
+    rows.push({ label: s.short, value: `${fixed(s.digits)(value)} ${s.unit}` });
+  }
+  return rows;
+}
+
 function matches(filter: ColumnFilter, value: string | number | null | undefined): boolean {
   if ('operator' in filter) {
     const results = filter.conditions.map((condition) => matches(condition, value));
