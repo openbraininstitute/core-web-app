@@ -27,31 +27,32 @@ const config: Json = {
 };
 
 function section(name: string) {
-  return screen.getByRole('heading', { name }).closest('section') as HTMLElement;
+  return screen.getByRole('heading', { name }).closest('details') as HTMLDetailsElement;
 }
 
 describe('JsonView', () => {
-  it('shows top-level leaves, technical keys included, verbatim', () => {
+  it('shows top-level leaves, technical keys included, with humanized keys', () => {
     render(<JsonView value={config} variant={ViewVariant.Default} />);
 
-    expect(screen.getByText('obi_one_version')).toBeInTheDocument();
+    expect(screen.getByText('Obi one version')).toBeInTheDocument();
     expect(screen.getByText('2026.7.13.post1.dev25')).toBeInTheDocument();
-    expect(screen.getByText('idx')).toBeInTheDocument();
+    expect(screen.getByText('Idx')).toBeInTheDocument();
   });
 
-  it('renders objects as sections titled by their key, nested as deep as the JSON', () => {
+  it('renders objects as open, collapsible sections at every level', () => {
     render(<JsonView value={config} variant={ViewVariant.Default} />);
 
-    expect(section('neuron_sets')).toContainElement(section('Custom'));
-    expect(section('Custom')).toContainElement(section('neuron_ids'));
-    expect(within(section('neuron_ids')).getByText('0, 1, 2')).toBeInTheDocument();
-    expect(within(section('circuit')).getByText('CircuitFromID')).toBeInTheDocument();
+    expect(section('Neuron sets')).toContainElement(section('Custom'));
+    expect(section('Custom')).toContainElement(section('Neuron ids'));
+    expect(section('Neuron ids').open).toBe(true);
+    expect(within(section('Neuron ids')).getByText('0, 1, 2')).toBeInTheDocument();
+    expect(within(section('Circuit')).getByText('CircuitFromID')).toBeInTheDocument();
   });
 
   it('prints booleans, nulls and empty arrays as JSON would', () => {
     render(<JsonView value={config} variant={ViewVariant.Default} />);
 
-    expect(within(section('initialize')).getByText('true')).toBeInTheDocument();
+    expect(within(section('Initialize')).getByText('true')).toBeInTheDocument();
     expect(screen.getByText('null')).toBeInTheDocument();
     expect(screen.getByText('[]')).toBeInTheDocument();
   });
@@ -62,5 +63,16 @@ describe('JsonView', () => {
     );
 
     expect(within(section('1')).getByText('b')).toBeInTheDocument();
+  });
+
+  it('shows the first ten items of long arrays', () => {
+    const ids = Array.from({ length: 12 }, (_, index) => index);
+    const groups = ids.map((index) => ({ name: `group ${index}` }));
+    render(<JsonView value={{ ids, groups }} variant={ViewVariant.Default} />);
+
+    expect(screen.getByText('0, 1, 2, 3, 4, 5, 6, 7, 8, 9, (+2 more)')).toBeInTheDocument();
+    expect(within(section('Groups')).getByText('group 9')).toBeInTheDocument();
+    expect(within(section('Groups')).queryByText('group 10')).not.toBeInTheDocument();
+    expect(within(section('Groups')).getByText('(+2 more)')).toBeInTheDocument();
   });
 });

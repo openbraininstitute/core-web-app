@@ -19,10 +19,26 @@ function isNested(value: Json) {
   return Array.isArray(value) && value.some((item) => typeof item === 'object' && item !== null);
 }
 
+const MAX_ARRAY_ITEMS = 10;
+
+function moreItems(count: number) {
+  return `(+${count - MAX_ARRAY_ITEMS} more)`;
+}
+
 function formatLeaf(value: Json): string {
-  if (Array.isArray(value)) return value.length ? value.map(formatLeaf).join(', ') : '[]';
+  if (Array.isArray(value)) {
+    if (!value.length) return '[]';
+    const shown = value.slice(0, MAX_ARRAY_ITEMS).map(formatLeaf).join(', ');
+    return value.length > MAX_ARRAY_ITEMS ? `${shown}, ${moreItems(value.length)}` : shown;
+  }
   if (isObject(value)) return '{}';
   return String(value);
+}
+
+/** `neuron_sets` -> `Neuron sets` */
+function humanize(key: string) {
+  const text = key.replaceAll('_', ' ');
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 function keyClass(variant: TViewVariant) {
@@ -31,7 +47,8 @@ function keyClass(variant: TViewVariant) {
 
 /**
  * Read-only rendering of any JSON value as nested sections in one column: leaves are key/value
- * rows, objects and arrays of objects are sections titled by their key. Keys are shown verbatim.
+ * rows, objects and arrays of objects are collapsible sections titled by their key. Arrays show
+ * their first ten items.
  */
 export function JsonView({ value, variant }: { value: Json; variant: TViewVariant }) {
   return (
@@ -45,7 +62,7 @@ function Node({ value, variant, depth }: { value: Json; variant: TViewVariant; d
   const entries: Array<[string, Json]> = isObject(value)
     ? Object.entries(value)
     : Array.isArray(value)
-      ? value.map((item, index) => [String(index), item])
+      ? value.slice(0, MAX_ARRAY_ITEMS).map((item, index) => [String(index), item])
       : [];
   const leaves = entries.filter(([, item]) => !isNested(item));
   const nested = entries.filter(([, item]) => isNested(item));
@@ -56,32 +73,36 @@ function Node({ value, variant, depth }: { value: Json; variant: TViewVariant; d
         <dl className="grid grid-cols-[minmax(8rem,max-content)_1fr] gap-x-8 gap-y-1.5">
           {leaves.map(([key, item]) => (
             <div key={key} className="contents">
-              <dt className={keyClass(variant)}>{key}</dt>
+              <dt className={keyClass(variant)}>{humanize(key)}</dt>
               <dd className={cn('break-all', detailViewValueClass(variant))}>{formatLeaf(item)}</dd>
             </div>
           ))}
         </dl>
       )}
       {nested.map(([key, item]) => (
-        <section
+        <details
           key={key}
+          open
           className={cn(
             depth === 0 ? 'rounded-2xl border p-5' : 'border-l pl-4',
             detailViewPanelBorderClass(variant)
           )}
         >
-          <h3
+          <summary
             className={cn(
-              'mb-3 font-bold',
+              'cursor-pointer font-bold [[open]>&]:mb-3',
               depth === 0 ? 'text-base' : 'text-sm',
               detailViewValueClass(variant)
             )}
           >
-            {key}
-          </h3>
+            <h3 className="inline">{humanize(key)}</h3>
+          </summary>
           <Node value={item} variant={variant} depth={depth + 1} />
-        </section>
+        </details>
       ))}
+      {Array.isArray(value) && value.length > MAX_ARRAY_ITEMS && (
+        <div className={keyClass(variant)}>{moreItems(value.length)}</div>
+      )}
     </div>
   );
 }
