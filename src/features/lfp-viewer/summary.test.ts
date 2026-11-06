@@ -5,6 +5,7 @@ import { ApiError } from '@/api/error';
 import { contactPositions, recordingArrayId } from './contacts';
 import {
   binAt,
+  blockRange,
   fieldStats,
   fieldValue,
   inflateRow,
@@ -14,7 +15,6 @@ import {
   readChunkTable,
   readRanges,
   readSlice,
-  rowRange,
   rowsField,
   sliceOf,
   sumFields,
@@ -172,7 +172,10 @@ describe('rows in chunks', () => {
     const fetchMock = vi.fn(answeringRanges(file));
     vi.stubGlobal('fetch', fetchMock);
 
-    const chunksRead = await readRanges(request, [rowRange(tables[1], 1), rowRange(tables[0], 0)]);
+    const chunksRead = await readRanges(request, [
+      blockRange(tables[1], 1, 1, 0),
+      blockRange(tables[0], 1, 0, 0),
+    ]);
     const rows = await Promise.all(chunksRead.map(inflateRow));
 
     expect(rows.map((row) => Array.from(row))).toEqual([

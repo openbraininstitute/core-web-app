@@ -159,7 +159,8 @@ describe('rowQuery', () => {
       [3, 4],
       [5, 6],
     ].map((values) => new Uint8Array(deflated(values)));
-    // The table (1 group, 3 contacts, offset and size each) first, the rows apart from each other
+    // The table (1 group, 3 contacts, a block each, offset and size) and the block scales first,
+    // the rows apart from each other
     const offsets = [100, 200, 300];
     const file = new Uint8Array(400);
     const table = new BigUint64Array(6);
@@ -169,15 +170,31 @@ describe('rowQuery', () => {
       table[c * 2 + 1] = BigInt(row.length);
     });
     file.set(new Uint8Array(table.buffer), 0);
+    // The third contact's block at twice the group's scale
+    file.set(new Uint8Array(Float32Array.from([0.5, 0.5, 1]).buffer), 48);
     const fetchMock = vi.fn(answeringRanges(file));
     vi.stubGlobal('fetch', fetchMock);
     const axis = {
       name: 'mtype',
-      levels: [{ step: 1, kind: 'value', dataset: '/l0', chunks: '/lfp/mtype/chunks' }],
+      scales: [0.5],
+      levels: [
+        {
+          step: 1,
+          kind: 'value',
+          dataset: '/l0',
+          chunks: '/lfp/mtype/chunks',
+          block_steps: 2,
+          block_scales: '/lfp/mtype/block_scales',
+        },
+      ],
     } as unknown as LfpAxis;
     const index = {
       contacts: 3,
-      datasets: { '/lfp/mtype/chunks': { offset: 0, shape: [1, 3, 2], dtype: '<u8' } },
+      time: { start: 0, dt: 0.1, steps: 2 },
+      datasets: {
+        '/lfp/mtype/chunks': { offset: 0, shape: [1, 3, 1, 2], dtype: '<u8' },
+        '/lfp/mtype/block_scales': { offset: 48, shape: [1, 3, 1], dtype: '<f4' },
+      },
     } as unknown as LfpSummaryIndex;
     const queryClient = new QueryClient();
     const at = { queryClient, source, sha256: 'a', index, axis };
@@ -187,11 +204,11 @@ describe('rowQuery', () => {
     );
 
     expect(read.map((row) => Array.from(row))).toEqual([
-      [5, 6],
+      [10, 12],
       [1, 2],
       [3, 4],
     ]);
-    // The table, then every row at once
+    // The table and the scales, then every row at once
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });

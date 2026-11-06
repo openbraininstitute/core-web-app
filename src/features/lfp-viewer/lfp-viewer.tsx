@@ -34,8 +34,8 @@ import {
   TOTAL_FIELD,
   useChosenField,
   useContactPositions,
-  useContactRows,
   useLfpSummary,
+  useWindowRows,
 } from '@/features/lfp-viewer/use-lfp-summary';
 import { useResultsSidePanel } from '@/features/scan-config/components/shared/results-layout';
 import {
@@ -67,7 +67,7 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { ISimulationResult } from '@/api/entitycore/types/entities/simulation-result';
 import type { IAsset } from '@/api/entitycore/types/shared/global';
 import type { LfpSummarySource } from '@/api/small-scale-simulator/simulation-result/lfp-summary';
-import type { FieldPlotMode } from '@/features/lfp-viewer/field-plot';
+import type { FieldPlotMode, LanesInView } from '@/features/lfp-viewer/field-plot';
 import type { RowOrder } from '@/features/lfp-viewer/field-structure';
 import type {
   ContactPositions,
@@ -236,6 +236,10 @@ function LfpReportView({
     index.contacts > FIT_AT_MOST ? 'small' : 'fit'
   );
   const [timeWindow, setTimeWindow] = useState<[number, number] | null>(null);
+  const shownWindow = useMemo<[number, number]>(
+    () => timeWindow ?? [start, end],
+    [timeWindow, start, end]
+  );
   // Each with a colour of its own, kept while others are ticked and unticked, as a voltage report's cells.
   const [picks, setPicks] = useState<Pick[]>([]);
   const ticked = useMemo(() => picks.map((p) => p.nodeId), [picks]);
@@ -294,18 +298,24 @@ function LfpReportView({
     () => lineColour(colours, selectedContact),
     [colours, selectedContact]
   );
-  // Read only while drawn, and once positions are in, as they can change which contacts are traced.
-  // A contact's row at full resolution holds nothing of the mean to take off.
-  const traceRows = useContactRows(
+  // The lanes on show and a screen of them either side are read over the window, finer than the
+  // overview: only while drawn, and once positions are in, as they can change which contacts are
+  // traced. A contact's row read so holds nothing of the mean to take off.
+  const [lanesInView, setLanesInView] = useState<LanesInView | null>(null);
+  const readTraces = useMemo(() => {
+    if (!lanesInView) return [];
+    const margin = lanesInView.end - lanesInView.first;
+    return traces.slice(Math.max(0, lanesInView.first - margin), lanesInView.end + margin);
+  }, [traces, lanesInView]);
+  const readsTraces = mode === 'traces' && !removeShared && contacts.state !== 'loading';
+  const traceRows = useWindowRows(
     source,
     summary,
     chosen,
-    mode === 'traces' &&
-      !removeShared &&
-      chosen.field.kind !== 'value' &&
-      contacts.state !== 'loading'
-      ? traces
-      : []
+    readTraces,
+    shownWindow,
+    lanesInView?.width ?? 0,
+    readsTraces
   );
   const sharedShare = useMemo(() => sharedShareOf(chosen.field), [chosen.field]);
   const sharedPercent = Math.round(sharedShare * 100);
@@ -359,11 +369,6 @@ function LfpReportView({
   useEffect(() => {
     if (sceneUp && !sliding) setSceneMounted(true);
   }, [sceneUp, sliding]);
-
-  const shownWindow = useMemo<[number, number]>(
-    () => timeWindow ?? [start, end],
-    [timeWindow, start, end]
-  );
 
   const transport = (left: number, right: number) => (
     <div className="relative h-10 shrink-0">
@@ -538,7 +543,9 @@ function LfpReportView({
         traces={traces}
         traceLabels={labels}
         colours={colours}
-        traceField={traceRows.field}
+        traceRows={traceRows.rows}
+        minSpanMs={2 * (readsTraces ? index.time.dt : field.binMs)}
+        onLanesInView={setLanesInView}
         gain={gain}
         laneHeight={LANE_HEIGHTS[laneHeight]}
         window={shownWindow}

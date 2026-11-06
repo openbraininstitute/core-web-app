@@ -26,7 +26,10 @@ export function groupsByShare(axis: LfpAxis): number[] {
 
 const percent = (share: number) => `${Math.round(share * 100)}%`;
 
-const LEFT_OUT: Record<string, string> = { memory: 'Too large to build' };
+const LEFT_OUT: Record<string, string> = {
+  memory: 'Too large to build',
+  size: 'Not split for runs this long',
+};
 
 const GROUPS_UNAVAILABLE: Record<string, { detail: string; title: string }> = {
   circuit_not_readable: {

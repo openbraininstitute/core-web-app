@@ -19,12 +19,16 @@ import type { ReactNode } from 'react';
 import type { ColourScale } from '@/features/lfp-viewer/colour-scale';
 import type { FieldRow } from '@/features/lfp-viewer/field-structure';
 import type { LfpField } from '@/features/lfp-viewer/summary';
+import type { TraceRows } from '@/features/lfp-viewer/use-lfp-summary';
 import type { TimeCursor } from '@/features/sonata-viewer/time-cursor';
 import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
 import type { MarkerGroup } from '@/features/spike-viewer/renderer/axis-overlay';
 import type { EventsHover } from '@/features/spike-viewer/renderer/raster-renderer';
 
 export type FieldPlotMode = 'traces' | 'map';
+
+/** The traces' lanes on show, [first, end), and the plot's width in px. */
+export type LanesInView = { first: number; end: number; width: number };
 
 const MARGIN = { left: 52, right: 10, top: 6, bottom: 22 };
 const INK = '#002766';
@@ -53,8 +57,11 @@ type Props = {
   traceLabels: readonly string[];
   /** The ticked contacts' colours, which their traces are drawn in. */
   colours: ReadonlyMap<number, string>;
-  /** The traced contacts at full resolution, a row each in the order of `traces`, once read. */
-  traceField: LfpField | null;
+  /** Traced contacts read over the window, finer than the overview; a lane not among them draws the overview's. */
+  traceRows: TraceRows | null;
+  /** The shortest window a drag zooms to. */
+  minSpanMs: number;
+  onLanesInView?: (lanes: LanesInView) => void;
   /** How many times the shared gain the traces are drawn at. */
   gain: number;
   /** Each trace's height in px, the pane scrolling through them where they don't fit; null fits them all. */
@@ -216,7 +223,9 @@ export function FieldPlot({
   traces,
   traceLabels,
   colours,
-  traceField,
+  traceRows,
+  minSpanMs,
+  onLanesInView,
   gain,
   laneHeight,
   window: [from, to],
@@ -276,9 +285,9 @@ export function FieldPlot({
   const clipTop = maxScroll > 0 ? plot.top : 0;
   const clipHeight = maxScroll > 0 ? plot.height : size.height;
   const laneY = (row: number) => plot.top + (row + 0.5) * lane - scroll;
-  const traceDrawing = (): TraceDrawing => {
-    // The traced rows at full resolution where they are in, else the overview's.
-    const source = traceField ?? field;
+  const firstLane = Math.max(0, Math.floor(scroll / lane) - 1);
+  const endLane = Math.min(traces.length, Math.ceil((scroll + plot.height) / lane) + 1);
+  const traceDrawing = (source: LfpField): TraceDrawing => {
     const [first, last] = binRange(source, from, to);
     return {
       source,
@@ -291,6 +300,27 @@ export function FieldPlot({
       width: plot.width,
     };
   };
+  /** Strokes a contact's lane from its row read over the window where it is in, else the overview's. */
+  const laneStroker = () => {
+    const overview = traceDrawing(field);
+    const read = traceRows && traceDrawing(traceRows.field);
+    return (g: CanvasRenderingContext2D, contact: number, y: number) => {
+      const at = traceRows?.rowOf(contact);
+      if (read && at !== undefined) strokeTrace(g, read, at, y);
+      else strokeTrace(g, overview, contact, y);
+    };
+  };
+  const laneValue = (contact: number, time: number) => {
+    const at = traceRows?.rowOf(contact);
+    return traceRows && at !== undefined
+      ? fieldValue(traceRows.field, at, binAt(traceRows.field, time))
+      : fieldValue(field, contact, binAt(field, time));
+  };
+
+  useEffect(() => {
+    if (mode === 'traces') onLanesInView?.({ first: firstLane, end: endLane, width: plot.width });
+  }, [mode, firstLane, endLane, plot.width, onLanesInView]);
+
   // None below the last lane, where lanes of a fixed height leave the plot empty.
   const rowOf = (y: number): number | null => {
     if (mode === 'map') {
@@ -397,8 +427,6 @@ export function FieldPlot({
     }
 
     if (mode === 'traces' && traces.length > 0) {
-      const firstLane = Math.max(0, Math.floor(scroll / lane) - 1);
-      const endLane = Math.min(traces.length, Math.ceil((scroll + plotHeight) / lane) + 1);
       const inView = (row: number) => row >= firstLane && row < endLane;
       g.textAlign = 'right';
       g.textBaseline = 'middle';
@@ -413,7 +441,7 @@ export function FieldPlot({
         g.fillText(traceLabels[row], plot.left - 6, laneY(row));
       }
       g.restore();
-      const drawing = traceDrawing();
+      const strokeLane = laneStroker();
       g.save();
       g.beginPath();
       g.rect(plot.left, clipTop, plotWidth, clipHeight);
@@ -427,7 +455,7 @@ export function FieldPlot({
         const contact = traces[row];
         g.strokeStyle = contactColour(colours, selectedContact, contact) ?? INK;
         g.lineWidth = colours.has(contact) ? 1.5 : 1;
-        strokeTrace(g, drawing, traceField ? row : contact, laneY(row));
+        strokeLane(g, contact, laneY(row));
       }
       g.restore();
     }
@@ -465,7 +493,7 @@ export function FieldPlot({
     traces,
     traceLabels,
     colours,
-    traceField,
+    traceRows,
     gain,
     lane,
     scroll,
@@ -495,7 +523,7 @@ export function FieldPlot({
     g.fillRect(plot.left, plot.top, plot.width, plot.height);
     g.strokeStyle = contactColour(colours, selectedContact, hoveredContact as number) ?? INK;
     g.lineWidth = HOVERED_WIDTH;
-    strokeTrace(g, traceDrawing(), traceField ? row : (hoveredContact as number), laneY(row));
+    laneStroker()(g, hoveredContact as number, laneY(row));
     g.restore();
   }, [
     hoveredContact,
@@ -504,7 +532,7 @@ export function FieldPlot({
     traces,
     colours,
     selectedContact,
-    traceField,
+    traceRows,
     field,
     gain,
     scale,
@@ -607,9 +635,7 @@ export function FieldPlot({
               title: `e${contact}`,
               subtitle: label === `e${contact}` ? undefined : label,
               swatch: contactColour(colours, selectedContact, contact) ?? INK,
-              uv: traceField
-                ? fieldValue(traceField, r, binAt(traceField, time))
-                : fieldValue(field, contact, binAt(field, time)),
+              uv: laneValue(contact, time),
               contact,
               listed: true,
             });
@@ -639,7 +665,7 @@ export function FieldPlot({
           }
           const a = timeOf(Math.min(drag.x0, x1));
           const b = timeOf(Math.max(drag.x0, x1));
-          if (b - a >= (traceField ?? field).binMs * 2) onWindowChange([a, b]);
+          if (b - a >= minSpanMs) onWindowChange([a, b]);
         }}
         onDoubleClick={() => onWindowChange(null)}
       >

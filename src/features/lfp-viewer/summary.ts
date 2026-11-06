@@ -20,15 +20,22 @@ const axisSchema = z.object({
   scales: z.array(z.number()),
   /** A group's part in the total's variance. */
   shares: z.array(z.number()),
-  /** Full resolution, then the overview if that is too long: the total's by min/max, a group's by means, which add up. */
+  /**
+   * Full resolution, then where that is too long its overviews, finest to coarsest, a quarter of the
+   * bins each: the total's by min/max, a group's by means, which add up.
+   */
   levels: z
     .array(
       z.object({
         step: z.number().int().positive(),
         kind: z.enum(['value', 'mean', 'min_max']),
         dataset: z.string(),
-        /** Where its rows lie, each deflated in a chunk of its own: only with an overview to read them for. */
+        /** Where its blocks lie, each deflated in a chunk of its own: only with an overview to read them for. */
         chunks: z.string().optional(),
+        /** Steps per block, the last one padded. */
+        block_steps: z.number().int().positive().optional(),
+        /** µV per int16 unit of each block: group × contact × block. */
+        block_scales: z.string().optional(),
       })
     )
     .min(1),
@@ -240,7 +247,7 @@ export async function inflateRow(
   return row;
 }
 
-/** Where a group's rows lie: contact × (offset, size). */
+/** Where a group's blocks lie: contact × block × (offset, size). */
 export async function readChunkTable(
   read: ReadRange,
   index: LfpSummaryIndex,
@@ -302,9 +309,155 @@ export async function readContactShares(
   return new Float32Array(await readSlice(read, datasetOf(index, axis.contact_shares), [group]));
 }
 
-/** Where a contact's row lies, deflated, by its group's chunk table. */
-export function rowRange(table: BigUint64Array, contact: number): ByteRange {
-  return { offset: Number(table[contact * 2]), length: Number(table[contact * 2 + 1]) };
+/** A group's block scales: contact × block. */
+export async function readBlockScales(
+  read: ReadRange,
+  index: LfpSummaryIndex,
+  axis: LfpAxis,
+  group: number
+): Promise<Float32Array> {
+  const { block_scales: scales } = axis.levels[0];
+  if (!scales) throw new Error(`The rows of ${axis.name} are not in blocks`);
+  return new Float32Array(await readSlice(read, datasetOf(index, scales), [group]));
+}
+
+/** An axis's blocks: how many steps each holds, and how many a row has. */
+export function blocksOf(index: LfpSummaryIndex, axis: LfpAxis) {
+  const length = axis.levels[0].block_steps ?? index.time.steps;
+  return { length, count: Math.ceil(index.time.steps / length) };
+}
+
+/** Where a contact's block lies, deflated, by its group's chunk table. */
+export function blockRange(
+  table: BigUint64Array,
+  blocks: number,
+  contact: number,
+  block: number
+): ByteRange {
+  const at = (contact * blocks + block) * 2;
+  return { offset: Number(table[at]), length: Number(table[at + 1]) };
+}
+
+/** A block's values, its padding left off, from its own scale to the group's. */
+export function toGroupScale(
+  values: Int16Array,
+  steps: number,
+  blockScale: number,
+  scale: number
+): Int16Array {
+  const ratio = blockScale / scale;
+  const out = new Int16Array(steps);
+  for (let i = 0; i < steps; i++) out[i] = Math.round(values[i] * ratio);
+  return out;
+}
+
+/** A contact's block at full resolution, to its group's scale. */
+export async function readBlock(
+  read: ReadRange,
+  index: LfpSummaryIndex,
+  axis: LfpAxis,
+  at: { group: number; contact: number; block: number },
+  table: BigUint64Array,
+  blockScales: Float32Array
+): Promise<Int16Array> {
+  const { length, count } = blocksOf(index, axis);
+  const { group, contact, block } = at;
+  const values = await inflateRow(await read(blockRange(table, count, contact, block)));
+  const steps = Math.min(length, index.time.steps - block * length);
+  return toGroupScale(values, steps, blockScales[contact * count + block], axis.scales[group]);
+}
+
+/** Bins an overview tile holds, the unit its windows are read and kept in. */
+export const TILE_BINS = 4096;
+
+/** What a level is read in: its bins, how many a tile holds, and the values a bin has. */
+export function levelTiling(index: LfpSummaryIndex, axis: LfpAxis, levelAt: number) {
+  const level = axis.levels[levelAt];
+  return {
+    level,
+    bins: Math.ceil(index.time.steps / level.step),
+    tileBins: levelAt === 0 ? blocksOf(index, axis).length : TILE_BINS,
+    width: level.kind === 'min_max' ? 2 : 1,
+  };
+}
+
+/**
+ * The level to draw `steps` steps from across `width` pixels: the coarsest with a bin a pixel at
+ * least, else full resolution.
+ */
+export function windowLevel(axis: LfpAxis, steps: number, width: number): number {
+  for (let at = axis.levels.length - 1; at > 0; at--) {
+    if (steps / axis.levels[at].step >= width) return at;
+  }
+  return 0;
+}
+
+/** The tiles of a level a window of time lies in, with a bin either side to carry the line across its edges. */
+export function windowTiles(
+  index: LfpSummaryIndex,
+  axis: LfpAxis,
+  levelAt: number,
+  [from, to]: readonly [number, number]
+): number[] {
+  const { level, bins, tileBins } = levelTiling(index, axis, levelAt);
+  const binMs = level.step * index.time.dt;
+  const first = Math.max(0, Math.floor((from - index.time.start) / binMs) - 1);
+  const last = Math.min(bins, Math.ceil((to - index.time.start) / binMs) + 1);
+  if (last <= first) return [];
+  const tiles = [];
+  for (let t = Math.floor(first / tileBins); t * tileBins < last; t++) tiles.push(t);
+  return tiles;
+}
+
+/** A contact's tile of an overview level, as stored: to its group's scale already. */
+export async function readTile(
+  read: ReadRange,
+  index: LfpSummaryIndex,
+  axis: LfpAxis,
+  at: { group: number; contact: number; levelAt: number; tile: number }
+): Promise<Int16Array> {
+  const { level, bins, tileBins } = levelTiling(index, axis, at.levelAt);
+  const first = at.tile * tileBins;
+  const entry = datasetOf(index, level.dataset);
+  const { offset, length } = sliceOf(
+    entry,
+    [at.group, at.contact, first],
+    Math.min(tileBins, bins - first)
+  );
+  return new Int16Array((await read({ offset, length })).slice().buffer);
+}
+
+/**
+ * One group's field over a window: a row per contact, each its tiles one after another, `tiles`
+ * holding a contact's in the order of `tileIds`.
+ */
+export function windowField(
+  index: LfpSummaryIndex,
+  axis: LfpAxis,
+  group: number,
+  levelAt: number,
+  tileIds: readonly number[],
+  tiles: readonly (readonly Int16Array[])[]
+): LfpField {
+  const { level, bins: allBins, tileBins, width } = levelTiling(index, axis, levelAt);
+  const begin = tileIds[0] * tileBins;
+  const bins = Math.min(allBins, (tileIds[tileIds.length - 1] + 1) * tileBins) - begin;
+  const data = new Int16Array(tiles.length * bins * width);
+  tiles.forEach((row, c) => {
+    row.forEach((tile, t) => {
+      data.set(tile, (c * bins + tileIds[t] * tileBins - begin) * width);
+    });
+  });
+  const binMs = level.step * index.time.dt;
+  return {
+    contacts: tiles.length,
+    bins,
+    binMs,
+    start: index.time.start + begin * binMs,
+    kind: level.kind,
+    data,
+    scale: axis.scales[group],
+  };
 }
 
 /** Contacts' full-resolution rows as one field, a row each in the order given. */
