@@ -44,6 +44,7 @@ import type { WorkspaceContext } from '@/types/common';
 
 /** How often a summary being built is asked after. */
 const BUILDING_POLL_MS = 5000;
+const REGROUP_POLL_MS = 60_000;
 
 /** The rows one view may ask for: read together, so what they cost is their bytes, about 35 KB each on a long run. */
 export const MAX_ROW_READS = 256;
@@ -121,7 +122,16 @@ export function useLfpSummary(source: LfpSummarySource) {
   const status = useQuery({
     queryKey: statusKey(source),
     queryFn: () => requestLfpSummary(source),
-    refetchInterval: (query) => (query.state.data?.state === 'building' ? BUILDING_POLL_MS : false),
+    refetchInterval: (query) => {
+      const status = query.state.data;
+      if (status?.state === 'building') return BUILDING_POLL_MS;
+      // Asked again while its groups may be on the way, for the summary that has them
+      const open =
+        status?.state === 'ready'
+          ? queryClient.getQueryData<LfpSummary>(summaryKey(source, 'data', status.sha256))
+          : undefined;
+      return open?.index.groups_unavailable ? REGROUP_POLL_MS : false;
+    },
     staleTime: Infinity,
   });
   const ready = status.data?.state === 'ready' ? status.data : null;
@@ -131,14 +141,14 @@ export function useLfpSummary(source: LfpSummarySource) {
     enabled: ready !== null,
     staleTime: Infinity,
     gcTime: 5 * 60_000,
-    queryFn: async (): Promise<LfpSummary> => {
+    queryFn: async ({ signal }): Promise<LfpSummary> => {
       const sha256 = ready?.sha256 ?? '';
       const index = lfpSummaryIndexSchema.parse(
         await getLfpSummaryIndex(source, sha256).catch(
           askStatusIfChanged(queryClient, source, sha256)
         )
       );
-      const read = rangesOf({ queryClient, source, sha256 });
+      const read = rangesOf({ queryClient, source, sha256 }, signal);
       const axis = index.axes[0];
       const [total, stored] = await Promise.all([
         readField(read, index, axis, 0, overviewLevel(axis)),
@@ -158,6 +168,7 @@ type AxisRead = SummaryRead & { index: LfpSummaryIndex; axis: LfpAxis };
 
 type RangeAsked = {
   range: ByteRange;
+  signal: AbortSignal;
   resolve: (bytes: Uint8Array<ArrayBuffer>) => void;
   reject: (error: unknown) => void;
 };
@@ -169,12 +180,25 @@ async function readRangesAsked(
   { queryClient, source, sha256 }: SummaryRead,
   asked: readonly RangeAsked[]
 ) {
+  // Read for as long as anyone still wants a part of it
+  const reading = new AbortController();
+  let wanted = asked.length;
+  for (const { signal, reject } of asked) {
+    const leave = () => {
+      reject(signal.reason);
+      wanted -= 1;
+      if (wanted === 0) reading.abort();
+    };
+    if (signal.aborted) leave();
+    else signal.addEventListener('abort', leave, { once: true });
+  }
   try {
     const parts = await buildLfpSummaryRequest(source, sha256)
       .then((request) =>
         readRanges(
           request,
-          asked.map(({ range }) => range)
+          asked.map(({ range }) => range),
+          reading.signal
         )
       )
       .catch(askStatusIfChanged(queryClient, source, sha256));
@@ -190,11 +214,11 @@ async function readRangesAsked(
  * A summary's bytes, read with every other range of it asked for at the same moment, as a view's
  * are: in one request, so with one check of the reader's access.
  */
-function rangesOf(at: SummaryRead): ReadRange {
+function rangesOf(at: SummaryRead, signal: AbortSignal): ReadRange {
   const key = summaryKey(at.source, 'ranges', at.sha256).join('/');
   return (range) =>
     new Promise((resolve, reject) => {
-      const one = { range, resolve, reject };
+      const one = { range, signal, resolve, reject };
       const asked = rangesAsked.get(key);
       if (asked) {
         asked.push(one);
@@ -218,7 +242,7 @@ const groupQuery = <T>(
   queryKey: summaryKey(at.source, kind, at.sha256, at.axis.name, group),
   staleTime: Infinity,
   gcTime: 5 * 60_000,
-  queryFn: () => read(rangesOf(at)),
+  queryFn: ({ signal }: { signal: AbortSignal }) => read(rangesOf(at, signal)),
 });
 
 const groupFieldQuery = (at: AxisRead, group: number) =>
@@ -244,8 +268,8 @@ export const rowQuery = (at: AxisRead, group: number, contact: number) => ({
   queryKey: summaryKey(at.source, 'row', at.sha256, at.axis.name, group, contact),
   staleTime: Infinity,
   gcTime: 60_000,
-  queryFn: async () =>
-    inflateRow(await rangesOf(at)(rowRange(await chunkTable(at, group), contact))),
+  queryFn: async ({ signal }: { signal: AbortSignal }) =>
+    inflateRow(await rangesOf(at, signal)(rowRange(await chunkTable(at, group), contact))),
 });
 
 const oneGroup = (
@@ -306,10 +330,11 @@ export function useChosenField(
     ...groupStatsQuery(at, choice.groups[0]),
     enabled: oneOfAGroup,
   });
-  const failed = read.failed || shares.failed || (oneOfAGroup && groupStats.isError);
+  const failed = read.failed || (oneOfAGroup && groupStats.isError);
   const wanted = useMemo<ChosenField | null>(() => {
     if (isTotalField(choice)) return totalField;
-    if (!read.data || !shares.data) return null;
+    // The shares are waited for, but the field is shown without them where they can't be read
+    if (!read.data || (!shares.data && !shares.failed)) return null;
     if (choice.groups.length > 1) {
       const field = sumFields(read.data);
       return {
@@ -317,13 +342,13 @@ export function useChosenField(
         field,
         stats: fieldStats(field, index.stats),
         spectra: null,
-        shares: addedUp(shares.data),
+        shares: shares.data && addedUp(shares.data),
       };
     }
     return groupStats.data
-      ? oneGroup(index, choice, read.data[0], groupStats.data, shares.data[0])
+      ? oneGroup(index, choice, read.data[0], groupStats.data, shares.data?.[0] ?? null)
       : null;
-  }, [index, choice, totalField, read.data, shares.data, groupStats.data]);
+  }, [index, choice, totalField, read.data, shares.data, shares.failed, groupStats.data]);
   const [shown, setShown] = useState<ChosenField>(totalField);
   if (wanted && wanted !== shown) setShown(wanted);
   return { chosen: wanted ?? shown, loading: !wanted && !failed, failed };

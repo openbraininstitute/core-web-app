@@ -140,10 +140,12 @@ const rangeHeader = (ranges: readonly ByteRange[]) =>
 
 async function readByRange(
   request: LfpSummaryRequest,
-  ranges: readonly ByteRange[]
+  ranges: readonly ByteRange[],
+  signal?: AbortSignal
 ): Promise<Response> {
   const response = await fetch(request.url, {
     headers: { ...request.headers, Range: rangeHeader(ranges) },
+    signal,
   });
   if (response.status === 412) throw new LfpSummaryChangedError();
   if (!response.ok) throw new Error(`Reading the LFP summary failed (${response.status})`);
@@ -184,9 +186,10 @@ function multipartParts(bytes: Uint8Array<ArrayBuffer>, boundary: string): Part[
 
 async function readSomeRanges(
   request: LfpSummaryRequest,
-  ranges: readonly ByteRange[]
+  ranges: readonly ByteRange[],
+  signal?: AbortSignal
 ): Promise<Uint8Array<ArrayBuffer>[]> {
-  const response = await readByRange(request, ranges);
+  const response = await readByRange(request, ranges, signal);
   const bytes = new Uint8Array(await response.arrayBuffer());
   const boundary = /boundary="?([^";\s]+)/.exec(response.headers.get('content-type') ?? '')?.[1];
   // A server may answer ranges that touch as one part, and all of them as one range.
@@ -205,11 +208,12 @@ async function readSomeRanges(
 /** Ranges' bytes, in the order given, with as few requests as the server takes. */
 export async function readRanges(
   request: LfpSummaryRequest,
-  ranges: readonly ByteRange[]
+  ranges: readonly ByteRange[],
+  signal?: AbortSignal
 ): Promise<Uint8Array<ArrayBuffer>[]> {
   const requests = [];
   for (let i = 0; i < ranges.length; i += MAX_RANGES_PER_REQUEST) {
-    requests.push(readSomeRanges(request, ranges.slice(i, i + MAX_RANGES_PER_REQUEST)));
+    requests.push(readSomeRanges(request, ranges.slice(i, i + MAX_RANGES_PER_REQUEST), signal));
   }
   return (await Promise.all(requests)).flat();
 }

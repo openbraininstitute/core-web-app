@@ -68,11 +68,11 @@ const summaryOf = (sha256: string): LfpSummary => ({
 });
 
 function chosen(summary: LfpSummary, choice: FieldChoice) {
-  const queryClient = new QueryClient();
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
-  return renderHook(() => useChosenField(source, summary, choice), { wrapper }).result;
+  return renderHook(() => useChosenField(source, summary, choice), { wrapper });
 }
 
 describe('useChosenField', () => {
@@ -82,7 +82,7 @@ describe('useChosenField', () => {
     const fetchMock = vi.fn(answeringRanges(file));
     vi.stubGlobal('fetch', fetchMock);
 
-    const result = chosen(summaryOf('one'), { axis: 1, groups: [1] });
+    const { result } = chosen(summaryOf('one'), { axis: 1, groups: [1] });
 
     await waitFor(() => expect(result.current.loading).toBe(false));
     const { field, stats, spectra, shares } = result.current.chosen;
@@ -96,7 +96,7 @@ describe('useChosenField', () => {
   it('adds up the shares of the groups ticked', async () => {
     vi.stubGlobal('fetch', vi.fn(answeringRanges(file)));
 
-    const result = chosen(summaryOf('two'), { axis: 1, groups: [0, 1] });
+    const { result } = chosen(summaryOf('two'), { axis: 1, groups: [0, 1] });
 
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(Array.from(result.current.chosen.shares ?? [])).toEqual([1, 1]);
@@ -104,9 +104,43 @@ describe('useChosenField', () => {
   });
 
   it('has no shares for the total', () => {
-    const result = chosen(summaryOf('three'), { axis: 0, groups: [0] });
+    const { result } = chosen(summaryOf('three'), { axis: 0, groups: [0] });
 
     expect(result.current.chosen.shares).toBeNull();
     expect(result.current.loading).toBe(false);
+  });
+
+  it('shows a field whose shares can not be read without them', async () => {
+    vi.stubGlobal('fetch', vi.fn(answeringRanges(file)));
+    const [total, mtype] = index.axes;
+    const summary = {
+      ...summaryOf('four'),
+      index: { ...index, axes: [total, { ...mtype, contact_shares: '/gone' }] },
+    };
+
+    const { result } = chosen(summary, { axis: 1, groups: [1] });
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.failed).toBe(false);
+    expect(Array.from(result.current.chosen.field.data)).toEqual([1, 1, 1, 1, 2, 2, 2, 2]);
+    expect(result.current.chosen.shares).toBeNull();
+  });
+
+  it('stops reading once nobody wants what is read', async () => {
+    const signals: AbortSignal[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((_url: string, init: RequestInit) => {
+        if (init.signal) signals.push(init.signal);
+        return new Promise<Response>(() => {});
+      })
+    );
+
+    const { unmount } = chosen(summaryOf('five'), { axis: 1, groups: [1] });
+    await waitFor(() => expect(signals).toHaveLength(1));
+    expect(signals[0].aborted).toBe(false);
+    unmount();
+
+    await waitFor(() => expect(signals[0].aborted).toBe(true));
   });
 });
