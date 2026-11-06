@@ -1,12 +1,14 @@
 'use client';
 
-import { MenuOutlined } from '@ant-design/icons';
+import { ControlOutlined, MenuOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
+import { ADMIN_ROOT } from '@/admin/shell/sections';
+import { useOperatorCapabilities } from '@/admin/shell/use-operator-capabilities';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
@@ -64,6 +66,7 @@ type LinkItem = {
   className: React.ComponentProps<'div'>['className'];
   isActive?: (path: string) => boolean;
   hasAction?: boolean;
+  hoverLabel?: boolean;
   action?: ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) => string;
 };
 
@@ -151,6 +154,17 @@ const links: LinkItem[] = [
     hasAction: false,
   },
   {
+    id: 'workspace-admin',
+    key: 'admin',
+    title: 'Admin',
+    url: ADMIN_ROOT,
+    icon: <ControlOutlined className="group-hover:text-primary-3 text-[17px]! shrink-0" />,
+    allowText: false,
+    className: '',
+    hasAction: false,
+    hoverLabel: true,
+  },
+  {
     id: 'workspace-help',
     key: 'help',
     title: 'Help',
@@ -159,6 +173,7 @@ const links: LinkItem[] = [
     allowText: false,
     className: '',
     hasAction: false,
+    hoverLabel: true,
   },
   {
     id: 'workspace-feedbacks',
@@ -195,6 +210,9 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
     staleTime: 1000 * 60 * 5,
   });
 
+  const { data: capabilities } = useOperatorCapabilities();
+  const isOperator = Boolean(capabilities?.ops.view);
+
   const learn = useFlag(learnFlag.key);
   const help = useFlag(hideHelpFlag.key) !== true;
   // the links, all but the active one, on the page's grey rather than white: behind its flag
@@ -214,6 +232,7 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
       links.filter((link) => {
         if (link.id === 'workspace-learn') return learn;
         if (link.id === 'workspace-help') return help;
+        if (link.id === 'workspace-admin') return isOperator;
         if (link.id === 'workspace-course') {
           return (
             hasCourse && isVlabAdmin && projectId === virtualLabData?.course?.template_project_id
@@ -221,13 +240,23 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
         }
         return true;
       }),
-    [learn, help, hasCourse, isVlabAdmin, projectId, virtualLabData?.course?.template_project_id]
+    [
+      learn,
+      help,
+      isOperator,
+      hasCourse,
+      isVlabAdmin,
+      projectId,
+      virtualLabData?.course?.template_project_id,
+    ]
   );
 
   const hashedLinks = filteredLinks.map((link) => ({
     ...link,
     baseUrl: link.url,
-    url: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/${link.url}`,
+    url: link.url.startsWith('/')
+      ? link.url
+      : `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/${link.url}`,
   }));
 
   // (after tests:) breakpoint for 950px threshold
@@ -332,6 +361,7 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
           className: clx,
           isActive,
           hasAction,
+          hoverLabel,
         }) => {
           if (id === 'workspace-feedbacks') {
             const isActive = activeSection === baseUrl;
@@ -368,57 +398,6 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
                   </Badge>
                   <span className="text-primary-9 absolute top-full right-0 text-sm whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                     Feedback
-                  </span>
-                </div>
-              </div>
-            );
-          }
-
-          if (id === 'workspace-help') {
-            const isActiveHelp = activeSection === baseUrl || isActive?.(pathname);
-            return (
-              <div key={key} className="group flex w-max items-center justify-center gap-0">
-                <div className="relative flex items-center">
-                  <Badge
-                    asChild
-                    rounded
-                    id={id}
-                    data-testid={id}
-                    variant="outline"
-                    size={breakpoint === 'xl' ? 'lg' : 'md'}
-                    className={cn(
-                      {
-                        'w-12 !justify-center !px-0': !allowText && breakpoint === 'xl',
-                      },
-                      {
-                        '!w-10 !justify-center !px-0': breakpoint === 'l' && !allowText,
-                      },
-                      'group relative flex items-center justify-center',
-                      `!overflow-visible !py-0 ${fill} select-none hover:shadow-sm hover:bg-background`,
-                      plain && PLAIN,
-                      {
-                        'bg-primary-9 text-white': isActiveHelp && !plain,
-                        [PLAIN_ACTIVE]: isActiveHelp && plain,
-                      },
-                      {
-                        'group-hover:rounded-r-none': hasAction,
-                      },
-                      'transition-all duration-400 ease-out',
-                      clx
-                    )}
-                  >
-                    <Link
-                      prefetch
-                      href={{
-                        pathname: url,
-                      }}
-                    >
-                      {allowText && <span className="group-hover:text-primary-3">{title}</span>}
-                      {icon}
-                    </Link>
-                  </Badge>
-                  <span className="text-primary-9 absolute top-full left-1/2 -translate-x-1/2 text-sm whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                    Help
                   </span>
                 </div>
               </div>
@@ -467,6 +446,11 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
                     {icon}
                   </Link>
                 </Badge>
+                {hoverLabel && (
+                  <span className="text-primary-9 absolute top-full left-1/2 -translate-x-1/2 text-sm whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                    {title}
+                  </span>
+                )}
               </div>
             </div>
           );
