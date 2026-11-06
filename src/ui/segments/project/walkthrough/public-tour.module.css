@@ -3,6 +3,22 @@
   --chapter-title-size: clamp(30px, 3.2vw, 50px);
   --chapter-copy-size: clamp(15px, 1.15vw, 17px);
   --chapter-copy-leading: 1.55;
+  --chapter-content-top: clamp(140px, 18vh, 180px);
+  /* A title's capitals start this far into its line (Gabarito at line-height 1.06); its media starts level with them. */
+  --chapter-media-top: calc(var(--chapter-content-top) + var(--chapter-title-size) * 0.185);
+  --chapter-media-foot: max(100px, 12vh);
+}
+/* Beside its words, a chapter's media stays put in the page, its top level with the title. */
+@media (min-width: 64rem), (orientation: landscape) {
+  .publicTour [data-chapter-media] {
+    top: var(--chapter-media-top);
+    bottom: var(--chapter-media-foot);
+    align-items: flex-start;
+    transform: none;
+  }
+  .publicTour [data-chapter-media] video {
+    max-height: calc(var(--chapter-h) - var(--chapter-media-top) - var(--chapter-media-foot));
+  }
 }
 .publicText {
   align-items: flex-start;
@@ -15,7 +31,7 @@
   width: 38%;
   max-width: none;
   margin: 0;
-  padding: clamp(140px, 18vh, 180px) 0 96px var(--chapter-text-inset);
+  padding: var(--chapter-content-top) 0 96px var(--chapter-text-inset);
   gap: 14px;
 }
 .publicTour .publicText[data-chapter-text="agents"] {
@@ -328,32 +344,13 @@
   transform: translateY(-100%);
   pointer-events: none;
 }
-@supports (animation-timeline: view()) {
-  .publicTour section[data-index] {
-    view-timeline-name: --chapter-visual;
-    view-timeline-axis: block;
-  }
-  .publicTour [data-chapter-stage] video {
-    transform-origin: right center;
-    animation: chapter-visual-exit linear both;
-    animation-timeline: --chapter-visual;
-    animation-range: exit 0% exit 100%;
-  }
-}
-@keyframes chapter-visual-exit {
-  from {
-    transform: translateX(0) scale(1);
-  }
-  to {
-    transform: translateX(45%) scale(0.82);
-  }
+/* The chapters' own timeline takes over in the same place, so the one line stays put as the page goes up. */
+.landingTransition[data-leaving] nav {
+  visibility: hidden;
 }
 @media (prefers-reduced-motion: reduce) {
   .landingTransition {
     transition: none;
-  }
-  .publicTour [data-chapter-stage] video {
-    animation: none;
   }
 }
 

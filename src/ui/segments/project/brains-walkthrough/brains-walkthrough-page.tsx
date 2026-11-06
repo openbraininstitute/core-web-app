@@ -106,7 +106,7 @@ export function BrainsWalkthroughPage({
       pager={false}
       stageScrolls
       footer="clamp(64px,9.5vh,88px)"
-      stage={(chapter, _colorSlot, _goTo, active) => (
+      stage={(chapter, _colorSlot, _goTo, active, near) => (
         <SlidingStage
           scene={chapter.scene}
           active={active}
@@ -114,30 +114,33 @@ export function BrainsWalkthroughPage({
           full={(scene) => scene === 'join' || (CNS_ON_FIRST_SCREEN && scene === 'opening')}
           // The first screen's fly brain, under its recording, is turned by hand through it.
           passThrough={(scene) => CNS_ON_FIRST_SCREEN && scene === 'opening'}
-          draw={(scene) => <BrainScene scene={scene} />}
+          draw={(scene) => <BrainScene scene={scene} near={near} />}
         />
       )}
     />
   );
 }
 
-/** A screen's stage. Its models are drawn from packs in the repo, the same signed in or not. */
-function BrainScene({ scene }: { scene: TBrainScene }) {
+/**
+ * A screen's stage, in place on its screen whichever is on; only `near` it does what costs: its video loads, the
+ * brains render. Its models are drawn from packs in the repo, the same signed in or not.
+ */
+function BrainScene({ scene, near }: { scene: TBrainScene; near: boolean }) {
   if (scene === 'opening') {
     return CNS_ON_FIRST_SCREEN ? <BrainsOpening /> : <VirtualLabsPreview />;
   }
-  if (scene === 'configuration') return <StageVideo video={CONFIGURATION_VIDEO} />;
-  if (scene === 'multiplying') return <MultiplyingBrains />;
-  if (scene === 'teaching') return <StageVideo video={TEACHING_VIDEO} />;
-  if (scene === 'analysis') return <StageVideo video={ANALYSIS_VIDEO} />;
-  if (scene === 'notebooks') return <NotebooksVideo />;
+  if (scene === 'configuration') return <StageVideo video={CONFIGURATION_VIDEO} near={near} />;
+  if (scene === 'multiplying') return near ? <MultiplyingBrains /> : null;
+  if (scene === 'teaching') return <StageVideo video={TEACHING_VIDEO} near={near} />;
+  if (scene === 'analysis') return <StageVideo video={ANALYSIS_VIDEO} near={near} />;
+  if (scene === 'notebooks') return <NotebooksVideo near={near} />;
   if (scene === 'models') return <ModelMosaic />;
   // Getting started, beside the early adopters already on the platform.
   if (scene === 'join')
     return (
       <>
-        <GetStartedBrain />
-        <EarlyAdopters />
+        <GetStartedBrain near={near} />
+        {near && <EarlyAdopters />}
       </>
     );
   return null;

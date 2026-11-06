@@ -38,7 +38,7 @@ export function ModelMosaic() {
   }, [visible, motionAllowed]);
 
   return (
-    <div ref={host} className={styles.gallery}>
+    <div ref={host} data-chapter-media className={styles.gallery}>
       <figure className={styles.movie}>
         <video
           ref={videoRef}

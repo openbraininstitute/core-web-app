@@ -5,7 +5,7 @@ import { useEffect, useRef } from 'react';
 import styles from './get-started.module.css';
 
 /** The production homepage film with soft edges fading into the white page. */
-export function GetStartedBrain() {
+export function GetStartedBrain({ near = true }: { near?: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   useEffect(() => {
     const video = videoRef.current;
@@ -31,10 +31,10 @@ export function GetStartedBrain() {
     };
   }, []);
   return (
-    <div className={styles.brainArtwork}>
+    <div data-chapter-media className={styles.brainArtwork}>
       <video
         ref={videoRef}
-        src="/video/get-started-brain.mp4"
+        src={near ? '/video/get-started-brain.mp4' : undefined}
         poster="/video/get-started-brain.jpg"
         muted
         loop

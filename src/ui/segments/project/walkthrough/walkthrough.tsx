@@ -1,5 +1,6 @@
 'use client';
 
+import { animate } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -86,6 +87,57 @@ const SCROLLER = '#workspace-body';
 /** How long the walkthrough takes to give way to the home it leads to, ms. */
 const FINISH_MS = 800;
 
+/** How much longer a glide takes for each screen past the first, so that a long jump does not take a screen's time per screen, ms. */
+const GLIDE_PER_EXTRA_SCREEN_MS = 400;
+
+/** How far a wheel or trackpad must go to turn the page, px; and how long it must then rest before it can again, ms. */
+const WHEEL_TURN_PX = 24;
+const WHEEL_REST_MS = 180;
+
+/** Where a page of `sections` comes to rest: each one's top, and the foot of one taller than the screen. */
+function chapterStops(root: HTMLElement, sections: HTMLElement[]): number[] {
+  const top = root.getBoundingClientRect().top;
+  return sections.flatMap((section) => {
+    const box = section.getBoundingClientRect();
+    const at = Math.round(box.top - top + root.scrollTop);
+    return box.height > root.clientHeight + 2
+      ? [at, at + Math.round(box.height - root.clientHeight)]
+      : [at];
+  });
+}
+
+/** The next place to rest from here, down (1) or up (-1); null if the page ends first. */
+function nextStop(root: HTMLElement, sections: HTMLElement[], way: 1 | -1): number | null {
+  const ahead = chapterStops(root, sections).filter((stop) =>
+    way > 0 ? stop > root.scrollTop + 2 : stop < root.scrollTop - 2
+  );
+  if (!ahead.length) return null;
+  return way > 0 ? Math.min(...ahead) : Math.max(...ahead);
+}
+
+/** Whether the chapter on screen goes on past it that way, to be read through by hand. */
+function roomInChapter(root: HTMLElement, sections: HTMLElement[], way: 1 | -1): boolean {
+  const top = root.getBoundingClientRect().top;
+  const screen = root.clientHeight;
+  return sections.some((section) => {
+    const box = section.getBoundingClientRect();
+    if (box.height <= screen + 2) return false;
+    const [above, below] = [box.top - top, box.bottom - top];
+    return way > 0 ? above <= 2 && below > screen + 2 : above < -2 && below >= screen - 2;
+  });
+}
+
+/** Whether something under `target` scrolls by itself and still has room that way. */
+function scrollsInside(target: EventTarget | null, root: HTMLElement, way: 1 | -1): boolean {
+  for (let at = target as HTMLElement | null; at && at !== root; at = at.parentElement) {
+    const { overflowY } = getComputedStyle(at);
+    if (overflowY !== 'auto' && overflowY !== 'scroll') continue;
+    const left = way > 0 ? at.scrollHeight - at.clientHeight - at.scrollTop : at.scrollTop;
+    if (left > 1) return true;
+  }
+  return false;
+}
+
 /**
  * A walkthrough: the project home as a story told while scrolling, after everyneuron.com, a screen
  * per chapter, the words on the left, and on the right its `stage`, the data the platform holds in
@@ -114,12 +166,16 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   footer,
 }: {
   chapters: readonly C[];
-  /** The right of the page for the chapter on, with where that chapter puts colour-by, and a way to another chapter. */
+  /**
+   * The right of the page for the chapter on, with where that chapter puts colour-by, a way to another chapter,
+   * and whether it is on or next to the chapter on: what is costly to load or run can wait for that.
+   */
   stage: (
     chapter: C,
     colorSlot: HTMLElement | null,
     goTo: (id: string) => void,
-    active: boolean
+    active: boolean,
+    near: boolean
   ) => ReactNode;
   /** Keep the media in each chapter's scroll container so it travels exactly with its words. */
   stageScrolls?: boolean;
@@ -182,7 +238,8 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   const [active, setActive] = useState(0);
   const navigationUntil = useRef(0);
   const pendingIntroChapter = useRef<string | null>(null);
-  const landingWheelUntil = useRef(0);
+  const wheelHeldUntil = useRef(0);
+  const glide = useRef<{ stop: () => void } | null>(null);
   const [finishing, setFinishing] = useState(false);
   const [colorSlot, setColorSlot] = useState<HTMLElement | null>(null);
   // Over the whole window, it is laid over the page's body once in the browser.
@@ -211,28 +268,80 @@ export function Walkthrough<C extends IWalkthroughChapter>({
     setIntroLeft(true);
   }, [root]);
   // A trackpad gesture has many momentum events after its first tick. Keep those
-  // from scrolling the first chapter while the public landing is moving away.
+  // from scrolling on while the page is already moving, or just after it stops.
+  const holdsWheel = !!introContent || stageScrolls;
   useEffect(() => {
-    if (!root || !introContent) return;
-    const holdLandingGesture = (event: WheelEvent) => {
+    if (!root || !holdsWheel) return;
+    const holdGesture = (event: WheelEvent) => {
       const now = performance.now();
-      if (now >= landingWheelUntil.current) return;
+      if (now >= wheelHeldUntil.current) return;
       event.preventDefault();
       event.stopPropagation();
-      landingWheelUntil.current = Math.max(landingWheelUntil.current, now + 180);
+      wheelHeldUntil.current = Math.max(wheelHeldUntil.current, now + WHEEL_REST_MS);
     };
-    root.addEventListener('wheel', holdLandingGesture, { passive: false, capture: true });
-    return () => root.removeEventListener('wheel', holdLandingGesture, true);
-  }, [root, introContent]);
+    root.addEventListener('wheel', holdGesture, { passive: false, capture: true });
+    return () => root.removeEventListener('wheel', holdGesture, true);
+  }, [root, holdsWheel]);
+
+  /** The page taken to a place at the pace of the landing's scroll, which the browser's own cannot be slowed to; how long it takes, ms. */
+  const glideTo = useCallback(
+    (to: number): number => {
+      if (!root) return 0;
+      glide.current?.stop();
+      glide.current = null;
+      const distance = Math.abs(to - root.scrollTop);
+      if (distance < 2) return 0;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        root.scrollTop = to;
+        return 0;
+      }
+      const extraScreens = Math.max(Math.round(distance / root.clientHeight) - 1, 0);
+      const ms = INTRO.scroll + extraScreens * GLIDE_PER_EXTRA_SCREEN_MS;
+      glide.current = animate(root.scrollTop, to, {
+        duration: ms / 1000,
+        ease: GLIDE_EASE,
+        onUpdate: (at) => {
+          root.scrollTop = at;
+        },
+        onComplete: () => {
+          glide.current = null;
+        },
+      });
+      return ms;
+    },
+    [root]
+  );
+  useEffect(() => () => glide.current?.stop(), []);
+
+  const placedSections = useCallback(
+    () => sections.current.filter((section): section is HTMLElement => section !== null),
+    []
+  );
+
+  /** On to the next place to rest, down or up; how long it takes, ms, or null if the page ends first. */
+  const turnPage = useCallback(
+    (way: 1 | -1): number | null => {
+      if (!root) return null;
+      const to = nextStop(root, placedSections(), way);
+      if (to === null) return null;
+      const ms = glideTo(to);
+      navigationUntil.current = Date.now() + Math.max(ms, 1000);
+      return ms;
+    },
+    [root, placedSections, glideTo]
+  );
 
   // What floats over the intro built, for the intro to start with it.
   const [floated, setFloated] = useState(0);
   const floatReady = useCallback(() => setFloated((built) => built + 1), []);
   // Back to the intro from the first screen, by the wheel, a key or its arrow.
+  const ownLanding = !!introContent;
   const backToIntro = useCallback(() => {
     setIntroState('returning');
-    setIntroLeft(false);
-  }, []);
+    // A host's own landing is drawn above the page first, where it left for, to come down with it.
+    if (ownLanding) requestAnimationFrame(() => requestAnimationFrame(() => setIntroLeft(false)));
+    else setIntroLeft(false);
+  }, [ownLanding]);
   // Entering asked for by what floats over the intro, as a click on the intro itself would.
   const [enterAsked, setEnterAsked] = useState(0);
   const askEnter = useCallback(() => setEnterAsked((asked) => asked + 1), []);
@@ -276,7 +385,9 @@ export function Walkthrough<C extends IWalkthroughChapter>({
     };
     const back = backToIntro;
     const onWheel = (e: WheelEvent) => {
-      if (e.deltaY < 0 && root.scrollTop <= 1 && performance.now() - topSince > AT_TOP_MS) back();
+      const now = performance.now();
+      const rested = now - topSince > AT_TOP_MS && now >= wheelHeldUntil.current;
+      if (e.deltaY < 0 && root.scrollTop <= 1 && rested) back();
     };
     const onKey = (e: KeyboardEvent) => {
       if ((e.key === 'ArrowLeft' || e.key === 'ArrowUp') && root.scrollTop <= 1) back();
@@ -333,9 +444,16 @@ export function Walkthrough<C extends IWalkthroughChapter>({
         finish();
         return;
       }
-      sections.current[Math.max(0, index)]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const section = sections.current[Math.max(0, index)];
+      if (stageScrolls && root && section) {
+        const offset = section.getBoundingClientRect().top - root.getBoundingClientRect().top;
+        const ms = glideTo(Math.round(offset + root.scrollTop));
+        navigationUntil.current = Date.now() + Math.max(ms, 1000);
+        return;
+      }
+      section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     },
-    [finish, chapters.length, introContent]
+    [finish, chapters.length, introContent, stageScrolls, root, glideTo]
   );
 
   const goTo = useCallback(
@@ -354,28 +472,27 @@ export function Walkthrough<C extends IWalkthroughChapter>({
     return () => cancelAnimationFrame(frame);
   }, [introDone, goTo]);
 
-  // The fixed-stage tour settles on a screen. Media that scrolls with its text must remain free to scroll:
-  // snapping to the nearest stop would undo short gestures, especially when scrolling back up.
+  // The tour settles on a screen. Where the page turns by the gesture, this is only for what is left between two:
+  // the scrollbar let go of, say, or a fling that ran out of a tall chapter.
   useEffect(() => {
-    if (!fullscreen || !root || stageScrolls) return;
+    if (!fullscreen || !root) return;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const settle = () => {
+      if (stageScrolls && (glide.current || !introDone)) return;
       const now = root.scrollTop;
       const top = root.getBoundingClientRect().top;
       const screen = root.clientHeight;
-      const placed = sections.current.filter((section): section is HTMLElement => section !== null);
+      const placed = placedSections();
       // Taller than the screen, as on a small phone, a chapter is read down through, its foot a stop as well.
       const boxes = placed.map((section) => section.getBoundingClientRect());
       if (boxes.some((box) => box.top - top < 0 && box.bottom - top >= screen - 2)) return;
-      const stops = boxes.flatMap((box) => {
-        const at = Math.round(box.top - top + now);
-        return box.height > screen + 2 ? [at, at + Math.round(box.height - screen)] : [at];
-      });
+      const stops = chapterStops(root, placed);
       if (stops.length === 0 || stops.some((stop) => Math.abs(stop - now) <= 2)) return;
       const nearest = stops.reduce((best, stop) =>
         Math.abs(stop - now) < Math.abs(best - now) ? stop : best
       );
-      root.scrollTo({ top: nearest, behavior: 'smooth' });
+      if (stageScrolls) glideTo(nearest);
+      else root.scrollTo({ top: nearest, behavior: 'smooth' });
     };
     const onScroll = () => {
       clearTimeout(timer);
@@ -386,9 +503,10 @@ export function Walkthrough<C extends IWalkthroughChapter>({
       root.removeEventListener('scroll', onScroll);
       clearTimeout(timer);
     };
-  }, [fullscreen, root, stageScrolls]);
+  }, [fullscreen, root, stageScrolls, introDone, placedSections, glideTo]);
 
-  // ← and → go a chapter back and on, as on everyneuron; up and down scroll as ever.
+  // ← and → go a chapter back and on, as on everyneuron; where the page turns by itself, up and down and the
+  // like do too, unless a tall chapter has more to read that way.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
@@ -398,12 +516,100 @@ export function Walkthrough<C extends IWalkthroughChapter>({
       if (typing) return;
       if (e.key === 'ArrowRight') go(active + 1);
       else if (e.key === 'ArrowLeft') go(active - 1);
-      else return;
+      else if (stageScrolls && introDone && root && e.key === 'Home') go(0);
+      else if (stageScrolls && introDone && root && e.key === 'End') go(chapters.length - 1);
+      else if (stageScrolls && introDone && root) {
+        const pressed = (e.target as HTMLElement | null)?.closest('a, button');
+        const down = e.key === 'ArrowDown' || e.key === 'PageDown' || (e.key === ' ' && !pressed);
+        const up = e.key === 'ArrowUp' || e.key === 'PageUp';
+        if (!down && !up) return;
+        const way = down ? 1 : -1;
+        if (roomInChapter(root, placedSections(), way)) return;
+        if (!e.repeat && turnPage(way) === null) return;
+      } else return;
       e.preventDefault();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [active, go]);
+  }, [active, go, stageScrolls, introDone, root, chapters.length, placedSections, turnPage]);
+
+  // Where the media scrolls with its words, a gesture turns the page, at the same pace whatever it was: one chapter
+  // for one flick of the wheel or the finger, however much momentum it has. A sign-up over the page keeps its own.
+  useEffect(() => {
+    if (!root || !stageScrolls || !introDone || accountFlow) return;
+    let travelled = 0;
+    let lastWheel = 0;
+    let readingUntil = 0;
+    const onWheel = (e: WheelEvent) => {
+      if (e.ctrlKey || e.deltaY === 0 || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+      const now = performance.now();
+      if (now < wheelHeldUntil.current) return;
+      const way = e.deltaY > 0 ? 1 : -1;
+      if (scrollsInside(e.target, root, way) || roomInChapter(root, placedSections(), way)) {
+        readingUntil = now + WHEEL_REST_MS;
+        return;
+      }
+      // The tail of a gesture that read to the end of a tall chapter is not a new one.
+      if (now < readingUntil) {
+        e.preventDefault();
+        readingUntil = now + WHEEL_REST_MS;
+        return;
+      }
+      if (nextStop(root, placedSections(), way) === null) return;
+      e.preventDefault();
+      if (now - lastWheel > 300) travelled = 0;
+      lastWheel = now;
+      const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? root.clientHeight : 1;
+      travelled += Math.abs(e.deltaY) * unit;
+      if (travelled < WHEEL_TURN_PX) return;
+      travelled = 0;
+      wheelHeldUntil.current = now + (turnPage(way) ?? 0) + WHEEL_REST_MS;
+    };
+    let from: { x: number; y: number } | null = null;
+    let paging = false;
+    const onTouchStart = (e: TouchEvent) => {
+      const touch = e.touches.length === 1 ? e.touches[0] : null;
+      from = touch && { x: touch.clientX, y: touch.clientY };
+      paging = false;
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (!from) return;
+      if (!paging) {
+        const [dx, dy] = [e.touches[0].clientX - from.x, e.touches[0].clientY - from.y];
+        const way = dy < 0 ? 1 : -1;
+        if (
+          Math.abs(dx) > Math.abs(dy) ||
+          scrollsInside(e.target, root, way) ||
+          roomInChapter(root, placedSections(), way) ||
+          nextStop(root, placedSections(), way) === null
+        ) {
+          from = null;
+          return;
+        }
+        paging = true;
+      }
+      if (e.cancelable) e.preventDefault();
+    };
+    const onTouchEnd = (e: TouchEvent) => {
+      if (from && paging) {
+        const dy = e.changedTouches[0].clientY - from.y;
+        if (Math.abs(dy) > PULL_PX / 2) turnPage(dy < 0 ? 1 : -1);
+      }
+      from = null;
+      paging = false;
+    };
+    const held = { passive: false, capture: true };
+    root.addEventListener('wheel', onWheel, held);
+    root.addEventListener('touchstart', onTouchStart, { passive: true, capture: true });
+    root.addEventListener('touchmove', onTouchMove, held);
+    root.addEventListener('touchend', onTouchEnd, { passive: true, capture: true });
+    return () => {
+      root.removeEventListener('wheel', onWheel, true);
+      root.removeEventListener('touchstart', onTouchStart, true);
+      root.removeEventListener('touchmove', onTouchMove, true);
+      root.removeEventListener('touchend', onTouchEnd, true);
+    };
+  }, [root, stageScrolls, introDone, accountFlow, placedSections, turnPage]);
 
   // The runway past the end is no chapter: the last one stays on while it is crossed.
   const on = Math.min(active, chapters.length - 1);
@@ -466,7 +672,6 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                 '--stage-video-top': 'max(60px, calc(var(--chapter-h) * 0.35 - 160px))',
                 fontFamily: 'var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif',
                 transitionDuration: `${FINISH_MS}ms`,
-                scrollSnapType: stageScrolls ? 'y mandatory' : undefined,
               } as CSSProperties
             }
           >
@@ -503,7 +708,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
               >
                 {introContent({
                   continue: () => {
-                    landingWheelUntil.current = performance.now() + INTRO.scroll + 450;
+                    wheelHeldUntil.current = performance.now() + INTRO.scroll + 450;
                     root?.scrollTo({ top: 0, behavior: 'instant' });
                     setIntroLeft(true);
                   },
@@ -520,7 +725,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
               className="pointer-events-none sticky top-0 h-(--chapter-h) overflow-hidden"
               style={underIntro}
             >
-              {!stageScrolls && stage(chapter, colorSlot, goTo, true)}
+              {!stageScrolls && stage(chapter, colorSlot, goTo, true, true)}
               {!fullscreen && (
                 <div className="pointer-events-auto">
                   <Progress chapters={chapters} active={on} onGo={go} />
@@ -614,11 +819,6 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                   key={chapter.id}
                   id={`walkthrough-${chapter.id}`}
                   data-index={index}
-                  style={
-                    stageScrolls
-                      ? { scrollSnapAlign: 'start', scrollSnapStop: 'always' }
-                      : undefined
-                  }
                   ref={(section) => {
                     sections.current[index] = section;
                   }}
@@ -631,12 +831,18 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                         : 'items-end beside:items-center'
                   )}
                 >
-                  {stageScrolls && Math.abs(index - on) <= 1 && (
+                  {stageScrolls && (
                     <div
                       data-chapter-stage
                       className="pointer-events-none absolute inset-0 overflow-hidden"
                     >
-                      {stage(chapter, index === on ? colorSlot : null, goTo, index === on)}
+                      {stage(
+                        chapter,
+                        index === on ? colorSlot : null,
+                        goTo,
+                        index === on,
+                        Math.abs(index - on) <= 1
+                      )}
                     </div>
                   )}
                   <ChapterText
@@ -823,7 +1029,8 @@ function heroClass(wide: boolean | undefined, bold: boolean): string {
  */
 const INTRO = { hold: 5000, logo: 1300, key: 45, typed: 700, scroll: 1000 };
 const typingMs = (line: string) => line.length * INTRO.key + INTRO.typed;
-const SCROLL_EASE = 'cubic-bezier(0.65, 0, 0.35, 1)';
+const GLIDE_EASE = [0.65, 0, 0.35, 1] as const;
+const SCROLL_EASE = `cubic-bezier(${GLIDE_EASE.join(', ')})`;
 /** The page scrolling on from the intro to the first screen, or back. */
 const SCROLL = `transform ${INTRO.scroll}ms ${SCROLL_EASE}`;
 

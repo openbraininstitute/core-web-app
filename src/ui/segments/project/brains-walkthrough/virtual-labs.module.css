@@ -345,3 +345,10 @@
     linear-gradient(to bottom, transparent, black 7%, black 93%, transparent);
   mask-composite: intersect;
 }
+/* Beside the words, half-way through its fade in is what reads as its top edge, level with the title. */
+@media (min-width: 64rem), (orientation: landscape) {
+  .video.animationVideo,
+  .blendedVideo.animationVideo {
+    translate: 0 -3.5%;
+  }
+}

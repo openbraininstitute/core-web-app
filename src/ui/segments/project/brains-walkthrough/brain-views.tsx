@@ -289,7 +289,7 @@ export function VirtualLabsPreview() {
     return () => preference.removeEventListener('change', update);
   }, []);
   return (
-    <figure className={labs.preview}>
+    <figure data-chapter-media className={labs.preview}>
       <video
         ref={videoRef}
         src={VIRTUAL_LABS_VIDEO.src}
@@ -458,7 +458,7 @@ export function EarlyAdopters() {
  * The notebooks' animation, as the platform's home shows it on its Notebooks card: from Sanity, whose Get Started
  * cards carry it.
  */
-export function NotebooksVideo() {
+export function NotebooksVideo({ near = true }: { near?: boolean }) {
   const client = getClient();
   const { data: home } = useQuery({
     queryKey: keyBuilderExternal.projectHomeGetStarted(),
@@ -469,21 +469,28 @@ export function NotebooksVideo() {
     (card) => card.title === 'Notebooks' && card.thumbnailType === 'video'
   )?.video;
   if (!src) return null;
-  return <StageVideo video={{ src, poster: '' }} presentation="animation" />;
+  return <StageVideo video={{ src, poster: '' }} presentation="animation" near={near} />;
 }
 
-/** A recording across the stage beside a screen's words, in the middle of its height; `className` to place it otherwise. */
+/**
+ * A recording across the stage beside a screen's words, in the middle of its height, or on the public tour level
+ * with its title; `className` to place it otherwise. Away from `near`, only its poster: the page need not load
+ * every film before one is seen.
+ */
 export function StageVideo({
   video,
   presentation = 'recording',
+  near = true,
   className,
 }: {
   video: { src: string; poster: string };
   presentation?: 'recording' | 'animation';
+  near?: boolean;
   className?: string;
 }) {
   return (
     <div
+      data-chapter-media
       className={cn(
         'absolute top-[max(148px,18vh)] right-[24px] bottom-[max(100px,12vh)] left-0 flex items-center justify-center',
         // Upright, across the page, for a screen's words to start under it (`UNDER_VIDEO`).
@@ -492,7 +499,7 @@ export function StageVideo({
       )}
     >
       <video
-        src={video.src}
+        src={near ? video.src : undefined}
         poster={video.poster || undefined}
         autoPlay
         muted
