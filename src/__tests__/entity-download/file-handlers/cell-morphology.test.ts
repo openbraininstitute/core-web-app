@@ -32,7 +32,7 @@ const { getSessionMock, downloadAssetMock } = vi.hoisted(() => {
   };
 });
 
-vi.mock('@/auth-fetch', () => ({
+vi.mock('@/features/auth/auth-fetch', () => ({
   getSession: getSessionMock,
 }));
 

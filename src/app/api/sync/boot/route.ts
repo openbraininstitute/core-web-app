@@ -3,7 +3,7 @@ import { tryCatch } from '@/api/utils';
 import { createProject } from '@/api/virtual-lab-svc/queries/project';
 import { updateUserOnboardingProfile } from '@/api/virtual-lab-svc/queries/user';
 import { createVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { auth } from '@/auth';
+import { auth } from '@/features/auth/server';
 import {
   WorkspaceBootstrap,
   WorkspaceBootstrapStep,

@@ -1,7 +1,7 @@
 'use client';
 
-import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
+import { getSession } from '@/features/auth/auth-fetch';
 import {
   getReconnectDelayMs,
   isRetryableStreamError,

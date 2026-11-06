@@ -9,8 +9,8 @@ import {
   storeInCache,
 } from '@/api/cache-storage';
 import { parseApiError } from '@/api/utils';
-import { getSession } from '@/auth-fetch';
 import { INTERNAL_QUERY_CACHE_PREFIX } from '@/constants';
+import { getSession } from '@/features/auth/auth-fetch';
 import { compactRecord } from '@/utils/dictionary';
 import { log } from '@/utils/logger';
 

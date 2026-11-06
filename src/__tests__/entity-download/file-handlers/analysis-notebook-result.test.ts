@@ -22,7 +22,7 @@ const { downloadAssetMock, getSessionMock } = vi.hoisted(() => {
   return { downloadAssetMock, getSessionMock };
 });
 
-vi.mock('@/auth-fetch', () => ({ getSession: getSessionMock }));
+vi.mock('@/features/auth/auth-fetch', () => ({ getSession: getSessionMock }));
 
 vi.mock('@/api/entitycore/queries/analysis-notebook-result', () => ({
   getAnalysisNotebookResult: vi.fn(),

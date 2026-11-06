@@ -4,12 +4,12 @@ import { useRouter } from '@bprogress/next/app';
 import { useMutation } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useSession } from 'next-auth/react';
 
 import { tryCatch } from '@/api/utils';
 import { acceptInvite } from '@/api/virtual-lab-svc/queries/invite';
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { config } from '@/config';
+import { useAuthSession } from '@/features/auth/client';
 import {
   type InvitationContentResponse,
   InviteErrorCodes,
@@ -24,7 +24,7 @@ import { log } from '@/utils/logger';
 import type { ApiErrorCause } from '@/api/error';
 
 export function InvitationProcessing({ data }: { data: InvitationContentResponse }) {
-  const { data: session } = useSession();
+  const { data: session } = useAuthSession();
   const inviteToken = useSearchParams().get('token');
   const { push: navigate } = useRouter();
 

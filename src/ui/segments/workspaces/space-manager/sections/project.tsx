@@ -13,7 +13,6 @@ import { RiRestartLine } from '@remixicon/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Form, Input, List, Popconfirm, Select, Table } from 'antd';
 import { compact, find, get, sortBy, uniqBy } from 'es-toolkit/compat';
-import { useSession } from 'next-auth/react';
 import { type SVGProps, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 import { z } from 'zod';
@@ -28,6 +27,7 @@ import {
 import { getProject, updateProject } from '@/api/virtual-lab-svc/queries/project';
 import { useAppNotification } from '@/components/notification';
 import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
+import { useAuthSession } from '@/features/auth/client';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { Badge } from '@/ui/molecules/badge';
 import { Button } from '@/ui/molecules/button';
@@ -769,7 +769,7 @@ function ProjectRoleModifier({
   virtualLabAdmins?: Array<string> | null;
   projectAdmins?: Array<string> | null;
 }) {
-  const { data: session } = useSession();
+  const { data: session } = useAuthSession();
   const queryClient = useQueryClient();
   const { error: notifyError, success: notifySuccess } = useAppNotification();
   const [role, setRole] = useState(user.role);
@@ -980,7 +980,7 @@ function ProjectMembersListing({
   targetVirtualLabId: string;
   targetProjectId: string;
 }) {
-  const { data: session } = useSession();
+  const { data: session } = useAuthSession();
   const {
     virtualLabAdmins,
     virtualLabOwnerId,

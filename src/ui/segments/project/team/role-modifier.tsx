@@ -4,7 +4,6 @@ import { DeleteOutlined, LoadingOutlined } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button as AntdButton, Popconfirm, Select } from 'antd';
 import { find, get } from 'es-toolkit/compat';
-import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 
 import {
@@ -13,6 +12,7 @@ import {
   updateProjectUserRole,
 } from '@/api/virtual-lab-svc/queries/member';
 import { useAppNotification } from '@/components/notification';
+import { useAuthSession } from '@/features/auth/client';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import {
@@ -53,7 +53,7 @@ export function RoleModifier({
   projectAdmins,
 }: RoleModifierProps) {
   const queryClient = useQueryClient();
-  const { data: session } = useSession();
+  const { data: session } = useAuthSession();
   const { virtualLabId, projectId } = useWorkspace();
   const { error: notifyError, success: notifySuccess } = useAppNotification();
   const [role, updateRole] = useState(user.role);

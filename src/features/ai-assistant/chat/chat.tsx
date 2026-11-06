@@ -2,7 +2,7 @@ import { isToolUIPart } from 'ai';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import React from 'react';
 
-import { useAccessToken } from '@/hooks/useAccessToken';
+import { useAccessToken } from '@/features/auth/client/use-access-token';
 import {
   useAiAgentRateLimit,
   useServiceAiAgentChat,

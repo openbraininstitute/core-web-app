@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { CheckIcon } from '@/components/icons';
 import Chevron from '@/components/icons/Chevron';
 import HelpIconI from '@/components/icons/HelpIcon';
-import { useAccessToken } from '@/hooks/useAccessToken';
+import { useAccessToken } from '@/features/auth/client/use-access-token';
 import { serviceAiAgentPatchSettings } from '@/services/ai-agent/api/settings';
 import { useAITools } from '@/services/ai-agent/tools/tools';
 import { useWorkspace } from '@/ui/hooks/use-workspace';

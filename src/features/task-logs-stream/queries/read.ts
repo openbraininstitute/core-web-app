@@ -1,7 +1,7 @@
 'use client';
 
-import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
+import { getSession } from '@/features/auth/auth-fetch';
 import { StreamHttpError } from '@/features/task-logs-stream/helpers';
 
 import type { IJobRead } from '@/features/task-logs-stream/types';

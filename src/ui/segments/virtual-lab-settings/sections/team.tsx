@@ -10,7 +10,6 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { List, Table } from 'antd';
 import { compact, filter, get, map, sortBy, uniqBy } from 'es-toolkit/compat';
-import { useSession } from 'next-auth/react';
 import { type SVGProps, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 import { z } from 'zod';
@@ -22,6 +21,7 @@ import {
 } from '@/api/virtual-lab-svc/queries/member';
 import { useAppNotification } from '@/components/notification';
 import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
+import { useAuthSession } from '@/features/auth/client';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { Button as UiButton } from '@/ui/molecules/button';
 import { XInput } from '@/ui/segments/profile/sections/profile-form/elements';
@@ -443,7 +443,7 @@ type ListingStepProps = {
 };
 
 function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps) {
-  const { data } = useSession();
+  const { data } = useAuthSession();
   const { isVirtualLabAdmin } = useWorkspaceMembership({ virtualLabId });
   const tableSlotRef = useRef<HTMLDivElement>(null);
   const [tableBodyScrollY, setTableBodyScrollY] = useState<number>();

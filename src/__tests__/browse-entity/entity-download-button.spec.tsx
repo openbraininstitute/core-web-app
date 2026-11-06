@@ -1,15 +1,19 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { createStore, Provider } from 'jotai';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { downloadArchive } from '@/services/entity-download';
-import sessionAtom from '@/state/session';
 import { EntityDownloadButton } from '@/ui/segments/data-table/elements/download-button';
 
-import type { Session } from 'next-auth';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import type { ISession } from '@/features/auth/types';
+
+const mocks = vi.hoisted(() => ({ session: null as unknown }));
+
+vi.mock('@/features/auth/client', () => ({
+  useAuthSession: () => ({ data: mocks.session }),
+}));
 
 vi.mock('@/ui/hooks/use-scope', () => ({
   useScope: () => ({ scope: 'public' }),
@@ -38,27 +42,23 @@ function makeRow(id: string, name?: string): EntityCoreIdentifiable {
 function renderDownloadButton({
   selectedRows,
   clearSelectedRows = vi.fn(),
-  session = { user: { name: 'tester' } } as Session,
+  session = { user: { name: 'tester' } } as ISession,
 }: {
   selectedRows: EntityCoreIdentifiable[];
   clearSelectedRows?: () => void;
-  session?: Session | null;
+  session?: ISession | null;
 }) {
-  const store = createStore();
-  store.set(sessionAtom, session);
+  mocks.session = session;
 
   return {
     clearSelectedRows,
-    store,
     ...render(
-      <Provider store={store}>
-        <EntityDownloadButton
-          selectedRows={selectedRows}
-          clearSelectedRows={clearSelectedRows}
-          dataType={ExtendedEntitiesTypeDict.CellMorphology}
-          workspace={workspace}
-        />
-      </Provider>
+      <EntityDownloadButton
+        selectedRows={selectedRows}
+        clearSelectedRows={clearSelectedRows}
+        dataType={ExtendedEntitiesTypeDict.CellMorphology}
+        workspace={workspace}
+      />
     ),
   };
 }

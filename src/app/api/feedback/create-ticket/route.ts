@@ -1,8 +1,8 @@
 import { Octokit } from '@octokit/core';
 import { type NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
 
 import { serverConfig } from '@/config/server';
+import { auth } from '@/features/auth/server';
 import { log } from '@/utils/logger';
 
 export async function POST(req: NextRequest) {
@@ -20,8 +20,8 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
     } else {
-      const token = await getToken({ req });
-      if (!token) {
+      const session = await auth();
+      if (!session) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
     }

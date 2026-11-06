@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import React from 'react';
 
-import { useAccessToken } from '@/hooks/useAccessToken';
+import { useAccessToken } from '@/features/auth/client/use-access-token';
 import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
 
 import { serviceAiAgentGetTool, serviceAiAgentListTools } from '../api/tools';

@@ -2,8 +2,8 @@ import { RedirectType, redirect } from 'next/navigation';
 import { match, P } from 'ts-pattern';
 
 import { tryCatch } from '@/api/utils';
-import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
+import { getSession } from '@/features/auth/auth-fetch';
 import { WorkspaceWizard } from '@/ui/segments/app-setup/bootsync-wizard';
 import { resolveWorkspace, WizardSteps } from '@/ui/segments/app-setup/helpers';
 

@@ -17,7 +17,7 @@ const configFields = {
   KEYCLOAK_CLIENT_SECRET: { schema: z.string().nonempty(), public: false },
   KEYCLOAK_ISSUER: { schema: z.url(), public: false },
 
-  NEXTAUTH_SECRET: { schema: z.string().nonempty(), public: false },
+  BETTER_AUTH_SECRET: { schema: z.string().nonempty(), public: false },
   AUTH_PROXY_URL: { schema: z.url().optional(), public: true },
 
   GRADING_WEB_LAUNCH_HMAC_SECRET: { schema: z.string().optional(), public: false },

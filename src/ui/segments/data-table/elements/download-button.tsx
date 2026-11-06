@@ -1,19 +1,18 @@
 'use client';
 
 import { CheckCircleFilled, DownloadOutlined, LoadingOutlined } from '@ant-design/icons';
-import { useAtomValue } from 'jotai';
 import { AnimatePresence, motion } from 'motion/react';
 import { type ReactNode, useCallback, useState } from 'react';
 
 import { useAppNotification } from '@/components/notification';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { useAuthSession } from '@/features/auth/client';
 // direct module import: the react barrel would close a module-init cycle via the grid host
 import {
   EXPANDING_PILL_BASE_CLASS,
   ExpandingPillContent,
 } from '@/features/data-grid/react/expanding-toolbar-button';
 import { downloadArchive, downloadFailedNotification } from '@/services/entity-download';
-import sessionAtom from '@/state/session';
 import { Button } from '@/ui/molecules/button';
 import {
   SelectionBadgeAnchor,
@@ -50,7 +49,7 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
   /** Render as the grid's expanding pill (icon at rest, label on hover/focus-visible). */
   expanding?: boolean;
 }) {
-  const session = useAtomValue(sessionAtom);
+  const { data: session } = useAuthSession();
   const [downloadState, setDownloadState] = useState<TDownloadState>(DownloadStateDict.idle);
   const notify = useAppNotification();
   const entityCount = selectedRows.length;

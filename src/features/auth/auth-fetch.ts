@@ -1,16 +1,34 @@
 import { isServer } from '@/config';
-import { getClientSession } from '@/hooks/session';
+import { authClient } from '@/features/auth/client/auth-client';
 import { retry } from '@/util/retry';
 
+import type { TSessionOrNull } from '@/features/auth/types';
+
+// Browser calls that overlap share one /get-session request; nothing is kept once it settles.
+// A page firing N queries at once would otherwise send N requests, each able to trigger the
+// server-side Keycloak refresh concurrently with the same refresh token.
+let inflightClientSession: Promise<TSessionOrNull> | undefined;
+
+async function fetchClientSession(): Promise<TSessionOrNull> {
+  const { data, error } = await authClient.getSession();
+  if (error) throw error;
+  return (data as TSessionOrNull) ?? null;
+}
+
 /**
-  Gets the current session.
+  Gets the current session, fresh on every call (never cached here).
   Works server and client side.
 */
-export async function getSession() {
-  if (!isServer) return await getClientSession();
+export async function getSession(): Promise<TSessionOrNull> {
+  if (!isServer) {
+    inflightClientSession ??= fetchClientSession().finally(() => {
+      inflightClientSession = undefined;
+    });
+    return inflightClientSession;
+  }
 
   // Only import if running on server
-  const { auth } = await import('@/auth');
+  const { auth } = await import('@/features/auth/server');
 
   return await auth();
 }

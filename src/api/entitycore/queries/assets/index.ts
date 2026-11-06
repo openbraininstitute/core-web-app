@@ -5,8 +5,8 @@ import {
   uploadAssetMultipart,
 } from '@/api/entitycore/queries/assets/multipart';
 import { entityAssetsPath, entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
-import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
+import { getSession } from '@/features/auth/auth-fetch';
 import { compactRecord } from '@/utils/dictionary';
 
 import type { CacheConfiguration } from '@/api/cache-storage';

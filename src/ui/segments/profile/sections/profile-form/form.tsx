@@ -8,13 +8,13 @@ import {
 } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { Checkbox, Form } from 'antd';
-import { useSession } from 'next-auth/react';
 import { useRef, useState } from 'react';
 import { match, P } from 'ts-pattern';
 
 import { getCountries } from '@/api/virtual-lab-svc/queries/config';
 import { checkUserProfileEmailAvailability } from '@/api/virtual-lab-svc/queries/user';
 import { useAppNotification } from '@/components/notification';
+import { useAuthSession } from '@/features/auth/client';
 import { Button } from '@/ui/molecules/button';
 import { CustomFormError, createZodFieldValidator } from '@/ui/segments/contribute/shared/helpers';
 import { GhostRoundedIconButton } from '@/ui/segments/workspaces/space-manager/sections/elements';
@@ -56,7 +56,7 @@ function getIdentityProviderDisplay(identityProvider?: string): {
 }
 
 export function Profile({ data }: ProfileProps) {
-  const { data: session } = useSession();
+  const { data: session } = useAuthSession();
   const initialValues = useInitialValues(data);
   const { error: errorNotify, success: successNotify } = useAppNotification();
   const [form] = Form.useForm<TUpdateUserProfileRequest>();
