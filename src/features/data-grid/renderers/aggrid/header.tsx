@@ -4,7 +4,7 @@ import {
   RiExpandUpDownLine,
   RiFilter3Fill,
 } from '@remixicon/react';
-import { useState } from 'react';
+import { createElement, useState } from 'react';
 
 import { GridActionType, SortDirection, summarizeFilter } from '@/features/data-grid/core';
 import { FilterEditor } from '@/features/data-grid/react/filters/filter-editor';
@@ -28,6 +28,10 @@ interface HeaderParams {
   filter?: {
     targets: ReadonlyArray<IFilterTarget>;
   };
+  /** registry key of a header that replaces all of the above */
+  headerRenderer?: string;
+  /** the column is sized to its content, so its filter follows the label rather than its edge */
+  fitted?: boolean;
 }
 
 /**
@@ -37,7 +41,19 @@ interface HeaderParams {
  */
 export function AgHeader(props: CustomHeaderProps) {
   const ctx = props.context as IAgGridContext;
-  const { columnId, unit, sortable, filter, headerNode } = props as CustomHeaderProps &
+  const { columnId, headerRenderer } = props as CustomHeaderProps & HeaderParams;
+  // a registered header replaces the default one; the registry hands out stable components
+  const registered = headerRenderer ? ctx.cellRenderers.getHeader(headerRenderer) : undefined;
+  if (registered) {
+    return createElement(registered, { columnId, label: props.displayName ?? '', ctx });
+  }
+  return <DefaultHeader {...props} />;
+}
+
+/** The label, sort toggle and filter popover of a column with no registered header. */
+function DefaultHeader(props: CustomHeaderProps) {
+  const ctx = props.context as IAgGridContext;
+  const { columnId, unit, sortable, filter, headerNode, fitted } = props as CustomHeaderProps &
     HeaderParams;
   const state = useGridState(ctx.controller);
   const [open, setOpen] = useState(false);
@@ -63,7 +79,8 @@ export function AgHeader(props: CustomHeaderProps) {
         type="button"
         onClick={onSortClick}
         className={cn(
-          'group flex h-full min-w-0 flex-1 items-center gap-1.5 text-left',
+          'group flex h-full min-w-0 items-center gap-1.5 text-left',
+          fitted ? 'flex-none' : 'flex-1',
           sortable ? 'cursor-pointer' : 'cursor-default'
         )}
       >

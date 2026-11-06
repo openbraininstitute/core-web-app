@@ -70,13 +70,13 @@ describe('buildWorkspaceSwitchUrl / notebooks', () => {
 });
 
 describe('buildWorkspaceSwitchUrl / reports', () => {
-  it('preserves the reports page with its section param', () => {
-    expect(build('/reports', 'section=summaries')).toBe(`${targetBase}/reports?section=summaries`);
+  it('keeps the research log list', () => {
+    expect(build('/reports', '')).toBe(`${targetBase}/reports`);
   });
 
-  it('preserves an obi-showcase detail page', () => {
-    expect(build('/reports/obi-showcase/my-slug', 'section=artifacts')).toBe(
-      `${targetBase}/reports/obi-showcase/my-slug?section=artifacts`
+  it('drops a research log, which belongs to one project', () => {
+    expect(build('/reports/6f1c1d2e-0000-4000-8000-000000000000', 'edit=1')).toBe(
+      `${targetBase}/reports`
     );
   });
 });
@@ -166,6 +166,6 @@ describe('buildWorkspaceSwitchUrl / fallbacks', () => {
       })
     ).toBe(`${targetBase}/notebooks/private?scope=project`);
 
-    expect(build('/reports', '?section=summaries')).toBe(`${targetBase}/reports?section=summaries`);
+    expect(build('/reports', '?section=summaries')).toBe(`${targetBase}/reports`);
   });
 });

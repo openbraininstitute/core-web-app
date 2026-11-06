@@ -9,6 +9,7 @@ import { Culling, DRAWS } from '@/features/circuit-viewer/morphologies/engine/we
 import { fakeGpu } from './fake-gpu';
 
 import type { ArenaBuffers } from '@/features/circuit-viewer/morphologies/engine/webgpu/arena-gpu';
+import type { CullTest } from '@/features/circuit-viewer/morphologies/engine/webgpu/culling';
 import type { CullTally } from '@/features/circuit-viewer/morphologies/types';
 
 const h = vi.hoisted(() => ({ logError: vi.fn() }));
@@ -35,6 +36,7 @@ const read = (counts: CullTally, marked = [0, 0], rest = 1) => ({
 const ARENA = { marked: { size: 8 } } as unknown as ArenaBuffers;
 const camera = new THREE.OrthographicCamera();
 const shift = new THREE.Vector3();
+const cells = new THREE.DataTexture();
 
 function cullingOn(options?: Parameters<typeof fakeGpu>[0]) {
   const { gpu, device, renderer } = fakeGpu(options);
@@ -42,14 +44,22 @@ function cullingOn(options?: Parameters<typeof fakeGpu>[0]) {
   const culling = new Culling(renderer, device, arenaStorage(), counted);
   culling.setArena(ARENA);
   culling.targetOf(16, 8);
-  const run = (rest = 1) => culling.run(camera, shift, 12, HOLE, 100, rest);
+  const run = (rest = 1, test: CullTest = 'everyCell') =>
+    culling.run(camera, shift, 12, HOLE, 100, rest, cells, test);
   /** The next read mapped, finding `counts` and the blocks `marked`. */
   const map = async (counts: CullTally, marked?: number[]) => {
     gpu.found = wordsOf(counts, marked);
     gpu.maps.shift()?.();
     await Promise.resolve();
   };
-  return { culling, counted, run, map, maps: gpu.maps };
+  return {
+    culling,
+    counted,
+    run,
+    map,
+    maps: gpu.maps,
+    writes: vi.mocked(device.queue.writeBuffer),
+  };
 }
 
 const A = { tested: 300, kept: 200, drawn: 100 };
@@ -75,6 +85,12 @@ describe("the culling's counts and its failures", () => {
     const drawn = Object.values(DRAWS).map((offset) => culling.quads(offset));
     expect(new Set(drawn.map((quads) => quads.indirect)).size).toBe(4);
     expect(drawn.every((quads) => quads.indirectOffset === 0)).toBe(true);
+  });
+
+  it('stores its samples, which a GPU with memoryless ones could not flush part way through', () => {
+    const { culling } = cullingOn();
+    expect(culling.targetOf(16, 8).storeMultisampledColorBuffer).not.toBe(false);
+    expect(culling.targetOf(16, 8).storeMultisampledDepthBuffer).not.toBe(false);
   });
 
   it('lets go of its targets with its arena', () => {
@@ -166,5 +182,61 @@ describe("the culling's counts and its failures", () => {
     for (let k = 0; k < 8; k++) await map(A);
     expect(maps).toHaveLength(0);
     expect(counted).toHaveBeenCalledExactlyOnceWith(null);
+  });
+});
+
+describe('the culling while the cell table hides cells', () => {
+  /** Which of the draws' words the last write of them starts again: where, and how many. */
+  const lastReset = (writes: ReturnType<typeof cullingOn>['writes']) => {
+    const [, offset, , dataOffset, size] = writes.mock.calls.at(-1) ?? [];
+    return { offset, dataOffset, size };
+  };
+
+  it('starts every list again where none is hidden', () => {
+    const { run, writes } = cullingOn();
+    run();
+    expect(lastReset(writes)).toEqual({ offset: 0, dataOffset: 0, size: 20 });
+  });
+
+  it('starts only the seen lists again in the test of the cells on show', () => {
+    const { run, writes } = cullingOn();
+    run(1, 'onShow');
+    expect(lastReset(writes)).toEqual({
+      offset: DRAWS.seenFlat,
+      dataOffset: DRAWS.seenFlat / 4,
+      size: 10,
+    });
+  });
+
+  it('starts only the kept lists again in the test of every cell for them', () => {
+    const { run, writes } = cullingOn();
+    run(1, 'keptOnly');
+    expect(lastReset(writes)).toEqual({ offset: 0, dataOffset: 0, size: DRAWS.seenFlat / 4 });
+  });
+
+  it('reads back only the test that marks what it sees', async () => {
+    const { counted, run, map, maps } = cullingOn();
+    run(1, 'keptOnly');
+    expect(maps).toHaveLength(0);
+
+    run(1, 'onShow');
+    expect(maps).toHaveLength(1);
+    await map(A);
+    expect(counted).toHaveBeenCalledExactlyOnceWith(read(A));
+  });
+
+  it('counts nothing as kept from an arena before, even in tests that leave the kept list alone', () => {
+    const { culling, writes } = cullingOn();
+    writes.mockClear();
+    culling.setArena(ARENA);
+    const [, offset, data] = writes.mock.calls.at(-1) ?? [];
+    expect(offset).toBe(0);
+    expect((data as Uint32Array).length).toBe(20);
+  });
+
+  it('fails for good where three made no texture of the cell table', () => {
+    const { culling, run } = cullingOn({ textures: false });
+    expect(run(1, 'onShow')).toBe(false);
+    expect(culling.failed).toBe(true);
   });
 });

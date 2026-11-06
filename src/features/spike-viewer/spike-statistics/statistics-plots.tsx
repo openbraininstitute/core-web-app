@@ -270,7 +270,7 @@ export function StatisticsPlots({
     ...groupOptions.map((c) => ({
       value: c.name,
       label: c.label ?? c.name,
-      heading: NEURON_HEADING,
+      heading: c.heading ?? NEURON_HEADING,
     })),
   ];
   const axisOptions = useMemo(() => scatterAxisOptions(statistics, columns), [statistics, columns]);
@@ -603,7 +603,11 @@ function scatterAxisOptions(
     })),
     ...(columns ?? [])
       .filter((c) => c.kind === 'numeric' && c.name !== 'node_id')
-      .map((c) => ({ value: c.name, label: c.name, heading: NEURON_HEADING })),
+      .map((c) => ({
+        value: c.name,
+        label: c.label ?? c.name,
+        heading: c.heading ?? NEURON_HEADING,
+      })),
   ];
 }
 

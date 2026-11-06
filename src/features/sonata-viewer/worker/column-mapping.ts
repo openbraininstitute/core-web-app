@@ -16,21 +16,42 @@ export function resolveTraces(
   const columnElementIds = elementIds?.length === numColumns ? elementIds : null;
 
   const columnsPerNode = new Map<number, number>();
-  for (const nodeId of columnNodeIds) {
+  // A cell's columns in each of its sections, where the file says which.
+  const columnsPerSection = new Map<string, number>();
+  columnNodeIds.forEach((nodeId, column) => {
     columnsPerNode.set(nodeId, (columnsPerNode.get(nodeId) ?? 0) + 1);
-  }
+    if (columnElementIds) {
+      const key = `${nodeId}:${columnElementIds[column]}`;
+      columnsPerSection.set(key, (columnsPerSection.get(key) ?? 0) + 1);
+    }
+  });
 
   const ordinals = new Map<number, number>();
+  const sectionOrdinals = new Map<string, number>();
   return columnNodeIds.map((nodeId, column) => {
     const ordinal = ordinals.get(nodeId) ?? 0;
     ordinals.set(nodeId, ordinal + 1);
+    const elementId = columnElementIds ? columnElementIds[column] : null;
+    // biome-ignore lint/style/noNonNullAssertion: every nodeId was counted above
+    if (columnsPerNode.get(nodeId)! === 1) return { nodeId, elementId, label: `${nodeId}` };
 
-    return {
-      nodeId,
-      elementId: columnElementIds ? columnElementIds[column] : null,
-      // biome-ignore lint/style/noNonNullAssertion: every nodeId was counted above
-      label: columnsPerNode.get(nodeId)! > 1 ? `${nodeId}[${ordinal}]` : `${nodeId}`,
-    };
+    if (elementId === null) {
+      return {
+        nodeId,
+        elementId,
+        label: `${nodeId}[${ordinal}]`,
+        compartment: `Compartment ${ordinal + 1}`,
+      };
+    }
+    // Named by its section, and numbered where the section has several.
+    const key = `${nodeId}:${elementId}`;
+    const nth = (sectionOrdinals.get(key) ?? 0) + 1;
+    sectionOrdinals.set(key, nth);
+    const compartment =
+      (columnsPerSection.get(key) ?? 0) > 1
+        ? `Section ${elementId} · ${nth}`
+        : `Section ${elementId}`;
+    return { nodeId, elementId, label: `${nodeId} · ${compartment}`, compartment };
   });
 }
 

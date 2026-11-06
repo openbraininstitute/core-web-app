@@ -11,10 +11,6 @@ import { EntityDownloadButton } from '@/ui/segments/data-table/elements/download
 import type { Session } from 'next-auth';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
-vi.mock('@/ui/hooks/use-scope', () => ({
-  useScope: () => ({ scope: 'public' }),
-}));
-
 vi.mock('@/components/notification', () => ({
   useAppNotification: () => ({
     destroy: vi.fn(),

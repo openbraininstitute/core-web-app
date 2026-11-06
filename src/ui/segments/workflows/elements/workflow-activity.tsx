@@ -3,7 +3,6 @@
 import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
 import { useCallback, useEffect, useMemo } from 'react';
 
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
 import { createEntitycorePagedDataSource } from '@/features/data-grid/bindings/entitycore/data-source.paged';
 import {
@@ -19,10 +18,21 @@ import {
   useGridStateSlice,
 } from '@/features/data-grid/react';
 import { AgGridRenderer } from '@/features/data-grid/renderers/aggrid';
+import { useFlags } from '@/features/feature-flags';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { ActivityValues, getActivity, type TActivityValue } from '@/ui/segments/workflows/config';
+import { getActivity, type TActivityValue } from '@/ui/segments/workflows/config';
 import { ActivityAndTypeSelectors } from '@/ui/segments/workflows/elements/browse-header';
-import { buildWorkflowActivityCellRenderers } from '@/ui/segments/workflows/elements/workflow-activity-cells';
+import {
+  ALL_WORKFLOWS,
+  allWorkflowsSources,
+  createAllWorkflowsDataSource,
+  type TAllWorkflows,
+} from '@/ui/segments/workflows/elements/workflow-activity-all';
+import {
+  buildWorkflowActivityCellRenderers,
+  WORKFLOW_ACTIVITY_QUERY_KEY,
+  WorkflowHoverCard,
+} from '@/ui/segments/workflows/elements/workflow-activity-cells';
 import { buildWorkflowActivitySchema } from '@/ui/segments/workflows/elements/workflow-activity-schema';
 import { withWorkflowIdSearch } from '@/ui/segments/workflows/elements/workflow-activity-search';
 import { cn } from '@/utils/css-class';
@@ -33,14 +43,22 @@ import type { IGridState } from '@/features/data-grid/core';
 
 /** Grid section id — namespaces the persisted column layout away from the browse pages. */
 const WORKFLOW_ACTIVITY_SECTION = 'workflow-activity';
+/**
+ * Where the column layout is saved. Versioned because a saved order or width outranks the
+ * declared one: v3 has Category and Type first and fits every column to its content.
+ */
+const WORKFLOW_ACTIVITY_LAYOUT = `${WORKFLOW_ACTIVITY_SECTION}-v3`;
 
 const selectFreeTextSearch = (state: IGridState): string => state.freeTextSearch;
+
+const renderHoverCard = (row: EntityCoreObjectTypes) => <WorkflowHoverCard row={row} />;
 
 /** One registry for every workflow-activity grid, so remounts resolve the same objects. */
 const CELL_RENDERERS = buildWorkflowActivityCellRenderers();
 
 export function WorkflowActivity() {
   const { virtualLabId, projectId } = useWorkspace();
+  const flags = useFlags();
 
   const [{ activityType, entityType }, updateActivityState] = useQueryStates(
     {
@@ -49,15 +67,15 @@ export function WorkflowActivity() {
           clearOnDefault: false,
           shallow: true,
         })
-        .withDefault(ActivityValues.Build) as SingleParserBuilder<TActivityValue>,
+        .withDefault(ALL_WORKFLOWS) as SingleParserBuilder<TActivityValue | TAllWorkflows>,
       entityType: parseAsString
         .withOptions({
           clearOnDefault: false,
           shallow: true,
         })
-        .withDefault(
-          ExtendedEntitiesTypeDict.MEModelBuildCampaign
-        ) as SingleParserBuilder<TExtendedEntitiesTypeDict>,
+        .withDefault(ALL_WORKFLOWS) as SingleParserBuilder<
+        TExtendedEntitiesTypeDict | TAllWorkflows
+      >,
     },
     {
       urlKeys: {
@@ -67,26 +85,31 @@ export function WorkflowActivity() {
     }
   );
 
-  const resolvedActivityType: TActivityValue =
-    activityType ?? (ActivityValues.Build as TActivityValue);
-  const resolvedEntityType: TExtendedEntitiesTypeDict =
-    entityType ?? ExtendedEntitiesTypeDict.MEModelBuildCampaign;
+  // All as the Category lists every workflow, as a type cannot narrow it; All as the Type lists
+  // every workflow of the category
+  const allCategories = activityType === ALL_WORKFLOWS;
+  const listedActivity = allCategories ? undefined : (activityType as TActivityValue);
+  const listedType =
+    allCategories || entityType === ALL_WORKFLOWS
+      ? undefined
+      : (entityType as TExtendedEntitiesTypeDict);
 
   const workspace = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
 
-  const gridKey = `${resolvedActivityType}-${resolvedEntityType}`;
+  const layoutType = listedType ?? ALL_WORKFLOWS;
+  const gridKey = `${listedActivity ?? ALL_WORKFLOWS}-${layoutType}`;
 
-  const activityName = getActivity(resolvedActivityType)?.name ?? '';
+  const activityName = listedActivity ? (getActivity(listedActivity)?.name ?? '') : '';
 
   const schema = useMemo(
     () =>
       buildWorkflowActivitySchema({
-        activity: resolvedActivityType,
+        activity: listedActivity,
         activityName,
-        entityType: resolvedEntityType,
+        entityType: listedType,
         workspace,
       }),
-    [resolvedActivityType, activityName, resolvedEntityType, workspace]
+    [listedActivity, activityName, listedType, workspace]
   );
 
   const operators = useMemo(() => createDefaultOperatorRegistry(), []);
@@ -96,19 +119,17 @@ export function WorkflowActivity() {
       new GridController<EntityCoreObjectTypes>({
         schema,
         context: {
-          dataType: resolvedEntityType,
+          dataType: layoutType,
           section: WORKFLOW_ACTIVITY_SECTION,
-          factors: { activity: resolvedActivityType },
+          factors: { activity: listedActivity ?? ALL_WORKFLOWS },
         },
         instanceKey: `${WORKFLOW_ACTIVITY_SECTION}:${virtualLabId}:${projectId}:${gridKey}`,
         // The layout slice is keyed by section + entity type only, so a chosen column
         // set follows the type across projects the way the browse listings do.
-        persistence: createDefaultPersistence(
-          layoutKeyFor(WORKFLOW_ACTIVITY_SECTION, resolvedEntityType)
-        ),
+        persistence: createDefaultPersistence(layoutKeyFor(WORKFLOW_ACTIVITY_LAYOUT, layoutType)),
         defaultPageSize: DEFAULT_PAGE_MEDIUM_SIZE,
       }),
-    [schema, resolvedEntityType, resolvedActivityType, virtualLabId, projectId, gridKey]
+    [schema, layoutType, listedActivity, virtualLabId, projectId, gridKey]
   );
   useEffect(() => controller.connect(), [controller]);
 
@@ -119,17 +140,24 @@ export function WorkflowActivity() {
   const freeTextSearch = useGridStateSlice(controller, selectFreeTextSearch);
 
   // The grid contributes page/sort/filter/search; the entity's domain config owns the
-  // endpoint, and `params` below pins the workspace scope.
+  // endpoint (All asks each workflow's), and `params` below pins the workspace scope.
   const dataSource = useMemo(
     () =>
-      createEntitycorePagedDataSource<EntityCoreObjectTypes>({
-        dataType: resolvedEntityType,
-        schema,
-        context: { virtualLabId, projectId },
-        // workflow-only: a pasted UUID in the search box looks up that record by id
-        transformParams: withWorkflowIdSearch,
-      }),
-    [resolvedEntityType, schema, virtualLabId, projectId]
+      listedType
+        ? createEntitycorePagedDataSource<EntityCoreObjectTypes>({
+            dataType: listedType,
+            schema,
+            context: { virtualLabId, projectId },
+            // workflow-only: a pasted UUID in the search box looks up that record by id
+            transformParams: withWorkflowIdSearch,
+          })
+        : createAllWorkflowsDataSource({
+            sources: allWorkflowsSources(flags, listedActivity),
+            schema,
+            context: { virtualLabId, projectId },
+            transformParams: withWorkflowIdSearch,
+          }),
+    [listedType, listedActivity, schema, virtualLabId, projectId, flags]
   );
 
   const params = useMemo(
@@ -155,19 +183,23 @@ export function WorkflowActivity() {
           renderer={AgGridRenderer}
           operators={operators}
           cellRenderers={CELL_RENDERERS}
-          queryKey={['workflow-activity', virtualLabId, projectId, gridKey]}
+          queryKey={[WORKFLOW_ACTIVITY_QUERY_KEY, virtualLabId, projectId, gridKey]}
           params={params}
-          enabled={Boolean(resolvedActivityType && resolvedEntityType)}
+          enabled={allCategories || Boolean(listedActivity)}
           loadingLabel="activities"
+          rowHoverCard={renderHoverCard}
           className="min-h-0 flex-1"
           gridClassName="[&_.ag-header]:bg-background [&_.ag-header-cell]:text-neutral-4"
           toolbarSlots={{
             entityType: (
               <ActivityAndTypeSelectors
-                activity={activityType}
-                entityType={entityType}
+                activity={listedActivity ?? ALL_WORKFLOWS}
+                entityType={layoutType}
                 onActivityChange={(activityType) => updateActivityState({ activityType })}
                 onEntityTypeChange={(entityType) => updateActivityState({ entityType })}
+                onAllSelect={(activityType) =>
+                  updateActivityState({ activityType, entityType: ALL_WORKFLOWS })
+                }
               />
             ),
             search: (

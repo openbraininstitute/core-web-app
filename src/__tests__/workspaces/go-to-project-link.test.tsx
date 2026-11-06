@@ -83,19 +83,16 @@ describe('GoToProjectLink / notebooks pages', () => {
 });
 
 describe('GoToProjectLink / reports pages', () => {
-  it('keeps the reports section', () => {
-    visit('/reports', 'section=summaries');
+  it('keeps the research log list', () => {
+    visit('/reports', '');
 
-    expect(renderLink()).toHaveAttribute('href', `${targetBase}/reports?section=summaries`);
+    expect(renderLink()).toHaveAttribute('href', `${targetBase}/reports`);
   });
 
-  it('keeps an obi-showcase detail page', () => {
-    visit('/reports/obi-showcase/my-slug', 'section=artifacts');
+  it('drops a research log, which belongs to one project', () => {
+    visit('/reports/6f1c1d2e-0000-4000-8000-000000000000', '');
 
-    expect(renderLink()).toHaveAttribute(
-      'href',
-      `${targetBase}/reports/obi-showcase/my-slug?section=artifacts`
-    );
+    expect(renderLink()).toHaveAttribute('href', `${targetBase}/reports`);
   });
 });
 

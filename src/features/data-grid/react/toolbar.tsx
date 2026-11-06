@@ -7,7 +7,9 @@ import type { ReactNode } from 'react';
  * decides the order. All optional — a surface renders only the pickers it needs.
  */
 export interface IDataGridToolbarSlots {
-  /** entity-type count selector — left cluster, first */
+  /** the page's own call to action (e.g. upload) — left cluster, before the pickers */
+  action?: ReactNode;
+  /** entity-type count selector — left cluster, first picker */
   entityType?: ReactNode;
   /** scope (Public / Project) selector — left cluster, second */
   scope?: ReactNode;
@@ -21,6 +23,8 @@ export interface IDataGridToolbarSlots {
 
 export interface IDataGridToolbarProps {
   slots?: IDataGridToolbarSlots;
+  /** the selection's actions kept in place — left cluster, right after the call to action */
+  selection?: ReactNode;
   /** the advanced/active filters control — right cluster, after the search */
   filters?: ReactNode;
   /** the column chooser — right cluster, last */
@@ -35,11 +39,18 @@ export interface IDataGridToolbarProps {
  */
 export function DataGridToolbar({
   slots,
+  selection,
   filters,
   columnChooser,
   className,
 }: IDataGridToolbarProps) {
-  const hasLeft = slots?.entityType || slots?.scope || slots?.brainRegion || slots?.left;
+  const hasLeft =
+    slots?.action ||
+    selection ||
+    slots?.entityType ||
+    slots?.scope ||
+    slots?.brainRegion ||
+    slots?.left;
   const hasRight = slots?.search || filters || columnChooser;
   if (!hasLeft && !hasRight) return null;
 
@@ -50,6 +61,8 @@ export function DataGridToolbar({
     >
       {hasLeft ? (
         <div className="flex min-w-0 flex-wrap items-center gap-2">
+          {slots?.action}
+          {selection}
           {slots?.entityType}
           {slots?.scope}
           {slots?.brainRegion}

@@ -47,6 +47,9 @@ export type HoverPoint = {
 };
 
 /** What the statistics plot draws: Plotly's traces and layout, built here so they stay pure. */
+/** What a plot's axes show, in their own units, in the direction each runs. */
+export type PlotRanges = { x: [number, number]; y: [number, number] };
+
 export type Figure = {
   data: Data[];
   layout: Partial<Layout>;

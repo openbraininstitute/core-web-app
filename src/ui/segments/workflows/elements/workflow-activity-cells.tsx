@@ -7,10 +7,12 @@ import {
   RiFileCopyLine,
   RiFolderLine,
   RiGitBranchLine,
+  RiPencilLine,
 } from '@remixicon/react';
+import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { type ITaskConfig, TaskConfigType } from '@/api/entitycore/types/entities/task-config';
@@ -25,6 +27,7 @@ import {
   GRID_ICON_BUTTON_ACTIVE_CLASS,
   GRID_OVERLAY_Z_CLASS,
 } from '@/features/data-grid/react/molecules-theme';
+import { HOVER_CARD_CLASS } from '@/features/scan-config/components/shared/box-class';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
@@ -35,7 +38,13 @@ import {
   canDuplicateWorkflowActivityRow,
   type TWorkflowActivityTableRow,
 } from '@/ui/segments/workflows/elements/workflow-activity-actions';
+import { rowWorkflow } from '@/ui/segments/workflows/elements/workflow-activity-all';
+import {
+  descriptionOf,
+  WorkflowDetailsDialog,
+} from '@/ui/segments/workflows/elements/workflow-details-dialog';
 import { WorkflowStatusCell } from '@/ui/segments/workflows/elements/workflow-status-cell';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
 
@@ -46,14 +55,17 @@ import type { ICellRendererProps } from '@/features/data-grid/react';
 import type { WorkspaceContext } from '@/types/common';
 import type { TActivityValue } from '@/ui/segments/workflows/config';
 
+/** Head of every workflow-activity listing's query key, so a row edit can refresh them all. */
+export const WORKFLOW_ACTIVITY_QUERY_KEY = 'workflow-activity';
+
 /** Cell-renderer registry keys owned by the workflow-activity grid. */
 export const WORKFLOW_ACTIVITY_TYPE_RENDERER = 'workflowActivityType';
 export const WORKFLOW_ACTIVITY_DATE_RENDERER = 'workflowActivityDate';
 export const WORKFLOW_ACTIVITY_ACTIONS_RENDERER = 'workflowActivityActions';
 export const WORKFLOW_ACTIVITY_STATUS_RENDERER = 'workflowActivityStatus';
 
-/** Fits four 32px action buttons, their gaps and the cell padding. */
-export const WORKFLOW_ACTIVITY_ACTIONS_COLUMN_WIDTH = 160;
+/** Fits five 32px action buttons, their gaps and the cell padding. */
+export const WORKFLOW_ACTIVITY_ACTIONS_COLUMN_WIDTH = 196;
 
 /** Glyph size inside an action button. */
 const ACTION_ICON_SIZE = 16;
@@ -130,18 +142,24 @@ interface ITypeCellParams {
 /** `cellRendererParams` the Status cell reads; supplied by the schema factory. */
 interface IStatusCellParams {
   workspace?: WorkspaceContext;
+  /** the listing's workflow, for the runs' links (an All row brings its own) */
+  activity?: TActivityValue;
+  entityType?: TExtendedEntitiesTypeDict;
 }
 
 /**
- * The row's entity title. A circuit-extraction campaign is a `TaskConfig` row whose
- * own `type` says nothing about which campaign it is, so its `task_config_type`
- * resolves the title instead; everything else falls back to the listed entity type.
+ * The row's entity title. Under All, the row's own workflow as the Type menu names it.
+ * A circuit-extraction campaign is a `TaskConfig` row whose own `type` says nothing about
+ * which campaign it is, so its `task_config_type` resolves the title instead; everything
+ * else falls back to the listed entity type.
  */
 export function WorkflowActivityTypeCell({
   row,
   params,
 }: ICellRendererProps<EntityCoreObjectTypes>): ReactNode {
   const { entityType } = (params ?? {}) as ITypeCellParams;
+  const own = rowWorkflow(row);
+  if (own) return <span className="text-primary-9 flex items-center">{own.label}</span>;
 
   const extractionTitle =
     row.type === EntityTypeDict.TaskConfig &&
@@ -176,9 +194,17 @@ export function WorkflowActivityStatusCell({
   row,
   params,
 }: ICellRendererProps<EntityCoreObjectTypes>): ReactNode {
-  const { workspace } = (params ?? {}) as IStatusCellParams;
+  const { workspace, activity, entityType } = (params ?? {}) as IStatusCellParams;
   if (!workspace) return null;
-  return <WorkflowStatusCell record={row} workspace={workspace} />;
+  const own = rowWorkflow(row);
+  return (
+    <WorkflowStatusCell
+      record={row}
+      workspace={workspace}
+      activity={own?.activity ?? activity}
+      entityType={own?.targetType ?? entityType}
+    />
+  );
 }
 
 /** `cellRendererParams` the actions cell reads; supplied by the schema factory. */
@@ -199,11 +225,17 @@ export function WorkflowActivityActionsCell({
   row,
   params,
 }: ICellRendererProps<EntityCoreObjectTypes>): ReactNode {
-  const { activity, entityType } = (params ?? {}) as IActionsCellParams;
+  // under All the row brings its own workflow; otherwise the toolbar's applies
+  const own = rowWorkflow(row);
+  const { activity, entityType } = own
+    ? { activity: own.activity, entityType: own.targetType }
+    : ((params ?? {}) as IActionsCellParams);
   const { push: navigate } = useRouter();
   const { virtualLabId, projectId } = useWorkspace();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
   const [, copyId, , hasCopiedId] = useCopyToClipboard();
+  const [editing, setEditing] = useState(false);
 
   const workspace = useMemo(() => ({ virtualLabId, projectId }), [virtualLabId, projectId]);
   const tableRow = row as unknown as TWorkflowActivityTableRow;
@@ -257,6 +289,12 @@ export function WorkflowActivityActionsCell({
 
   const actions: IRowAction[] = [
     {
+      key: 'edit',
+      label: 'Edit name and description',
+      icon: <RiPencilLine size={ACTION_ICON_SIZE} />,
+      onClick: () => setEditing(true),
+    },
+    {
       key: 'configuration',
       label: 'View configuration',
       icon: <RiFolderLine size={ACTION_ICON_SIZE} />,
@@ -299,6 +337,18 @@ export function WorkflowActivityActionsCell({
       {actions.map(({ key, ...action }) => (
         <ActionButton key={key} testId={`workflow-activity-action-${key}`} {...action} />
       ))}
+      {editing && (
+        <WorkflowDetailsDialog
+          row={row}
+          workspace={workspace}
+          onClose={() => setEditing(false)}
+          onSaved={() => {
+            // the editor's cached copy names the campaign as it was
+            queryClient.removeQueries({ queryKey: keyBuilder.simCampaign({ entityId: row.id }) });
+            return queryClient.invalidateQueries({ queryKey: [WORKFLOW_ACTIVITY_QUERY_KEY] });
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -311,4 +361,21 @@ export function buildWorkflowActivityCellRenderers(): CellRendererRegistry {
     .register(WORKFLOW_ACTIVITY_STATUS_RENDERER, WorkflowActivityStatusCell)
     .register(WORKFLOW_ACTIVITY_ACTIONS_RENDERER, WorkflowActivityActionsCell)
     .register(LIFECYCLE_STATUS_RENDERER, LifecycleStatusCell);
+}
+
+/** The row's name and description, in the card the grid shows under a hovered row. */
+export function WorkflowHoverCard({ row }: { row: EntityCoreObjectTypes }): ReactNode {
+  const description = descriptionOf(row).trim();
+  return (
+    <div className={cn(HOVER_CARD_CLASS, 'flex max-w-sm flex-col gap-1 px-4 py-3')}>
+      <span className="text-primary-9 font-bold wrap-break-word">{row.name}</span>
+      {description ? (
+        <p className="text-neutral-6 line-clamp-8 text-sm whitespace-pre-line wrap-break-word">
+          {description}
+        </p>
+      ) : (
+        <p className="text-neutral-4 text-sm italic">No description</p>
+      )}
+    </div>
+  );
 }
