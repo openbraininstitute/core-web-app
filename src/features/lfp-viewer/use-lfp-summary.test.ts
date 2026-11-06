@@ -182,9 +182,7 @@ describe('rowQuery', () => {
           step: 1,
           kind: 'value',
           dataset: '/l0',
-          chunks: '/lfp/mtype/chunks',
-          block_steps: 2,
-          block_scales: '/lfp/mtype/block_scales',
+          blocks: { chunks: '/lfp/mtype/chunks', steps: 2, scales: '/lfp/mtype/block_scales' },
         },
       ],
     } as unknown as LfpAxis;

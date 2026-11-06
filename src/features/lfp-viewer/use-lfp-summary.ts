@@ -496,7 +496,8 @@ function windowBytes(
 
 /**
  * The finest level `rows` rows can be read at, the overview where none are, and the level a window
- * of `spanMs` across `width` pixels is read at: the coarsest with a bin a pixel, the finest at most.
+ * of `spanMs` across `width` pixels is read at: the coarsest with a bin a pixel, the finest at most,
+ * the overview where that is as fine.
  */
 export function windowReadLevel(
   index: LfpSummaryIndex,
@@ -514,7 +515,9 @@ export function windowReadLevel(
             at === coarsest ||
             windowBytes(index, axis, rows, at, NARROW_WINDOW_TILES) <= MAX_WINDOW_BYTES
         );
-  return { finest, levelAt: Math.max(finest, windowLevel(axis, spanMs / index.time.dt, width)) };
+  const at = Math.max(finest, windowLevel(axis, spanMs / index.time.dt, width));
+  // A short run's overview is its values: none finer is read
+  return { finest, levelAt: axis.levels[at].step < axis.levels[coarsest].step ? at : coarsest };
 }
 
 const covers = (field: LfpField, from: number, to: number) =>

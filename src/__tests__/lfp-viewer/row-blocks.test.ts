@@ -44,10 +44,8 @@ describe('a whole row in blocks', () => {
         {
           step: 1,
           kind: 'value',
-          dataset: '/lfp/total/level0',
-          chunks: '/lfp/total/chunks',
-          block_steps: 3,
-          block_scales: '/lfp/total/block_scales',
+          dataset: '/lfp/total/rows',
+          blocks: { chunks: '/lfp/total/chunks', steps: 3, scales: '/lfp/total/block_scales' },
         },
       ],
     } as unknown as LfpAxis;

@@ -25,10 +25,8 @@ const axis = {
     {
       step: 1,
       kind: 'value',
-      dataset: '/lfp/total/level0',
-      chunks: '/lfp/total/chunks',
-      block_steps: 65_536,
-      block_scales: '/lfp/total/block_scales',
+      dataset: '/lfp/total/rows',
+      blocks: { chunks: '/lfp/total/chunks', steps: 65_536, scales: '/lfp/total/block_scales' },
     },
     { step: 32, kind: 'min_max', dataset: '/lfp/total/level5' },
     { step: 128, kind: 'min_max', dataset: '/lfp/total/level7' },
@@ -65,6 +63,22 @@ describe('windowReadLevel', () => {
     // 300 rows of 3 blocks are 118 MB, over the budget; 3 tiles of bins of 32 are 15 MB
     expect(windowReadLevel(index, axis, 300, 10, 1500)).toEqual({ finest: 1, levelAt: 1 });
     expect(windowReadLevel(index, axis, 100, 10, 1500)).toEqual({ finest: 0, levelAt: 0 });
+  });
+
+  it("is a short run's overview, which is its values, however narrow the window", () => {
+    const shortIndex = { ...index, time: { start: 0, dt: 0.025, steps: 1500 } };
+    const shortAxis = {
+      ...axis,
+      levels: [
+        { ...axis.levels[0], blocks: { ...axis.levels[0].blocks, steps: 1500 } },
+        { step: 1, kind: 'value', dataset: '/lfp/total/level0' },
+      ],
+    } as unknown as LfpAxis;
+
+    expect(windowReadLevel(shortIndex, shortAxis, 10, 10, 1500)).toEqual({
+      finest: 0,
+      levelAt: 1,
+    });
   });
 
   it('is the overview where no rows are read', () => {
@@ -151,15 +165,11 @@ describe('blocks', () => {
     vi.stubGlobal('fetch', vi.fn(answeringRanges(file)));
     // One contact, two blocks; the second, of 3 steps, padded
     const table = BigUint64Array.from([BigInt(0), BigInt(0), BigInt(500), BigInt(chunk.length)]);
-    const blockAxis = {
-      ...axis,
-      levels: [{ ...axis.levels[0], block_steps: 65_536 }],
-    } as unknown as LfpAxis;
 
     const values = await readBlock(
       rangeReader({ url: 'u', headers: {} }),
       shortRun as unknown as LfpSummaryIndex,
-      blockAxis,
+      axis,
       { group: 0, contact: 0, block: 1 },
       table,
       Float32Array.from([1, 1])

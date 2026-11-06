@@ -13,6 +13,24 @@ const ITEM_BYTES = { '<i2': 2, '<f4': 4, '<u8': 8 };
 /** Past Starlette's 100 ranges a request is answered with the whole file. */
 const MAX_RANGES_PER_REQUEST = 100;
 
+const levelSchema = z.object({
+  step: z.number().int().positive(),
+  kind: z.enum(['value', 'mean', 'min_max']),
+  dataset: z.string(),
+});
+
+const rowsSchema = levelSchema.extend({
+  /** Full resolution in blocks, each deflated in a chunk of its own. */
+  blocks: z.object({
+    /** Where each lies: group × contact × block × (offset, size). */
+    chunks: z.string(),
+    /** Steps per block, the last one padded. */
+    steps: z.number().int().positive(),
+    /** µV per int16 unit of each block: group × contact × block. */
+    scales: z.string(),
+  }),
+});
+
 const axisSchema = z.object({
   name: z.string(),
   groups: z.array(z.string()).min(1),
@@ -21,24 +39,11 @@ const axisSchema = z.object({
   /** A group's part in the total's variance. */
   shares: z.array(z.number()),
   /**
-   * Full resolution, then where that is too long its overviews, finest to coarsest, a quarter of the
-   * bins each: the total's by min/max, a group's by means, which add up.
+   * Full resolution in blocks, then its overviews, finest to coarsest, a quarter of the bins each:
+   * the total's by min/max, a group's by means, which add up. A short run's one overview is its
+   * values.
    */
-  levels: z
-    .array(
-      z.object({
-        step: z.number().int().positive(),
-        kind: z.enum(['value', 'mean', 'min_max']),
-        dataset: z.string(),
-        /** Where its blocks lie, each deflated in a chunk of its own: only with an overview to read them for. */
-        chunks: z.string().optional(),
-        /** Steps per block, the last one padded. */
-        block_steps: z.number().int().positive().optional(),
-        /** µV per int16 unit of each block: group × contact × block. */
-        block_scales: z.string().optional(),
-      })
-    )
-    .min(1),
+  levels: z.tuple([rowsSchema, levelSchema], levelSchema),
   stats: z.string(),
   psd: z.string(),
   psd_frequencies: z.array(z.number()),
@@ -255,8 +260,7 @@ export async function readChunkTable(
   axis: LfpAxis,
   group: number
 ): Promise<BigUint64Array> {
-  const { chunks } = axis.levels[0];
-  if (!chunks) throw new Error(`The rows of ${axis.name} are not in chunks`);
+  const { chunks } = axis.levels[0].blocks;
   return new BigUint64Array(await readSlice(read, datasetOf(index, chunks), [group]));
 }
 
@@ -317,14 +321,13 @@ export async function readBlockScales(
   axis: LfpAxis,
   group: number
 ): Promise<Float32Array> {
-  const { block_scales: scales } = axis.levels[0];
-  if (!scales) throw new Error(`The rows of ${axis.name} are not in blocks`);
+  const { scales } = axis.levels[0].blocks;
   return new Float32Array(await readSlice(read, datasetOf(index, scales), [group]));
 }
 
 /** An axis's blocks: how many steps each holds, and how many a row has. */
 export function blocksOf(index: LfpSummaryIndex, axis: LfpAxis) {
-  const length = axis.levels[0].block_steps ?? index.time.steps;
+  const length = axis.levels[0].blocks.steps;
   return { length, count: Math.ceil(index.time.steps / length) };
 }
 
