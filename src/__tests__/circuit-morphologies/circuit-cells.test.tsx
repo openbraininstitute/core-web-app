@@ -396,7 +396,8 @@ describe('CircuitCells', () => {
     expect(viewer.setData).toHaveBeenCalledTimes(1);
 
     update({ cellColors: recoloured, backgroundColor: '#000000' });
-    expect(viewer.setDark.mock.calls).toEqual([[false], [true]]);
+    // a white background asks the viewer for a white light canvas, rather than its grey
+    expect(viewer.setDark.mock.calls).toEqual([[false, '#ffffff'], [true]]);
 
     update({ cellColors: recoloured, backgroundColor: '#000000', defaultColor: '#7aa2ff' });
     expect(viewer.setDefaultColor.mock.calls).toEqual([['#2b5cd9'], ['#7aa2ff']]);

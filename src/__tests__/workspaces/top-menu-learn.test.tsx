@@ -12,6 +12,8 @@ const base = `/app/virtual-lab/${VLAB}/${PROJECT}`;
 vi.mock('next/navigation', () => ({
   usePathname: () => `${base}/learn`,
   useParams: () => ({ virtualLabId: VLAB, projectId: PROJECT }),
+  // the project home menu reads the selected design from the query string
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 // the menu's lab and membership queries are beside the point here
