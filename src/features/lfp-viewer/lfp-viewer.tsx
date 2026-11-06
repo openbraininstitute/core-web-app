@@ -463,7 +463,14 @@ function LfpReportView({
       positions={positions}
       blocks={blocks}
       ticked={ticked}
-      onTickedChange={setTicked}
+      onTick={(contact) =>
+        setTicked((shown) =>
+          shown.includes(contact)
+            ? shown.filter((c) => c !== contact)
+            : [...shown, contact].sort((a, b) => a - b)
+        )
+      }
+      onReset={() => setTicked([])}
       selectedContact={selectedContact}
       onContactClick={setSelectedContact}
     />

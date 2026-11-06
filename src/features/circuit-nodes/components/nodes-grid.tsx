@@ -138,6 +138,8 @@ type Props = {
   rowIndexOf?: (nodeId: number, sort: SortItem[], filter: FilterModel) => Promise<number>;
   /** A row to keep marked, by node id, such as the cell picked in a view beside the table. */
   markedNodeId?: number | null;
+  /** What the rows are, as the count names them: `Nodes` by default. */
+  rowsName?: string;
 };
 
 export type QuickFilter = { label: string; title?: string; model: FilterModel };
@@ -391,6 +393,7 @@ export function NodesGrid({
   focusRow,
   rowIndexOf,
   markedNodeId = null,
+  rowsName = 'Nodes',
 }: Props) {
   const gridRef = useRef<AgGridReact>(null);
 
@@ -769,7 +772,7 @@ export function NodesGrid({
             {pickColumn ? (
               // Ticks and the filter each narrow what is drawn, ticks first, so both are told.
               <>
-                Nodes:{' '}
+                {rowsName}:{' '}
                 <span className={selectedNodeIds.size > 0 ? styles.gridStatHighlight : undefined}>
                   {selectedNodeIds.size.toLocaleString()}
                 </span>
@@ -780,13 +783,15 @@ export function NodesGrid({
                 /{total.toLocaleString()} showing
               </>
             ) : filteredCount === null ? (
-              <>{total.toLocaleString()} nodes</>
+              <>
+                {total.toLocaleString()} {rowsName.toLowerCase()}
+              </>
             ) : (
               <>
                 <strong className={styles.gridStatHighlight}>
                   {filteredCount.toLocaleString()}
                 </strong>{' '}
-                of {total.toLocaleString()} nodes
+                of {total.toLocaleString()} {rowsName.toLowerCase()}
               </>
             )}
           </span>

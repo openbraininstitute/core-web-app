@@ -1,47 +1,77 @@
 'use client';
 
-import { Table } from 'antd';
-import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import type { TableColumnsType } from 'antd';
+import { defaultVisibleColumnSet, NodesGrid } from '@/features/circuit-nodes/components/nodes-grid';
+import { numberTest, textTest } from '@/features/circuit-nodes/row-filters';
+import { ColumnKindDict } from '@/features/circuit-nodes/types';
+
+import type { IDatasource } from 'ag-grid-community';
+import type { PinnedColumn } from '@/features/circuit-nodes/components/nodes-grid';
+import type {
+  ColumnFilter,
+  ColumnMeta,
+  FilterModel,
+  SortItem,
+} from '@/features/circuit-nodes/types';
 import type { ContactBlock } from '@/features/lfp-viewer/contacts';
 
-type Row = {
-  key: number;
-  contact: number;
-  block: string;
-  x?: number;
-  y?: number;
-  z?: number;
-  [stat: string]: number | string | undefined;
-};
+import styles from '@/features/circuit-nodes/circuit-nodes-table.module.css';
 
-const STAT_COLUMNS: { key: string; title: string; digits: number }[] = [
-  { key: 'min', title: 'Min (µV)', digits: 1 },
-  { key: 'max', title: 'Max (µV)', digits: 1 },
-  { key: 'ptp', title: 'P–p (µV)', digits: 1 },
-  { key: 'rms', title: 'RMS (µV)', digits: 1 },
-  { key: 'trough_ms', title: 'Trough (ms)', digits: 0 },
-];
+/** A row of the grid, which goes by its node id: here the contact it is. */
+type ContactRow = Record<string, string | number | null> & { node_id: number };
 
-const HEADER_PX = 40;
-const TICK_PX = 36;
+const STAT_COLUMNS: { key: string; title: string; short: string; unit: string; digits: number }[] =
+  [
+    { key: 'min', title: 'Min (µV)', short: 'Min', unit: 'µV', digits: 1 },
+    { key: 'max', title: 'Max (µV)', short: 'Max', unit: 'µV', digits: 1 },
+    { key: 'ptp', title: 'P–p (µV)', short: 'P–p', unit: 'µV', digits: 1 },
+    { key: 'rms', title: 'RMS (µV)', short: 'RMS', unit: 'µV', digits: 1 },
+    { key: 'trough_ms', title: 'Trough (ms)', short: 'Trough', unit: 'ms', digits: 0 },
+  ];
 
-function numberColumn(key: string, title: string, digits: number): TableColumnsType<Row>[number] {
-  return {
-    key,
-    dataIndex: key,
-    title,
-    align: 'right',
-    width: 96,
-    sorter: (a, b) => Number(a[key] ?? 0) - Number(b[key] ?? 0),
-    render: (value?: number) => (value === undefined ? '' : value.toFixed(digits)),
-  };
+const fixed = (digits: number) => (value: number) => value.toFixed(digits);
+
+function matches(filter: ColumnFilter, value: string | number | null | undefined): boolean {
+  if ('operator' in filter) {
+    const results = filter.conditions.map((condition) => matches(condition, value));
+    return filter.operator === 'OR' ? results.some(Boolean) : results.every(Boolean);
+  }
+  if (filter.filterType === 'set') return filter.values.includes(String(value ?? ''));
+  if (filter.filterType === 'text') return textTest(filter)(String(value ?? ''));
+  return value !== null && value !== undefined && numberTest(filter)(Number(value));
+}
+
+function compare(a: string | number | null, b: string | number | null): number {
+  if (a === null || a === undefined) return b === null || b === undefined ? 0 : 1;
+  if (b === null || b === undefined) return -1;
+  if (typeof a === 'number' && typeof b === 'number') return a - b;
+  return String(a).localeCompare(String(b), undefined, { numeric: true });
+}
+
+/** The rows a grid's filters and sort leave, in its order. */
+function queryContacts(
+  rows: readonly ContactRow[],
+  sort: readonly SortItem[],
+  filter: FilterModel
+): ContactRow[] {
+  const filters = Object.entries(filter);
+  const kept = rows.filter((row) =>
+    filters.every(([column, columnFilter]) => matches(columnFilter, row[column]))
+  );
+  if (sort.length === 0) return kept;
+  return kept.sort((a, b) => {
+    for (const { column, direction } of sort) {
+      const order = compare(a[column], b[column]);
+      if (order !== 0) return direction === 'asc' ? order : -order;
+    }
+    return a.node_id - b.node_id;
+  });
 }
 
 /**
- * The report's contacts, one a row: where each is and its field's statistics
- * over the run. Ticked rows are the traces drawn; a click picks a contact.
+ * The report's contacts, one a row, in the grid the simulations' cells are in: where each is and
+ * its field's statistics over the run. A click on a row ticks its contact and picks it.
  */
 export function ElectrodesTable({
   contacts,
@@ -51,9 +81,11 @@ export function ElectrodesTable({
   positions,
   blocks,
   ticked,
-  onTickedChange,
+  onTick,
+  onReset,
   selectedContact,
   onContactClick,
+  onContactHover,
 }: {
   contacts: number;
   /** The summary's stats columns, in the order `stats` holds them per contact. */
@@ -64,29 +96,67 @@ export function ElectrodesTable({
   positions: Float32Array | null;
   blocks: readonly ContactBlock[] | null;
   ticked: readonly number[];
-  onTickedChange: (contacts: number[]) => void;
+  onTick: (contact: number) => void;
+  onReset: () => void;
   selectedContact: number | null;
   onContactClick: (contact: number) => void;
+  onContactHover?: (contact: number | null) => void;
 }) {
-  const boxRef = useRef<HTMLDivElement>(null);
-  const [height, setHeight] = useState(0);
-  useLayoutEffect(() => {
-    const box = boxRef.current;
-    if (!box) return;
-    const observer = new ResizeObserver(() => setHeight(box.clientHeight));
-    observer.observe(box);
-    return () => observer.disconnect();
-  }, []);
+  const manyBlocks = !!blocks && blocks.length > 1;
+  const columns = useMemo<ColumnMeta[]>(
+    () => [
+      { name: 'contact', label: 'Contact', kind: ColumnKindDict.Numeric },
+      ...(manyBlocks
+        ? [
+            {
+              name: 'block',
+              label: 'Block',
+              kind: ColumnKindDict.Categorical,
+              library: blocks.map((b) => b.name).sort(),
+            },
+          ]
+        : []),
+      ...(positions
+        ? (['x', 'y', 'z'] as const).map((axis) => ({
+            name: axis,
+            label: `${axis} (µm)`,
+            kind: ColumnKindDict.Numeric,
+          }))
+        : []),
+    ],
+    [manyBlocks, blocks, positions]
+  );
+  const pinnedColumns = useMemo<PinnedColumn[]>(
+    () => [
+      ...(shares
+        ? [
+            {
+              name: 'share',
+              headerName: 'Share (%)',
+              short: { headerName: 'Share', unit: '%' },
+              format: fixed(0),
+            },
+          ]
+        : []),
+      ...STAT_COLUMNS.filter((s) => statNames.includes(s.key)).map((s) => ({
+        name: s.key,
+        headerName: s.title,
+        short: { headerName: s.short, unit: s.unit },
+        format: fixed(s.digits),
+      })),
+    ],
+    [shares, statNames]
+  );
 
-  const rows = useMemo<Row[]>(() => {
+  const rows = useMemo<ContactRow[]>(() => {
     const blockOf = (c: number) =>
       blocks?.find((b) => c >= b.first && c < b.first + b.count)?.name ?? '';
     return Array.from({ length: contacts }, (_, c) => {
-      const row: Row = { key: c, contact: c, block: blockOf(c) };
+      const row: ContactRow = { node_id: c, contact: c, block: blockOf(c) };
       if (positions) {
-        row.x = positions[c * 3];
-        row.y = positions[c * 3 + 1];
-        row.z = positions[c * 3 + 2];
+        row.x = Math.round(positions[c * 3]);
+        row.y = Math.round(positions[c * 3 + 1]);
+        row.z = Math.round(positions[c * 3 + 2]);
       }
       statNames.forEach((name, i) => {
         row[name] = stats[c * statNames.length + i];
@@ -96,54 +166,67 @@ export function ElectrodesTable({
     });
   }, [contacts, statNames, stats, shares, positions, blocks]);
 
-  const columns = useMemo<TableColumnsType<Row>>(
-    () => [
-      {
-        key: 'contact',
-        dataIndex: 'contact',
-        title: 'Contact',
-        width: 80,
-        sorter: (a, b) => a.contact - b.contact,
-        render: (c: number) => `e${c}`,
+  const [visibleColumns, setVisibleColumns] = useState(() => defaultVisibleColumnSet(columns));
+  useEffect(() => setVisibleColumns(defaultVisibleColumnSet(columns)), [columns]);
+  const [filteredCount, setFilteredCount] = useState<number | null>(null);
+  const datasource = useMemo<IDatasource>(
+    () => ({
+      rowCount: rows.length,
+      getRows(params) {
+        const filter = (params.filterModel ?? {}) as FilterModel;
+        const sort = (params.sortModel ?? []).map((item) => ({
+          column: item.colId,
+          direction: item.sort,
+        }));
+        const kept = queryContacts(rows, sort, filter);
+        setFilteredCount(Object.keys(filter).length > 0 ? kept.length : null);
+        params.successCallback(kept.slice(params.startRow, params.endRow), kept.length);
       },
-      ...(blocks && blocks.length > 1
-        ? [{ key: 'block', dataIndex: 'block', title: 'Block', width: 120, ellipsis: true }]
-        : []),
-      ...(positions
-        ? (['x', 'y', 'z'] as const).map((axis) => numberColumn(axis, `${axis} (µm)`, 0))
-        : []),
-      ...(shares ? [numberColumn('share', 'Share (%)', 0)] : []),
-      ...STAT_COLUMNS.filter((s) => statNames.includes(s.key)).map((s) =>
-        numberColumn(s.key, s.title, s.digits)
-      ),
-    ],
-    [blocks, positions, statNames, shares]
+    }),
+    [rows]
   );
+  const rowIndexOf = useCallback(
+    async (contact: number, sort: SortItem[], filter: FilterModel) =>
+      queryContacts(rows, sort, filter).findIndex((row) => row.node_id === contact),
+    [rows]
+  );
+  const selected = useMemo(() => new Set(ticked), [ticked]);
+
+  // A contact picked elsewhere, in the traces or the map, is brought into view; one clicked here isn't.
+  const clickedRef = useRef<number | null>(null);
+  const [focusRow, setFocusRow] = useState<{ nodeId: number; key: number }>();
+  useEffect(() => {
+    if (selectedContact === null || selectedContact === clickedRef.current) return;
+    clickedRef.current = null;
+    setFocusRow((last) => ({ nodeId: selectedContact, key: (last?.key ?? 0) + 1 }));
+  }, [selectedContact]);
+  const onRowClick = (contact: number) => {
+    clickedRef.current = contact;
+    onTick(contact);
+    onContactClick(contact);
+  };
 
   return (
-    <div ref={boxRef} className="min-h-0 flex-1">
-      {height > 0 && (
-        <Table<Row>
-          size="small"
-          virtual
-          pagination={false}
-          dataSource={rows}
-          columns={columns}
-          scroll={{
-            x: columns.reduce((sum, c) => sum + Number(c.width ?? 0), TICK_PX),
-            y: Math.max(80, height - HEADER_PX),
-          }}
-          rowSelection={{
-            selectedRowKeys: ticked as number[],
-            onChange: (keys) => onTickedChange((keys as number[]).slice().sort((a, b) => a - b)),
-            columnWidth: TICK_PX,
-          }}
-          rowClassName={(row) =>
-            row.contact === selectedContact ? 'bg-primary-0 cursor-pointer' : 'cursor-pointer'
-          }
-          onRow={(row) => ({ onClick: () => onContactClick(row.contact) })}
-        />
-      )}
+    <div className={styles.root}>
+      <NodesGrid
+        columns={columns}
+        rowCount={rows.length}
+        filteredCount={filteredCount}
+        datasource={datasource}
+        visibleColumns={visibleColumns}
+        onVisibleColumnsChange={setVisibleColumns}
+        pinnedColumns={pinnedColumns}
+        pinnedVersion={rows}
+        pickColumn
+        selectedNodeIds={selected}
+        onRowClick={onRowClick}
+        onRowHover={onContactHover}
+        markedNodeId={selectedContact}
+        focusRow={focusRow}
+        rowIndexOf={rowIndexOf}
+        reset={{ picked: ticked.length > 0, onReset }}
+        rowsName="Contacts"
+      />
     </div>
   );
 }
