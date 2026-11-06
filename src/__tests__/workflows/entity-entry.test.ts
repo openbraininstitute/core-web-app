@@ -80,7 +80,7 @@ type TCase = {
 };
 
 const base = `/app/virtual-lab/${workspace.virtualLabId}/${workspace.projectId}/workflows`;
-const { build, simulate, extract, optimize, process } = WorkflowActivityDictValue;
+const { build, simulate, extract, optimize, validate, process } = WorkflowActivityDictValue;
 
 const cases: TCase[] = [
   // source models: a new configure session, entity pre-selected ───
@@ -365,6 +365,19 @@ const cases: TCase[] = [
     href: `${base}/optimize/configure/emodel-optimization-campaign/{session}?origin=${ENTITY_ID}`,
   },
   {
+    name: 'e-model validation task config → validate editor',
+    fixture: {
+      entity: { type: EntityTypeDict.TaskConfig },
+      input: { type: EntityTypeDict.Emodel },
+      taskConfigType: TaskConfigType.EModelValidationCampaign,
+    },
+    covers: {
+      activity: validate,
+      targetType: ExtendedEntitiesTypeDict.EModelValidationCampaign,
+    },
+    href: `${base}/validate/configure/emodel-validation-campaign/{session}?origin=${ENTITY_ID}`,
+  },
+  {
     name: 'EM synapse mapping task config → build editor',
     fixture: {
       entity: { type: EntityTypeDict.TaskConfig },
@@ -417,6 +430,19 @@ const cases: TCase[] = [
     href: `${base}/build/configure/ion-channel-build-campaign/{session}?origin=${ENTITY_ID}`,
   },
   {
+    name: 'ME-model build task config → build editor',
+    fixture: {
+      entity: { type: EntityTypeDict.TaskConfig },
+      input: { type: EntityTypeDict.CellMorphology },
+      taskConfigType: TaskConfigType.MEModelBuildCampaign,
+    },
+    covers: {
+      activity: build,
+      targetType: ExtendedEntitiesTypeDict.MEModelBuildCampaign,
+    },
+    href: `${base}/build/configure/memodel-build-campaign/{session}?origin=${ENTITY_ID}`,
+  },
+  {
     name: 'circuit synaptic physiology task config → build editor',
     fixture: {
       entity: { type: EntityTypeDict.TaskConfig },
@@ -453,7 +479,6 @@ const cases: TCase[] = [
  * reached from the workflows page, not from an entity link
  */
 const UNREACHABLE_FROM_AN_ENTITY_ID: ReadonlySet<string> = new Set([
-  `${build}/${ExtendedEntitiesTypeDict.Memodel}`,
   `${build}/${ExtendedEntitiesTypeDict.SingleNeuronSynaptome}`,
 ]);
 

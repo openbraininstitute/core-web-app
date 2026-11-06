@@ -1,11 +1,6 @@
 'use client';
 
-import {
-  type RemixiconComponentType,
-  RiAmazonLine,
-  RiMicrosoftLine,
-  RiPlayFill,
-} from '@remixicon/react';
+import { type RemixiconComponentType, RiAmazonLine, RiPlayFill } from '@remixicon/react';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 
@@ -16,6 +11,7 @@ import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
 import { useLowCredits } from '@/features/low-credits';
 import {
+  getNotebookProfiles,
   type NotebookStartResponse,
   startEmptyNotebook,
   startNotebook,
@@ -30,7 +26,7 @@ export type NotebookRunTarget = {
   label: string;
   /** overrides the virtual lab's compute cell (dev-only cloud targets) */
   cloud?: string;
-  /** brand/run icon — AWS uses Amazon, Azure uses Microsoft */
+  /** brand/run icon — AWS uses Amazon */
   Icon: RemixiconComponentType;
   hideInProduction?: boolean;
 };
@@ -51,18 +47,11 @@ const DEV_RUN_TARGETS: NotebookRunTarget[] = [
     Icon: RiAmazonLine,
     hideInProduction: true,
   },
-  {
-    key: 'azure-dev',
-    label: 'Run on Azure (dev)',
-    cloud: 'azure',
-    Icon: RiMicrosoftLine,
-    hideInProduction: true,
-  },
 ];
 
 /**
- * Run targets visible for the given deployment: always the default, plus the single-pod AWS/Azure
- * targets in dev/preview/local deployments.
+ * Run targets visible for the given deployment: always the default, plus the single-pod AWS
+ * target in dev/preview/local deployments.
  */
 export function buildRunTargets(deploymentEnv: string): NotebookRunTarget[] {
   return [DEFAULT_RUN_TARGET, ...(DEV_DEPLOYMENTS.includes(deploymentEnv) ? DEV_RUN_TARGETS : [])];
@@ -71,9 +60,23 @@ export function buildRunTargets(deploymentEnv: string): NotebookRunTarget[] {
 /**
  * Shared "Run notebook" behaviour for the table-less notebook surfaces (mini-detail drawer and
  * detail action rail): launches the `jupyter_notebook` asset on JupyterHub. In dev/preview/local
- * deployments it also exposes the single-pod AWS/Azure run targets. `openJupyterHub` opens a bare
+ * deployments it also exposes the single-pod AWS run target. `openJupyterHub` opens a bare
  * JupyterHub session (used by the Results "Open notebook" action).
  */
+export function useNotebookProfiles(enabled = true) {
+  const { data } = useQuery({
+    queryKey: ['notebook-profiles'],
+    queryFn: () => getNotebookProfiles(),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    select: (response) => ({
+      profiles: response.profiles ?? [],
+      defaultProfile: response.default_profile ?? null,
+    }),
+  });
+  return data ?? { profiles: [], defaultProfile: null };
+}
+
 export function useRunNotebook({
   id,
   assets,
@@ -97,9 +100,11 @@ export function useRunNotebook({
     enabled: Boolean(virtualLabId) && enabled,
   });
 
+  const { profiles, defaultProfile } = useNotebookProfiles(enabled);
+
   const runTargets = buildRunTargets(config.DEPLOYMENT_ENV);
 
-  async function run(target: NotebookRunTarget = DEFAULT_RUN_TARGET) {
+  async function run(target: NotebookRunTarget = DEFAULT_RUN_TARGET, profile?: string) {
     if (runningTarget) return;
     const asset = getAsset({
       assets,
@@ -117,7 +122,9 @@ export function useRunNotebook({
         virtualLabId,
         projectId,
         cloud,
-        0
+        0,
+        undefined,
+        profile
       );
       notification.success({
         message: 'Notebook starting',
@@ -171,5 +178,7 @@ export function useRunNotebook({
     openJupyterHub,
     opening,
     creditsModal,
+    profiles,
+    defaultProfile,
   };
 }

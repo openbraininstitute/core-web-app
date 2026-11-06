@@ -1,71 +1,92 @@
 'use client';
 
-import { QuestionCircleOutlined, SettingOutlined } from '@ant-design/icons';
+import { RiEqualizerLine } from '@remixicon/react';
 import { Slider } from 'antd';
 
-import { Button } from '@/ui/molecules/button';
+import { useControlsCollapsed } from '@/features/spike-viewer/components/collapsing-controls';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
+import { ROUND_PILL_CLASS } from '@/ui/molecules/select/pill-select';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+
+import type { ReactNode } from 'react';
 
 type RasterPlotControlsProps = {
   markerSize: number;
   onMarkerSizeChange: (size: number) => void;
   minSize?: number;
   maxSize?: number;
-  /** Whether a plain click in the plot seeks right now. */
-  canSeek?: boolean;
 };
 
+/**
+ * The raster's settings: behind the settings button in the row of controls,
+ * and a slider among the others once the row has folded into its panel.
+ */
 export default function RasterPlotControls({
   markerSize,
   onMarkerSizeChange,
   minSize = 1,
   maxSize = 10,
-  canSeek,
 }: RasterPlotControlsProps) {
-  return (
-    <div className="flex items-center gap-1">
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button type="button" variant="icon" size="sm" aria-label="Open chart settings">
-            <SettingOutlined />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent align="end" className="w-64 border-neutral-2 bg-white shadow-lg">
-          <div className="flex select-none flex-col gap-2">
-            <div className="flex items-center justify-between text-xs text-gray-600">
-              <span>Marker size</span>
-              <span className="tabular-nums">{markerSize}</span>
-            </div>
-            <Slider
-              value={markerSize}
-              min={minSize}
-              max={maxSize}
-              step={1}
-              onChange={onMarkerSizeChange}
-              tooltip={{ formatter: null }}
-            />
-          </div>
-        </PopoverContent>
-      </Popover>
-
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button type="button" variant="icon" size="sm" aria-label="Show chart controls help">
-            <QuestionCircleOutlined />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent
-          side="left"
-          align="start"
-          alignOffset={-32}
-          showArrow={false}
-          className="bg-white text-primary-9 shadow-md"
-        >
-          Drag to zoom · Shift+drag to pan · Double-click to reset
-          {canSeek && ' · Click to seek'}
-        </TooltipContent>
-      </Tooltip>
+  const collapsed = useControlsCollapsed();
+  const slider = (
+    <div className="flex select-none flex-col gap-2">
+      <div className="flex items-center justify-between text-xs text-gray-600">
+        <span>Marker size</span>
+        <span className="tabular-nums">{markerSize}</span>
+      </div>
+      <Slider
+        value={markerSize}
+        min={minSize}
+        max={maxSize}
+        step={1}
+        onChange={onMarkerSizeChange}
+        tooltip={{ formatter: null }}
+      />
     </div>
+  );
+  if (collapsed) return <div className="w-56">{slider}</div>;
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button type="button" aria-label="Open chart settings" className={ROUND_PILL_CLASS}>
+          <RiEqualizerLine className="size-4" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-64 border-neutral-2 bg-white shadow-lg">
+        {slider}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+/** A plot's help, a question mark at the top right of its controls, never folded away. */
+export function PlotHelp({ children }: { children: ReactNode }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button type="button" aria-label="Show chart controls help" className={ROUND_PILL_CLASS}>
+          {/* In the pills' own bold navy, rather than an icon's drawing of one. */}
+          <span className="text-base leading-none font-bold">?</span>
+        </button>
+      </TooltipTrigger>
+      <TooltipContent
+        side="bottom"
+        align="end"
+        showArrow={false}
+        className="bg-white text-primary-9 shadow-md"
+      >
+        {children}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
+/** How the raster is zoomed, panned and picked from. */
+export function RasterHelp() {
+  return (
+    <PlotHelp>
+      Drag to zoom: the statistics and the 3D view follow the window · Shift+drag to pan ·
+      Double-click to reset · Click a spike to pick its cell
+    </PlotHelp>
   );
 }

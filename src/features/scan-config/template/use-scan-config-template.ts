@@ -5,6 +5,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { diffBarDataAtom } from '@/features/ai-assistant/chat/use-last-message-diff-bar';
 import { showRestoreAtom } from '@/features/ai-assistant/message-item/collapsible-message/collapsible-message';
+import { useScanConfigWorkflowEditorField } from '@/features/scan-config/bridge/editor-context';
+import { useSetScanConfigEntityPreview } from '@/features/scan-config/bridge/entity-preview';
 import {
   nextEntryName,
   useEntries,
@@ -19,6 +21,7 @@ import {
   ScanConfigCampaignOriginActionDict,
 } from '@/features/scan-config/helpers';
 import { useScanConfigEditingLocked } from '@/features/scan-config/hooks/use-config-editing-locked';
+import { useDefaultValidationTargets } from '@/features/scan-config/hooks/use-default-validation-targets';
 import { useScanConfigTab } from '@/features/scan-config/hooks/use-scan-config-tab';
 import {
   type Config,
@@ -56,6 +59,7 @@ export function useScanConfigTemplate({
   workflowSessionSelection,
   resolveSessionFromIdType,
   seed,
+  hideTabs,
 }: ScanConfigTemplateProps) {
   const [urlTab, setTab] = useScanConfigTab(activity, defaultTab);
   const firstRoot = Object.entries(schema.properties).find(([, spec]) => !isType(spec))?.[0];
@@ -92,10 +96,14 @@ export function useScanConfigTemplate({
     resolveFromIdType: resolveSessionFromIdType,
     seed,
   });
-
+  useDefaultValidationTargets({ schemaName, config, setConfig });
   const allEntries = useEntries({ config, schema });
   const errors = useValidateSchema({ initialConfig, config, schema });
-  const editingLocked = useScanConfigEditingLocked({ campaignId, loading, readOnly });
+  const editingLocked = useScanConfigEditingLocked({
+    campaignId,
+    loading,
+    readOnly,
+  });
   const setExpandedRootElements = useSetAtom(expandedRootElementsAtom);
 
   const createEntry = useCallback(
@@ -107,7 +115,10 @@ export function useScanConfigTemplate({
         (previous) =>
           ({
             ...previous,
-            [rootElement]: { ...(previous[rootElement] as object), [entry]: block },
+            [rootElement]: {
+              ...(previous[rootElement] as object),
+              [entry]: block,
+            },
           }) as Config
       );
 
@@ -186,8 +197,18 @@ export function useScanConfigTemplate({
     setSelectedRegionModel('');
   }, []);
 
-  const tab = resolveScanConfigTab(urlTab, activity, Boolean(campaignId));
+  // without the tab strip only the configuration can be shown, whatever `?tab=` says
+  const tab = resolveScanConfigTab(urlTab, activity, Boolean(campaignId) && !hideTabs);
   const isConfigurationTab = tab.id === ScanConfigTabs[activity].configuration;
+
+  // a mini detail view belongs to the tab it was opened from; switching any tab closes it, except
+  // in workflows that pin the preview to an entity of the config
+  const setEntityPreview = useSetScanConfigEntityPreview();
+  const pinsPreview = !!useScanConfigWorkflowEditorField()?.configureBinding?.pinEntityPreview;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: the tabs are the triggers, not inputs
+  useEffect(() => {
+    if (!pinsPreview) setEntityPreview(null);
+  }, [selectedRootElement, selectedMechanismsTab, tab.id, pinsPreview, setEntityPreview]);
 
   // The `emodel_optimisation_parameters` root element gets a bespoke layout: no
   // preview column, and the middle panel spans the freed space split into

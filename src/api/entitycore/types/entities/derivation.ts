@@ -66,6 +66,11 @@ export const CircuitDerivationShortLabel: Partial<Record<TDerivationType, string
   [DerivationTypeDictionary.CircuitCustomization]: 'Customized',
 };
 
+/** Derivation types the "Derivation type" column shows, derived from the short labels. */
+export const CircuitColumnDerivationTypes = Object.keys(
+  CircuitDerivationShortLabel
+) as ReadonlyArray<TDerivationType>;
+
 /** Options offered in the static "Derivation type" dropdown filter, derived from the short labels. */
 export const CircuitDerivationFilterOptions: Array<{ value: TDerivationType; label: string }> =
   Object.entries(CircuitDerivationShortLabel).map(([value, label]) => ({
@@ -133,8 +138,43 @@ export interface EntityDerivations {
   used_by_derivations?: Array<IUsedByDerivation> | null;
 }
 
-/** Opt-in derivation lists any entity read can request via `?expand=...` (repeatable). */
-export type EntityExpandParam = 'generated_from_derivations' | 'used_by_derivations';
+/** The two derivation lists of {@link EntityDerivations}, named as the `expand` param names them. */
+export const DerivationExpandDirection = {
+  GeneratedFrom: 'generated_from_derivations',
+  UsedBy: 'used_by_derivations',
+} as const satisfies Record<string, keyof EntityDerivations>;
+
+export type TDerivationExpandDirection =
+  (typeof DerivationExpandDirection)[keyof typeof DerivationExpandDirection];
+
+/**
+ * One `?expand=` value (repeatable). A bare direction loads every derivation type and wins over
+ * typed values; `<direction>:<derivation_type>` loads only that type (entitycore #747).
+ */
+export type EntityExpandParam =
+  | TDerivationExpandDirection
+  | `${TDerivationExpandDirection}:${TDerivationType}`;
+
+/**
+ * Builds the `expand` values for one direction: one typed value per entry of `types`, or the bare
+ * direction (all types) when `types` is omitted. An empty `types` expands nothing.
+ */
+export function derivationExpand(
+  direction: TDerivationExpandDirection,
+  types?: ReadonlyArray<TDerivationType>
+): Array<EntityExpandParam> {
+  if (!types) return [direction];
+  return uniq(types).map((type) => `${direction}:${type}` as const);
+}
+
+/**
+ * `expand` for circuit lists feeding the "Derivation type" column. Narrowed to the types the column
+ * labels, so the API skips derivations the column would drop anyway (smaller payload).
+ */
+export const CircuitDerivationColumnExpand: ReadonlyArray<EntityExpandParam> = derivationExpand(
+  DerivationExpandDirection.GeneratedFrom,
+  CircuitColumnDerivationTypes
+);
 
 /**
  * Derivation filters available on every entity list endpoint (entitycore #647).

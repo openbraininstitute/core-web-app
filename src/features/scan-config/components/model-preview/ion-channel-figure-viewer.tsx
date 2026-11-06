@@ -209,7 +209,7 @@ function PdfAsImage({
   );
 }
 
-export function IonChannelFigureViewer({ entity }: { entity: IonChannelModel }) {
+function IonChannelFigureViewer({ entity }: { entity: IonChannelModel }) {
   const context = useWorkspace();
 
   const [selectedGroup, setSelectedGroup] = useState<GroupKey>('traces');

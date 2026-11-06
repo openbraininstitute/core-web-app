@@ -125,3 +125,29 @@
   overflow-y: hidden;
   padding: 0.125rem 0;
 }
+
+.dark a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.dark code,
+.dark pre {
+  background-color: rgb(255 255 255 / 0.15);
+}
+
+.dark blockquote {
+  border-inline-start-color: rgb(255 255 255 / 0.4);
+  color: inherit;
+  opacity: 0.85;
+}
+
+.dark th {
+  background-color: rgb(255 255 255 / 0.1);
+}
+
+.dark th,
+.dark td,
+.dark hr {
+  border-color: rgb(255 255 255 / 0.25);
+}

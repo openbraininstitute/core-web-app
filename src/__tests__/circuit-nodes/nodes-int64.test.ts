@@ -108,6 +108,16 @@ describe('NodesSession with 64-bit integer columns', () => {
     ).toEqual([UNSIGNED[1]]);
   });
 
+  it('keeps a row equal to any of several values', () => {
+    expect(
+      filtered('flywire_id', {
+        filterType: 'number',
+        type: 'equals',
+        filter: `${IDS[0]}, ${IDS[2]}`,
+      })
+    ).toEqual([IDS[0], IDS[2]]);
+  });
+
   it('filters them exactly by decimal bounds', () => {
     const flywire = (type: 'equals' | 'greaterThan', filter: string) =>
       filtered('flywire_id', { filterType: 'number', type, filter });

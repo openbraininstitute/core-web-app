@@ -30,6 +30,8 @@ function scanConfigActivityToWorkspaceSection(activity: TScanConfigActivity): TW
       return WorkspaceSection.ScanConfigBuildWorkflow;
     case ScanConfigActivity.Optimize:
       return WorkspaceSection.OptimizeWorkflow;
+    case ScanConfigActivity.Validate:
+      return WorkspaceSection.ValidateWorkflow;
     default:
       return WorkspaceSection.GeneralWorkflow;
   }

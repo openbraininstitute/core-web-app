@@ -588,8 +588,8 @@ describe('scene viewer', () => {
       protected override beforeDraw(): void {
         this.motionFrame = this.cut;
       }
-      protected override afterDraw(moved: MovingFrame | null): void {
-        this.moved.push(moved);
+      protected override afterDraw(moving: boolean): void {
+        this.moved.push(moving ? this.drawnCut : null);
       }
       drop(): void {
         this.dropMovingPipeline();

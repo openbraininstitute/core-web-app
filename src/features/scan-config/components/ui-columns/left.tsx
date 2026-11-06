@@ -15,6 +15,7 @@ import { pendingRestoreConfigAtom, restorePreviewActiveAtom } from '@/state/conf
 
 import { EditWithChatButton } from '../edit-with-chat-button';
 import GenerateConfigButton from '../generate-config-button';
+import GenerateNewCampaignButton from '../generate-new-campaign-button';
 
 import type { ErrorObject } from 'ajv';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -181,6 +182,12 @@ export default function Left({
             campaignEntityType={campaignEntityType}
             generatedApiUrl={generatedEndpoint}
           />
+        </div>
+      )}
+
+      {readOnly && !!campaignId && (
+        <div className="mt-auto w-full pr-4 pt-2">
+          <GenerateNewCampaignButton campaignId={campaignId} activity={activity} />
         </div>
       )}
     </div>

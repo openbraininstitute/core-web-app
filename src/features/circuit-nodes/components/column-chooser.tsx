@@ -84,6 +84,10 @@ export function ColumnChooser({
     setDropIndex(null);
   };
 
+  const labelByName = new Map(
+    columns.flatMap((c): [string, string][] => (c.label ? [[c.name, c.label]] : []))
+  );
+
   const toggle = (name: string, checked: boolean) => {
     const next = new Set(visibleColumns);
     if (checked) next.add(name);
@@ -104,7 +108,7 @@ export function ColumnChooser({
           showLineAbove && styles.rowDropAbove,
           showLineBelow && styles.rowDropBelow
         );
-        const label = capitalize(name.replace(/_/g, ' '));
+        const label = labelByName.get(name) ?? capitalize(name.replace(/_/g, ' '));
         return (
           <li
             key={name}

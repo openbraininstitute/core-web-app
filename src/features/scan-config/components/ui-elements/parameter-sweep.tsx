@@ -177,7 +177,7 @@ export default function ParameterSweep({
             onChange(v);
           }}
           // room for the floating add button so long values never run under it
-          className="w-full [&_input]:pr-9"
+          className="w-full! [&_input]:pr-9"
         />
 
         {errorMessage && <span className="text-red-500">{errorMessage}</span>}

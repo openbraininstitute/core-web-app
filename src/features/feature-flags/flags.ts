@@ -45,6 +45,14 @@ export const smallScalesViaLaunchSystemFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
+export const memodelBuildViaLaunchSystemFlag = defineFlag<boolean>({
+  key: 'memodel-build-via-launch-system',
+  defaultValue: false,
+  values: [true, false],
+  description: 'Launch single neuron (ME-model) builds via the launch system',
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
 /** Interactive electrode overlays in circuit preview (independent of the build workflow). */
 export const electrodeOverlaysFlag = defineFlag<boolean>({
   key: 'electrode-overlays',
@@ -54,21 +62,76 @@ export const electrodeOverlaysFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
-/** The morphology viewer's Debug menu: the statistics of the file and the mesh, and the mesh exports. */
-export const morphologyDebugFlag = defineFlag<boolean>({
-  key: 'morphology-debug',
+/** The 3D viewers' Debug menus, fetched only with this on, and the circuit viewer's diagnostics in the console. */
+export const debugFlag = defineFlag<boolean>({
+  key: 'debug',
   defaultValue: false,
   values: [true, false],
-  description: 'Morphology viewer debug menu (statistics and mesh export)',
+  description: 'Debug menus in the morphology, EM cell mesh and circuit viewers',
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
-/** The EM cell mesh viewer's Debug menu: the load's timings and memory, and how the mesh on show is chosen. */
-export const emMeshDebugFlag = defineFlag<boolean>({
-  key: 'em-mesh-debug',
+/** A circuit past the small scales as morphologies and not only somas, where Bluenaas can build its pack. */
+export const circuitMorphologiesFlag = defineFlag<boolean>({
+  key: 'circuit-morphologies',
   defaultValue: false,
   values: [true, false],
-  description: 'EM cell mesh viewer debug menu (load timings, memory and mesh choice)',
+  description: 'Morphologies in the 3D viewer of circuits larger than a small microcircuit',
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
+/** Learn: its tab in the project's top menu, its page of courses and the courses themselves. Off
+ * unless switched on. */
+export const learnFlag = defineFlag<boolean>({
+  key: 'learn',
+  defaultValue: false,
+  values: [true, false],
+  description: 'Learn: free courses, each a deck of slides',
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
+/** The AI assistant opened from a round "AI" button in the top menu, rather than its side rail. */
+export const aiButtonFlag = defineFlag<boolean>({
+  key: 'ai-button',
+  defaultValue: false,
+  values: [true, false],
+  description: 'AI assistant: a round "AI" button in the top menu instead of the side rail',
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
+/** The project's top bar drawn in the style of the Learn courses' bar. */
+export const courseToolbarFlag = defineFlag<boolean>({
+  key: 'course-toolbar',
+  defaultValue: false,
+  values: [true, false],
+  description: "Top bar drawn in the style of the Learn courses' bar",
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
+/** The top menu's links, all but the active one, on the page's grey rather than white. */
+export const greyMenuPillsFlag = defineFlag<boolean>({
+  key: 'grey-menu-pills',
+  defaultValue: false,
+  values: [true, false],
+  description: "Top menu: links on the page's grey instead of white",
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
+/** Help hidden altogether: no Help button in the top menu, and no Help page. */
+export const hideHelpFlag = defineFlag<boolean>({
+  key: 'hide-help',
+  defaultValue: false,
+  values: [true, false],
+  description: 'Help hidden altogether: no Help button and no Help page',
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
+/** E-model validation: the Validate workflow tab and its results under Data > Simulations. */
+export const emodelValidationFlag = defineFlag<boolean>({
+  key: 'emodel-validation',
+  defaultValue: false,
+  values: [true, false],
+  description: 'E-model validation workflow and results',
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
@@ -78,9 +141,16 @@ export const flags = [
   brainRegionSimulationFlag,
   extracellularRecordingArrayBuildFlag,
   smallScalesViaLaunchSystemFlag,
+  memodelBuildViaLaunchSystemFlag,
   electrodeOverlaysFlag,
-  morphologyDebugFlag,
-  emMeshDebugFlag,
+  debugFlag,
+  circuitMorphologiesFlag,
+  learnFlag,
+  aiButtonFlag,
+  courseToolbarFlag,
+  greyMenuPillsFlag,
+  hideHelpFlag,
+  emodelValidationFlag,
 ] as const;
 
 export type FlagKey = (typeof flags)[number]['key'];

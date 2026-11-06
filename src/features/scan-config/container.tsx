@@ -13,6 +13,8 @@ import type { ReactNode } from 'react';
 
 export type ScanConfigContainerProps = TUseScanConfigurationParams & {
   className?: string;
+  /** show only the configuration, without the tab strip */
+  hideTabs?: boolean;
 };
 
 /**
@@ -29,7 +31,7 @@ function ScanConfigFallback({ children }: { children?: ReactNode }) {
 }
 
 export function ScanConfigContainer(props: ScanConfigContainerProps) {
-  const { className, ...configurationParams } = props;
+  const { className, hideTabs, ...configurationParams } = props;
   const { isLoading, error, unresolvedMessage, ready } = useScanConfiguration(configurationParams);
 
   if (isLoading) {
@@ -50,7 +52,7 @@ export function ScanConfigContainer(props: ScanConfigContainerProps) {
 
   return (
     <>
-      <ScanConfigTemplate {...ready} className={className} />
+      <ScanConfigTemplate {...ready} className={className} hideTabs={hideTabs} />
       <DownloadPanel />
     </>
   );

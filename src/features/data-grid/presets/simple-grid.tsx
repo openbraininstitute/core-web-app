@@ -22,6 +22,7 @@ import type {
   ICellRendererParams,
   IHeaderParams,
   RowSelectionOptions,
+  RowStyle,
   SelectionChangedEvent,
 } from 'ag-grid-community';
 import type { ReactNode } from 'react';
@@ -138,6 +139,7 @@ export interface ISimpleGridProps<Row> {
   loadingLabel?: string;
   /** Extra classes for the grid wrapper. */
   className?: string;
+  onRowClick?: (row: Row) => void;
 
   /**
    * Enable per-column header filter popovers; only columns declaring a `filter` show
@@ -297,6 +299,7 @@ function SimpleGridBasic<Row>({
   rowSelection,
   pinnedColumnBorder = true,
   className,
+  onRowClick,
 }: ISimpleGridProps<Row>) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -392,6 +395,8 @@ function SimpleGridBasic<Row>({
           applySelection();
         }}
         onRowDataUpdated={applySelection}
+        onRowClicked={onRowClick ? (e) => e.data && onRowClick(e.data) : undefined}
+        getRowStyle={(): RowStyle | undefined => (onRowClick ? { cursor: 'pointer' } : undefined)}
       />
     </div>
   );
@@ -439,6 +444,7 @@ export function SimpleGrid<Row>(props: ISimpleGridProps<Row>) {
       rowSelection={props.rowSelection}
       operators={props.operators}
       cellRenderers={props.cellRenderers}
+      onRowClick={props.onRowClick}
       className={cn(
         props.className,
         props.pinnedColumnBorder === false ? NO_PINNED_BORDER_CLASS : undefined

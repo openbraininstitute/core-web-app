@@ -1,0 +1,169 @@
+import { describe, expect, it } from 'vitest';
+
+import { morphologyLocationsColor } from '@/features/scan-config/components/color-by/palette';
+import {
+  collectLocations,
+  hasGeneratedBlock,
+  isStoredLocationsBlockOpen,
+  locationPickBlockType,
+  MorphologyLocationPickModeDict,
+  morphologyLocationPickMode,
+  readGeneratedBlocks,
+} from '@/features/scan-config/components/model-preview/morphology-locations-block';
+
+import type { Config } from '@/features/scan-config/types';
+
+/** Two explicit blocks, one row each. */
+const TWO_BLOCKS = {
+  first: { type: 'ExplicitMorphologyLocations', locations: [{ section_id: 3, offset: 0.1 }] },
+  second: { type: 'ExplicitMorphologyLocations', locations: [{ section_id: 1, offset: 0.2 }] },
+};
+
+describe('isStoredLocationsBlockOpen', () => {
+  it('is false for a sampling block under the same root element', () => {
+    const sampling: Config = {
+      morphology_locations: { block: { type: 'RandomMorphologyLocations' } },
+    };
+
+    expect(
+      isStoredLocationsBlockOpen({
+        config: sampling,
+        selectedRootElement: 'morphology_locations',
+        selectedEntry: 'block',
+      })
+    ).toBe(false);
+  });
+
+  it('is true only for an explicit block', () => {
+    expect(
+      isStoredLocationsBlockOpen({
+        config: {
+          morphology_locations: {
+            block: {
+              type: 'ExplicitMorphologyLocations',
+              locations: [{ section_id: 3, offset: 0.5 }],
+            },
+          },
+        },
+        selectedRootElement: 'morphology_locations',
+        selectedEntry: 'block',
+      })
+    ).toBe(true);
+  });
+});
+
+describe('collectLocations', () => {
+  it('gathers the rows of every explicit block', () => {
+    expect(collectLocations(TWO_BLOCKS).map((row) => row.section_id)).toEqual([3, 1]);
+  });
+
+  it('ignores blocks that only describe how to sample', () => {
+    const dictionary = {
+      explicit: {
+        type: 'ExplicitMorphologyLocations',
+        locations: [{ section_id: 3, offset: 0.1 }],
+      },
+      sampled: { type: 'RandomMorphologyLocations', number_of_locations: 20 },
+    };
+
+    expect(collectLocations(dictionary)).toHaveLength(1);
+  });
+
+  it('is empty when there is no morphology-locations dictionary at all', () => {
+    expect(collectLocations(null)).toEqual([]);
+  });
+});
+
+describe('readGeneratedBlocks', () => {
+  it('keeps only the blocks that describe how to sample', () => {
+    const dictionary = {
+      ...TWO_BLOCKS,
+      sampled: { type: 'RandomMorphologyLocations', number_of_locations: 20 },
+    };
+
+    expect(readGeneratedBlocks(dictionary).map(([entry]) => entry)).toEqual(['sampled']);
+  });
+
+  it('leaves out per-neuron blocks, which store their locations too', () => {
+    const dictionary = {
+      perNeuron: {
+        type: 'PerNeuronExplicitMorphologyLocations',
+        locations: [{ node_id: 2, section_id: 3, offset: 0.1 }],
+      },
+    };
+
+    expect(readGeneratedBlocks(dictionary)).toEqual([]);
+  });
+});
+
+describe('the block a pick writes', () => {
+  const PER_NEURON = 'PerNeuronExplicitMorphologyLocations';
+  const EXPLICIT = 'ExplicitMorphologyLocations';
+  const config = {
+    morphology_locations: {
+      plain: { type: EXPLICIT, locations: [{ section_id: 3, offset: 0.1 }] },
+      perNeuron: { type: PER_NEURON, locations: [{ node_id: 1, section_id: 3, offset: 0.1 }] },
+    },
+  } as unknown as Config;
+  const onLocations = (entry: string) => ({
+    config,
+    selectedRootElement: 'morphology_locations',
+    selectedEntry: entry,
+    onConfigChange: () => {},
+    onCreateEntry: () => {},
+  });
+
+  it('is the open block’s, where the model can fill it', () => {
+    const options = {
+      ...onLocations('perNeuron'),
+      explicitLocationsBlockTypes: [EXPLICIT, PER_NEURON] as const,
+    };
+    expect(locationPickBlockType(options)).toBe(PER_NEURON);
+    expect(morphologyLocationPickMode(options)).toBe(MorphologyLocationPickModeDict.Edit);
+  });
+
+  it('is the first the model fills where the open block is of another kind', () => {
+    const options = { ...onLocations('plain'), explicitLocationsBlockTypes: [PER_NEURON] as const };
+    expect(locationPickBlockType(options)).toBe(PER_NEURON);
+    expect(morphologyLocationPickMode(options)).toBe(MorphologyLocationPickModeDict.Create);
+  });
+
+  it('leaves cell clicks alone elsewhere in the form when the model draws several neurons', () => {
+    const elsewhere = {
+      ...onLocations('plain'),
+      selectedRootElement: 'stimuli',
+      explicitLocationsBlockTypes: [PER_NEURON] as const,
+    };
+    expect(morphologyLocationPickMode(elsewhere)).toBe(null);
+    expect(morphologyLocationPickMode({ ...elsewhere, singleMorphology: true })).toBe(
+      MorphologyLocationPickModeDict.Create
+    );
+  });
+});
+
+describe('hasGeneratedBlock', () => {
+  it('is true only when a block describes how to sample', () => {
+    const sampled = { type: 'RandomMorphologyLocations', number_of_locations: 20 };
+
+    const explicitOnly = { morphology_locations: TWO_BLOCKS } as unknown as Config;
+    const withSampled = { morphology_locations: { ...TWO_BLOCKS, sampled } } as unknown as Config;
+
+    expect(hasGeneratedBlock(explicitOnly)).toBe(false);
+    expect(hasGeneratedBlock(withSampled)).toBe(true);
+  });
+});
+
+describe('morphologyLocationsColor', () => {
+  it('does not depend on where the block sits in the dictionary', () => {
+    const before = collectLocations(TWO_BLOCKS);
+    const after = collectLocations({ second: TWO_BLOCKS.second });
+
+    expect(morphologyLocationsColor(after[0].entry)).toBe(
+      morphologyLocationsColor(before[1].entry)
+    );
+  });
+
+  it('gives different blocks different colours', () => {
+    expect(morphologyLocationsColor('block-a')).not.toBe(morphologyLocationsColor('block-b'));
+  });
+});

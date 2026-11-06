@@ -1,10 +1,12 @@
 import { WorkflowActivityDictValue } from '@/constants';
+import { emodelValidationFlag } from '@/features/feature-flags/flags';
 
 import { BuildBrowseWorkflows, BuildWorkflows } from './build';
 import { ExtractionWorkflows } from './extract';
 import { OptimizeWorkflows } from './optimize';
 import { ProcessingWorkflows } from './process';
 import { SimulateWorkflows } from './simulate';
+import { ValidationWorkflows } from './validate';
 
 import type { TActivityEntry, TActivityValue } from '../types';
 
@@ -52,8 +54,9 @@ export const ActivityRegistry: Record<TActivityValue, TActivityEntry> = {
     label: 'Validate',
     name: 'Validation',
     order: 6,
-    disabled: true,
-    workflows: [],
+    disabled: false,
+    requiredFeatures: [emodelValidationFlag.key],
+    workflows: ValidationWorkflows,
   },
   [WorkflowActivityDictValue.process]: {
     value: WorkflowActivityDictValue.process,

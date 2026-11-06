@@ -59,7 +59,7 @@ export function FloatOptional({
         value={value}
         placeholder={UNSET_PLACEHOLDER}
         onChange={onChange}
-        className="w-full"
+        className="w-full!"
       />
 
       {errorMessage && <span className="text-red-500">{errorMessage}</span>}

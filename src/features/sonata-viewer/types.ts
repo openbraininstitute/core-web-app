@@ -22,6 +22,31 @@ export type PopulationMetadata = {
   dataUnits: string;
 };
 
+/**
+ * Each recorded cell's values over the run, thinned to at most a set number of
+ * frames: the cells' node ids, the frames' times, and a value per cell per
+ * frame, frame by frame. A cell recorded in several compartments gives its first.
+ */
+export type CellFrames = {
+  nodeIds: Uint32Array;
+  times: Float64Array;
+  values: Float32Array;
+};
+
+/**
+ * Each recorded cell's statistics over the run, in the order of `nodeIds`: of
+ * its first column, the soma in a compartment report. `spikes` counts upward
+ * crossings of a threshold, where one was given.
+ */
+export type CellValueStatistics = {
+  nodeIds: Uint32Array;
+  mean: Float64Array;
+  sd: Float64Array;
+  min: Float64Array;
+  max: Float64Array;
+  spikes: Float64Array | null;
+};
+
 export type TimeConfig = {
   startTime: number;
   endTime: number;
@@ -32,6 +57,12 @@ export type TimeConfig = {
 export type NodeTraceData = {
   x: number[];
   y: number[];
+};
+
+/** A trace of a cell picked to draw, and the cell's colour slot (-1 past the palette). */
+export type PickedTrace = {
+  traceIndex: number;
+  slot: number;
 };
 
 export type ZoomRange = {

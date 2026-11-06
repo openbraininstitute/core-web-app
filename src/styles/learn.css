@@ -1,0 +1,347 @@
+/*
+ * Learn's courses (src/features/learn). Everything hangs off the course page's root, `.learn-root`, or off `.learn-figure`, round a course's figure shown on the
+ * Learn page, so none of it reaches the rest of the platform. It is imported by Learn's two routes, the Learn page and a
+ * course, so nothing else downloads it; its quiet-notes variant is in globals.css, where Tailwind needs it.
+ */
+
+/* The courses are sized in rems of 16px; the platform's are 14px. */
+html:has(.learn-root) {
+  font-size: 16px;
+}
+
+/*
+ * The courses' dark look — and Tailwind's own sans, mono and serif rather than the platform's, for
+ * the words the courses set in them.
+ */
+.learn-root,
+.learn-figure {
+  --background: #060911;
+  --foreground: #e2e8f0;
+  --body-font: var(--font-geist-sans);
+  /* What widgets draw on; mirrors SCREEN in lib/theme.ts, for canvases framed in CSS. */
+  --screen: #070a13;
+  --focus: #38bdf8;
+  /* Height of the bar above the course, which only the OBI theme has. */
+  --chrome-h: 0px;
+  --font-sans:
+    var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-mono:
+    var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+}
+
+.learn-root {
+  position: relative;
+  /* a stack of its own: the figures' full-page canvases sit behind its words, in front of its page */
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--body-font), Arial, Helvetica, sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* A figure on the Learn page, in the course's words and type; sized in the page's own rems. */
+.learn-figure {
+  color: var(--foreground);
+  font-family: var(--body-font), Arial, Helvetica, sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/*
+ * The Open Brain Institute's white and blue: the default here, unless the settings menu has chosen
+ * the dark look (data-theme="dark"); and always, for a figure on the Learn page.
+ *
+ * Every component is written against Tailwind's slate and sky for a dark page. Rather than restyle
+ * each one, the palette itself is turned over: slate runs from white to OBI navy instead of the
+ * other way round, and sky becomes OBI's blues — so text-slate-100, a near-white heading on the
+ * dark page, is a navy heading here, and bg-sky-500 with text-slate-950 is a blue button with white
+ * text. The light amber, emerald, rose and pink that label chips use are darkened to read on white.
+ * The 400s are left alone: the sliders share them with the canvas drawings, which keep a dark navy
+ * screen to draw on.
+ */
+.learn-root:not([data-theme="dark"]),
+.learn-figure {
+  --background: #ffffff;
+  --foreground: #182b4d;
+  --body-font: var(--font-titillium-web);
+  --screen: #001026;
+  --focus: #096dd9;
+  --chrome-h: 4rem;
+
+  --color-slate-50: #001026;
+  --color-slate-100: #002766;
+  --color-slate-200: #182b4d;
+  --color-slate-300: #2b3d5c;
+  --color-slate-400: #42546f;
+  --color-slate-500: #5c6d86;
+  --color-slate-600: #8797ad;
+  --color-slate-700: #b9c6d8;
+  --color-slate-800: #d5deea;
+  --color-slate-900: #e6ecf4;
+  --color-slate-950: #ffffff;
+
+  --color-sky-100: #001026;
+  --color-sky-200: #002766;
+  --color-sky-300: #003a8c;
+  --color-sky-400: #0050b3;
+  --color-sky-500: #096dd9;
+
+  --color-amber-100: oklch(41.4% 0.112 45.904);
+  --color-amber-200: oklch(47.3% 0.137 46.201);
+  --color-amber-300: oklch(55.5% 0.163 48.998);
+  --color-emerald-100: oklch(37.8% 0.077 168.94);
+  --color-emerald-200: oklch(43.2% 0.095 166.913);
+  --color-rose-100: oklch(41% 0.159 10.272);
+  --color-rose-200: oklch(45.5% 0.188 13.697);
+  --color-pink-300: oklch(52.5% 0.223 3.958);
+}
+
+/*
+ * The typewriter. With it on, a slide's words wait hidden until the client can type them, rather
+ * than flashing up whole first. The caret has no width of its own, so it never moves the text.
+ */
+.learn-root[data-typewriter="on"] [data-typewriter-pending] {
+  visibility: hidden;
+}
+
+.learn-root .typing-caret {
+  position: relative;
+}
+
+.learn-root .typing-caret::after {
+  content: "";
+  position: absolute;
+  top: 0.12em;
+  left: 0.04em;
+  width: max(2px, 0.07em);
+  height: 0.95em;
+  border-radius: 1px;
+  background: var(--color-sky-400);
+}
+
+/* Shown only in the OBI theme; rendered regardless, so it is there on the first paint. */
+.learn-root .obi-only {
+  display: none;
+}
+
+.learn-root:not([data-theme="dark"]) .obi-only {
+  display: flex;
+}
+
+/* Native range inputs, tinted with Tailwind's accent-* utilities. */
+.learn-root input[type="range"],
+.learn-figure input[type="range"] {
+  cursor: pointer;
+  height: 1.15rem;
+}
+
+.learn-root button:focus-visible,
+.learn-root input:focus-visible,
+.learn-root canvas:focus-visible,
+.learn-figure button:focus-visible,
+.learn-figure input:focus-visible,
+.learn-figure canvas:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* The Shimmer callout's slow sheen across its words (Dev settings' Appearance), still with reduced motion. */
+@keyframes learn-shimmer {
+  from {
+    background-position: 0% 50%;
+  }
+  to {
+    background-position: -200% 50%;
+  }
+}
+
+.learn-shimmer {
+  animation: learn-shimmer 9s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .learn-shimmer {
+    animation: none;
+  }
+}
+
+/* Slide transitions, left to right. */
+@keyframes learn-slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes learn-slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.learn-root .animate-slide-in-right {
+  animation: learn-slide-in-right 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.learn-root .animate-slide-in-left {
+  animation: learn-slide-in-left 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .learn-root .animate-slide-in-right,
+  .learn-root .animate-slide-in-left {
+    animation: none;
+  }
+}
+
+/* A term's pop-up, from a slide's title: easing in below it. */
+@keyframes learn-term-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.learn-root .animate-term-in {
+  animation: learn-term-in 140ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .learn-root .animate-term-in {
+    animation: none;
+  }
+}
+
+/* TEMPORARY, the "Outer box" setting off: the page's grey box loses its fill and border in every
+   look, its spacing kept so nothing moves */
+.learn-no-box.learn-no-box {
+  background: transparent;
+  border-color: transparent;
+}
+
+/* TEMPORARY, the "List box" setting off: the courses', terms' or tutorials' cards sit straight on
+   the page, the box round them gone in every look, and the cards as wide as the tiles above */
+.learn-no-list .learn-list.learn-list {
+  padding-left: 0;
+  padding-right: 0;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+/* with nothing behind them, the glossary's letters take the page's grey */
+.learn-no-list .learn-list .sticky.sticky {
+  background: #fafafa;
+}
+/* light on the navy box, its heading chips need the page's dark ink once it has gone */
+.learn-no-list .learn-list
+  :is(.text-white, .text-white\/80, .text-white\/60):not([data-learn="row"] *) {
+  color: #595959;
+}
+.learn-no-list .learn-list .border-white\/25 {
+  border-color: #d9d9d9;
+}
+
+/*
+ * TEMPORARY, the "Selected" setting: how the selected card on the left is drawn, whatever the
+ * look (these come last, so they win over it). Course, term and tutorial cards alike.
+ */
+[data-selected]:not([data-selected="look"]) [data-learn="row"][aria-pressed="true"] {
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+/* light-on-dark text inside, for the fills that need it */
+:is([data-selected="navy"], [data-selected="gradient"])
+  [data-learn="row"][aria-pressed="true"]
+  :is(.text-\[\#002766\], .text-\[\#003a8c\], .text-\[\#8c8c8c\], .text-\[\#595959\]) {
+  color: #fff;
+}
+:is([data-selected="navy"], [data-selected="gradient"])
+  [data-learn="row"][aria-pressed="true"]
+  .bg-\[\#fafafa\] {
+  background: rgb(255 255 255 / 0.16);
+  box-shadow: none;
+  color: #fff;
+}
+:is([data-selected="navy"], [data-selected="gradient"])
+  [data-learn="row"][aria-pressed="true"]
+  .bg-\[\#f0f0f0\] {
+  background: rgb(255 255 255 / 0.2);
+}
+/* the others are on white: dark text, whatever a dark look made it */
+:is([data-selected="bar"], [data-selected="glow"], [data-selected="lift"])
+  [data-learn="row"][aria-pressed="true"]
+  :is(.text-\[\#002766\], .text-\[\#003a8c\]) {
+  color: #002766;
+}
+:is([data-selected="bar"], [data-selected="glow"], [data-selected="lift"])
+  [data-learn="row"][aria-pressed="true"]
+  :is(.text-\[\#8c8c8c\], .text-\[\#595959\]) {
+  color: #595959;
+}
+
+/* B · Navy fill: the active tab's pill */
+[data-selected="navy"] [data-learn="row"][aria-pressed="true"] {
+  background: #002766;
+  box-shadow: 0 2px 8px rgb(0 39 102 / 0.25);
+}
+
+/* C · Accent bar: white, with a navy bar down its left edge */
+[data-selected="bar"] [data-learn="row"][aria-pressed="true"] {
+  background: #fff;
+  box-shadow:
+    inset 4px 0 0 #002766,
+    inset 0 0 0 1px #d6e4ff,
+    0 2px 10px rgb(0 39 102 / 0.08);
+}
+
+/* D · Blue glow: white, ringed and glowing in the platform's blue */
+[data-selected="glow"] [data-learn="row"][aria-pressed="true"] {
+  background: #fff;
+  box-shadow:
+    inset 0 0 0 2px #1890ff,
+    0 0 0 4px rgb(24 144 255 / 0.15),
+    0 6px 20px rgb(24 144 255 / 0.25);
+}
+
+/* E · Lifted: white, raised off the rest and a little larger */
+[data-selected="lift"] [data-learn="row"][aria-pressed="true"] {
+  background: #fff;
+  box-shadow:
+    0 14px 32px -8px rgb(0 39 102 / 0.28),
+    0 2px 6px rgb(0 39 102 / 0.08);
+  transform: translateY(-2px) scale(1.015);
+  position: relative;
+  z-index: 1;
+}
+
+/* F · Gradient: the navy lit to blue from its corner, as the gradient tiles are */
+[data-selected="gradient"] [data-learn="row"][aria-pressed="true"] {
+  background: linear-gradient(135deg, #002766 0%, #003a8c 55%, #1890ff 100%);
+  box-shadow:
+    0 8px 20px -6px rgb(24 144 255 / 0.55),
+    inset 0 1px 0 rgb(255 255 255 / 0.25);
+}

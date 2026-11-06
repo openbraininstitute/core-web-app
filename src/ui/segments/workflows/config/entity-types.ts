@@ -54,6 +54,11 @@ export const EntityTypeCatalog: Partial<Record<TExtendedEntitiesTypeDict, TEntit
     label: 'Single neuron',
     title: 'Single neuron',
   },
+  [ExtendedEntitiesTypeDict.MEModelBuildCampaign]: {
+    value: ExtendedEntitiesTypeDict.MEModelBuildCampaign,
+    group: EntityGroupDict.Cellular,
+    label: 'Single neuron',
+  },
   [ExtendedEntitiesTypeDict.SingleNeuronSimulation]: {
     value: ExtendedEntitiesTypeDict.SingleNeuronSimulation,
     group: EntityGroupDict.Cellular,
@@ -156,6 +161,13 @@ export const EntityTypeCatalog: Partial<Record<TExtendedEntitiesTypeDict, TEntit
     label: 'E-model',
     title: 'E-model',
     description: 'Optimize E-Model parameters against extracted e-features.',
+  },
+  [ExtendedEntitiesTypeDict.EModelValidationCampaign]: {
+    value: ExtendedEntitiesTypeDict.EModelValidationCampaign,
+    group: EntityGroupDict.Cellular,
+    label: 'E-model',
+    title: 'E-model',
+    description: 'Validate an optimized E-Model against e-features.',
   },
   [ExtendedEntitiesTypeDict.EmSynapseMappingCampaign]: {
     value: ExtendedEntitiesTypeDict.EmSynapseMappingCampaign,

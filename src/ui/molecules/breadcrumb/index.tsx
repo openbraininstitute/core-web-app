@@ -117,12 +117,11 @@ function BreadcrumbChip({ className, ...props }: React.ComponentProps<'div'>) {
 /** What a copy button puts on the clipboard, and how it is announced (`aria-label`, tooltip). */
 export type BreadcrumbCopy = { value: string; label: string };
 
-/** One entry of a menu crumb: its name, an optional kind label, and its own copy button. */
+/** One entry of a menu crumb: its name and an optional kind label. */
 export type BreadcrumbMenuEntry = {
   key: string;
   label: string;
   hint?: string;
-  copy: BreadcrumbCopy;
 };
 
 export type BreadcrumbTrailItem = {
@@ -144,14 +143,13 @@ export type BreadcrumbTrailItem = {
   /** A copy icon button right after the crumb (e.g. the entity's id). */
   copy?: BreadcrumbCopy;
   /**
-   * The crumb stands for several things: it becomes a dropdown trigger listing them, each with
-   * its own copy button. Wins over `href` / `onClick`.
+   * The crumb stands for several things: it becomes a dropdown trigger listing them. Wins over `href` / `onClick`.
    */
   menu?: BreadcrumbMenuEntry[];
 };
 
 const CRUMB =
-  'text-primary-9 focus-visible:ring-primary-9 rounded-full px-2 py-1 text-base outline-none transition-colors hover:bg-gray-200 focus-visible:ring-2';
+  'text-primary-9 focus-visible:ring-primary-9 rounded-full px-2 py-1 text-base outline-none transition-colors focus-visible:ring-2';
 
 /** Bare glyph at rest; the round chip only materialises under the pointer. */
 function BreadcrumbCopyButton({
@@ -206,7 +204,10 @@ function BreadcrumbMenu({
         <button
           type="button"
           aria-current={ariaCurrent}
-          className={cn(className, 'hover:text-primary-7 inline-flex items-center gap-0.5')}
+          className={cn(
+            className,
+            'hover:bg-gray-200 hover:text-primary-7 inline-flex items-center gap-0.5'
+          )}
         >
           {label}
           <RiArrowDownSLine aria-hidden className="size-4 shrink-0" />
@@ -214,14 +215,20 @@ function BreadcrumbMenu({
       </PopoverTrigger>
       <PopoverContent
         align="start"
-        sideOffset={8}
-        className="max-h-96 w-96 overflow-y-auto rounded-2xl border border-[oklch(0.968_0.007_247.896)] bg-white p-2 shadow-lg"
+        sideOffset={0}
+        className="relative w-96 rounded-2xl border border-[oklch(0.968_0.007_247.896)] bg-white p-2 shadow-lg"
       >
-        <ul className="flex flex-col gap-1">
+        {/* tip near the start of the crumb text (Radix's arrow centres on the trigger) */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -top-[5px] left-6 size-2.5 rotate-45 border-t border-l border-[oklch(0.968_0.007_247.896)] bg-white"
+        />
+        {/* the list scrolls inside the popover's padding, so the bar sits within the rounded card */}
+        <ul className="secondary-scrollbar flex max-h-80 flex-col gap-1 overflow-y-auto">
           {entries.map((entry) => (
             <li
               key={entry.key}
-              className="flex items-center gap-3 rounded-xl px-3 py-2 transition-colors hover:bg-[oklch(0.968_0.007_247.896)]"
+              className="flex cursor-default items-center gap-3 rounded-xl px-3 py-2 transition-colors hover:bg-[oklch(0.968_0.007_247.896)]"
             >
               <div className="min-w-0 flex-1">
                 {entry.hint ? (
@@ -231,7 +238,6 @@ function BreadcrumbMenu({
                 ) : null}
                 <div className="text-primary-9 text-sm font-medium break-words">{entry.label}</div>
               </div>
-              <BreadcrumbCopyButton copy={entry.copy} tooltip={false} />
             </li>
           ))}
         </ul>
@@ -312,7 +318,7 @@ function BreadcrumbTrailLink({
   }
   if (item.href) {
     return (
-      <BreadcrumbLink asChild className={cn(className, 'hover:text-primary-7')}>
+      <BreadcrumbLink asChild className={cn(className, 'hover:bg-gray-200 hover:text-primary-7')}>
         <Link
           {...rest}
           href={item.href}
@@ -333,7 +339,7 @@ function BreadcrumbTrailLink({
         onClick={item.onClick}
         title={item.title}
         aria-current={ariaCurrent}
-        className={cn(className, 'hover:text-primary-7')}
+        className={cn(className, 'hover:bg-gray-200 hover:text-primary-7')}
       >
         {label}
       </button>

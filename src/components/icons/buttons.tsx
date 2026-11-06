@@ -54,6 +54,21 @@ export function ReportsIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+/** A mortarboard, as on the Learn page's Courses options. */
+export function LearnIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <title>Learn</title>
+      <path
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+        d="M1.5 6 8 3l6.5 3L8 9 1.5 6Zm2.5 1.2v3.3c0 .9 1.8 2 4 2s4-1.1 4-2V7.2M14.5 6v3.5"
+      />
+    </svg>
+  );
+}
+
 export function CourseIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>

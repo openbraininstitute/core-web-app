@@ -1,12 +1,35 @@
-import { readFileSync } from 'node:fs';
+import { globSync, readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 
 import { loadEnv } from 'vite';
 import { defineConfig } from 'vitest/config';
 
+const require = createRequire(import.meta.url);
+
+const TESTS = 'src/**/*.{test,spec}.{ts,tsx}';
+// The legacy `*.nodetest.*` files target Node's built-in runner (`pnpm test:node`),
+// not vitest, so keep them out of this suite.
+const EXCLUDE = ['**/node_modules/**', '**/.next/**', '**/*.nodetest.*'];
+// `vi.mock` only replaces a module that is not loaded yet, so a file that mocks
+// modules needs a fresh module graph; every other file shares its worker's
+// module cache, which loads antd, react-day-picker, etc. once per worker
+// instead of once per file (about half the suite's CPU time).
+const MOCKING = globSync(TESTS).filter((file) =>
+  /\bvi\.(mock|doMock)\(/.test(readFileSync(file, 'utf8'))
+);
+
 export default defineConfig({
-  // `resolve.tsconfigPaths` resolves the `@/* -> src/*` alias from tsconfig.json
-  // so tests import modules the same way the app does.
-  resolve: { tsconfigPaths: true },
+  resolve: {
+    // `tsconfigPaths` resolves the `@/* -> src/*` alias from tsconfig.json
+    // so tests import modules the same way the app does.
+    tsconfigPaths: true,
+    alias: [
+      // The `@ant-design/icons` barrel resolves to its `es/` build, which vitest
+      // evaluates module by module (~1.7k files) in every test file that reaches
+      // it; Node loads its CJS build natively instead.
+      { find: /^@ant-design\/icons$/, replacement: require.resolve('@ant-design/icons') },
+    ],
+  },
   plugins: [
     // Mirrors the `raw-loader` rules for `.frag`/`.vert` in next.config.ts;
     // without them rolldown parses GLSL as JavaScript.
@@ -27,10 +50,20 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
-    include: ['src/**/*.{test,spec}.{ts,tsx}'],
-    // The legacy `*.nodetest.*` files target Node's built-in runner (`pnpm test:node`),
-    // not vitest, so keep them out of this suite.
-    exclude: ['**/node_modules/**', '**/.next/**', '**/*.nodetest.*'],
+    // `include`/`exclude` live on the projects only: `extends: true` concatenates
+    // arrays, so root values would leak every test file into both projects.
+    projects: [
+      { extends: true, test: { name: 'isolated', include: MOCKING, exclude: EXCLUDE } },
+      {
+        extends: true,
+        test: {
+          name: 'shared',
+          isolate: false,
+          include: [TESTS],
+          exclude: [...EXCLUDE, ...MOCKING],
+        },
+      },
+    ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json-summary', 'html'],

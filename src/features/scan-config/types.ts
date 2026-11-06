@@ -2,9 +2,7 @@ import { z } from 'zod';
 
 // biome-ignore lint/style/useImportType: biome hallucination
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-// Past the package barrel: `SectionSchema` needs the enum as a runtime value,
-// and the barrel would cost this module a WebGL renderer.
-import { MorphoViewerTreeItemType } from '@/morpho-viewer/tree-item-type';
+import { SectionType } from '@/features/circuit-viewer/section-type';
 
 import type {
   ICellMorphology,
@@ -20,7 +18,6 @@ import type { IEntity } from '@/api/entitycore/types/entities/entity';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import type { AssetContentType, IAsset } from '@/api/entitycore/types/shared/global';
-import type { MorphoViewerTreeItem } from '@/morpho-viewer/tree-item-type';
 import type { Prettify } from '@/utils/type';
 
 export type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
@@ -47,6 +44,7 @@ export const ScanConfigActivity = {
   Process: 'process',
   Build: 'build',
   Optimize: 'optimize',
+  Validate: 'validate',
 } as const;
 
 export type TScanConfigActivity = (typeof ScanConfigActivity)[keyof typeof ScanConfigActivity];
@@ -83,12 +81,18 @@ export type TOptimizeScanConfigTabs = {
   __activity: 'optimize';
 };
 
+export type TValidateScanConfigTabs = {
+  id: keyof typeof ValidateScanConfigTabs;
+  __activity: 'validate';
+};
+
 export type TScanConfigTabs =
   | Prettify<TSimulateScanConfigTabs>
   | Prettify<TExtractScanConfigTabs>
   | Prettify<TProcessScanConfigTabs>
   | Prettify<TBuildScanConfigTabs>
-  | Prettify<TOptimizeScanConfigTabs>;
+  | Prettify<TOptimizeScanConfigTabs>
+  | Prettify<TValidateScanConfigTabs>;
 
 export const SimulateScanConfigTabs = {
   ...BaseScanConfigTabs,
@@ -110,12 +114,18 @@ export const OptimizeScanConfigTabs = {
   optimizations: 'optimizations',
 } as const;
 
+export const ValidateScanConfigTabs = {
+  ...BaseScanConfigTabs,
+  validations: 'validations',
+} as const;
+
 export const ScanConfigTabs = {
   [ScanConfigActivity.Simulate]: SimulateScanConfigTabs,
   [ScanConfigActivity.Extract]: ExtractScanConfigTabs,
   [ScanConfigActivity.Process]: ProcessScanConfigTabs,
   [ScanConfigActivity.Build]: BuildScanConfigTabs,
   [ScanConfigActivity.Optimize]: OptimizeScanConfigTabs,
+  [ScanConfigActivity.Validate]: ValidateScanConfigTabs,
 } as const;
 
 export const ScanConfigDefaultTab = {
@@ -143,10 +153,13 @@ export const SchemaNameDict = {
   BuildSynaptomeScanConfig: 'MEModelSynapticModelPlacementScanConfig',
   SynapseParameterizationScanConfig: 'SynapseParameterizationScanConfig',
   IonChannelFittingScanConfig: 'IonChannelFittingScanConfig',
+  MEModelBuildScanConfig: 'MEModelBuildScanConfig',
   // processing
   SkeletonizationScanConfig: 'SkeletonizationScanConfig',
   // optimization
   EModelOptimizationScanConfig: 'EModelOptimizationScanConfig',
+  // validation
+  EModelValidationScanConfig: 'EModelValidationScanConfig',
 } as const;
 
 export type SchemaName = (typeof SchemaNameDict)[keyof typeof SchemaNameDict];
@@ -196,6 +209,7 @@ export const ScanConfigUIElementDict = {
   FloatOptional: 'float_optional',
   SelectEFeaturesByProtocol: 'select_efeatures_by_protocol',
   MorphologyLocationSelection: 'morphology_location_selection',
+  PerNeuronMorphologyLocationSelection: 'per_neuron_morphology_location_selection',
   TaskResultSelector: 'task_result_selector',
   EtypeSelector: 'etype_selector',
   EModelOptimisationParameters: 'emodel_optimisation_parameters',
@@ -609,6 +623,21 @@ export interface IMorphologyLocationSelection extends TBlockElement {
   };
 }
 
+/**
+ * A list of `{ node_id, section_id, offset }` rows: one location each, on the neuron it names.
+ *
+ * The multi-neuron counterpart of {@link IMorphologyLocationSelection}. `node_id` is the SONATA
+ * node id within the population on show, taken from the cell the viewer pick landed on.
+ */
+export interface IPerNeuronMorphologyLocationSelection extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.PerNeuronMorphologyLocationSelection;
+  items: {
+    properties: IMorphologyLocationSelection['items']['properties'] & {
+      node_id: { title?: string; description?: string; minimum?: number };
+    };
+  };
+}
+
 export interface DiscreteProbabilities extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.DiscreteProbabilities;
   items: { type: 'integer' };
@@ -750,6 +779,7 @@ export type ParamSchema =
   | SelectRecordableIonChannelVariable
   | MorphologySectionTypeSelection
   | IMorphologyLocationSelection
+  | IPerNeuronMorphologyLocationSelection
   | VoltageDuration
   | StringSelection
   | DiscreteProbabilities
@@ -867,11 +897,6 @@ export function isAssetBackedFile(file: TActivityCustomFile): file is TAssetBack
   return file.renderer !== ActivityCustomFileRenderer.MiniDetailView && 'asset' in file;
 }
 
-// Re-exported rather than re-declared: a structurally identical enum is still a
-// *different* enum to TypeScript, so two copies never compare equal.
-export type { MorphoViewerTreeItem };
-export { MorphoViewerTreeItemType };
-
 const Point3DSchema = z.tuple([z.number(), z.number(), z.number()]);
 
 export const SectionSchema = z.object({
@@ -888,7 +913,7 @@ export const SectionSchema = z.object({
    */
   sonata_section_id: z.number().int().optional(),
   parent_id: z.string().nullable(),
-  type: z.enum(MorphoViewerTreeItemType),
+  type: z.enum(SectionType),
   points: z.array(Point3DSchema),
   radii: z.array(z.number()),
 });

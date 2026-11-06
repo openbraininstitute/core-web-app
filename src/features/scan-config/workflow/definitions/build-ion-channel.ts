@@ -11,7 +11,9 @@ export const buildIonChannelWorkflow = defineScanConfigWorkflow({
   id: 'build-ion-channel',
   activity: ScanConfigActivity.Build,
   entity: {
+    // recordings are picked in the editor, next to the model properties they default
     mode: ScanConfigEntitySourceMode.Session,
+    picksEntitiesInEditor: true,
   },
   campaign: {
     resolve: async ({ id, context }) => {

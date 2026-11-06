@@ -1,21 +1,33 @@
 import { RiCursorHand } from '@remixicon/react';
 
-import { MorphologyLocationPickModeDict } from '@/features/scan-config/components/model-preview/morphology-locations-block';
+import {
+  MorphologyLocationPickModeDict,
+  PER_NEURON_EXPLICIT_BLOCK_TYPE,
+} from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import { cn } from '@/utils/css-class';
 
 import { isTargetableSectionType, sectionTypeLabel } from '../section-type-label';
 
-import type { TMorphologyLocationPickModeDict } from '@/features/scan-config/components/model-preview/morphology-locations-block';
-import type { MorphoViewerMorphologyLocationHover } from '@/morpho-viewer';
+import type {
+  TExplicitLocationsBlockType,
+  TMorphologyLocationPickModeDict,
+} from '@/features/scan-config/components/model-preview/morphology-locations-block';
+import type { LocationHover } from './use-location-selection';
 
 /** Gap between the point and the popover, so the dot stays visible under it. */
 const OFFSET_PX = 14;
 
 /** What a click here would do. */
-function clickPrompt(isPreview: boolean, pickMode: TMorphologyLocationPickModeDict): string {
+function clickPrompt(
+  isPreview: boolean,
+  pickMode: TMorphologyLocationPickModeDict,
+  blockType: TExplicitLocationsBlockType | null
+): string {
   if (!isPreview) return 'Click again to remove';
   if (pickMode === MorphologyLocationPickModeDict.Create)
-    return 'Add to new Explicit Morphology Locations';
+    return blockType === PER_NEURON_EXPLICIT_BLOCK_TYPE
+      ? 'Add to new Per Neuron Explicit Morphology Locations'
+      : 'Add to new Explicit Morphology Locations';
   return 'Click to add a location';
 }
 
@@ -23,21 +35,30 @@ function clickPrompt(isPreview: boolean, pickMode: TMorphologyLocationPickModeDi
  * Labels the morphology location under the pointer with the values the config stores.
  *
  * `selected` is already in the list; `preview` is a spot a click would add. DOM rather than
- * canvas so it inherits app typography and stays sharp at any device-pixel ratio.
+ * canvas so it inherits app typography and stays sharp at any device-pixel ratio. A per-neuron
+ * location names its neuron too, since that is part of what is stored.
  */
 export function MorphologyLocationPopover({
   hover,
   pickMode,
+  blockType,
 }: {
-  hover: MorphoViewerMorphologyLocationHover | null;
+  hover: LocationHover | null;
   pickMode: TMorphologyLocationPickModeDict;
+  /** The block a pick writes, which a new one is named after. */
+  blockType: TExplicitLocationsBlockType | null;
 }) {
   if (!hover) return null;
 
   const isPreview = hover.kind === 'preview';
   const typeLabel = sectionTypeLabel(hover.sectionType);
-  const showPrompt = !isPreview || isTargetableSectionType(hover.sectionType);
-  const prompt = clickPrompt(isPreview, pickMode);
+  // A generated location moves with its block's parameters, so a click has nothing to offer.
+  const generated = hover.generated === true;
+  // Nothing to offer on another population's cell, where a click places nothing.
+  const showPrompt = isPreview
+    ? isTargetableSectionType(hover.sectionType) && !hover.foreign
+    : !generated;
+  const prompt = clickPrompt(isPreview, pickMode, blockType);
 
   // Flip to the other side near an edge so the popover is never clipped by the canvas.
   const flipX = hover.screen.x > 0.65;
@@ -57,6 +78,12 @@ export function MorphologyLocationPopover({
     >
       <div className="rounded-md bg-neutral-8/95 px-3 py-2 text-white shadow-xl ring-1 ring-white/10">
         <dl className="grid grid-cols-[auto_auto] gap-x-3 gap-y-0.5 whitespace-nowrap text-xs">
+          {hover.nodeId !== undefined && (
+            <>
+              <dt className="text-neutral-3">Node</dt>
+              <dd className="text-right font-medium tabular-nums">{hover.nodeId}</dd>
+            </>
+          )}
           {typeLabel && (
             <>
               <dt className="text-neutral-3">Type</dt>

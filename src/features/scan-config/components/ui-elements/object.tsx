@@ -1,5 +1,7 @@
 'use client';
 
+import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
+import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import { UIElementRender } from '@/features/scan-config/components/ui-elements';
 import {
   type Config,
@@ -63,15 +65,11 @@ export function ObjectField({
               data-testid={`scan-config-field-${fieldKey}`}
             >
               <div className="mb-1 flex w-full items-center gap-0.5">
-                <label
-                  htmlFor={fieldKey}
-                  className="text-primary-9 text-sm font-medium"
-                  title={fieldSchema.description}
-                >
-                  {fieldSchema.title}
+                <label htmlFor={fieldKey} className="text-primary-9 text-sm font-medium">
+                  {renderMathInText(fieldSchema.title)}
                 </label>
                 {fieldSchema.units && (
-                  <div className="text-sm text-gray-500">{fieldSchema.units}</div>
+                  <FieldUnit unit={fieldSchema.units} className="ml-1 text-sm" />
                 )}
               </div>
 
@@ -106,7 +104,7 @@ export function ObjectField({
                   )}
                   arrowClassName="bg-primary-8"
                 >
-                  <MarkdownDescription>{fieldSchema.description}</MarkdownDescription>
+                  <MarkdownDescription dark>{fieldSchema.description}</MarkdownDescription>
                 </TooltipContent>
               </Tooltip>
             </div>

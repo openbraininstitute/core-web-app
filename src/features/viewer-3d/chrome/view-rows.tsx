@@ -6,7 +6,7 @@ import { BackgroundToggle } from '@/features/scan-config/components/color-by/chr
 
 import { HelpRow, ICON, ToggleRow } from './menu-rows';
 
-import type { Projection } from '../engine/scene-viewer';
+import type { Projection } from '../engine/scene-view';
 import type { HelpText } from '../help/help-button';
 
 interface ViewSettings {

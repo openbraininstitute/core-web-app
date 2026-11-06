@@ -15,6 +15,7 @@ import {
   ELECTRODE_LOCATIONS_CONFIG_KEY,
   seedElectrodeInitialOrigin,
 } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
+import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import Block from '@/features/scan-config/components/ui-blocks/block';
 import { ScanValueSelectorProvider } from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { isPlainObject } from '@/features/scan-config/components/utils';
@@ -251,7 +252,9 @@ export default function BlockDictionary({
                 }}
                 data-scan-config-block-element-item={`${blockDictionarySchema.ui_element}_item`}
               >
-                <span className="text-primary-9 block text-lg font-bold">{o.title}</span>
+                <span className="text-primary-9 block text-lg font-bold">
+                  {renderMathInText(o.title)}
+                </span>
                 <MarkdownDescription className="mt-3">{o.description}</MarkdownDescription>
               </button>
             </TooltipTrigger>

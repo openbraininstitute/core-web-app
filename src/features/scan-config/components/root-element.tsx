@@ -1,12 +1,12 @@
 import { CheckCircleFilled, WarningFilled } from '@ant-design/icons';
-import { lowerCase, upperFirst } from 'es-toolkit/compat';
 import { useSetAtom } from 'jotai';
 
 import BlockDictionaryEntries from '@/features/scan-config/components/block-dictionary-entries';
-import { Chevron, LeftMenuTab } from '@/features/scan-config/components/components';
+import { Chevron, CountBadge, LeftMenuTab } from '@/features/scan-config/components/components';
 import { EModelOptimisationMechanismsTabList } from '@/features/scan-config/components/emodel-optimisation-mechanisms-tabs';
 import { useFieldErrorsForPath } from '@/features/scan-config/components/hooks/field-errors';
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
+import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { useRootElementDiff } from '@/features/scan-config/hooks/use-root-element-diff';
 import {
@@ -22,6 +22,7 @@ import {
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
 import { expandedRootElementsAtom } from '@/state/config-highlights';
+import { MarkdownDescription } from '@/ui/molecules/markdown-description';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
@@ -183,19 +184,7 @@ export function RootElement({
                 />
               </span>
               <div className="flex items-center gap-3">
-                {entryCount ? (
-                  <span
-                    className={cn(
-                      // 1em box: the same height as the status mark beside it
-                      'inline-flex h-[1em] min-w-[1em] shrink-0 items-center justify-center rounded-full px-[0.2em]',
-                      isSelected ? 'bg-white text-primary-8' : 'bg-primary-8 text-white'
-                    )}
-                  >
-                    <span className="text-[0.7em] leading-none font-semibold tabular-nums">
-                      {entryCount}
-                    </span>
-                  </span>
-                ) : null}
+                {entryCount ? <CountBadge count={entryCount} selected={isSelected} /> : null}
 
                 {errors?.find((error) => error.instancePath.startsWith(`/${rootElement}`)) ||
                 hasFieldErrors ? (
@@ -229,7 +218,7 @@ export function RootElement({
           )}
           arrowClassName="bg-primary-8"
         >
-          {rootElementSchema.description}
+          <MarkdownDescription dark>{rootElementSchema.description}</MarkdownDescription>
         </TooltipContent>
       </Tooltip>
 
@@ -243,6 +232,7 @@ export function RootElement({
             setSelectedMechanismsTab(key);
             setEditing(true);
           }}
+          value={config[rootElement]}
           errors={errors}
         />
       )}
@@ -296,7 +286,7 @@ function SelectedUnionVariantLabel({
   fallbackTitle?: string;
 }) {
   if (rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion)
-    return upperFirst(lowerCase(fallbackTitle));
+    return fallbackTitle && renderMathInText(fallbackTitle);
 
   const unionSchema = rootElementSchema as IRootBlockUnion;
   const discriminatorProp = unionSchema.discriminator
@@ -316,5 +306,6 @@ function SelectedUnionVariantLabel({
       })
     : undefined;
 
-  return upperFirst(lowerCase(selectedVariant?.title ?? fallbackTitle));
+  const title = selectedVariant?.title ?? fallbackTitle;
+  return title && renderMathInText(title);
 }

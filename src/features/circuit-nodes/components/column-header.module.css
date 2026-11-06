@@ -54,6 +54,28 @@
   white-space: nowrap;
 }
 
+/* A label that may take two lines sits closer to the buttons, so they stay near level with the next column's. */
+.wrapped {
+  gap: 4px;
+}
+
+/* Two lines at most, where a narrow column would cut a two-word label short. */
+.labelTextWrap {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-height: 1.15;
+  white-space: normal;
+}
+
+.unit {
+  flex: 0 0 auto;
+  margin-left: 1px;
+  font-size: 0.625rem;
+  font-weight: 400;
+  color: #a3a3a3;
+}
+
 .sortIcon {
   flex: 0 0 auto;
   color: var(--color-primary-9);

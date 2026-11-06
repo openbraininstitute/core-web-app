@@ -14,7 +14,6 @@ import {
   collectWorkflowSessionRefs,
   getAllRefsFromParsed,
   parseModelIdentifierFieldValue,
-  readFieldMaxItems,
   resolveEntityFetchTarget,
   serializeModelIdentifierFieldValue,
 } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/helpers';
@@ -27,6 +26,7 @@ import {
   type TModelIdentifierMultiple,
   type TScanConfigUIElementDict,
 } from '@/features/scan-config/types';
+import { readFieldMaxItems } from '@/features/scan-config/workflow/selection-cap';
 import { ModelIdentifierFieldStorageMode } from '@/features/scan-config/workflow/workflow-schema-selection';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { cn } from '@/utils/css-class';
@@ -381,7 +381,7 @@ type OuterProps = Omit<Props, 'maxSelections' | 'blockElement' | 'paramSchema'>;
 export function ModelIdentifierMultiple(
   props: OuterProps & { paramSchema: TModelIdentifierMultiple }
 ) {
-  const maxSelections = readFieldMaxItems(props.paramSchema as unknown as Record<string, unknown>);
+  const maxSelections = readFieldMaxItems(props.paramSchema);
   return (
     <ModelIdentifierField
       {...props}

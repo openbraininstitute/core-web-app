@@ -1,32 +1,4 @@
-import {
-  ScalebarOrientation,
-  ScalebarSide,
-  ScalebarWhen,
-} from '@openbraininstitute/morphoviewer/dist/components/types';
-
 import { backgroundIsDark } from '@/features/scan-config/components/color-by/contrast';
-
-import type { ScalebarConfig } from '@openbraininstitute/morphoviewer/dist/components/types';
-
-/** Scalebar defaults for circuit viewers: right pins + labels always visible. */
-export const VERTICAL_SCALEBAR: ScalebarConfig = {
-  orientation: ScalebarOrientation.Vertical,
-  hiDPI: true,
-  margin: { x: 0, y: 10 },
-  pins: { left: ScalebarWhen.Never, right: ScalebarWhen.Always },
-  labels: { show: ScalebarWhen.Always, side: ScalebarSide.Right },
-} as const;
-
-/**
- * The scalebar config for a circuit viewer, or `false` to leave it out.
- *
- * Shared because both viewers resolve it the same way, and a scalebar that differed
- * between the small and large circuit views would read as a bug.
- */
-export function resolveScalebar(show: boolean, color?: string): ScalebarConfig | false {
-  if (!show) return false;
-  return color ? { ...VERTICAL_SCALEBAR, color } : VERTICAL_SCALEBAR;
-}
 
 const WATERMARK_TITLE = 'Open Brain Institute';
 const WATERMARK_URL = 'www.openbraininstitute.org';
@@ -78,34 +50,18 @@ function triggerDownload(url: string, filename: string): void {
 }
 
 /**
- * download a viewer-captured image (from `onCapture`) as a watermarked PNG. The
- * captured image is redrawn onto a 2D canvas so the "Open Brain Institute"
- * watermark can be composited on top; object URLs we create are revoked after
- * the download starts.
+ * Download the viewer's frame, a 2D canvas of its own, as a PNG with the "Open Brain Institute" watermark drawn on
+ * it; the object URL is revoked after the download starts.
  */
 export function downloadCircuitImage(
-  image: HTMLImageElement,
+  frame: HTMLCanvasElement,
   name: string,
   backgroundColor: string
 ): void {
   const filename = `${(name || 'circuit').replace(/[^\w.-]+/g, '_')}.png`;
-  const width = image.naturalWidth || image.width;
-  const height = image.naturalHeight || image.height;
-  const ctx = width && height ? document.createElement('canvas').getContext('2d') : null;
-  if (!ctx) {
-    // fall back to the raw capture if a 2D context isn't available
-    triggerDownload(image.src, filename);
-    setTimeout(() => URL.revokeObjectURL(image.src), 10_000);
-    return;
-  }
-
-  ctx.canvas.width = width;
-  ctx.canvas.height = height;
-  ctx.drawImage(image, 0, 0, width, height);
-  drawWatermark(ctx, width, height, watermarkColor(backgroundColor));
-  URL.revokeObjectURL(image.src);
-
-  ctx.canvas.toBlob((blob) => {
+  const ctx = frame.getContext('2d');
+  if (ctx) drawWatermark(ctx, frame.width, frame.height, watermarkColor(backgroundColor));
+  frame.toBlob((blob) => {
     if (!blob) return;
     const url = URL.createObjectURL(blob);
     triggerDownload(url, filename);

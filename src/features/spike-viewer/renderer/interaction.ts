@@ -4,8 +4,8 @@ import type { PlotRect, ViewBounds } from '@/features/spike-viewer/renderer/axis
 
 const MIN_RANGE = 1e-6;
 const MIN_DRAG_PX = 5;
-// Long enough to cover a comfortable double-click, short enough that a seek
-// still feels like it answers the click.
+// Long enough to cover a comfortable double-click, short enough that a click
+// still feels answered.
 const DBLCLICK_MS = 300;
 
 export type HoverInfo = {
@@ -33,17 +33,18 @@ export class InteractionManager {
   private selectionEl: HTMLDivElement;
 
   private drag: DragState | null = null;
+  /** A press outside the plot and its axes, which only a click can come of. */
+  private press: { x: number; y: number; pointerId: number } | null = null;
   private seekTimer = 0;
 
   onViewChange: ((bounds: ViewBounds) => void) | null = null;
   onHover: ((info: HoverInfo | null) => void) | null = null;
   /**
-   * A plain click inside the plot, as a time in ms.
-   *
+   * A plain click inside the plot, where it landed, for what is under it.
    * Drag already means zoom and shift-drag means pan, so a click that never
-   * moved was the one gesture left unused.
+   * moved was the one gesture left.
    */
-  onSeek: ((timeInMs: number) => void) | null = null;
+  onClick: ((info: HoverInfo) => void) | null = null;
 
   constructor(element: HTMLElement) {
     this.element = element;
@@ -83,6 +84,13 @@ export class InteractionManager {
   setInitialView(bounds: ViewBounds) {
     this.initialView = { ...bounds };
     this.view = { ...bounds };
+  }
+
+  /** Show these bounds, as a drag would, kept inside the data. */
+  setView(bounds: ViewBounds) {
+    this.view = { ...bounds };
+    this.clampView();
+    this.onViewChange?.(this.view);
   }
 
   setPlotRect(rect: PlotRect) {
@@ -128,7 +136,8 @@ export class InteractionManager {
     const { x: px, y: py } = this.elementPoint(clientX, clientY);
     const { x, y, width, height } = this.plotRect;
     const normX = (px - x) / width;
-    const normY = 1 - (py - y) / height;
+    // Rows run down from the top.
+    const normY = (py - y) / height;
     return {
       x: this.view.xMin + normX * (this.view.xMax - this.view.xMin),
       y: this.view.yMin + normY * (this.view.yMax - this.view.yMin),
@@ -209,7 +218,10 @@ export class InteractionManager {
     } else if (this.isInYAxisArea(e.clientX, e.clientY)) {
       mode = 'zoom-y';
     }
-    if (!mode) return;
+    if (!mode) {
+      this.press = { x: e.clientX, y: e.clientY, pointerId: e.pointerId };
+      return;
+    }
 
     e.preventDefault();
     this.drag = {
@@ -233,7 +245,7 @@ export class InteractionManager {
         const xRange = this.view.xMax - this.view.xMin;
         const yRange = this.view.yMax - this.view.yMin;
         const dataX = -(dx / this.plotRect.width) * xRange;
-        const dataY = (dy / this.plotRect.height) * yRange;
+        const dataY = -(dy / this.plotRect.height) * yRange;
 
         this.view = {
           xMin: this.view.xMin + dataX,
@@ -266,6 +278,14 @@ export class InteractionManager {
   };
 
   private readonly handlePointerUp = (e: PointerEvent) => {
+    const press = this.press;
+    this.press = null;
+    if (!this.drag && press?.pointerId === e.pointerId) {
+      if (Math.hypot(e.clientX - press.x, e.clientY - press.y) < MIN_DRAG_PX) {
+        this.clickAt(e.clientX, e.clientY);
+      }
+      return;
+    }
     if (!this.drag || this.drag.pointerId !== e.pointerId) return;
 
     const drag = this.drag;
@@ -289,13 +309,9 @@ export class InteractionManager {
           : dx >= MIN_DRAG_PX || dy >= MIN_DRAG_PX;
     if (!significant) {
       // Held for one double-click interval so that resetting the view does not
-      // also move time: a double-click is two of these pairs, and both land
+      // also pick a cell: a double-click is two of these pairs, and both land
       // before the dblclick that cancels them.
-      if (drag.mode === 'zoom-xy') {
-        const timeInMs = this.pixelToData(drag.lastClient.x, drag.lastClient.y).x;
-        window.clearTimeout(this.seekTimer);
-        this.seekTimer = window.setTimeout(() => this.onSeek?.(timeInMs), DBLCLICK_MS);
-      }
+      this.clickAt(drag.lastClient.x, drag.lastClient.y);
       return;
     }
 
@@ -324,6 +340,20 @@ export class InteractionManager {
     this.clampView();
     this.onViewChange?.(this.view);
   };
+
+  /** A click where it landed, told one double-click interval late so a double-click is not one. */
+  private clickAt(clientX: number, clientY: number) {
+    const data = this.pixelToData(clientX, clientY);
+    const rect = this.element.getBoundingClientRect();
+    const info: HoverInfo = {
+      dataX: data.x,
+      dataY: data.y,
+      pixelX: clientX - rect.left,
+      pixelY: clientY - rect.top,
+    };
+    window.clearTimeout(this.seekTimer);
+    this.seekTimer = window.setTimeout(() => this.onClick?.(info), DBLCLICK_MS);
+  }
 
   private readonly handlePointerLeave = () => {
     if (!this.drag) this.onHover?.(null);

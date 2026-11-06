@@ -4,6 +4,7 @@ import { RiArrowDownSLine } from '@remixicon/react';
 import { Checkbox, Radio } from 'antd';
 import { Fragment, useState } from 'react';
 
+import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
 import {
   DEFAULT_PARAMETER_MODE,
   hasErrorAt,
@@ -275,17 +276,17 @@ export function ParameterRow({
       className="flex flex-col gap-2 rounded border border-gray-200 bg-white p-3"
     >
       <div className="flex items-center justify-between gap-3">
-        <span className="text-primary-8 min-w-0 truncate text-sm font-medium">{name}</span>
-        <div className="flex shrink-0 items-center gap-3">
-          {unit && <span className="text-xs text-gray-500">{unit}</span>}
-          {onToggle && (
-            <Checkbox
-              checked={checked}
-              disabled={disabled}
-              onChange={(e) => onToggle(e.target.checked)}
-            />
-          )}
-        </div>
+        <span className="flex min-w-0 items-center">
+          <span className="text-primary-8 min-w-0 truncate text-sm font-medium">{name}</span>
+          {unit && <FieldUnit unit={unit} className="text-sm" />}
+        </span>
+        {onToggle && (
+          <Checkbox
+            checked={checked}
+            disabled={disabled}
+            onChange={(e) => onToggle(e.target.checked)}
+          />
+        )}
       </div>
 
       {checked && optimizationValue && (
@@ -343,9 +344,7 @@ export function ParameterRow({
 
           {distribution !== undefined && availableDistributions && onDistributionChange && (
             <div className="mt-1 flex flex-col gap-1.5">
-              <span className="text-[11px] font-medium tracking-wide text-gray-400 uppercase">
-                Distance distribution
-              </span>
+              <span className="text-[11px] font-medium text-gray-400">Distance distribution</span>
               <DistributionPicker
                 value={distribution}
                 options={availableDistributions}

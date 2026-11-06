@@ -6,6 +6,12 @@ import { classNames } from '@/util/utils';
 import type { ReactNode } from 'react';
 import type { TActivityCustomFile } from '@/features/scan-config/types';
 
+/**
+ * The single config obi-one writes for every simulation or task of a campaign,
+ * whatever the workflow and its asset's label: named alike in every one.
+ */
+const OBI_ONE_CONFIG_FILE = 'obi_one_coordinate.json';
+
 function splitName(name: string | undefined): { head: string; tail: string } {
   const MAX_TAIL = 12;
   if (!name || name.length <= MAX_TAIL * 2) return { head: name ?? '', tail: '' };
@@ -22,16 +28,24 @@ type Props = {
   file: TActivityCustomFile;
   selected?: boolean;
   label?: ReactNode;
+  /** Opens an interactive view, such as a report's statistics: its tag is white on purple, as the button opening them is. */
+  interactive?: boolean;
   onSelect: (file: TActivityCustomFile) => void;
 };
 
-export function TaskIOFileItem({ id, name, file, selected, label, onSelect }: Props) {
+export function TaskIOFileItem({ id, name, file, selected, label, interactive, onSelect }: Props) {
   const asset = isAssetBackedFile(file) ? file.asset : undefined;
   const assetPath = isAssetBackedFile(file) ? file.assetPath : undefined;
   const fileName = assetPath?.split('/').at(-1) ?? asset?.path.split('/').at(-1);
   const isDirectory = !!asset && isDirectoryAsset(asset);
   const isCircuitDirectory = isDirectory && asset?.label === AssetLabel.sonata_circuit;
-  const displayName = name ?? (isCircuitDirectory ? 'Circuit directory' : fileName);
+  const displayName =
+    name ??
+    (isCircuitDirectory
+      ? 'Circuit directory'
+      : fileName === OBI_ONE_CONFIG_FILE
+        ? 'OBI-ONE Config'
+        : fileName);
   // a directory asset has no extension to fall back on, and "figures" is not a format
   const badgeContent = label ?? (isDirectory ? 'folder' : fileName?.split('.').at(-1));
   const { head, tail } = splitName(displayName);
@@ -54,7 +68,7 @@ export function TaskIOFileItem({ id, name, file, selected, label, onSelect }: Pr
     >
       <div
         className={classNames(
-          'flex min-w-36 flex-1 basis-0 items-baseline overflow-hidden font-semibold whitespace-nowrap text-left',
+          'flex min-w-20 flex-1 basis-0 items-baseline overflow-hidden font-semibold whitespace-nowrap text-left',
           selected ? 'text-white' : 'text-primary-9'
         )}
       >
@@ -63,11 +77,15 @@ export function TaskIOFileItem({ id, name, file, selected, label, onSelect }: Pr
       </div>
       <span
         className={classNames(
-          'min-w-0 max-w-[48%] truncate rounded-full border px-4 uppercase text-xs py-1',
+          // Its margins pulled in, a tag of two lines reaches into the row's padding
+          // rather than making the row taller; the name sets the row's height. It
+          // keeps its width up to its cap, so a short name gives way, not the tag.
+          'min-w-0 max-w-[48%] shrink-0 truncate rounded-full border px-4 uppercase text-xs py-1 -my-2',
           'transition-[max-width] duration-200 ease-[cubic-bezier(0.2,0,0,1)] hover:max-w-[88%]',
           selected
             ? 'border-white text-primary-9 bg-white'
-            : 'border-[oklch(0.968_0.007_247.896)] bg-[oklch(0.929_0.013_255.508)] text-neutral-5'
+            : 'border-[oklch(0.968_0.007_247.896)] bg-[oklch(0.929_0.013_255.508)] text-neutral-5',
+          interactive && 'border-purple-600! bg-purple-600! text-white!'
         )}
       >
         {badgeContent}

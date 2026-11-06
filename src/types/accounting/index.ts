@@ -50,6 +50,7 @@ export enum ServiceSubtype {
   Mcp = 'mcp',
   MlRag = 'ml-rag',
   Notebook = 'notebook',
+  ResearchAgent = 'research-agent',
   SmallCircuitSim = 'small-circuit-sim',
   // { CircuitScale simulations
   SingleCellSimulation = 'single-sim',

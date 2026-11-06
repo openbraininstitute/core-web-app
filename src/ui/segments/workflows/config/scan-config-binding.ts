@@ -34,8 +34,10 @@ export const ScanConfigGeneratedApiPath = {
     'create-extracellular-recording-array-scan-config-generate-grid',
   BuildSynaptome: 'me-model-synaptic-model-placement-scan-config-generate-grid',
   EModelOptimization: 'e-model-optimization-scan-config-generate-grid',
+  EModelValidation: 'e-model-validation-scan-config-generate-grid',
   SynapseParameterization: 'synapse-parameterization-scan-config-generate-grid',
   IonChannelFitting: 'ion-channel-fitting-scan-config-generate-grid',
+  MEModelBuild: 'me-model-build-scan-config-generate-grid',
 } as const;
 
 /** Maps browse/session entity types to scan-config API, schema, and FromID wiring. */
@@ -273,6 +275,15 @@ export function buildIonChannelConfigureBinding(): TScanConfigConfigureBinding {
   };
 }
 
+export function buildMEModelConfigureBinding(): TScanConfigConfigureBinding {
+  return {
+    browseType: ExtendedEntitiesTypeDict.Memodel,
+    scanConfigEntityType: ExtendedEntitiesTypeDict.Memodel,
+    fromIdTypeByBrowseType: {},
+    generatedApiPath: ScanConfigGeneratedApiPath.MEModelBuild,
+  };
+}
+
 export function wholeBrainCircuitSimulationConfigureBinding(): TScanConfigConfigureBinding {
   return {
     browseType: ExtendedEntitiesTypeDict.WholeBrain,
@@ -296,5 +307,16 @@ export function optimizeEModelConfigureBinding(): TScanConfigConfigureBinding {
     // FromID selection to write under `initialize` — configure opens with nothing picked.
     fromIdTypeByBrowseType: {},
     generatedApiPath: ScanConfigGeneratedApiPath.EModelOptimization,
+  };
+}
+
+export function validateEModelConfigureBinding(): TScanConfigConfigureBinding {
+  return {
+    browseType: ExtendedEntitiesTypeDict.Emodel,
+    scanConfigEntityType: ExtendedEntitiesTypeDict.Emodel,
+    // The e-model validation scan-config has no `model_identifier` field, so there is no
+    // FromID selection to write under `initialize` — configure opens with nothing picked.
+    fromIdTypeByBrowseType: {},
+    generatedApiPath: ScanConfigGeneratedApiPath.EModelValidation,
   };
 }

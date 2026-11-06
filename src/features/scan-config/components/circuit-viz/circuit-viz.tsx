@@ -1,118 +1,50 @@
 import { useSetAtom } from 'jotai';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 
+import { LazyCircuitCells } from '@/features/circuit-viewer/morphologies/lazy-circuit-cells';
+import { PLACEHOLDER_SOMA_RADIUS } from '@/features/circuit-viewer/morphologies/load/place-trees';
+import { sectionNumbered } from '@/features/circuit-viewer/morphologies/sections';
+import { useCellClick } from '@/features/circuit-viewer/morphologies/use-cell-click';
+import { useTreeMorphologies } from '@/features/circuit-viewer/morphologies/use-tree-morphologies';
+import { DEFAULT_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
 import { DEFAULT_ELECTRODE_RADIUS } from '@/features/scan-config/components/color-by/use-viewer-config';
-import { useMorphologyLocationSelection } from '@/features/scan-config/components/hooks/use-morphology-location-selection';
-import { circuitSceneAnchorAtom } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
-import { resolveScalebar } from '@/features/scan-config/components/shared/3d-viewer';
+import { useMorphologyLocationPreviews } from '@/features/scan-config/components/hooks/use-morphology-location-previews';
+import { usePublishAnchor } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
+import {
+  hiddenLocationNodesAtom,
+  isExplicitLocationsBlockType,
+  MORPHOLOGY_LOCATIONS_CONFIG_KEY,
+  readEntry,
+} from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
-import { MorphoViewerCircuitMultipleNeurons } from '@/morpho-viewer';
 
+import { GeneratedLocationsLegend } from './morphology-location/generated-legend';
 import { MorphologyLocationLabels } from './morphology-location/labels';
 import { MorphologyLocationPopover } from './morphology-location/popover';
-import { sequentialCellLoader } from './sequential-loader';
+import { MorphologyLocationPreviewStatus } from './morphology-location/preview-status';
+import { useLocationSelection } from './morphology-location/use-location-selection';
 import {
   circuitDrawsSynapses,
   useMemodelVisualizationSource,
   useSmallCircuitSource,
 } from './sources';
-import { parseNodeKey } from './sources/node-key';
 import { SynapseLegend } from './synapse-legend';
 
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
-import type { NodePopulation } from '@/features/circuit-nodes/types';
-import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
-import type { NodeColors } from '@/features/scan-config/components/color-by/types';
-import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
-import type { IFormBindingOptions } from '@/features/scan-config/components/model-preview/morphology-locations-block';
-import type { Cell } from '@/features/scan-config/types';
 import type {
-  MorphoViewerOverlayTransformEvent,
-  MorphoViewerSignals,
-  MorphoViewerSmallCircuitCell,
-} from '@/morpho-viewer';
+  CircuitCellsHostProps,
+  CircuitViewerHostProps,
+} from '@/features/circuit-viewer/host-props';
+import type { Population } from '@/features/circuit-viewer/morphologies/types';
+import type { ViewerTheme } from '@/features/scan-config/components/color-by/contrast';
+import type { IFormBindingOptions } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import type { SmallCircuitSource } from './sources';
-
-import styles from './circuit-viz.module.css';
-
-/**
- * Synapse marker radius in world units. Much smaller than an electrode contact:
- * a single neuron carries thousands of them, so anything larger reads as a
- * crust over the morphology instead of discrete contact points.
- */
-const SYNAPSE_RADIUS = 0.5;
 
 /** Nothing hidden, shared so the initial state is one object rather than one per viewer. */
 const EMPTY_LABELS: ReadonlySet<string> = new Set();
+const NO_POPULATIONS: Population[] = [];
 
-/** Per-pixel floor so synapses stay visible once the camera pulls back. */
-const SYNAPSE_MIN_RADIUS_IN_PIXELS = 2;
-
-interface CircuitVizProps {
-  circuit: ICircuit;
-  /**
-   * SONATA node population to draw. Host-owned and shared with colour-by, so
-   * `nodeColors` stays indexed against the same nodes this draws.
-   */
-  population?: NodePopulation;
-  /** per-node colors (a palette + column per node); undefined → viewer default (blue). */
-  nodeColors?: NodeColors;
-  /** default color for nodes with no property color (adapts to bg in adaptive mode). */
-  defaultColor?: string;
-  /**
-   * Every population to draw, in declared order, including `population`. The
-   * others are drawn receded, keeping the morphologies of those that have any,
-   * or not at all when their nodes carry no positions.
-   */
-  populations: readonly NodePopulation[];
-  /**
-   * Populations taken out of the scene, by name. Here that is a real saving
-   * rather than a repaint: a hidden population contributes no cells, and the
-   * viewer only asks for the morphologies of cells it has been given.
-   */
-  hiddenPopulations?: readonly string[];
-  /** Colour for the populations that are not on show. */
-  recededColor?: string;
-  /** Called with the population name when a cell of another population is clicked. */
-  onPopulationClick?: (populationName: string) => void;
-  showAxons: boolean;
-  backgroundColor: string;
-  /** scalebar pin/label color (adaptive mode); undefined → package default. */
-  scalebarColor?: string;
-  /** Draw the scalebar down the side of the canvas. */
-  showScalebar?: boolean;
-  /** signal bus: dispatch camera reset / snapshot; `snapshotReady` returns the image */
-  signals: MorphoViewerSignals;
-  /**
-   * World-coordinate electrode overlays from {@link usePlacedElectrodeOverlays}.
-   * Passed through to morphoviewer as point clouds (not Three.js helpers).
-   */
-  overlays?: ICircuitOverlayGroup[];
-  /**
-   * Enable left-drag (translate) / right-drag or Alt/Shift (rotate) on overlays.
-   * Why gated: only when `setConfig` exists so 3D edits can write the form.
-   */
-  overlaysInteractive?: boolean;
-  /**
-   * Fired by morphoviewer on gesture end with absolute origin + rotation.
-   * Host applies via {@link applyElectrodeOverlayTransform}.
-   */
-  onOverlayTransform?: (event: MorphoViewerOverlayTransformEvent) => void;
-  /** Form-selected electrode block name → highlight in the 3D view. */
-  highlightedOverlayId?: string | null;
-  /**
-   * Neuron paint opacity (0–1). Host defaults: 1 generally, 0.2 for the
-   * extracellular recording array campaign. Electrode markers stay opaque.
-   */
-  neuronOpacity?: number;
-  /** Electrode marker radius in world units (morphoviewer `overlaysRadius`). */
-  electrodeRadius?: number;
-  /**
-   * Viewer feature flags from domain `viewer` (via host).
-   * Only `cellHover` is consumed here today.
-   */
-  features?: Partial<Pick<IEntityViewerFeatures, 'cellHover'>>;
+interface CircuitVizProps extends CircuitViewerHostProps, CircuitCellsHostProps {
   /**
    * Binding for picking morphology locations in 3D.
    *
@@ -122,16 +54,14 @@ interface CircuitVizProps {
   morphologyLocations?: IMorphologyLocationsBinding;
   /** Morph the cell into a dendrogram of the same segments. */
   dendrogram?: boolean;
-  /** Called with the camera zoom whenever it changes, the user's own scrolling included. */
-  onZoomChange?: (zoom: number) => void;
-  /** Spikes to replay over the circuit, and the transport driving them. */
-  spikes?: ISpikeReplayBinding;
   /**
-   * Whether the host draws its own controls in the viewer's top-right corner.
-   * The synapse legend sits below them when it does and takes the corner itself
-   * when it does not.
+   * The host chrome's top-right column, which the legends flow into under the colour-by key so
+   * the open key cannot cover them. Undefined when the host draws nothing there, and the legends
+   * take the corner themselves; null while it mounts.
    */
-  chromeTopRight?: boolean;
+  legendTarget?: HTMLElement | null;
+  /** Background-derived chrome theme for the legends; null keeps the fixed light styling. */
+  theme?: ViewerTheme | null;
 }
 
 export interface IMorphologyLocationsBinding extends IFormBindingOptions {
@@ -152,8 +82,13 @@ export interface IMorphologyLocationsBinding extends IFormBindingOptions {
 export function CircuitVisualization({
   populations,
   hiddenPopulations,
+  shownCells,
+  highlightedCell,
   recededColor,
   onPopulationClick,
+  nodeColors,
+  onSubjectCellClick,
+  onPositionlessPopulationsChange,
   ...props
 }: CircuitVizProps) {
   const source = useSmallCircuitSource({
@@ -161,25 +96,26 @@ export function CircuitVisualization({
     population: props.population,
     populations,
     hiddenPopulations,
-    showAxons: props.showAxons,
-    nodeColors: props.nodeColors,
-    defaultColor: props.defaultColor,
+    shownCells,
+    highlightedCell,
+    nodeColors,
     recededColor,
     withSynapses: circuitDrawsSynapses(props.circuit.scale),
+    onPositionlessPopulationsChange,
   });
-  const subjectName = props.population?.name;
-  const handleCellClick = useCallback(
-    (cell: MorphoViewerSmallCircuitCell | undefined) => {
-      const node = cell && parseNodeKey(cell.id);
-      if (node && node.population !== subjectName) onPopulationClick?.(node.population);
-    },
-    [subjectName, onPopulationClick]
+
+  const handleCellClick = useCellClick(
+    source.tree?.somas.populations ?? NO_POPULATIONS,
+    props.population?.name,
+    onPopulationClick,
+    onSubjectCellClick
   );
   return (
     <CircuitVizView
       {...props}
+      entityId={props.circuit.id}
       source={source}
-      onCellClick={onPopulationClick ? handleCellClick : undefined}
+      onCellClick={onPopulationClick || onSubjectCellClick ? handleCellClick : undefined}
     />
   );
 }
@@ -187,27 +123,30 @@ export function CircuitVisualization({
 /** The view reads no entity fields, so it serves circuits and MEModels alike. */
 type TCircuitVizViewProps = Omit<
   CircuitVizProps,
-  // `nodeColors` and `defaultColor` feed `useSmallCircuitSource` in the
-  // wrapper; the view itself never reads them.
   | 'circuit'
   | 'population'
   | 'populations'
   | 'hiddenPopulations'
+  | 'shownCells'
+  | 'highlightedCell'
   | 'recededColor'
   | 'onPopulationClick'
+  | 'onSubjectCellClick'
+  | 'onPositionlessPopulationsChange'
   | 'nodeColors'
-  | 'defaultColor'
 > & {
   source: SmallCircuitSource;
-  /** Whole-cell clicks, from the same pick pass as `cellHover`. */
-  onCellClick?: (cell: MorphoViewerSmallCircuitCell | undefined) => void;
+  /** The circuit or MEModel on show, which generated morphology locations are previewed on. */
+  entityId: string;
+  /** Whole-cell clicks, by the cell's number in the source's scene. */
+  onCellClick?: (cell: number) => void;
 };
 
 function CircuitVizView({
-  showAxons,
+  showAxons = true,
   backgroundColor,
-  scalebarColor,
   showScalebar = true,
+  spin,
   signals,
   overlays,
   overlaysInteractive = false,
@@ -217,40 +156,82 @@ function CircuitVizView({
   electrodeRadius = DEFAULT_ELECTRODE_RADIUS,
   features,
   source,
+  entityId,
   morphologyLocations,
   dendrogram = false,
   onZoomChange,
   spikes,
-  chromeTopRight = false,
+  onGlowAvailableChange,
+  onEmptyClick,
+  legendTarget,
+  theme,
   onCellClick,
+  defaultColor = DEFAULT_NEURON_COLOR,
+  debugTarget,
 }: TCircuitVizViewProps) {
-  const enableCellHover = features?.cellHover ?? true;
   const {
-    selection: locationSelection,
-    hover: locationHover,
-    labels: locationLabels,
-    pickMode: locationPickMode,
-  } = useMorphologyLocationSelection({
-    ...morphologyLocations,
-    cells: source.locationCells ?? source.cells,
-    sonataSectionIds: source.sonataSectionIds,
-    backgroundColor,
+    tree,
+    cellColors,
+    hidden,
+    locationCells,
+    locationFirstCell,
+    locationNodeCount,
+    error,
+    synapses,
+    anchor,
+    download,
+  } = source;
+  const morphologies = useTreeMorphologies(tree, { axons: showAxons, hidden });
+  const locationPreviews = useMorphologyLocationPreviews({
+    config: morphologyLocations?.config,
+    entityId,
+    // The same single-morphology models the preview endpoint accepts.
+    enabled: Boolean(morphologyLocations?.singleMorphology),
   });
-  const [progress, setProgress] = useState(0);
-  const [morphologiesPainted, setMorphologiesPainted] = useState(false);
-  const { cells, isLoading, error, loadCell, retry, synapses, anchor, download } = source;
-  // Labels the legend is hiding. Held here because the legend names them and
-  // the viewer is handed what is left.
+  const openLocationBlock =
+    morphologyLocations?.selectedRootElement === MORPHOLOGY_LOCATIONS_CONFIG_KEY
+      ? readEntry(morphologyLocations.config, morphologyLocations.selectedEntry)
+      : null;
+  // Blocks the legend is hiding, by entry. Only the markers go: the legend still lists them.
+  const [hiddenLocationBlocks, setHiddenLocationBlocks] =
+    useState<ReadonlySet<string>>(EMPTY_LABELS);
+  const toggleLocationBlock = useCallback(
+    (entry: string) => setHiddenLocationBlocks((current) => toggled(current, entry)),
+    []
+  );
+  const visibleGeneratedLocations = useMemo(
+    () =>
+      hiddenLocationBlocks.size === 0
+        ? locationPreviews.locations
+        : locationPreviews.locations.filter(({ entry }) => !hiddenLocationBlocks.has(entry)),
+    [locationPreviews.locations, hiddenLocationBlocks]
+  );
+  // A location is drawn only where the drawn tree has its section; one on the axon is not while axons are hidden.
+  const drawnGeneratedLocations = useMemo(() => {
+    const { data } = morphologies;
+    if (!data?.trees || morphologies.loaded < morphologies.total) return undefined;
+    const drawn = new Map<string, number>();
+    for (const { entry, section_id: sonataId } of locationPreviews.locations) {
+      const placed = locationCells.some((cell) => sectionNumbered(data, cell, sonataId) !== null);
+      drawn.set(entry, (drawn.get(entry) ?? 0) + (placed ? 1 : 0));
+    }
+    return drawn;
+  }, [morphologies, locationPreviews.locations, locationCells]);
+  usePublishHiddenLocationNodes(locationCells, locationFirstCell, locationNodeCount);
+  const { locations, hover, labels, pickMode, blockType } = useLocationSelection({
+    ...morphologyLocations,
+    cells: locationCells,
+    firstCell: locationFirstCell,
+    backgroundColor,
+    generatedLocations: visibleGeneratedLocations,
+  });
+  // Labels the legend is hiding. Held here because the legend names them and the viewer is handed what is left.
   const [hiddenSynapses, setHiddenSynapses] = useState<ReadonlySet<string>>(EMPTY_LABELS);
-  const toggleSynapseLabel = useCallback((label: string) => {
-    setHiddenSynapses((current) => {
-      const next = new Set(current);
-      if (!next.delete(label)) next.add(label);
-      return next;
-    });
-  }, []);
-  // Memoized because morphoviewer compares the array by identity and rebuilds
-  // the whole point cloud when it changes.
+  const toggleSynapseLabel = useCallback(
+    (label: string) => setHiddenSynapses((current) => toggled(current, label)),
+    []
+  );
+  // Memoised: other groups are drawn again.
   const visibleSynapses = useMemo(
     () =>
       hiddenSynapses.size === 0
@@ -258,167 +239,99 @@ function CircuitVizView({
         : synapses?.filter((group) => !hiddenSynapses.has(group.label)),
     [synapses, hiddenSynapses]
   );
-  const setCircuitSceneAnchor = useSetAtom(circuitSceneAnchorAtom);
-
-  const [reloadNonce, setReloadNonce] = useState(0);
-
-  const resetPaint = useCallback(() => {
-    setProgress(0);
-    setMorphologiesPainted(false);
-  }, []);
-
-  const handleRetry = useCallback(() => {
-    resetPaint();
-    setReloadNonce((nonce) => nonce + 1);
-    retry();
-  }, [resetPaint, retry]);
 
   // Publish circuit centre so Add-electrode can seed origin_* in-view.
-  useEffect(() => {
-    if (anchor) setCircuitSceneAnchor(anchor);
-  }, [anchor, setCircuitSceneAnchor]);
+  usePublishAnchor(anchor);
 
-  const scalebar = useMemo(
-    () => resolveScalebar(showScalebar, scalebarColor),
-    [scalebarColor, showScalebar]
-  );
+  // A morphology that cannot be read leaves its cell a soma; only a scene where none could be read is worth covering.
+  const unread = morphologies.total > 0 && morphologies.failed === morphologies.total;
+  const loading = !error && (!tree || morphologies.loaded < morphologies.total);
 
-  const [highlightedCellId, setHighlightedCellId] = useState('');
-  const draggingOverlayRef = useRef(false);
-  const handleCellHover = useCallback((cell: Cell | undefined): void => {
-    if (draggingOverlayRef.current) return;
-    setHighlightedCellId(cell?.id ?? '');
-  }, []);
-  const suspendHoverHighlight = () => {
-    if (!overlaysInteractive) return;
-    draggingOverlayRef.current = true;
-    setHighlightedCellId('');
-  };
-  const resumeHoverHighlight = () => {
-    draggingOverlayRef.current = false;
-  };
-
-  const highlightedCellIds = useMemo(
-    () => (enableCellHover ? [highlightedCellId] : []),
-    [enableCellHover, highlightedCellId]
-  );
-
-  // OBI-One axon toggle remounts morph keys — clear the sequential morphology cache.
-  const prevAxonRef = useRef(showAxons);
-  useEffect(() => {
-    if (prevAxonRef.current !== showAxons) {
-      prevAxonRef.current = showAxons;
-      sequentialCellLoader.clear();
-      resetPaint();
-    }
-  }, [showAxons, resetPaint]);
-
-  useEffect(() => {
-    if (progress < 1) {
-      setMorphologiesPainted(false);
-      return;
-    }
-    let inner = 0;
-    const outer = requestAnimationFrame(() => {
-      inner = requestAnimationFrame(() => setMorphologiesPainted(true));
-    });
-    return () => {
-      cancelAnimationFrame(outer);
-      cancelAnimationFrame(inner);
-    };
-  }, [progress]);
-
-  // Wait on the viewer's paint only where there is a viewer: with no cells it
-  // is never mounted, so its progress would never arrive and the indicator
-  // would sit for good over a scene the user emptied on purpose. Whether an
-  // empty scene is that or one still arriving is the source's to say.
-  const painting = cells.length > 0 && (progress < 1 || !morphologiesPainted);
-  const loading = !error && (isLoading || painting);
-
-  // What the second phase is counting. The scene already marks the cells with
-  // no morphology coming, and morphoviewer counts the rest, so the two agree
-  // without a second source of truth or a change to the viewer.
-  const morphologyCount = useMemo(() => cells.filter((cell) => !cell.somaOnly).length, [cells]);
-
-  // Pass interactive metadata through; morphoviewer ignores unknown fields safely.
-  const morphoOverlays = useMemo(
-    () =>
-      overlays?.map(({ color, coordinates, id, kind, origin, rotation }) => ({
-        color,
-        coordinates,
-        id,
-        kind,
-        origin,
-        rotation,
-      })),
-    [overlays]
+  const legends = (
+    <>
+      <SynapseLegend
+        groups={synapses}
+        hidden={hiddenSynapses}
+        onToggle={toggleSynapseLabel}
+        theme={theme}
+      />
+      <GeneratedLocationsLegend
+        entries={locationPreviews.entries}
+        locations={locationPreviews.locations}
+        drawn={drawnGeneratedLocations}
+        errors={locationPreviews.errors}
+        pending={locationPreviews.pending}
+        // As the markers have it, so each swatch matches its block's markers.
+        openEntry={morphologyLocations?.selectedEntry}
+        backgroundColor={backgroundColor}
+        hidden={hiddenLocationBlocks}
+        onToggle={toggleLocationBlock}
+        theme={theme}
+      />
+    </>
   );
 
   return (
-    <div
-      className="h-full w-full relative"
-      onPointerDown={suspendHoverHighlight}
-      onPointerUp={resumeHoverHighlight}
-      onPointerCancel={resumeHoverHighlight}
-      onPointerLeave={resumeHoverHighlight}
-    >
-      {cells.length > 0 && (
-        <MorphoViewerCircuitMultipleNeurons
-          gizmo
-          key={reloadNonce}
-          className={styles.morphoViewer}
+    <div className="h-full w-full relative">
+      {tree && (
+        <LazyCircuitCells
+          somas={tree.somas}
+          somaRadius={PLACEHOLDER_SOMA_RADIUS}
+          somaOpacity={neuronOpacity}
+          data={morphologies.data}
+          follow
+          crowding={false}
           dendrogram={dendrogram}
-          onZoomChange={onZoomChange}
-          scalebar={scalebar}
-          backgroundColor={backgroundColor}
-          signals={signals}
-          circuit={cells}
-          onCellHover={enableCellHover ? handleCellHover : undefined}
-          // Not while a location is being placed: morphoviewer dispatches the
-          // cell click and the location pick from the same tap, so a tap meant
-          // for a neurite would also put another population on show, recolouring
-          // the scene and swapping the nodes table under the user. The checklist
-          // still changes population.
-          onCellClick={locationPickMode ? undefined : onCellClick}
-          locationSelection={locationSelection}
-          highlightedCellIds={highlightedCellIds}
-          loadCell={loadCell}
-          controls={[]}
-          onLoadProgress={setProgress}
-          overlays={morphoOverlays}
-          overlaysRadius={electrodeRadius}
-          overlaysMinRadiusInPixels={Math.max(2, Math.round(electrodeRadius * 0.32))}
-          overlaysInteractive={overlaysInteractive}
-          onOverlayTransform={onOverlayTransform}
-          highlightedOverlayId={highlightedOverlayId}
-          neuronOpacity={neuronOpacity}
+          cellColors={cellColors}
+          defaultColor={defaultColor}
+          cellHover={(source.hover ?? true) && (features?.cellHover ?? true)}
+          // Not while a location is being placed: a tap meant for a neurite would also put another population on show,
+          // recolouring the scene and swapping the nodes table under the user. The checklist still changes population.
+          onCellClick={pickMode ? undefined : onCellClick}
+          electrodes={overlays}
+          electrodeRadius={electrodeRadius}
+          selectedElectrode={highlightedOverlayId}
+          onElectrodeTransform={overlaysInteractive ? onOverlayTransform : undefined}
+          locations={locations}
           synapses={visibleSynapses}
-          synapsesRadius={SYNAPSE_RADIUS}
-          synapsesMinRadiusInPixels={SYNAPSE_MIN_RADIUS_IN_PIXELS}
-          spikes={spikes?.data}
-          spikeTime={spikes?.timeInMs}
-          onSpikeTimeChange={spikes?.onTimeChange}
-          spikePlaying={spikes?.playing}
-          onSpikePlayingChange={spikes?.onPlayingChange}
-          spikeSpeed={spikes?.speed}
-          spikeAfterglowInSeconds={spikes?.afterglowInSeconds}
+          spikes={spikes}
+          onGlowAvailable={onGlowAvailableChange}
+          onEmptyClick={onEmptyClick}
+          backgroundColor={backgroundColor}
+          showScalebar={showScalebar}
+          spin={spin}
+          signals={signals}
+          onZoomChange={onZoomChange}
+          debugTarget={debugTarget}
+          debugLoad={{
+            loaded: morphologies.loaded,
+            failed: morphologies.failed,
+            total: morphologies.total,
+          }}
         />
       )}
-      <SynapseLegend
-        groups={synapses}
-        belowChrome={chromeTopRight}
-        hidden={hiddenSynapses}
-        onToggle={toggleSynapseLabel}
-      />
-      <MorphologyLocationLabels labels={locationLabels} />
-      <MorphologyLocationPopover hover={locationHover} pickMode={locationPickMode} />
+      {legendTarget === undefined ? (
+        <div className="pointer-events-none absolute top-3 right-3 z-10 flex flex-col items-stretch gap-2">
+          {legends}
+        </div>
+      ) : (
+        legendTarget && createPortal(legends, legendTarget)
+      )}
+      <MorphologyLocationLabels labels={labels} />
+      <MorphologyLocationPopover hover={hover} pickMode={pickMode} blockType={blockType} />
+      {openLocationBlock && !isExplicitLocationsBlockType(openLocationBlock.type) && (
+        <MorphologyLocationPreviewStatus
+          pending={locationPreviews.pending.has(morphologyLocations?.selectedEntry ?? '')}
+          error={locationPreviews.errors.get(morphologyLocations?.selectedEntry ?? '')}
+        />
+      )}
       {loading && (
         <VisualizationLoadingIndicator
           download={download}
-          morphologies={{ loaded: Math.round(progress * morphologyCount), total: morphologyCount }}
+          morphologies={{ loaded: morphologies.loaded, total: morphologies.total }}
         />
       )}
-      {error && (
+      {(error || unread) && (
         <div
           role="alert"
           className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4"
@@ -427,27 +340,61 @@ function CircuitVizView({
             <summary>
               <strong>Couldn't load the visualization</strong>
             </summary>
-            <div>{error.message}</div>
+            <div>{error?.message ?? 'The morphologies could not be read.'}</div>
           </details>
-          <button
-            type="button"
-            onClick={handleRetry}
-            className="rounded-full bg-white px-3 py-1 text-sm text-primary-9 shadow-md ring-1 ring-black/5 hover:bg-neutral-100"
-          >
-            Try again
-          </button>
+          {/* What the source failed at, the circuit's config or its placement, is not read again from here. */}
+          {!error && (
+            <button
+              type="button"
+              onClick={morphologies.retry}
+              className="rounded-full bg-white px-3 py-1 text-sm text-primary-9 shadow-md ring-1 ring-black/5 hover:bg-neutral-100"
+            >
+              Try again
+            </button>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-type TMemodelVizProps = Omit<TCircuitVizViewProps, 'source' | 'onCellClick'> & {
+/** `set` with `key` added, or taken out if it was already there. */
+function toggled(set: ReadonlySet<string>, key: string): ReadonlySet<string> {
+  const next = new Set(set);
+  if (!next.delete(key)) next.add(key);
+  return next;
+}
+
+/**
+ * Tells the form which nodes of the population locations are placed on carry no marker, so it can grey their rows out:
+ * filtered out in the nodes table, without a morphology, or in a hidden population.
+ */
+function usePublishHiddenLocationNodes(
+  drawn: readonly number[],
+  firstCell: number,
+  nodeCount: number
+) {
+  const setHiddenNodes = useSetAtom(hiddenLocationNodesAtom);
+  useEffect(() => {
+    const shown = new Set(drawn);
+    const hidden = new Set<number>();
+    for (let node = 0; node < nodeCount; node++) if (!shown.has(firstCell + node)) hidden.add(node);
+    // Kept when unchanged, so the form does not render again for nothing.
+    setHiddenNodes((previous) =>
+      previous.size === hidden.size && [...hidden].every((id) => previous.has(id))
+        ? previous
+        : hidden
+    );
+  }, [drawn, firstCell, nodeCount, setHiddenNodes]);
+  useEffect(() => () => setHiddenNodes(new Set()), [setHiddenNodes]);
+}
+
+type TMemodelVizProps = Omit<TCircuitVizViewProps, 'source' | 'onCellClick' | 'entityId'> & {
   memodelId: string;
 };
 
 /** A single MEModel on the small-circuit viewer, served from its cell morphology. */
 export function MemodelVisualization({ memodelId, ...props }: TMemodelVizProps) {
-  const source = useMemodelVisualizationSource({ memodelId, showAxons: props.showAxons });
-  return <CircuitVizView {...props} source={source} />;
+  const source = useMemodelVisualizationSource({ memodelId });
+  return <CircuitVizView {...props} entityId={memodelId} source={source} />;
 }

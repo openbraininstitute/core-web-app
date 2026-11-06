@@ -1,19 +1,34 @@
 import { RiCloseLine } from '@remixicon/react';
 import chroma from 'chroma-js';
+import { isEqual } from 'es-toolkit';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { NodePopulationType } from '@/api/entitycore/types/entities/circuit';
+import { MorphologyPackState } from '@/api/small-scale-simulator/circuit/morphology-pack';
 import { CircuitNodesTable } from '@/features/circuit-nodes';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
-import { resolvePopulation } from '@/features/circuit-nodes/population-utils';
+import { NO_NAMES, resolvePopulation } from '@/features/circuit-nodes/population-utils';
+import {
+  morphologyPackNote,
+  useMorphologyPackStatus,
+} from '@/features/circuit-viewer/morphologies/use-morphology-pack-status';
+import { circuitMorphologiesFlag, debugFlag, useFlag } from '@/features/feature-flags';
 import {
   CircuitVisualization,
   MemodelVisualization,
 } from '@/features/scan-config/components/circuit-viz/circuit-viz';
-import { CircuitViewerChrome } from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
+import { circuitSmallForThePack } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
+import {
+  CircuitViewerChrome,
+  STATUS_PLACE,
+} from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
 import { adaptColorToBackground } from '@/features/scan-config/components/color-by/contrast';
-import { recedeMarkerColor } from '@/features/scan-config/components/color-by/palette';
+import {
+  fadedNeuronColor,
+  recedeMarkerColor,
+} from '@/features/scan-config/components/color-by/palette';
 import { useCircuitColorBy } from '@/features/scan-config/components/color-by/use-circuit-color-by';
 import { applyElectrodeOverlayTransform } from '@/features/scan-config/components/model-preview/apply-electrode-overlay-transform';
 import {
@@ -23,29 +38,39 @@ import {
 import { LargeCircuitPreview } from '@/features/scan-config/components/model-preview/large-circuit-preview';
 import {
   hasAnyLocation,
+  hasGeneratedBlock,
   type IFormBindingOptions,
+  isStoredLocationsBlockOpen,
   morphologyLocationPickMode,
   morphologyLocationsHintHoveredAtom,
-  supportsMorphologyLocationPicking,
 } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import {
   electrodeBlockPath,
   useElectrodeOverlays,
 } from '@/features/scan-config/components/model-preview/use-electrode-overlays';
 import { useViewerZoom } from '@/features/scan-config/components/zoom-slider/use-viewer-zoom';
+import { useLatest } from '@/ui/hooks/use-latest';
 import { classNames } from '@/util/utils';
 
 import { PaneResizeHandle } from './pane-resize-handle';
+import { useSceneTablePane } from './scene-table-pane';
+import { useCellFocus } from './use-cell-focus';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
+import type {
+  CircuitCellsHostProps,
+  CircuitViewerHostProps,
+} from '@/features/circuit-viewer/host-props';
+import type { ElectrodeTransform } from '@/features/circuit-viewer/morphologies/types';
 import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
+import type { ICircuitViewerChromeProps } from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
 import type { IViewerModeOption } from '@/features/scan-config/components/color-by/mode-toggle';
+import type { NodeColors } from '@/features/scan-config/components/color-by/types';
 import type { PopulationsControls } from '@/features/scan-config/components/color-by/use-circuit-color-by';
 import type { TElectrodeArrayEntity } from '@/features/scan-config/components/model-preview/use-electrode-overlays';
-import type { MorphoViewerOverlayTransformEvent } from '@/morpho-viewer';
 
 const NOTHING_HIDDEN: readonly string[] = [];
 const MIN_TABLE_HEIGHT = 280;
@@ -72,7 +97,10 @@ export type TSceneSubject =
   | { memodel: TSceneMemodel; circuit?: never };
 
 interface ICircuitSceneOptions {
-  /** Draw somas only. Region-scale circuits have too many cells for morphologies. */
+  /**
+   * Draw with `LargeCircuitPreview`, as somas or as the morphologies of the circuit's pack. @see
+   * circuitDrawsEachCell
+   */
   largeCircuit?: boolean;
   /**
    * Whether this scene is the view currently on show.
@@ -112,6 +140,45 @@ interface ICircuitSceneOptions {
    * Omit to leave the button out.
    */
   fullscreen?: { target: HTMLElement | null };
+  /**
+   * Where the colour-by control goes instead of the scene's top-right corner,
+   * such as the host's header row; null while that element mounts.
+   */
+  colorByTarget?: HTMLElement | null;
+  /** What colouring by no property is called in the colour-by control, where "All" would mislead. */
+  colorByNoneLabel?: string;
+  /**
+   * One flag per cell of the population on show, 0 for a cell filtered out:
+   * left undrawn, but kept in its place, so spikes still find theirs.
+   */
+  shownCells?: Uint8Array;
+  /**
+   * A cell of the population on show to point out, by node index, such as the
+   * table row under the pointer: the rest faded where the scene draws somas,
+   * and where it draws morphologies, highlighted with the rest hidden.
+   */
+  highlightedCell?: number;
+  /** Told the node index of a clicked cell of the population on show. */
+  onCellClick?: (index: number) => void;
+  /** Told of a click on the scene's empty space. */
+  onEmptyClick?: () => void;
+  /**
+   * Colours for the population's cells in place of the colour-by's, such as a
+   * recording's values as it plays; a host passing them turns colour-by off.
+   */
+  nodeColorsOverride?: NodeColors;
+  /** How many of the population's cells are selected, said with a reset at the top centre. */
+  selection?: ICircuitViewerChromeProps['selection'];
+  /**
+   * A column of `nodeColorsOverride` whose cells are drawn faint, in a colour
+   * that follows the background: such as the cells a report did not record.
+   */
+  fadedColumn?: number;
+  /**
+   * Told the colour-by mapping of the population on show, or null with none, so
+   * a host drawing the same cells elsewhere - spike replay's raster - can match.
+   */
+  onNodeColorsChange?: (colors: { population: string; nodeColors: NodeColors } | null) => void;
   /** Spikes to replay over the circuit, and the transport driving them. */
   spikes?: ISpikeReplayBinding;
   /** Morph the cell into a dendrogram of the same segments. MEModels only. */
@@ -154,7 +221,7 @@ export type ICircuitSceneProps = ICircuitSceneOptions & TSceneSubject;
  * How electrode sync works here:
  * - {@link useElectrodeOverlays} → coloured overlays from every source
  * - form selection → `highlightedOverlayId` + selection styling
- * - morphoviewer `onOverlayTransform` (phase `end`) →
+ * - the viewer's `onOverlayTransform`, once a drag ends →
  *   {@link applyElectrodeOverlayTransform} → `setConfig`
  *
  * Why: keep 3D↔form bidirectional without pushing config on every pointer move.
@@ -164,7 +231,7 @@ export type ICircuitSceneProps = ICircuitSceneOptions & TSceneSubject;
 export function CircuitScene({
   circuit,
   memodel,
-  largeCircuit = false,
+  largeCircuit: drawnLarge = false,
   active = true,
   features,
   defaultNeuronOpacity,
@@ -172,6 +239,16 @@ export function CircuitScene({
   electrodes,
   modeToggle,
   fullscreen,
+  colorByTarget,
+  colorByNoneLabel,
+  shownCells,
+  highlightedCell,
+  onCellClick,
+  onEmptyClick,
+  nodeColorsOverride,
+  fadedColumn,
+  selection,
+  onNodeColorsChange,
   spikes,
   dendrogram = false,
   populationName: hostPopulationName,
@@ -184,7 +261,8 @@ export function CircuitScene({
     selectedRootElement,
     selectedEntry,
     onCreateEntry,
-    supportsExplicitLocations,
+    explicitLocationsBlockTypes,
+    singleMorphology,
   } = form ?? {};
   const { arrayEntity, visibleIds: visibleOverlayIds } = electrodes ?? {};
   const enableElectrodes = features?.electrodes ?? false;
@@ -193,9 +271,29 @@ export function CircuitScene({
   const enableCellHover = Boolean(circuit) && (features?.cellHover ?? true);
   const enableNodesTable = Boolean(circuit) && (features?.nodesTable ?? true);
 
+  const morphologiesFlag = !!useFlag(circuitMorphologiesFlag.key);
+  const smallForThePack =
+    morphologiesFlag &&
+    drawnLarge &&
+    circuit !== undefined &&
+    circuitSmallForThePack(circuit.scale);
+  // Asked again while it builds where the cells are drawn as somas until it is ready.
+  const packStatus = useMorphologyPackStatus(drawnLarge ? circuit : undefined, {
+    poll: !smallForThePack,
+  });
+  const pack = packStatus?.state === MorphologyPackState.Ready ? packStatus : null;
+  const [fellBackFor, setFellBackFor] = useState<string | null>(null);
+  const largeCircuit = drawnLarge && fellBackFor !== circuit?.id;
+
   const [showTable, setShowTable] = useState(false);
   const [tableHeight, setTableHeight] = useState<number | null>(null);
   const [containerHeight, setContainerHeight] = useState<number>(0);
+  // Where the host lays the table out in a pane of its own, beside the view rather than over
+  // it: always there, so the view offers no button for it.
+  const tablePane = useSceneTablePane();
+  const paneTable = enableNodesTable ? tablePane : null;
+  const claimPane = paneTable?.claim;
+  useEffect(() => claimPane?.(), [claimPane]);
 
   const { config: circuitConfig } = useCircuitConfig(circuit);
   const [tablePopulationName, setTablePopulationName] = useState<string | undefined>();
@@ -206,9 +304,91 @@ export function CircuitScene({
     [circuitConfig, populationName]
   );
 
+  // Reported by whichever viewer draws the circuit, and kept with the circuit it
+  // came from so another circuit's report never applies to this one.
+  const [reportedPositionless, setReportedPositionless] = useState<{
+    circuitId: string;
+    names: ReadonlySet<string>;
+  } | null>(null);
+  const circuitId = circuit?.id;
+  const handlePositionlessPopulationsChange = useCallback(
+    (names: ReadonlySet<string>) => {
+      if (!circuitId) return;
+      // Kept as it was when the names are: a viewer reports an empty set as it
+      // mounts, and an equal one on every unrelated retry.
+      setReportedPositionless((previous) => {
+        const current = previous?.circuitId === circuitId ? previous.names : NO_NAMES;
+        return isEqual(current, names) ? previous : { circuitId, names };
+      });
+    },
+    [circuitId]
+  );
+  const positionless =
+    reportedPositionless && reportedPositionless.circuitId === circuitId
+      ? reportedPositionless.names
+      : NO_NAMES;
+  const subjectUnplaceable = population !== undefined && positionless.has(population.name);
+  // Nothing of the population on show is drawn to colour.
+  const chromeColorBy = enableColorBy && !subjectUnplaceable;
+  // The chrome's place for the scene's legends; state, so the legends move in once it mounts.
+  const [legendSlot, setLegendSlot] = useState<HTMLElement | null>(null);
+  const debug = !!useFlag(debugFlag.key);
+  const [debugTarget, setDebugTarget] = useState<HTMLElement | null>(null);
+
   useEffect(() => {
     onPopulationChange?.(population);
   }, [population, onPopulationChange]);
+
+  // With the table in a pane of its own beside the scene, as while a simulation
+  // is configured, the two work as the results' views do: the scene shows the
+  // ticked rows, else those the filter keeps, a row under the pointer lights its
+  // cell, and a cell clicked marks its row and brings it into view. A host that
+  // says any of this itself is listened to instead.
+  const tableDriven = Boolean(paneTable) && circuit !== undefined;
+  // Kept with the circuit as well as the population, as the positionless
+  // populations are: another circuit's population of the same name is other cells.
+  const focus = useCellFocus({
+    scope: circuit && population ? `${circuit.id}/${population.name}` : '',
+    tableShown: tableDriven,
+  });
+  const [tableCells, setTableCells] = useState<{
+    circuitId: string;
+    population: string;
+    cells: Uint32Array | null;
+    rowCount: number;
+  }>();
+  const [tableResetRequest, setTableResetRequest] = useState(0);
+  const narrowed =
+    tableDriven &&
+    tableCells?.circuitId === circuit?.id &&
+    tableCells?.population === population?.name
+      ? tableCells
+      : null;
+  const tableShownCells = useMemo(() => {
+    if (!narrowed?.cells) return undefined;
+    const flags = new Uint8Array(narrowed.rowCount);
+    for (const cell of narrowed.cells) if (cell < flags.length) flags[cell] = 1;
+    return flags;
+  }, [narrowed]);
+  const held = focus.focusedCell !== null;
+  const selectedCount = held ? 1 : (narrowed?.cells?.length ?? null);
+  // The chip's reset undoes what its count says: the cell held first, then the
+  // table's own filters and ticks.
+  const tableSelection =
+    narrowed && selectedCount !== null
+      ? {
+          count: selectedCount,
+          total: narrowed.rowCount,
+          held,
+          onReset: held ? focus.releaseCell : () => setTableResetRequest((n) => n + 1),
+        }
+      : undefined;
+  const sceneShownCells = shownCells ?? (tableDriven ? tableShownCells : undefined);
+  const sceneHighlightedCell =
+    highlightedCell ?? (tableDriven ? (focus.highlightedCell ?? undefined) : undefined);
+  const sceneCellClick = onCellClick ?? (tableDriven ? focus.handleCellClick : undefined);
+  const sceneEmptyClick = onEmptyClick ?? (tableDriven ? focus.releaseCell : undefined);
+  const sceneSelection = selection ?? tableSelection;
 
   // What the viewers draw, in declared order: every population, or only the
   // one on show.
@@ -220,9 +400,11 @@ export function CircuitScene({
   const handlePopulationClick =
     hostPopulationName === undefined ? setTablePopulationName : undefined;
 
-  // Every small-circuit source filters axon sections, so the toggle is offered wherever the
-  // morphology itself is drawn.
-  const supportsAxons = !largeCircuit;
+  // Drawn as somas, the cells can be switched to their morphologies where the circuit has its pack.
+  const supportsMorphologies = morphologiesFlag && largeCircuit && pack !== null;
+  // Else why not, where it is coming or never will.
+  const morphologiesNote =
+    largeCircuit && !smallForThePack ? morphologyPackNote(packStatus) : undefined;
 
   const canPickMorphologyLocations =
     !largeCircuit &&
@@ -232,17 +414,20 @@ export function CircuitScene({
       selectedEntry,
       onConfigChange: setConfig,
       onCreateEntry,
-      supportsExplicitLocations,
+      explicitLocationsBlockTypes,
+      singleMorphology,
     }) !== null;
   // Gated on markers, not on picking, so the menu stays out of blocks with nothing to show.
   const hasMorphologyLocationsOnScreen =
     !largeCircuit &&
-    (supportsMorphologyLocationPicking({
+    (isStoredLocationsBlockOpen({
       config: scanConfig,
       selectedRootElement,
       selectedEntry,
     }) ||
-      hasAnyLocation(scanConfig));
+      hasAnyLocation(scanConfig) ||
+      // The flag that turns the preview on, so the controls show only with generated markers.
+      (Boolean(singleMorphology) && hasGeneratedBlock(scanConfig)));
 
   const {
     overlays,
@@ -254,15 +439,16 @@ export function CircuitScene({
     arrayEntity: enableElectrodes ? arrayEntity : undefined,
   });
 
+  const scopedOverlays = useMemo(
+    () => scopeOverlaysToSelection(overlays, visibleOverlayIds),
+    [overlays, visibleOverlayIds]
+  );
   const handleOverlayTransform = useCallback(
-    (event: MorphoViewerOverlayTransformEvent) => {
+    (event: ElectrodeTransform) => {
       if (!setConfig || !enableElectrodes) return;
       // Overlays the form does not own (arrays a simulation only references)
       // have nowhere to write back to.
       if (!draggableOverlayIds.has(event.id)) return;
-      // 3D already updates optimistically during the gesture; write the form
-      // only on drop so React/config churn does not lag the drag.
-      if (event.phase !== 'end') return;
       setConfig((prev) => applyElectrodeOverlayTransform(prev, event));
     },
     [setConfig, enableElectrodes, draggableOverlayIds]
@@ -278,17 +464,44 @@ export function CircuitScene({
     signals,
     colorBy,
     onHiddenPopulationsChange,
+    representation,
+    onRepresentationChange,
     menu,
     onResetView,
   } = useCircuitColorBy(circuit, {
-    supportsAxons,
     supportsElectrodes: enableElectrodes && electrodesAvailable,
     supportsMorphologyLocations: hasMorphologyLocationsOnScreen,
-    supportsSomaSize: largeCircuit,
+    drawsSomas: largeCircuit,
+    supportsMorphologies,
+    morphologiesNote,
+    defaultRepresentation: smallForThePack ? 'morphologies' : undefined,
     defaultNeuronOpacity,
     population,
     subject: memodel,
   });
+
+  // The override's faint column painted for the background on show, and drawn
+  // flat, so every cell in it is the one shade.
+  const overrideColors = useMemo(() => {
+    if (!nodeColorsOverride || fadedColumn === undefined) return nodeColorsOverride;
+    const palette = [...nodeColorsOverride.palette];
+    palette[fadedColumn] = fadedNeuronColor(config.backgroundColor);
+    return { ...nodeColorsOverride, palette, flatColumns: [fadedColumn] };
+  }, [nodeColorsOverride, fadedColumn, config.backgroundColor]);
+
+  // A mapping with no column per node is colour-by off.
+  const populationOnShow = population?.name;
+  const handedColors =
+    enableColorBy && populationOnShow && nodeColors && nodeColors.columnByNode.length > 0
+      ? nodeColors
+      : undefined;
+  useEffect(() => {
+    onNodeColorsChange?.(
+      populationOnShow && handedColors
+        ? { population: populationOnShow, nodeColors: handedColors }
+        : null
+    );
+  }, [onNodeColorsChange, populationOnShow, handedColors]);
 
   // Offered only where the other populations are on screen to begin with, and
   // only where there is more than one: with a single population, hiding it is
@@ -331,6 +544,7 @@ export function CircuitScene({
       // that is the one on show.
       selected: population?.name,
       onSelect: handlePopulationClick,
+      positionless,
     };
   }, [
     hasPopulationsChecklist,
@@ -339,6 +553,7 @@ export function CircuitScene({
     onHiddenPopulationsChange,
     population?.name,
     handlePopulationClick,
+    positionless,
   ]);
 
   // Selecting the block an overlay came from highlights it, whichever root
@@ -348,10 +563,6 @@ export function CircuitScene({
     enableElectrodes && selectedRootElement && selectedEntry
       ? (overlayIdByBlockPath.get(electrodeBlockPath(selectedRootElement, selectedEntry)) ?? null)
       : null;
-  const scopedOverlays = useMemo(
-    () => scopeOverlaysToSelection(overlays, visibleOverlayIds),
-    [overlays, visibleOverlayIds]
-  );
   // When the host supplies `visibleIds` it owns visibility outright. Letting the
   // viewer's own show/hide toggle also gate them strands the host control: with
   // the toggle off, ticking an electrode draws nothing and the auto-enable effect
@@ -425,17 +636,21 @@ export function CircuitScene({
 
   const zoom = useViewerZoom(signals);
 
-  // Props shared by both viz surfaces. An MEModel has no colour-by, so
-  // `nodeColors` and `defaultColor` stay on the circuit branch.
+  // Props every viewer here shares, then those of a circuit's cells, then the per-cell viewer's own.
   //
   // Memoised explicitly, not left to the compiler: a zoom tick changes this object, and a
   // fresh one re-renders the 3D surface every frame of a scroll-zoom.
-  const sharedVizProps = useMemo(
-    () => ({
+  const [glowAvailable, setGlowAvailable] = useState(false);
+  // One function for the host's, whatever it is each render: a new one would build the viewer's props anew.
+  const emptyClicked = useLatest(sceneEmptyClick);
+  const emptyHeard = sceneEmptyClick !== undefined;
+  const handleEmptyClick = useCallback(() => emptyClicked.current?.(), [emptyClicked]);
+  const viewerProps = useMemo(
+    (): CircuitViewerHostProps => ({
       showAxons: config.showAxons,
       backgroundColor: config.backgroundColor,
-      scalebarColor: theme?.foreground,
       showScalebar: config.showScalebar,
+      spin: config.spin,
       signals,
       overlays: styledOverlays,
       overlaysInteractive,
@@ -445,34 +660,21 @@ export function CircuitScene({
       electrodeRadius: config.electrodeRadius,
       features: vizFeatures,
       spikes,
-      // The colour-by toolbar is what sits in the viewer's top-right, so the
-      // synapse legend drops below it exactly when that toolbar is drawn.
-      chromeTopRight: enableColorBy,
+      onGlowAvailableChange: setGlowAvailable,
+      onEmptyClick: emptyHeard ? handleEmptyClick : undefined,
       // Subscribed only while the slider is shown: the viewer reports every zoom change, and
       // with the slider off that is a render per frame of a scroll-zoom for nothing on screen.
       onZoomChange: config.showZoomSlider ? zoom.onZoomChange : undefined,
-      morphologyLocations: {
-        config: scanConfig,
-        onConfigChange: setConfig,
-        selectedRootElement,
-        selectedEntry,
-        onCreateEntry,
-        supportsExplicitLocations,
-        markerRadius: config.morphologyLocationRadius,
-        showLabels: config.showMorphologyLocationLabels,
-      },
+      debugTarget,
     }),
     [
       config.showAxons,
       config.backgroundColor,
       config.showScalebar,
+      config.spin,
       config.neuronOpacity,
       config.electrodeRadius,
-      config.morphologyLocationRadius,
-      config.showMorphologyLocationLabels,
       config.showZoomSlider,
-      enableColorBy,
-      theme?.foreground,
       signals,
       styledOverlays,
       overlaysInteractive,
@@ -480,13 +682,78 @@ export function CircuitScene({
       highlightedOverlayId,
       vizFeatures,
       spikes,
+      emptyHeard,
+      handleEmptyClick,
       zoom.onZoomChange,
+      debugTarget,
+    ]
+  );
+  const cellsProps = useMemo(
+    (): CircuitCellsHostProps | null =>
+      circuit
+        ? {
+            circuit,
+            population,
+            populations,
+            hiddenPopulations,
+            shownCells: sceneShownCells,
+            highlightedCell: sceneHighlightedCell,
+            nodeColors: overrideColors ?? (enableColorBy ? nodeColors : undefined),
+            defaultColor,
+            recededColor,
+            onPopulationClick: handlePopulationClick,
+            onSubjectCellClick: sceneCellClick,
+            onPositionlessPopulationsChange: handlePositionlessPopulationsChange,
+          }
+        : null,
+    [
+      circuit,
+      population,
+      populations,
+      hiddenPopulations,
+      sceneShownCells,
+      sceneHighlightedCell,
+      overrideColors,
+      enableColorBy,
+      nodeColors,
+      defaultColor,
+      recededColor,
+      handlePopulationClick,
+      sceneCellClick,
+      handlePositionlessPopulationsChange,
+    ]
+  );
+  const perCellProps = useMemo(
+    () => ({
+      // Under the colour-by key while the chrome draws its column, in the corner otherwise.
+      legendTarget: chromeColorBy ? legendSlot : undefined,
+      // Background-derived chrome theme, for the legends drawn over the viewer.
+      theme,
+      morphologyLocations: {
+        config: scanConfig,
+        onConfigChange: setConfig,
+        selectedRootElement,
+        selectedEntry,
+        onCreateEntry,
+        explicitLocationsBlockTypes,
+        singleMorphology,
+        markerRadius: config.morphologyLocationRadius,
+        showLabels: config.showMorphologyLocationLabels,
+      },
+    }),
+    [
+      chromeColorBy,
+      legendSlot,
+      theme,
       scanConfig,
       setConfig,
       selectedRootElement,
       selectedEntry,
       onCreateEntry,
-      supportsExplicitLocations,
+      explicitLocationsBlockTypes,
+      singleMorphology,
+      config.morphologyLocationRadius,
+      config.showMorphologyLocationLabels,
     ]
   );
 
@@ -507,50 +774,38 @@ export function CircuitScene({
         aria-hidden={!active}
         inert={!active || undefined}
       >
-        {largeCircuit && circuit ? (
+        {largeCircuit && cellsProps ? (
           <LargeCircuitPreview
-            key={circuit.id}
-            circuit={circuit}
-            population={population}
-            populations={populations}
-            hiddenPopulations={hiddenPopulations}
-            nodeColors={enableColorBy ? nodeColors : undefined}
-            recededColor={recededColor}
-            onPopulationClick={handlePopulationClick}
-            backgroundColor={config.backgroundColor}
-            scalebarColor={theme?.foreground}
-            showScalebar={config.showScalebar}
-            signals={signals}
-            overlays={styledOverlays}
-            overlaysInteractive={overlaysInteractive}
-            onOverlayTransform={handleOverlayTransform}
-            highlightedOverlayId={highlightedOverlayId}
-            neuronOpacity={config.neuronOpacity}
+            key={cellsProps.circuit.id}
+            {...viewerProps}
+            {...cellsProps}
             somaSizeScale={config.somaSizeScale}
-            electrodeRadius={config.electrodeRadius}
-            features={vizFeatures}
-            spikes={spikes}
+            pack={pack}
+            followMorphologies={smallForThePack}
+            representation={representation}
+            onRepresentationChange={onRepresentationChange}
+            onMorphologiesStopped={() =>
+              smallForThePack
+                ? setFellBackFor(cellsProps.circuit.id)
+                : onRepresentationChange?.('somas')
+            }
+            statusPlace={STATUS_PLACE}
           />
         ) : memodel ? (
           <MemodelVisualization
             key={memodel.id}
             memodelId={memodel.id}
             dendrogram={dendrogram}
-            {...sharedVizProps}
+            {...viewerProps}
+            {...perCellProps}
           />
         ) : (
-          circuit && (
+          cellsProps && (
             <CircuitVisualization
-              key={circuit.id}
-              circuit={circuit}
-              population={population}
-              populations={populations}
-              hiddenPopulations={hiddenPopulations}
-              nodeColors={enableColorBy ? nodeColors : undefined}
-              defaultColor={defaultColor}
-              recededColor={recededColor}
-              onPopulationClick={handlePopulationClick}
-              {...sharedVizProps}
+              key={cellsProps.circuit.id}
+              {...viewerProps}
+              {...cellsProps}
+              {...perCellProps}
             />
           )
         )}
@@ -560,22 +815,57 @@ export function CircuitScene({
         modeToggle={modeToggle}
         vizActive={active}
         theme={theme}
-        table={enableNodesTable ? { active: showTable, onToggle: handleToggleTable } : undefined}
+        table={
+          enableNodesTable && !paneTable
+            ? { active: showTable, onToggle: handleToggleTable }
+            : undefined
+        }
         fullscreen={fullscreen}
+        colorByTarget={colorByTarget}
+        colorByNoneLabel={colorByNoneLabel}
+        legendSlotRef={setLegendSlot}
+        debugSlotRef={debug ? setDebugTarget : undefined}
+        selection={sceneSelection}
         viz={{
-          menu,
+          // A replay's afterglow and glow are set with the rest of how the scene is drawn; the menu leaves out a
+          // control the host offers no setter for, and the glow where the viewer cannot draw it.
+          menu: spikes?.data
+            ? {
+                ...menu,
+                spikeAfterglowInSeconds: spikes.afterglowInSeconds,
+                onSpikeAfterglowChange: spikes.onAfterglowChange,
+                spikeGlow: spikes.glow,
+                onToggleSpikeGlow: glowAvailable ? spikes.onGlowChange : undefined,
+              }
+            : menu,
           onResetView,
-          colorBy: enableColorBy ? colorBy : undefined,
+          colorBy: chromeColorBy ? colorBy : undefined,
           populations: populationsControl,
           electrodesInteractive: overlaysInteractive,
           morphologyLocationsInteractive: canPickMorphologyLocations,
-          // Omitted rather than hidden downstream: the large-circuit viewer takes no zoom
-          // props, and with the setting off there is nothing to drive.
-          zoom: largeCircuit || !config.showZoomSlider ? undefined : zoom,
+          // Omitted rather than hidden downstream: with the setting off there is nothing to drive.
+          zoom: config.showZoomSlider ? zoom : undefined,
         }}
       />
 
-      {showTable && circuit && tableHeight !== null && containerHeight > 0 && (
+      {paneTable?.target &&
+        circuit &&
+        createPortal(
+          <CircuitNodesTable
+            circuit={circuit}
+            populationName={populationName}
+            onPopulationChange={setTablePopulationName}
+            cells={{
+              onShownCellsChange: setTableCells,
+              onHoveredCellChange: focus.handleHoveredCell,
+              focusedCell: focus.focusedCell ?? undefined,
+              heldCell: focus.focusedCell?.nodeId ?? null,
+              resetRequest: tableResetRequest,
+            }}
+          />,
+          paneTable.target
+        )}
+      {!paneTable && showTable && circuit && tableHeight !== null && containerHeight > 0 && (
         <div
           className="pointer-events-auto absolute left-0 right-0 bottom-0 z-30 flex flex-col border-t border-neutral-200 bg-white"
           style={{ height: clampedHeight }}
@@ -630,7 +920,7 @@ function styleOverlaysForSelection(
 }
 
 /**
- * Strip any CSS alpha so morphoviewer palette texels stay fully opaque.
+ * Strip any CSS alpha so electrode markers stay fully opaque.
  *
  * Same `try`/`catch` shape as {@link adaptColorToBackground} and
  * {@link recedeMarkerColor}, the two functions this one sits between: a colour

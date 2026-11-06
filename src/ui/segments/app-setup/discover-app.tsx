@@ -6,9 +6,10 @@ import {
   NextStep as OnboardingSteps,
   useNextStep,
 } from 'nextstepjs';
-import { type ReactNode, useLayoutEffect } from 'react';
+import { type ReactNode, useLayoutEffect, useMemo } from 'react';
 
 import { OnboardingFeature } from '@/api/virtual-lab-svc/queries/types';
+import { aiButtonFlag, hideHelpFlag, useFlag } from '@/features/feature-flags';
 import { useOnboardingStatus, useUpdateOnboardingStatus } from '@/hooks/use-onboarding';
 import { Button } from '@/ui/molecules/button';
 import { Card } from '@/ui/molecules/card';
@@ -60,11 +61,13 @@ function QuitOnboardingOnClickOutside({
 
 export function AppOnboardingProvider({ children }: { children: ReactNode }) {
   const { mutate: updateBackend } = useUpdateOnboardingStatus();
+  const aiButton = useFlag(aiButtonFlag.key) === true;
+  const hideHelp = useFlag(hideHelpFlag.key) === true;
+  const tours = useMemo(() => discoverTours({ aiButton, hideHelp }), [aiButton, hideHelp]);
 
   const onSkipOrComplete = (tour: string | null, step?: number, action?: TTourAction) => {
     if (!tour) return;
-    const isComplete =
-      (OnboardingDiscoverSteps.find((o) => o.tour === tour)?.steps.length ?? 0) - 1 === step;
+    const isComplete = (tours.find((o) => o.tour === tour)?.steps.length ?? 0) - 1 === step;
     updateBackend({
       tour: tour as TOnboardingFeature,
       current_step: step,
@@ -87,7 +90,7 @@ export function AppOnboardingProvider({ children }: { children: ReactNode }) {
       <OnboardingSteps
         showNextStep
         disableConsoleLogs
-        steps={OnboardingDiscoverSteps}
+        steps={tours}
         shadowRgb="63, 92, 139"
         shadowOpacity="0.8"
         cardComponent={OnboardingDiscoverCard}
@@ -513,6 +516,40 @@ export const OnboardingDiscoverSteps: Tour[] = [
   //   steps: [],
   // },
 ];
+
+/**
+ * The tours, as the top menu stands: no Help step while the `hide-help` flag is on, and the AI step
+ * on the AI button when the `ai-button` flag puts one there, as no panel is left to point at while
+ * it is closed.
+ */
+export function discoverTours({
+  aiButton,
+  hideHelp,
+}: {
+  aiButton: boolean;
+  hideHelp: boolean;
+}): Tour[] {
+  if (!aiButton && !hideHelp) return OnboardingDiscoverSteps;
+  return OnboardingDiscoverSteps.map((t) =>
+    t.tour !== projectTour
+      ? t
+      : {
+          ...t,
+          steps: t.steps
+            .filter((s) => !(hideHelp && s.selector === '#workspace-help'))
+            .map((s) =>
+              aiButton && s.selector === '#workspace-ai'
+                ? {
+                    ...s,
+                    selector: '#workspace-ai-button',
+                    side: 'bottom-right' as const,
+                    pointerRadius: 25,
+                  }
+                : s
+            ),
+        }
+  );
+}
 
 export function useNextStepOnboarding({
   condition,

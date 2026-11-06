@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { placementAt } from '@/features/circuit-nodes/geometry-utils';
+import { debugFlag, useFlag } from '@/features/feature-flags';
 import {
   loadAfferentSynapses,
   Report,
@@ -18,7 +19,7 @@ import { logError } from '@/utils/logger';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { NodeGeometry, ParsedCircuitConfig } from '@/features/circuit-nodes/types';
-import type { MorphoViewerTree } from '@/morpho-viewer';
+import type { TreeMorphology } from '@/features/circuit-viewer/morphologies/load/tree';
 import type { TSmallCircuitSynapseGroup } from './types';
 
 /** Legend wording per synapse type. */
@@ -40,7 +41,7 @@ type Options = {
    * One node's morphology, in morphology-local coordinates. Asked for with its
    * axons whatever the viewer is showing — see below.
    */
-  loadTree: (nodeIndex: number) => Promise<MorphoViewerTree | null>;
+  loadTree: (nodeIndex: number) => Promise<TreeMorphology | null>;
 };
 
 /**
@@ -72,6 +73,7 @@ export function useAfferentSynapses({
   loadTree,
 }: Options): TSmallCircuitSynapseGroup[] {
   const ctx = useWorkspace();
+  const debugging = !!useFlag(debugFlag.key);
   const [groups, setGroups] = useState<TSmallCircuitSynapseGroup[]>([]);
 
   const circuitId = circuit.id;
@@ -81,7 +83,7 @@ export function useAfferentSynapses({
   useEffect(() => {
     if (!enabled) return;
 
-    const report = new Report();
+    const report = new Report(debugging);
     if (!placementSettled || !edges || !circuitAssetId) {
       report
         .logTask(
@@ -159,7 +161,17 @@ export function useAfferentSynapses({
     return () => {
       cancelled = true;
     };
-  }, [enabled, ctx, circuitId, circuitAssetId, edges, placementSettled, geometry, loadTree]);
+  }, [
+    enabled,
+    debugging,
+    ctx,
+    circuitId,
+    circuitAssetId,
+    edges,
+    placementSettled,
+    geometry,
+    loadTree,
+  ]);
 
   return groups;
 }
