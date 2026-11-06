@@ -28,6 +28,7 @@ import type { EventsHover } from '@/features/spike-viewer/renderer/raster-render
 export type FieldPlotMode = 'traces' | 'map';
 
 /** The traces' lanes on show, [first, end), and the plot's width in px. */
+/** The lanes on show a screen at a time: the first of the screen the top one is in, and how many a screen holds. */
 export type LanesInView = { first: number; perScreen: number; width: number };
 
 const MARGIN = { left: 52, right: 10, top: 6, bottom: 22 };
@@ -288,6 +289,7 @@ export function FieldPlot({
   const firstLane = Math.max(0, Math.floor(scroll / lane) - 1);
   const endLane = Math.min(traces.length, Math.ceil((scroll + plot.height) / lane) + 1);
   const perScreen = Math.max(1, Math.ceil(plot.height / lane));
+  const screenFirst = Math.floor(Math.floor(scroll / lane) / perScreen) * perScreen;
   const traceDrawing = (source: LfpField): TraceDrawing => {
     const [first, last] = binRange(source, from, to);
     return {
@@ -320,8 +322,8 @@ export function FieldPlot({
   };
 
   useEffect(() => {
-    if (mode === 'traces') onLanesInView({ first: firstLane, perScreen, width: plot.width });
-  }, [mode, firstLane, perScreen, plot.width, onLanesInView]);
+    if (mode === 'traces') onLanesInView({ first: screenFirst, perScreen, width: plot.width });
+  }, [mode, screenFirst, perScreen, plot.width, onLanesInView]);
 
   // None below the last lane, where lanes of a fixed height leave the plot empty.
   const rowOf = (y: number): number | null => {

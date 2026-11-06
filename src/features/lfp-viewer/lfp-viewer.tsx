@@ -301,14 +301,14 @@ function LfpReportView({
   // The lanes on show and a screen of them either side are read over the window, finer than the
   // overview: only while drawn, and once positions are in, as they can change which contacts are
   // traced. A contact's row read so holds nothing of the mean to take off. They move a screen at a
-  // time, so that a scroll of a lane doesn't put the window's field together again.
+  // time, so that a scroll of a lane doesn't put the window's field together again: the lanes on
+  // show are within two screens and a lane of the first of theirs.
   const [lanesInView, setLanesInView] = useState<LanesInView | null>(null);
-  const screen = lanesInView?.perScreen ?? 0;
-  const readFrom = lanesInView ? Math.floor(lanesInView.first / screen) * screen - screen : 0;
-  const readTraces = useMemo(
-    () => (screen ? traces.slice(Math.max(0, readFrom), readFrom + 4 * screen) : []),
-    [traces, screen, readFrom]
-  );
+  const readTraces = useMemo(() => {
+    if (!lanesInView) return [];
+    const { first, perScreen } = lanesInView;
+    return traces.slice(Math.max(0, first - perScreen), first + 3 * perScreen + 1);
+  }, [traces, lanesInView]);
   const readsTraces = mode === 'traces' && !removeShared && contacts.state !== 'loading';
   const traceRows = useWindowRows(
     source,
@@ -417,7 +417,8 @@ function LfpReportView({
                   ` · along (${direction.axis.map((d) => d.toFixed(2)).join(', ')})`}
                 {statsFromOverview(chosen) &&
                   ` · table over ${Number(chosen.field.binMs.toFixed(2))} ms means, so peaks read lower`}
-                {traceRows.tooMany && ' · overview traces: too many rows for full resolution'}
+                {traceRows.tooMany && ' · overview traces: too many rows to read finer'}
+                {traceRows.failed && ' · overview traces: the finer ones could not be read'}
                 {loading && ' · reading the field'}
                 {(failed || lastUnread) && ' · that field could not be read'}
               </span>
@@ -545,7 +546,7 @@ function LfpReportView({
         traceLabels={labels}
         colours={colours}
         traceRows={traceRows.rows}
-        minSpanMs={2 * (readsTraces ? index.time.dt : field.binMs)}
+        minSpanMs={2 * traceRows.finestBinMs}
         onLanesInView={setLanesInView}
         gain={gain}
         laneHeight={LANE_HEIGHTS[laneHeight]}

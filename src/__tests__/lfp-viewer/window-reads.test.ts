@@ -11,6 +11,7 @@ import {
   windowTiles,
 } from '@/features/lfp-viewer/summary';
 import { answeringRanges, deflated, rangeReader } from '@/features/lfp-viewer/test-ranges';
+import { windowReadLevel } from '@/features/lfp-viewer/use-lfp-summary';
 
 import type { LfpAxis, LfpSummaryIndex } from '@/features/lfp-viewer/summary';
 
@@ -54,6 +55,24 @@ describe('windowLevel', () => {
   it('is full resolution where the finest has too few bins', () => {
     expect(windowLevel(axis, 32 * 1500, 1500)).toBe(1);
     expect(windowLevel(axis, 32 * 1500 - 1, 1500)).toBe(0);
+  });
+});
+
+describe('windowReadLevel', () => {
+  const runMs = STEPS * 0.025;
+
+  it('is no finer than the rows read fit at, as far as a zoom goes', () => {
+    // 300 rows of 3 blocks are 118 MB, over the budget; 3 tiles of bins of 32 are 15 MB
+    expect(windowReadLevel(index, axis, 300, 10, 1500)).toEqual({ finest: 1, levelAt: 1 });
+    expect(windowReadLevel(index, axis, 100, 10, 1500)).toEqual({ finest: 0, levelAt: 0 });
+  });
+
+  it('is the overview where no rows are read', () => {
+    expect(windowReadLevel(index, axis, null, 10, 1500)).toEqual({ finest: 4, levelAt: 4 });
+  });
+
+  it('is the coarsest with a bin a pixel, where that is coarser', () => {
+    expect(windowReadLevel(index, axis, 300, runMs / 10, 1500).levelAt).toBe(2);
   });
 });
 

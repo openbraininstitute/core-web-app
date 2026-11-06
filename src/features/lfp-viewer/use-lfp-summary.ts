@@ -472,14 +472,59 @@ export function useContactRows(
 /** Contacts' rows over a window: `rows` has each contact's row of `field`. */
 export type TraceRows = { field: LfpField; rows: ReadonlyMap<number, number> };
 
-type WindowRows = { rows: TraceRows | null; tooMany: boolean };
+type WindowRows = {
+  rows: TraceRows | null;
+  /** The finest bin the contacts can be read at: a window of two is as far as a zoom goes. */
+  finestBinMs: number;
+  tooMany: boolean;
+  failed: boolean;
+};
 
-const NO_WINDOW_ROWS: WindowRows = { rows: null, tooMany: false };
+/** The tiles a level's reads must fit in for it to be read at all: a narrow window's, with room to pan. */
+const NARROW_WINDOW_TILES = 3;
+
+function windowBytes(
+  index: LfpSummaryIndex,
+  axis: LfpAxis,
+  rows: number,
+  levelAt: number,
+  tiles: number
+) {
+  const { tileBins, width } = levelTiling(index, axis, levelAt);
+  return rows * tiles * tileBins * width * 2;
+}
 
 /**
- * Contacts over a window of time, at the coarsest level with a bin for each of `width` pixels: read
- * in tiles, kept, and shared with the next window. None where the overview already has that, which
- * is then drawn. While a window is read the last one of the same field stays on show.
+ * The finest level `rows` rows can be read at, the overview where none are, and the level a window
+ * of `spanMs` across `width` pixels is read at: the coarsest with a bin a pixel, the finest at most.
+ */
+export function windowReadLevel(
+  index: LfpSummaryIndex,
+  axis: LfpAxis,
+  rows: number | null,
+  spanMs: number,
+  width: number
+) {
+  const coarsest = axis.levels.length - 1;
+  const finest =
+    rows === null
+      ? coarsest
+      : axis.levels.findIndex(
+          (_, at) =>
+            at === coarsest ||
+            windowBytes(index, axis, rows, at, NARROW_WINDOW_TILES) <= MAX_WINDOW_BYTES
+        );
+  return { finest, levelAt: Math.max(finest, windowLevel(axis, spanMs / index.time.dt, width)) };
+}
+
+const covers = (field: LfpField, from: number, to: number) =>
+  field.start <= from && field.start + field.bins * field.binMs >= to;
+
+/**
+ * Contacts over a window of time, at the coarsest level with a bin for each of `width` pixels, or
+ * the finest their reads fit in: read in tiles, kept, and shared with the next window. None where
+ * the overview already has that, which is then drawn. While a window is read the last one of the
+ * same field stays on show, where it covers the window.
  */
 export function useWindowRows(
   source: LfpSummarySource,
@@ -493,8 +538,10 @@ export function useWindowRows(
   const { index, sha256 } = summary;
   const { choice, field: overview } = chosen;
   const axis = index.axes[choice.axis];
-  const levelAt = windowLevel(axis, (to - from) / index.time.dt, width);
-  const fromOverview = !enabled || levelAt === axis.levels.length - 1;
+  const rowsRead = enabled ? contacts.length * choice.groups.length : null;
+  const { finest, levelAt } = windowReadLevel(index, axis, rowsRead, to - from, width);
+  const finestBinMs = axis.levels[finest].step * index.time.dt;
+  const fromOverview = levelAt === axis.levels.length - 1;
   // Kept while the window moves within the same tiles, so the field isn't put together again
   const inWindow = fromOverview ? [] : windowTiles(index, axis, levelAt, [from, to]);
   const [firstTile, tileCount] = [inWindow[0], inWindow.length];
@@ -502,10 +549,7 @@ export function useWindowRows(
     () => Array.from({ length: tileCount }, (_, t) => firstTile + t),
     [firstTile, tileCount]
   );
-  const { tileBins, width: values } = levelTiling(index, axis, levelAt);
-  const tooMany =
-    contacts.length * choice.groups.length * tiles.length * tileBins * values * 2 >
-    MAX_WINDOW_BYTES;
+  const tooMany = windowBytes(index, axis, rowsRead ?? 0, levelAt, tiles.length) > MAX_WINDOW_BYTES;
   const queryClient = useQueryClient();
   const at = { queryClient, source, sha256, index, axis };
   const read = useQueries({
@@ -538,9 +582,10 @@ export function useWindowRows(
   }, [read.data, choice.groups, tiles, index, axis, levelAt, contacts]);
   const [shown, setShown] = useState<{ of: LfpField; rows: TraceRows } | null>(null);
   if (wanted && shown?.rows !== wanted) setShown({ of: overview, rows: wanted });
-  if (fromOverview) return NO_WINDOW_ROWS;
-  if (tooMany) return { rows: null, tooMany };
-  return { rows: wanted ?? (shown?.of === overview ? shown.rows : null), tooMany };
+  const none = { rows: null, finestBinMs, tooMany, failed: false };
+  if (fromOverview || tooMany) return none;
+  const held = shown?.of === overview && covers(shown.rows.field, from, to) ? shown.rows : null;
+  return { ...none, rows: wanted ?? held, failed: read.failed };
 }
 
 /** Whether the field chosen has its correlation stored: groups added up have none. */
