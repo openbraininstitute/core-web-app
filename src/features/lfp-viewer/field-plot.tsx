@@ -489,8 +489,9 @@ export function FieldPlot({
     g.beginPath();
     g.rect(plot.left, clipTop, plot.width, clipHeight);
     g.clip();
+    // Over the plot alone, not its time axis, though the trace may reach past it as on the traces' canvas.
     g.fillStyle = HOVER_WASH;
-    g.fillRect(plot.left, clipTop, plot.width, clipHeight);
+    g.fillRect(plot.left, plot.top, plot.width, plot.height);
     g.strokeStyle = inkOf(colours, selectedContact, hoveredContact as number, INK);
     g.lineWidth = HOVERED_WIDTH;
     strokeTrace(g, traceDrawing(), traceField ? row : (hoveredContact as number), laneY(row));
