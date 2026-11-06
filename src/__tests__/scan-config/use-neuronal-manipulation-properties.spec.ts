@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { selectMechanismVariablesRoot } from '@/features/scan-config/components/hooks/use-neuronal-manipulation-properties';
+import {
+  selectMechanismVariablesRoot,
+  selectNeuronalManipulationProperties,
+} from '@/features/scan-config/components/hooks/use-neuronal-manipulation-properties';
 
 const SAMPLE_CHANNEL = {
   section_lists: ['somatic'],
@@ -47,5 +50,22 @@ describe('selectMechanismVariablesRoot', () => {
 
   it('returns an empty object when neither key is present', () => {
     expect(selectMechanismVariablesRoot({ entity_type: 'circuit' })).toEqual({});
+  });
+});
+
+describe('selectNeuronalManipulationProperties', () => {
+  it('keeps the string warnings next to the variables', () => {
+    expect(
+      selectNeuronalManipulationProperties({
+        populations: [],
+        MechanismVariablesByIonChannel: {},
+        warnings: ['The neuron set selects no neurons.', 42],
+      })
+    ).toEqual({ variables: {}, warnings: ['The neuron set selects no neurons.'] });
+  });
+
+  it('gives no warnings when the field is null or missing', () => {
+    expect(selectNeuronalManipulationProperties({ warnings: null }).warnings).toEqual([]);
+    expect(selectNeuronalManipulationProperties({}).warnings).toEqual([]);
   });
 });
