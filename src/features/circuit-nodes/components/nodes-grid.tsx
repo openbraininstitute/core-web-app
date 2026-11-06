@@ -293,7 +293,8 @@ function buildColumnDefs({
     const isNumeric = c.kind === 'numeric';
     const useSetFilter =
       c.kind === 'categorical' && (c.library?.length ?? 0) < CATEGORICAL_SET_FILTER_MAX;
-    const width = PREFERRED_WIDTH_BY_NAME.get(c.name) ?? (isNumeric ? 100 : 120);
+    const preferred = PREFERRED_WIDTH_BY_NAME.get(c.name);
+    const width = preferred ?? (isNumeric ? 100 : 120);
     return {
       field: c.name,
       headerName: c.label ?? capitalize(c.name.replace(/_/g, ' ')),
@@ -309,8 +310,9 @@ function buildColumnDefs({
       filter: useSetFilter ? CategoricalFilter : isNumeric ? NumericFilter : TextFilter,
       filterParams: useSetFilter ? { library: c.library } : undefined,
       suppressHeaderMenuButton: true,
-      minWidth: 60,
-      width,
+      // Columns of a set width share out what the rest leave of the grid, never narrower than set.
+      // The others are sized to their values, which drops a flex.
+      ...(preferred === undefined ? { minWidth: 60, width } : { flex: 1, minWidth: width, width }),
       cellClass: isNumeric ? 'ag-right-aligned-cell' : undefined,
       valueFormatter: isNumeric
         ? (p: ValueFormatterParams) =>
