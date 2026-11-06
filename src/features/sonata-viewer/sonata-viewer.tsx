@@ -323,6 +323,19 @@ export function SonataReportView({
     },
     [populationName]
   );
+  // The cell of the line under the pointer in the traces, which the scene alone shows: the lines
+  // drawn follow `hovered`, and would be drawn anew at every move.
+  const [lineHovered, setLineHovered] = useState<{ population: string; nodeId: number } | null>(
+    null
+  );
+  const handleLineHover = useCallback(
+    (nodeId: number | null) => {
+      setLineHovered(
+        nodeId === null || !populationName ? null : { population: populationName, nodeId }
+      );
+    },
+    [populationName]
+  );
   const hoveredTraces = useMemo(() => {
     if (!population || hovered?.population !== populationName) return NO_TRACES;
     const traces: number[] = [];
@@ -567,7 +580,13 @@ export function SonataReportView({
         valueRange={sceneFrames?.range ?? null}
         units={population.dataUnits}
         timeCursor={timeCursor}
-        highlightedCell={hovered?.population === populationName ? hovered.nodeId : held}
+        highlightedCell={
+          hovered?.population === populationName
+            ? hovered.nodeId
+            : lineHovered?.population === populationName
+              ? lineHovered.nodeId
+              : held
+        }
         shownCells={sceneCells ?? undefined}
         selection={sceneSelection}
         onCellClick={handleSceneCellClick}
@@ -598,6 +617,7 @@ export function SonataReportView({
           onTimeWindowChange={handleTimeWindowChange}
           cellRows={cellRows}
           onCellClick={handleTraceClick}
+          onCellHover={handleLineHover}
           events={timeline}
         />
       </ErrorBoundary>
@@ -637,6 +657,7 @@ export function SonataReportView({
                   onTimeWindowChange={handleTimeWindowChange}
                   cellRows={cellRows}
                   onCellClick={handleTraceClick}
+                  onCellHover={handleLineHover}
                   events={timeline}
                 />
               </ErrorBoundary>
@@ -760,6 +781,7 @@ export function SonataReportView({
                     },
                   },
                   focusRow: focusedRow,
+                  markedNodeId: held ?? null,
                   resetRequest,
                 }}
               />

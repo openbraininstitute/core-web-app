@@ -170,6 +170,7 @@ export default function ReportDetailsView({
   onTimeWindowChange,
   cellRows,
   onCellClick,
+  onCellHover,
   events,
 }: {
   population: PopulationMetadata;
@@ -191,6 +192,8 @@ export default function ReportDetailsView({
   cellRows?: CellRowSource;
   /** Told the node id of a line clicked. */
   onCellClick?: (nodeId: number) => void;
+  /** Told the node id of the line under the pointer; null once there is none. */
+  onCellHover?: (nodeId: number | null) => void;
   /** The traces the nodes table's filter keeps; null shows them all. */
   visibleTraces: number[] | null;
   /** The traces of the cells picked in the nodes table, in the order they were picked. */
@@ -241,6 +244,7 @@ export default function ReportDetailsView({
         onTimeWindowChange={onTimeWindowChange}
         cellRows={cellRows}
         onCellClick={onCellClick}
+        onCellHover={onCellHover}
         events={events}
       />
     </div>
@@ -260,6 +264,7 @@ function SharedTracesPlot({
   onTimeWindowChange,
   cellRows,
   onCellClick,
+  onCellHover,
   events,
 }: {
   population: PopulationMetadata;
@@ -271,6 +276,7 @@ function SharedTracesPlot({
   onTimeWindowChange?: (window: TimeRange | null) => void;
   cellRows?: CellRowSource;
   onCellClick?: (nodeId: number) => void;
+  onCellHover?: (nodeId: number | null) => void;
   lines: Line[];
   hovered: number[];
   /** Name each line in a legend: the picked cells, each in its own colour. */
@@ -453,6 +459,12 @@ function SharedTracesPlot({
   }, [x, y, size, legend, timeUnits, units, valueLabel]);
 
   const [tip, setTip] = useState<TraceHover>();
+  const hoveredCellRef = useRef<number | null>(null);
+  const hoverCell = (nodeId: number | null) => {
+    if (hoveredCellRef.current === nodeId) return;
+    hoveredCellRef.current = nodeId;
+    onCellHover?.(nodeId);
+  };
   // The graph once drawn, for the timings over it; a timing's card over a line's, which gives way.
   const [graph, setGraph] = useState<HTMLElement | null>(null);
   const [timingHovered, setTimingHovered] = useState(false);
@@ -572,10 +584,17 @@ function SharedTracesPlot({
       onPointerMove={(e) => {
         const line = lineUnder(e.clientX, e.clientY);
         setTip(line ? { ...line, clientX: e.clientX, clientY: e.clientY } : undefined);
+        hoverCell(line ? (population.traces[line.traceIndex]?.nodeId ?? null) : null);
       }}
       // Not while a zoom is dragged out, which Plotly follows over a cover of its own.
-      onPointerDown={() => setTip(undefined)}
-      onPointerLeave={() => setTip(undefined)}
+      onPointerDown={() => {
+        setTip(undefined);
+        hoverCell(null);
+      }}
+      onPointerLeave={() => {
+        setTip(undefined);
+        hoverCell(null);
+      }}
       onClick={(e) => {
         // A click on the plot itself, which Plotly passes on when nothing was dragged.
         if (!(e.target instanceof Element) || !e.target.closest('.nsewdrag')) return;
