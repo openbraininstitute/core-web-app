@@ -3,7 +3,6 @@ import { maxBy } from 'es-toolkit';
 import { extentOf } from '@/features/circuit-viewer/morphologies/extent';
 import { binMiddle } from '@/features/lfp-viewer/summary';
 
-import type { FieldPlotMode } from '@/features/lfp-viewer/field-plot';
 import type { LfpField } from '@/features/lfp-viewer/summary';
 
 /** Bins the measurements are taken over at most: blocks of the overview's, averaged. */
@@ -23,12 +22,8 @@ const LINE_ABOVE_CHANCE = 4;
 const LINE_EXPLAINS_MOST = 0.5;
 /** Differences up to this many steps of a stored field are its rounding. */
 const ROUNDING_STEPS = 1;
-/** Above this many contacts the map is shown first: their traces would not read. */
-const MAP_FIRST_ABOVE = 64;
-/** Below this share of signal common to all contacts the map is shown first: it is what differs. */
-const MAP_FIRST_SHARED_BELOW = 0.5;
 /** Traces drawn while none are ticked: spread evenly over the contacts. */
-const DEFAULT_TRACES = 32;
+export const DEFAULT_TRACES = 32;
 /** Ticked contacts traced at most, a range read each. */
 export const MAX_TRACES = 64;
 
@@ -155,10 +150,6 @@ export function describeField(field: LfpField): FieldStructure {
         ? new Float32Array(contacts)
         : leadingVector(residual, contacts, bins),
   };
-}
-
-export function openingView({ sharedShare, mode }: FieldStructure): FieldPlotMode {
-  return mode.length > MAP_FIRST_ABOVE || sharedShare < MAP_FIRST_SHARED_BELOW ? 'map' : 'traces';
 }
 
 function solve3(a: number[][], b: number[]): number[] | null {

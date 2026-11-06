@@ -7,7 +7,6 @@ import {
   fieldDirection,
   fieldRows,
   openingOrder,
-  openingView,
   tracedContacts,
   traceLabels,
   withoutShared,
@@ -214,22 +213,6 @@ describe('buildRows', () => {
     const rows = buildRows(100, coordinate, 'microns', (c) => (c === 94 ? 9 : 1));
     expect(rows[3].contacts).toEqual([95, 94]);
     expect(rows[3].lead).toBe(94);
-  });
-});
-
-describe('openingView', () => {
-  const structure = (sharedShare: number, contacts: number) => ({
-    sharedShare,
-    mode: new Float32Array(contacts),
-  });
-
-  it('opens traces of a few contacts that share most of the field', () => {
-    expect(openingView(structure(0.9, 16))).toBe('traces');
-  });
-
-  it('opens the map where little is shared, or where traces would not read', () => {
-    expect(openingView(structure(0.3, 16))).toBe('map');
-    expect(openingView(structure(0.9, 65))).toBe('map');
   });
 });
 

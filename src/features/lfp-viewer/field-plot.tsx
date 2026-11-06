@@ -32,6 +32,8 @@ const LABEL = '#8c8c8c';
 const SELECTED = SELECTED_COLOUR;
 /** A drag shorter than this is a click. */
 const DRAG_PX = 4;
+/** A trace's label needs this much height; in lanes lower, only every few are labelled. */
+const LABEL_PX = 11;
 const NO_EVENTS: readonly TimelineEvent[] = [];
 
 type Props = {
@@ -50,6 +52,8 @@ type Props = {
   traceField: LfpField | null;
   /** How many times the shared gain the traces are drawn at. */
   gain: number;
+  /** Each trace's height in px, the pane scrolling through them where they don't fit; null fits them all. */
+  laneHeight: number | null;
   window: [number, number];
   onWindowChange: (window: [number, number] | null) => void;
   selectedContact: number | null;
@@ -125,6 +129,7 @@ export function FieldPlot({
   colours,
   traceField,
   gain,
+  laneHeight,
   window: [from, to],
   onWindowChange,
   selectedContact,
@@ -169,8 +174,45 @@ export function FieldPlot({
   const xOf = (t: number) => plot.left + ((t - from) / (to - from)) * plot.width;
   const timeOf = (x: number) => from + ((x - plot.left) / plot.width) * (to - from);
   const rowCount = mode === 'map' ? rows.length : traces.length;
+  // The traces' lanes, which scroll where they don't fit.
+  const lane = laneHeight ?? plot.height / Math.max(1, traces.length);
+  const lanesHeight = traces.length * lane;
+  const maxScroll = mode === 'traces' ? Math.max(0, lanesHeight - plot.height) : 0;
+  const [chosenScroll, setScroll] = useState(0);
+  const scroll = Math.min(chosenScroll, maxScroll);
   const rowOf = (y: number) =>
-    Math.min(rowCount - 1, Math.max(0, Math.floor(((y - plot.top) / plot.height) * rowCount)));
+    Math.min(
+      rowCount - 1,
+      Math.max(
+        0,
+        mode === 'traces'
+          ? Math.floor((y - plot.top + scroll) / lane)
+          : Math.floor(((y - plot.top) / plot.height) * rowCount)
+      )
+    );
+
+  useEffect(() => {
+    const box = boxRef.current;
+    if (!box || maxScroll === 0) return;
+    const onWheel = (e: WheelEvent) => {
+      if (e.ctrlKey) return;
+      e.preventDefault();
+      setScroll((s) => Math.min(maxScroll, Math.max(0, Math.min(s, maxScroll) + e.deltaY)));
+    };
+    box.addEventListener('wheel', onWheel, { passive: false });
+    return () => box.removeEventListener('wheel', onWheel);
+  }, [maxScroll]);
+
+  // A contact picked elsewhere is scrolled into view.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: only a new pick scrolls, not a scroll of the user's
+  useEffect(() => {
+    const row = selectedContact === null ? -1 : traces.indexOf(selectedContact);
+    if (row < 0 || maxScroll === 0) return;
+    const y = row * lane;
+    if (y < scroll || y + lane > scroll + plot.height) {
+      setScroll(Math.min(maxScroll, Math.max(0, y - (plot.height - lane) / 2)));
+    }
+  }, [selectedContact]);
 
   // The map's image, a pixel per row and bin over the whole run; a window crops it.
   const mapImage = useMemo(() => {
@@ -248,7 +290,14 @@ export function FieldPlot({
     }
 
     if (mode === 'traces' && traces.length > 0) {
-      const rowHeight = plotHeight / traces.length;
+      const rowHeight = lane;
+      const laneY = (row: number) => plot.top + (row + 0.5) * rowHeight - scroll;
+      const firstLane = Math.max(0, Math.floor(scroll / rowHeight) - 1);
+      const endLane = Math.min(traces.length, Math.ceil((scroll + plotHeight) / rowHeight) + 1);
+      const inView = (row: number) => row >= firstLane && row < endLane;
+      // Scrolling, the lanes are cut at the plot's edges; all on show, gain may take them past.
+      const clipTop = maxScroll > 0 ? plot.top : 0;
+      const clipHeight = maxScroll > 0 ? plotHeight : size.height;
       // The scale's limit spans most of a row; more gain lets traces overlap, as raw data does.
       const pxPerUv = (rowHeight * 0.45 * gain) / scale.limit;
       // The traced rows at full resolution where they are in, else the overview's.
@@ -259,24 +308,32 @@ export function FieldPlot({
       g.textBaseline = 'middle';
       const inkOf = (contact: number, otherwise: string) =>
         colours.get(contact) ?? (contact === selectedContact ? SELECTED : otherwise);
-      traces.forEach((contact, row) => {
-        g.fillStyle = inkOf(contact, LABEL);
-        g.fillText(traceLabels[row], plot.left - 6, plot.top + (row + 0.5) * rowHeight);
-      });
+      const labelEvery = Math.max(1, Math.ceil(LABEL_PX / rowHeight));
+      g.save();
+      g.beginPath();
+      g.rect(0, clipTop, plot.left, clipHeight);
+      g.clip();
+      for (let row = firstLane; row < endLane; row++) {
+        if (row % labelEvery !== 0) continue;
+        g.fillStyle = inkOf(traces[row], LABEL);
+        g.fillText(traceLabels[row], plot.left - 6, laneY(row));
+      }
+      g.restore();
       // A window can fall between two bin centres: the bins either side carry the line across it.
       const lineFrom = Math.max(0, first - 1);
       const lineEnd = Math.min(source.bins, last + 1);
       g.save();
       g.beginPath();
-      g.rect(plot.left, 0, plotWidth, size.height);
+      g.rect(plot.left, clipTop, plotWidth, clipHeight);
       g.clip();
       // The ticked last, so that they lie over the others where gain makes them meet.
       const drawOrder = traces
         .map((_, row) => row)
+        .filter(inView)
         .sort((a, b) => Number(colours.has(traces[a])) - Number(colours.has(traces[b])));
       for (const row of drawOrder) {
         const contact = traces[row];
-        const base = plot.top + (row + 0.5) * rowHeight;
+        const base = laneY(row);
         const at = traceField ? row : contact;
         g.strokeStyle = inkOf(contact, INK);
         g.lineWidth = colours.has(contact) ? 1.5 : 1;
@@ -341,6 +398,9 @@ export function FieldPlot({
     colours,
     traceField,
     gain,
+    lane,
+    scroll,
+    maxScroll,
     from,
     to,
     selectedContact,
@@ -484,6 +544,15 @@ export function FieldPlot({
             display: 'none',
           }}
         />
+        {maxScroll > 0 && (
+          <ScrollThumb
+            top={plot.top}
+            height={plot.height}
+            scroll={scroll}
+            total={lanesHeight}
+            onScroll={(s) => setScroll(Math.min(maxScroll, Math.max(0, s)))}
+          />
+        )}
         {drag && Math.abs(drag.x1 - drag.x0) >= DRAG_PX && (
           <div
             className="bg-primary-9/10 border-primary-9/40 pointer-events-none absolute border-x"
@@ -504,5 +573,45 @@ export function FieldPlot({
       </div>
       {size.width > 0 && footer(plot.left, plot.right)}
     </div>
+  );
+}
+
+/** Where the lanes on show lie among all of them, in the plot's right margin: dragged, it scrolls them. */
+function ScrollThumb({
+  top,
+  height,
+  scroll,
+  total,
+  onScroll,
+}: {
+  top: number;
+  height: number;
+  scroll: number;
+  total: number;
+  onScroll: (scroll: number) => void;
+}) {
+  const [grab, setGrab] = useState<{ y: number; scroll: number } | null>(null);
+  const thumb = Math.max(16, (height * height) / total);
+  const room = Math.max(1, height - thumb);
+  const at = top + (scroll / Math.max(1, total - height)) * room;
+  return (
+    <div
+      aria-hidden
+      className={`absolute right-0.5 w-1.5 cursor-grab rounded-full ${grab ? 'bg-neutral-400' : 'bg-neutral-300 hover:bg-neutral-400'}`}
+      style={{ top: at, height: thumb }}
+      onPointerDown={(e) => {
+        e.stopPropagation();
+        e.currentTarget.setPointerCapture(e.pointerId);
+        setGrab({ y: e.clientY, scroll });
+      }}
+      onPointerMove={(e) => {
+        e.stopPropagation();
+        if (grab) onScroll(grab.scroll + ((e.clientY - grab.y) * (total - height)) / room);
+      }}
+      onPointerUp={(e) => {
+        e.stopPropagation();
+        setGrab(null);
+      }}
+    />
   );
 }
