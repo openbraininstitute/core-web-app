@@ -1,7 +1,8 @@
 import { useSetAtom } from 'jotai';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { populationRanges } from '@/features/circuit-viewer/morphologies/cell-colors';
 import { LazyCircuitCells } from '@/features/circuit-viewer/morphologies/lazy-circuit-cells';
 import { PLACEHOLDER_SOMA_RADIUS } from '@/features/circuit-viewer/morphologies/load/place-trees';
 import { sectionNumbered } from '@/features/circuit-viewer/morphologies/sections';
@@ -17,6 +18,7 @@ import {
   MORPHOLOGY_LOCATIONS_CONFIG_KEY,
   readEntry,
 } from '@/features/scan-config/components/model-preview/morphology-locations-block';
+import { UnplacedPopulationsNotice } from '@/features/scan-config/components/shared/unplaced-populations-notice';
 import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
 
 import { GeneratedLocationsLegend } from './morphology-location/generated-legend';
@@ -35,7 +37,12 @@ import type {
   CircuitCellsHostProps,
   CircuitViewerHostProps,
 } from '@/features/circuit-viewer/host-props';
-import type { Population } from '@/features/circuit-viewer/morphologies/types';
+import type { LocationHit } from '@/features/circuit-viewer/morphologies/pointer';
+import type {
+  LocationMarker,
+  Population,
+  ViewLocations,
+} from '@/features/circuit-viewer/morphologies/types';
 import type { ViewerTheme } from '@/features/scan-config/components/color-by/contrast';
 import type { IFormBindingOptions } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import type { SmallCircuitSource } from './sources';
@@ -43,6 +50,7 @@ import type { SmallCircuitSource } from './sources';
 /** Nothing hidden, shared so the initial state is one object rather than one per viewer. */
 const EMPTY_LABELS: ReadonlySet<string> = new Set();
 const NO_POPULATIONS: Population[] = [];
+const NO_POPULATION_NAMES: readonly string[] = [];
 
 interface CircuitVizProps extends CircuitViewerHostProps, CircuitCellsHostProps {
   /**
@@ -62,7 +70,35 @@ interface CircuitVizProps extends CircuitViewerHostProps, CircuitCellsHostProps 
   legendTarget?: HTMLElement | null;
   /** Background-derived chrome theme for the legends; null keeps the fixed light styling. */
   theme?: ViewerTheme | null;
+  /**
+   * Balls on cells of the population on show, each at a section and an offset along it in a
+   * colour of its own: a compartment report's locations, coloured by their values as it plays.
+   * In place of the form's morphology locations.
+   */
+  locationMarkers?: readonly SceneLocationMarker[];
+  /** Told the key of a ball clicked, which then counts as no click on its cell. */
+  onLocationClick?: (key: number) => void;
+  /** Told the key of the ball under the pointer, and null once it leaves them. */
+  onLocationHover?: (key: number | null) => void;
 }
+
+/**
+ * A ball on a cell of the population on show: its key, such as the trace it plays, its node
+ * index, SONATA section id, offset and colour.
+ */
+export type SceneLocationMarker = {
+  key: number;
+  nodeId: number;
+  sectionId: number;
+  offset: number;
+  color: string;
+};
+
+/** A ball as the view draws it, on the scene's cell, its key along. */
+type SceneBall = LocationMarker & { key: number };
+
+/** The balls' radius in world units, µm: large enough to read a colour off with a whole cell in view. */
+const LOCATION_BALL_RADIUS = 10;
 
 export interface IMorphologyLocationsBinding extends IFormBindingOptions {
   /** Marker radius in world units, from the viewer settings slider. */
@@ -89,6 +125,9 @@ export function CircuitVisualization({
   nodeColors,
   onSubjectCellClick,
   onPositionlessPopulationsChange,
+  locationMarkers,
+  onLocationClick,
+  onLocationHover,
   ...props
 }: CircuitVizProps) {
   const source = useSmallCircuitSource({
@@ -110,12 +149,27 @@ export function CircuitVisualization({
     onPopulationClick,
     onSubjectCellClick
   );
+  // Each ball on its cell's number in the scene, numbered through the populations in turn.
+  const { tree } = source;
+  const subjectName = props.population?.name;
+  const balls = useMemo(() => {
+    if (!locationMarkers || !tree) return undefined;
+    const range = populationRanges(tree.somas.populations).find(({ name }) => name === subjectName);
+    if (!range) return [];
+    return locationMarkers.flatMap(({ key, nodeId, sectionId, offset, color }): SceneBall[] => {
+      const cell = range.first + nodeId;
+      return cell < range.end ? [{ key, cell, sonataId: sectionId, offset, color }] : [];
+    });
+  }, [locationMarkers, tree, subjectName]);
   return (
     <CircuitVizView
       {...props}
       entityId={props.circuit.id}
       source={source}
       onCellClick={onPopulationClick || onSubjectCellClick ? handleCellClick : undefined}
+      balls={balls}
+      onBallClick={onLocationClick}
+      onBallHover={onLocationHover}
     />
   );
 }
@@ -134,12 +188,19 @@ type TCircuitVizViewProps = Omit<
   | 'onSubjectCellClick'
   | 'onPositionlessPopulationsChange'
   | 'nodeColors'
+  | 'locationMarkers'
+  | 'onLocationClick'
+  | 'onLocationHover'
 > & {
   source: SmallCircuitSource;
   /** The circuit or MEModel on show, which generated morphology locations are previewed on. */
   entityId: string;
   /** Whole-cell clicks, by the cell's number in the source's scene. */
   onCellClick?: (cell: number) => void;
+  /** Balls on the scene's cells, in place of the form's locations. */
+  balls?: readonly SceneBall[];
+  onBallClick?: (key: number) => void;
+  onBallHover?: (key: number | null) => void;
 };
 
 function CircuitVizView({
@@ -167,6 +228,9 @@ function CircuitVizView({
   theme,
   onCellClick,
   defaultColor = DEFAULT_NEURON_COLOR,
+  balls,
+  onBallClick,
+  onBallHover,
   debugTarget,
 }: TCircuitVizViewProps) {
   const {
@@ -177,6 +241,8 @@ function CircuitVizView({
     locationFirstCell,
     locationNodeCount,
     error,
+    unplaced,
+    retry,
     synapses,
     anchor,
     download,
@@ -225,6 +291,50 @@ function CircuitVizView({
     backgroundColor,
     generatedLocations: visibleGeneratedLocations,
   });
+  // A tap on a ball is told as its pick first, then as a click on the cell under it or on empty
+  // space: the ball's own is then the only click. The next press forgets it, should none follow.
+  const ballPicked = useRef(false);
+  const ballsPicked = onBallClick !== undefined;
+  const cellClick = useMemo(
+    () =>
+      onCellClick && ballsPicked
+        ? (cell: number) => {
+            if (ballPicked.current) ballPicked.current = false;
+            else onCellClick(cell);
+          }
+        : onCellClick,
+    [onCellClick, ballsPicked]
+  );
+  const emptyClick = useMemo(
+    () =>
+      onEmptyClick && ballsPicked
+        ? () => {
+            if (ballPicked.current) ballPicked.current = false;
+            else onEmptyClick();
+          }
+        : onEmptyClick,
+    [onEmptyClick, ballsPicked]
+  );
+  const ballLocations = useMemo((): ViewLocations | undefined => {
+    if (!balls) return undefined;
+    const keyOf = (hit: LocationHit | null) =>
+      hit && 'marker' in hit ? balls[hit.marker]?.key : undefined;
+    return {
+      markers: balls,
+      radius: LOCATION_BALL_RADIUS,
+      // A ball is there to be read and picked, not a place to add another.
+      pickable: () => false,
+      onPick: onBallClick
+        ? (hit) => {
+            const key = keyOf(hit);
+            if (key === undefined) return;
+            ballPicked.current = true;
+            onBallClick(key);
+          }
+        : undefined,
+      onHover: onBallHover ? (hit) => onBallHover(keyOf(hit) ?? null) : undefined,
+    };
+  }, [balls, onBallClick, onBallHover]);
   // Labels the legend is hiding. Held here because the legend names them and the viewer is handed what is left.
   const [hiddenSynapses, setHiddenSynapses] = useState<ReadonlySet<string>>(EMPTY_LABELS);
   const toggleSynapseLabel = useCallback(
@@ -272,7 +382,12 @@ function CircuitVizView({
   );
 
   return (
-    <div className="h-full w-full relative">
+    <div
+      className="h-full w-full relative"
+      onPointerDown={() => {
+        ballPicked.current = false;
+      }}
+    >
       {tree && (
         <LazyCircuitCells
           somas={tree.somas}
@@ -287,16 +402,16 @@ function CircuitVizView({
           cellHover={(source.hover ?? true) && (features?.cellHover ?? true)}
           // Not while a location is being placed: a tap meant for a neurite would also put another population on show,
           // recolouring the scene and swapping the nodes table under the user. The checklist still changes population.
-          onCellClick={pickMode ? undefined : onCellClick}
+          onCellClick={pickMode ? undefined : cellClick}
           electrodes={overlays}
           electrodeRadius={electrodeRadius}
           selectedElectrode={highlightedOverlayId}
           onElectrodeTransform={overlaysInteractive ? onOverlayTransform : undefined}
-          locations={locations}
+          locations={ballLocations ?? locations}
           synapses={visibleSynapses}
           spikes={spikes}
           onGlowAvailable={onGlowAvailableChange}
-          onEmptyClick={onEmptyClick}
+          onEmptyClick={emptyClick}
           backgroundColor={backgroundColor}
           showScalebar={showScalebar}
           spin={spin}
@@ -331,6 +446,9 @@ function CircuitVizView({
           morphologies={{ loaded: morphologies.loaded, total: morphologies.total }}
         />
       )}
+      {!error && (
+        <UnplacedPopulationsNotice names={unplaced ?? NO_POPULATION_NAMES} onRetry={retry} />
+      )}
       {(error || unread) && (
         <div
           role="alert"
@@ -342,11 +460,11 @@ function CircuitVizView({
             </summary>
             <div>{error?.message ?? 'The morphologies could not be read.'}</div>
           </details>
-          {/* What the source failed at, the circuit's config or its placement, is not read again from here. */}
-          {!error && (
+          {/* Of what the source failed at, only node files that could not be read are asked for again. */}
+          {(!error || (retry && unplaced?.length)) && (
             <button
               type="button"
-              onClick={morphologies.retry}
+              onClick={error ? retry : morphologies.retry}
               className="rounded-full bg-white px-3 py-1 text-sm text-primary-9 shadow-md ring-1 ring-black/5 hover:bg-neutral-100"
             >
               Try again

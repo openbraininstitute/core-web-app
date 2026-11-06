@@ -30,6 +30,8 @@ interface HeaderParams {
   };
   /** registry key of a header that replaces all of the above */
   headerRenderer?: string;
+  /** the column is sized to its content, so its filter follows the label rather than its edge */
+  fitted?: boolean;
 }
 
 /**
@@ -51,7 +53,7 @@ export function AgHeader(props: CustomHeaderProps) {
 /** The label, sort toggle and filter popover of a column with no registered header. */
 function DefaultHeader(props: CustomHeaderProps) {
   const ctx = props.context as IAgGridContext;
-  const { columnId, unit, sortable, filter, headerNode } = props as CustomHeaderProps &
+  const { columnId, unit, sortable, filter, headerNode, fitted } = props as CustomHeaderProps &
     HeaderParams;
   const state = useGridState(ctx.controller);
   const [open, setOpen] = useState(false);
@@ -77,7 +79,8 @@ function DefaultHeader(props: CustomHeaderProps) {
         type="button"
         onClick={onSortClick}
         className={cn(
-          'group flex h-full min-w-0 flex-1 items-center gap-1.5 text-left',
+          'group flex h-full min-w-0 items-center gap-1.5 text-left',
+          fitted ? 'flex-none' : 'flex-1',
           sortable ? 'cursor-pointer' : 'cursor-default'
         )}
       >

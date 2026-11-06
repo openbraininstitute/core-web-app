@@ -8,8 +8,13 @@ export type TraceMeta = {
   nodeId: number;
   /** Value from `mapping/element_ids` for this column, when the file carries one. */
   elementId: number | null;
-  /** Unique label: the node id, plus a per-cell ordinal when the cell spans columns. */
+  /**
+   * Unique label: the node id, and where the cell spans columns its compartment, or a
+   * per-cell ordinal when the file does not say which section a column is in.
+   */
   label: string;
+  /** Where the cell spans columns, this one's name among them: its section, or its number. */
+  compartment?: string;
 };
 
 export type PopulationMetadata = {
@@ -38,8 +43,16 @@ export type CellFrames = {
  * its first column, the soma in a compartment report. `spikes` counts upward
  * crossings of a threshold, where one was given.
  */
-export type CellValueStatistics = {
-  nodeIds: Uint32Array;
+/** Some traces' values over the run, thinned as {@link CellFrames} are: a value per trace per frame. */
+export type TraceFrames = {
+  times: Float64Array;
+  values: Float32Array;
+};
+
+export type CellValueStatistics = TraceValueStatistics & { nodeIds: Uint32Array };
+
+/** Each column's statistics over the run, in column order: a compartment report's compartments each. */
+export type TraceValueStatistics = {
   mean: Float64Array;
   sd: Float64Array;
   min: Float64Array;

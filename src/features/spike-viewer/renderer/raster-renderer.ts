@@ -118,6 +118,8 @@ export class RasterRenderer {
   private plotRect: PlotRect = { x: 0, y: 0, width: 1, height: 1 };
   private pops: PlottedPopulation[] = [];
   private dataBounds: ViewBounds = { xMin: 0, xMax: 1, yMin: 0, yMax: 1 };
+  /** The bounds `setData` was last given: `dataBounds` takes `setYBounds`' rows over them. */
+  private givenBounds: ViewBounds = { xMin: 0, xMax: 1, yMin: 0, yMax: 1 };
   private visibleSpikes = 0;
   private baseSize = 6;
   private dirty = true;
@@ -208,10 +210,13 @@ export class RasterRenderer {
 
   setData(populations: SpikePopulation[], dataBounds: ViewBounds) {
     // The same span again - the same spikes cut to fewer cells, say - keeps the
-    // zoom, which may be what cut them.
-    const sameSpan = this.hasData && sameBounds(this.dataBounds, dataBounds);
-    this.dataBounds = dataBounds;
+    // zoom, which may be what cut them, and the rows `setYBounds` gave the
+    // population on show. Against those rows rather than the bounds given here,
+    // every cut looked like a new span and zoomed back out.
+    const sameSpan = this.hasData && sameBounds(this.givenBounds, dataBounds);
+    this.givenBounds = dataBounds;
     if (!sameSpan) {
+      this.dataBounds = dataBounds;
       this.initialView = paddedView(dataBounds);
       this.view = { ...this.initialView };
       this.interaction.setInitialView(this.initialView);

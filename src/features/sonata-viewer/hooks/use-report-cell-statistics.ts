@@ -112,3 +112,47 @@ export function useReportCellStatistics({
   const { population, rows, values } = registeredStatistics;
   return population === populationName && rows === rowCount ? values : null;
 }
+
+/**
+ * Each column's statistics over the traces' time window, as {@link useReportCellStatistics}
+ * works out each cell's from its first: in a compartment report, each compartment's, by
+ * trace. Null until the first are in; a new window's are worked out while the last stand.
+ */
+export function useReportTraceStatistics({
+  enabled,
+  worker,
+  populationName,
+  timeWindow,
+  voltage,
+}: {
+  enabled: boolean;
+  worker: Remote<SonataWorkerImpl>;
+  populationName: string | undefined;
+  timeWindow: TimeRange | null;
+  /** A voltage report, whose compartments' spikes are counted too. */
+  voltage: boolean;
+}): StatisticValues | null {
+  const [found, setFound] = useState<{
+    population: string;
+    window: TimeRange | null;
+    values: StatisticValues;
+  }>();
+  const known = found?.population === populationName && found?.window === timeWindow;
+  useEffect(() => {
+    if (!enabled || !populationName || known) return;
+    let cancelled = false;
+    worker
+      .getTraceStatistics(populationName, voltage ? SPIKE_THRESHOLD_MV : null, timeWindow)
+      .then(({ mean, sd, min, max, spikes }) => {
+        if (cancelled) return;
+        const values: Record<string, Float64Array> = { mean, sd, min, max };
+        if (spikes) values.spikes = spikes;
+        setFound({ population: populationName, window: timeWindow, values });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [enabled, populationName, known, worker, voltage, timeWindow]);
+  return enabled && found && found.population === populationName ? found.values : null;
+}
