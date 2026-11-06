@@ -5,9 +5,10 @@ import {
   CloseOutlined,
   DeleteOutlined,
   EditOutlined,
+  LinkOutlined,
   PlusOutlined,
 } from '@ant-design/icons';
-import { App, Input, Modal } from 'antd';
+import { App } from 'antd';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
@@ -18,6 +19,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip'
 import { cn } from '@/utils/css-class';
 
 import { joinBlocks, splitBlocks } from './blocks';
+import { type LinkedEntity, LinkEntitiesWindow } from './link-entities-window';
 import {
   useDeleteResearchLog,
   useResearchLog,
@@ -30,7 +32,6 @@ import { ResearchLogMarkdown } from './markdown';
 import type { ReactNode } from 'react';
 import type { IResearchLog } from '@/api/entitycore/types/entities/research-log';
 
-const UUID = /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i;
 
 /** A text field set in the typography it edits, so entering edit mode changes nothing visually. */
 const inlineField =
@@ -59,8 +60,7 @@ function Loaded({ log }: { log: IResearchLog }) {
   const [description, setDescription] = useState(log.description);
   const [blocks, setBlocks] = useState<string[] | null>(null);
   const [active, setActive] = useState<number | null>(null);
-  const [cardOpen, setCardOpen] = useState(false);
-  const [cardInput, setCardInput] = useState('');
+  const [linkOpen, setLinkOpen] = useState(false);
 
   useEffect(() => {
     if (saved !== undefined && blocks === null) setBlocks(splitBlocks(saved));
@@ -125,15 +125,16 @@ function Loaded({ log }: { log: IResearchLog }) {
       },
     });
 
-  const insertCard = () => {
-    const entityId = cardInput.match(UUID)?.[1];
-    if (!entityId) {
-      notification.warning({ message: 'Paste an entity id or its platform link' });
-      return;
-    }
-    setBlocks([...current, `[${entityId}](/app/entity/${entityId})`]);
-    setCardInput('');
-    setCardOpen(false);
+  const linkEntities = (entities: LinkedEntity[]) => {
+    const origin = window.location.origin;
+    setBlocks([
+      ...current,
+      ...entities.map(
+        (entity) =>
+          `[${entity.name.replace(/[[\]]/g, '')}](${origin}/app/entity/${entity.id})`
+      ),
+    ]);
+    setLinkOpen(false);
   };
 
   return (
@@ -227,8 +228,8 @@ function Loaded({ log }: { log: IResearchLog }) {
                 <Button rounded variant="ghost" size="sm" onClick={() => addBlock('')}>
                   <PlusOutlined /> Text
                 </Button>
-                <Button rounded variant="ghost" size="sm" onClick={() => setCardOpen(true)}>
-                  <PlusOutlined /> Entity card
+                <Button rounded variant="ghost" size="sm" onClick={() => setLinkOpen(true)}>
+                  <LinkOutlined /> Link entities
                 </Button>
               </div>
             </>
@@ -238,22 +239,7 @@ function Loaded({ log }: { log: IResearchLog }) {
         </article>
       </div>
 
-      <Modal
-        open={cardOpen}
-        title="Add an entity card"
-        okText="Add"
-        onOk={insertCard}
-        onCancel={() => setCardOpen(false)}
-      >
-        <p className="text-neutral-5 mb-2 text-sm">
-          Paste an entity id or its platform link. A block holding only that link shows as a card.
-        </p>
-        <Input
-          value={cardInput}
-          onChange={(e) => setCardInput(e.target.value)}
-          onPressEnter={insertCard}
-        />
-      </Modal>
+      {linkOpen && <LinkEntitiesWindow onAdd={linkEntities} onClose={() => setLinkOpen(false)} />}
     </div>
   );
 }
