@@ -117,6 +117,9 @@ export function NotebooksLayout({ children }: Props) {
   }
 
   const course = virtualLabData?.course;
+  // Students (course projects that aren't the instructor's template project) don't choose a
+  // session size: hide the size picker and open JupyterHub with the backend default size.
+  const isCourseStudentProject = !!course && course.template_project_id !== projectId;
 
   const [syncRecord, setSyncRecord] = useState<EntityCoreObjectTypes | null>(null);
   const pendingSyncRef = useRef<EntityCoreObjectTypes | null>(null);
@@ -175,9 +178,9 @@ export function NotebooksLayout({ children }: Props) {
             <Dropdown
               trigger={['click']}
               placement="bottomRight"
-              open={sizeMenuOpen && !loading}
+              open={sizeMenuOpen && !loading && !isCourseStudentProject}
               onOpenChange={setSizeMenuOpen}
-              disabled={loading}
+              disabled={loading || isCourseStudentProject}
               popupRender={() => (
                 <SessionSizePanel
                   profiles={profiles}
@@ -194,6 +197,7 @@ export function NotebooksLayout({ children }: Props) {
                 type="button"
                 className="flex h-[40px] items-center justify-between gap-2 rounded-full border border-[#F37726] bg-white px-5 text-[#F37726] transition-colors hover:bg-orange-50"
                 data-testid="open-jupyterhub-button"
+                onClick={isCourseStudentProject ? () => handleRunNotebook() : undefined}
               >
                 <div>Open JupyterHub</div>
                 {loading ? (
@@ -201,7 +205,7 @@ export function NotebooksLayout({ children }: Props) {
                 ) : (
                   <Image src="/images/jupyter.svg" alt="Jupyter hub" width={20} height={20} />
                 )}
-                <DownOutlined className="text-xs" />
+                {!isCourseStudentProject && <DownOutlined className="text-xs" />}
               </button>
             </Dropdown>
           </div>
