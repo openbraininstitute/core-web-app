@@ -25,7 +25,6 @@ export default function ShowcaseDetailContent({ project }: { project: SanityShow
               Description
               <RightOutlined className="ml-auto text-current" />
             </Button>
-
           </aside>
 
           <main className="w-full overflow-y-auto">

@@ -12,8 +12,8 @@ import { cn } from '@/utils/css-class';
 
 import {
   useResearchLogHref,
-  useResearchLogs,
   useResearchLogScope,
+  useResearchLogs,
   useStartResearchLog,
 } from './hooks';
 
@@ -102,7 +102,10 @@ export function ResearchLogsLayout({ children }: { children: ReactNode }) {
                         {log.name}
                       </span>
                       <span
-                        className={cn('text-xs font-light', active ? 'text-white' : 'text-neutral-4')}
+                        className={cn(
+                          'text-xs font-light',
+                          active ? 'text-white' : 'text-neutral-4'
+                        )}
                       >
                         {dateLabel(log.update_date)}
                       </span>

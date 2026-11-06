@@ -3,8 +3,8 @@ import type {
   EntityCoreBaseAsset,
   EntityCoreOwnership,
   IAsset,
-  Timestamps,
   TEntityLifecycleStatus,
+  Timestamps,
 } from '@/api/entitycore/types/shared/global';
 
 /** A research log: a markdown document (asset label `research_log_document`) plus metadata. */

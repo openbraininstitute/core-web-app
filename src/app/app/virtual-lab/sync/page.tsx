@@ -11,10 +11,7 @@ import type { ServerSideComponentProp } from '@/types/common';
 
 export default async function Page({
   searchParams,
-}: ServerSideComponentProp<
-  null,
-  { redirectUrl?: string; showcaseSlug?: string }
->) {
+}: ServerSideComponentProp<null, { redirectUrl?: string; showcaseSlug?: string }>) {
   const queryParams = await searchParams;
   const session = await getSession();
   const { data: workspace, error } = await tryCatch(resolveWorkspace());

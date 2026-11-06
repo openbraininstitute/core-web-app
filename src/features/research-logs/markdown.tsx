@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
-import { entityCoreApi, entityAssetsPath, getEntityCoreContext } from '@/api/entitycore/utils';
+import { entityAssetsPath, entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 import { EntityCard, entityIdFromHref } from './entity-card';
@@ -56,7 +56,10 @@ function onlyChild(children: ReactNode): ReactElement<ComponentProps<'a'>> | nul
   const arr = Array.isArray(children) ? children : [children];
   const real = arr.filter((c) => !(typeof c === 'string' && c.trim() === ''));
   const first = real[0] as ReactElement<ComponentProps<'a'>> | undefined;
-  return real.length === 1 && first && typeof first === 'object' && typeof first.props?.href === 'string'
+  return real.length === 1 &&
+    first &&
+    typeof first === 'object' &&
+    typeof first.props?.href === 'string'
     ? first
     : null;
 }
@@ -95,7 +98,12 @@ export function ResearchLogMarkdown({
       );
     },
     img: ({ src, alt }) => (
-      <LogImage src={typeof src === 'string' ? src : undefined} alt={alt} logId={logId} filesAssetId={filesAssetId} />
+      <LogImage
+        src={typeof src === 'string' ? src : undefined}
+        alt={alt}
+        logId={logId}
+        filesAssetId={filesAssetId}
+      />
     ),
     table: ({ children }) => (
       <div className="my-3 overflow-x-auto">
@@ -106,19 +114,29 @@ export function ResearchLogMarkdown({
       <th className="border-neutral-2 bg-neutral-1 border px-3 py-1.5 text-left">{children}</th>
     ),
     td: ({ children }) => <td className="border-neutral-2 border px-3 py-1.5">{children}</td>,
-    h1: ({ children }) => <h1 className="mt-6 mb-3 text-2xl font-bold text-primary-9">{children}</h1>,
-    h2: ({ children }) => <h2 className="mt-6 mb-2 text-xl font-bold text-primary-9">{children}</h2>,
-    h3: ({ children }) => <h3 className="mt-5 mb-2 text-lg font-semibold text-primary-9">{children}</h3>,
+    h1: ({ children }) => (
+      <h1 className="mt-6 mb-3 text-2xl font-bold text-primary-9">{children}</h1>
+    ),
+    h2: ({ children }) => (
+      <h2 className="mt-6 mb-2 text-xl font-bold text-primary-9">{children}</h2>
+    ),
+    h3: ({ children }) => (
+      <h3 className="mt-5 mb-2 text-lg font-semibold text-primary-9">{children}</h3>
+    ),
     ul: ({ children }) => <ul className="my-2 list-disc pl-6">{children}</ul>,
     ol: ({ children }) => <ol className="my-2 list-decimal pl-6">{children}</ol>,
     blockquote: ({ children }) => (
-      <blockquote className="border-neutral-3 text-neutral-6 my-3 border-l-4 pl-4">{children}</blockquote>
+      <blockquote className="border-neutral-3 text-neutral-6 my-3 border-l-4 pl-4">
+        {children}
+      </blockquote>
     ),
     pre: ({ children }) => (
       <pre className="bg-neutral-1 my-3 overflow-x-auto rounded-lg p-3 text-sm">{children}</pre>
     ),
     code: ({ children, className }) => (
-      <code className={className ?? 'bg-neutral-1 rounded px-1 py-0.5 text-[0.9em]'}>{children}</code>
+      <code className={className ?? 'bg-neutral-1 rounded px-1 py-0.5 text-[0.9em]'}>
+        {children}
+      </code>
     ),
   };
 

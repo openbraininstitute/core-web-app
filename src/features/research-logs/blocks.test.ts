@@ -4,7 +4,11 @@ import { joinBlocks, splitBlocks } from './blocks';
 
 describe('splitBlocks', () => {
   it('splits at blank lines and drops empty ones', () => {
-    expect(splitBlocks('# A\n\n\nText\nmore\n\n- x\n- y\n')).toEqual(['# A', 'Text\nmore', '- x\n- y']);
+    expect(splitBlocks('# A\n\n\nText\nmore\n\n- x\n- y\n')).toEqual([
+      '# A',
+      'Text\nmore',
+      '- x\n- y',
+    ]);
   });
 
   it('keeps a fenced code block whole', () => {

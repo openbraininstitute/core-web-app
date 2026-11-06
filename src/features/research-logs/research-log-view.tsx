@@ -19,7 +19,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip'
 import { cn } from '@/utils/css-class';
 
 import { joinBlocks, splitBlocks } from './blocks';
-import { type LinkedEntity, LinkEntitiesWindow } from './link-entities-window';
 import {
   useDeleteResearchLog,
   useResearchLog,
@@ -27,11 +26,11 @@ import {
   useResearchLogHref,
   useSaveResearchLog,
 } from './hooks';
+import { LinkEntitiesWindow, type LinkedEntity } from './link-entities-window';
 import { ResearchLogMarkdown } from './markdown';
 
 import type { ReactNode } from 'react';
 import type { IResearchLog } from '@/api/entitycore/types/entities/research-log';
-
 
 /** A text field set in the typography it edits, so entering edit mode changes nothing visually. */
 const inlineField =
@@ -40,7 +39,8 @@ const inlineField =
 export function ResearchLogView({ id }: { id: string }) {
   const { data: log, isLoading, isError } = useResearchLog(id);
   if (isLoading) return <Skeleton className="m-6 h-64 w-2/3 rounded-xl" />;
-  if (isError || !log) return <p className="text-neutral-5 p-6">This research log was not found.</p>;
+  if (isError || !log)
+    return <p className="text-neutral-5 p-6">This research log was not found.</p>;
   return <Loaded key={log.id} log={log} />;
 }
 
@@ -60,6 +60,8 @@ function Loaded({ log }: { log: IResearchLog }) {
   const [description, setDescription] = useState(log.description);
   const [blocks, setBlocks] = useState<string[] | null>(null);
   const [active, setActive] = useState<number | null>(null);
+  // the block last worked in: new text and links go below it, and below the last block if none
+  const [anchor, setAnchor] = useState<number | null>(null);
   const [linkOpen, setLinkOpen] = useState(false);
 
   useEffect(() => {
@@ -75,15 +77,28 @@ function Loaded({ log }: { log: IResearchLog }) {
 
   /** Writes a block back; a blank draft removes it and a draft with blank lines becomes several. */
   const commit = (index: number, draft: string) => {
+    const parts = splitBlocks(draft);
     const next = [...current];
-    next.splice(index, 1, ...splitBlocks(draft));
+    next.splice(index, 1, ...parts);
     setBlocks(next);
     setActive(null);
+    // a blank draft removes the block, so the anchor falls back to the one before it
+    setAnchor(index + parts.length - 1);
   };
 
-  const addBlock = (source: string) => {
-    setBlocks([...current, source]);
-    setActive(current.length);
+  /** Puts blocks below the anchor, or at the end when none was worked in. */
+  const insertBlocks = (sources: string[]) => {
+    const at = anchor === null ? current.length : Math.min(anchor + 1, current.length);
+    const next = [...current];
+    next.splice(at, 0, ...sources);
+    setBlocks(next);
+    return at;
+  };
+
+  const addBlock = () => {
+    const at = insertBlocks(['']);
+    setActive(at);
+    setAnchor(at);
   };
 
   const cancel = () => {
@@ -91,6 +106,7 @@ function Loaded({ log }: { log: IResearchLog }) {
     setDescription(log.description);
     setBlocks(splitBlocks(saved ?? ''));
     setActive(null);
+    setAnchor(null);
     setEditing(false);
   };
 
@@ -107,6 +123,7 @@ function Loaded({ log }: { log: IResearchLog }) {
       });
       setEditing(false);
       setActive(null);
+      setAnchor(null);
       router.replace(href(log.id));
     } catch (e) {
       notification.error({ message: 'Could not save', description: String(e) });
@@ -127,13 +144,12 @@ function Loaded({ log }: { log: IResearchLog }) {
 
   const linkEntities = (entities: LinkedEntity[]) => {
     const origin = window.location.origin;
-    setBlocks([
-      ...current,
-      ...entities.map(
-        (entity) =>
-          `[${entity.name.replace(/[[\]]/g, '')}](${origin}/app/entity/${entity.id})`
-      ),
-    ]);
+    const at = insertBlocks(
+      entities.map(
+        (entity) => `[${entity.name.replace(/[[\]]/g, '')}](${origin}/app/entity/${entity.id})`
+      )
+    );
+    setAnchor(at + entities.length - 1);
     setLinkOpen(false);
   };
 
@@ -141,67 +157,91 @@ function Loaded({ log }: { log: IResearchLog }) {
     <div className="flex min-h-full flex-col gap-4 p-1">
       <div className="flex-1 rounded-2xl bg-white p-8 shadow-md">
         {/* zero-height and sticky, so the buttons float over the report while it scrolls */}
-        <div className="pointer-events-none sticky top-3 z-10 -mt-4 -mr-4 flex h-0 justify-end gap-2 [&>*]:pointer-events-auto">
-          {editing ? (
-            <>
-              <IconAction label="Cancel" onClick={cancel}>
-                <CloseOutlined />
-              </IconAction>
+        <div className="pointer-events-none sticky top-3 z-10 -mt-4 -mr-4 flex h-0 flex-col items-end gap-2 [&>*]:pointer-events-auto">
+          <div className="flex gap-2">
+            {editing ? (
+              <>
+                <IconAction label="Cancel" onClick={cancel}>
+                  <CloseOutlined />
+                </IconAction>
+                <IconAction
+                  label={save.isPending ? 'Saving…' : 'Save'}
+                  onClick={onSave}
+                  disabled={!dirty || save.isPending}
+                  className="bg-accent-dark text-white hover:bg-accent-dark/90"
+                >
+                  <CheckOutlined />
+                </IconAction>
+              </>
+            ) : (
               <IconAction
-                label={save.isPending ? 'Saving…' : 'Save'}
-                onClick={onSave}
-                disabled={!dirty || save.isPending}
-                className="bg-accent-dark text-white hover:bg-accent-dark/90"
+                label="Edit"
+                onClick={() => setEditing(true)}
+                testId="edit-research-log"
+                className="bg-primary-9 text-white hover:bg-primary-9/90"
               >
-                <CheckOutlined />
+                <EditOutlined />
               </IconAction>
-            </>
-          ) : (
-            <IconAction
-              label="Edit"
-              onClick={() => setEditing(true)}
-              testId="edit-research-log"
-              className="bg-primary-9 text-white hover:bg-primary-9/90"
-            >
-              <EditOutlined />
-            </IconAction>
-          )}
-          {!editing && (
-            <IconAction
-              label="Delete"
-              onClick={onDelete}
-              disabled={remove.isPending}
-              testId="delete-research-log"
-              className="bg-destructive text-white hover:bg-destructive/90"
-            >
-              <DeleteOutlined />
-            </IconAction>
+            )}
+            {!editing && (
+              <IconAction
+                label="Delete"
+                onClick={onDelete}
+                disabled={remove.isPending}
+                testId="delete-research-log"
+                className="bg-destructive text-white hover:bg-destructive/90"
+              >
+                <DeleteOutlined />
+              </IconAction>
+            )}
+          </div>
+          {editing && (
+            <div className="flex flex-col items-end gap-2">
+              <Button
+                rounded
+                variant="outline"
+                size="sm"
+                className="border-none shadow-md"
+                onClick={addBlock}
+              >
+                <PlusOutlined /> Text
+              </Button>
+              <Button
+                rounded
+                variant="outline"
+                size="sm"
+                className="border-none shadow-md"
+                onClick={() => setLinkOpen(true)}
+              >
+                <LinkOutlined /> Link entities
+              </Button>
+            </div>
           )}
         </div>
         <article className="mx-auto max-w-3xl">
           <div className="pr-28">
-          {editing ? (
-            <GrowingField
-              value={name}
-              onChange={setName}
-              placeholder="Name"
-              label="Name"
-              className="text-primary-9 text-3xl font-bold"
-            />
-          ) : (
-            <h1 className="text-primary-9 text-3xl font-bold">{log.name}</h1>
-          )}
-          {editing ? (
-            <GrowingField
-              value={description}
-              onChange={setDescription}
-              placeholder="Add a one-line summary"
-              label="Summary"
-              className="text-primary-9 mt-2 text-lg"
-            />
-          ) : log.description ? (
-            <p className="text-primary-9 mt-2 text-lg">{log.description}</p>
-          ) : null}
+            {editing ? (
+              <GrowingField
+                value={name}
+                onChange={setName}
+                placeholder="Name"
+                label="Name"
+                className="text-primary-9 text-3xl font-bold"
+              />
+            ) : (
+              <h1 className="text-primary-9 text-3xl font-bold">{log.name}</h1>
+            )}
+            {editing ? (
+              <GrowingField
+                value={description}
+                onChange={setDescription}
+                placeholder="Add a one-line summary"
+                label="Summary"
+                className="text-primary-9 mt-2 text-lg"
+              />
+            ) : log.description ? (
+              <p className="text-primary-9 mt-2 text-lg">{log.description}</p>
+            ) : null}
           </div>
           <p className="text-neutral-4 border-neutral-2 mt-1 mb-4 border-b pb-4 text-xs">
             {log.created_by?.pref_label ?? 'Unknown author'} · updated{' '}
@@ -218,20 +258,15 @@ function Loaded({ log }: { log: IResearchLog }) {
                   key={i}
                   source={source}
                   active={active === i}
-                  onActivate={() => setActive(i)}
+                  onActivate={() => {
+                    setActive(i);
+                    setAnchor(i);
+                  }}
                   onCommit={(draft) => commit(i, draft)}
                   logId={log.id}
                   filesAssetId={filesAssetId}
                 />
               ))}
-              <div className="mt-4 flex gap-2">
-                <Button rounded variant="ghost" size="sm" onClick={() => addBlock('')}>
-                  <PlusOutlined /> Text
-                </Button>
-                <Button rounded variant="ghost" size="sm" onClick={() => setLinkOpen(true)}>
-                  <LinkOutlined /> Link entities
-                </Button>
-              </div>
             </>
           ) : (
             <ResearchLogMarkdown markdown={markdown} logId={log.id} filesAssetId={filesAssetId} />
@@ -297,6 +332,7 @@ function GrowingField({
   className?: string;
 }) {
   const ref = useRef<HTMLTextAreaElement>(null);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: the text is what changes the height
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -343,6 +379,7 @@ function EditableBlock({
   }, [active, source]);
 
   // grow with the text, so the block never scrolls inside itself
+  // biome-ignore lint/correctness/useExhaustiveDependencies: the draft is what changes the height
   useLayoutEffect(() => {
     const el = area.current;
     if (!el) return;
@@ -350,11 +387,18 @@ function EditableBlock({
     el.style.height = `${el.scrollHeight}px`;
   }, [draft, active]);
 
+  // a block opened for editing takes the caret, at the end of its text
+  useEffect(() => {
+    const el = area.current;
+    if (!active || !el) return;
+    el.focus();
+    el.setSelectionRange(el.value.length, el.value.length);
+  }, [active]);
+
   if (active) {
     return (
       <textarea
         ref={area}
-        autoFocus
         value={draft}
         spellCheck={false}
         onChange={(e) => setDraft(e.target.value)}
@@ -362,7 +406,6 @@ function EditableBlock({
         onKeyDown={(e) => {
           if (e.key === 'Escape') onCommit(draft);
         }}
-        onFocus={(e) => e.currentTarget.setSelectionRange(draft.length, draft.length)}
         className="bg-primary-1/60 text-primary-9 -mx-2 my-1 block w-[calc(100%+1rem)] resize-none overflow-hidden rounded-lg px-2 py-0.5 font-mono text-sm leading-relaxed outline-none"
       />
     );

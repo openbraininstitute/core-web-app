@@ -122,10 +122,7 @@ export async function saveResearchLogDocument({
 }): Promise<IAsset> {
   const api = await entityCoreApi();
   const form = new FormData();
-  form.append(
-    'file',
-    new File([markdown], `logbook-${Date.now()}.md`, { type: 'text/markdown' })
-  );
+  form.append('file', new File([markdown], `logbook-${Date.now()}.md`, { type: 'text/markdown' }));
   form.append('label', RESEARCH_LOG_DOCUMENT_LABEL);
   const created = await api.post<IAsset>(entityAssetsPath(ENTITY_TYPE, logId), {
     headers: { ...getEntityCoreContext(context).headers, 'Content-Type': undefined },

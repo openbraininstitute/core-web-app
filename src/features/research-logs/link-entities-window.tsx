@@ -39,7 +39,11 @@ import type { TExploreLeftMenuContext } from '@/features/brain-region-hierarchy/
 
 export type LinkedEntity = { id: string; name: string; type: TExtendedEntitiesTypeDict };
 
-type TypeEntry = { title: string; extendedType: TExtendedEntitiesTypeDict; requiredFeatures?: string[] };
+type TypeEntry = {
+  title: string;
+  extendedType: TExtendedEntitiesTypeDict;
+  requiredFeatures?: string[];
+};
 
 const TYPES_BY_TAB: Record<TExploreDataTypeTabs, TypeEntry[]> = {
   [ExploreDataTypeTabs.Experimental]: Object.values(BrowseExperimentalDataExtendedTypes),
@@ -102,7 +106,8 @@ export function LinkEntitiesWindow({
     );
 
   const items = TYPES_BY_TAB[tab].filter(
-    (entry) => !entry.requiredFeatures || entry.requiredFeatures.every((flag) => flags?.[flag as never])
+    (entry) =>
+      !entry.requiredFeatures || entry.requiredFeatures.every((flag) => flags?.[flag as never])
   );
 
   const { style, headerProps, panelRef } = useFloating();

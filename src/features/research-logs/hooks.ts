@@ -18,7 +18,10 @@ import { getResearchLogDocument } from '@/api/entitycore/types/entities/research
 import { config } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
-import type { TResearchLogCreate, TResearchLogUpdate } from '@/api/entitycore/types/entities/research-log';
+import type {
+  TResearchLogCreate,
+  TResearchLogUpdate,
+} from '@/api/entitycore/types/entities/research-log';
 
 const KEY = 'research-logs';
 
@@ -67,7 +70,10 @@ export function useResearchLog(id: string) {
 }
 
 /** The markdown text of a log; empty when no document has been uploaded yet. */
-export function useResearchLogDocument(id: string, assets: Parameters<typeof getResearchLogDocument>[0]) {
+export function useResearchLogDocument(
+  id: string,
+  assets: Parameters<typeof getResearchLogDocument>[0]
+) {
   const ctx = useWorkspace();
   const doc = getResearchLogDocument(assets);
   return useQuery({
