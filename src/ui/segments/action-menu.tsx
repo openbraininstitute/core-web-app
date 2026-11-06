@@ -7,6 +7,7 @@ import {
   DownloadOutlined,
   ExperimentOutlined,
   LoadingOutlined,
+  PlayCircleOutlined,
 } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Popconfirm } from 'antd';
@@ -21,7 +22,7 @@ import {
   type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
 import { useAppNotification } from '@/components/notification';
-import { type TViewVariant, ViewVariant } from '@/constants';
+import { type TViewVariant, ViewVariant, WorkflowActivityDictValue } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { getWorkflowLifecycleBlockReason } from '@/entity-configuration/domain/workflow-lifecycle-eligibility';
 import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
@@ -30,7 +31,7 @@ import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive, downloadFailedNotification } from '@/services/entity-download';
 import { Action, ActionKind } from '@/ui/molecules/side-menu-action';
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
-import { buildSimulateConfigureUrlFromDataViewEntity } from '@/ui/segments/workflows/config';
+import { listLaunchActionsFromDataViewEntity } from '@/ui/segments/workflows/config';
 import { cn } from '@/utils/css-class';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -117,27 +118,21 @@ export default function ActionMenu({
     },
     onError: (error: Error) => notifyError(downloadFailedNotification(error)),
   });
-  const isSimulatable =
-    typeof entityType.isSimulatable === 'boolean'
-      ? entityType.isSimulatable
-      : (entityType.isSimulatable as (e: typeof entity) => boolean)(entity);
+  const launchActions = useMemo(
+    () =>
+      listLaunchActionsFromDataViewEntity({
+        workspace: ctx,
+        extendedType: type,
+        entityId: entity.id,
+        entity,
+        flags,
+      }),
+    [ctx, type, entity, flags]
+  );
 
-  const simulateHref = useMemo(() => {
-    if (!isSimulatable) {
-      return null;
-    }
-
-    return buildSimulateConfigureUrlFromDataViewEntity({
-      workspace: ctx,
-      extendedType: type,
-      entityId: entity.id,
-      entity,
-      flags,
-    });
-  }, [isSimulatable, ctx, type, entity, flags]);
-
-  const simulateBlockReason = getWorkflowLifecycleBlockReason(entity);
-  const simulateDisabled = Boolean(simulateBlockReason);
+  const launchBlockReason = getWorkflowLifecycleBlockReason(entity);
+  const simulateIcon = <ExperimentOutlined />;
+  const launchIcon = <PlayCircleOutlined />;
 
   return (
     <div
@@ -168,29 +163,39 @@ export default function ActionMenu({
         {copying ? 'Copied' : 'Copy ID'}
       </Action>
 
-      {simulateHref &&
-        (simulateDisabled ? (
+      {launchActions.map(({ activity, workflow, label, href }) => {
+        const isSimulate = activity === WorkflowActivityDictValue.simulate;
+        // the e2e suite addresses Simulate by this id, so it stays unsuffixed
+        const testId = isSimulate
+          ? 'data-view-action-simulate'
+          : `data-view-action-${activity}-${workflow.targetType}`;
+        const icon = isSimulate ? simulateIcon : launchIcon;
+
+        return launchBlockReason ? (
           <Action
+            key={testId}
             variant={variant}
             kind={ActionKind.Button}
-            testId="data-view-action-simulate"
+            testId={testId}
             disabled
-            disabledReason={simulateBlockReason}
-            icon={<ExperimentOutlined />}
+            disabledReason={launchBlockReason}
+            icon={icon}
           >
-            Simulate
+            {label}
           </Action>
         ) : (
           <Action
+            key={testId}
             variant={variant}
             kind={ActionKind.Link}
-            testId="data-view-action-simulate"
-            href={simulateHref}
-            icon={<ExperimentOutlined />}
+            testId={testId}
+            href={href}
+            icon={icon}
           >
-            Simulate
+            {label}
           </Action>
-        ))}
+        );
+      })}
 
       {entityType.isDownloadable && (
         <Action

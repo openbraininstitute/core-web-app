@@ -65,7 +65,9 @@ export interface IMEModel
   emodel: IEModel;
   calibration_result?: {
     rin: number;
-  };
+    holding_current?: number | null;
+    threshold_current?: number | null;
+  } | null;
 }
 
 export interface INestedMEModel extends IMEModelBase, Timestamps {

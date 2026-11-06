@@ -33,7 +33,7 @@ import {
   WorkflowStagePresets,
 } from '../types';
 
-import type { TCircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+import type { ICircuit, TCircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import type {
   TBrowsePrerequisite,
   TWorkflowBrowseConfig,
@@ -169,14 +169,29 @@ function circuitBuildBrowseConfig(limits: TCircuitBuildLimits) {
   } satisfies TWorkflowBrowseConfig;
 }
 
-const smallScaleCircuitBrowseConfig = circuitBuildBrowseConfig({
-  scales: SMALL_SCALE_CIRCUIT_BUILD_SCALES,
-});
+/** The same limits as {@link circuitBuildBrowseConfig}, for one circuit. */
+function acceptsCircuit({ scales, maxNeurons }: TCircuitBuildLimits) {
+  return (entity: object) => {
+    const circuit = entity as Pick<ICircuit, 'scale' | 'number_neurons'>;
+    return (
+      scales.includes(circuit.scale) &&
+      (maxNeurons === undefined || circuit.number_neurons <= maxNeurons)
+    );
+  };
+}
 
-const extracellularRecordingArrayBrowseConfig = circuitBuildBrowseConfig({
+const smallScaleCircuitLimits: TCircuitBuildLimits = { scales: SMALL_SCALE_CIRCUIT_BUILD_SCALES };
+
+const extracellularRecordingArrayLimits: TCircuitBuildLimits = {
   scales: EXTRACELLULAR_RECORDING_ARRAY_BUILD_SCALES,
   maxNeurons: EXTRACELLULAR_RECORDING_ARRAY_MAX_NEURONS,
-});
+};
+
+const smallScaleCircuitBrowseConfig = circuitBuildBrowseConfig(smallScaleCircuitLimits);
+
+const extracellularRecordingArrayBrowseConfig = circuitBuildBrowseConfig(
+  extracellularRecordingArrayLimits
+);
 
 export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
   {
@@ -204,6 +219,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     sourceType: ExtendedEntitiesTypeDict.MEModelBuildCampaign,
     targetType: ExtendedEntitiesTypeDict.MEModelBuildCampaign,
     label: 'Single neuron',
+    verb: 'Build ME-model',
     breadcrumb: {
       root: 'Single neuron build',
     },
@@ -213,6 +229,8 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
       schemaName: SchemaNameDict.MEModelBuildScanConfig,
       configureBinding: buildMEModelConfigureBinding(),
     },
+    // the e-model is picked in the editor, listed so its detail page can offer this build
+    configurationInputs: [{ type: ExtendedEntitiesTypeDict.Emodel }],
     order: 2,
     disabled: false,
   },
@@ -224,6 +242,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     sourceType: ExtendedEntitiesTypeDict.Memodel,
     targetType: ExtendedEntitiesTypeDict.BuildSynaptomeCampaign,
     label: 'Synaptome',
+    verb: 'Build synaptome',
     breadcrumb: {
       root: 'Synaptome build',
       steps: {
@@ -247,6 +266,8 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     targetType: ExtendedEntitiesTypeDict.EmSynapseMappingCampaign,
     hasMultipleSources: true,
     label: 'Electron microscopy circuit',
+    // a detail page can't launch it: the inputs are listed from an EM dataset picked on /new first
+    acceptsInput: () => false,
     breadcrumb: {
       root: 'Electron microscopy circuit build',
       steps: {
@@ -301,6 +322,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     sourceType: ExtendedEntitiesTypeDict.Circuit,
     targetType: ExtendedEntitiesTypeDict.ExtracellularRecordingArrayCampaign,
     label: 'Extracellular recording array',
+    verb: 'Recording array',
     breadcrumb: {
       root: 'Extracellular recording array build',
       steps: {
@@ -315,6 +337,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     configurationInputs: [{ type: ExtendedEntitiesTypeDict.Circuit }],
     requireFilters: true,
     browseConfig: extracellularRecordingArrayBrowseConfig,
+    acceptsInput: acceptsCircuit(extracellularRecordingArrayLimits),
     order: 5,
     disabled: false,
     requiredFeatures: [extracellularRecordingArrayBuildFlag.key],
@@ -325,6 +348,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     sourceType: ExtendedEntitiesTypeDict.Circuit,
     targetType: ExtendedEntitiesTypeDict.CircuitSynapticPhysiologyCampaign,
     label: 'Circuit synaptic physiology',
+    verb: 'Synapse physiology',
     breadcrumb: {
       root: 'Circuit synaptic physiology build',
       steps: {
@@ -339,6 +363,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     configurationInputs: [{ type: ExtendedEntitiesTypeDict.Circuit }],
     requireFilters: true,
     browseConfig: smallScaleCircuitBrowseConfig,
+    acceptsInput: acceptsCircuit(smallScaleCircuitLimits),
     order: 6,
     disabled: false,
   },

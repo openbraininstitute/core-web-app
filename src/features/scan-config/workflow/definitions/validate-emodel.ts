@@ -5,6 +5,7 @@ import { EModelValidationCampaign } from '@/entity-configuration/domain/validati
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import { ScanConfigActivity, ValidateScanConfigTabs } from '@/features/scan-config/types';
 import { defineScanConfigWorkflow } from '@/features/scan-config/workflow/define';
+import { BlockSingleFieldSeed } from '@/features/scan-config/workflow/seeding/block-single-field-seed';
 import { ScanConfigEntitySourceMode } from '@/features/scan-config/workflow/types';
 
 export const validateEModelWorkflow = defineScanConfigWorkflow({
@@ -22,6 +23,7 @@ export const validateEModelWorkflow = defineScanConfigWorkflow({
       return await EModelValidationCampaign.api.query.resolve!({ id, context });
     },
   },
+  seed: new BlockSingleFieldSeed('emodel', 'emodel'),
   editor: {
     className: 'px-4',
     campaignOriginAction: ScanConfigCampaignOriginActionDict.Task,

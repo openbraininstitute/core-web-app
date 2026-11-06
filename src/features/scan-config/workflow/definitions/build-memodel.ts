@@ -5,6 +5,7 @@ import { MEModelBuildCampaign } from '@/entity-configuration/domain/model/memode
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import { BuildScanConfigTabs, ScanConfigActivity } from '@/features/scan-config/types';
 import { defineScanConfigWorkflow } from '@/features/scan-config/workflow/define';
+import { BlockSingleFieldSeed } from '@/features/scan-config/workflow/seeding/block-single-field-seed';
 import { ScanConfigEntitySourceMode } from '@/features/scan-config/workflow/types';
 
 export const buildMEModelWorkflow = defineScanConfigWorkflow({
@@ -22,6 +23,7 @@ export const buildMEModelWorkflow = defineScanConfigWorkflow({
       return await MEModelBuildCampaign.api.query.resolve!({ id, context });
     },
   },
+  seed: new BlockSingleFieldSeed('initialize', 'emodel'),
   taskTypeBindings: {
     obiOne: ObiOneTaskTypeDict.MEModelBuild,
     configGeneration: TaskActivityType.MEModelBuildConfigGeneration,

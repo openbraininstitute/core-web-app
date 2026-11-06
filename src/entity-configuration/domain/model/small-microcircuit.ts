@@ -45,6 +45,7 @@ export const SmallMicrocircuit: EntityCoreTypeConfig<ICircuit> = {
   detailViewSections: [
     DetailViewSectionsDict.Overview,
     DetailViewSectionsDict.Analysis,
+    DetailViewSectionsDict.Configuration,
     DetailViewSectionsDict.RelatedPublications,
     DetailViewSectionsDict.RelatedArtifacts,
   ],

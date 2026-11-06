@@ -147,6 +147,26 @@ export async function usedTaskConfigId(
 
 export namespace Task {
   /**
+   * Campaign id of a config a task generated or used; `null` when it cannot be traced.
+   * Walks `task_config_generator_id`, falling back to the `configGenerationType` activity.
+   */
+  export async function campaignIdFromConfigId({
+    configId,
+    configGenerationType,
+    context,
+  }: {
+    configId: string;
+    configGenerationType: TTaskActivityType;
+    context: WorkspaceContext | undefined;
+  }) {
+    const config = await getTaskConfig({ id: configId, context });
+    return (
+      config.task_config_generator_id ??
+      (await usedTaskConfigId(configId, configGenerationType, context))
+    );
+  }
+
+  /**
    * Campaign id of an entity a task generated (an e-model, an e-feature result, ...); `null` when
    * it cannot be traced. Generated entities have no FK to their campaign, so walk provenance:
    * entity → `executionType` activity → the config it used → campaign
@@ -166,11 +186,7 @@ export namespace Task {
     const configId = await usedTaskConfigId(id, executionType, context);
     if (!configId) return null;
 
-    const config = await getTaskConfig({ id: configId, context });
-    return (
-      config.task_config_generator_id ??
-      (await usedTaskConfigId(configId, configGenerationType, context))
-    );
+    return campaignIdFromConfigId({ configId, configGenerationType, context });
   }
   export async function many<TMeta extends Record<string, unknown> = Record<string, unknown>>({
     withFacets,
