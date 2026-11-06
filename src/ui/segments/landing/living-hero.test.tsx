@@ -100,4 +100,11 @@ describe('public science opening', () => {
     });
     expect(onContinue).toHaveBeenCalledTimes(2);
   });
+  it('accumulates small trackpad deltas and enters only once per gesture', () => {
+    const onContinue = vi.fn();
+    render(<LivingHero onContinue={onContinue} onChapter={vi.fn()} />);
+    const hero = screen.getByRole('region', { name: 'Discover the Open Brain Platform' });
+    for (let i = 0; i < 8; i++) fireEvent.wheel(hero, { deltaY: 4 });
+    expect(onContinue).toHaveBeenCalledTimes(1);
+  });
 });

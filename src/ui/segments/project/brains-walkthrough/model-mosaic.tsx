@@ -42,7 +42,7 @@ export function ModelMosaic() {
       <figure className={styles.movie}>
         <video
           ref={videoRef}
-          className={labs.blendedVideo}
+          className={`${labs.blendedVideo} ${labs.animationVideo}`}
           src={visible ? '/images/start/walkthrough/models-mosaic.mp4' : undefined}
           poster="/images/start/walkthrough/models-mosaic.jpg"
           muted

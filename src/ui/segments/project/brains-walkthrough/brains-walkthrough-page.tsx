@@ -1,5 +1,9 @@
 'use client';
 
+import { useQuery } from '@tanstack/react-query';
+
+import { getSocialMediaLinks } from '@/services/sanity/api/get-social-media';
+import FooterPanel from '@/ui/segments/landing/layout/footer/footer-panel';
 import { LivingHero } from '@/ui/segments/landing/living-hero';
 import { OriginalHomePage } from '@/ui/segments/project/original-home';
 import { SlidingStage } from '@/ui/segments/project/walkthrough/sliding-stage';
@@ -24,7 +28,8 @@ import {
   BRAIN_THEME_UNDERLINES,
   SERIF_TITLE,
 } from './chapters';
-import { CnsBackdrop, FloatingMaleCns, FloatingMicrocircuit } from './floating-model';
+import { FloatingMaleCns, FloatingMicrocircuit } from './floating-model';
+import { GetStartedBrain } from './get-started-brain';
 import { LandingThemes, ThemeNav } from './landing-themes';
 import { ModelMosaic } from './model-mosaic';
 import { MultiplyingBrains } from './multiplying-brains';
@@ -33,8 +38,6 @@ import type { TBrainScene } from './chapters';
 
 /** How long the landing stands once its words are out before the page scrolls on by itself, ms. */
 const LANDING_STAY_MS = 4000;
-/** The analysis screen, behind which the Male CNS turns. */
-const ANALYSIS_AT = BRAIN_CHAPTERS.findIndex((chapter) => chapter.scene === 'analysis');
 /**
  * The second walkthrough: the brain modeling course's three brains, a fruit fly's, a mouse's and a
  * human's, turning, and inside each what the platform holds of it. Over its landing the fly's nervous
@@ -75,17 +78,19 @@ export function BrainsWalkthroughPage({
         <>
           {(!enterHref || state.entered) && <FloatingMicrocircuit {...state} />}
           {(!enterHref || state.entered) && <FloatingMaleCns {...state} walking={walking} />}
-          <CnsBackdrop {...state} at={ANALYSIS_AT} />
-          {(!enterHref || state.entered) && (
-            <ThemeNav
-              entered={state.entered}
-              chapter={state.chapter}
-              underlines={BRAIN_THEME_UNDERLINES}
-              links={BRAIN_THEME_LINKS}
-              goTo={state.goTo}
-              playback={enterHref ? state.playback : undefined}
-            />
-          )}
+          {(!enterHref || state.entered) &&
+            (enterHref && state.chapter === BRAIN_CHAPTERS.length - 1 ? (
+              <PublicTourFooter />
+            ) : (
+              <ThemeNav
+                entered={state.entered}
+                chapter={state.chapter}
+                underlines={BRAIN_THEME_UNDERLINES}
+                links={BRAIN_THEME_LINKS}
+                goTo={state.goTo}
+                playback={enterHref ? state.playback : undefined}
+              />
+            ))}
         </>
       )}
       chapters={
@@ -106,7 +111,7 @@ export function BrainsWalkthroughPage({
           scene={chapter.scene}
           active={active}
           // The first screen, on its grid.
-          full={(scene) => CNS_ON_FIRST_SCREEN && scene === 'opening'}
+          full={(scene) => scene === 'join' || (CNS_ON_FIRST_SCREEN && scene === 'opening')}
           // The first screen's fly brain, under its recording, is turned by hand through it.
           passThrough={(scene) => CNS_ON_FIRST_SCREEN && scene === 'opening'}
           draw={(scene) => <BrainScene scene={scene} />}
@@ -128,6 +133,25 @@ function BrainScene({ scene }: { scene: TBrainScene }) {
   if (scene === 'notebooks') return <NotebooksVideo />;
   if (scene === 'models') return <ModelMosaic />;
   // Getting started, beside the early adopters already on the platform.
-  if (scene === 'join') return <EarlyAdopters />;
+  if (scene === 'join')
+    return (
+      <>
+        <GetStartedBrain />
+        <EarlyAdopters />
+      </>
+    );
   return null;
+}
+
+/** Reuse the information pages' footer at the final public chapter. */
+function PublicTourFooter() {
+  const { data: socialMediaLinks = [] } = useQuery({
+    queryKey: ['public-tour', 'footer-social-links'],
+    queryFn: getSocialMediaLinks,
+  });
+  return (
+    <div className="pointer-events-auto fixed inset-x-0 bottom-0 z-[67]">
+      <FooterPanel socialMediaLinks={socialMediaLinks} />
+    </div>
+  );
 }

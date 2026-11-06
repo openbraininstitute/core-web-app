@@ -63,7 +63,6 @@ export default function SectionRail() {
         <button
           key={`${label}/${i}`}
           type="button"
-          title={label}
           aria-label={`Go to ${label}`}
           aria-current={i === active ? 'true' : undefined}
           onClick={() => {

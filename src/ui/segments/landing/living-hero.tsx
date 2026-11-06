@@ -32,6 +32,7 @@ export function LivingHero({
   const [reduced, setReduced] = useState(true);
   const [visible, setVisible] = useState(true);
   const touchY = useRef<number | null>(null);
+  const heroRef = useRef<HTMLElement>(null);
   const active = SCIENCE_SCENES[scene];
   const animate = playing && !reduced && visible;
 
@@ -75,16 +76,43 @@ export function LivingHero({
     return () => window.removeEventListener('keydown', onKey, true);
   }, [onContinue]);
 
+  useEffect(() => {
+    const host = heroRef.current;
+    if (!host) return;
+    let distance = 0;
+    let previous = 0;
+    let leaving = false;
+    const wheel = (event: WheelEvent) => {
+      if (event.ctrlKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
+      const atBottom = host.scrollTop + host.clientHeight >= host.scrollHeight - 8;
+      if (event.deltaY <= 0 || !atBottom) {
+        distance = 0;
+        return;
+      }
+      // Own the gesture at the end of the landing instead of scrolling the chapter underneath it.
+      event.preventDefault();
+      event.stopPropagation();
+      if (leaving) return;
+      const now = performance.now();
+      if (now - previous > 300) distance = 0;
+      previous = now;
+      distance +=
+        event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? host.clientHeight : 1);
+      if (distance >= 24) {
+        leaving = true;
+        onContinue();
+      }
+    };
+    host.addEventListener('wheel', wheel, { passive: false });
+    return () => host.removeEventListener('wheel', wheel);
+  }, [onContinue]);
+
   return (
     <section
+      ref={heroRef}
       className={styles.hero}
       aria-label="Discover the Open Brain Platform"
       data-walkthrough-intro
-      onWheel={(event) => {
-        const host = event.currentTarget;
-        if (event.deltaY > 20 && host.scrollTop + host.clientHeight >= host.scrollHeight - 8)
-          onContinue();
-      }}
       onTouchStart={(event) => {
         touchY.current = event.touches[0]?.clientY ?? null;
       }}

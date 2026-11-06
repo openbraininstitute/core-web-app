@@ -2,6 +2,7 @@
 
 import { RiArrowDownSLine, RiMenuLine } from '@remixicon/react';
 import Link from 'next/link';
+import { useRef } from 'react';
 
 import { learnFonts } from '@/features/learn/fonts';
 import {
@@ -16,11 +17,15 @@ import {
 import { MENU_ITEMS } from '@/ui/segments/landing/constants';
 import { cn } from '@/utils/css-class';
 
+import { useHeaderContrast } from './use-header-contrast';
+
 /**
  * All the site's pages as one menu in the top bar, under the headings of its own menu; on a phone, where its words do
  * not fit beside the logo and the way in, by its mark alone. Not modal: the page goes on scrolling under it.
  */
 export function FindOutMore({ shown = true }: { shown?: boolean }) {
+  const trigger = useRef<HTMLButtonElement>(null);
+  const light = useHeaderContrast(trigger);
   return (
     <div
       aria-hidden={!shown}
@@ -32,8 +37,12 @@ export function FindOutMore({ shown = true }: { shown?: boolean }) {
     >
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger
+          ref={trigger}
           aria-label="Find out more"
-          className="group text-primary-9 flex items-center gap-[4px] text-[14px] leading-[18px] font-semibold whitespace-nowrap transition-opacity hover:opacity-60 max-sm:-m-[9px] max-sm:p-[9px]"
+          className={cn(
+            'group flex items-center gap-[4px] text-[14px] leading-[18px] font-semibold whitespace-nowrap transition-[color,opacity] duration-300 hover:opacity-60 max-sm:-m-[9px] max-sm:p-[9px]',
+            light ? 'text-white' : 'text-primary-9'
+          )}
         >
           <RiMenuLine className="size-[26px] sm:hidden" />
           <span className="max-sm:hidden">Find out more</span>
@@ -54,7 +63,11 @@ export function FindOutMore({ shown = true }: { shown?: boolean }) {
                 </DropdownMenuLabel>
               )}
               {(item.submenu ?? [item]).map((page) => (
-                <DropdownMenuItem key={page.slug} asChild className="cursor-pointer rounded-lg px-3 py-1.5">
+                <DropdownMenuItem
+                  key={page.slug}
+                  asChild
+                  className="cursor-pointer rounded-lg px-3 py-1.5 max-sm:min-h-[44px]"
+                >
                   <Link href={page.slug} className="text-primary-9 text-[14px] leading-[18px]">
                     {page.caption}
                   </Link>

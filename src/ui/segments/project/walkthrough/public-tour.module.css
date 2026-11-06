@@ -1,6 +1,7 @@
 .publicTour {
-  --chapter-title-size: clamp(38px, 4.1vw, 66px);
-  --chapter-copy-size: clamp(16px, 1.3vw, 19px);
+  --chapter-text-inset: clamp(32px, 5vw, 88px);
+  --chapter-title-size: clamp(30px, 3.2vw, 50px);
+  --chapter-copy-size: clamp(15px, 1.15vw, 17px);
   --chapter-copy-leading: 1.55;
 }
 .publicText {
@@ -8,6 +9,28 @@
   text-align: left;
   font-family: var(--font-gabarito), sans-serif;
   color: #082d63;
+}
+.publicTour .publicText {
+  align-self: flex-start;
+  width: 38%;
+  max-width: none;
+  margin: 0;
+  padding: clamp(140px, 18vh, 180px) 0 96px var(--chapter-text-inset);
+  gap: 14px;
+}
+.publicTour .publicText[data-chapter-text="agents"] {
+  width: 60%;
+  max-height: none;
+  overflow: visible;
+  gap: 14px;
+}
+.publicTour .publicText[data-chapter-text="agents"] [data-chapter-action] {
+  margin-top: -8px;
+  padding-top: 0;
+}
+.publicTour .publicText > p:first-child {
+  position: absolute;
+  top: clamp(108px, 14vh, 148px);
 }
 .publicTour .publicText h1,
 .publicTour .publicText h2 {
@@ -18,6 +41,7 @@
   letter-spacing: -0.025em;
   color: #082d63;
   text-align: left;
+  min-height: calc(var(--chapter-title-size) * 2.12);
 }
 .publicText > div {
   align-items: flex-start;
@@ -51,18 +75,36 @@
 .publicText [data-chapter-body] p {
   color: #365479;
 }
+.publicText [data-chapter-body] li p:first-child {
+  font-size: var(--chapter-copy-size);
+}
+.publicText [data-chapter-body] li p + p {
+  font-size: 13px;
+}
 .publicText [data-chapter-body] > div {
   align-items: flex-start;
 }
 @media (max-width: 760px) {
   .publicTour {
-    --chapter-title-size: clamp(36px, 9.5vw, 50px);
+    --chapter-title-size: clamp(28px, 7.6vw, 38px);
   }
 }
 @media (max-width: 63.999rem) and (orientation: portrait) {
   .publicTour {
     --chapter-copy-size: 15px;
     --chapter-copy-leading: 1.45;
+  }
+  .publicTour .publicText,
+  .publicTour .publicText[data-chapter-text="agents"] {
+    width: 100%;
+    padding: calc(var(--stage-video-top) + var(--stage-video-h) + 28px) 20px 104px;
+  }
+  .publicTour .publicText > p:first-child {
+    position: static;
+  }
+  .publicTour .publicText h1,
+  .publicTour .publicText h2 {
+    min-height: 0;
   }
 }
 .publicTour [data-fly] {
@@ -76,7 +118,7 @@
   margin-inline: auto;
   padding-inline: 20px;
   font-family: var(--font-gabarito), sans-serif;
-  font-size: clamp(14px, 1.15vw, 18px);
+  font-size: clamp(13px, 1.05vw, 16px);
   line-height: 1.4;
   color: #737373;
 }
@@ -103,6 +145,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 8px;
   flex-shrink: 0;
   min-height: 44px;
   cursor: pointer;
@@ -118,7 +161,7 @@
   justify-content: center;
   width: 100%;
   height: 16px;
-  margin-top: 8px;
+  margin-top: auto;
 }
 .timelineTrack::before {
   content: "";
@@ -130,7 +173,7 @@
 .timelineChapter:first-child .timelineTrack::before {
   left: 50%;
 }
-.timelineChapter:last-child .timelineTrack::before {
+.timelineChapter:last-of-type .timelineTrack::before {
   right: 50%;
 }
 .timelineDot {
@@ -220,5 +263,125 @@
   .navProgress > span,
   .timelinePlayback > span {
     transition: none;
+  }
+}
+
+/* On phones, reserve a clear area for the header and up arrow before the media. */
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .publicTour :global(section[data-index]) {
+    --stage-video-top: 116px;
+    --stage-video-h: min(calc((100vw - 32px) * 0.5625), calc(var(--chapter-h) * 0.25));
+  }
+
+  .publicTour .publicText[data-chapter-text="agents"] {
+    padding-top: 124px;
+  }
+
+  .publicTour :global(#walkthrough-agents) > :global([data-chapter-stage]) {
+    display: none;
+  }
+
+  .publicTour .publicText[data-chapter-text="agents"] [data-agent-prompt] {
+    height: 92px;
+  }
+
+  .chapterTimeline .navPause {
+    position: sticky;
+    right: 20px;
+    z-index: 3;
+    background: #fff;
+    box-shadow: 0 0 10px 6px #fff;
+  }
+}
+
+@media (pointer: coarse) {
+  .navPause,
+  .navPauseSpace {
+    width: 44px;
+    height: 44px;
+  }
+
+  .publicText [data-chapter-action] > a,
+  .publicText [data-chapter-action] > button {
+    min-height: 44px;
+  }
+}
+
+.publicTour .publicText[data-chapter-text="agents"] h1 {
+  width: calc(38vw - clamp(32px, 5vw, 88px));
+  max-width: 100%;
+}
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .publicTour .publicText[data-chapter-text="agents"] h1 {
+    width: 100%;
+  }
+}
+
+.landingTransition {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  transform: translateY(0);
+  transition: transform var(--landing-exit-ms, 900ms) cubic-bezier(0.65, 0, 0.35, 1);
+}
+.landingTransition[data-leaving] {
+  transform: translateY(-100%);
+  pointer-events: none;
+}
+@supports (animation-timeline: view()) {
+  .publicTour section[data-index] {
+    view-timeline-name: --chapter-visual;
+    view-timeline-axis: block;
+  }
+  .publicTour [data-chapter-stage] video {
+    transform-origin: right center;
+    animation: chapter-visual-exit linear both;
+    animation-timeline: --chapter-visual;
+    animation-range: exit 0% exit 100%;
+  }
+}
+@keyframes chapter-visual-exit {
+  from {
+    transform: translateX(0) scale(1);
+  }
+  to {
+    transform: translateX(45%) scale(0.82);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .landingTransition {
+    transition: none;
+  }
+  .publicTour [data-chapter-stage] video {
+    animation: none;
+  }
+}
+
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .publicTour .publicText[data-chapter-text="join"] {
+    padding-top: 116px;
+  }
+}
+
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .publicTour {
+    --chapter-text-inset: 20px;
+  }
+}
+
+.publicTour .publicText[data-chapter-text="join"] h1 {
+  min-height: 0;
+}
+.publicTour .publicText[data-chapter-text="join"] {
+  gap: 18px;
+}
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .publicTour .publicText[data-chapter-text="join"] {
+    width: 64%;
+    padding-right: 0;
+    gap: 12px;
+  }
+  .publicTour .publicText[data-chapter-text="join"] h1 {
+    font-size: clamp(26px, 7vw, 34px);
   }
 }

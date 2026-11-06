@@ -1,9 +1,12 @@
 import { cleanup, render } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { SlidingStage } from './sliding-stage';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 describe('sliding chapter media', () => {
   it('hands playback and interaction to the current chapter while retaining its neighbour', () => {
@@ -26,5 +29,20 @@ describe('sliding chapter media', () => {
     expect(teach).not.toHaveAttribute('inert');
     rerender(pair('labs'));
     expect(container.querySelector('[data-stage-current="true"]')).toBe(labs);
+  });
+  it('pauses offscreen videos instead of leaving adjacent chapters autoplaying', () => {
+    const pause = vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
+    const draw = () => <video autoPlay muted playsInline />;
+    const { container, rerender } = render(
+      <SlidingStage scene="labs" active={false} draw={draw} />
+    );
+    const video = container.querySelector('video');
+    expect(video?.autoplay).toBe(false);
+    expect(pause).toHaveBeenCalledOnce();
+    rerender(<SlidingStage scene="labs" active draw={draw} />);
+    expect(video?.autoplay).toBe(true);
+    rerender(<SlidingStage scene="labs" active={false} draw={draw} />);
+    expect(video?.autoplay).toBe(false);
+    expect(pause).toHaveBeenCalledTimes(2);
   });
 });

@@ -65,7 +65,7 @@ export default function FooterPanel({ className, socialMediaLinks }: FooterPanel
         <SocialMediaLinks className={styles.socialmedia} links={socialMediaLinks} />
         <details className={styles.newsletter}>
           <summary>
-            Email updates <span aria-hidden="true">+</span>
+            Subscribe <span aria-hidden="true">+</span>
           </summary>
           <NewsLetterSubscription className={styles.subscribe} />
         </details>

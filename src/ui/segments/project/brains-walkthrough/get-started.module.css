@@ -5,13 +5,14 @@
 
 .customers {
   position: absolute;
-  top: var(--join-top);
-  left: 2%;
-  right: clamp(110px, 12vw, 210px);
+  top: auto;
+  bottom: clamp(102px, 14.5vh, 140px);
+  left: 0;
+  right: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24px;
+  gap: 16px;
 }
 
 @media (min-width: 64rem), (orientation: landscape) {
@@ -23,8 +24,9 @@
 
 @media (max-width: 63.999rem) and (orientation: portrait) {
   .customers {
-    inset-inline: 20px;
-    top: 88px;
+    inset-inline: 0;
+    top: auto;
+    bottom: 190px;
     gap: 18px;
   }
 }
@@ -34,4 +36,162 @@
   .customers {
     --join-top: 100px;
   }
+}
+
+.logoBand {
+  width: 100%;
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+}
+.logoTrack {
+  display: flex;
+  width: max-content;
+  animation: customer-band 36s linear infinite;
+}
+.logoGroup {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: clamp(28px, 3vw, 48px);
+  margin: 0;
+  padding: 12px clamp(28px, 3vw, 48px) 12px 0;
+  list-style: none;
+}
+.logoItem {
+  width: clamp(100px, 11vw, 150px);
+  flex: 0 0 auto;
+}
+.logoLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100px;
+  padding: 10px;
+  border: 0;
+  background: transparent;
+}
+.logoLink:focus-visible {
+  outline: 2px solid #183f8b;
+  outline-offset: -2px;
+}
+.logoMark {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #3b4f6e;
+  transition: background-color 200ms ease;
+}
+.logoLink:hover .logoMark {
+  background: #183f8b;
+}
+.logoBand:hover .logoTrack,
+.logoBand:focus-within .logoTrack,
+:global([data-stage-current="false"]) .logoTrack {
+  animation-play-state: paused;
+}
+@keyframes customer-band {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .logoBand {
+    mask-image: none;
+  }
+  .logoTrack {
+    width: 100%;
+    animation: none;
+  }
+  .logoGroup {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    padding: 0;
+  }
+  .logoGroup[aria-hidden] {
+    display: none;
+  }
+  .logoLink {
+    height: 64px;
+  }
+}
+
+.customerHeading {
+  width: 100%;
+  padding-inline: var(--chapter-text-inset, clamp(32px, 5vw, 88px));
+  text-align: left;
+  align-self: stretch;
+}
+.customerHeading h2 {
+  margin: 0;
+  text-align: left;
+  font-size: 14px;
+  line-height: 1.25;
+  font-weight: 600;
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .customers {
+    top: auto;
+    bottom: 100px;
+    gap: 8px;
+  }
+  .logoLink {
+    height: 64px;
+  }
+}
+
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .customerHeading {
+    padding-inline: var(--chapter-text-inset, 20px);
+  }
+}
+
+.brainArtwork {
+  position: absolute;
+  top: 112px;
+  right: 4%;
+  width: 52%;
+  height: clamp(240px, 47vh, 520px);
+  pointer-events: none;
+}
+.freeOffer {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #526178;
+}
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .brainArtwork {
+    top: 108px;
+    right: 0;
+    width: 40%;
+    height: 250px;
+  }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .brainArtwork {
+    top: 90px;
+    height: 145px;
+  }
+}
+
+.brainArtwork {
+  overflow: hidden;
+}
+.brainVideo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  mask-image: radial-gradient(
+    ellipse closest-side,
+    black 40%,
+    rgb(0 0 0 / 85%) 60%,
+    transparent 100%
+  );
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: white;
 }

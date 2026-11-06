@@ -10,6 +10,8 @@ import { EnumSection } from '@/ui/segments/landing/sections/sections';
 import { getSection } from '@/ui/segments/landing/utils';
 import { classNames } from '@/util/utils';
 
+import { HEXAGON_ARTWORKS } from './hexagon-artworks';
+import HexagonHero from './hexagon-hero';
 import NextPanel from './next-panel';
 
 import type { ContentForHero } from '@/services/sanity/api/get-hero-content';
@@ -37,48 +39,61 @@ export default function HeroClient({ className, section, data }: HeroClientProps
   const [videoReady, setVideoReady] = React.useState(false);
   const hasMedia = backgroundType === 'video' || (backgroundType === 'image' && Boolean(imageURL));
   const sectionSlug = getSection(section).slug.replace(/^\//, '') || 'home';
+  const hexagonArtwork =
+    hasMedia && section !== EnumSection.Home ? HEXAGON_ARTWORKS[sectionSlug] : undefined;
   const heroTestIdPrefix = `landing-${sectionSlug}-hero`;
   return (
     <div
       data-page-section
-      className={classNames(className, styles.hero, hasMedia ? styles.withMedia : styles.wordsOnly)}
+      className={classNames(
+        className,
+        styles.hero,
+        hasMedia ? styles.withMedia : styles.wordsOnly,
+        hasMedia && section !== EnumSection.Home && styles.immersive,
+        hexagonArtwork && styles.hexagonHero
+      )}
     >
       {hasMedia && (
-      <div className={styles.media}>
-        {backgroundType === 'video' && (
-          <>
-            {posterURL && posterWidth && posterHeight && (
-              <ProgressiveImage
-                src={posterURL}
-                width={posterWidth}
-                height={posterHeight}
-                alt="Hero image"
-                testId={`${heroTestIdPrefix}-image`}
+        <div
+          className={classNames(styles.media, hexagonArtwork && styles.hexagonMedia)}
+          data-header-media
+        >
+          {hexagonArtwork && <HexagonHero key={hexagonArtwork.mosaic} artwork={hexagonArtwork} />}
+          {!hexagonArtwork && backgroundType === 'video' && (
+            <>
+              {posterURL && posterWidth && posterHeight && (
+                <ProgressiveImage
+                  src={posterURL}
+                  width={posterWidth}
+                  height={posterHeight}
+                  alt="Hero image"
+                  testId={`${heroTestIdPrefix}-image`}
+                />
+              )}
+              <video
+                className={videoReady ? styles.show : styles.hide}
+                loop
+                muted
+                autoPlay
+                playsInline
+                disablePictureInPicture
+                crossOrigin="anonymous"
+                src={videoURL ?? ''}
+                onCanPlay={() => setVideoReady(true)}
               />
-            )}
-            <video
-              className={videoReady ? styles.show : styles.hide}
-              loop
-              muted
-              autoPlay
-              playsInline
-              disablePictureInPicture
-              src={videoURL ?? ''}
-              onCanPlay={() => setVideoReady(true)}
+            </>
+          )}
+          {!hexagonArtwork && backgroundType === 'image' && imageURL && (
+            <Image
+              src={imageURL}
+              alt=""
+              fill
+              sizes="100vw"
+              preload
+              data-testid={`${heroTestIdPrefix}-image`}
             />
-          </>
-        )}
-        {backgroundType === 'image' && imageURL && (
-          <Image
-            src={imageURL}
-            alt=""
-            fill
-            sizes="(max-width: 1024px) 100vw, 62vw"
-            preload
-            data-testid={`${heroTestIdPrefix}-image`}
-          />
-        )}
-      </div>
+          )}
+        </div>
       )}
       {section === EnumSection.ComingSoon ? (
         <div className={styles.comingSoon}>

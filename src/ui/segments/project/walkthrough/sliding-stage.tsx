@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
+
 import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
@@ -20,8 +22,26 @@ export function SlidingStage<S extends string>({
   full,
   passThrough,
 }: StageProps<S>) {
+  const root = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const host = root.current;
+    if (!host) return;
+    // Neighbouring screens stay mounted for scrolling, but must not decode and
+    // play movies in the background on a phone. The active playback hook owns play/pause.
+    const syncMedia = () => {
+      for (const video of host.querySelectorAll('video')) {
+        video.autoplay = active;
+        if (!active) video.pause();
+      }
+    };
+    syncMedia();
+    const observer = new MutationObserver(syncMedia);
+    observer.observe(host, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [active]);
   return (
     <div
+      ref={root}
       data-stage-current={active}
       data-stage-scene={scene}
       className={cn(

@@ -274,7 +274,7 @@ export const VIRTUAL_LABS_VIDEO = {
   poster: '/images/start/walkthrough/virtual-labs.jpg',
 };
 
-/** A large, crisp platform recording, presented without a frame or edge effects. */
+/** A crisp platform recording with a soft shadow beneath it. */
 export function VirtualLabsPreview() {
   const videoRef = useRef<HTMLVideoElement>(null);
   useEffect(() => {
@@ -398,10 +398,7 @@ export const ANALYSIS_VIDEO = {
   poster: '/images/start/walkthrough/interactive-analysis.jpg',
 };
 
-/**
- * The platform's early adopters, by their logos, as the public landing on main has them (Sanity's adopters), in
- * white cards on the stage, four to a row and the last row centred; each to its own site.
- */
+/** A continuous band of customer logos, each linked to its organization. */
 export function EarlyAdopters() {
   const { data: adopters = [] } = useQuery({
     queryKey: ['walkthrough', 'early-adopters'],
@@ -410,48 +407,49 @@ export function EarlyAdopters() {
   if (!adopters.length) return null;
   return (
     <div className={getStarted.customers}>
-      <div className="w-full">
-        <h2 className="text-primary-9 text-[24px] leading-[1.25] font-semibold stacked:text-[20px]">
-          Our customers
-        </h2>
-        <p className="mt-[6px] text-[14px] leading-[1.5] text-neutral-600 stacked:text-[13px]">
-          Organizations already using the Open Brain Platform.
-        </p>
+      <div className={getStarted.customerHeading}>
+        <h2>Trusted by</h2>
       </div>
-      <ul className="flex w-full flex-wrap justify-center gap-[clamp(14px,1.6vw,24px)]">
-        {adopters.map((adopter, i) => (
-          <li
-            key={adopter.name}
-            className="w-[calc((100%-3*clamp(14px,1.6vw,24px))/4)]"
-            style={{ animation: `fade-in 600ms ease-out ${i * 90}ms both` }}
-          >
-            <a
-              href={adopter.url || undefined}
-              target="_blank"
-              rel="noopener noreferrer"
-              title={adopter.name}
-              className="group flex aspect-[3/2] items-center justify-center rounded-[16px] border border-neutral-200 bg-white p-[clamp(16px,1.8vw,26px)] shadow-[0_10px_30px_rgba(0,39,102,0.08)] transition-transform duration-300 hover:-translate-y-[3px]"
+      <div className={getStarted.logoBand}>
+        <div className={getStarted.logoTrack}>
+          {[false, true].map((duplicate) => (
+            <ul
+              key={String(duplicate)}
+              className={getStarted.logoGroup}
+              aria-hidden={duplicate || undefined}
+              inert={duplicate || undefined}
             >
-              {/* White marks made for a dark page, drawn here in the page's ink through their shapes. */}
-              <span
-                role="img"
-                aria-label={adopter.name}
-                className="block size-full bg-[#3b4f6e] transition-colors duration-300 group-hover:bg-[#002766]"
-                style={{
-                  maskImage: `url(${adopter.imageURL})`,
-                  maskSize: 'contain',
-                  maskRepeat: 'no-repeat',
-                  maskPosition: 'center',
-                  WebkitMaskImage: `url(${adopter.imageURL})`,
-                  WebkitMaskSize: 'contain',
-                  WebkitMaskRepeat: 'no-repeat',
-                  WebkitMaskPosition: 'center',
-                }}
-              />
-            </a>
-          </li>
-        ))}
-      </ul>
+              {adopters.map((adopter) => (
+                <li key={adopter.name} className={getStarted.logoItem}>
+                  <a
+                    href={adopter.url || undefined}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={adopter.name}
+                    className={getStarted.logoLink}
+                  >
+                    <span
+                      role="img"
+                      aria-label={adopter.name}
+                      className={getStarted.logoMark}
+                      style={{
+                        maskImage: `url(${adopter.imageURL})`,
+                        maskSize: 'contain',
+                        maskRepeat: 'no-repeat',
+                        maskPosition: 'center',
+                        WebkitMaskImage: `url(${adopter.imageURL})`,
+                        WebkitMaskSize: 'contain',
+                        WebkitMaskRepeat: 'no-repeat',
+                        WebkitMaskPosition: 'center',
+                      }}
+                    />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -471,21 +469,23 @@ export function NotebooksVideo() {
     (card) => card.title === 'Notebooks' && card.thumbnailType === 'video'
   )?.video;
   if (!src) return null;
-  return <StageVideo video={{ src, poster: '' }} />;
+  return <StageVideo video={{ src, poster: '' }} presentation="animation" />;
 }
 
 /** A recording across the stage beside a screen's words, in the middle of its height; `className` to place it otherwise. */
 export function StageVideo({
   video,
+  presentation = 'recording',
   className,
 }: {
   video: { src: string; poster: string };
+  presentation?: 'recording' | 'animation';
   className?: string;
 }) {
   return (
     <div
       className={cn(
-        'absolute inset-y-[10vh] right-[24px] left-[-5%] flex items-center justify-center',
+        'absolute top-[max(148px,18vh)] right-[24px] bottom-[max(100px,12vh)] left-0 flex items-center justify-center',
         // Upright, across the page, for a screen's words to start under it (`UNDER_VIDEO`).
         'stacked:inset-x-0 stacked:top-(--stage-video-top) stacked:bottom-auto stacked:h-(--stage-video-h)',
         className
@@ -498,7 +498,11 @@ export function StageVideo({
         muted
         loop
         playsInline
-        className={labs.blendedVideo}
+        className={cn(
+          labs.blendedVideo,
+          labs.stageRecordingVideo,
+          presentation === 'animation' && labs.animationVideo
+        )}
       />
     </div>
   );

@@ -29,6 +29,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import type { THomeDesign } from '@/ui/segments/project/home-designs';
 import type { IDummyAccount } from './account-flow';
 
+import pills from '@/ui/segments/landing/cta-pill.module.css';
 import publicTour from './public-tour.module.css';
 
 /** A screen of a walkthrough: its words, and what its stage shows, which each walkthrough says. */
@@ -180,6 +181,8 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   const [height, setHeight] = useState<number | null>(null);
   const [active, setActive] = useState(0);
   const navigationUntil = useRef(0);
+  const pendingIntroChapter = useRef<string | null>(null);
+  const landingWheelUntil = useRef(0);
   const [finishing, setFinishing] = useState(false);
   const [colorSlot, setColorSlot] = useState<HTMLElement | null>(null);
   // Over the whole window, it is laid over the page's body once in the browser.
@@ -193,12 +196,35 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   const finishIntro = useCallback(() => setIntroState('done'), []);
   // From the click, wheel or key that enters until the intro comes back: what floats over it goes then.
   const [introLeft, setIntroLeft] = useState(false);
+  // Keep the public landing mounted while it moves upward with the incoming chapter.
+  useEffect(() => {
+    if (!introContent || !introLeft || introDone) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const timer = window.setTimeout(finishIntro, reduced ? 0 : INTRO.scroll);
+    return () => window.clearTimeout(timer);
+  }, [introContent, introLeft, introDone, finishIntro]);
+
   const leaveIntro = useCallback(() => {
     const intro = root?.querySelector<HTMLElement>('[data-walkthrough-intro]');
     const first = sections.current[0];
     if (root && intro && first) flyShared(root, intro, first);
     setIntroLeft(true);
   }, [root]);
+  // A trackpad gesture has many momentum events after its first tick. Keep those
+  // from scrolling the first chapter while the public landing is moving away.
+  useEffect(() => {
+    if (!root || !introContent) return;
+    const holdLandingGesture = (event: WheelEvent) => {
+      const now = performance.now();
+      if (now >= landingWheelUntil.current) return;
+      event.preventDefault();
+      event.stopPropagation();
+      landingWheelUntil.current = Math.max(landingWheelUntil.current, now + 180);
+    };
+    root.addEventListener('wheel', holdLandingGesture, { passive: false, capture: true });
+    return () => root.removeEventListener('wheel', holdLandingGesture, true);
+  }, [root, introContent]);
+
   // What floats over the intro built, for the intro to start with it.
   const [floated, setFloated] = useState(0);
   const floatReady = useCallback(() => setFloated((built) => built + 1), []);
@@ -296,19 +322,20 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   );
   // The runway past the last chapter, crossing the middle of the scroller, is the end.
   useEffect(() => {
-    if (active === chapters.length) finish();
-  }, [active, finish, chapters.length]);
+    if (!introContent && active === chapters.length) finish();
+  }, [active, finish, chapters.length, introContent]);
 
   const go = useCallback(
     (index: number) => {
       navigationUntil.current = Date.now() + 1000;
       if (index >= chapters.length) {
+        if (introContent) return;
         finish();
         return;
       }
       sections.current[Math.max(0, index)]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     },
-    [finish, chapters.length]
+    [finish, chapters.length, introContent]
   );
 
   const goTo = useCallback(
@@ -318,6 +345,14 @@ export function Walkthrough<C extends IWalkthroughChapter>({
     },
     [chapters, go]
   );
+
+  useEffect(() => {
+    if (!introDone || !pendingIntroChapter.current) return;
+    const id = pendingIntroChapter.current;
+    pendingIntroChapter.current = null;
+    const frame = requestAnimationFrame(() => goTo(id));
+    return () => cancelAnimationFrame(frame);
+  }, [introDone, goTo]);
 
   // The fixed-stage tour settles on a screen. Media that scrolls with its text must remain free to scroll:
   // snapping to the nearest stop would undo short gestures, especially when scrolling back up.
@@ -431,6 +466,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                 '--stage-video-top': 'max(60px, calc(var(--chapter-h) * 0.35 - 160px))',
                 fontFamily: 'var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif',
                 transitionDuration: `${FINISH_MS}ms`,
+                scrollSnapType: stageScrolls ? 'y mandatory' : undefined,
               } as CSSProperties
             }
           >
@@ -458,19 +494,26 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                 onDone={finishIntro}
               />
             )}
-            {intro &&
-              !introDone &&
-              introContent?.({
-                continue: () => {
-                  setIntroLeft(true);
-                  finishIntro();
-                },
-                goTo: (id) => {
-                  setIntroLeft(true);
-                  finishIntro();
-                  requestAnimationFrame(() => requestAnimationFrame(() => goTo(id)));
-                },
-              })}
+            {intro && !introDone && introContent && (
+              <div
+                className={publicTour.landingTransition}
+                data-leaving={introLeft || undefined}
+                style={{ '--landing-exit-ms': `${INTRO.scroll}ms` } as CSSProperties}
+                inert={introLeft || undefined}
+              >
+                {introContent({
+                  continue: () => {
+                    landingWheelUntil.current = performance.now() + INTRO.scroll + 450;
+                    root?.scrollTo({ top: 0, behavior: 'instant' });
+                    setIntroLeft(true);
+                  },
+                  goTo: (id) => {
+                    pendingIntroChapter.current = id;
+                    setIntroLeft(true);
+                  },
+                })}
+              </div>
+            )}
             {/* The stage's scenes take the pointer, unless one lets it through to what floats under it. */}
             <div
               ref={stageScrolls ? undefined : stageRef}
@@ -491,7 +534,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
             {fullscreen && (
               <SlideArrows
                 onUp={on > 0 ? () => go(on - 1) : intro ? backToIntro : null}
-                onDown={() => go(on + 1)}
+                onDown={introContent && on === chapters.length - 1 ? null : () => go(on + 1)}
                 last={on === chapters.length - 1}
                 shown={introDone}
                 bottom={footer}
@@ -518,7 +561,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
               <div
                 className={cn(
                   'pointer-events-none fixed inset-x-0 top-0 z-[70] flex items-start justify-between px-[clamp(20px,3vw,40px)] pt-[22px] max-sm:px-[16px] max-sm:pt-[14px] squat:pt-[10px]',
-                  introContent && 'bg-white pb-[14px]'
+                  introContent && 'bg-transparent pb-[14px]'
                 )}
               >
                 <Link
@@ -532,7 +575,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                     backToIntro();
                   }}
                   className={cn(
-                    'pointer-events-auto shrink-0 rounded-sm transition-opacity duration-500 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#183f8b]',
+                    'pointer-events-auto inline-flex min-h-[44px] shrink-0 items-center rounded-sm transition-opacity duration-500 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#183f8b]',
                     introDone || introContent ? 'opacity-100' : 'opacity-0'
                   )}
                 >
@@ -541,17 +584,9 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                 <div className="pointer-events-auto flex items-center gap-[20px] max-sm:gap-[10px]">
                   <FindOutMore shown={introDone || !!introContent} />
                   {/* For now, the home it leads to, uncovered as the walkthrough lifts away. */}
-                  <button
-                    type="button"
-                    onClick={finish}
-                    className={cn(
-                      'rounded-full px-[22px] py-[10px] text-[14px] leading-[18px] font-semibold whitespace-nowrap text-white transition-[filter] hover:brightness-110 max-sm:px-[16px] max-sm:py-[8px] max-sm:text-[13px] squat:py-[8px]',
-                      introContent
-                        ? 'bg-[#183f8b]'
-                        : 'bg-green-main shadow-[0_4px_14px_rgba(0,140,5,0.25)]'
-                    )}
-                  >
-                    Enter the platform
+                  <button type="button" onClick={finish} className={cn(pills.pill, pills.header)}>
+                    <span className="sm:hidden">Enter platform</span>
+                    <span className="max-sm:hidden">Enter the platform</span>
                   </button>
                   {account && (
                     <AccountChip
@@ -579,6 +614,11 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                   key={chapter.id}
                   id={`walkthrough-${chapter.id}`}
                   data-index={index}
+                  style={
+                    stageScrolls
+                      ? { scrollSnapAlign: 'start', scrollSnapStop: 'always' }
+                      : undefined
+                  }
                   ref={(section) => {
                     sections.current[index] = section;
                   }}
@@ -592,7 +632,10 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                   )}
                 >
                   {stageScrolls && Math.abs(index - on) <= 1 && (
-                    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                    <div
+                      data-chapter-stage
+                      className="pointer-events-none absolute inset-0 overflow-hidden"
+                    >
                       {stage(chapter, index === on ? colorSlot : null, goTo, index === on)}
                     </div>
                   )}
@@ -609,13 +652,15 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                 </section>
               ))}
               {/* Past the last chapter, the way on to the home. */}
-              <section
-                data-index={chapters.length}
-                ref={(section) => {
-                  sections.current[chapters.length] = section;
-                }}
-                className="h-[60vh]"
-              />
+              {!introContent && (
+                <section
+                  data-index={chapters.length}
+                  ref={(section) => {
+                    sections.current[chapters.length] = section;
+                  }}
+                  className="h-[60vh]"
+                />
+              )}
             </div>
           </div>
         </BareViewers>
@@ -699,6 +744,7 @@ function ChapterText({
   return (
     <div
       inert={!on || undefined}
+      data-chapter-text={chapter.id}
       className={cn(
         'relative flex w-full flex-col gap-[18px]',
         !scrollsWithStage && 'transition-[opacity,translate] duration-700 ease-out',
@@ -1143,7 +1189,7 @@ function flyShared(root: HTMLElement, intro: HTMLElement, first: HTMLElement) {
 
 /** A way back or on: a bare chevron, with room round it to be pointed at. */
 const ARROW =
-  'pointer-events-auto flex size-[40px] items-center justify-center text-primary-9 transition-opacity duration-200 hover:opacity-60 stacked:rounded-full stacked:bg-white/85';
+  'pointer-events-auto flex size-[40px] items-center justify-center max-sm:size-[44px] text-primary-9 transition-opacity duration-200 hover:opacity-60 stacked:rounded-full stacked:bg-white/85';
 
 /**
  * A screen back, up at the top of the page, and a screen on, down at its foot, both in the middle: back from
@@ -1159,7 +1205,7 @@ function SlideArrows({
 }: {
   /** Null where there is nothing back. */
   onUp: (() => void) | null;
-  onDown: () => void;
+  onDown: (() => void) | null;
   last: boolean;
   shown: boolean;
   /** How far up the foot the way on sits, a CSS length, over the usual. */
@@ -1199,8 +1245,8 @@ function SlideArrows({
       <button
         type="button"
         aria-label={last ? 'On to your home page' : 'Next screen'}
-        onClick={onDown}
-        className={ARROW}
+        onClick={() => onDown?.()}
+        className={cn(ARROW, !onDown && 'pointer-events-none invisible')}
       >
         {chevron('M6 9l6 6 6-6')}
       </button>

@@ -165,13 +165,13 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     scene: 'multiplying',
     title: (
       <>
-        Perform Neuroscience at the speed of thought
+        Neuroscience at the speed of thought
         <AiSparkles className="ml-[0.18em] inline-block size-[0.8em] -translate-y-[0.06em] align-baseline" />
       </>
     ),
     hero: true,
     titleClass: SERIF_TITLE,
-    // Wide enough for its title in two lines, its prompts ending above the bar of words at the foot.
+    // Keep room for the prompts; the public title uses the same measure as the other chapters.
     column: `${labs.chapter} ${labs.aiChapter} beside:w-[60%] beside:max-w-[860px]`,
     body: (
       <>
@@ -211,13 +211,20 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     theme: 'Get Started',
     label: 'Get Started',
     scene: 'join',
-    title: 'Get started',
+    title: 'Your next experiment starts here.',
     hero: true,
     column: getStarted.words,
     body: (
       <>
-        <p>Free to start, with 100 credits for your first simulations.</p>
+        <p>
+          Explore brain data, build models and run simulations.
+          <br />
+          All in your browser.
+        </p>
         <StartNow />
+        <p className={getStarted.freeOffer}>
+          Free to start. <strong>100 credits included.</strong>
+        </p>
       </>
     ),
   },

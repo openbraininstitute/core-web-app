@@ -72,6 +72,39 @@
   text-wrap: balance;
 }
 
+/* Full-bleed information-page visuals, with a light scrim only behind the words. */
+.immersive {
+  display: flex;
+  overflow: hidden;
+}
+.immersive .media {
+  position: absolute;
+  inset: 0;
+  aspect-ratio: auto;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+.immersive .media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    rgb(255 255 255 / 75%) 0%,
+    rgb(255 255 255 / 5%) 55%,
+    rgb(255 255 255 / 0%) 60%
+  );
+  pointer-events: none;
+}
+.immersive .text {
+  position: relative;
+  z-index: 1;
+  width: 36%;
+  max-width: 560px;
+}
+
 .withMedia .text > div {
   align-items: flex-start;
 }
@@ -130,6 +163,11 @@
   width: 100%;
   z-index: 9;
 }
+.immersive > footer button {
+  color: #fff;
+  opacity: 1;
+  text-shadow: 0 1px 8px rgb(0 0 0 / 30%);
+}
 
 .comingSoon {
   z-index: 8;
@@ -161,6 +199,33 @@
     aspect-ratio: 16 / 9;
   }
 
+  .immersive {
+    display: grid;
+    padding-top: 0;
+  }
+
+  .immersive .media {
+    position: relative;
+    inset: auto;
+    width: calc(100% + 40px);
+    height: clamp(320px, 54svh, 560px);
+    margin-inline: -20px;
+  }
+
+  .immersive .media::after {
+    display: none;
+  }
+
+  .immersive .text {
+    width: 100%;
+    max-width: none;
+  }
+
+  .immersive > footer button {
+    color: var(--color-primary);
+    text-shadow: none;
+  }
+
   .wordsOnly {
     min-height: 0;
     padding: 96px 20px 72px;
@@ -173,5 +238,48 @@
 
   .hero .text div.content {
     font-size: 15px;
+  }
+}
+
+/* The approved layered artwork is contained, with no rectangular photo frame. */
+.immersive .media.hexagonMedia {
+  inset: auto 8vw auto auto;
+  top: 50%;
+  transform: translateY(-50%);
+  width: min(84vw, calc(75svh * 16 / 9));
+  height: auto;
+  aspect-ratio: 16 / 9;
+  overflow: visible;
+}
+
+.immersive .media.hexagonMedia::after {
+  display: none;
+}
+
+.hexagonHero > footer button {
+  color: var(--color-primary);
+  text-shadow: none;
+}
+
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .immersive .media.hexagonMedia {
+    position: relative;
+    inset: auto;
+    transform: none;
+    width: calc(100% + 40px);
+    height: auto;
+    max-height: 75svh;
+    margin-inline: -20px;
+  }
+}
+
+/* Keep the phone header on white, with the artwork and copy flowing beneath it. */
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .immersive.hexagonHero {
+    padding-top: 76px;
+  }
+
+  .hero .text div.content {
+    font-size: 16px;
   }
 }
