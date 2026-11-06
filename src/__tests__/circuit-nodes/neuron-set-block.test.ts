@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { neuronSetBlock } from '@/features/circuit-nodes/neuron-set-block';
+import { MAX_ID_SET_CELLS, neuronSetBlock } from '@/features/circuit-nodes/neuron-set-block';
 
 import type { ColumnMeta, ColumnValues } from '@/features/circuit-nodes/types';
 
@@ -89,7 +89,7 @@ describe('neuronSetBlock', () => {
       offered: OFFERED,
       getColumn,
     });
-    expect(block.type).toBe('PointPopulationIDNeuronSet');
+    expect(block?.type).toBe('PointPopulationIDNeuronSet');
   });
 
   describe('with a property the form does not offer', () => {
@@ -136,5 +136,48 @@ describe('neuronSetBlock', () => {
   it('takes the ids of cells a blank value picks out, which the form cannot show', async () => {
     const { by } = await build([5], true, {}, { cell_type: CELL_TYPE.library });
     expect(by).toBe('id');
+  });
+
+  describe('around the most ids a set may hold', () => {
+    const upTo = (count: number) => Array.from({ length: count }, (_, cell) => cell);
+
+    it('takes the ids of as many cells as it may hold', async () => {
+      const { block, by } = await build(upTo(MAX_ID_SET_CELLS), true, {}, {});
+      expect(by).toBe('id');
+      expect(block).toMatchObject({ neuron_ids: { name: `${MAX_ID_SET_CELLS}_selected_neurons` } });
+    });
+
+    it('makes no set of more cells than that', async () => {
+      const { block, by } = await build(upTo(MAX_ID_SET_CELLS + 1), true, {}, {});
+      expect(by).toBeNull();
+      expect(block).toBeNull();
+    });
+
+    it('still takes a filter of value lists as the property set', async () => {
+      const { by } = await build(upTo(MAX_ID_SET_CELLS + 1), false, {
+        layer: { filterType: 'set', values: ['5'] },
+      });
+      expect(by).toBe('property');
+    });
+
+    it('still says that many cells by values that pick out exactly them', async () => {
+      const many = MAX_ID_SET_CELLS + 1;
+      const { block, by } = await neuronSetBlock({
+        population,
+        cells: Uint32Array.from(upTo(many)),
+        rowCount: many * 2,
+        ticked: false,
+        filterModel: { x: { filterType: 'number', type: 'greaterThan', filter: '10' } },
+        columns: COLUMNS,
+        offered: { mtype: ['A', 'B'] },
+        getColumn: async () => ({
+          kind: 'categorical',
+          library: ['A', 'B'],
+          indices: Uint32Array.from({ length: many * 2 }, (_, row) => (row < many ? 0 : 1)),
+        }),
+      });
+      expect(by).toBe('property');
+      expect(block).toMatchObject({ property_filter: { filter_dict: { mtype: ['A'] } } });
+    });
   });
 });

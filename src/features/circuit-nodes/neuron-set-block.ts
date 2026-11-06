@@ -31,6 +31,11 @@ const TELLING = [
 ];
 /** A property taking more of its values than this to say the selection reads as a list, not a description. */
 const MOST_VALUES = 40;
+/**
+ * The most cells an ID neuron set may hold: its ids go in the scan config, so the form, its
+ * validation and the saved JSON all carry each one. The form stays responsive with this many.
+ */
+export const MAX_ID_SET_CELLS = 250_000;
 
 /** obi-one's neuron set types come by the kind of population they select from. */
 function typePrefix(population: NodePopulation): string {
@@ -118,7 +123,8 @@ function countKept(narrowings: readonly Narrowing[], rowCount: number, limit: nu
  * can show say exactly which cells they are, else their ids. Where the table's filter is only lists
  * of those values, they are the property set. Otherwise each categorical property on offer is
  * narrowed to the values the cells have; where nothing else has those values, the properties that
- * add nothing are dropped, the least telling first, and the rest are the set.
+ * add nothing are dropped, the least telling first, and the rest are the set. Cells only their ids
+ * can say, past `MAX_ID_SET_CELLS` of them, make no set: `block` is null.
  */
 export async function neuronSetBlock({
   population,
@@ -140,7 +146,7 @@ export async function neuronSetBlock({
   columns: readonly ColumnMeta[];
   offered: OfferedProperties;
   getColumn: (name: string) => Promise<ColumnValues>;
-}): Promise<{ block: NeuronSetBlock; by: 'property' | 'id' }> {
+}): Promise<{ block: NeuronSetBlock; by: 'property' | 'id' } | { block: null; by: null }> {
   const asFiltered = ticked ? null : filterAsProperties(filterModel, columns, offered);
   if (asFiltered) return { block: propertyBlock(population, asFiltered), by: 'property' };
 
@@ -177,7 +183,11 @@ export async function neuronSetBlock({
   }
   const exact = (kept: readonly Narrowing[]) =>
     kept.length > 0 && countKept(kept, rowCount, cells.length) === cells.length;
-  if (!exact(narrowings)) return { block: idBlock(population, cells), by: 'id' };
+  if (!exact(narrowings)) {
+    return cells.length > MAX_ID_SET_CELLS
+      ? { block: null, by: null }
+      : { block: idBlock(population, cells), by: 'id' };
+  }
 
   // The least telling are tried first: a property not among them, then theirs from the last.
   const rank = (name: string) => {

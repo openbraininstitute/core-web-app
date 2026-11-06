@@ -4,6 +4,7 @@ import { RiAddLine } from '@remixicon/react';
 import { Empty } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { useAppNotification } from '@/components/notification';
 import { CenteredSpin, DownloadProgress } from '@/features/circuit-nodes/components/loading';
 import { NodesGrid, withNewColumnsOn } from '@/features/circuit-nodes/components/nodes-grid';
 import { NodesToolbar } from '@/features/circuit-nodes/components/nodes-toolbar';
@@ -19,7 +20,7 @@ import {
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 import { useTableTicks } from '@/features/circuit-nodes/hooks/use-table-ticks';
-import { neuronSetBlock } from '@/features/circuit-nodes/neuron-set-block';
+import { MAX_ID_SET_CELLS, neuronSetBlock } from '@/features/circuit-nodes/neuron-set-block';
 import { resolvePopulation } from '@/features/circuit-nodes/population-utils';
 import { GenericError } from '@/ui/molecules/generic-error';
 import { PILL_CLASS } from '@/ui/molecules/select/pill-select';
@@ -56,7 +57,8 @@ export type TableCells = {
   resetRequest?: number;
   /**
    * Given, the neurons on show, while they are neither all of them nor none, can be made a
-   * neuron set: a property set where their values say exactly which they are, else their ids.
+   * neuron set: a property set where their values say exactly which they are, else their ids,
+   * while there are few enough of them.
    */
   onCreateNeuronSet?: (block: NeuronSetBlock) => void;
   /** What the form's property neuron sets can show, by population; only those go in a property set. */
@@ -180,6 +182,7 @@ export default function CircuitNodesTable({
   }, [resetRequest]);
   // The neurons on show as a neuron set, where they are some but not all of them.
   const [makingSet, setMakingSet] = useState(false);
+  const notification = useAppNotification();
   const onCreateNeuronSet = cells?.onCreateNeuronSet;
   const setOfShown =
     onCreateNeuronSet &&
@@ -200,7 +203,16 @@ export default function CircuitNodesTable({
             offered: cells?.neuronSetProperties?.[population.name] ?? {},
             getColumn,
           })
-            .then(({ block }) => onCreateNeuronSet(block))
+            .then(({ block }) => {
+              if (block) {
+                onCreateNeuronSet(block);
+                return;
+              }
+              notification.warning({
+                message: 'Too many neurons for an ID neuron set',
+                description: `Their property values don't pick out exactly these ${shown.length.toLocaleString()} neurons, and an ID neuron set holds at most ${MAX_ID_SET_CELLS.toLocaleString()}. Select fewer, or filter by property values instead.`,
+              });
+            })
             .catch((error: unknown) =>
               logError('The neurons on show could not be made a neuron set:', error)
             )
