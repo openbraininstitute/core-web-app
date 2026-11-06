@@ -11,7 +11,6 @@ import {
   isLfpSummaryChanged,
   LfpSummaryChangedError,
   lfpSummaryIndexSchema,
-  rangeReader,
   readChunkTable,
   readRanges,
   readSlice,
@@ -20,7 +19,7 @@ import {
   sliceOf,
   sumFields,
 } from './summary';
-import { answeringRanges, deflated } from './test-ranges';
+import { answeringRanges, deflated, rangeReader } from './test-ranges';
 
 import type { LfpAxis, LfpDataset, LfpField, LfpSummaryIndex } from './summary';
 
@@ -64,7 +63,11 @@ describe('readSlice', () => {
 
   it('asks for the slice by range and reads it as its dtype', async () => {
     const fetchMock = vi.fn(
-      async () => new Response(new Int16Array([1, -2, 3, -4, 5]).buffer, { status: 206 })
+      async () =>
+        new Response(new Int16Array([1, -2, 3, -4, 5]).buffer, {
+          status: 206,
+          headers: { 'Content-Range': 'bytes 1020-1029/2000' },
+        })
     );
     vi.stubGlobal('fetch', fetchMock);
     const values = new Int16Array(
@@ -81,6 +84,16 @@ describe('readSlice', () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => new Response(new Int16Array(600).buffer, { status: 200 }))
+    );
+    await expect(readSlice(rangeReader({ url: 'u', headers: {} }), level0, [0, 2])).rejects.toThrow(
+      'not read by range'
+    );
+  });
+
+  it('refuses a part that does not say which range it is', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(new Int16Array(5).buffer, { status: 206 }))
     );
     await expect(readSlice(rangeReader({ url: 'u', headers: {} }), level0, [0, 2])).rejects.toThrow(
       'not read by range'
@@ -170,7 +183,13 @@ describe('rows in chunks', () => {
   });
 
   it("reads a group's table alone, and refuses an axis of plain rows", async () => {
-    const fetchMock = vi.fn(async () => new Response(tables[1].buffer, { status: 206 }));
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(tables[1].buffer, {
+          status: 206,
+          headers: { 'Content-Range': 'bytes 72-103/200' },
+        })
+    );
     vi.stubGlobal('fetch', fetchMock);
     const read = rangeReader(request);
 

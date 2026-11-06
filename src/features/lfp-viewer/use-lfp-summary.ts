@@ -38,7 +38,6 @@ import type {
   LfpAxis,
   LfpField,
   LfpSummaryIndex,
-  LfpSummaryRequest,
   ReadRange,
 } from '@/features/lfp-viewer/summary';
 import type { WorkspaceContext } from '@/types/common';
@@ -157,17 +156,6 @@ type SummaryRead = { queryClient: QueryClient; source: LfpSummarySource; sha256:
 
 type AxisRead = SummaryRead & { index: LfpSummaryIndex; axis: LfpAxis };
 
-async function readingSummary<T>(
-  { queryClient, source, sha256 }: SummaryRead,
-  read: (request: LfpSummaryRequest) => Promise<T>
-): Promise<T> {
-  try {
-    return await read(await buildLfpSummaryRequest(source, sha256));
-  } catch (error) {
-    return askStatusIfChanged(queryClient, source, sha256)(error);
-  }
-}
-
 type RangeAsked = {
   range: ByteRange;
   resolve: (bytes: Uint8Array<ArrayBuffer>) => void;
@@ -177,14 +165,19 @@ type RangeAsked = {
 /** By summary, the ranges asked for since it was last read from. */
 const rangesAsked = new Map<string, RangeAsked[]>();
 
-async function readRangesAsked(at: SummaryRead, asked: readonly RangeAsked[]) {
+async function readRangesAsked(
+  { queryClient, source, sha256 }: SummaryRead,
+  asked: readonly RangeAsked[]
+) {
   try {
-    const parts = await readingSummary(at, (request) =>
-      readRanges(
-        request,
-        asked.map(({ range }) => range)
+    const parts = await buildLfpSummaryRequest(source, sha256)
+      .then((request) =>
+        readRanges(
+          request,
+          asked.map(({ range }) => range)
+        )
       )
-    );
+      .catch(askStatusIfChanged(queryClient, source, sha256));
     asked.forEach(({ resolve }, i) => {
       resolve(parts[i]);
     });
@@ -270,7 +263,6 @@ const oneGroup = (
 });
 
 function addedUp(arrays: readonly Float32Array[]): Float32Array {
-  if (arrays.length === 1) return arrays[0];
   const sum = new Float32Array(arrays[0].length);
   for (const values of arrays) {
     for (let i = 0; i < sum.length; i++) sum[i] += values[i];
@@ -278,19 +270,8 @@ function addedUp(arrays: readonly Float32Array[]): Float32Array {
   return sum;
 }
 
-const sharesRead = (results: UseQueryResult<Float32Array>[]) => ({
-  shares:
-    results.length > 0 && results.every((r) => r.data)
-      ? addedUp(results.map((r) => r.data as Float32Array))
-      : null,
-  failed: results.some((r) => r.isError),
-});
-
-const fieldsRead = (results: UseQueryResult<LfpField>[]) => ({
-  fields:
-    results.length > 0 && results.every((r) => r.data)
-      ? results.map((r) => r.data as LfpField)
-      : null,
+const allRead = <T>(results: UseQueryResult<T>[]) => ({
+  data: results.length > 0 && results.every((r) => r.data) ? results.map((r) => r.data as T) : null,
   failed: results.some((r) => r.isError),
 });
 
@@ -313,11 +294,11 @@ export function useChosenField(
   const at = { queryClient, source, sha256, index, axis };
   const read = useQueries({
     queries: isTotalField(choice) ? [] : choice.groups.map((group) => groupFieldQuery(at, group)),
-    combine: fieldsRead,
+    combine: allRead<LfpField>,
   });
   const shares = useQueries({
     queries: isTotalField(choice) ? [] : choice.groups.map((group) => groupSharesQuery(at, group)),
-    combine: sharesRead,
+    combine: allRead<Float32Array>,
   });
   // Only one group's are shown: a sum's are worked out from its field, so they'd be read for nothing.
   const oneOfAGroup = !isTotalField(choice) && choice.groups.length === 1;
@@ -328,21 +309,21 @@ export function useChosenField(
   const failed = read.failed || shares.failed || (oneOfAGroup && groupStats.isError);
   const wanted = useMemo<ChosenField | null>(() => {
     if (isTotalField(choice)) return totalField;
-    if (!read.fields || !shares.shares) return null;
+    if (!read.data || !shares.data) return null;
     if (choice.groups.length > 1) {
-      const field = sumFields(read.fields);
+      const field = sumFields(read.data);
       return {
         choice,
         field,
         stats: fieldStats(field, index.stats),
         spectra: null,
-        shares: shares.shares,
+        shares: addedUp(shares.data),
       };
     }
     return groupStats.data
-      ? oneGroup(index, choice, read.fields[0], groupStats.data, shares.shares)
+      ? oneGroup(index, choice, read.data[0], groupStats.data, shares.data[0])
       : null;
-  }, [index, choice, totalField, read.fields, shares.shares, groupStats.data]);
+  }, [index, choice, totalField, read.data, shares.data, groupStats.data]);
   const [shown, setShown] = useState<ChosenField>(totalField);
   if (wanted && wanted !== shown) setShown(wanted);
   return { chosen: wanted ?? shown, loading: !wanted && !failed, failed };
@@ -428,21 +409,16 @@ export function useStoredCorrelation(
   const { index, sha256 } = summary;
   const axis = index.axes[axisAt];
   const queryClient = useQueryClient();
+  const at = { queryClient, source, sha256, index, axis };
   return useQuery({
-    queryKey: summaryKey(source, 'correlation', sha256, axis.name, group),
-    enabled,
-    staleTime: Infinity,
-    gcTime: 60_000,
-    queryFn: async () => {
+    ...groupQuery(at, 'correlation', group, async (read) => {
       const stored = axis.correlation;
       if (!stored) throw new Error('The LFP summary has no correlation');
-      const bytes = await readSlice(
-        rangesOf({ queryClient, source, sha256 }),
-        datasetOf(index, stored.dataset),
-        [group]
-      );
+      const bytes = await readSlice(read, datasetOf(index, stored.dataset), [group]);
       return { values: new Int16Array(bytes), scale: stored.scale };
-    },
+    }),
+    enabled,
+    gcTime: 60_000,
   });
 }
 

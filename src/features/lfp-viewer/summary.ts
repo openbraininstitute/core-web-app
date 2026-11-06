@@ -157,24 +157,29 @@ async function readByRange(
 
 type Part = { start: number; bytes: Uint8Array<ArrayBuffer> };
 
+const PART_HEADERS_BYTES = 512;
+
 /** The parts of a multipart/byteranges answer, each by the range its header gives. */
 function multipartParts(bytes: Uint8Array<ArrayBuffer>, boundary: string): Part[] {
-  // One character per byte, so that positions in the text are positions in the bytes.
-  const text = new TextDecoder('latin1').decode(bytes);
+  // Only each part's headers are read as text, one character per byte, as the parts' lengths are
+  // in them.
+  const latin1 = new TextDecoder('latin1');
   const delimiter = `--${boundary}`;
   const parts: Part[] = [];
-  let at = text.indexOf(delimiter);
-  while (at >= 0 && !text.startsWith('--', at + delimiter.length)) {
-    const headersEnd = text.indexOf('\r\n\r\n', at);
-    const range = /content-range:\s*bytes (\d+)-(\d+)/i.exec(text.slice(at, headersEnd));
+  let at = 0;
+  for (;;) {
+    const headers = latin1.decode(bytes.subarray(at, at + PART_HEADERS_BYTES));
+    const begins = headers.indexOf(delimiter);
+    if (begins < 0 || headers.startsWith('--', begins + delimiter.length)) return parts;
+    const headersEnd = headers.indexOf('\r\n\r\n', begins);
+    const range = /content-range:\s*bytes (\d+)-(\d+)/i.exec(headers.slice(begins, headersEnd));
     if (headersEnd < 0 || !range) throw new Error('The LFP summary was not read by range');
     const start = Number(range[1]);
-    const from = headersEnd + 4;
+    const from = at + headersEnd + 4;
     const length = Number(range[2]) - start + 1;
     parts.push({ start, bytes: bytes.subarray(from, from + length) });
-    at = text.indexOf(delimiter, from + length);
+    at = from + length;
   }
-  return parts;
 }
 
 async function readSomeRanges(
@@ -186,9 +191,8 @@ async function readSomeRanges(
   const boundary = /boundary="?([^";\s]+)/.exec(response.headers.get('content-type') ?? '')?.[1];
   // A server may answer ranges that touch as one part, and all of them as one range.
   const single = /bytes (\d+)-/.exec(response.headers.get('content-range') ?? '')?.[1];
-  const parts = boundary
-    ? multipartParts(bytes, boundary)
-    : [{ start: single ? Number(single) : Math.min(...ranges.map((r) => r.offset)), bytes }];
+  if (!boundary && !single) throw new Error('The LFP summary was not read by range');
+  const parts = boundary ? multipartParts(bytes, boundary) : [{ start: Number(single), bytes }];
   return ranges.map(({ offset, length }) => {
     const part = parts.find(
       (p) => p.start <= offset && offset + length <= p.start + p.bytes.length
@@ -209,12 +213,6 @@ export async function readRanges(
   }
   return (await Promise.all(requests)).flat();
 }
-
-/** Each range read with a request of its own. */
-export const rangeReader =
-  (request: LfpSummaryRequest): ReadRange =>
-  async (range) =>
-    (await readRanges(request, [range]))[0];
 
 /** A slice of a dataset's bytes, copied to a buffer of their own to be read as their type. */
 export async function readSlice(

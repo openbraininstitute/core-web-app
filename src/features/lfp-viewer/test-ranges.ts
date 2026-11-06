@@ -1,5 +1,15 @@
 import { deflateSync } from 'node:zlib';
 
+import { readRanges } from './summary';
+
+import type { LfpSummaryRequest, ReadRange } from './summary';
+
+/** Each range read with a request of its own. */
+export const rangeReader =
+  (request: LfpSummaryRequest): ReadRange =>
+  async (range) =>
+    (await readRanges(request, [range]))[0];
+
 /** A row as HDF5's shuffle and deflate filters leave it. */
 export function deflated(values: readonly number[]): ArrayBuffer {
   const bytes = new Uint8Array(Int16Array.from(values).buffer);
