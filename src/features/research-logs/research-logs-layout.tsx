@@ -62,22 +62,6 @@ export function ResearchLogsLayout({ children }: { children: ReactNode }) {
           </label>
 
           <nav className="secondary-scrollbar flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pb-2">
-            <Button
-              asChild
-              rounded
-              variant="outline"
-              size="lg"
-              active={!logId}
-              className="w-full shrink-0 border-none text-base"
-            >
-              <Link href={href()} className="flex! w-full items-center justify-between!">
-                <span className="font-bold text-current">All research logs</span>
-                <span className={cn('text-sm font-bold', logId ? 'text-neutral-4' : 'text-white')}>
-                  {data?.data.length ?? ''}
-                </span>
-              </Link>
-            </Button>
-
             {isLoading ? (
               <Skeleton className="h-14 w-full rounded-full" />
             ) : data?.data.length === 0 ? (

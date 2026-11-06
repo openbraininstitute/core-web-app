@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  ArrowLeftOutlined,
   CheckOutlined,
   CloseOutlined,
   DeleteOutlined,
@@ -163,76 +164,82 @@ function Loaded({ log }: { log: IResearchLog }) {
     <div className="flex min-h-full flex-col gap-4 p-1">
       <div className="flex-1 rounded-2xl bg-white p-8 shadow-md">
         {/* zero-height and sticky, so the buttons float over the report while it scrolls */}
-        <div className="pointer-events-none sticky top-3 z-10 -mt-4 -mr-4 flex h-0 flex-col items-end gap-2 [&>*]:pointer-events-auto">
-          <div className="flex gap-2">
-            {editing ? (
-              <>
-                <IconAction label="Cancel" onClick={cancel}>
-                  <CloseOutlined />
-                </IconAction>
+        <div className="pointer-events-none sticky top-3 z-10 -mx-4 -mt-4 flex h-0 items-start justify-between [&>*]:pointer-events-auto">
+          {editing ? (
+            <span />
+          ) : (
+            <IconAction
+              label={filePath ? `Back to ${log.name}` : 'All research logs'}
+              onClick={() => router.push(filePath ? href(log.id) : href())}
+              testId="back-research-log"
+            >
+              <ArrowLeftOutlined />
+            </IconAction>
+          )}
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex gap-2">
+              {editing ? (
+                <>
+                  <IconAction label="Cancel" onClick={cancel}>
+                    <CloseOutlined />
+                  </IconAction>
+                  <IconAction
+                    label={save.isPending ? 'Saving…' : 'Save'}
+                    onClick={onSave}
+                    disabled={!dirty || save.isPending}
+                    className="bg-accent-dark text-white hover:bg-accent-dark/90"
+                  >
+                    <CheckOutlined />
+                  </IconAction>
+                </>
+              ) : !filePath ? (
                 <IconAction
-                  label={save.isPending ? 'Saving…' : 'Save'}
-                  onClick={onSave}
-                  disabled={!dirty || save.isPending}
-                  className="bg-accent-dark text-white hover:bg-accent-dark/90"
+                  label="Edit"
+                  onClick={() => setEditing(true)}
+                  testId="edit-research-log"
+                  className="bg-primary-9 text-white hover:bg-primary-9/90"
                 >
-                  <CheckOutlined />
+                  <EditOutlined />
                 </IconAction>
-              </>
-            ) : !filePath ? (
-              <IconAction
-                label="Edit"
-                onClick={() => setEditing(true)}
-                testId="edit-research-log"
-                className="bg-primary-9 text-white hover:bg-primary-9/90"
-              >
-                <EditOutlined />
-              </IconAction>
-            ) : null}
-            {!editing && (
-              <IconAction
-                label="Delete"
-                onClick={onDelete}
-                disabled={remove.isPending}
-                testId="delete-research-log"
-                className="bg-destructive text-white hover:bg-destructive/90"
-              >
-                <DeleteOutlined />
-              </IconAction>
+              ) : null}
+              {!editing && (
+                <IconAction
+                  label="Delete"
+                  onClick={onDelete}
+                  disabled={remove.isPending}
+                  testId="delete-research-log"
+                  className="bg-destructive text-white hover:bg-destructive/90"
+                >
+                  <DeleteOutlined />
+                </IconAction>
+              )}
+            </div>
+            {editing && (
+              <div className="flex flex-col items-end gap-2">
+                <Button
+                  rounded
+                  variant="outline"
+                  size="sm"
+                  className="border-none shadow-md"
+                  onClick={addBlock}
+                >
+                  <PlusOutlined /> Text
+                </Button>
+                <Button
+                  rounded
+                  variant="outline"
+                  size="sm"
+                  className="border-none shadow-md"
+                  onClick={() => setLinkOpen(true)}
+                >
+                  <LinkOutlined /> Link entities
+                </Button>
+              </div>
             )}
           </div>
-          {editing && (
-            <div className="flex flex-col items-end gap-2">
-              <Button
-                rounded
-                variant="outline"
-                size="sm"
-                className="border-none shadow-md"
-                onClick={addBlock}
-              >
-                <PlusOutlined /> Text
-              </Button>
-              <Button
-                rounded
-                variant="outline"
-                size="sm"
-                className="border-none shadow-md"
-                onClick={() => setLinkOpen(true)}
-              >
-                <LinkOutlined /> Link entities
-              </Button>
-            </div>
-          )}
         </div>
         {filePath && !editing ? (
-          <LogFile
-            logName={log.name}
-            logId={log.id}
-            path={filePath}
-            filesAssetId={filesAssetId}
-            onBack={() => router.push(href(log.id))}
-            onOpen={openFile}
-          />
+          <LogFile logId={log.id} path={filePath} filesAssetId={filesAssetId} onOpen={openFile} />
         ) : (
           <article className="mx-auto max-w-3xl">
             <div className="pr-28">
@@ -303,30 +310,19 @@ function Loaded({ log }: { log: IResearchLog }) {
 
 /** A markdown file from the log's files folder, shown in place of the log, with the way back. */
 function LogFile({
-  logName,
   logId,
   path,
   filesAssetId,
-  onBack,
   onOpen,
 }: {
-  logName: string;
   logId: string;
   path: string;
   filesAssetId?: string;
-  onBack: () => void;
   onOpen: (path: string) => void;
 }) {
   const { data, isLoading, isError } = useResearchLogFile(logId, filesAssetId, path);
   return (
     <article className="mx-auto max-w-3xl">
-      <nav className="border-neutral-2 text-neutral-5 mb-4 flex items-center gap-2 border-b pb-4 pr-28 text-sm">
-        <button type="button" onClick={onBack} className="text-primary-7 hover:underline">
-          {logName}
-        </button>
-        <span aria-hidden>›</span>
-        <span className="truncate font-mono">{path}</span>
-      </nav>
       {!filesAssetId ? (
         <p className="text-neutral-5">This log has no files folder to read {path} from.</p>
       ) : isLoading ? (
