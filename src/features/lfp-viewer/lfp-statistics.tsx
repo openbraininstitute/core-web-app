@@ -79,7 +79,7 @@ type PlotKind =
   | 'profile'
   | 'csd';
 const STORED_MEASURES = { ptp: 'Peak-to-peak', rms: 'RMS', min: 'Min', max: 'Max' };
-type ProfileMeasure = keyof typeof STORED_MEASURES | 'at-time';
+type ProfileMeasure = keyof typeof STORED_MEASURES | 'share' | 'at-time';
 
 type StatisticsProps = {
   source: LfpSummarySource;
@@ -604,9 +604,12 @@ function ProfilePlot({
   visible,
 }: PlotProps) {
   const { index } = summary;
-  const { stats } = chosen;
+  const { stats, shares } = chosen;
   const measures = Object.entries(STORED_MEASURES).filter(([name]) => index.stats.includes(name));
-  const [measure, setMeasure] = useState(() => (measures[0]?.[0] ?? 'at-time') as ProfileMeasure);
+  const first = (measures[0]?.[0] ?? 'at-time') as ProfileMeasure;
+  const [picked, setMeasure] = useState(first);
+  // The total's share is all of it, so it is only offered for groups.
+  const measure = picked === 'share' && !shares ? first : picked;
   const axis = useMemo(
     () => direction?.axis ?? (positions ? arrayAxis(positions, grid) : null),
     [direction, positions, grid]
@@ -630,8 +633,9 @@ function ProfilePlot({
       const bin = time === null ? 0 : binAt(field, time);
       return (contact: number) => fieldValue(field, contact, bin);
     }
+    if (measure === 'share' && shares) return (contact: number) => shares[contact] * 100;
     return (contact: number) => stats[contact * index.stats.length + column];
-  }, [atTime, time, field, stats, index.stats.length, column]);
+  }, [atTime, time, field, measure, shares, stats, index.stats.length, column]);
   const figure = useMemo(() => {
     if (!coordinate || !axis) return null;
     return profileFigure({
@@ -639,7 +643,9 @@ function ProfilePlot({
       measure:
         measure === 'at-time'
           ? `Field at ${time === null ? 'the start' : `${time.toFixed(1)} ms`} (µV)`
-          : `${STORED_MEASURES[measure]} (µV)`,
+          : measure === 'share'
+            ? 'Share of the total’s variance (%)'
+            : `${STORED_MEASURES[measure]} (µV)`,
       axisLabel: alongLabel(axis),
       selected:
         selectedContact === null
@@ -657,6 +663,7 @@ function ProfilePlot({
           value={measure}
           options={[
             ...measures.map(([value, label]) => ({ value, label })),
+            ...(shares ? [{ value: 'share', label: 'Share of the field' }] : []),
             { value: 'at-time', label: 'At the player’s time' },
           ]}
           onChange={(v) => setMeasure(v as ProfileMeasure)}
@@ -667,9 +674,9 @@ function ProfilePlot({
           ? removeShared
             ? 'shared signal removed'
             : undefined
-          : statsFromOverview(chosen)
-            ? 'from the overview'
-            : 'as recorded'
+          : measure === 'share' || !statsFromOverview(chosen)
+            ? 'as recorded'
+            : 'from the overview'
       }
       help="A value against position along the field's direction, or the array's longest axis where no line follows the field, a grid's own if it is one. Many contacts are averaged into stretches of the axis"
       visible={visible}

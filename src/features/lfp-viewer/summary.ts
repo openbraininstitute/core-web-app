@@ -37,6 +37,8 @@ const axisSchema = z.object({
   psd_frequencies: z.array(z.number()),
   /** Group × contact × contact, if it is stored. */
   correlation: z.object({ dataset: z.string(), scale: z.number() }).optional(),
+  /** Group × contact: a group's part in the total's variance at each contact. */
+  contact_shares: z.string(),
 });
 
 export const lfpSummaryIndexSchema = z.object({
@@ -48,6 +50,10 @@ export const lfpSummaryIndexSchema = z.object({
   contacts: z.number().int().nonnegative(),
   stats: z.array(z.string()),
   axes: z.array(axisSchema).min(1),
+  /** The axes the cells differ on that the build left out, and why. */
+  axes_left_out: z.record(z.string(), z.string()),
+  /** Why there are no groups, where that is not down to the report: they are built once someone who can read what they need opens it. */
+  groups_unavailable: z.string().nullable(),
   datasets: z.record(z.string(), datasetSchema),
 });
 
@@ -56,6 +62,8 @@ export type LfpDataset = z.infer<typeof datasetSchema>;
 export type LfpAxis = z.infer<typeof axisSchema>;
 export type LfpSummaryRequest = { url: string; headers: Record<string, string> };
 export type ByteRange = { offset: number; length: number };
+/** A range of a summary's bytes. A part of a multipart answer may lie at any offset of its buffer. */
+export type ReadRange = (range: ByteRange) => Promise<Uint8Array<ArrayBuffer>>;
 
 /** One group's field over every contact, at one level: µV = data × scale. */
 export type LfpField = {
@@ -132,12 +140,10 @@ const rangeHeader = (ranges: readonly ByteRange[]) =>
 
 async function readByRange(
   request: LfpSummaryRequest,
-  ranges: readonly ByteRange[],
-  signal?: AbortSignal
+  ranges: readonly ByteRange[]
 ): Promise<Response> {
   const response = await fetch(request.url, {
     headers: { ...request.headers, Range: rangeHeader(ranges) },
-    signal,
   });
   if (response.status === 412) throw new LfpSummaryChangedError();
   if (!response.ok) throw new Error(`Reading the LFP summary failed (${response.status})`);
@@ -147,18 +153,6 @@ async function readByRange(
     throw new Error('The LFP summary was not read by range');
   }
   return response;
-}
-
-async function readRange(
-  request: LfpSummaryRequest,
-  offset: number,
-  length: number,
-  signal?: AbortSignal
-): Promise<ArrayBuffer> {
-  const response = await readByRange(request, [{ offset, length }], signal);
-  const bytes = await response.arrayBuffer();
-  if (bytes.byteLength !== length) throw new Error('The LFP summary was cut short');
-  return bytes;
 }
 
 type Part = { start: number; bytes: Uint8Array<ArrayBuffer> };
@@ -191,14 +185,10 @@ async function readSomeRanges(
   const bytes = new Uint8Array(await response.arrayBuffer());
   const boundary = /boundary="?([^";\s]+)/.exec(response.headers.get('content-type') ?? '')?.[1];
   // A server may answer ranges that touch as one part, and all of them as one range.
+  const single = /bytes (\d+)-/.exec(response.headers.get('content-range') ?? '')?.[1];
   const parts = boundary
     ? multipartParts(bytes, boundary)
-    : [
-        {
-          start: Number(/bytes (\d+)-/.exec(response.headers.get('content-range') ?? '')?.[1]),
-          bytes,
-        },
-      ];
+    : [{ start: single ? Number(single) : Math.min(...ranges.map((r) => r.offset)), bytes }];
   return ranges.map(({ offset, length }) => {
     const part = parts.find(
       (p) => p.start <= offset && offset + length <= p.start + p.bytes.length
@@ -220,15 +210,20 @@ export async function readRanges(
   return (await Promise.all(requests)).flat();
 }
 
-/** A slice of a dataset's bytes, read with one range request. */
-export function readSlice(
-  request: LfpSummaryRequest,
+/** Each range read with a request of its own. */
+export const rangeReader =
+  (request: LfpSummaryRequest): ReadRange =>
+  async (range) =>
+    (await readRanges(request, [range]))[0];
+
+/** A slice of a dataset's bytes, copied to a buffer of their own to be read as their type. */
+export async function readSlice(
+  read: ReadRange,
   entry: LfpDataset,
-  leading: readonly number[] = [],
-  signal?: AbortSignal
+  leading: readonly number[] = []
 ): Promise<ArrayBuffer> {
   const { offset, length } = sliceOf(entry, leading);
-  return readRange(request, offset, length, signal);
+  return (await read({ offset, length })).slice().buffer;
 }
 
 /** A chunk's int16 values: HDF5's deflate and shuffle filters undone. */
@@ -243,15 +238,16 @@ export async function inflateRow(
   return row;
 }
 
-/** Where an axis's rows lie: group × contact × (offset, size). */
+/** Where a group's rows lie: contact × (offset, size). */
 export async function readChunkTable(
-  request: LfpSummaryRequest,
+  read: ReadRange,
   index: LfpSummaryIndex,
-  axis: LfpAxis
+  axis: LfpAxis,
+  group: number
 ): Promise<BigUint64Array> {
   const { chunks } = axis.levels[0];
   if (!chunks) throw new Error(`The rows of ${axis.name} are not in chunks`);
-  return new BigUint64Array(await readSlice(request, datasetOf(index, chunks)));
+  return new BigUint64Array(await readSlice(read, datasetOf(index, chunks), [group]));
 }
 
 /** The level an axis is overviewed at: its coarsest, at most the format's 2,048 bins. */
@@ -261,15 +257,14 @@ export function overviewLevel(axis: LfpAxis) {
 
 /** A group's whole field at a level, every contact. */
 export async function readField(
-  request: LfpSummaryRequest,
+  read: ReadRange,
   index: LfpSummaryIndex,
   axis: LfpAxis,
   group: number,
-  level: LfpAxis['levels'][number],
-  signal?: AbortSignal
+  level: LfpAxis['levels'][number]
 ): Promise<LfpField> {
   const entry = datasetOf(index, level.dataset);
-  const data = new Int16Array(await readSlice(request, entry, [group], signal));
+  const data = new Int16Array(await readSlice(read, entry, [group]));
   return {
     contacts: entry.shape[1],
     bins: entry.shape[2],
@@ -283,36 +278,31 @@ export async function readField(
 
 /** A group's stats and spectra, each per contact. */
 export async function readGroupStats(
-  request: LfpSummaryRequest,
+  read: ReadRange,
   index: LfpSummaryIndex,
   axis: LfpAxis,
-  group: number,
-  signal?: AbortSignal
+  group: number
 ): Promise<GroupStats> {
   const [stats, psd] = await Promise.all([
-    readSlice(request, datasetOf(index, axis.stats), [group], signal),
-    readSlice(request, datasetOf(index, axis.psd), [group], signal),
+    readSlice(read, datasetOf(index, axis.stats), [group]),
+    readSlice(read, datasetOf(index, axis.psd), [group]),
   ]);
   return { stats: new Float32Array(stats), psd: new Float32Array(psd) };
 }
 
-/** Where a contact's row lies, deflated, by its axis's chunk table. */
-export function rowRange(
+/** A group's part in the total's variance at each contact. */
+export async function readContactShares(
+  read: ReadRange,
   index: LfpSummaryIndex,
-  table: BigUint64Array,
-  group: number,
-  contact: number
-): ByteRange {
-  const at = (group * index.contacts + contact) * 2;
-  return { offset: Number(table[at]), length: Number(table[at + 1]) };
+  axis: LfpAxis,
+  group: number
+): Promise<Float32Array> {
+  return new Float32Array(await readSlice(read, datasetOf(index, axis.contact_shares), [group]));
 }
 
-/** Rows' full-resolution values, read together. */
-export async function readRows(
-  request: LfpSummaryRequest,
-  ranges: readonly ByteRange[]
-): Promise<Int16Array[]> {
-  return Promise.all((await readRanges(request, ranges)).map(inflateRow));
+/** Where a contact's row lies, deflated, by its group's chunk table. */
+export function rowRange(table: BigUint64Array, contact: number): ByteRange {
+  return { offset: Number(table[contact * 2]), length: Number(table[contact * 2 + 1]) };
 }
 
 /** Contacts' full-resolution rows as one field, a row each in the order given. */

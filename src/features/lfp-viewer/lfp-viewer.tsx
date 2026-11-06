@@ -459,6 +459,7 @@ function LfpReportView({
       contacts={index.contacts}
       statNames={index.stats}
       stats={chosen.stats}
+      shares={chosen.shares}
       positions={positions}
       blocks={blocks}
       ticked={ticked}

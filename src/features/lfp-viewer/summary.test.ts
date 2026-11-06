@@ -11,9 +11,9 @@ import {
   isLfpSummaryChanged,
   LfpSummaryChangedError,
   lfpSummaryIndexSchema,
+  rangeReader,
   readChunkTable,
   readRanges,
-  readRows,
   readSlice,
   rowRange,
   rowsField,
@@ -68,7 +68,7 @@ describe('readSlice', () => {
     );
     vi.stubGlobal('fetch', fetchMock);
     const values = new Int16Array(
-      await readSlice({ url: 'u', headers: { a: 'b' } }, level0, [0, 2])
+      await readSlice(rangeReader({ url: 'u', headers: { a: 'b' } }), level0, [0, 2])
     );
     expect(Array.from(values)).toEqual([1, -2, 3, -4, 5]);
     expect(fetchMock).toHaveBeenCalledWith(
@@ -82,7 +82,7 @@ describe('readSlice', () => {
       'fetch',
       vi.fn(async () => new Response(new Int16Array(600).buffer, { status: 200 }))
     );
-    await expect(readSlice({ url: 'u', headers: {} }, level0, [0, 2])).rejects.toThrow(
+    await expect(readSlice(rangeReader({ url: 'u', headers: {} }), level0, [0, 2])).rejects.toThrow(
       'not read by range'
     );
   });
@@ -92,11 +92,23 @@ describe('readSlice', () => {
       'fetch',
       vi.fn(async () => new Response(null, { status: 412 }))
     );
-    await expect(readSlice({ url: 'u', headers: {} }, level0, [0, 2])).rejects.toBeInstanceOf(
-      LfpSummaryChangedError
-    );
+    await expect(
+      readSlice(rangeReader({ url: 'u', headers: {} }), level0, [0, 2])
+    ).rejects.toBeInstanceOf(LfpSummaryChangedError);
     expect(isLfpSummaryChanged(new ApiError('changed', { status: 412 }))).toBe(true);
     expect(isLfpSummaryChanged(new ApiError('gone', { status: 404 }))).toBe(false);
+  });
+});
+
+describe('readSlice of a part of a larger answer', () => {
+  it('reads values that lie at an odd offset of its buffer', async () => {
+    const answer = new Uint8Array(11);
+    answer.set(new Uint8Array(Int16Array.of(-3, 7, 300, 0, -1).buffer), 1);
+    const read = async () => answer.subarray(1);
+
+    const values = new Int16Array(await readSlice(read, level0, [0, 2]));
+
+    expect(Array.from(values)).toEqual([-3, 7, 300, 0, -1]);
   });
 });
 
@@ -124,17 +136,11 @@ describe('rows in chunks', () => {
     900: deflated([7, 8, 9]),
   };
   const size = (offset: number) => BigInt(chunks[offset].byteLength);
-  // Group x contact x (offset, size): 2 groups, 2 contacts
-  const table = BigUint64Array.from([
-    BigInt(500),
-    size(500),
-    BigInt(0),
-    BigInt(0),
-    BigInt(0),
-    BigInt(0),
-    BigInt(900),
-    size(900),
-  ]);
+  // Contact x (offset, size), a table per group: 2 groups, 2 contacts
+  const tables = [
+    BigUint64Array.from([BigInt(500), size(500), BigInt(0), BigInt(0)]),
+    BigUint64Array.from([BigInt(0), BigInt(0), BigInt(900), size(900)]),
+  ];
   const index = {
     contacts: 2,
     time: { start: 0, dt: 0.1, steps: 3 },
@@ -153,10 +159,8 @@ describe('rows in chunks', () => {
     const fetchMock = vi.fn(answeringRanges(file));
     vi.stubGlobal('fetch', fetchMock);
 
-    const rows = await readRows(request, [
-      rowRange(index, table, 1, 1),
-      rowRange(index, table, 0, 0),
-    ]);
+    const chunksRead = await readRanges(request, [rowRange(tables[1], 1), rowRange(tables[0], 0)]);
+    const rows = await Promise.all(chunksRead.map(inflateRow));
 
     expect(rows.map((row) => Array.from(row))).toEqual([
       [7, 8, 9],
@@ -165,17 +169,18 @@ describe('rows in chunks', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it('reads the table once, and refuses an axis of plain rows', async () => {
-    const fetchMock = vi.fn(async () => new Response(table.buffer, { status: 206 }));
+  it("reads a group's table alone, and refuses an axis of plain rows", async () => {
+    const fetchMock = vi.fn(async () => new Response(tables[1].buffer, { status: 206 }));
     vi.stubGlobal('fetch', fetchMock);
+    const read = rangeReader(request);
 
-    expect(await readChunkTable(request, index, axis)).toEqual(table);
+    expect(await readChunkTable(read, index, axis, 1)).toEqual(tables[1]);
     expect(fetchMock.mock.calls[0]).toEqual([
       'u',
-      expect.objectContaining({ headers: { Range: 'bytes=40-103' } }),
+      expect.objectContaining({ headers: { Range: 'bytes=72-103' } }),
     ]);
     const plain = { ...axis, levels: [{ step: 1, kind: 'value', dataset: 'x' }] } as LfpAxis;
-    await expect(readChunkTable(request, index, plain)).rejects.toThrow();
+    await expect(readChunkTable(read, index, plain, 0)).rejects.toThrow();
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
@@ -314,6 +319,7 @@ describe('the index', () => {
         psd: '/lfp/total/psd',
         psd_frequencies: [1, 2],
         correlation: { dataset: '/lfp/total/correlation', scale: 1 / 32767 },
+        contact_shares: '/lfp/total/contact_shares',
       },
       {
         name: 'mtype',
@@ -327,13 +333,27 @@ describe('the index', () => {
         stats: '/lfp/mtype/stats',
         psd: '/lfp/mtype/psd',
         psd_frequencies: [1, 2],
+        contact_shares: '/lfp/mtype/contact_shares',
       },
     ],
+    axes_left_out: { etype: 'memory' },
+    groups_unavailable: null,
     datasets: { '/lfp/mtype/chunks': { offset: 0, shape: [2, 216, 2], dtype: '<u8' } },
   };
 
   it('takes a summary with group fields', () => {
-    expect(lfpSummaryIndexSchema.parse(index).axes[1].levels[1].kind).toBe('mean');
+    const parsed = lfpSummaryIndexSchema.parse(index);
+    expect(parsed.axes[1].levels[1].kind).toBe('mean');
+    expect(parsed.axes_left_out).toEqual({ etype: 'memory' });
+  });
+
+  it('takes a summary whose groups could not be built yet', () => {
+    const parsed = lfpSummaryIndexSchema.parse({
+      ...index,
+      axes: index.axes.slice(0, 1),
+      groups_unavailable: 'circuit_not_readable',
+    });
+    expect(parsed.groups_unavailable).toBe('circuit_not_readable');
   });
 
   it('refuses a summary of the format before', () => {

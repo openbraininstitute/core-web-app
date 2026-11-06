@@ -10,13 +10,15 @@ import { contactPositions } from '@/features/lfp-viewer/contacts';
 import {
   datasetOf,
   fieldStats,
+  inflateRow,
   isLfpSummaryChanged,
   lfpSummaryIndexSchema,
   overviewLevel,
   readChunkTable,
+  readContactShares,
   readField,
   readGroupStats,
-  readRows,
+  readRanges,
   readSlice,
   rowRange,
   rowsField,
@@ -31,11 +33,13 @@ import type {
 } from '@/api/small-scale-simulator/simulation-result/lfp-summary';
 import type { ContactBlock } from '@/features/lfp-viewer/contacts';
 import type {
+  ByteRange,
   GroupStats,
   LfpAxis,
   LfpField,
   LfpSummaryIndex,
   LfpSummaryRequest,
+  ReadRange,
 } from '@/features/lfp-viewer/summary';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -68,6 +72,8 @@ export type ChosenField = {
   stats: Float32Array;
   /** Per contact, stored for one group: the power of a sum is not the sum of the powers. */
   spectra: { frequencies: readonly number[]; psd: Float32Array } | null;
+  /** Per contact, the part of the total's variance its groups make there, added up. None for the total. */
+  shares: Float32Array | null;
 };
 
 /** Whether a chosen field's table is worked out from its overview's bins, not its full rows. */
@@ -126,37 +132,33 @@ export function useLfpSummary(source: LfpSummarySource) {
     enabled: ready !== null,
     staleTime: Infinity,
     gcTime: 5 * 60_000,
-    queryFn: async ({ signal }): Promise<LfpSummary> => {
+    queryFn: async (): Promise<LfpSummary> => {
       const sha256 = ready?.sha256 ?? '';
-      try {
-        const index = lfpSummaryIndexSchema.parse(await getLfpSummaryIndex(source, sha256));
-        const request = await buildLfpSummaryRequest(source, sha256);
-        const axis = index.axes[0];
-        const [total, stored] = await Promise.all([
-          readField(request, index, axis, 0, overviewLevel(axis), signal),
-          readGroupStats(request, index, axis, 0, signal),
-        ]);
-        return { sha256, index, total, ...stored };
-      } catch (error) {
-        return askStatusIfChanged(queryClient, source, sha256)(error);
-      }
+      const index = lfpSummaryIndexSchema.parse(
+        await getLfpSummaryIndex(source, sha256).catch(
+          askStatusIfChanged(queryClient, source, sha256)
+        )
+      );
+      const read = rangesOf({ queryClient, source, sha256 });
+      const axis = index.axes[0];
+      const [total, stored] = await Promise.all([
+        readField(read, index, axis, 0, overviewLevel(axis)),
+        readGroupStats(read, index, axis, 0),
+      ]);
+      return { sha256, index, total, ...stored };
     },
   });
 
   return { status, summary };
 }
 
-/** What a query of an axis of a summary holds on to, for as long as the cache keeps it. */
-type AxisRead = {
-  queryClient: QueryClient;
-  source: LfpSummarySource;
-  sha256: string;
-  index: LfpSummaryIndex;
-  axis: LfpAxis;
-};
+/** What a read of a summary holds on to, for as long as the cache keeps it. */
+type SummaryRead = { queryClient: QueryClient; source: LfpSummarySource; sha256: string };
+
+type AxisRead = SummaryRead & { index: LfpSummaryIndex; axis: LfpAxis };
 
 async function readingSummary<T>(
-  { queryClient, source, sha256 }: AxisRead,
+  { queryClient, source, sha256 }: SummaryRead,
   read: (request: LfpSummaryRequest) => Promise<T>
 ): Promise<T> {
   try {
@@ -166,61 +168,25 @@ async function readingSummary<T>(
   }
 }
 
-const groupFieldQuery = (at: AxisRead, group: number) => ({
-  queryKey: summaryKey(at.source, 'group', at.sha256, at.axis.name, group),
-  staleTime: Infinity,
-  gcTime: 5 * 60_000,
-  queryFn: ({ signal }: { signal: AbortSignal }) =>
-    readingSummary(at, (request) =>
-      readField(request, at.index, at.axis, group, overviewLevel(at.axis), signal)
-    ),
-});
-
-const groupStatsQuery = (at: AxisRead, group: number) => ({
-  queryKey: summaryKey(at.source, 'group-stats', at.sha256, at.axis.name, group),
-  staleTime: Infinity,
-  gcTime: 5 * 60_000,
-  queryFn: ({ signal }: { signal: AbortSignal }) =>
-    readingSummary(at, (request) => readGroupStats(request, at.index, at.axis, group, signal)),
-});
-
-const chunkTable = (at: AxisRead, request: LfpSummaryRequest) =>
-  at.queryClient.fetchQuery({
-    queryKey: summaryKey(at.source, 'chunks', at.sha256, at.axis.name),
-    staleTime: Infinity,
-    gcTime: 60_000,
-    queryFn: () => readChunkTable(request, at.index, at.axis),
-  });
-
-type RowAsked = {
-  at: AxisRead;
-  group: number;
-  contact: number;
-  resolve: (row: Int16Array) => void;
+type RangeAsked = {
+  range: ByteRange;
+  resolve: (bytes: Uint8Array<ArrayBuffer>) => void;
   reject: (error: unknown) => void;
 };
 
-/** By summary, the rows asked for since it was last read from. */
-const rowsAsked = new Map<string, RowAsked[]>();
+/** By summary, the ranges asked for since it was last read from. */
+const rangesAsked = new Map<string, RangeAsked[]>();
 
-async function readRowsAsked(asked: readonly RowAsked[]) {
+async function readRangesAsked(at: SummaryRead, asked: readonly RangeAsked[]) {
   try {
-    const rows = await readingSummary(asked[0].at, async (request) => {
-      const tables = new Map<string, Promise<BigUint64Array>>();
-      const tableOf = (at: AxisRead) => {
-        const table = tables.get(at.axis.name) ?? chunkTable(at, request);
-        tables.set(at.axis.name, table);
-        return table;
-      };
-      const ranges = await Promise.all(
-        asked.map(async ({ at, group, contact }) =>
-          rowRange(at.index, await tableOf(at), group, contact)
-        )
-      );
-      return readRows(request, ranges);
-    });
+    const parts = await readingSummary(at, (request) =>
+      readRanges(
+        request,
+        asked.map(({ range }) => range)
+      )
+    );
     asked.forEach(({ resolve }, i) => {
-      resolve(rows[i]);
+      resolve(parts[i]);
     });
   } catch (error) {
     for (const { reject } of asked) reject(error);
@@ -228,44 +194,96 @@ async function readRowsAsked(asked: readonly RowAsked[]) {
 }
 
 /**
- * A contact's row, read with every other row of its summary asked for at the same moment, as a
- * view's are: in one request, so with one check of the reader's access.
+ * A summary's bytes, read with every other range of it asked for at the same moment, as a view's
+ * are: in one request, so with one check of the reader's access.
  */
-function askRow(at: AxisRead, group: number, contact: number): Promise<Int16Array> {
-  const key = summaryKey(at.source, 'rows', at.sha256).join('/');
-  return new Promise((resolve, reject) => {
-    const row = { at, group, contact, resolve, reject };
-    const asked = rowsAsked.get(key);
-    if (asked) {
-      asked.push(row);
-      return;
-    }
-    const batch = [row];
-    rowsAsked.set(key, batch);
-    setTimeout(() => {
-      rowsAsked.delete(key);
-      readRowsAsked(batch);
+function rangesOf(at: SummaryRead): ReadRange {
+  const key = summaryKey(at.source, 'ranges', at.sha256).join('/');
+  return (range) =>
+    new Promise((resolve, reject) => {
+      const one = { range, resolve, reject };
+      const asked = rangesAsked.get(key);
+      if (asked) {
+        asked.push(one);
+        return;
+      }
+      const batch = [one];
+      rangesAsked.set(key, batch);
+      setTimeout(() => {
+        rangesAsked.delete(key);
+        readRangesAsked(at, batch);
+      });
     });
-  });
 }
 
+const groupQuery = <T>(
+  at: AxisRead,
+  kind: string,
+  group: number,
+  read: (read: ReadRange) => Promise<T>
+) => ({
+  queryKey: summaryKey(at.source, kind, at.sha256, at.axis.name, group),
+  staleTime: Infinity,
+  gcTime: 5 * 60_000,
+  queryFn: () => read(rangesOf(at)),
+});
+
+const groupFieldQuery = (at: AxisRead, group: number) =>
+  groupQuery(at, 'group', group, (read) =>
+    readField(read, at.index, at.axis, group, overviewLevel(at.axis))
+  );
+
+const groupStatsQuery = (at: AxisRead, group: number) =>
+  groupQuery(at, 'group-stats', group, (read) => readGroupStats(read, at.index, at.axis, group));
+
+const groupSharesQuery = (at: AxisRead, group: number) =>
+  groupQuery(at, 'group-shares', group, (read) =>
+    readContactShares(read, at.index, at.axis, group)
+  );
+
+const chunkTable = (at: AxisRead, group: number) =>
+  at.queryClient.fetchQuery(
+    groupQuery(at, 'chunks', group, (read) => readChunkTable(read, at.index, at.axis, group))
+  );
+
+/** A contact's row: its group's chunk table read first, then its chunk. */
 export const rowQuery = (at: AxisRead, group: number, contact: number) => ({
   queryKey: summaryKey(at.source, 'row', at.sha256, at.axis.name, group, contact),
   staleTime: Infinity,
   gcTime: 60_000,
-  queryFn: () => askRow(at, group, contact),
+  queryFn: async () =>
+    inflateRow(await rangesOf(at)(rowRange(await chunkTable(at, group), contact))),
 });
 
 const oneGroup = (
   index: LfpSummaryIndex,
   choice: FieldChoice,
   field: LfpField,
-  { stats, psd }: GroupStats
+  { stats, psd }: GroupStats,
+  shares: Float32Array | null
 ): ChosenField => ({
   choice,
   field,
   stats,
   spectra: { frequencies: index.axes[choice.axis].psd_frequencies, psd },
+  shares,
+});
+
+function addedUp(arrays: readonly Float32Array[]): Float32Array {
+  if (arrays.length === 1) return arrays[0];
+  const sum = new Float32Array(arrays[0].length);
+  for (const values of arrays) {
+    for (let i = 0; i < sum.length; i++) sum[i] += values[i];
+  }
+  return sum;
+}
+
+const sharesRead = (results: UseQueryResult<Float32Array>[]) => ({
+  shares:
+    results.length > 0 && results.every((r) => r.data)
+      ? addedUp(results.map((r) => r.data as Float32Array))
+      : null,
+  failed: results.some((r) => r.isError),
 });
 
 const fieldsRead = (results: UseQueryResult<LfpField>[]) => ({
@@ -289,7 +307,7 @@ export function useChosenField(
   const axis = index.axes[choice.axis];
   const queryClient = useQueryClient();
   const totalField = useMemo(
-    () => oneGroup(index, TOTAL_FIELD, total, { stats, psd }),
+    () => oneGroup(index, TOTAL_FIELD, total, { stats, psd }, null),
     [index, total, stats, psd]
   );
   const at = { queryClient, source, sha256, index, axis };
@@ -297,22 +315,34 @@ export function useChosenField(
     queries: isTotalField(choice) ? [] : choice.groups.map((group) => groupFieldQuery(at, group)),
     combine: fieldsRead,
   });
+  const shares = useQueries({
+    queries: isTotalField(choice) ? [] : choice.groups.map((group) => groupSharesQuery(at, group)),
+    combine: sharesRead,
+  });
   // Only one group's are shown: a sum's are worked out from its field, so they'd be read for nothing.
   const oneOfAGroup = !isTotalField(choice) && choice.groups.length === 1;
   const groupStats = useQuery({
     ...groupStatsQuery(at, choice.groups[0]),
     enabled: oneOfAGroup,
   });
-  const failed = read.failed || (oneOfAGroup && groupStats.isError);
+  const failed = read.failed || shares.failed || (oneOfAGroup && groupStats.isError);
   const wanted = useMemo<ChosenField | null>(() => {
     if (isTotalField(choice)) return totalField;
-    if (!read.fields) return null;
+    if (!read.fields || !shares.shares) return null;
     if (choice.groups.length > 1) {
       const field = sumFields(read.fields);
-      return { choice, field, stats: fieldStats(field, index.stats), spectra: null };
+      return {
+        choice,
+        field,
+        stats: fieldStats(field, index.stats),
+        spectra: null,
+        shares: shares.shares,
+      };
     }
-    return groupStats.data ? oneGroup(index, choice, read.fields[0], groupStats.data) : null;
-  }, [index, choice, totalField, read.fields, groupStats.data]);
+    return groupStats.data
+      ? oneGroup(index, choice, read.fields[0], groupStats.data, shares.shares)
+      : null;
+  }, [index, choice, totalField, read.fields, shares.shares, groupStats.data]);
   const [shown, setShown] = useState<ChosenField>(totalField);
   if (wanted && wanted !== shown) setShown(wanted);
   return { chosen: wanted ?? shown, loading: !wanted && !failed, failed };
@@ -403,15 +433,14 @@ export function useStoredCorrelation(
     enabled,
     staleTime: Infinity,
     gcTime: 60_000,
-    queryFn: async ({ signal }) => {
+    queryFn: async () => {
       const stored = axis.correlation;
       if (!stored) throw new Error('The LFP summary has no correlation');
       const bytes = await readSlice(
-        await buildLfpSummaryRequest(source, sha256),
+        rangesOf({ queryClient, source, sha256 }),
         datasetOf(index, stored.dataset),
-        [group],
-        signal
-      ).catch(askStatusIfChanged(queryClient, source, sha256));
+        [group]
+      );
       return { values: new Int16Array(bytes), scale: stored.scale };
     },
   });

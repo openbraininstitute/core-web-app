@@ -47,6 +47,7 @@ export function ElectrodesTable({
   contacts,
   statNames,
   stats,
+  shares,
   positions,
   blocks,
   ticked,
@@ -58,6 +59,8 @@ export function ElectrodesTable({
   /** The summary's stats columns, in the order `stats` holds them per contact. */
   statNames: readonly string[];
   stats: Float32Array;
+  /** Per contact, the part of the total's variance the field drawn makes there, if it is not the total. */
+  shares: Float32Array | null;
   positions: Float32Array | null;
   blocks: readonly ContactBlock[] | null;
   ticked: readonly number[];
@@ -88,9 +91,10 @@ export function ElectrodesTable({
       statNames.forEach((name, i) => {
         row[name] = stats[c * statNames.length + i];
       });
+      if (shares) row.share = shares[c] * 100;
       return row;
     });
-  }, [contacts, statNames, stats, positions, blocks]);
+  }, [contacts, statNames, stats, shares, positions, blocks]);
 
   const columns = useMemo<TableColumnsType<Row>>(
     () => [
@@ -108,11 +112,12 @@ export function ElectrodesTable({
       ...(positions
         ? (['x', 'y', 'z'] as const).map((axis) => numberColumn(axis, `${axis} (µm)`, 0))
         : []),
+      ...(shares ? [numberColumn('share', 'Share (%)', 0)] : []),
       ...STAT_COLUMNS.filter((s) => statNames.includes(s.key)).map((s) =>
         numberColumn(s.key, s.title, s.digits)
       ),
     ],
-    [blocks, positions, statNames]
+    [blocks, positions, statNames, shares]
   );
 
   return (

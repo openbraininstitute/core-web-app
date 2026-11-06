@@ -26,6 +26,18 @@ export function groupsByShare(axis: LfpAxis): number[] {
 
 const percent = (share: number) => `${Math.round(share * 100)}%`;
 
+const LEFT_OUT: Record<string, string> = { memory: 'Too large to build' };
+
+const GROUPS_UNAVAILABLE: Record<string, { detail: string; title: string }> = {
+  circuit_not_readable: {
+    detail: 'Circuit not readable',
+    title:
+      'The circuit could not be read when this was summarised, so the field is not split by kind of cell. That is added once someone who can read the circuit opens this',
+  },
+};
+
+const axisLabel = (name: string) => AXIS_LABELS[name] ?? name;
+
 /** Which cells' field is drawn: the total, or some of the groups of an axis, added up. */
 export function FieldFromControls({
   index,
@@ -36,18 +48,43 @@ export function FieldFromControls({
   choice: FieldChoice;
   onChange: (choice: FieldChoice) => void;
 }) {
-  if (index.axes.length < 2) return null;
+  const leftOut = Object.entries(index.axes_left_out);
+  const unavailable = index.groups_unavailable
+    ? (GROUPS_UNAVAILABLE[index.groups_unavailable] ?? {
+        detail: 'Not available',
+        title: 'The field is not split by kind of cell for this report',
+      })
+    : null;
+  if (index.axes.length < 2 && leftOut.length === 0 && !unavailable) return null;
   return (
     <>
       <PillSelect
         label="Field from"
-        title="The part of the field that a kind of cell makes"
+        title={unavailable?.title ?? 'The part of the field that a kind of cell makes'}
         value={String(choice.axis)}
-        options={index.axes.map((axis, i) => ({
-          value: String(i),
-          label: i === 0 ? 'All cells' : (AXIS_LABELS[axis.name] ?? axis.name),
-          detail: i === 0 ? undefined : `${axis.groups.length} groups`,
-        }))}
+        options={[
+          ...index.axes.map((axis, i) => ({
+            value: String(i),
+            label: i === 0 ? 'All cells' : axisLabel(axis.name),
+            detail: i === 0 ? undefined : `${axis.groups.length} groups`,
+          })),
+          ...leftOut.map(([name, why]) => ({
+            value: `left-out-${name}`,
+            label: axisLabel(name),
+            detail: LEFT_OUT[why] ?? 'Left out',
+            disabled: true,
+          })),
+          ...(unavailable
+            ? [
+                {
+                  value: 'unavailable',
+                  label: 'Kinds of cell',
+                  detail: unavailable.detail,
+                  disabled: true,
+                },
+              ]
+            : []),
+        ]}
         onChange={(value) => {
           const axis = Number(value);
           onChange(
