@@ -7,7 +7,7 @@ import remarkGfm from 'remark-gfm';
 import { entityAssetsPath, entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
-import { EntityCard, entityIdFromHref } from './entity-card';
+import { EntityCard, EntityLink, entityIdFromHref } from './entity-card';
 import { isRelativeMarkdownLink, resolveLogPath } from './files';
 
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
@@ -110,11 +110,18 @@ export function ResearchLogMarkdown({
           </a>
         );
       }
-      const external = !!href && isExternal(href);
+      const entityId = entityIdFromHref(href);
+      if (href && entityId) {
+        return (
+          <EntityLink id={entityId} href={href}>
+            {children}
+          </EntityLink>
+        );
+      }
       return (
         <a
           href={href}
-          target={external || entityIdFromHref(href) ? '_blank' : undefined}
+          target={href && isExternal(href) ? '_blank' : undefined}
           rel="noreferrer noopener"
           className="text-primary-7 underline"
         >

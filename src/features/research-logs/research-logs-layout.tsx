@@ -1,42 +1,107 @@
 'use client';
 
 import { GlobalOutlined, PlusOutlined, SearchOutlined, TeamOutlined } from '@ant-design/icons';
+import { motion } from 'motion/react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
+import {
+  PaneSideResizeHandle,
+  SHUT_BAR_SIZE,
+  ShutPaneBar,
+} from '@/features/circuit-viewer/pane-resize-handle';
+import { BOX_CLASS } from '@/features/scan-config/components/shared/box-class';
 import { Button } from '@/ui/molecules/button';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
+import { EntityPanelProvider, EntityPanelView, useEntityPanel } from './entity-panel';
 import {
   useResearchLogHref,
   useResearchLogScope,
   useResearchLogs,
   useStartResearchLog,
 } from './hooks';
+import { LogActions } from './log-actions';
 
 import type { ReactNode } from 'react';
+
+/** The rail opens at this width (26rem at the app's 14px rem) and cannot be dragged wider. */
+const RAIL_WIDTH = 364;
+/** Dragged under this it holds there; dragged on to under half of it, the rail shuts. */
+const RAIL_FLOOR = 220;
+/**
+ * The grid's padding plus half its gap, which is 1rem (p-2 and gap-4): the rule between rail and
+ * page sits this far past the rail's edge. The app's rem is 14px, so it is read, not assumed.
+ */
+const ruleOffset = () => parseFloat(getComputedStyle(document.documentElement).fontSize) || 14;
 
 const dateLabel = (iso: string) =>
   new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 
-/** Same shell as Notebooks: a bordered panel with a rail of pills and the page beside it. */
+/** A rail of pills on one white card, with the page beside it. */
 export function ResearchLogsLayout({ children }: { children: ReactNode }) {
+  return (
+    <EntityPanelProvider>
+      <Shell>{children}</Shell>
+    </EntityPanelProvider>
+  );
+}
+
+function Shell({ children }: { children: ReactNode }) {
   const { logId } = useParams<{ logId?: string }>();
   const [search, setSearch] = useState('');
   const { data, isLoading } = useResearchLogs(search);
   const href = useResearchLogHref();
   const { start, isPending } = useStartResearchLog();
+  const panel = useEntityPanel();
+  const panelOpen = !!panel?.record;
+  const closePanel = panel?.close;
+  // the rail's width, dragged from the grab bar between it and the page
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [railWidth, setRailWidth] = useState(RAIL_WIDTH);
+  const [railShut, setRailShut] = useState(false);
+  const [dragging, setDragging] = useState(false);
+
+  // an entity opened from one log has no business beside the next
+  // biome-ignore lint/correctness/useExhaustiveDependencies: moving to another log is the trigger
+  useEffect(() => {
+    closePanel?.();
+  }, [logId, closePanel]);
 
   return (
     <div
       data-testid="research-logs-layout"
       className="bg-background h-full w-full overflow-hidden pt-2 pr-1"
     >
-      <div className="bg-background border-neutral-2 mx-2 mb-2 ml-3 grid h-full max-h-[calc(100vh-8rem)] w-[calc(100%-10px)] grid-cols-[22rem_1fr] gap-4 overflow-hidden rounded-2xl border p-2">
-        <aside className="flex h-full min-h-0 flex-col gap-3 overflow-hidden px-1 py-2">
+      {/* as the Data page does: with an entity open, the rail makes way and the log shifts left */}
+      <motion.div
+        ref={gridRef}
+        className="mx-2 mb-2 ml-3 grid h-full max-h-[calc(100vh-8rem)] w-[calc(100%-10px)] grid-rows-[minmax(0,1fr)] gap-4 overflow-hidden p-2"
+        initial={false}
+        animate={{
+          gridTemplateColumns: panelOpen
+            ? '3fr 2fr'
+            : railShut
+              ? `${SHUT_BAR_SIZE}px 1fr`
+              : `${railWidth}px 1fr`,
+          gridTemplateAreas: panelOpen ? "'body mini-view'" : "'aside body'",
+        }}
+        // while the bar is dragged the columns follow the pointer, not a spring behind it
+        transition={
+          dragging ? { duration: 0 } : { type: 'spring', stiffness: 320, damping: 30, mass: 0.6 }
+        }
+        style={{ willChange: 'grid-template-columns, grid-template-areas' }}
+      >
+        <aside
+          className={cn(
+            BOX_CLASS,
+            'flex h-full min-h-0 flex-col gap-3 overflow-hidden p-3 [grid-area:aside]',
+            { hidden: panelOpen || railShut }
+          )}
+        >
           <div className="flex shrink-0 items-center justify-between gap-2">
             <ScopeToggles />
             <Button
@@ -51,7 +116,7 @@ export function ResearchLogsLayout({ children }: { children: ReactNode }) {
             </Button>
           </div>
 
-          <label className="text-primary-9 flex h-10 shrink-0 items-center gap-2 rounded-full bg-white px-4 shadow-md">
+          <label className="text-primary-9 bg-neutral-1 flex h-10 shrink-0 items-center gap-2 rounded-full px-4">
             <SearchOutlined />
             <input
               value={search}
@@ -72,37 +137,83 @@ export function ResearchLogsLayout({ children }: { children: ReactNode }) {
               data?.data.map((log) => {
                 const active = log.id === logId;
                 return (
-                  <Button
-                    key={log.id}
-                    asChild
-                    rounded
-                    variant="outline"
-                    size="lg"
-                    active={active}
-                    className="h-auto w-full shrink-0 border-none py-3 text-base"
-                  >
-                    <Link href={href(log.id)} className="flex! w-full flex-col items-start!">
-                      <span className="w-full truncate text-left font-bold text-current">
-                        {log.name}
-                      </span>
-                      <span
-                        className={cn(
-                          'text-xs font-light',
-                          active ? 'text-white' : 'text-neutral-4'
-                        )}
-                      >
-                        {dateLabel(log.update_date)}
-                      </span>
-                    </Link>
-                  </Button>
+                  <div key={log.id} className="group/log relative shrink-0">
+                    <Button
+                      asChild
+                      rounded
+                      variant="outline"
+                      size="lg"
+                      active={active}
+                      className={cn(
+                        'h-auto w-full border-none py-3 text-base',
+                        !active && 'bg-neutral-1 shadow-none'
+                      )}
+                    >
+                      <Link href={href(log.id)} className="flex! w-full flex-col items-start!">
+                        <span className="w-full truncate text-left font-bold text-current">
+                          {log.name}
+                        </span>
+                        <span
+                          className={cn(
+                            'w-full truncate text-left text-xs font-light',
+                            active ? 'text-white' : 'text-neutral-4'
+                          )}
+                        >
+                          {log.created_by?.pref_label ?? 'Unknown author'} ·{' '}
+                          {dateLabel(log.update_date)}
+                        </span>
+                      </Link>
+                    </Button>
+                    <LogActions log={log} className="absolute top-1/2 right-3 -translate-y-1/2" />
+                  </div>
                 );
               })
             )}
           </nav>
         </aside>
 
-        <main className="secondary-scrollbar min-h-0 overflow-y-auto pr-1">{children}</main>
-      </div>
+        {railShut && !panelOpen && (
+          <ShutPaneBar
+            title="Reports"
+            upright
+            onOpen={() => setRailShut(false)}
+            className="h-full [grid-area:aside]"
+          />
+        )}
+
+        <main className="relative min-h-0 [grid-area:body]">
+          {!panelOpen && (
+            // the grab bar goes halfway across the gap between the two cards: this zero-width
+            // anchor is that far (half the gap) left of the page, and the bar centres on it
+            <div className="pointer-events-none absolute inset-y-0 -left-2 w-0 *:pointer-events-auto">
+              <PaneSideResizeHandle
+                containerRef={gridRef}
+                minWidth={0}
+                onResize={(left) => {
+                  const wanted = left - ruleOffset();
+                  if (wanted < RAIL_FLOOR / 2) {
+                    setRailShut(true);
+                    return;
+                  }
+                  setRailShut(false);
+                  setRailWidth(Math.min(RAIL_WIDTH, Math.max(RAIL_FLOOR, wanted)));
+                }}
+                onDragChange={setDragging}
+              />
+            </div>
+          )}
+          {children}
+        </main>
+
+        <div
+          data-testid="research-log-entity-panel"
+          className={cn('h-full min-h-0 w-full min-w-0 [grid-area:mini-view]', {
+            hidden: !panelOpen,
+          })}
+        >
+          <EntityPanelView />
+        </div>
+      </motion.div>
     </div>
   );
 }
@@ -115,7 +226,7 @@ function ScopeToggles() {
     { key: 'project', label: 'Project', Icon: TeamOutlined, on: 'text-primary-4 bg-primary-1' },
   ] as const;
   return (
-    <div className="flex h-10 shrink-0 items-center gap-1 rounded-full bg-white px-1.5 shadow-md">
+    <div className="bg-neutral-1 flex h-10 shrink-0 items-center gap-1 rounded-full px-1.5">
       {items.map(({ key, label, Icon, on }) => (
         <Tooltip key={key} delayDuration={200}>
           <TooltipTrigger asChild>
@@ -126,7 +237,7 @@ function ScopeToggles() {
               onClick={() => toggle(key)}
               className={cn(
                 'flex size-8 items-center justify-center rounded-full text-lg transition-colors',
-                scope[key] ? on : 'hover:bg-neutral-1 text-gray-300'
+                scope[key] ? on : 'text-gray-300 hover:bg-white'
               )}
             >
               <Icon />

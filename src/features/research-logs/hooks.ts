@@ -12,6 +12,8 @@ import {
   downloadResearchLogFile,
   getResearchLog,
   getResearchLogs,
+  listResearchLogFiles,
+  rewriteResearchLogFiles,
   saveResearchLogDocument,
   updateResearchLog,
 } from '@/api/entitycore/queries/research-log';
@@ -86,21 +88,37 @@ export function useResearchLogDocument(
   });
 }
 
-/** The text of a markdown file kept in the log's files folder. */
-export function useResearchLogFile(logId: string, filesAssetId: string | undefined, path: string) {
+/** The text of a markdown file kept in the log's files folder; `null` path reads nothing. */
+export function useResearchLogFile(
+  logId: string,
+  filesAssetId: string | undefined,
+  path: string | null
+) {
   const ctx = useWorkspace();
   return useQuery({
     queryKey: [KEY, 'file', logId, filesAssetId, path],
-    enabled: !!filesAssetId,
+    enabled: !!filesAssetId && path !== null,
     retry: false,
     queryFn: ({ signal }) =>
       downloadResearchLogFile({
         logId,
         filesAssetId: filesAssetId as string,
-        path,
+        path: path as string,
         context: ctx,
         signal,
       }),
+  });
+}
+
+/** The paths in the log's files folder, to keep a new page from taking an existing name. */
+export function useResearchLogFileList(logId: string, filesAssetId: string | undefined) {
+  const ctx = useWorkspace();
+  return useQuery({
+    queryKey: [KEY, 'files', logId, filesAssetId],
+    enabled: !!filesAssetId,
+    retry: false,
+    queryFn: () =>
+      listResearchLogFiles({ logId, filesAssetId: filesAssetId as string, context: ctx }),
   });
 }
 
@@ -126,7 +144,23 @@ export function useSaveResearchLog(id: string) {
       meta?: TResearchLogUpdate;
       markdown?: string;
       previousAssetId?: string;
+      /** Linked pages written or changed, by path in the files folder. */
+      pages?: Record<string, string>;
+      /** The files folder they go into, if the log has one. */
+      filesAssetId?: string;
     }) => {
+      // pages first, so the log never links to a page that is not there
+      let folder: string | undefined;
+      if (args.pages && Object.keys(args.pages).length > 0) {
+        folder = (
+          await rewriteResearchLogFiles({
+            logId: id,
+            previousAssetId: args.filesAssetId,
+            pages: args.pages,
+            context: ctx,
+          })
+        ).id;
+      }
       if (args.markdown !== undefined) {
         await saveResearchLogDocument({
           logId: id,
@@ -138,7 +172,27 @@ export function useSaveResearchLog(id: string) {
       if (args.meta && Object.keys(args.meta).length > 0) {
         await updateResearchLog({ id, payload: args.meta, context: ctx });
       }
+      return { folder };
     },
+    onSuccess: ({ folder }, args) => {
+      // the pages are in hand, so the new folder shows them at once rather than after a re-read
+      if (folder && args.pages) {
+        for (const [path, text] of Object.entries(args.pages)) {
+          qc.setQueryData([KEY, 'file', id, folder, path], text);
+        }
+      }
+      return qc.invalidateQueries({ queryKey: [KEY] });
+    },
+  });
+}
+
+/** Changes a log's name or description, for any log, not only the one being read. */
+export function useUpdateResearchLog() {
+  const ctx = useWorkspace();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { id: string; meta: TResearchLogUpdate }) =>
+      updateResearchLog({ id: args.id, payload: args.meta, context: ctx }),
     onSuccess: () => qc.invalidateQueries({ queryKey: [KEY] }),
   });
 }

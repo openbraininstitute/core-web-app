@@ -33,6 +33,11 @@ export type TResearchLogFilter = {
   order_by?: string;
 };
 
+/** The folder of files the log's markdown links to (label `research_log_files`), if it has one. */
+export function getResearchLogFiles(log: Pick<IResearchLog, 'assets'>): IAsset | undefined {
+  return log.assets?.find((a) => a.label === 'research_log_files' && a.status !== 'deleted');
+}
+
 /** The research log's markdown document asset, if one has been uploaded. */
 export function getResearchLogDocument(log: Pick<IResearchLog, 'assets'>): IAsset | undefined {
   return log.assets?.find((a) => a.label === 'research_log_document' && a.status !== 'deleted');

@@ -39,3 +39,24 @@ export function resolveLogPath(baseDir: string, href: string): string {
   }
   return out.join('/');
 }
+
+/** The file name for a page titled `title`: its words in lower case, joined by dashes. */
+export function pageFileName(title: string): string {
+  const slug = title
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return `${slug || 'page'}.md`;
+}
+
+/** Where a new page goes: in `dir`, named for its title, and numbered when that name is taken. */
+export function newPagePath(title: string, dir: string, taken: Iterable<string>): string {
+  const used = new Set(taken);
+  const name = pageFileName(title);
+  const at = (file: string) => (dir ? `${dir}/${file}` : file);
+  let path = at(name);
+  for (let n = 2; used.has(path); n++) path = at(`${name.slice(0, -3)}-${n}.md`);
+  return path;
+}

@@ -6,6 +6,7 @@ import {
   CloseOutlined,
   DeleteOutlined,
   EditOutlined,
+  FileAddOutlined,
   LinkOutlined,
   PlusOutlined,
 } from '@ant-design/icons';
@@ -13,19 +14,24 @@ import { App } from 'antd';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
-import { getResearchLogDocument } from '@/api/entitycore/types/entities/research-log';
+import {
+  getResearchLogDocument,
+  getResearchLogFiles,
+} from '@/api/entitycore/types/entities/research-log';
+import { BOX_CLASS } from '@/features/scan-config/components/shared/box-class';
 import { Button } from '@/ui/molecules/button';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
 import { joinBlocks, splitBlocks } from './blocks';
-import { dirOf } from './files';
+import { dirOf, newPagePath } from './files';
 import {
   useDeleteResearchLog,
   useResearchLog,
   useResearchLogDocument,
   useResearchLogFile,
+  useResearchLogFileList,
   useResearchLogHref,
   useSaveResearchLog,
 } from './hooks';
@@ -53,7 +59,7 @@ function Loaded({ log }: { log: IResearchLog }) {
   const href = useResearchLogHref();
   const { notification, modal } = App.useApp();
   const doc = getResearchLogDocument(log);
-  const filesAssetId = log.assets?.find((a) => a.label === 'research_log_files')?.id;
+  const filesAssetId = getResearchLogFiles(log)?.id;
   const { data: saved, isLoading } = useResearchLogDocument(log.id, log);
   const save = useSaveResearchLog(log.id);
   const remove = useDeleteResearchLog();
@@ -65,29 +71,68 @@ function Loaded({ log }: { log: IResearchLog }) {
   const [editing, setEditing] = useState(params.get('edit') === '1');
   const [name, setName] = useState(log.name);
   const [description, setDescription] = useState(log.description);
-  const [blocks, setBlocks] = useState<string[] | null>(null);
+
+  // a rename made elsewhere (the rail's pill, the grid's card) shows here unless it is being edited
+  useEffect(() => {
+    if (editing) return;
+    setName(log.name);
+    setDescription(log.description);
+  }, [editing, log.name, log.description]);
+
+  // the document in view is the log (key '') or the page it opened (key = the page's path)
+  const docKey = filePath ?? '';
+  const {
+    data: pageSaved,
+    isLoading: pageLoading,
+    isError: pageMissing,
+  } = useResearchLogFile(log.id, filesAssetId, filePath);
+  const { data: fileList } = useResearchLogFileList(log.id, filesAssetId);
+  // the blocks of each document edited so far; the others read as saved
+  const [drafts, setDrafts] = useState<Record<string, string[]>>({});
+  // what a page held when it was first changed (as blocks join it), or null for a page made here
+  const [bases, setBases] = useState<Record<string, string | null>>({});
   const [active, setActive] = useState<number | null>(null);
   // the block last worked in: new text and links go below it, and below the last block if none
   const [anchor, setAnchor] = useState<number | null>(null);
   const [linkOpen, setLinkOpen] = useState(false);
 
+  // a block's place means nothing in another document
+  // biome-ignore lint/correctness/useExhaustiveDependencies: moving to another document is the trigger
   useEffect(() => {
-    if (saved !== undefined && blocks === null) setBlocks(splitBlocks(saved));
-  }, [saved, blocks]);
+    setActive(null);
+    setAnchor(null);
+  }, [docKey]);
 
-  const current = blocks ?? splitBlocks(saved ?? '');
+  const sourceText = docKey === '' ? saved : pageSaved;
+  const loadingDoc = (docKey === '' ? isLoading : pageLoading) && drafts[docKey] === undefined;
+  const current = drafts[docKey] ?? splitBlocks(sourceText ?? '');
   const markdown = joinBlocks(current);
-  const dirty =
-    name !== log.name ||
-    description !== log.description ||
-    markdown !== joinBlocks(splitBlocks(saved ?? ''));
+  const mainMarkdown = joinBlocks(drafts[''] ?? splitBlocks(saved ?? ''));
+  const mainChanged = mainMarkdown !== joinBlocks(splitBlocks(saved ?? ''));
+  // the pages written or changed; one made here has no base, so it always counts
+  const pages = Object.fromEntries(
+    Object.entries(drafts)
+      .filter(([key]) => key !== '')
+      .map(([key, pageBlocks]) => [key, joinBlocks(pageBlocks)] as const)
+      .filter(([key, text]) => text !== bases[key])
+  );
+  const hasPages = Object.keys(pages).length > 0;
+  const dirty = name !== log.name || description !== log.description || mainChanged || hasPages;
+
+  /** Writes the blocks of the document in view. */
+  const writeBlocks = (next: string[]) => {
+    if (docKey !== '' && !(docKey in bases)) {
+      setBases((b) => ({ ...b, [docKey]: joinBlocks(splitBlocks(sourceText ?? '')) }));
+    }
+    setDrafts((d) => ({ ...d, [docKey]: next }));
+  };
 
   /** Writes a block back; a blank draft removes it and a draft with blank lines becomes several. */
   const commit = (index: number, draft: string) => {
     const parts = splitBlocks(draft);
     const next = [...current];
     next.splice(index, 1, ...parts);
-    setBlocks(next);
+    writeBlocks(next);
     setActive(null);
     // a blank draft removes the block, so the anchor falls back to the one before it
     setAnchor(index + parts.length - 1);
@@ -98,7 +143,7 @@ function Loaded({ log }: { log: IResearchLog }) {
     const at = anchor === null ? current.length : Math.min(anchor + 1, current.length);
     const next = [...current];
     next.splice(at, 0, ...sources);
-    setBlocks(next);
+    writeBlocks(next);
     return at;
   };
 
@@ -108,13 +153,25 @@ function Loaded({ log }: { log: IResearchLog }) {
     setAnchor(at);
   };
 
+  /** A new page beside the document in view: a link to it goes in, and the page opens to write in. */
+  const createPage = (title: string) => {
+    const path = newPagePath(title, dirOf(docKey), [...(fileList ?? []), ...Object.keys(drafts)]);
+    insertBlocks([`[${title.replace(/[[\]]/g, '')}](${path.slice(path.lastIndexOf('/') + 1)})`]);
+    setDrafts((d) => ({ ...d, [path]: [`# ${title}`] }));
+    setBases((b) => ({ ...b, [path]: null }));
+    openFile(path);
+  };
+
   const cancel = () => {
     setName(log.name);
     setDescription(log.description);
-    setBlocks(splitBlocks(saved ?? ''));
+    setDrafts({});
+    setBases({});
     setActive(null);
     setAnchor(null);
     setEditing(false);
+    // a page made in this edit goes with it
+    if (filePath && bases[filePath] === null) router.replace(href(log.id));
   };
 
   const onSave = async () => {
@@ -124,14 +181,19 @@ function Loaded({ log }: { log: IResearchLog }) {
           ...(name.trim() && name !== log.name ? { name: name.trim() } : {}),
           ...(description !== log.description ? { description } : {}),
         },
-        ...(markdown !== joinBlocks(splitBlocks(saved ?? ''))
-          ? { markdown, previousAssetId: doc?.id }
-          : {}),
+        ...(mainChanged ? { markdown: mainMarkdown, previousAssetId: doc?.id } : {}),
+        ...(hasPages ? { pages, filesAssetId } : {}),
       });
       setEditing(false);
       setActive(null);
       setAnchor(null);
-      router.replace(href(log.id));
+      // the log keeps its text, so it does not fall back to the old document while the new one
+      // loads; pages read from the folder just written
+      setDrafts((d): Record<string, string[]> => (d[''] ? { '': d[''] } : {}));
+      setBases({});
+      router.replace(
+        filePath ? `${href(log.id)}?file=${encodeURIComponent(filePath)}` : href(log.id)
+      );
     } catch (e) {
       notification.error({ message: 'Could not save', description: String(e) });
     }
@@ -160,24 +222,40 @@ function Loaded({ log }: { log: IResearchLog }) {
     setLinkOpen(false);
   };
 
+  // what the header names: the log, or the page opened from it
+  const headerTitle = filePath ? (filePath.split('/').pop() ?? filePath) : log.name;
+
   return (
-    <div className="flex min-h-full flex-col gap-4 p-1">
-      <div className="flex-1 rounded-2xl bg-white p-8 shadow-md">
-        {/* zero-height and sticky, so the buttons float over the report while it scrolls */}
-        <div className="pointer-events-none sticky top-3 z-10 -mx-4 -mt-4 flex h-0 items-start justify-between [&>*]:pointer-events-auto">
-          {editing ? (
-            <span />
-          ) : (
-            <IconAction
-              label={filePath ? `Back to ${log.name}` : 'All research logs'}
-              onClick={() => router.push(filePath ? href(log.id) : href())}
-              testId="back-research-log"
-            >
-              <ArrowLeftOutlined />
-            </IconAction>
-          )}
-          <div className="flex flex-col items-end gap-2">
-            <div className="flex gap-2">
+    <div className="flex h-full min-h-0 flex-col gap-4">
+      <div className={cn(BOX_CLASS, 'flex min-h-0 flex-1 flex-col overflow-hidden')}>
+        {/* holds still while the report scrolls under it: the way back, the title, the actions */}
+        <header className="border-neutral-2 shrink-0 border-b px-6 pt-3 pb-3">
+          <div className="flex items-center gap-3">
+            {editing && !filePath ? null : (
+              <IconAction
+                label={filePath ? `Back to ${log.name}` : 'All research logs'}
+                onClick={() => router.push(filePath ? href(log.id) : href())}
+                testId="back-research-log"
+              >
+                <ArrowLeftOutlined />
+              </IconAction>
+            )}
+            <div className="min-w-0 flex-1">
+              {editing && !filePath ? (
+                <GrowingField
+                  value={name}
+                  onChange={setName}
+                  placeholder="Name"
+                  label="Name"
+                  className="text-primary-9 text-2xl font-bold"
+                />
+              ) : (
+                <h1 className="text-primary-9 truncate text-2xl font-bold" title={headerTitle}>
+                  {headerTitle}
+                </h1>
+              )}
+            </div>
+            <div className="flex shrink-0 gap-2">
               {editing ? (
                 <>
                   <IconAction label="Cancel" onClick={cancel}>
@@ -192,7 +270,7 @@ function Loaded({ log }: { log: IResearchLog }) {
                     <CheckOutlined />
                   </IconAction>
                 </>
-              ) : !filePath ? (
+              ) : !filePath || (filesAssetId && !pageMissing) ? (
                 <IconAction
                   label="Edit"
                   onClick={() => setEditing(true)}
@@ -214,93 +292,89 @@ function Loaded({ log }: { log: IResearchLog }) {
                 </IconAction>
               )}
             </div>
-            {editing && (
-              <div className="flex flex-col items-end gap-2">
-                <Button
-                  rounded
-                  variant="outline"
-                  size="sm"
-                  className="border-none shadow-md"
-                  onClick={addBlock}
-                >
-                  <PlusOutlined /> Text
-                </Button>
-                <Button
-                  rounded
-                  variant="outline"
-                  size="sm"
-                  className="border-none shadow-md"
-                  onClick={() => setLinkOpen(true)}
-                >
-                  <LinkOutlined /> Link entities
-                </Button>
-              </div>
-            )}
           </div>
-        </div>
-        {filePath && !editing ? (
-          <LogFile logId={log.id} path={filePath} filesAssetId={filesAssetId} onOpen={openFile} />
-        ) : (
-          <article className="mx-auto max-w-3xl">
-            <div className="pr-28">
-              {editing ? (
-                <GrowingField
-                  value={name}
-                  onChange={setName}
-                  placeholder="Name"
-                  label="Name"
-                  className="text-primary-9 text-3xl font-bold"
-                />
-              ) : (
-                <h1 className="text-primary-9 text-3xl font-bold">{log.name}</h1>
-              )}
-              {editing ? (
-                <GrowingField
-                  value={description}
-                  onChange={setDescription}
-                  placeholder="Add a one-line summary"
-                  label="Summary"
-                  className="text-primary-9 mt-2 text-lg"
-                />
-              ) : log.description ? (
-                <p className="text-primary-9 mt-2 text-lg">{log.description}</p>
-              ) : null}
+          {editing && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              <Button
+                rounded
+                variant="outline"
+                size="sm"
+                className="border-none shadow-md"
+                onClick={addBlock}
+              >
+                <PlusOutlined /> Text
+              </Button>
+              <Button
+                rounded
+                variant="outline"
+                size="sm"
+                className="border-none shadow-md"
+                onClick={() => setLinkOpen(true)}
+              >
+                <LinkOutlined /> Link entities
+              </Button>
+              <NewPageButton onCreate={createPage} />
             </div>
-            <p className="text-neutral-4 border-neutral-2 mt-1 mb-4 border-b pb-4 text-xs">
-              {log.created_by?.pref_label ?? 'Unknown author'} · updated{' '}
-              {new Date(log.update_date).toLocaleString()}
-            </p>
+          )}
+        </header>
 
-            {isLoading ? (
-              <Skeleton className="h-48 w-full rounded-xl" />
-            ) : editing ? (
-              <>
-                {current.map((source, i) => (
-                  <EditableBlock
-                    // biome-ignore lint/suspicious/noArrayIndexKey: blocks have no identity beyond position
-                    key={i}
-                    source={source}
-                    active={active === i}
-                    onActivate={() => {
-                      setActive(i);
-                      setAnchor(i);
-                    }}
-                    onCommit={(draft) => commit(i, draft)}
-                    logId={log.id}
-                    filesAssetId={filesAssetId}
-                  />
-                ))}
-              </>
-            ) : (
-              <ResearchLogMarkdown
-                markdown={markdown}
-                logId={log.id}
-                filesAssetId={filesAssetId}
-                onOpenFile={openFile}
-              />
-            )}
-          </article>
-        )}
+        <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-8 pt-4 pb-8">
+          {filePath && !editing ? (
+            <LogFile logId={log.id} path={filePath} filesAssetId={filesAssetId} onOpen={openFile} />
+          ) : (
+            <article className="mx-auto max-w-3xl">
+              {!filePath && (
+                <>
+                  {editing ? (
+                    <GrowingField
+                      value={description}
+                      onChange={setDescription}
+                      placeholder="Add a one-line summary"
+                      label="Summary"
+                      className="text-primary-9 text-lg"
+                    />
+                  ) : log.description ? (
+                    <p className="text-primary-9 text-lg">{log.description}</p>
+                  ) : null}
+                  <p className="text-neutral-4 border-neutral-2 mt-1 mb-4 border-b pb-4 text-xs">
+                    {log.created_by?.pref_label ?? 'Unknown author'} · updated{' '}
+                    {new Date(log.update_date).toLocaleString()}
+                  </p>
+                </>
+              )}
+
+              {loadingDoc ? (
+                <Skeleton className="h-48 w-full rounded-xl" />
+              ) : editing ? (
+                <>
+                  {current.map((source, i) => (
+                    <EditableBlock
+                      // biome-ignore lint/suspicious/noArrayIndexKey: blocks have no identity beyond position
+                      key={i}
+                      source={source}
+                      active={active === i}
+                      onActivate={() => {
+                        setActive(i);
+                        setAnchor(i);
+                      }}
+                      onCommit={(draft) => commit(i, draft)}
+                      logId={log.id}
+                      filesAssetId={filesAssetId}
+                      basePath={dirOf(docKey)}
+                    />
+                  ))}
+                </>
+              ) : (
+                <ResearchLogMarkdown
+                  markdown={markdown}
+                  logId={log.id}
+                  filesAssetId={filesAssetId}
+                  onOpenFile={openFile}
+                />
+              )}
+            </article>
+          )}
+        </div>
       </div>
 
       {linkOpen && <LinkEntitiesWindow onAdd={linkEntities} onClose={() => setLinkOpen(false)} />}
@@ -426,6 +500,7 @@ function EditableBlock({
   onCommit,
   logId,
   filesAssetId,
+  basePath,
 }: {
   source: string;
   active: boolean;
@@ -433,6 +508,8 @@ function EditableBlock({
   onCommit: (draft: string) => void;
   logId: string;
   filesAssetId?: string;
+  /** The folder of the page being edited, for its relative images. */
+  basePath?: string;
 }) {
   const [draft, setDraft] = useState(source);
   const area = useRef<HTMLTextAreaElement>(null);
@@ -486,7 +563,61 @@ function EditableBlock({
       }}
       className="hover:bg-primary-1/50 -mx-2 cursor-text rounded-lg px-2 transition-colors"
     >
-      <ResearchLogMarkdown markdown={source} logId={logId} filesAssetId={filesAssetId} />
+      <ResearchLogMarkdown
+        markdown={source}
+        logId={logId}
+        filesAssetId={filesAssetId}
+        basePath={basePath}
+      />
     </div>
+  );
+}
+
+/** Asks for a title, then makes a linked markdown page of that name. */
+function NewPageButton({ onCreate }: { onCreate: (title: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState('');
+  const input = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (open) input.current?.focus();
+  }, [open]);
+
+  const close = () => {
+    setOpen(false);
+    setTitle('');
+  };
+
+  if (!open) {
+    return (
+      <Button
+        rounded
+        variant="outline"
+        size="sm"
+        className="border-none shadow-md"
+        title="Add a linked markdown page"
+        onClick={() => setOpen(true)}
+      >
+        <FileAddOutlined /> Linked page
+      </Button>
+    );
+  }
+  return (
+    <input
+      ref={input}
+      value={title}
+      placeholder="Page title, then Enter"
+      aria-label="Page title"
+      onChange={(e) => setTitle(e.target.value)}
+      onBlur={close}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') close();
+        if (e.key === 'Enter' && title.trim()) {
+          onCreate(title.trim());
+          close();
+        }
+      }}
+      className="text-primary-9 h-8 w-56 rounded-full bg-white px-4 text-sm shadow-md outline-none"
+    />
   );
 }
