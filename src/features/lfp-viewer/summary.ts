@@ -5,10 +5,10 @@ import { ApiError } from '@/api/error';
 const datasetSchema = z.object({
   offset: z.number().int().nonnegative(),
   shape: z.array(z.number().int().nonnegative()),
-  dtype: z.enum(['<i2', '<f4', '<u8']),
+  dtype: z.enum(['<i2', '<f4', '<u8', '|u1']),
 });
 
-const ITEM_BYTES = { '<i2': 2, '<f4': 4, '<u8': 8 };
+const ITEM_BYTES = { '<i2': 2, '<f4': 4, '<u8': 8, '|u1': 1 };
 
 /** Past Starlette's 100 ranges a request is answered with the whole file. */
 const MAX_RANGES_PER_REQUEST = 100;
@@ -32,6 +32,8 @@ const rowsSchema = levelSchema.extend({
   blocks: blocksSchema.extend({
     /** µV per int16 unit of each block: group × contact × block. */
     scales: z.string(),
+    /** How many times each block's values were taken less the one before: group × contact × block. */
+    predictors: z.string(),
   }),
 });
 
@@ -331,15 +333,22 @@ export async function readContactShares(
   return new Float32Array(await readSlice(read, datasetOf(index, axis.contact_shares), [group]));
 }
 
-/** A group's block scales: contact × block. */
-export async function readBlockScales(
+/** Where a group's blocks at full resolution lie, and how each is stored: contact × block each. */
+export type BlocksIndex = { table: BigUint64Array; scales: Float32Array; predictors: Uint8Array };
+
+/** A group's block scales and orders of prediction: contact × block. */
+export async function readBlockCoding(
   read: ReadRange,
   index: LfpSummaryIndex,
   axis: LfpAxis,
   group: number
-): Promise<Float32Array> {
-  const { scales } = axis.levels[0].blocks;
-  return new Float32Array(await readSlice(read, datasetOf(index, scales), [group]));
+): Promise<Pick<BlocksIndex, 'scales' | 'predictors'>> {
+  const { scales, predictors } = axis.levels[0].blocks;
+  const [scaleBytes, predictorBytes] = await Promise.all([
+    readSlice(read, datasetOf(index, scales), [group]),
+    readSlice(read, datasetOf(index, predictors), [group]),
+  ]);
+  return { scales: new Float32Array(scaleBytes), predictors: new Uint8Array(predictorBytes) };
 }
 
 /** An axis's blocks: how many steps each holds, and how many a row has. */
@@ -372,20 +381,31 @@ export function toGroupScale(
   return out;
 }
 
+/**
+ * A block's values from its residuals of `order`, in place: added back up as many times as they
+ * were taken, wrapping as int16 does as they wrapped.
+ */
+export function undoResiduals(residuals: Int16Array, order: number): Int16Array {
+  for (let o = 0; o < order; o++) {
+    for (let i = 1; i < residuals.length; i++) residuals[i] += residuals[i - 1];
+  }
+  return residuals;
+}
+
 /** A contact's block at full resolution, to its group's scale. */
 export async function readBlock(
   read: ReadRange,
   index: LfpSummaryIndex,
   axis: LfpAxis,
   at: { group: number; contact: number; block: number },
-  table: BigUint64Array,
-  blockScales: Float32Array
+  { table, scales, predictors }: BlocksIndex
 ): Promise<Int16Array> {
   const { length, count } = blocksOf(index, axis);
   const { group, contact, block } = at;
-  const values = await inflateRow(await read(blockRange(table, count, contact, block)));
+  const residuals = await inflateRow(await read(blockRange(table, count, contact, block)));
+  const values = undoResiduals(residuals, predictors[contact * count + block]);
   const steps = Math.min(length, index.time.steps - block * length);
-  return toGroupScale(values, steps, blockScales[contact * count + block], axis.scales[group]);
+  return toGroupScale(values, steps, scales[contact * count + block], axis.scales[group]);
 }
 
 /**

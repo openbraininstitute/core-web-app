@@ -6,6 +6,7 @@ import {
   readField,
   readTile,
   toGroupScale,
+  undoResiduals,
   windowField,
   windowLevel,
   windowTiles,
@@ -184,11 +185,19 @@ describe('blocks', () => {
       shortRun as unknown as LfpSummaryIndex,
       axis,
       { group: 0, contact: 0, block: 1 },
-      table,
-      Float32Array.from([1, 1])
+      { table, scales: Float32Array.from([1, 1]), predictors: Uint8Array.from([0, 0]) }
     );
 
     expect(Array.from(values)).toEqual([16, 18, 20]);
+  });
+
+  it('are their residuals added back up, wrapping as int16 as they did', () => {
+    // 32767 then -32767 is a step of -65534, stored wrapped as 2
+    expect(Array.from(undoResiduals(Int16Array.from([32767, 2, 32767, 5]), 1))).toEqual([
+      32767, -32767, 0, 5,
+    ]);
+    expect(Array.from(undoResiduals(Int16Array.from([1, 0, 0, 1]), 2))).toEqual([1, 2, 3, 5]);
+    expect(Array.from(undoResiduals(Int16Array.from([4, -1]), 0))).toEqual([4, -1]);
   });
 });
 

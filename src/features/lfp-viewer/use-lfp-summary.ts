@@ -16,7 +16,7 @@ import {
   lfpSummaryIndexSchema,
   overviewAt,
   readBlock,
-  readBlockScales,
+  readBlockCoding,
   readChunkTable,
   readContactShares,
   readField,
@@ -39,6 +39,7 @@ import type {
 } from '@/api/small-scale-simulator/simulation-result/lfp-summary';
 import type { ContactBlock } from '@/features/lfp-viewer/contacts';
 import type {
+  BlocksIndex,
   ByteRange,
   GroupStats,
   LfpAxis,
@@ -276,16 +277,18 @@ const chunkTable = (at: AxisRead, group: number, levelAt: number) =>
     )
   );
 
-/** A group's chunk table and block scales at full resolution. */
-const blocksIndex = (at: AxisRead, group: number) =>
-  Promise.all([
+/** A group's chunk table, block scales and orders of prediction at full resolution. */
+const blocksIndex = async (at: AxisRead, group: number): Promise<BlocksIndex> => {
+  const [table, coding] = await Promise.all([
     chunkTable(at, group, 0),
     at.queryClient.fetchQuery(
-      groupQuery(at, 'block-scales', [group], (read) =>
-        readBlockScales(read, at.index, at.axis, group)
+      groupQuery(at, 'block-coding', [group], (read) =>
+        readBlockCoding(read, at.index, at.axis, group)
       )
     ),
   ]);
+  return { table, ...coding };
+};
 
 const ROWS_GC_MS = 60_000;
 
@@ -296,11 +299,11 @@ export const rowQuery = (at: AxisRead, group: number, contact: number) =>
     'row',
     [group, contact],
     async (read) => {
-      const [table, scales] = await blocksIndex(at, group);
+      const blocksAt = await blocksIndex(at, group);
       const { length, count } = blocksOf(at.index, at.axis);
       const blocks = await Promise.all(
         Array.from({ length: count }, (_, block) =>
-          readBlock(read, at.index, at.axis, { group, contact, block }, table, scales)
+          readBlock(read, at.index, at.axis, { group, contact, block }, blocksAt)
         )
       );
       const row = new Int16Array(at.index.time.steps);
@@ -323,8 +326,8 @@ const tileQuery = (at: AxisRead, group: number, contact: number, levelAt: number
         const table = await chunkTable(at, group, levelAt);
         return readTile(read, at.index, at.axis, { contact, levelAt, tile }, table);
       }
-      const [table, scales] = await blocksIndex(at, group);
-      return readBlock(read, at.index, at.axis, { group, contact, block: tile }, table, scales);
+      const blocksAt = await blocksIndex(at, group);
+      return readBlock(read, at.index, at.axis, { group, contact, block: tile }, blocksAt);
     },
     ROWS_GC_MS
   );

@@ -23,8 +23,9 @@ describe('a whole row in blocks', () => {
   afterEach(() => vi.unstubAllGlobals());
 
   it('is its blocks one after another, each to the group’s scale, the padding left off', async () => {
-    // 5 steps in blocks of 3: the second has 2 steps and a step of padding, at twice the scale
-    const blocks = [deflated([1, 2, 3]), deflated([4, 5, 0])].map((b) => new Uint8Array(b));
+    // 5 steps in blocks of 3: the first stored as its residuals of order 2, the second has 2 steps
+    // and a step of padding, at twice the scale
+    const blocks = [deflated([1, 0, 0]), deflated([4, 5, 0])].map((b) => new Uint8Array(b));
     const offsets = [100, 200];
     const file = new Uint8Array(300);
     const table = new BigUint64Array(4);
@@ -35,6 +36,7 @@ describe('a whole row in blocks', () => {
     });
     file.set(new Uint8Array(table.buffer), 0);
     file.set(new Uint8Array(Float32Array.from([0.5, 1]).buffer), 40);
+    file.set([2, 0], 48);
     const fetchMock = vi.fn(answeringRanges(file));
     vi.stubGlobal('fetch', fetchMock);
     const axis = {
@@ -45,7 +47,12 @@ describe('a whole row in blocks', () => {
           step: 1,
           kind: 'value',
           dataset: '/lfp/total/rows',
-          blocks: { chunks: '/lfp/total/chunks', steps: 3, scales: '/lfp/total/block_scales' },
+          blocks: {
+            chunks: '/lfp/total/chunks',
+            steps: 3,
+            scales: '/lfp/total/block_scales',
+            predictors: '/lfp/total/block_predictors',
+          },
         },
       ],
     } as unknown as LfpAxis;
@@ -55,6 +62,7 @@ describe('a whole row in blocks', () => {
       datasets: {
         '/lfp/total/chunks': { offset: 0, shape: [1, 1, 2, 2], dtype: '<u8' },
         '/lfp/total/block_scales': { offset: 40, shape: [1, 1, 2], dtype: '<f4' },
+        '/lfp/total/block_predictors': { offset: 48, shape: [1, 1, 2], dtype: '|u1' },
       },
     } as unknown as LfpSummaryIndex;
     const queryClient = new QueryClient();
@@ -64,7 +72,7 @@ describe('a whole row in blocks', () => {
     );
 
     expect(Array.from(row)).toEqual([1, 2, 3, 8, 10]);
-    // The table and the scales, then both blocks at once
+    // The table, the scales and the orders, then both blocks at once
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });

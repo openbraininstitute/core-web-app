@@ -328,7 +328,12 @@ describe('the index', () => {
     step: 1,
     kind: 'value',
     dataset: `/lfp/${axis}/rows`,
-    blocks: { chunks: `/lfp/${axis}/chunks`, steps: 65_536, scales: `/lfp/${axis}/block_scales` },
+    blocks: {
+      chunks: `/lfp/${axis}/chunks`,
+      steps: 65_536,
+      scales: `/lfp/${axis}/block_scales`,
+      predictors: `/lfp/${axis}/block_predictors`,
+    },
   });
   const overview = (axis: string, k: number, kind: string, tile = 1875) => ({
     step: 2 ** k,

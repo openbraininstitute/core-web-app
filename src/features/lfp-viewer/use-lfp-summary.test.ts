@@ -154,13 +154,14 @@ describe('rowQuery', () => {
   afterEach(() => vi.unstubAllGlobals());
 
   it('reads the rows asked for at one moment in one request, after their chunk table', async () => {
+    // The first contact's block stored as its residuals, 1 and 2 less 1
     const rows = [
-      [1, 2],
+      [1, 1],
       [3, 4],
       [5, 6],
     ].map((values) => new Uint8Array(deflated(values)));
-    // The table (1 group, 3 contacts, a block each, offset and size) and the block scales first,
-    // the rows apart from each other
+    // The table (1 group, 3 contacts, a block each, offset and size), the block scales and the
+    // orders of prediction first, the rows apart from each other
     const offsets = [100, 200, 300];
     const file = new Uint8Array(400);
     const table = new BigUint64Array(6);
@@ -172,6 +173,7 @@ describe('rowQuery', () => {
     file.set(new Uint8Array(table.buffer), 0);
     // The third contact's block at twice the group's scale
     file.set(new Uint8Array(Float32Array.from([0.5, 0.5, 1]).buffer), 48);
+    file.set([1, 0, 0], 64);
     const fetchMock = vi.fn(answeringRanges(file));
     vi.stubGlobal('fetch', fetchMock);
     const axis = {
@@ -182,7 +184,12 @@ describe('rowQuery', () => {
           step: 1,
           kind: 'value',
           dataset: '/l0',
-          blocks: { chunks: '/lfp/mtype/chunks', steps: 2, scales: '/lfp/mtype/block_scales' },
+          blocks: {
+            chunks: '/lfp/mtype/chunks',
+            steps: 2,
+            scales: '/lfp/mtype/block_scales',
+            predictors: '/lfp/mtype/block_predictors',
+          },
         },
       ],
     } as unknown as LfpAxis;
@@ -192,6 +199,7 @@ describe('rowQuery', () => {
       datasets: {
         '/lfp/mtype/chunks': { offset: 0, shape: [1, 3, 1, 2], dtype: '<u8' },
         '/lfp/mtype/block_scales': { offset: 48, shape: [1, 3, 1], dtype: '<f4' },
+        '/lfp/mtype/block_predictors': { offset: 64, shape: [1, 3, 1], dtype: '|u1' },
       },
     } as unknown as LfpSummaryIndex;
     const queryClient = new QueryClient();
@@ -206,7 +214,7 @@ describe('rowQuery', () => {
       [1, 2],
       [3, 4],
     ]);
-    // The table and the scales, then every row at once
+    // The table, the scales and the orders, then every row at once
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });
