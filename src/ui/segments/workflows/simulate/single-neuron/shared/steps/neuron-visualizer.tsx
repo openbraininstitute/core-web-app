@@ -1,6 +1,6 @@
 'use client';
 
-import { NeuronViewerContainer } from '@/components/neuron-viewer/neuron-viewer-with-actions';
+import { NeuronViewerContainer } from '@/components/neuron-viewer/neuron-viewer-lazy';
 
 type Props = {
   sessionId: string;
