@@ -1,13 +1,22 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useMemo } from 'react';
 
-import { SimpleGrid } from '@/features/data-grid/presets/simple-grid';
 import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
-import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
+import type {
+  SimpleGrid as EagerSimpleGrid,
+  ISimpleColumn,
+} from '@/features/data-grid/presets/simple-grid';
 import type { CreditsPack, SinglePrice } from '@/services/sanity';
+
+// loaded when the table renders: Turbopack otherwise puts AG Grid (~300 KiB gz) in the chunk shared by every
+// landing page client component, so it downloaded on pages without a price table; the cast keeps the generic
+const SimpleGrid = dynamic(() =>
+  import('@/features/data-grid/presets/simple-grid').then((m) => m.SimpleGrid)
+) as typeof EagerSimpleGrid;
 
 type PriceTableProps = {
   prices: SinglePrice[];

@@ -10,13 +10,12 @@ import {
   useRef,
   useState,
 } from 'react';
-import { type BundledLanguage, codeToHtml, type ShikiTransformer } from 'shiki';
 
 import { Button } from '@/ui/molecules/button';
 import { nmodl } from '@/ui/molecules/code-blocks/nmodl';
 import { cn } from '@/utils/css-class';
 
-import type { LanguageRegistration } from 'shiki';
+import type { BundledLanguage, LanguageRegistration, ShikiTransformer } from 'shiki';
 
 type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
   code: string;
@@ -82,6 +81,8 @@ export async function highlightCode(
   language: BundledLanguage,
   showLineNumbers = false
 ) {
+  // loaded on first use: shiki is ~60 KiB gz and every route links this file through app/error.tsx
+  const { codeToHtml } = await import('shiki');
   const transformers: ShikiTransformer[] = showLineNumbers ? [lineNumberTransformer] : [];
 
   const render = (lang: BundledLanguage | LanguageRegistration) =>

@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useCallback, useState } from 'react';
 
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -15,7 +16,13 @@ import {
   type WorkspaceActionType,
 } from '@/ui/segments/workspaces/space-manager/event';
 
-import { WorkspaceManagerModal } from './modal';
+// loaded on first open: the modal pulls AG Grid (~300 KiB gz) into every project route otherwise
+const WorkspaceManagerModal = dynamic(
+  () => import('./modal').then((m) => m.WorkspaceManagerModal),
+  {
+    ssr: false,
+  }
+);
 
 type TProjectPreviewPayload = {
   projectId?: string | null;
