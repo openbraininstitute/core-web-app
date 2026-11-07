@@ -3,8 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   blocksOf,
   readBlock,
+  readField,
   readTile,
-  TILE_BINS,
   toGroupScale,
   windowField,
   windowLevel,
@@ -17,6 +17,16 @@ import type { LfpAxis, LfpSummaryIndex } from '@/features/lfp-viewer/summary';
 
 // 300 contacts at 40 kHz for 100 s: levels of 32 to 2,048 steps
 const STEPS = 4_000_000;
+const TILE_BINS = 4096;
+const minMax = (k: number) => ({
+  step: 2 ** k,
+  kind: 'min_max',
+  dataset: `/lfp/total/level${k}`,
+  blocks: {
+    chunks: `/lfp/total/level${k}_chunks`,
+    steps: Math.min(TILE_BINS, Math.ceil(STEPS / 2 ** k)),
+  },
+});
 const axis = {
   name: 'total',
   groups: ['total'],
@@ -28,18 +38,16 @@ const axis = {
       dataset: '/lfp/total/rows',
       blocks: { chunks: '/lfp/total/chunks', steps: 65_536, scales: '/lfp/total/block_scales' },
     },
-    { step: 32, kind: 'min_max', dataset: '/lfp/total/level5' },
-    { step: 128, kind: 'min_max', dataset: '/lfp/total/level7' },
-    { step: 512, kind: 'min_max', dataset: '/lfp/total/level9' },
-    { step: 2048, kind: 'min_max', dataset: '/lfp/total/level11' },
+    minMax(5),
+    minMax(7),
+    minMax(9),
+    minMax(11),
   ],
 } as unknown as LfpAxis;
 const index = {
   contacts: 300,
   time: { start: 0, dt: 0.025, steps: STEPS },
-  datasets: {
-    '/lfp/total/level5': { offset: 1000, shape: [1, 300, STEPS / 32, 2], dtype: '<i2' },
-  },
+  datasets: {},
 } as unknown as LfpSummaryIndex;
 
 describe('windowLevel', () => {
@@ -71,7 +79,12 @@ describe('windowReadLevel', () => {
       ...axis,
       levels: [
         { ...axis.levels[0], blocks: { ...axis.levels[0].blocks, steps: 1500 } },
-        { step: 1, kind: 'value', dataset: '/lfp/total/level0' },
+        {
+          step: 1,
+          kind: 'value',
+          dataset: '/lfp/total/level0',
+          blocks: { chunks: '/lfp/total/level0_chunks', steps: 1500 },
+        },
       ],
     } as unknown as LfpAxis;
 
@@ -179,25 +192,75 @@ describe('blocks', () => {
   });
 });
 
-describe('readTile', () => {
+describe('tiles of an overview level', () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it("reads a contact's bins of a tile, the last tile cut at the end of the level", async () => {
-    const fetchMock = vi.fn(async () => new Response(null, { status: 416 }));
+  it('are read by the chunk table, the last tile cut at the end of the level', async () => {
+    // Bins of 32 steps: 125,000 of them in 31 tiles, the last holding the 2,120 left, padded
+    const values = Array.from({ length: TILE_BINS * 2 }, (_, i) => (i < 2120 * 2 ? i - 2000 : 0));
+    const chunk = new Uint8Array(deflated(values));
+    const file = new Uint8Array(600 + chunk.length);
+    file.set(chunk, 600);
+    const fetchMock = vi.fn(answeringRanges(file));
     vi.stubGlobal('fetch', fetchMock);
-    const read = rangeReader({ url: 'u', headers: {} });
+    const table = new BigUint64Array(300 * 31 * 2);
+    table.set([BigInt(600), BigInt(chunk.length)], (2 * 31 + 30) * 2);
 
-    await readTile(read, index, axis, { group: 0, contact: 2, levelAt: 1, tile: 30 }).catch(
-      () => null
+    const tile = await readTile(
+      rangeReader({ url: 'u', headers: {} }),
+      index,
+      axis,
+      { contact: 2, levelAt: 1, tile: 30 },
+      table
     );
 
-    // Contact 2 is 2 × 125,000 bins × 2 values × 2 bytes in; tile 30 starts at bin 122,880 and
-    // holds the 2,120 left
-    const offset = 1000 + (2 * 125_000 + 122_880) * 4;
-    const range = `bytes=${offset}-${offset + 2120 * 4 - 1}`;
+    expect(Array.from(tile)).toEqual(values.slice(0, 2120 * 2));
     expect(fetchMock.mock.calls[0]).toEqual([
       'u',
-      expect.objectContaining({ headers: { Range: range } }),
+      expect.objectContaining({ headers: { Range: `bytes=600-${599 + chunk.length}` } }),
     ]);
+  });
+
+  it("are a group's field put together, every contact's tiles one after another", async () => {
+    // 2 contacts, 5 bins of means in tiles of 3: a tile and 2 bins each
+    const small = {
+      contacts: 2,
+      time: { start: 0, dt: 0.1, steps: 20 },
+      datasets: { '/lfp/mtype/level2_chunks': { offset: 0, shape: [2, 2, 2, 2], dtype: '<u8' } },
+    } as unknown as LfpSummaryIndex;
+    const means = {
+      ...axis,
+      scales: [1, 0.25],
+      levels: [
+        axis.levels[0],
+        {
+          step: 4,
+          kind: 'mean',
+          dataset: '/lfp/mtype/level2',
+          blocks: { chunks: '/lfp/mtype/level2_chunks', steps: 3 },
+        },
+      ],
+    } as unknown as LfpAxis;
+    const tiles = [
+      [1, 2, 3],
+      [4, 5, 0],
+      [6, 7, 8],
+      [9, 10, 0],
+    ].map((t) => new Uint8Array(deflated(t)));
+    const file = new Uint8Array(1000);
+    // Group 1's table, after group 0's
+    const table = new BigUint64Array(8);
+    tiles.forEach((tile, t) => {
+      file.set(tile, 200 + t * 100);
+      table.set([BigInt(200 + t * 100), BigInt(tile.length)], t * 2);
+    });
+    file.set(new Uint8Array(table.buffer), 64);
+    const fetchMock = vi.fn(answeringRanges(file));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const field = await readField(rangeReader({ url: 'u', headers: {} }), small, means, 1, 1);
+
+    expect(Array.from(field.data)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    expect(field).toMatchObject({ contacts: 2, bins: 5, binMs: 0.4, kind: 'mean', scale: 0.25 });
   });
 });

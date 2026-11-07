@@ -14,7 +14,7 @@ import {
   isLfpSummaryChanged,
   levelTiling,
   lfpSummaryIndexSchema,
-  overviewLevel,
+  overviewAt,
   readBlock,
   readBlockScales,
   readChunkTable,
@@ -160,7 +160,7 @@ export function useLfpSummary(source: LfpSummarySource) {
       const read = rangesOf({ queryClient, source, sha256 }, signal);
       const axis = index.axes[0];
       const [total, stored] = await Promise.all([
-        readField(read, index, axis, 0, overviewLevel(axis)),
+        readField(read, index, axis, 0, overviewAt(axis)),
         readGroupStats(read, index, axis, 0),
       ]);
       return { sha256, index, total, ...stored };
@@ -257,7 +257,7 @@ const groupQuery = <T>(
 
 const groupFieldQuery = (at: AxisRead, group: number) =>
   groupQuery(at, 'group', [group], (read) =>
-    readField(read, at.index, at.axis, group, overviewLevel(at.axis))
+    readField(read, at.index, at.axis, group, overviewAt(at.axis))
   );
 
 const groupStatsQuery = (at: AxisRead, group: number) =>
@@ -268,12 +268,18 @@ const groupSharesQuery = (at: AxisRead, group: number) =>
     readContactShares(read, at.index, at.axis, group)
   );
 
-/** A group's chunk table and block scales, read once and kept. */
+/** A group's chunk table of a level, read once and kept. */
+const chunkTable = (at: AxisRead, group: number, levelAt: number) =>
+  at.queryClient.fetchQuery(
+    groupQuery(at, 'chunks', [group, levelAt], (read) =>
+      readChunkTable(read, at.index, at.axis.levels[levelAt], group)
+    )
+  );
+
+/** A group's chunk table and block scales at full resolution. */
 const blocksIndex = (at: AxisRead, group: number) =>
   Promise.all([
-    at.queryClient.fetchQuery(
-      groupQuery(at, 'chunks', [group], (read) => readChunkTable(read, at.index, at.axis, group))
-    ),
+    chunkTable(at, group, 0),
     at.queryClient.fetchQuery(
       groupQuery(at, 'block-scales', [group], (read) =>
         readBlockScales(read, at.index, at.axis, group)
@@ -313,7 +319,10 @@ const tileQuery = (at: AxisRead, group: number, contact: number, levelAt: number
     'tile',
     [group, contact, levelAt, tile],
     async (read) => {
-      if (levelAt > 0) return readTile(read, at.index, at.axis, { group, contact, levelAt, tile });
+      if (levelAt > 0) {
+        const table = await chunkTable(at, group, levelAt);
+        return readTile(read, at.index, at.axis, { contact, levelAt, tile }, table);
+      }
       const [table, scales] = await blocksIndex(at, group);
       return readBlock(read, at.index, at.axis, { group, contact, block: tile }, table, scales);
     },

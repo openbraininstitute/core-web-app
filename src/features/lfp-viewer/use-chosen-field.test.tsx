@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { answeringRanges } from './test-ranges';
+import { answeringRanges, deflated } from './test-ranges';
 import { useChosenField } from './use-lfp-summary';
 
 import type { ReactNode } from 'react';
@@ -22,13 +22,21 @@ const source: LfpSummarySource = {
   assetId: 'asset',
 };
 
-// Two groups of an axis over two contacts: their fields of 4 steps, one stat, two frequencies and
-// their shares at each contact.
-const file = new Uint8Array(256);
-file.set(
-  new Uint8Array(Int16Array.from([1, 2, 3, 4, 5, 6, 7, 8, 1, 1, 1, 1, 2, 2, 2, 2]).buffer),
-  0
-);
+// Two groups of an axis over two contacts: their fields of 4 steps, a tile a contact, deflated
+// after their chunk table, one stat, two frequencies and their shares at each contact.
+const file = new Uint8Array(512);
+const table = new BigUint64Array(8);
+[
+  [1, 2, 3, 4],
+  [5, 6, 7, 8],
+  [1, 1, 1, 1],
+  [2, 2, 2, 2],
+].forEach((row, at) => {
+  const tile = new Uint8Array(deflated(row));
+  file.set(tile, 256 + at * 64);
+  table.set([BigInt(256 + at * 64), BigInt(tile.length)], at * 2);
+});
+file.set(new Uint8Array(table.buffer), 0);
 file.set(new Uint8Array(Float32Array.from([10, 20, 30, 40]).buffer), 64);
 file.set(new Uint8Array(Float32Array.from([1, 2, 3, 4, 5, 6, 7, 8]).buffer), 128);
 file.set(new Uint8Array(Float32Array.from([0.25, 0.5, 0.75, 0.5]).buffer), 192);
@@ -44,7 +52,9 @@ const index = {
       groups: ['A', 'B'],
       scales: [1, 1],
       shares: [0.4, 0.6],
-      levels: [{ step: 1, kind: 'value', dataset: '/l0' }],
+      levels: [
+        { step: 1, kind: 'value', dataset: '/l0', blocks: { chunks: '/l0_chunks', steps: 4 } },
+      ],
       stats: '/stats',
       psd: '/psd',
       psd_frequencies: [1, 2],
@@ -52,7 +62,7 @@ const index = {
     },
   ],
   datasets: {
-    '/l0': { offset: 0, shape: [2, 2, 4], dtype: '<i2' },
+    '/l0_chunks': { offset: 0, shape: [2, 2, 1, 2], dtype: '<u8' },
     '/stats': { offset: 64, shape: [2, 2, 1], dtype: '<f4' },
     '/psd': { offset: 128, shape: [2, 2, 2], dtype: '<f4' },
     '/shares': { offset: 192, shape: [2, 2], dtype: '<f4' },
@@ -78,7 +88,7 @@ function chosen(summary: LfpSummary, choice: FieldChoice) {
 describe('useChosenField', () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it("reads a group's field, stats, spectra and shares in one request", async () => {
+  it("reads a group's chunk table, stats, spectra and shares in one request, then its tiles", async () => {
     const fetchMock = vi.fn(answeringRanges(file));
     vi.stubGlobal('fetch', fetchMock);
 
@@ -90,7 +100,7 @@ describe('useChosenField', () => {
     expect(Array.from(stats)).toEqual([30, 40]);
     expect(Array.from(spectra?.psd ?? [])).toEqual([5, 6, 7, 8]);
     expect(Array.from(shares ?? [])).toEqual([0.75, 0.5]);
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   it('adds up the shares of the groups ticked', async () => {

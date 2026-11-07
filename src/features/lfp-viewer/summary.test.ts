@@ -203,7 +203,7 @@ describe('rows in chunks', () => {
     vi.stubGlobal('fetch', fetchMock);
     const read = rangeReader(request);
 
-    expect(await readChunkTable(read, index, axis, 1)).toEqual(tables[1]);
+    expect(await readChunkTable(read, index, axis.levels[0], 1)).toEqual(tables[1]);
     expect(fetchMock.mock.calls[0]).toEqual([
       'u',
       expect.objectContaining({ headers: { Range: 'bytes=72-103' } }),
@@ -330,6 +330,12 @@ describe('the index', () => {
     dataset: `/lfp/${axis}/rows`,
     blocks: { chunks: `/lfp/${axis}/chunks`, steps: 65_536, scales: `/lfp/${axis}/block_scales` },
   });
+  const overview = (axis: string, k: number, kind: string, tile = 1875) => ({
+    step: 2 ** k,
+    kind,
+    dataset: `/lfp/${axis}/level${k}`,
+    blocks: { chunks: `/lfp/${axis}/level${k}_chunks`, steps: tile },
+  });
   const index = {
     format: 'lfp-summary',
     version: 2,
@@ -344,7 +350,7 @@ describe('the index', () => {
         groups: ['total'],
         scales: [1],
         shares: [1],
-        levels: [rowsLevel('total'), { step: 16, kind: 'min_max', dataset: '/lfp/total/level4' }],
+        levels: [rowsLevel('total'), overview('total', 4, 'min_max')],
         stats: '/lfp/total/stats',
         psd: '/lfp/total/psd',
         psd_frequencies: [1, 2],
@@ -356,7 +362,7 @@ describe('the index', () => {
         groups: ['A', 'B'],
         scales: [1, 2],
         shares: [0.25, 0.75],
-        levels: [rowsLevel('mtype'), { step: 16, kind: 'mean', dataset: '/lfp/mtype/level4' }],
+        levels: [rowsLevel('mtype'), overview('mtype', 4, 'mean')],
         stats: '/lfp/mtype/stats',
         psd: '/lfp/mtype/psd',
         psd_frequencies: [1, 2],
@@ -393,16 +399,16 @@ describe('the index', () => {
   });
 
   it("takes a short run's, its overview its values", () => {
-    const short = withTotalLevels([
-      rowsLevel('total'),
-      { step: 1, kind: 'value', dataset: '/lfp/total/level0' },
-    ]);
-    expect(lfpSummaryIndexSchema.parse(short).axes[0].levels[0].blocks.steps).toBe(65_536);
+    const short = withTotalLevels([rowsLevel('total'), overview('total', 0, 'value', 1500)]);
+    expect(lfpSummaryIndexSchema.parse(short).axes[0].levels[1].blocks.steps).toBe(1500);
   });
 
-  it('refuses rows not in blocks, and rows with no overview', () => {
+  it('refuses rows or an overview not in blocks, and rows with no overview', () => {
     const plain = { step: 1, kind: 'value', dataset: '/lfp/total/level0' };
     expect(() => lfpSummaryIndexSchema.parse(withTotalLevels([plain, plain]))).toThrow();
+    expect(() =>
+      lfpSummaryIndexSchema.parse(withTotalLevels([rowsLevel('total'), plain]))
+    ).toThrow();
     expect(() => lfpSummaryIndexSchema.parse(withTotalLevels([rowsLevel('total')]))).toThrow();
   });
 });
