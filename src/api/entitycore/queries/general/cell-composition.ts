@@ -4,7 +4,7 @@ import type {
   ICellComposition,
   ICellCompositionFilter,
 } from '@/api/entitycore/types/entities/cell-composition';
-import type { EntityExpandParam } from '@/api/entitycore/types/entities/derivation';
+import type { TAnyEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -26,7 +26,7 @@ export async function getCellComposition({
 }: {
   ctx?: WorkspaceContext;
   id: string;
-  expand?: ReadonlyArray<EntityExpandParam>;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<ICellComposition>(`${baseUri}/${id}`, {
@@ -42,7 +42,7 @@ export async function getCellCompositions({
 }: {
   ctx?: WorkspaceContext;
   filters: Partial<ICellCompositionFilter>;
-  expand?: ReadonlyArray<EntityExpandParam>;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<ICellComposition>>(baseUri, {

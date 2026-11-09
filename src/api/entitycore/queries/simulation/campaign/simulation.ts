@@ -1,11 +1,11 @@
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
 
-import type { EntityExpandParam } from '@/api/entitycore/types/entities/derivation';
 import type {
   ICircuitSimulationFilter,
   ISimulation,
 } from '@/api/entitycore/types/entities/simulation';
+import type { TAnyEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -23,7 +23,7 @@ export async function getSimulation({
 }: {
   id: string;
   context?: WorkspaceContext | null;
-  expand?: ReadonlyArray<EntityExpandParam>;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<ISimulation>(`${baseUri}/${id}`, {
@@ -57,7 +57,7 @@ export async function getSimulations({
   withFacets?: boolean;
   filters?: Partial<ICircuitSimulationFilter>;
   context?: WorkspaceContext | null;
-  expand?: ReadonlyArray<EntityExpandParam>;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<ISimulation>>(baseUri, {

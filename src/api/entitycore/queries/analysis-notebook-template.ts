@@ -5,7 +5,7 @@ import type {
   TAnalysisNotebookTemplateBase,
   TAnalysisNotebookTemplateFilter,
 } from '@/api/entitycore/types/entities/analysis-notebook-template';
-import type { EntityExpandParam } from '@/api/entitycore/types/entities/derivation';
+import type { TAnyEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -27,7 +27,7 @@ export async function getAnalysisNotebookTemplates({
   withFacets?: boolean;
   filters?: TAnalysisNotebookTemplateFilter;
   context?: WorkspaceContext | null;
-  expand?: ReadonlyArray<EntityExpandParam>;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IAnalysisNotebookTemplate>>(baseUri, {
@@ -58,7 +58,7 @@ export async function getAnalysisNotebookTemplate({
 }: {
   id: string;
   context?: WorkspaceContext | null;
-  expand?: ReadonlyArray<EntityExpandParam>;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<IAnalysisNotebookTemplate>(`${baseUri}/${id}`, {

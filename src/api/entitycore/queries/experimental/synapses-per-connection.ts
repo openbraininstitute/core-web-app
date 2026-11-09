@@ -3,11 +3,11 @@ import z from 'zod';
 import { measurementSchema } from '@/api/entitycore/queries/experimental/neuron-density';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 
-import type { EntityExpandParam } from '@/api/entitycore/types/entities/derivation';
 import type {
   ExperimentalSynapsesPerConnectionFilter,
   IExperimentalSynapsesPerConnection,
 } from '@/api/entitycore/types/entities/synapses-per-connection';
+import type { TAnyEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -28,7 +28,7 @@ export async function getExperimentalSynapsesPerConnections({
   withFacets?: boolean;
   filters?: ExperimentalSynapsesPerConnectionFilter;
   context?: WorkspaceContext | null;
-  expand?: ReadonlyArray<EntityExpandParam>;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IExperimentalSynapsesPerConnection>>(baseUri, {
@@ -59,7 +59,7 @@ export async function getExperimentalSynapsesPerConnection({
 }: {
   id: string;
   context?: WorkspaceContext | null;
-  expand?: ReadonlyArray<EntityExpandParam>;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<IExperimentalSynapsesPerConnection>(`${baseUri}/${id}`, {

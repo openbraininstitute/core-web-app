@@ -1,7 +1,7 @@
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 
-import type { EntityExpandParam } from '@/api/entitycore/types/entities/derivation';
 import type { ISimulationResult } from '@/api/entitycore/types/entities/simulation-result';
+import type { TAnyEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/simulation-result';
@@ -18,7 +18,7 @@ export async function getSimulationResult({
 }: {
   id: string;
   context?: WorkspaceContext | null;
-  expand?: ReadonlyArray<EntityExpandParam>;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<ISimulationResult>(`${baseUri}/${id}`, {

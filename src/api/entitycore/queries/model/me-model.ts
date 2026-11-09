@@ -1,11 +1,11 @@
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 
-import type { EntityExpandParam } from '@/api/entitycore/types/entities/derivation';
 import type {
   IMEModel,
   IMEModelFilter,
   TCreateMEModel,
 } from '@/api/entitycore/types/entities/me-model';
+import type { TAnyEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -26,7 +26,7 @@ export async function getMEModels({
   withFacets?: boolean;
   filters?: Partial<IMEModelFilter>;
   context?: WorkspaceContext | null;
-  expand?: ReadonlyArray<EntityExpandParam>;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IMEModel>>(baseUri, {
@@ -57,7 +57,7 @@ export async function getMEModel({
 }: {
   id: string;
   context?: WorkspaceContext | null;
-  expand?: ReadonlyArray<EntityExpandParam>;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   const result = await api.get<IMEModel>(`${baseUri}/${id}`, {

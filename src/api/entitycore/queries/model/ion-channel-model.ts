@@ -1,10 +1,10 @@
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 
-import type { EntityExpandParam } from '@/api/entitycore/types/entities/derivation';
 import type {
   IonChannelModel,
   IonChannelModelFilter,
 } from '@/api/entitycore/types/entities/ion-channel';
+import type { TAnyEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -25,7 +25,7 @@ export async function getIonChannelModels({
   withFacets?: boolean;
   filters?: IonChannelModelFilter;
   context?: WorkspaceContext | null;
-  expand?: ReadonlyArray<EntityExpandParam>;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IonChannelModel>>(baseUri, {
@@ -56,7 +56,7 @@ export async function getIonChannelModel({
 }: {
   id: string;
   context?: WorkspaceContext | null;
-  expand?: ReadonlyArray<EntityExpandParam>;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<IonChannelModel>(`${baseUri}/${id}`, {

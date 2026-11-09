@@ -1,7 +1,7 @@
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
 
-import type { EntityExpandParam } from '@/api/entitycore/types/entities/derivation';
+import type { TAnyEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { IProtocol } from '@/api/entitycore/types/shared/global';
 import type { IProtocolFilter } from '@/api/entitycore/types/shared/protocol';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
@@ -23,7 +23,7 @@ export async function getProtocols({
 }: {
   filters?: Partial<IProtocolFilter>;
   context?: WorkspaceContext | null;
-  expand?: ReadonlyArray<EntityExpandParam>;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }): Promise<EntityCoreResponse<IProtocol>> {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IProtocol>>(baseUri, {
@@ -53,7 +53,7 @@ export async function getProtocol({
 }: {
   id: string;
   context?: WorkspaceContext | null;
-  expand?: ReadonlyArray<EntityExpandParam>;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }): Promise<EntityCoreResponse<IProtocol>> {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IProtocol>>(`${baseUri}/${id}`, {

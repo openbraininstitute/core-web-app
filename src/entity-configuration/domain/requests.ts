@@ -1,7 +1,7 @@
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TAnyEntityExpandParam } from '@/api/entitycore/types/shared/expand';
+import type { TMeasurableEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { AwaitedType, WorkspaceContext } from '@/types/common';
 
@@ -41,7 +41,7 @@ export async function retrieveEntity({
   const one = request as (query: {
     id: string;
     context: WorkspaceContext;
-    expand?: ReadonlyArray<TAnyEntityExpandParam>;
+    expand?: ReadonlyArray<TMeasurableEntityExpandParam>; // widest set (includes the generic one)
   }) => ReturnType<typeof request>;
 
   // opt-in: expanded fields cost extra loads on the API, so plain reads skip them

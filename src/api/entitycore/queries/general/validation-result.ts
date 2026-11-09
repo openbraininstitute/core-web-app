@@ -1,10 +1,10 @@
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 
-import type { EntityExpandParam } from '@/api/entitycore/types/entities/derivation';
 import type {
   IValidationResult,
   IValidationResultFilter,
 } from '@/api/entitycore/types/entities/validation-result';
+import type { TAnyEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -24,7 +24,7 @@ export async function getValidationResults({
 }: {
   filters?: Partial<IValidationResultFilter>;
   context?: WorkspaceContext | null;
-  expand?: ReadonlyArray<EntityExpandParam>;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IValidationResult>>(baseUri, {
@@ -54,7 +54,7 @@ export async function getValidationResult({
 }: {
   context?: WorkspaceContext | null;
   id: string;
-  expand?: ReadonlyArray<EntityExpandParam>;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IValidationResult>>(baseUri, {

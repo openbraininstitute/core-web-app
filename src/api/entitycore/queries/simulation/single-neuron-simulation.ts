@@ -8,12 +8,12 @@ import { tryCatch } from '@/api/utils';
 import { SingleNeuronSimulation } from '@/entity-configuration/domain/simulation';
 import { compactRecord } from '@/utils/dictionary';
 
-import type { EntityExpandParam } from '@/api/entitycore/types/entities/derivation';
 import type {
   ISingleNeuronSimulation,
   ISingleNeuronSimulationFilter,
   TCreateSingleNeuronSimulation,
 } from '@/api/entitycore/types/entities/single-neuron-simulation';
+import type { TAnyEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 import type { SimulationPayload } from '@/types/small-scale-simulator/single-neuron';
@@ -35,7 +35,7 @@ export async function getSingleNeuronSimulation({
   options?: {
     next?: NextFetchRequestConfig;
   };
-  expand?: ReadonlyArray<EntityExpandParam>;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<ISingleNeuronSimulation>(`${baseUri}/${id}`, {
@@ -70,7 +70,7 @@ export async function getSingleNeuronSimulations({
   withFacets?: boolean;
   filters?: Partial<ISingleNeuronSimulationFilter>;
   context?: WorkspaceContext | null;
-  expand?: ReadonlyArray<EntityExpandParam>;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<ISingleNeuronSimulation>>(baseUri, {

@@ -1,4 +1,3 @@
-import type { EntityExpandParam } from '@/api/entitycore/types/entities/derivation';
 /* eslint-disable no-param-reassign */
 
 import some from 'es-toolkit/compat/some';
@@ -17,6 +16,7 @@ import type {
   TCreateSingleNeuronSynaptome,
   TSingleNeuronSynaptomeConfiguration,
 } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import type { TAnyEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -43,7 +43,7 @@ export async function getSingleNeuronSynaptomes({
   withFacets?: boolean;
   filters?: Partial<ISingleNeuronSynaptomeFilter>;
   context?: WorkspaceContext | null;
-  expand?: ReadonlyArray<EntityExpandParam>;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<ISingleNeuronSynaptome>>(baseUri, {
@@ -78,7 +78,7 @@ export async function getSingleNeuronSynaptome({
 }: {
   id: string;
   context?: WorkspaceContext | null;
-  expand?: ReadonlyArray<EntityExpandParam>;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<ISingleNeuronSynaptome>(`${baseUri}/${id}`, {

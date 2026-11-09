@@ -1,6 +1,6 @@
 import type { TEntityTypeDict } from '@/api/entitycore/types';
-import type { EntityExpandParam } from '@/api/entitycore/types/entities/derivation';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TAnyEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { AssetLabel, EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { TDetailViewSectionDict } from '@/entity-configuration/definitions/types';
@@ -23,7 +23,7 @@ export type EntityCoreTypeConfig<
   T extends EntityCoreIdentifiable,
   S = never, // single endpoint
   L = never, // List endpoint
-  E extends string = EntityExpandParam, // `expand` values the endpoint accepts
+  E extends string = TAnyEntityExpandParam, // `expand` values the endpoint accepts
 > = {
   group: TEntityTypeGroup;
   extendedType: TExtendedEntitiesTypeDict;

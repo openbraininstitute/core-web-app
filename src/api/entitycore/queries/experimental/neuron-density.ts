@@ -2,11 +2,11 @@ import z from 'zod';
 
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 
-import type { EntityExpandParam } from '@/api/entitycore/types/entities/derivation';
 import type {
   ExperimentalNeuronDensityFilter,
   IExperimentalNeuronDensity,
 } from '@/api/entitycore/types/entities/neuron-density';
+import type { TAnyEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -27,7 +27,7 @@ export async function getExperimentalNeuronDensities({
   withFacets?: boolean;
   filters?: ExperimentalNeuronDensityFilter;
   context?: WorkspaceContext | null;
-  expand?: ReadonlyArray<EntityExpandParam>;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IExperimentalNeuronDensity>>(baseUri, {
@@ -58,7 +58,7 @@ export async function getExperimentalNeuronDensity({
 }: {
   id: string;
   context?: WorkspaceContext | null;
-  expand?: ReadonlyArray<EntityExpandParam>;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<IExperimentalNeuronDensity>(`${baseUri}/${id}`, {

@@ -6,12 +6,12 @@ import { entityCoreApi, getAssetElement, getEntityCoreContext } from '@/api/enti
 import { tryCatch } from '@/api/utils';
 import { SingleNeuronSynaptomeSimulation } from '@/entity-configuration/domain/simulation';
 
-import type { EntityExpandParam } from '@/api/entitycore/types/entities/derivation';
 import type {
   ISingleNeuronSynaptomeSimulation,
   ISingleNeuronSynaptomeSimulationFilter,
   TCreateSingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types/entities/single-neuron-synaptome-simulation';
+import type { TAnyEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 import type { SimulationPayload } from '@/types/small-scale-simulator/single-neuron';
@@ -32,7 +32,7 @@ export async function getSingleNeuronSynaptomeSimulation({
 }: {
   id: string;
   context?: WorkspaceContext | null;
-  expand?: ReadonlyArray<EntityExpandParam>;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<ISingleNeuronSynaptomeSimulation>(`${baseUri}/${id}`, {
@@ -66,7 +66,7 @@ export async function getSingleNeuronSynaptomeSimulations({
   withFacets?: boolean;
   filters?: Partial<ISingleNeuronSynaptomeSimulationFilter>;
   context?: WorkspaceContext | null;
-  expand?: ReadonlyArray<EntityExpandParam>;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<ISingleNeuronSynaptomeSimulation>>(baseUri, {

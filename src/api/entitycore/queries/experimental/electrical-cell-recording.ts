@@ -3,11 +3,11 @@ import z from 'zod';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
 
-import type { EntityExpandParam } from '@/api/entitycore/types/entities/derivation';
 import type {
   ElectricalCellRecordingFilter,
   IElectricalCellRecording,
 } from '@/api/entitycore/types/entities/electrical-cell-recording';
+import type { TAnyEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -28,7 +28,7 @@ export async function getElectricalCellRecordings({
   withFacets?: boolean;
   filters?: ElectricalCellRecordingFilter;
   context?: WorkspaceContext | null;
-  expand?: ReadonlyArray<EntityExpandParam>;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IElectricalCellRecording>>(baseUri, {
@@ -59,7 +59,7 @@ export async function getElectricalCellRecording({
 }: {
   id: string;
   context?: WorkspaceContext | null;
-  expand?: ReadonlyArray<EntityExpandParam>;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<IElectricalCellRecording>(`${baseUri}/${id}`, {
