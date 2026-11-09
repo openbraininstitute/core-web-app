@@ -258,7 +258,8 @@ export function BrainTrio() {
 
 /**
  * A simulation campaign being set up and generated on the Male CNS's LIF model, from the user's recording
- * "2. Simulation Configuration + Generation", its menu bar cropped.
+ * "2. Simulation Configuration + Generation", its menu bar cropped, cut down to three moments of configuration at
+ * 1.25x (10 s): naming the campaign, filtering a neuron set beside the 3D brain, then stimulus and recordings.
  */
 export const CONFIGURATION_VIDEO = {
   src: '/images/start/walkthrough/simulation-configuration.mp4',
