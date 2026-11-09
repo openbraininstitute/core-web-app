@@ -241,15 +241,14 @@
   }
 }
 
-/* The approved layered artwork is contained, with no rectangular photo frame. */
+/* The imported tile stage spans the hero; its own left side stays white for copy. */
 .immersive .media.hexagonMedia {
-  inset: auto 8vw auto auto;
-  top: 50%;
-  transform: translateY(-50%);
-  width: min(84vw, calc(75svh * 16 / 9));
-  height: auto;
-  aspect-ratio: 16 / 9;
-  overflow: visible;
+  inset: 0;
+  transform: none;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  overflow: hidden;
 }
 
 .immersive .media.hexagonMedia::after {
@@ -267,8 +266,8 @@
     inset: auto;
     transform: none;
     width: calc(100% + 40px);
-    height: auto;
-    max-height: 75svh;
+    height: clamp(280px, 48svh, 440px);
+    max-height: none;
     margin-inline: -20px;
   }
 }

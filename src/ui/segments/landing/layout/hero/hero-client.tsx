@@ -10,8 +10,8 @@ import { EnumSection } from '@/ui/segments/landing/sections/sections';
 import { getSection } from '@/ui/segments/landing/utils';
 import { classNames } from '@/util/utils';
 
-import { HEXAGON_ARTWORKS } from './hexagon-artworks';
-import HexagonHero from './hexagon-hero';
+import HexaTileHero from './hexa-tile-hero';
+import { InformationDescription, InformationTitle } from './information-text';
 import NextPanel from './next-panel';
 
 import type { ContentForHero } from '@/services/sanity/api/get-hero-content';
@@ -37,10 +37,14 @@ export default function HeroClient({ className, section, data }: HeroClientProps
     next,
   } = data;
   const [videoReady, setVideoReady] = React.useState(false);
-  const hasMedia = backgroundType === 'video' || (backgroundType === 'image' && Boolean(imageURL));
+  const [flipCycle, setFlipCycle] = React.useState(0);
+  const onImageFlip = React.useCallback((cycle: number) => setFlipCycle(cycle), []);
+  const tileAnimation = section !== EnumSection.Home;
+  const hasMedia =
+    tileAnimation ||
+    backgroundType === 'video' ||
+    (backgroundType === 'image' && Boolean(imageURL));
   const sectionSlug = getSection(section).slug.replace(/^\//, '') || 'home';
-  const hexagonArtwork =
-    hasMedia && section !== EnumSection.Home ? HEXAGON_ARTWORKS[sectionSlug] : undefined;
   const heroTestIdPrefix = `landing-${sectionSlug}-hero`;
   return (
     <div
@@ -50,16 +54,16 @@ export default function HeroClient({ className, section, data }: HeroClientProps
         styles.hero,
         hasMedia ? styles.withMedia : styles.wordsOnly,
         hasMedia && section !== EnumSection.Home && styles.immersive,
-        hexagonArtwork && styles.hexagonHero
+        tileAnimation && styles.hexagonHero
       )}
     >
       {hasMedia && (
         <div
-          className={classNames(styles.media, hexagonArtwork && styles.hexagonMedia)}
+          className={classNames(styles.media, tileAnimation && styles.hexagonMedia)}
           data-header-media
         >
-          {hexagonArtwork && <HexagonHero key={hexagonArtwork.mosaic} artwork={hexagonArtwork} />}
-          {!hexagonArtwork && backgroundType === 'video' && (
+          {tileAnimation && <HexaTileHero key={sectionSlug} onFlip={onImageFlip} />}
+          {!tileAnimation && backgroundType === 'video' && (
             <>
               {posterURL && posterWidth && posterHeight && (
                 <ProgressiveImage
@@ -83,7 +87,7 @@ export default function HeroClient({ className, section, data }: HeroClientProps
               />
             </>
           )}
-          {!hexagonArtwork && backgroundType === 'image' && imageURL && (
+          {!tileAnimation && backgroundType === 'image' && imageURL && (
             <Image
               src={imageURL}
               alt=""
@@ -97,18 +101,19 @@ export default function HeroClient({ className, section, data }: HeroClientProps
       )}
       {section === EnumSection.ComingSoon ? (
         <div className={styles.comingSoon}>
-          <ComingSoon />
+          <ComingSoon cycle={flipCycle} />
         </div>
       ) : (
         <div className={styles.text}>
           <div className="flex flex-col items-center">
             <h1
               className={styles.largeTitle}
+              aria-label={tileAnimation ? title : undefined}
               data-testid={
                 section === EnumSection.Home ? 'home-hero-heading' : `${heroTestIdPrefix}-heading`
               }
             >
-              {title}
+              {tileAnimation ? <InformationTitle text={title} cycle={flipCycle} /> : title}
             </h1>
             {section === EnumSection.Home && (
               <Link
@@ -124,7 +129,15 @@ export default function HeroClient({ className, section, data }: HeroClientProps
                 </div>
               </Link>
             )}
-            {content && <div className={styles.content}>{content}</div>}
+            {content && (
+              <div className={styles.content}>
+                {tileAnimation ? (
+                  <InformationDescription text={content} cycle={flipCycle} />
+                ) : (
+                  content
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -135,7 +148,7 @@ export default function HeroClient({ className, section, data }: HeroClientProps
   );
 }
 
-function ComingSoon() {
+function ComingSoon({ cycle }: { cycle: number }) {
   return (
     <main
       className={classNames(
@@ -146,8 +159,11 @@ function ComingSoon() {
     >
       <div className="flex flex-col items-start justify-start">
         <div className="animate-fade-in mb-6">
-          <h1 className="mb-4 font-serif text-4xl font-bold tracking-[0.040em] text-primary-9 select-none sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl">
-            Releasing soon
+          <h1
+            aria-label="Releasing soon"
+            className="mb-4 font-serif text-4xl font-bold tracking-[0.040em] text-primary-9 select-none sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl"
+          >
+            <InformationTitle text="Releasing soon" cycle={cycle} />
           </h1>
           <p className="mx-auto mr-4 max-w-3xl text-justify text-lg font-medium text-primary-9 select-none sm:text-left md:text-xl">
             The platform will be launched soon with access to features such as single cell modeling

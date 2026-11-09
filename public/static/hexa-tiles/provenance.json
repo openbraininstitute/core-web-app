@@ -1,0 +1,6 @@
+{
+  "source": "User-provided HexaTile_Export_V2",
+  "visuals": ["flywire.png", "full-brain.png", "microcircuit.png"],
+  "animation": "Original WebGL instanced tile renderer, hover lift, cube flips, shadows and 20-frame shine sweep. Adapted to scoped React lifecycle without sample UI or text.",
+  "font": "Titillium Web, weights 300, 600, 700; extracted supplied WOFF2 faces."
+}

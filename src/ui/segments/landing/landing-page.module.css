@@ -178,3 +178,36 @@
 .landingPage a[href^="mailto:subscription@"]:hover {
   background-color: #00428b;
 }
+
+/* Use the exported page's self-hosted typeface throughout information pages only. */
+.informationPage {
+  --font-sans-serif: var(--font-info-titillium), Arial, sans-serif;
+  --font-serif: var(--font-info-titillium), Arial, sans-serif;
+  font-family: var(--font-info-titillium), Arial, sans-serif;
+  font-weight: 300;
+}
+.informationPage
+  :where(
+    h1,
+    h2,
+    h3,
+    h4,
+    p,
+    a,
+    button,
+    input,
+    textarea,
+    select,
+    label,
+    summary,
+    small,
+    li,
+    dt,
+    dd,
+    figcaption
+  ) {
+  font-family: var(--font-info-titillium), Arial, sans-serif;
+}
+.informationPage h1 {
+  font-weight: 300;
+}

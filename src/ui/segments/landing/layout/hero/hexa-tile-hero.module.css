@@ -1,0 +1,38 @@
+.artwork {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: white;
+}
+.stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1920px;
+  height: 1080px;
+  transform-origin: 0 0;
+}
+.canvas {
+  display: block;
+  width: 1920px;
+  height: 1080px;
+}
+.fallback {
+  pointer-events: none;
+  position: absolute;
+  left: 840px;
+  top: 187px;
+  width: 1000px;
+  height: 666px;
+  object-fit: contain;
+}
+.tint {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    circle 1300px at 100% 100%,
+    rgb(204 224 248 / 45%),
+    rgb(204 224 248 / 0%)
+  );
+}

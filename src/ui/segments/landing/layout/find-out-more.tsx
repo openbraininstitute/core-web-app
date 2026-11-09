@@ -2,6 +2,7 @@
 
 import { RiArrowDownSLine, RiMenuLine } from '@remixicon/react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useRef } from 'react';
 
 import { learnFonts } from '@/features/learn/fonts';
@@ -14,7 +15,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/ui/molecules/dropdown-menu';
-import { MENU_ITEMS } from '@/ui/segments/landing/constants';
+import { MENU_ITEMS, SECTIONS } from '@/ui/segments/landing/constants';
+import { informationFont } from '@/ui/segments/landing/information-font';
 import { cn } from '@/utils/css-class';
 
 import { useHeaderContrast } from './use-header-contrast';
@@ -25,6 +27,10 @@ import { useHeaderContrast } from './use-header-contrast';
  */
 export function FindOutMore({ shown = true }: { shown?: boolean }) {
   const trigger = useRef<HTMLButtonElement>(null);
+  const pathname = usePathname();
+  const informationPage = SECTIONS.some(
+    (page) => page.slug !== '/' && (pathname === page.slug || pathname.startsWith(`${page.slug}/`))
+  );
   const light = useHeaderContrast(trigger);
   return (
     <div
@@ -53,7 +59,11 @@ export function FindOutMore({ shown = true }: { shown?: boolean }) {
           align="start"
           sideOffset={14}
           className={cn('border-neutral-1 z-[1000] w-44 rounded-xl bg-white p-1', learnFonts)}
-          style={{ fontFamily: 'var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif' }}
+          style={{
+            fontFamily: informationPage
+              ? informationFont.style.fontFamily
+              : 'var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif',
+          }}
         >
           {MENU_ITEMS.map((item) => (
             <DropdownMenuGroup key={item.caption}>

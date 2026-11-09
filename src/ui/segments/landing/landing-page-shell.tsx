@@ -4,6 +4,7 @@ import { learnFonts } from '@/features/learn/fonts';
 import { InvitationErrorDialog } from '@/ui/segments/invites/error-dialog';
 import { classNames } from '@/util/utils';
 
+import { informationFont } from './information-font';
 import SectionRail from './layout/section-rail';
 import { EnumSection } from './sections/sections';
 
@@ -48,7 +49,13 @@ export default function LandingPageShell({
 
   return (
     <div
-      className={classNames(className, learnFonts, styles.landingPage, snaps && 'landing-page-snap')}
+      className={classNames(
+        className,
+        learnFonts,
+        styles.landingPage,
+        section !== EnumSection.Home && `${informationFont.variable} ${styles.informationPage}`,
+        snaps && 'landing-page-snap'
+      )}
     >
       <AntdRegistry>{children}</AntdRegistry>
       {snaps && <SectionRail />}
