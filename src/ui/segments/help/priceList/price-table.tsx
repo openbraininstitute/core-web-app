@@ -18,6 +18,10 @@ const SimpleGrid = dynamic(() =>
   import('@/features/data-grid/presets/simple-grid').then((m) => m.SimpleGrid)
 ) as typeof EagerSimpleGrid;
 
+// SimpleGrid's default header and row heights; reserving them keeps the content below still while AG Grid loads
+const GRID_HEADER_HEIGHT = 48;
+const GRID_ROW_HEIGHT = 44;
+
 type PriceTableProps = {
   prices: SinglePrice[];
   creditsPacks: CreditsPack[];
@@ -147,11 +151,15 @@ export default function PriceTable({
           >
             Credits
           </h3>
-          <SimpleGrid<CreditsPack>
-            columns={creditsPackColumns}
-            rows={sortedCreditsPacks}
-            getRowId={(record) => `credits-${record.quantity}-${record.price}-${record.discount}`}
-          />
+          <div
+            style={{ minHeight: GRID_HEADER_HEIGHT + sortedCreditsPacks.length * GRID_ROW_HEIGHT }}
+          >
+            <SimpleGrid<CreditsPack>
+              columns={creditsPackColumns}
+              rows={sortedCreditsPacks}
+              getRowId={(record) => `credits-${record.quantity}-${record.price}-${record.discount}`}
+            />
+          </div>
         </div>
       )}
     </div>

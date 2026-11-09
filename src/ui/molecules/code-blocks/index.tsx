@@ -7,7 +7,6 @@ import {
   type HTMLAttributes,
   useContext,
   useEffect,
-  useRef,
   useState,
 } from 'react';
 
@@ -115,20 +114,35 @@ export function CodeBlock({
   ...props
 }: CodeBlockProps) {
   const [html, setHtml] = useState<string>('');
-  const mounted = useRef(false);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    highlightCode(code, language, showLineNumbers).then((highlighted) => {
-      if (!mounted.current) {
+    // per-run flag: a highlight that resolves after code changed must not overwrite the newer one
+    let cancelled = false;
+    highlightCode(code, language, showLineNumbers).then(
+      (highlighted) => {
+        if (cancelled) return;
         setHtml(highlighted);
-        mounted.current = true;
+        setFailed(false);
+      },
+      // the shiki chunk failed to load (e.g. a stale tab after a deploy): show the code unhighlighted
+      () => {
+        if (!cancelled) setFailed(true);
       }
-    });
+    );
 
     return () => {
-      mounted.current = false;
+      cancelled = true;
     };
   }, [code, language, showLineNumbers]);
+
+  const contentClass = cn(
+    '[&>pre]:bg-background! [&>pre]:text-foreground! [&_code]:font-mono [&_code]:text-sm [&>pre]:m-0 [&>pre]:p-4 [&>pre]:text-sm',
+    scrollableX
+      ? 'secondary-scrollbar overflow-x-auto overflow-y-hidden [&>pre]:min-w-max [&>pre]:w-max'
+      : 'overflow-hidden',
+    contentClassName
+  );
 
   return (
     <CodeBlockContext.Provider value={{ code, language }}>
@@ -142,17 +156,19 @@ export function CodeBlock({
       >
         {children}
         <div className="relative">
-          <div
-            className={cn(
-              '[&>pre]:bg-background! [&>pre]:text-foreground! [&_code]:font-mono [&_code]:text-sm [&>pre]:m-0 [&>pre]:p-4 [&>pre]:text-sm',
-              scrollableX
-                ? 'secondary-scrollbar overflow-x-auto overflow-y-hidden [&>pre]:min-w-max [&>pre]:w-max'
-                : 'overflow-hidden',
-              contentClassName
-            )}
-            // biome-ignore lint/security/noDangerouslySetInnerHtml: required
-            dangerouslySetInnerHTML={{ __html: html }}
-          />
+          {failed ? (
+            <div className={contentClass}>
+              <pre>
+                <code>{code}</code>
+              </pre>
+            </div>
+          ) : (
+            <div
+              className={contentClass}
+              // biome-ignore lint/security/noDangerouslySetInnerHtml: required
+              dangerouslySetInnerHTML={{ __html: html }}
+            />
+          )}
         </div>
       </div>
     </CodeBlockContext.Provider>

@@ -8,18 +8,23 @@ import {
   WorkspaceActions,
 } from '@/ui/segments/workspaces/space-manager/event';
 
-vi.mock('@/features/ai-assistant', () => ({
-  default: () => <div data-testid="ai-assistant-stub" />,
-}));
+// set by the mock factories, which run only when the module is first imported
+const loaded = vi.hoisted(() => ({ aiAssistant: false, modal: false }));
+
+vi.mock('@/features/ai-assistant', () => {
+  loaded.aiAssistant = true;
+  return { default: () => <div data-testid="ai-assistant-stub" /> };
+});
 
 vi.mock('@/features/feature-flags', () => ({
   aiButtonFlag: { key: 'aiButton' },
   useFlag: () => false,
 }));
 
-vi.mock('@/ui/segments/workspaces/space-manager/modal', () => ({
-  WorkspaceManagerModal: () => <div data-testid="workspace-manager-modal-stub" />,
-}));
+vi.mock('@/ui/segments/workspaces/space-manager/modal', () => {
+  loaded.modal = true;
+  return { WorkspaceManagerModal: () => <div data-testid="workspace-manager-modal-stub" /> };
+});
 
 vi.mock('@/ui/hooks/use-workspace', () => ({
   useWorkspace: () => ({ virtualLabId: 'vlab-1', projectId: 'project-1' }),
@@ -28,6 +33,7 @@ vi.mock('@/ui/hooks/use-workspace', () => ({
 describe('lazy-loaded layout panels', () => {
   it('loads the AI assistant when the collapsed panel is expanded', async () => {
     render(<AiContainer />);
+    expect(loaded.aiAssistant).toBe(false);
     expect(screen.queryByTestId('ai-assistant-stub')).toBeNull();
 
     fireEvent.click(screen.getByTestId('ai-assistant-open-button'));
@@ -37,6 +43,7 @@ describe('lazy-loaded layout panels', () => {
 
   it('loads the workspace manager modal when its open event fires', async () => {
     render(<SpaceManagerContainer />);
+    expect(loaded.modal).toBe(false);
     expect(screen.queryByTestId('workspace-manager-modal-stub')).toBeNull();
 
     act(() => {
