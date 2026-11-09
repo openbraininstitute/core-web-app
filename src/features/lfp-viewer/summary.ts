@@ -19,6 +19,13 @@ const blocksSchema = z.object({
   chunks: z.string(),
   /** Bins per block, the last one padded. */
   steps: z.number().int().positive(),
+  /** µV per int16 unit of each block, group × contact × block, where not the group's. */
+  scales: z.string().optional(),
+  /**
+   * How many times each block's values were taken less the one before, group × contact × block,
+   * where they were.
+   */
+  predictors: z.string().optional(),
 });
 
 const levelSchema = z.object({
@@ -26,15 +33,6 @@ const levelSchema = z.object({
   kind: z.enum(['value', 'mean', 'min_max']),
   dataset: z.string(),
   blocks: blocksSchema,
-});
-
-const rowsSchema = levelSchema.extend({
-  blocks: blocksSchema.extend({
-    /** µV per int16 unit of each block: group × contact × block. */
-    scales: z.string(),
-    /** How many times each block's values were taken less the one before: group × contact × block. */
-    predictors: z.string(),
-  }),
 });
 
 const axisSchema = z.object({
@@ -49,7 +47,7 @@ const axisSchema = z.object({
    * the total's by min/max, a group's by means, which add up. A short run's one overview is its
    * values.
    */
-  levels: z.tuple([rowsSchema, levelSchema], levelSchema),
+  levels: z.tuple([levelSchema, levelSchema], levelSchema),
   stats: z.string(),
   psd: z.string(),
   psd_frequencies: z.array(z.number()),
@@ -214,26 +212,67 @@ async function readSomeRanges(
   const single = /bytes (\d+)-/.exec(response.headers.get('content-range') ?? '')?.[1];
   if (!boundary && !single) throw new Error('The LFP summary was not read by range');
   const parts = boundary ? multipartParts(bytes, boundary) : [{ start: Number(single), bytes }];
-  return ranges.map(({ offset, length }) => {
-    const part = parts.find(
-      (p) => p.start <= offset && offset + length <= p.start + p.bytes.length
-    );
-    if (!part) throw new Error('The LFP summary was cut short');
-    return part.bytes.subarray(offset - part.start, offset - part.start + length);
-  });
+  return ranges.map((range) =>
+    bytesOf(
+      parts.find((part) => holds(part, range)),
+      range
+    )
+  );
 }
 
-/** Ranges' bytes, in the order given, with as few requests as the server takes. */
+const holds = (part: Part, { offset, length }: ByteRange) =>
+  part.start <= offset && offset + length <= part.start + part.bytes.length;
+
+function bytesOf(part: Part | undefined, range: ByteRange): Uint8Array<ArrayBuffer> {
+  if (!part || !holds(part, range)) throw new Error('The LFP summary was cut short');
+  const at = range.offset - part.start;
+  return part.bytes.subarray(at, at + range.length);
+}
+
+/** The part of parts in the order of the file that a range would lie in. */
+function partAt(parts: readonly Part[], offset: number): Part | undefined {
+  let [low, high] = [0, parts.length - 1];
+  while (low < high) {
+    const middle = (low + high + 1) >> 1;
+    if (parts[middle].start <= offset) low = middle;
+    else high = middle - 1;
+  }
+  return parts[low];
+}
+
+/** Ranges that touch or overlap as one, in the order of the file. */
+export function mergedRanges(ranges: readonly ByteRange[]): ByteRange[] {
+  const merged: ByteRange[] = [];
+  for (const { offset, length } of [...ranges].sort((a, b) => a.offset - b.offset)) {
+    const last = merged[merged.length - 1];
+    if (last && offset <= last.offset + last.length) {
+      last.length = Math.max(last.length, offset + length - last.offset);
+    } else merged.push({ offset, length });
+  }
+  return merged;
+}
+
+/**
+ * Ranges' bytes, in the order given, with as few requests as the server takes: those that touch
+ * asked for as one, as a group's chunks of a level mostly do.
+ */
 export async function readRanges(
   request: LfpSummaryRequest,
   ranges: readonly ByteRange[],
   signal?: AbortSignal
 ): Promise<Uint8Array<ArrayBuffer>[]> {
+  const merged = mergedRanges(ranges);
   const requests = [];
-  for (let i = 0; i < ranges.length; i += MAX_RANGES_PER_REQUEST) {
-    requests.push(readSomeRanges(request, ranges.slice(i, i + MAX_RANGES_PER_REQUEST), signal));
+  for (let i = 0; i < merged.length; i += MAX_RANGES_PER_REQUEST) {
+    const some = merged.slice(i, i + MAX_RANGES_PER_REQUEST);
+    requests.push(
+      readSomeRanges(request, some, signal).then((read) =>
+        read.map((bytes, j): Part => ({ start: some[j].offset, bytes }))
+      )
+    );
   }
-  return (await Promise.all(requests)).flat();
+  const parts = (await Promise.all(requests)).flat();
+  return ranges.map((range) => bytesOf(partAt(parts, range.offset), range));
 }
 
 /** A slice of a dataset's bytes, copied to a buffer of their own to be read as their type. */
@@ -259,20 +298,36 @@ export async function inflateRow(
   return row;
 }
 
-/** Where a group's blocks of a level lie: contact × block × (offset, size). */
-export async function readChunkTable(
+/**
+ * Where a group's blocks of a level lie, contact × block × (offset, size), and, where stored, each
+ * block's scale and order of prediction, contact × block.
+ */
+export type BlockCoding = { table: BigUint64Array; scales?: Float32Array; predictors?: Uint8Array };
+
+export async function readBlockCoding(
   read: ReadRange,
   index: LfpSummaryIndex,
   level: LfpAxis['levels'][number],
   group: number
-): Promise<BigUint64Array> {
-  return new BigUint64Array(await readSlice(read, datasetOf(index, level.blocks.chunks), [group]));
+): Promise<BlockCoding> {
+  const { chunks, scales, predictors } = level.blocks;
+  const slice = (name: string) => readSlice(read, datasetOf(index, name), [group]);
+  const [table, scaleBytes, predictorBytes] = await Promise.all([
+    slice(chunks),
+    scales ? slice(scales) : undefined,
+    predictors ? slice(predictors) : undefined,
+  ]);
+  return {
+    table: new BigUint64Array(table),
+    scales: scaleBytes && new Float32Array(scaleBytes),
+    predictors: predictorBytes && new Uint8Array(predictorBytes),
+  };
 }
 
 /** The level an axis is overviewed at: its coarsest, at most the format's 2,048 bins. */
 export const overviewAt = (axis: LfpAxis) => axis.levels.length - 1;
 
-/** A group's whole field at an overview level, every contact, its tiles one after another. */
+/** A group's whole field at a level, every contact, its tiles one after another. */
 export async function readField(
   read: ReadRange,
   index: LfpSummaryIndex,
@@ -280,33 +335,18 @@ export async function readField(
   group: number,
   levelAt: number
 ): Promise<LfpField> {
-  const { level, bins, tileBins, width, count } = levelTiling(index, axis, levelAt);
-  const table = await readChunkTable(read, index, level, group);
-  const { contacts } = index;
+  const coding = await readBlockCoding(read, index, axis.levels[levelAt], group);
+  const tileIds = Array.from({ length: levelTiling(index, axis, levelAt).count }, (_, t) => t);
   const tiles = await Promise.all(
-    Array.from({ length: contacts * count }, (_, at) =>
-      readTile(
-        read,
-        index,
-        axis,
-        { contact: Math.floor(at / count), levelAt, tile: at % count },
-        table
+    Array.from({ length: index.contacts }, (_, contact) =>
+      Promise.all(
+        tileIds.map((tile) =>
+          readTile(read, index, axis, { group, contact, levelAt, tile }, coding)
+        )
       )
     )
   );
-  const data = new Int16Array(contacts * bins * width);
-  tiles.forEach((tile, at) => {
-    data.set(tile, (Math.floor(at / count) * bins + (at % count) * tileBins) * width);
-  });
-  return {
-    contacts,
-    bins,
-    binMs: level.step * index.time.dt,
-    start: index.time.start,
-    kind: level.kind,
-    data,
-    scale: axis.scales[group],
-  };
+  return windowField(index, axis, group, levelAt, tileIds, tiles);
 }
 
 /** A group's stats and spectra, each per contact. */
@@ -333,30 +373,6 @@ export async function readContactShares(
   return new Float32Array(await readSlice(read, datasetOf(index, axis.contact_shares), [group]));
 }
 
-/** Where a group's blocks at full resolution lie, and how each is stored: contact × block each. */
-export type BlocksIndex = { table: BigUint64Array; scales: Float32Array; predictors: Uint8Array };
-
-/** A group's block scales and orders of prediction: contact × block. */
-export async function readBlockCoding(
-  read: ReadRange,
-  index: LfpSummaryIndex,
-  axis: LfpAxis,
-  group: number
-): Promise<Pick<BlocksIndex, 'scales' | 'predictors'>> {
-  const { scales, predictors } = axis.levels[0].blocks;
-  const [scaleBytes, predictorBytes] = await Promise.all([
-    readSlice(read, datasetOf(index, scales), [group]),
-    readSlice(read, datasetOf(index, predictors), [group]),
-  ]);
-  return { scales: new Float32Array(scaleBytes), predictors: new Uint8Array(predictorBytes) };
-}
-
-/** An axis's blocks: how many steps each holds, and how many a row has. */
-export function blocksOf(index: LfpSummaryIndex, axis: LfpAxis) {
-  const length = axis.levels[0].blocks.steps;
-  return { length, count: Math.ceil(index.time.steps / length) };
-}
-
 /** Where a contact's block of a level lies, deflated, by its group's chunk table. */
 export function blockRange(
   table: BigUint64Array,
@@ -368,17 +384,10 @@ export function blockRange(
   return { offset: Number(table[at]), length: Number(table[at + 1]) };
 }
 
-/** A block's values, its padding left off, from its own scale to the group's. */
-export function toGroupScale(
-  values: Int16Array,
-  steps: number,
-  blockScale: number,
-  scale: number
-): Int16Array {
+/** A block's values from its own scale to the group's. */
+export function toGroupScale(values: Int16Array, blockScale: number, scale: number): Int16Array {
   const ratio = blockScale / scale;
-  const out = new Int16Array(steps);
-  for (let i = 0; i < steps; i++) out[i] = Math.round(values[i] * ratio);
-  return out;
+  return values.map((v) => Math.round(v * ratio));
 }
 
 /**
@@ -390,22 +399,6 @@ export function undoResiduals(residuals: Int16Array, order: number): Int16Array 
     for (let i = 1; i < residuals.length; i++) residuals[i] += residuals[i - 1];
   }
   return residuals;
-}
-
-/** A contact's block at full resolution, to its group's scale. */
-export async function readBlock(
-  read: ReadRange,
-  index: LfpSummaryIndex,
-  axis: LfpAxis,
-  at: { group: number; contact: number; block: number },
-  { table, scales, predictors }: BlocksIndex
-): Promise<Int16Array> {
-  const { length, count } = blocksOf(index, axis);
-  const { group, contact, block } = at;
-  const residuals = await inflateRow(await read(blockRange(table, count, contact, block)));
-  const values = undoResiduals(residuals, predictors[contact * count + block]);
-  const steps = Math.min(length, index.time.steps - block * length);
-  return toGroupScale(values, steps, scales[contact * count + block], axis.scales[group]);
 }
 
 /**
@@ -453,17 +446,24 @@ export function windowTiles(
   return tiles;
 }
 
-/** A contact's tile of an overview level, by its group's chunk table: to the group's scale already. */
+/**
+ * A contact's tile of a level, by its group's block coding: its padding left off, its residuals
+ * added back up and brought to the group's scale where it was stored so.
+ */
 export async function readTile(
   read: ReadRange,
   index: LfpSummaryIndex,
   axis: LfpAxis,
-  at: { contact: number; levelAt: number; tile: number },
-  table: BigUint64Array
+  at: { group: number; contact: number; levelAt: number; tile: number },
+  { table, scales, predictors }: BlockCoding
 ): Promise<Int16Array> {
   const { bins, tileBins, count, width } = levelTiling(index, axis, at.levelAt);
-  const values = await inflateRow(await read(blockRange(table, count, at.contact, at.tile)));
-  return values.subarray(0, Math.min(tileBins, bins - at.tile * tileBins) * width);
+  const block = at.contact * count + at.tile;
+  const stored = await inflateRow(await read(blockRange(table, count, at.contact, at.tile)));
+  // Prefix sums only look back, so the padding can go first
+  const cut = stored.subarray(0, Math.min(tileBins, bins - at.tile * tileBins) * width);
+  const values = undoResiduals(cut, predictors?.[block] ?? 0);
+  return scales ? toGroupScale(values, scales[block], axis.scales[at.group]) : values;
 }
 
 /**

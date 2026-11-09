@@ -8,16 +8,13 @@ import {
 } from '@/api/small-scale-simulator/simulation-result/lfp-summary';
 import { contactPositions } from '@/features/lfp-viewer/contacts';
 import {
-  blocksOf,
   datasetOf,
   fieldStats,
   isLfpSummaryChanged,
   levelTiling,
   lfpSummaryIndexSchema,
   overviewAt,
-  readBlock,
   readBlockCoding,
-  readChunkTable,
   readContactShares,
   readField,
   readGroupStats,
@@ -39,7 +36,6 @@ import type {
 } from '@/api/small-scale-simulator/simulation-result/lfp-summary';
 import type { ContactBlock } from '@/features/lfp-viewer/contacts';
 import type {
-  BlocksIndex,
   ByteRange,
   GroupStats,
   LfpAxis,
@@ -269,26 +265,13 @@ const groupSharesQuery = (at: AxisRead, group: number) =>
     readContactShares(read, at.index, at.axis, group)
   );
 
-/** A group's chunk table of a level, read once and kept. */
-const chunkTable = (at: AxisRead, group: number, levelAt: number) =>
+/** A group's block coding of a level, read once and kept. */
+const blockCoding = (at: AxisRead, group: number, levelAt: number) =>
   at.queryClient.fetchQuery(
-    groupQuery(at, 'chunks', [group, levelAt], (read) =>
-      readChunkTable(read, at.index, at.axis.levels[levelAt], group)
+    groupQuery(at, 'blocks', [group, levelAt], (read) =>
+      readBlockCoding(read, at.index, at.axis.levels[levelAt], group)
     )
   );
-
-/** A group's chunk table, block scales and orders of prediction at full resolution. */
-const blocksIndex = async (at: AxisRead, group: number): Promise<BlocksIndex> => {
-  const [table, coding] = await Promise.all([
-    chunkTable(at, group, 0),
-    at.queryClient.fetchQuery(
-      groupQuery(at, 'block-coding', [group], (read) =>
-        readBlockCoding(read, at.index, at.axis, group)
-      )
-    ),
-  ]);
-  return { table, ...coding };
-};
 
 const ROWS_GC_MS = 60_000;
 
@@ -299,16 +282,16 @@ export const rowQuery = (at: AxisRead, group: number, contact: number) =>
     'row',
     [group, contact],
     async (read) => {
-      const blocksAt = await blocksIndex(at, group);
-      const { length, count } = blocksOf(at.index, at.axis);
+      const coding = await blockCoding(at, group, 0);
+      const { tileBins, count } = levelTiling(at.index, at.axis, 0);
       const blocks = await Promise.all(
-        Array.from({ length: count }, (_, block) =>
-          readBlock(read, at.index, at.axis, { group, contact, block }, blocksAt)
+        Array.from({ length: count }, (_, tile) =>
+          readTile(read, at.index, at.axis, { group, contact, levelAt: 0, tile }, coding)
         )
       );
       const row = new Int16Array(at.index.time.steps);
       blocks.forEach((block, b) => {
-        row.set(block, b * length);
+        row.set(block, b * tileBins);
       });
       return row;
     },
@@ -322,12 +305,8 @@ const tileQuery = (at: AxisRead, group: number, contact: number, levelAt: number
     'tile',
     [group, contact, levelAt, tile],
     async (read) => {
-      if (levelAt > 0) {
-        const table = await chunkTable(at, group, levelAt);
-        return readTile(read, at.index, at.axis, { contact, levelAt, tile }, table);
-      }
-      const blocksAt = await blocksIndex(at, group);
-      return readBlock(read, at.index, at.axis, { group, contact, block: tile }, blocksAt);
+      const coding = await blockCoding(at, group, levelAt);
+      return readTile(read, at.index, at.axis, { group, contact, levelAt, tile }, coding);
     },
     ROWS_GC_MS
   );

@@ -1,8 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
-  blocksOf,
-  readBlock,
+  levelTiling,
   readField,
   readTile,
   toGroupScale,
@@ -118,7 +117,7 @@ describe('windowTiles', () => {
     expect(windowTiles(index, axis, 0, [blockMs + 1, blockMs + 2])).toEqual([1]);
     const runMs = STEPS * 0.025;
     expect(windowTiles(index, axis, 0, [runMs - 1, runMs])).toEqual([61]);
-    expect(blocksOf(index, axis)).toEqual({ length: 65_536, count: 62 });
+    expect(levelTiling(index, axis, 0)).toMatchObject({ tileBins: 65_536, count: 62 });
   });
 });
 
@@ -165,13 +164,11 @@ describe('windowField', () => {
 describe('blocks', () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it('are brought to the group’s scale, their padding left off', () => {
-    expect(Array.from(toGroupScale(Int16Array.from([100, -6, 7, 0]), 3, 0.25, 0.5))).toEqual([
-      50, -3, 4,
-    ]);
+  it('are brought to the group’s scale', () => {
+    expect(Array.from(toGroupScale(Int16Array.from([100, -6, 7]), 0.25, 0.5))).toEqual([50, -3, 4]);
   });
 
-  it('are read by their chunk table and their own scales', async () => {
+  it('are read by their chunk table and their own scales, their padding left off', async () => {
     const shortRun = { ...index, time: { start: 0, dt: 0.025, steps: 65_536 + 3 } };
     const chunk = new Uint8Array(deflated([8, 9, 10, 0]));
     const file = new Uint8Array(600);
@@ -180,11 +177,11 @@ describe('blocks', () => {
     // One contact, two blocks; the second, of 3 steps, padded
     const table = BigUint64Array.from([BigInt(0), BigInt(0), BigInt(500), BigInt(chunk.length)]);
 
-    const values = await readBlock(
+    const values = await readTile(
       rangeReader({ url: 'u', headers: {} }),
       shortRun as unknown as LfpSummaryIndex,
       axis,
-      { group: 0, contact: 0, block: 1 },
+      { group: 0, contact: 0, levelAt: 0, tile: 1 },
       { table, scales: Float32Array.from([1, 1]), predictors: Uint8Array.from([0, 0]) }
     );
 
@@ -219,8 +216,8 @@ describe('tiles of an overview level', () => {
       rangeReader({ url: 'u', headers: {} }),
       index,
       axis,
-      { contact: 2, levelAt: 1, tile: 30 },
-      table
+      { group: 0, contact: 2, levelAt: 1, tile: 30 },
+      { table }
     );
 
     expect(Array.from(tile)).toEqual(values.slice(0, 2120 * 2));

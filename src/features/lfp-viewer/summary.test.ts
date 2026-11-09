@@ -12,7 +12,8 @@ import {
   isLfpSummaryChanged,
   LfpSummaryChangedError,
   lfpSummaryIndexSchema,
-  readChunkTable,
+  mergedRanges,
+  readBlockCoding,
   readRanges,
   readSlice,
   rowsField,
@@ -165,7 +166,7 @@ describe('rows in chunks', () => {
         step: 1,
         kind: 'value',
         dataset: '/lfp/mtype/rows',
-        blocks: { chunks: '/lfp/mtype/chunks', steps: 3, scales: '/lfp/mtype/block_scales' },
+        blocks: { chunks: '/lfp/mtype/chunks', steps: 3 },
       },
     ],
     scales: [1, 1],
@@ -192,7 +193,7 @@ describe('rows in chunks', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it("reads a group's table alone", async () => {
+  it("reads a group's table alone, where its blocks store no scales or orders", async () => {
     const fetchMock = vi.fn(
       async () =>
         new Response(tables[1].buffer, {
@@ -203,7 +204,11 @@ describe('rows in chunks', () => {
     vi.stubGlobal('fetch', fetchMock);
     const read = rangeReader(request);
 
-    expect(await readChunkTable(read, index, axis.levels[0], 1)).toEqual(tables[1]);
+    expect(await readBlockCoding(read, index, axis.levels[0], 1)).toEqual({
+      table: tables[1],
+      scales: undefined,
+      predictors: undefined,
+    });
     expect(fetchMock.mock.calls[0]).toEqual([
       'u',
       expect.objectContaining({ headers: { Range: 'bytes=72-103' } }),
@@ -244,6 +249,41 @@ describe('readRanges', () => {
     ]);
 
     expect(parts.map(text)).toEqual([text(file.slice(10, 12)), text(file.slice(12, 15))]);
+  });
+
+  it('asks for ranges that touch as one, each taken back out of it', async () => {
+    const fetchMock = vi.fn(answeringRanges(file));
+    vi.stubGlobal('fetch', fetchMock);
+    const asked = [
+      { offset: 20, length: 5 },
+      { offset: 3, length: 4 },
+      { offset: 7, length: 3 },
+      { offset: 10, length: 2 },
+    ];
+
+    const parts = await readRanges(request, asked);
+
+    expect(parts.map(text)).toEqual(
+      asked.map(({ offset, length }) => text(file.slice(offset, offset + length)))
+    );
+    expect(fetchMock.mock.calls[0]).toEqual([
+      'u',
+      expect.objectContaining({ headers: { Range: 'bytes=3-11,20-24' } }),
+    ]);
+  });
+
+  it('merges ranges that touch or overlap, not those a byte apart', () => {
+    expect(
+      mergedRanges([
+        { offset: 10, length: 5 },
+        { offset: 0, length: 10 },
+        { offset: 12, length: 2 },
+        { offset: 16, length: 1 },
+      ])
+    ).toEqual([
+      { offset: 0, length: 15 },
+      { offset: 16, length: 1 },
+    ]);
   });
 
   it('asks for at most 100 ranges a request, as more would be answered with the whole file', async () => {
