@@ -1,6 +1,5 @@
 import z from 'zod';
 
-import { toExpandQueryParam } from '@/api/entitycore/types/shared/expand';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 
 import type {
@@ -29,13 +28,12 @@ export async function getCellMorphologies({
   withFacets?: boolean;
   filters?: CellMorphologyFilter;
   context?: WorkspaceContext | null;
-  /** entitycore `expand` values, sent as repeated `expand=` params. */
   expand?: ReadonlyArray<TMeasurableEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<ICellMorphology | ICellMorphologyExpanded>>(baseUri, {
     queryParams: {
-      expand: toExpandQueryParam(expand),
+      expand,
       ...filters,
       with_facets: withFacets,
     },
@@ -67,7 +65,7 @@ export async function getCellMorphology({
   const api = await entityCoreApi();
   return await api.get<ICellMorphology | ICellMorphologyExpanded>(`${baseUri}/${id}`, {
     queryParams: {
-      expand: toExpandQueryParam(expand),
+      expand,
     },
     headers: {
       accept: 'application/json',

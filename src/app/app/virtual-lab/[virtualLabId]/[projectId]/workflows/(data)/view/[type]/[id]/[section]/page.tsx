@@ -32,7 +32,6 @@ export default async function Page({
       type: snakeCase(type) as TExtendedEntitiesTypeDict,
       ctx: context,
       id,
-      expand: entityType.api.config.entityExpand,
     })
   );
 

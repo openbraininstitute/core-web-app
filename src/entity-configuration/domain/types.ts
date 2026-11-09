@@ -1,6 +1,6 @@
 import type { TEntityTypeDict } from '@/api/entitycore/types';
+import type { EntityExpandParam } from '@/api/entitycore/types/entities/derivation';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { AssetLabel, EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { TDetailViewSectionDict } from '@/entity-configuration/definitions/types';
@@ -47,9 +47,9 @@ export type EntityCoreTypeConfig<
       extraQueryKeyBuilder?: Record<string, any>;
       ilikeSearchEnabled?: boolean;
       /**
-       * entitycore `expand` paths requested when a detail page loads one entity (sent as repeated
-       * `expand` params). Inlines related data in the same request instead of a follow-up fetch;
-       * set it only when `query.one` forwards `expand`.
+       * entitycore `expand` paths `retrieveEntity` requests for one entity of this type. Inlines
+       * related data in the same request instead of a follow-up fetch; `query.one` must forward
+       * `expand`.
        */
       entityExpand?: ReadonlyArray<E>;
     };

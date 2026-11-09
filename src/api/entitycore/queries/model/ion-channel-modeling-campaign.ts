@@ -1,14 +1,13 @@
-import { toExpandQueryParam } from '@/api/entitycore/types/shared/expand';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
 
+import type { EntityExpandParam } from '@/api/entitycore/types/entities/derivation';
 import type {
   IIonChannelModelingCampaign,
   IonChannelModelingCampaignFilter,
   TCreateIonChannelModelingCampaign,
   TUpdateIonChannelModelingCampaign,
 } from '@/api/entitycore/types/entities/ion-channel-modeling-campaign';
-import type { EntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -26,13 +25,12 @@ export async function getIonChannelModelingCampaigns({
   withFacets?: boolean;
   filters?: Partial<IonChannelModelingCampaignFilter>;
   context?: WorkspaceContext | null;
-  /** entitycore `expand` values, sent as repeated `expand=` params. */
   expand?: ReadonlyArray<EntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IIonChannelModelingCampaign>>(baseUri, {
     queryParams: compactRecord({
-      expand: toExpandQueryParam(expand),
+      expand,
       ...filters,
       with_facets: withFacets,
     }),
@@ -54,12 +52,11 @@ export async function getIonChannelModelingCampaign({
 }: {
   id: string;
   context?: WorkspaceContext | null;
-  /** entitycore `expand` values, sent as repeated `expand=` params. */
   expand?: ReadonlyArray<EntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<IIonChannelModelingCampaign>(`${baseUri}/${id}`, {
-    queryParams: { expand: toExpandQueryParam(expand) },
+    queryParams: { expand },
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',

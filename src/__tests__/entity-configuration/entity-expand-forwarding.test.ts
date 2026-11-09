@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getEModel } from '@/api/entitycore/queries/model/e-model';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { CellMorphology } from '@/entity-configuration/domain/experimental/cell-morphology';
 import { retrieveEntity } from '@/entity-configuration/domain/requests';
 
 // vi.mock is hoisted above the imports, so the spy must be hoisted with it
@@ -27,16 +26,17 @@ describe('entitycore expand forwarding', () => {
     h.get.mockResolvedValue({ id: 'm-1' });
   });
 
-  it("retrieveEntity sends the type's entityExpand to its one query", async () => {
-    await retrieveEntity({
-      type: ExtendedEntitiesTypeDict.CellMorphology,
-      id: 'm-1',
-      ctx,
-      expand: CellMorphology.api.config.entityExpand,
-    });
+  it("retrieveEntity sends the type's own entityExpand", async () => {
+    await retrieveEntity({ type: ExtendedEntitiesTypeDict.CellMorphology, id: 'm-1', ctx });
 
     expect(sentExpand()).toEqual(['measurement_annotation']);
     expect(h.get.mock.calls[0][0]).toBe('/cell-morphology/m-1');
+  });
+
+  it('retrieveEntity sends no expand for a type without entityExpand', async () => {
+    await retrieveEntity({ type: ExtendedEntitiesTypeDict.Emodel, id: 'e-1', ctx });
+
+    expect(sentExpand()).toBeUndefined();
   });
 
   it('sends no expand when none is given', async () => {

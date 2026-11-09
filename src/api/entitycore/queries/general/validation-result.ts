@@ -1,11 +1,10 @@
-import { toExpandQueryParam } from '@/api/entitycore/types/shared/expand';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 
+import type { EntityExpandParam } from '@/api/entitycore/types/entities/derivation';
 import type {
   IValidationResult,
   IValidationResultFilter,
 } from '@/api/entitycore/types/entities/validation-result';
-import type { EntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -25,13 +24,12 @@ export async function getValidationResults({
 }: {
   filters?: Partial<IValidationResultFilter>;
   context?: WorkspaceContext | null;
-  /** entitycore `expand` values, sent as repeated `expand=` params. */
   expand?: ReadonlyArray<EntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IValidationResult>>(baseUri, {
     queryParams: {
-      expand: toExpandQueryParam(expand),
+      expand,
       ...filters,
     },
     headers: {
@@ -56,13 +54,12 @@ export async function getValidationResult({
 }: {
   context?: WorkspaceContext | null;
   id: string;
-  /** entitycore `expand` values, sent as repeated `expand=` params. */
   expand?: ReadonlyArray<EntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IValidationResult>>(baseUri, {
     queryParams: {
-      expand: toExpandQueryParam(expand),
+      expand,
       id,
     },
     headers: {

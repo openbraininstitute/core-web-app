@@ -1,4 +1,3 @@
-import { toExpandQueryParam } from '@/api/entitycore/types/shared/expand';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 
 import type {
@@ -6,7 +5,7 @@ import type {
   TAnalysisNotebookTemplateBase,
   TAnalysisNotebookTemplateFilter,
 } from '@/api/entitycore/types/entities/analysis-notebook-template';
-import type { EntityExpandParam } from '@/api/entitycore/types/shared/expand';
+import type { EntityExpandParam } from '@/api/entitycore/types/entities/derivation';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -28,13 +27,12 @@ export async function getAnalysisNotebookTemplates({
   withFacets?: boolean;
   filters?: TAnalysisNotebookTemplateFilter;
   context?: WorkspaceContext | null;
-  /** entitycore `expand` values, sent as repeated `expand=` params. */
   expand?: ReadonlyArray<EntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IAnalysisNotebookTemplate>>(baseUri, {
     queryParams: {
-      expand: toExpandQueryParam(expand),
+      expand,
       ...filters,
       with_facets: withFacets,
     },
@@ -60,12 +58,11 @@ export async function getAnalysisNotebookTemplate({
 }: {
   id: string;
   context?: WorkspaceContext | null;
-  /** entitycore `expand` values, sent as repeated `expand=` params. */
   expand?: ReadonlyArray<EntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<IAnalysisNotebookTemplate>(`${baseUri}/${id}`, {
-    queryParams: { expand: toExpandQueryParam(expand) },
+    queryParams: { expand },
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',

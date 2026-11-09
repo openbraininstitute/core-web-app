@@ -1,6 +1,4 @@
-import { toExpandQueryParam } from '@/api/entitycore/types/shared/expand';
-
-import type { EntityExpandParam } from '@/api/entitycore/types/shared/expand';
+import type { EntityExpandParam } from '@/api/entitycore/types/entities/derivation';
 /* eslint-disable no-param-reassign */
 
 import some from 'es-toolkit/compat/some';
@@ -45,13 +43,12 @@ export async function getSingleNeuronSynaptomes({
   withFacets?: boolean;
   filters?: Partial<ISingleNeuronSynaptomeFilter>;
   context?: WorkspaceContext | null;
-  /** entitycore `expand` values, sent as repeated `expand=` params. */
   expand?: ReadonlyArray<EntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<ISingleNeuronSynaptome>>(baseUri, {
     queryParams: {
-      expand: toExpandQueryParam(expand),
+      expand,
       ...filters,
       with_facets: withFacets,
     },
@@ -81,12 +78,11 @@ export async function getSingleNeuronSynaptome({
 }: {
   id: string;
   context?: WorkspaceContext | null;
-  /** entitycore `expand` values, sent as repeated `expand=` params. */
   expand?: ReadonlyArray<EntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<ISingleNeuronSynaptome>(`${baseUri}/${id}`, {
-    queryParams: { expand: toExpandQueryParam(expand) },
+    queryParams: { expand },
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',

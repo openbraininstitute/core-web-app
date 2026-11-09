@@ -1,11 +1,10 @@
-import { toExpandQueryParam } from '@/api/entitycore/types/shared/expand';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 
 import type {
   ICellComposition,
   ICellCompositionFilter,
 } from '@/api/entitycore/types/entities/cell-composition';
-import type { EntityExpandParam } from '@/api/entitycore/types/shared/expand';
+import type { EntityExpandParam } from '@/api/entitycore/types/entities/derivation';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -27,13 +26,12 @@ export async function getCellComposition({
 }: {
   ctx?: WorkspaceContext;
   id: string;
-  /** entitycore `expand` values, sent as repeated `expand=` params. */
   expand?: ReadonlyArray<EntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<ICellComposition>(`${baseUri}/${id}`, {
     ...getEntityCoreContext(ctx),
-    queryParams: { expand: toExpandQueryParam(expand) },
+    queryParams: { expand },
   });
 }
 
@@ -44,12 +42,11 @@ export async function getCellCompositions({
 }: {
   ctx?: WorkspaceContext;
   filters: Partial<ICellCompositionFilter>;
-  /** entitycore `expand` values, sent as repeated `expand=` params. */
   expand?: ReadonlyArray<EntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<ICellComposition>>(baseUri, {
     ...getEntityCoreContext(ctx),
-    queryParams: { ...filters, expand: toExpandQueryParam(expand) },
+    queryParams: { ...filters, expand },
   });
 }

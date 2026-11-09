@@ -1,8 +1,7 @@
-import { toExpandQueryParam } from '@/api/entitycore/types/shared/expand';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
 
-import type { EntityExpandParam } from '@/api/entitycore/types/shared/expand';
+import type { EntityExpandParam } from '@/api/entitycore/types/entities/derivation';
 import type { ISubject } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { ISubjectFilter, TSubjectCreate } from '@/api/entitycore/types/shared/subject';
@@ -24,13 +23,12 @@ export async function getSubjects({
 }: {
   filters?: Partial<ISubjectFilter>;
   context?: WorkspaceContext | null;
-  /** entitycore `expand` values, sent as repeated `expand=` params. */
   expand?: ReadonlyArray<EntityExpandParam>;
 }): Promise<EntityCoreResponse<ISubject>> {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<ISubject>>(baseUri, {
     queryParams: compactRecord({
-      expand: toExpandQueryParam(expand),
+      expand,
       ...filters,
     }),
     headers: {
@@ -55,12 +53,11 @@ export async function getSubject({
 }: {
   id: string;
   context?: WorkspaceContext | null;
-  /** entitycore `expand` values, sent as repeated `expand=` params. */
   expand?: ReadonlyArray<EntityExpandParam>;
 }): Promise<EntityCoreResponse<ISubject>> {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<ISubject>>(`${baseUri}/${id}`, {
-    queryParams: { expand: toExpandQueryParam(expand) },
+    queryParams: { expand },
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',
