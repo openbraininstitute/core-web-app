@@ -313,7 +313,7 @@ function SpectrumPlot({
   return (
     <PlotFrame
       picker={picker}
-      note={`Welch, whole run${contacts.length > 0 ? ` · ${contacts.map(nameIn(selectedContact, contactPicked)).join(', ')}` : ''}`}
+      note={`Welch, whole run${contacts.length > 0 ? ` · ${contacts.map(nameIn(selectedContact, contactPicked || ticked.length > 0)).join(', ')}` : ''}`}
       help="Power at each frequency over the whole run: the mean of all contacts, and the selected contact or those ticked, as recorded. Groups added up show only the selected or ticked, as spectra don't add"
       visible={visible}
       figure={figure}

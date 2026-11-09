@@ -268,7 +268,7 @@ function LfpReportView({
   );
   const clickHint = useCallback(
     (contact: number) =>
-      contact === pickedContact ? 'Click to let it go' : 'Click to select this contact',
+      contact === pickedContact ? 'Click to let it go' : 'Click to pick this contact',
     [pickedContact]
   );
   const traces = useMemo(() => tracedContacts(rows, ticked), [rows, ticked]);
@@ -284,7 +284,8 @@ function LfpReportView({
     [tracingTicked, traces, labels, rows]
   );
   const showAll = useCallback(() => setPicks([]), []);
-  const colourOfLine = useMemo(() => lineColour(colours, statsContact), [colours, statsContact]);
+  // In the selected colour only once picked, as the traces draw it.
+  const colourOfLine = useMemo(() => lineColour(colours, pickedContact), [colours, pickedContact]);
   // The lanes on show and a screen of them either side are read over the window, finer than the
   // overview: only while drawn, and once positions are in, as they can change which contacts are
   // traced. A contact's row read so holds nothing of the mean to take off. They move a screen at a
@@ -408,11 +409,11 @@ function LfpReportView({
                 {(failed || lastUnread) && ' · that field could not be read'}
               </span>
               <PlotHelp>
-                Drag to zoom · Double-click to reset · Click a trace to select its contact for the
-                statistics, again to go back to the one the field swings most at; in the map, the
-                row&apos;s contact · The player moves with the bar below · Tick contacts in the
-                table to show them alone, each in a colour of its own, in the traces, the map and
-                the 3D player; with none ticked, every contact is shown; a row hovered that
+                Drag to zoom · Double-click to reset · Click a trace to pick its contact for the
+                statistics, again to let it go, back to the one the field swings most at; in the
+                map, the row&apos;s contact · The player moves with the bar below · Tick contacts in
+                the table to show them alone, each in a colour of its own, in the traces, the map
+                and the 3D player; with none ticked, every contact is shown; a row hovered that
                 isn&apos;t ticked shows at the foot · Scroll through traces that don&apos;t fit ·
                 Removing the shared signal leaves the table and spectra as recorded · A group of
                 cells&apos; overview holds means over its bins, the total&apos;s their extremes, so
