@@ -59,7 +59,7 @@ function ObiMark() {
  * handing over to the next, round and round; from the start each time they come into view.
  * All three boxes remain visible while the active prompt animates.
  */
-export function AgentPrompts() {
+export function AgentPrompts({ className }: { className?: string }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [seen, setSeen] = useState(false);
   const [state, setState] = useState<{ box: number; phase: TPhase; typed: number }>({
@@ -120,9 +120,7 @@ export function AgentPrompts() {
     <div
       ref={rootRef}
       data-agent-prompts
-      // Beside the stage, ending a gutter short of the multiplying brains' canvas (the stage's 62% of the page,
-      // that canvas inset from it), less the column's own left padding.
-      className="flex flex-col gap-[12px] pt-[4px] pb-[6px] beside:max-w-[calc(38vw_+_clamp(16px,4vw,72px)_-_clamp(32px,5vw,88px)_-_24px)]"
+      className={cn('flex flex-col gap-[12px] pt-[4px] pb-[6px]', className)}
     >
       {PROMPTS.map((prompt, i) => {
         const on = i === state.box;
@@ -234,6 +232,21 @@ export function AgentPrompts() {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+/**
+ * The prompt boxes on the stage, where the other screens have their recording: beside the screen's words, level
+ * with its title. Upright on a phone there is no room beside them, so the words carry the boxes there instead.
+ */
+export function AgentPromptsStage() {
+  return (
+    <div
+      data-chapter-media
+      className="absolute top-[max(148px,18vh)] right-[clamp(24px,5vw,88px)] bottom-[max(100px,12vh)] left-0 flex items-center justify-center stacked:hidden"
+    >
+      <AgentPrompts className="w-full max-w-[600px]" />
     </div>
   );
 }

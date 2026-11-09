@@ -9,6 +9,7 @@ import { OriginalHomePage } from '@/ui/segments/project/original-home';
 import { SlidingStage } from '@/ui/segments/project/walkthrough/sliding-stage';
 import { Walkthrough } from '@/ui/segments/project/walkthrough/walkthrough';
 
+import { AgentPromptsStage } from './agent-prompts';
 import { AgentReady } from './agent-ready';
 import {
   ANALYSIS_VIDEO,
@@ -32,7 +33,6 @@ import { FloatingMaleCns, FloatingMicrocircuit } from './floating-model';
 import { GetStartedBrain } from './get-started-brain';
 import { LandingThemes, ThemeNav } from './landing-themes';
 import { ModelMosaic } from './model-mosaic';
-import { MultiplyingBrains } from './multiplying-brains';
 
 import type { TBrainScene } from './chapters';
 
@@ -130,7 +130,7 @@ function BrainScene({ scene, near }: { scene: TBrainScene; near: boolean }) {
     return CNS_ON_FIRST_SCREEN ? <BrainsOpening /> : <VirtualLabsPreview />;
   }
   if (scene === 'configuration') return <StageVideo video={CONFIGURATION_VIDEO} near={near} />;
-  if (scene === 'multiplying') return near ? <MultiplyingBrains /> : null;
+  if (scene === 'agents') return near ? <AgentPromptsStage /> : null;
   if (scene === 'teaching') return <StageVideo video={TEACHING_VIDEO} near={near} />;
   if (scene === 'analysis') return <StageVideo video={ANALYSIS_VIDEO} near={near} />;
   if (scene === 'notebooks') return <NotebooksVideo near={near} />;

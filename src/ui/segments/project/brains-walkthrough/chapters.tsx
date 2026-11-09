@@ -14,7 +14,7 @@ import labs from './virtual-labs.module.css';
 /** What the stage shows beside a chapter: the three brains, or one with what the platform holds of it inside. */
 export type TBrainScene =
   | 'opening'
-  | 'multiplying'
+  | 'agents'
   | 'models'
   | 'analysis'
   | 'configuration'
@@ -162,7 +162,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     id: 'agents',
     theme: 'Leverage AI',
     label: 'AI',
-    scene: 'multiplying',
+    scene: 'agents',
     title: (
       <>
         Neuroscience at the speed of thought
@@ -171,14 +171,22 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     ),
     hero: true,
     titleClass: SERIF_TITLE,
-    // Keep room for the prompts; the public title uses the same measure as the other chapters.
-    column: `${labs.chapter} ${labs.aiChapter} beside:w-[60%] beside:max-w-[860px]`,
+    // The words on the left, as on the other screens; the prompts on the stage beside them.
+    column: labs.chapter,
     body: (
       <>
-        <p className="-mt-[4px] text-[15px] leading-[1.4] text-neutral-500">
-          AI assistant, MCP server, Plugins + Connectors
+        <p>AI assistant, MCP server, plugins and connectors.</p>
+        {/* Upright on a phone the prompts below say it, and there is no room for both. */}
+        <p className="stacked:hidden">
+          Work on the platform from the AI you already use: Claude through the OBI connector,
+          ChatGPT through the OBI plugin, or the OBI Assistant built into the platform.
         </p>
-        <AgentPrompts />
+        <p className="stacked:hidden">
+          Ask in plain words to build models, run simulation campaigns and analyse their results,
+          all in your Virtual Lab.
+        </p>
+        {/* Upright on a phone the stage has no room for the prompts: they come after the words. */}
+        <AgentPrompts className="beside:hidden" />
       </>
     ),
     after: <ChapterAction label="Get Started" destination="platform" />,

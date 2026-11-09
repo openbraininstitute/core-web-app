@@ -35,16 +35,6 @@
   padding: var(--chapter-content-top) 0 96px var(--chapter-text-inset);
   gap: 14px;
 }
-.publicTour .publicText[data-chapter-text="agents"] {
-  width: 60%;
-  max-height: none;
-  overflow: visible;
-  gap: 14px;
-}
-.publicTour .publicText[data-chapter-text="agents"] [data-chapter-action] {
-  margin-top: -8px;
-  padding-top: 0;
-}
 .publicTour .publicText > p:first-child {
   position: absolute;
   top: clamp(108px, 14vh, 148px);
@@ -322,16 +312,6 @@
   .publicText [data-chapter-action] > a,
   .publicText [data-chapter-action] > button {
     min-height: 44px;
-  }
-}
-
-.publicTour .publicText[data-chapter-text="agents"] h1 {
-  width: calc(38vw - clamp(32px, 5vw, 88px));
-  max-width: 100%;
-}
-@media (max-width: 63.999rem) and (orientation: portrait) {
-  .publicTour .publicText[data-chapter-text="agents"] h1 {
-    width: 100%;
   }
 }
 
