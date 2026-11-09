@@ -44,6 +44,8 @@ const SCENE_FEATURES: Partial<IEntityViewerFeatures> = { nodesTable: false };
 /** Colours change at most this often while playing. */
 const RECOLOR_MS = 50;
 const HOVERED_COLOR = '#8c8c8c';
+/** Darker than the hovered ring: a line a pixel wide in grey is lost among the boxes. */
+const OUTLINE_COLOR = '#141414';
 /** Shorter than a replay's: at the usual fade, most cells of a busy circuit are lit at any moment, hiding the field. */
 const SPIKE_AFTERGLOW_IN_SECONDS = 0.1;
 const CONTACT_VIEWS = [
@@ -257,9 +259,21 @@ export function LfpScene({
     () => (grid && view !== 'points' ? placeVoxels(grid, slice) : null),
     [grid, view, slice]
   );
-  const voxels = useMemo(
+  const fieldVoxels = useMemo(
     () => (placement && fieldLevels ? voxelsOf(placement, fieldLevels) : null),
     [placement, fieldLevels]
+  );
+  // Its box outlined rather than made more opaque, which would read as a stronger field.
+  const outlinedBox =
+    placement && hoveredContact !== null ? placement.shown.indexOf(hoveredContact) : -1;
+  const outlineColor =
+    hoveredContact === null ? null : (colours.get(hoveredContact) ?? OUTLINE_COLOR);
+  const voxels = useMemo(
+    () =>
+      fieldVoxels && outlineColor && outlinedBox >= 0
+        ? { ...fieldVoxels, outline: { box: outlinedBox, color: outlineColor } }
+        : fieldVoxels,
+    [fieldVoxels, outlinedBox, outlineColor]
   );
   const electrodes = useMemo(() => ({ drawn, voxels }), [drawn, voxels]);
 

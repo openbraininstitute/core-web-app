@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { growRoundDots } from '@/features/circuit-viewer/morphologies/engine/electrodes';
 import {
   growRoundVoxels,
+  placeOnBox,
   turnToVoxelFrame,
   VoxelOrder,
   voxelGeometry,
@@ -204,6 +205,33 @@ describe('writeVoxels', () => {
     expect(geometry.getAttribute('position').count).toBe(24);
     expect(geometry.getAttribute('normal').count).toBe(24);
     expect(geometry.instanceCount).toBe(1);
+  });
+});
+
+describe('placeOnBox', () => {
+  it('puts a unit box over a turned layer’s box, where its mesh draws it, at its size', () => {
+    const matrix = new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(2.1, 0.4, -0.9));
+    const axes = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
+    matrix.extractBasis(axes[0], axes[1], axes[2]);
+    const frame = axes.map((axis) => axis.toArray()) as unknown as VoxelFrame;
+    const centre: Vec3 = [100, 200, 300];
+    const layer = {
+      centres: Float32Array.of(0, 0, 0, 10, -20, 30),
+      sizes: Float32Array.of(1, 1, 1, 4, 6, 8),
+      looks: new Float32Array(8),
+      lattice: NO_LATTICE,
+      frame,
+    };
+    const outline = new THREE.Object3D();
+
+    placeOnBox(outline, layer, 1, centre);
+
+    outline.updateMatrixWorld();
+    const corner = new THREE.Vector3(0.5, 0.5, 0.5).applyMatrix4(outline.matrixWorld);
+    const expected = new THREE.Vector3(12, -17, 34)
+      .applyMatrix4(matrix)
+      .sub(new THREE.Vector3(...centre));
+    expect(corner.distanceTo(expected)).toBeLessThan(1e-3);
   });
 });
 

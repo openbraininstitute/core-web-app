@@ -104,6 +104,20 @@ export function turnToVoxelFrame(mesh: THREE.Object3D, frame: VoxelLayer['frame'
   mesh.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, y, z));
 }
 
+/** Places a unit box's `object` over box `box` of the layer, with `centre` taken off as `writeVoxels` takes it. */
+export function placeOnBox(
+  object: THREE.Object3D,
+  { centres, sizes, frame }: VoxelLayer,
+  box: number,
+  centre: Vec3
+): void {
+  turnToVoxelFrame(object, frame);
+  const framed = inVoxelFrame(centre, frame);
+  const at = (part: number) => centres[box * 3 + part] - framed[part];
+  object.position.set(at(0), at(1), at(2)).applyQuaternion(object.quaternion);
+  object.scale.set(sizes[box * 3], sizes[box * 3 + 1], sizes[box * 3 + 2]);
+}
+
 /** Grows `box` round the layer's boxes, with `centre` taken off where they are, however they are turned. */
 export function growRoundVoxels(
   box: THREE.Box3,

@@ -62,6 +62,7 @@ import { NEON, SPIKE_HUE } from './spike-light';
 import {
   growRoundVoxels,
   inVoxelFrame,
+  placeOnBox,
   turnToVoxelFrame,
   VoxelOrder,
   voxelGeometry,
@@ -475,6 +476,9 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   private voxels: Quads | null = null;
   /** The boxes of `voxels` again, where something nearer the eye hides them. */
   private hiddenVoxels: Quads | null = null;
+  /** The edges of the layer's outlined box, drawn through whatever is nearer, so that it is found deep among them. */
+  private voxelOutline: THREE.LineSegments<THREE.EdgesGeometry, THREE.LineBasicMaterial> | null =
+    null;
   private synapseGroups: readonly SynapseGroup[] = [];
   protected synapseUniforms = {
     ...this.electrodeUniforms,
@@ -693,6 +697,8 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.contactsAmong?.geometry.dispose();
     this.contactsOver?.geometry.dispose();
     this.voxels?.geometry.dispose();
+    this.voxelOutline?.geometry.dispose();
+    this.voxelOutline?.material.dispose();
     this.markerDots?.geometry.dispose();
     this.synapseDots?.geometry.dispose();
     this.spikeTimeListeners.clear();
@@ -1740,7 +1746,33 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.drawHiddenVoxels(mesh, layer);
     set?.order.seenFrom(this.voxelEye());
     const written = set && writeVoxels(set.layer, this.centre, set.order.boxes, mesh.geometry);
-    if (written || changed) this.invalidate();
+    const outlined = this.drawVoxelOutline(mesh.visible ? layer : null);
+    if (written || changed || outlined) this.invalidate();
+  }
+
+  /** The layer's outlined box, placed as `writeVoxels` places it; whether anything drawn changed. */
+  private drawVoxelOutline(layer: VoxelLayer | null): boolean {
+    const box = layer?.outline?.box ?? -1;
+    if (!layer?.outline || box < 0 || box * 3 >= layer.centres.length) {
+      if (!this.voxelOutline?.visible) return false;
+      this.voxelOutline.visible = false;
+      return true;
+    }
+    if (!this.voxelOutline) {
+      const lines = new THREE.LineSegments(
+        new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1)),
+        new THREE.LineBasicMaterial({ depthTest: false, depthWrite: false, transparent: true })
+      );
+      lines.name = 'voxel outline';
+      // After the boxes, before the contacts, whose dot stays on top.
+      lines.renderOrder = 0.78;
+      this.scene.add(lines);
+      this.voxelOutline = lines;
+    }
+    placeOnBox(this.voxelOutline, layer, box, this.centre);
+    this.voxelOutline.material.color.set(layer.outline.color);
+    this.voxelOutline.visible = true;
+    return true;
   }
 
   /** Draws the boxes of `mesh`, in the order written there, before it, where something nearer the eye hides them. */
