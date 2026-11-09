@@ -25,12 +25,21 @@ import { useHeaderContrast } from './use-header-contrast';
  * All the site's pages as one menu in the top bar, under the headings of its own menu; on a phone, where its words do
  * not fit beside the logo and the way in, by its mark alone. Not modal: the page goes on scrolling under it.
  */
-export function FindOutMore({ shown = true }: { shown?: boolean }) {
+export function FindOutMore({
+  shown = true,
+  informationTypography = false,
+}: {
+  shown?: boolean;
+  informationTypography?: boolean;
+}) {
   const trigger = useRef<HTMLButtonElement>(null);
   const pathname = usePathname();
-  const informationPage = SECTIONS.some(
-    (page) => page.slug !== '/' && (pathname === page.slug || pathname.startsWith(`${page.slug}/`))
-  );
+  const informationPage =
+    informationTypography ||
+    SECTIONS.some(
+      (page) =>
+        page.slug !== '/' && (pathname === page.slug || pathname.startsWith(`${page.slug}/`))
+    );
   const light = useHeaderContrast(trigger);
   return (
     <div

@@ -1,5 +1,9 @@
 .footerPanel {
   --font-size-M: 13px;
+  --font-sans-serif: var(--font-info-titillium), Arial, sans-serif;
+  --font-serif: var(--font-info-titillium), Arial, sans-serif;
+  font-family: var(--font-info-titillium), Arial, sans-serif;
+  font-weight: 300;
   width: 100%;
   padding: 14px clamp(20px, 4vw, 64px);
   border-top: 1px solid #dbe3ed;

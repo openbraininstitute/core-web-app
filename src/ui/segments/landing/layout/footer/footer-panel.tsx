@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import SocialMediaLinks from '@/ui/segments/landing/components/social-media-links/social-media-links';
+import { informationFont } from '@/ui/segments/landing/information-font';
 import { classNames } from '@/util/utils';
 
 import NewsLetterSubscription from './newsletter-subscription';
@@ -30,7 +31,10 @@ const LEGAL_LINKS = [
 
 export default function FooterPanel({ className, socialMediaLinks }: FooterPanelProps) {
   return (
-    <footer className={classNames(className, styles.footerPanel)} data-testid="site-footer">
+    <footer
+      className={classNames(className, informationFont.variable, styles.footerPanel)}
+      data-testid="site-footer"
+    >
       <div className={styles.main}>
         <div className={styles.identity}>
           <Link href="/" className={styles.brand}>

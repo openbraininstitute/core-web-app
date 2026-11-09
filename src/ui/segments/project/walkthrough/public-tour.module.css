@@ -1,4 +1,5 @@
 .publicTour {
+  font-weight: 300;
   --chapter-text-inset: clamp(32px, 5vw, 88px);
   --chapter-title-size: clamp(30px, 3.2vw, 50px);
   --chapter-copy-size: clamp(15px, 1.15vw, 17px);
@@ -23,7 +24,7 @@
 .publicText {
   align-items: flex-start;
   text-align: left;
-  font-family: var(--font-gabarito), sans-serif;
+  font-family: var(--font-info-titillium, var(--font-gabarito)), sans-serif;
   color: #082d63;
 }
 .publicTour .publicText {
@@ -50,8 +51,8 @@
 }
 .publicTour .publicText h1,
 .publicTour .publicText h2 {
-  font-family: var(--font-gabarito), sans-serif;
-  font-weight: 400;
+  font-family: var(--font-info-titillium, var(--font-gabarito)), sans-serif;
+  font-weight: 300;
   font-size: var(--chapter-title-size);
   line-height: 1.06;
   letter-spacing: -0.025em;
@@ -124,7 +125,7 @@
   }
 }
 .publicTour [data-fly] {
-  font-family: var(--font-gabarito), sans-serif;
+  font-family: var(--font-info-titillium, var(--font-gabarito)), sans-serif;
   font-style: normal;
 }
 .chapterTimeline {
@@ -133,7 +134,7 @@
   width: max-content;
   margin-inline: auto;
   padding-inline: 20px;
-  font-family: var(--font-gabarito), sans-serif;
+  font-family: var(--font-info-titillium, var(--font-gabarito)), sans-serif;
   font-size: clamp(13px, 1.05vw, 16px);
   line-height: 1.4;
   color: #737373;
@@ -256,7 +257,7 @@
   pointer-events: auto;
   border-radius: 50%;
   background: #183f8b0d;
-  font-family: var(--font-gabarito), sans-serif;
+  font-family: var(--font-info-titillium, var(--font-gabarito)), sans-serif;
   font-size: 18px;
   line-height: 1;
   font-style: normal;

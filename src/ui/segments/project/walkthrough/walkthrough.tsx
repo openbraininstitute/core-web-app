@@ -19,6 +19,7 @@ import ObiLogo from '@/features/learn/components/ui/ObiLogo';
 import { learnFonts } from '@/features/learn/fonts';
 import { BareViewers } from '@/features/viewer-3d/bare';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { informationFont } from '@/ui/segments/landing/information-font';
 import { FindOutMore } from '@/ui/segments/landing/layout/find-out-more';
 import { HOME_DESIGNS } from '@/ui/segments/project/home-designs';
 import { cn } from '@/utils/css-class';
@@ -681,6 +682,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
               // Lifted away, the home under it uncovered.
               finishing && 'pointer-events-none scale-[1.04] opacity-0',
               learnFonts,
+              introContent && informationFont.variable,
               introContent && publicTour.publicTour
             )}
             style={
@@ -690,7 +692,9 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                 '--stage-video-h':
                   'min(calc((100vw - 32px) * 0.5625), calc(var(--chapter-h) * 0.32))',
                 '--stage-video-top': 'max(60px, calc(var(--chapter-h) * 0.35 - 160px))',
-                fontFamily: 'var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif',
+                fontFamily: introContent
+                  ? informationFont.style.fontFamily
+                  : 'var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif',
                 transitionDuration: `${FINISH_MS}ms`,
               } as CSSProperties
             }
@@ -811,7 +815,10 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                   <ObiLogo className="block h-[clamp(44px,5vh,56px)] w-auto text-[#002766] max-sm:h-[38px] squat:h-[36px]" />
                 </Link>
                 <div className="pointer-events-auto flex items-center gap-[20px] max-sm:gap-[10px]">
-                  <FindOutMore shown={introDone || !!introContent} />
+                  <FindOutMore
+                    shown={introDone || !!introContent}
+                    informationTypography={!!introContent}
+                  />
                   {/* For now, the home it leads to, uncovered as the walkthrough lifts away. */}
                   <button type="button" onClick={finish} className={cn(pills.pill, pills.header)}>
                     <span className="sm:hidden">Enter platform</span>
