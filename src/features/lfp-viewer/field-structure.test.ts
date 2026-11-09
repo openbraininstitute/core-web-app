@@ -205,7 +205,7 @@ describe('buildRows', () => {
     expect(rows[0].contacts).toHaveLength(1);
     expect(rows[0].label).toBe('+49 µm');
     expect(rows[63].contacts).toHaveLength(2);
-    expect(rows[63].label).toBe('−50 µm');
+    expect(rows[63].label).toBe('−49 µm');
     expect(buildRows(100, coordinate, 'place', noSwing)[0].label).toBe('#1');
   });
 
@@ -219,26 +219,59 @@ describe('buildRows', () => {
 
 describe('rowTicks', () => {
   const noSwing = () => 0;
-  /** Where a tick lies along the field, from the rows either side of it. */
   const atTick = (rows: { at?: number }[], row: number) => {
     const above = rows[Math.floor(row)].at ?? Number.NaN;
     const below = rows[Math.ceil(row)].at ?? Number.NaN;
     return above + (row - Math.floor(row)) * (below - above);
   };
 
+  // Six planes 108 µm apart of 36 contacts each, a little tilted to the field: 10.7 rows a plane.
+  const planes = Float32Array.from(
+    { length: 216 },
+    (_, c) => 270 - 108 * Math.floor(c / 36) + ((c % 36) / 35 - 0.5) * 6
+  );
+
   it('labels planes of contacts by round distances, once each, between their rows', () => {
-    // Six planes 108 µm apart of 36 contacts each, a little tilted to the field: 10.7 rows a plane.
-    const coordinate = Float32Array.from(
-      { length: 216 },
-      (_, c) => 270 - 108 * Math.floor(c / 36) + ((c % 36) / 35 - 0.5) * 6
-    );
-    const rows = buildRows(216, coordinate, 'microns', noSwing);
+    const rows = buildRows(216, planes, 'microns', noSwing);
     const ticks = rowTicks(rows, 7);
     expect(ticks.map((t) => t.label)).toEqual(['+200 µm', '+100 µm', '0 µm', '−100 µm', '−200 µm']);
     ticks.forEach((tick, i) => {
       expect(tick.row).toBeGreaterThan(i === 0 ? 0 : ticks[i - 1].row);
       expect(atTick(rows, tick.row)).toBeCloseTo(200 - 100 * i, 6);
     });
+  });
+
+  it.each([
+    12, 20, 40,
+  ])('keeps %i wanted labels from bunching in the gaps between planes, at one step', (target) => {
+    const rows = buildRows(216, planes, 'microns', noSwing);
+    const ticks = rowTicks(rows, target);
+    expect(ticks.length).toBeGreaterThan(1);
+    const values = ticks.map((t) => atTick(rows, t.row));
+    for (let i = 1; i < ticks.length; i++) {
+      expect(ticks[i].row - ticks[i - 1].row).toBeGreaterThanOrEqual(rows.length / target / 2);
+      expect(values[i - 1] - values[i]).toBeCloseTo(values[0] - values[1], 6);
+    }
+  });
+
+  it('steps by whole µm, so that no two labels read alike, however close the rows lie', () => {
+    const coordinate = Float32Array.from({ length: 128 }, (_, c) => c * 0.025);
+    const labels = rowTicks(buildRows(128, coordinate, 'microns', noSwing), 7).map((t) => t.label);
+    expect(labels.length).toBeGreaterThan(1);
+    expect(new Set(labels).size).toBe(labels.length);
+  });
+
+  it('keeps the label of a top row that lies on a round distance', () => {
+    const coordinate = Float32Array.from({ length: 128 }, (_, c) => c * 2 - 153);
+    const rows = buildRows(128, coordinate, 'microns', noSwing);
+    expect(rows[0].at).toBe(100);
+    expect(rowTicks(rows, 7)[0]).toEqual({ row: 0, label: '+100 µm' });
+  });
+
+  it('names a row by where its contacts lie on average, as the axis places it', () => {
+    const rows = buildRows(216, planes, 'microns', noSwing);
+    const straddling = rows[10];
+    expect(straddling.label).toBe(`+${Math.round(straddling.at ?? 0)} µm`);
   });
 
   it('puts each round distance at its row along an even line', () => {

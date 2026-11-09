@@ -35,7 +35,6 @@ export type FieldRow = {
   at?: number;
 };
 
-/** A label on a map's row axis, at a row or between two. */
 export type RowTick = { row: number; label: string };
 
 type FieldStructure = {
@@ -236,7 +235,6 @@ export function buildRows(
       Math.floor((r * contacts) / count),
       Math.floor(((r + 1) * contacts) / count)
     );
-    const middle = members[Math.floor(members.length / 2)];
     const row: FieldRow = {
       contacts: members,
       lead: maxBy(members, swing) ?? members[0],
@@ -244,8 +242,8 @@ export function buildRows(
     };
     if (contacts > count && coordinate) {
       if (unit === 'microns') {
-        row.label = signedMicrons(coordinate[middle]);
         row.at = members.reduce((sum, c) => sum + coordinate[c], 0) / members.length;
+        row.label = signedMicrons(row.at);
       } else {
         row.label = `#${r + 1}`;
       }
@@ -254,34 +252,38 @@ export function buildRows(
   });
 }
 
-/**
- * About `target` labels down a map's rows. Rows that lie along the field get round distances, each
- * between the rows it falls between, as rows hold equal counts of contacts however they are spread.
- */
 export function rowTicks(rows: readonly FieldRow[], target: number): RowTick[] {
   if (rows.length === 0) return [];
-  const at: number[] = [];
-  for (const row of rows) {
-    if (row.at === undefined) {
-      return computeTicks(0, rows.length - 1, target, true).map((r) => ({
-        row: r,
-        label: rows[r].label,
-      }));
-    }
-    at.push(row.at);
+  if (rows[0].at === undefined) {
+    return computeTicks(0, rows.length - 1, target, true).map((r) => ({
+      row: r,
+      label: rows[r].label,
+    }));
   }
-  const top = at[0];
-  const bottom = at[at.length - 1];
+  const at = rows.map((row) => row.at ?? Number.NaN);
   const rowAt = (t: number) => {
     for (let r = 0; r < at.length - 1; r++) {
-      if (at[r + 1] <= t) return at[r] === at[r + 1] ? r : r + (at[r] - t) / (at[r] - at[r + 1]);
+      if (at[r + 1] <= t) {
+        const row = at[r] === at[r + 1] ? r : r + (at[r] - t) / (at[r] - at[r + 1]);
+        return Math.max(0, row);
+      }
     }
     return at.length - 1;
   };
-  return computeTicks(bottom, top, target)
-    .filter((t) => t <= top)
-    .reverse()
-    .map((t) => ({ row: rowAt(t), label: signedMicrons(t) }));
+  const ticksOf = (count: number) =>
+    computeTicks(at[at.length - 1], at[0], count, true)
+      .reverse()
+      .map((t) => ({ row: rowAt(t), label: signedMicrons(t) }));
+  // Rows hold equal counts of contacts, so round distances bunch where contacts leave a gap:
+  // the finest step whose labels keep at least half the room wanted for each.
+  const room = rows.length / target / 2;
+  const fits = (ticks: RowTick[]) =>
+    ticks.every((tick, i) => i === 0 || tick.row - ticks[i - 1].row >= room);
+  for (let count = Math.max(1, Math.floor(target)); count > 1; count--) {
+    const ticks = ticksOf(count);
+    if (fits(ticks)) return ticks;
+  }
+  return ticksOf(1).slice(0, 1);
 }
 
 export function fieldRows(

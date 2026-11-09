@@ -535,6 +535,10 @@ export function FieldPlot({
     if (mode !== 'map' || field.bins === 0 || typeof document === 'undefined') return null;
     return heatImage(field.bins, rows.length, scale, (r, b) => rowValue(field, rows[r], b));
   }, [mode, field, scale, rows]);
+  const mapTicks = useMemo(
+    () => (mode === 'map' ? rowTicks(rows, plot.height / 40) : []),
+    [mode, rows, plot.height]
+  );
   // A contact of the table hovered that the map has no row of, as while others are ticked.
   const previewed =
     mode === 'map' && hoveredContact !== null && rowWith(rows, hoveredContact) < 0
@@ -561,7 +565,7 @@ export function FieldPlot({
       g.textAlign = 'right';
       g.textBaseline = 'middle';
       const rowY = (r: number) => plot.top + ((r + 0.5) / rows.length) * plotHeight;
-      for (const tick of rowTicks(rows, plotHeight / 40)) {
+      for (const tick of mapTicks) {
         g.fillText(tick.label, plot.left - 6, rowY(tick.row));
       }
       // In a ticked contact's colour, or the selected one's, as the traces draw them.
@@ -634,6 +638,7 @@ export function FieldPlot({
     size,
     mode,
     mapImage,
+    mapTicks,
     rows,
     field,
     scale,
