@@ -4,6 +4,7 @@ import type {
   ICellComposition,
   ICellCompositionFilter,
 } from '@/api/entitycore/types/entities/cell-composition';
+import type { TAnyEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -18,21 +19,34 @@ const baseUri = '/cell-composition';
  * @remarks
  * The result is cached with a cache name of 'cell-composition' for 24 hours (86,400 seconds).
  */
-export async function getCellComposition({ ctx, id }: { ctx?: WorkspaceContext; id: string }) {
+export async function getCellComposition({
+  ctx,
+  id,
+  expand,
+}: {
+  ctx?: WorkspaceContext;
+  id: string;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
+}) {
   const api = await entityCoreApi();
-  return await api.get<ICellComposition>(`${baseUri}/${id}`, { ...getEntityCoreContext(ctx) });
+  return await api.get<ICellComposition>(`${baseUri}/${id}`, {
+    ...getEntityCoreContext(ctx),
+    queryParams: { expand },
+  });
 }
 
 export async function getCellCompositions({
   ctx,
   filters,
+  expand,
 }: {
   ctx?: WorkspaceContext;
   filters: Partial<ICellCompositionFilter>;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<ICellComposition>>(baseUri, {
     ...getEntityCoreContext(ctx),
-    queryParams: { ...filters },
+    queryParams: { ...filters, expand },
   });
 }

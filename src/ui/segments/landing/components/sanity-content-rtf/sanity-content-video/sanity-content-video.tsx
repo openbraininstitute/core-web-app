@@ -2,11 +2,14 @@
 
 import React from 'react';
 
+import YouTubePlayer from '@/components/documentation/tutorials/youtube-player';
 import ProgressiveVideo from '@/ui/segments/landing/components/video/video';
 import { styleBlockMedium } from '@/ui/segments/landing/styles';
 import { classNames } from '@/util/utils';
+import { parseYouTubeId } from '@/utils/youtube';
 
 import type { ContentForRichTextVideo } from '@/services/sanity/types/rtf-content';
+import type { VideoHandle } from '@/util/play-video-at-time';
 
 import styles from './sanity-content-video.module.css';
 
@@ -19,12 +22,15 @@ export default function SanityContentVideo({ className, value }: SanityContentVi
   const [stepIndex, setStepIndex] = React.useState(0);
   const timestamps = value.timestamps ?? [];
   const [currentTime, setCurrentTime] = React.useState(0);
+  const youTubeId = parseYouTubeId(value.url);
+  const youTubeRef = React.useRef<VideoHandle>(null);
   const jumpTo = (index: number) => {
     const step = timestamps[index];
     if (!step) return;
 
     setStepIndex(index);
     setCurrentTime(step.timestamp);
+    if (youTubeRef.current) youTubeRef.current.currentTime = step.timestamp;
   };
   const handleCurrentTimeChange = (time: number) => {
     for (const [index, { timestamp }] of timestamps.entries()) {
@@ -37,13 +43,23 @@ export default function SanityContentVideo({ className, value }: SanityContentVi
 
   return (
     <div className={classNames(className, styles.sanityContentVideo, styleBlockMedium)}>
-      <ProgressiveVideo
-        src={value.url}
-        controls
-        autosize
-        currentTime={currentTime}
-        onCurrentTimeChange={handleCurrentTimeChange}
-      />
+      {youTubeId ? (
+        <YouTubePlayer
+          id={youTubeId}
+          handleRef={youTubeRef}
+          onTime={handleCurrentTimeChange}
+          className="aspect-video w-full"
+        />
+      ) : (
+        // file URLs keep playing until Sanity holds only YouTube links
+        <ProgressiveVideo
+          src={value.url}
+          controls
+          autosize
+          currentTime={currentTime}
+          onCurrentTimeChange={handleCurrentTimeChange}
+        />
+      )}
       {timestamps.length > 0 && (
         <nav style={{ '--custom-columns': `${timestamps.length}` }}>
           {timestamps.map(({ label }, index) =>

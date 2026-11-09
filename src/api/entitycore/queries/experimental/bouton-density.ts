@@ -7,6 +7,7 @@ import type {
   ExperimentalBoutonDensityFilter,
   IExperimentalBoutonDensity,
 } from '@/api/entitycore/types/entities/bouton-density';
+import type { TAnyEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -22,14 +23,17 @@ export async function getExperimentalBoutonDensities({
   withFacets,
   filters,
   context,
+  expand,
 }: {
   withFacets?: boolean;
   filters?: ExperimentalBoutonDensityFilter;
   context?: WorkspaceContext | null;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IExperimentalBoutonDensity>>(baseUri, {
     queryParams: {
+      expand,
       ...filters,
       with_facets: withFacets,
     },
@@ -51,12 +55,15 @@ export async function getExperimentalBoutonDensities({
 export async function getExperimentalBoutonDensity({
   id,
   context,
+  expand,
 }: {
   id: string;
   context?: WorkspaceContext | null;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<IExperimentalBoutonDensity>(`${baseUri}/${id}`, {
+    queryParams: { expand },
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',

@@ -7,6 +7,7 @@ import type {
   TCreateIonChannelModelingCampaign,
   TUpdateIonChannelModelingCampaign,
 } from '@/api/entitycore/types/entities/ion-channel-modeling-campaign';
+import type { TAnyEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -19,14 +20,17 @@ export async function getIonChannelModelingCampaigns({
   withFacets,
   filters,
   context,
+  expand,
 }: {
   withFacets?: boolean;
   filters?: Partial<IonChannelModelingCampaignFilter>;
   context?: WorkspaceContext | null;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IIonChannelModelingCampaign>>(baseUri, {
     queryParams: compactRecord({
+      expand,
       ...filters,
       with_facets: withFacets,
     }),
@@ -44,12 +48,15 @@ export async function getIonChannelModelingCampaigns({
 export async function getIonChannelModelingCampaign({
   id,
   context,
+  expand,
 }: {
   id: string;
   context?: WorkspaceContext | null;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<IIonChannelModelingCampaign>(`${baseUri}/${id}`, {
+    queryParams: { expand },
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',

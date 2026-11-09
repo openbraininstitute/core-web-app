@@ -19,6 +19,8 @@ export const messages = {
     'Simulation encountered an error, please be sure that the configuration is correct and try again',
   RunningSimulationDefaultError:
     'We are having trouble running the simulation, please wait a few moments, and try again',
+  SimulationLaunchTargetError:
+    "We couldn't work out how to run this simulation. Please reload the page and try again, or contact support if this problem persists.",
   SteamingSimulationResultDefaultError:
     'Simulation encountered an error, please be sure that the configuration is correct and try again',
   CurrentInjectionConfigMissingError:

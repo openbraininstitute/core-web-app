@@ -54,7 +54,7 @@ type Props = {
   onActiveSimulationChange: (simulation: ISimulation) => void;
   onSelectedForSimChange: (simulationId: string, selected: boolean) => void;
   onSimulationStatusLoad: (simulationId: string, status: ActivityStatus) => void;
-  onRun: (simulationIds: string[]) => void;
+  onRun: () => void;
   middle: ReactNode;
   right: ReactNode;
   /** Picks the simulation by its scan parameters, where the list is out of view. */
@@ -133,7 +133,7 @@ export function SimulationsResultsUiAdapter({
               countLabel={launchSimBtnLabelPrefix}
               pending={simRequestInProgress}
               disabled={simRequestInProgress || selectedSimulationIds.length === 0}
-              onClick={() => onRun(selectedSimulationIds)}
+              onClick={onRun}
               className="rounded-full"
             />
           )}

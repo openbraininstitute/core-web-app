@@ -1,7 +1,8 @@
 'use client';
 
-import { LoadingOutlined } from '@ant-design/icons';
+import { DownOutlined, LoadingOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
+import { Dropdown } from 'antd';
 import { domAnimation, LazyMotion, m } from 'framer-motion';
 import Image from 'next/image';
 import { type ReactNode, useCallback, useRef, useState } from 'react';
@@ -11,7 +12,9 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { useAppNotification } from '@/components/notification';
 import { NotebookLeftMenu } from '@/features/notebooks/components/notebook-left-menu';
+import { SessionSizePanel } from '@/features/notebooks/components/session-size-panel';
 import { SyncNotebookModal } from '@/features/notebooks/components/update-notebook-modal';
+import { useNotebookProfiles } from '@/features/notebooks/hooks/use-run-notebook';
 import { startEmptyNotebook } from '@/services/notebooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { useContributionEntityClickEvent } from '@/ui/segments/contribute/event';
@@ -31,6 +34,7 @@ export function NotebooksLayout({ children }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const notification = useAppNotification();
   const [loading, setLoading] = useState(false);
+  const [sizeMenuOpen, setSizeMenuOpen] = useState(false);
   const [isGridAnimating, setIsGridAnimating] = useState(false);
   const { mdv, setMdv } = useMiniDetailView();
 
@@ -44,14 +48,21 @@ export function NotebooksLayout({ children }: Props) {
     enabled: Boolean(virtualLabId),
   });
 
-  async function handleRunNotebook() {
+  const { profiles, defaultProfile } = useNotebookProfiles();
+
+  async function handleRunNotebook(profile?: string) {
     setLoading(true);
     if (virtualLabData == null) {
       setLoading(false);
       throw new Error(`Could not fetch virtual lab data`);
     }
     try {
-      const retval = await startEmptyNotebook(virtualLabId, projectId, virtualLabData.compute_cell);
+      const retval = await startEmptyNotebook(
+        virtualLabId,
+        projectId,
+        virtualLabData.compute_cell,
+        profile
+      );
       notification.success({
         message: `Notebook starting`,
         key: 'notebook-started-successfully',
@@ -77,6 +88,9 @@ export function NotebooksLayout({ children }: Props) {
   }
 
   const course = virtualLabData?.course;
+  // Students (course projects that aren't the instructor's template project) don't choose a
+  // session size: hide the size picker and open JupyterHub with the backend default size.
+  const isCourseStudentProject = !!course && course.template_project_id !== projectId;
 
   const [syncRecord, setSyncRecord] = useState<EntityCoreObjectTypes | null>(null);
   const pendingSyncRef = useRef<EntityCoreObjectTypes | null>(null);
@@ -113,19 +127,39 @@ export function NotebooksLayout({ children }: Props) {
               />
             )}
 
-            <button
-              disabled={loading}
-              type="button"
-              className="flex h-[40px] items-center justify-between gap-2 rounded-full border border-[#F37726] bg-white px-5 text-[#F37726] transition-colors hover:bg-orange-50"
-              data-testid="open-jupyterhub-button"
-              onClick={handleRunNotebook}
-            >
-              <div>Open JupyterHub</div>
-              {!loading && (
-                <Image src="/images/jupyter.svg" alt="Jupyter hub" width={20} height={20} />
+            <Dropdown
+              trigger={['click']}
+              placement="bottomRight"
+              open={sizeMenuOpen && !loading && !isCourseStudentProject}
+              onOpenChange={setSizeMenuOpen}
+              disabled={loading || isCourseStudentProject}
+              popupRender={() => (
+                <SessionSizePanel
+                  profiles={profiles}
+                  defaultProfile={defaultProfile}
+                  onSelect={(profile) => {
+                    setSizeMenuOpen(false);
+                    handleRunNotebook(profile);
+                  }}
+                />
               )}
-              {loading && <LoadingOutlined className="text-[#F37726]" />}
-            </button>
+            >
+              <button
+                disabled={loading}
+                type="button"
+                className="flex h-[40px] items-center justify-between gap-2 rounded-full border border-[#F37726] bg-white px-5 text-[#F37726] transition-colors hover:bg-orange-50"
+                data-testid="open-jupyterhub-button"
+                onClick={isCourseStudentProject ? () => handleRunNotebook() : undefined}
+              >
+                <div>Open JupyterHub</div>
+                {loading ? (
+                  <LoadingOutlined className="size-5 text-[#F37726]" />
+                ) : (
+                  <Image src="/images/jupyter.svg" alt="Jupyter hub" width={20} height={20} />
+                )}
+                {!isCourseStudentProject && <DownOutlined className="text-xs" />}
+              </button>
+            </Dropdown>
           </div>
         </div>
 

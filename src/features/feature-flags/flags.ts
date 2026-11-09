@@ -36,15 +36,6 @@ export const extracellularRecordingArrayBuildFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
-export const smallScalesViaLaunchSystemFlag = defineFlag<boolean>({
-  key: 'small-scales-via-launch-system',
-  defaultValue: false,
-  values: [true, false],
-  description:
-    'Launch single neuron, synaptome, paired neurons and small microcircuit simulations via the launch system',
-  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
-});
-
 export const memodelBuildViaLaunchSystemFlag = defineFlag<boolean>({
   key: 'memodel-build-via-launch-system',
   defaultValue: false,
@@ -81,7 +72,7 @@ export const projectScopeIconFlag = defineFlag<'two' | 'one'>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
-/** A circuit past the small scales as morphologies and not only somas, where OBI-One can build its pack. */
+/** A circuit past the small scales as morphologies and not only somas, where Bluenaas can build its pack. */
 export const circuitMorphologiesFlag = defineFlag<boolean>({
   key: 'circuit-morphologies',
   defaultValue: false,
@@ -150,7 +141,6 @@ export const flags = [
   extractionActivityFlag,
   brainRegionSimulationFlag,
   extracellularRecordingArrayBuildFlag,
-  smallScalesViaLaunchSystemFlag,
   memodelBuildViaLaunchSystemFlag,
   electrodeOverlaysFlag,
   debugFlag,

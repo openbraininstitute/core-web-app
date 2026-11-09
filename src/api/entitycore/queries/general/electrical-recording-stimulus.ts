@@ -5,6 +5,7 @@ import type {
   IElectricalRecordingStimulus,
   IElectricalRecordingStimulusFilter,
 } from '@/api/entitycore/types/shared/electrical-recording-stimulus';
+import type { TAnyEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -21,14 +22,17 @@ export async function getElectricalRecordingStimulus({
   withFacets,
   filters,
   context,
+  expand,
 }: {
   withFacets?: boolean;
   filters?: Partial<IElectricalRecordingStimulusFilter>;
   context?: WorkspaceContext | null;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }): Promise<EntityCoreResponse<IElectricalRecordingStimulus>> {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IElectricalRecordingStimulus>>(baseUri, {
     queryParams: compactRecord({
+      expand,
       with_facets: withFacets,
       ...filters,
     }),

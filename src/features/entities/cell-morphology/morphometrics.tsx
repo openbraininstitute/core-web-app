@@ -47,7 +47,11 @@ export function Morphometrics({
   context: WorkspaceContext;
   variant?: TViewVariant;
 }) {
-  const { data: measurementKinds, isLoading } = useQuery({
+  // The detail page fetches the morphology with `expand=measurement_annotation`; only fall back
+  // to the annotations endpoint when the entity arrived without it.
+  const expanded = 'measurement_annotation' in morphology;
+  const { data: fetchedKinds, isLoading: isFetching } = useQuery({
+    enabled: !expanded,
     queryKey: ['measurement-annotations', morphology.id],
     queryFn: async () => {
       return await getMeasurementAnnotations({
@@ -59,6 +63,11 @@ export function Morphometrics({
       return measurementAnnotationsRes.data.flatMap((annotation) => annotation.measurement_kinds);
     },
   });
+
+  const measurementKinds = expanded
+    ? (morphology as ICellMorphologyExpanded).measurement_annotation?.measurement_kinds
+    : fetchedKinds;
+  const isLoading = !expanded && isFetching;
 
   const expandedMorphology = {
     ...morphology,

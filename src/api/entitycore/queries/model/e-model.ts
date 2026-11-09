@@ -1,6 +1,7 @@
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 
 import type { IEModel, IEModelFilter } from '@/api/entitycore/types/entities/e-model';
+import type { TAnyEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -16,14 +17,17 @@ export async function getEModels({
   withFacets,
   filters,
   context,
+  expand,
 }: {
   withFacets?: boolean;
   filters?: IEModelFilter;
   context?: WorkspaceContext | null;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IEModel>>(baseUri, {
     queryParams: {
+      expand,
       ...filters,
       with_facets: withFacets,
     },
@@ -45,12 +49,15 @@ export async function getEModels({
 export async function getEModel({
   id,
   context,
+  expand,
 }: {
   id: string;
   context?: WorkspaceContext | null;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<IEModel>(`${baseUri}/${id}`, {
+    queryParams: { expand },
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',

@@ -578,6 +578,10 @@ describe('loadCircuitMorphologies', () => {
     it('keeps packs a month', () => {
       expect(PACK_CACHE.ttlMs).toBe(30 * 24 * 60 * 60 * 1000);
     });
+
+    it('keeps up to 1 GiB of packs', () => {
+      expect(PACK_CACHE.maxBytes).toBe(2 ** 30);
+    });
   });
 
   it('fetches the pack every time where the browser has no Cache Storage', async () => {
