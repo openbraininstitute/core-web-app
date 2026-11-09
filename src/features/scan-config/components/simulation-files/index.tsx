@@ -6,8 +6,6 @@ import { NodePopulationType } from '@/api/entitycore/types/entities/circuit';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
-import { useFlag } from '@/features/feature-flags';
-import { lfpViewerFlag } from '@/features/feature-flags/flags';
 import { simResultBySimIdAtomFamily, useModelQuery } from '@/features/scan-config/components/atoms';
 import { hasStatistics, isVoltageReportFile } from '@/features/scan-config/components/file-viewer';
 import { IoLayout } from '@/features/scan-config/components/shared/io-layout';
@@ -93,7 +91,6 @@ export function SimulationFiles({
   jobId,
   reports,
 }: SimulationFilesProps) {
-  const lfpViewer = useFlag(lfpViewerFlag.key) === true;
   const [inputLoading, inputFiles] = useInputFiles(simulation, context);
 
   const outputAvailable =
@@ -281,7 +278,7 @@ export function SimulationFiles({
                 file={file}
                 name={name}
                 label={label}
-                interactive={hasStatistics(file, lfpViewer)}
+                interactive={hasStatistics(file)}
                 onSelect={() => {
                   if (population) {
                     setChosenPopulations((previous) => ({

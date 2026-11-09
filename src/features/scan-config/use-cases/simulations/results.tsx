@@ -20,8 +20,6 @@ import { getLatestSimulationExecution } from '@/entity-configuration/domain/simu
 import { resolveSimulationLaunchTarget } from '@/entity-configuration/domain/simulation/utils';
 import { NodesTableKeeper } from '@/features/circuit-nodes/components/kept-nodes-grid';
 import { NodesSessionKeeper } from '@/features/circuit-nodes/hooks/nodes-session-keeper';
-import { useFlag } from '@/features/feature-flags';
-import { lfpViewerFlag } from '@/features/feature-flags/flags';
 import { isLowCreditsError, useLowCredits } from '@/features/low-credits';
 import {
   OfflineTokenConsentModal,
@@ -249,9 +247,8 @@ export function SimulationsTab({
     !!activeSimulationExecStatus &&
       [ActivityStatus.ERROR, ActivityStatus.DONE].includes(activeSimulationExecStatus)
   );
-  const lfpViewer = useFlag(lfpViewerFlag.key) === true;
   const shownReport =
-    selectedFile && isAssetBackedFile(selectedFile) && hasStatistics(selectedFile, lfpViewer)
+    selectedFile && isAssetBackedFile(selectedFile) && hasStatistics(selectedFile)
       ? selectedFile
       : undefined;
   const reportFiles = useMemo(() => {
@@ -264,13 +261,11 @@ export function SimulationsTab({
             renderer: ActivityCustomFileRenderer.Default,
           }))
       : [];
-    const reports = [...resultFiles.filter((f) => hasStatistics(f, lfpViewer)), ...inputs].sort(
-      byReportKind
-    );
+    const reports = [...resultFiles.filter(hasStatistics), ...inputs].sort(byReportKind);
     return shownReport && !reports.some((f) => f.asset.id === shownReport.asset.id)
       ? [shownReport, ...reports]
       : reports;
-  }, [resultFiles, activeSimulation, shownReport, lfpViewer]);
+  }, [resultFiles, activeSimulation, shownReport]);
   const spikeFiles = useMemo(() => reportFiles.filter(isSpikeFile), [reportFiles]);
   const activeSimulationJobIdFromLaunch = activeSimulation
     ? jobIdMap.get(activeSimulation.id)

@@ -126,15 +126,6 @@ export const emodelValidationFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
-/** The LFP report viewer: extracellular reports read from their Bluenaas summary. */
-export const lfpViewerFlag = defineFlag<boolean>({
-  key: 'lfp-viewer',
-  defaultValue: false,
-  values: [true, false],
-  description: 'LFP report viewer',
-  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
-});
-
 export const flags = [
   aiPanelStateFlag,
   extractionActivityFlag,
@@ -150,7 +141,6 @@ export const flags = [
   greyMenuPillsFlag,
   hideHelpFlag,
   emodelValidationFlag,
-  lfpViewerFlag,
 ] as const;
 
 export type FlagKey = (typeof flags)[number]['key'];

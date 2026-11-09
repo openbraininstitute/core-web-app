@@ -5,8 +5,6 @@ import { match, P } from 'ts-pattern';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { Loader } from '@/components/loader';
 import { EphysViewer } from '@/features/ephys-viewer';
-import { useFlag } from '@/features/feature-flags';
-import { lfpViewerFlag } from '@/features/feature-flags/flags';
 import { LfpViewer } from '@/features/lfp-viewer';
 import { isAssetBackedFile } from '@/features/scan-config/types';
 import { isLfpReport } from '@/features/scan-config/use-cases/simulations/report-picker';
@@ -85,12 +83,9 @@ function isLfpReportFile(file: TAssetBackedFile): boolean {
   );
 }
 
-/**
- * A file whose statistics open beside it in a results layout: spikes, a voltage
- * report, or with the LFP viewer on, an extracellular report.
- */
-export function hasStatistics(file: TAssetBackedFile, lfpViewer: boolean): boolean {
-  return isSpikeFile(file) || isVoltageReportFile(file) || (lfpViewer && isLfpReportFile(file));
+/** A file whose statistics open beside it in a results layout: spikes, a voltage or an extracellular report. */
+export function hasStatistics(file: TAssetBackedFile): boolean {
+  return isSpikeFile(file) || isVoltageReportFile(file) || isLfpReportFile(file);
 }
 
 /**
@@ -290,10 +285,8 @@ function H5SonataFileViewer({ file, context }: H5FileViewerProps) {
   const { entity, asset } = file;
   const reports = useSimulationReports();
   const report = useSimulationReport(asset.path.split('/').pop());
-  const lfpViewer = useFlag(lfpViewerFlag.key) === true;
-  if (!lfpViewer && isLfpReportFile(file)) return <PlaceholderFileViewer file={file} />;
   // The runs launch-system registers label an LFP report a voltage report; its config entry says what it is.
-  if (lfpViewer && isLfpReport(file, reports)) {
+  if (isLfpReport(file, reports)) {
     return (
       <LfpViewer
         key={`${entity.id}-${asset.id}`}
@@ -310,7 +303,7 @@ function H5SonataFileViewer({ file, context }: H5FileViewerProps) {
       entity={entity as ISimulationResult}
       assetId={asset.id}
       ctx={context}
-      withStatistics={hasStatistics(file, lfpViewer)}
+      withStatistics={hasStatistics(file)}
     />
   );
 }

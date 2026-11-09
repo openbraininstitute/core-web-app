@@ -53,7 +53,6 @@ vi.mock('@/entity-configuration/domain/simulation/simulation-campaign', () => ({
   listExecutionsBySimulationId: async () => [],
 }));
 vi.mock('@/ui/hooks/use-workspace', () => ({ useWorkspace: () => ({}) }));
-vi.mock('@/features/feature-flags', () => ({ useFlag: () => false }));
 vi.mock('@/features/low-credits', () => ({
   isLowCreditsError: () => false,
   useLowCredits: () => ({ notifyLowCredits: vi.fn(), reportError: vi.fn(), creditsModal: null }),
