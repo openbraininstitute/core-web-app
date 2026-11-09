@@ -7,6 +7,7 @@ import {
   fieldDirection,
   fieldRows,
   openingOrder,
+  rowTicks,
   tracedContacts,
   traceLabels,
   withoutShared,
@@ -213,6 +214,63 @@ describe('buildRows', () => {
     const rows = buildRows(100, coordinate, 'microns', (c) => (c === 94 ? 9 : 1));
     expect(rows[3].contacts).toEqual([95, 94]);
     expect(rows[3].lead).toBe(94);
+  });
+});
+
+describe('rowTicks', () => {
+  const noSwing = () => 0;
+  /** Where a tick lies along the field, from the rows either side of it. */
+  const atTick = (rows: { at?: number }[], row: number) => {
+    const above = rows[Math.floor(row)].at ?? Number.NaN;
+    const below = rows[Math.ceil(row)].at ?? Number.NaN;
+    return above + (row - Math.floor(row)) * (below - above);
+  };
+
+  it('labels planes of contacts by round distances, once each, between their rows', () => {
+    // Six planes 108 µm apart of 36 contacts each, a little tilted to the field: 10.7 rows a plane.
+    const coordinate = Float32Array.from(
+      { length: 216 },
+      (_, c) => 270 - 108 * Math.floor(c / 36) + ((c % 36) / 35 - 0.5) * 6
+    );
+    const rows = buildRows(216, coordinate, 'microns', noSwing);
+    const ticks = rowTicks(rows, 7);
+    expect(ticks.map((t) => t.label)).toEqual(['+200 µm', '+100 µm', '0 µm', '−100 µm', '−200 µm']);
+    ticks.forEach((tick, i) => {
+      expect(tick.row).toBeGreaterThan(i === 0 ? 0 : ticks[i - 1].row);
+      expect(atTick(rows, tick.row)).toBeCloseTo(200 - 100 * i, 6);
+    });
+  });
+
+  it('puts each round distance at its row along an even line', () => {
+    const coordinate = Float32Array.from({ length: 128 }, (_, c) => c * 20 - 1270);
+    const rows = buildRows(128, coordinate, 'microns', noSwing);
+    const ticks = rowTicks(rows, 5);
+    expect(ticks.map((t) => t.label)).toEqual([
+      '+1000 µm',
+      '+500 µm',
+      '0 µm',
+      '−500 µm',
+      '−1000 µm',
+    ]);
+    for (const [i, tick] of ticks.entries()) {
+      expect(atTick(rows, tick.row)).toBeCloseTo(1000 - 500 * i, 6);
+    }
+  });
+
+  it('labels rows by their place where they do not lie along the field', () => {
+    const coordinate = Float32Array.from({ length: 100 }, (_, c) => c);
+    const ticks = rowTicks(buildRows(100, coordinate, 'place', noSwing), 7);
+    expect(ticks.map((t) => t.row)).toEqual([0, 10, 20, 30, 40, 50, 60]);
+    expect(ticks[1].label).toBe('#11');
+  });
+
+  it('labels rows of one contact each by contact', () => {
+    const rows = buildRows(3, Float32Array.of(-20, 20, 0), 'microns', noSwing);
+    expect(rowTicks(rows, 2).map((t) => t.label)).toEqual(['e1', 'e2', 'e0']);
+  });
+
+  it('has nothing to label without rows', () => {
+    expect(rowTicks([], 7)).toEqual([]);
   });
 });
 

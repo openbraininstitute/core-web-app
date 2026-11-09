@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { COLOUR_TABLE } from '@/features/lfp-viewer/colour-scale';
 import { contactColour } from '@/features/lfp-viewer/contact-colours';
+import { rowTicks } from '@/features/lfp-viewer/field-structure';
 import { binAt, fieldValue } from '@/features/lfp-viewer/summary';
 import { TIME_CURSOR_COLOR } from '@/features/sonata-viewer/time-cursor';
 import { nextEventsHover, TimelineCard } from '@/features/spike-viewer/components/timeline-card';
@@ -560,8 +561,8 @@ export function FieldPlot({
       g.textAlign = 'right';
       g.textBaseline = 'middle';
       const rowY = (r: number) => plot.top + ((r + 0.5) / rows.length) * plotHeight;
-      for (const r of computeTicks(0, rows.length - 1, plotHeight / 40, true)) {
-        g.fillText(rows[r].label, plot.left - 6, rowY(r));
+      for (const tick of rowTicks(rows, plotHeight / 40)) {
+        g.fillText(tick.label, plot.left - 6, rowY(tick.row));
       }
       // In a ticked contact's colour, or the selected one's, as the traces draw them.
       rows.forEach((row, r) => {

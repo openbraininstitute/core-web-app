@@ -1,6 +1,7 @@
 import { DIVERGING_COLOURS } from '@/features/lfp-viewer/colour-scale';
 import { byPlace } from '@/features/lfp-viewer/contact-colours';
 import { CONDUCTIVITY } from '@/features/lfp-viewer/field-analysis';
+import { rowTicks } from '@/features/lfp-viewer/field-structure';
 import { PICK_COLORS } from '@/features/sonata-viewer/constants';
 import {
   axis,
@@ -147,9 +148,9 @@ export function correlationFigure({
 }): Figure {
   const n = rows.length;
   const indices = rows.map((_, r) => r);
-  const every = Math.max(1, Math.ceil(n / MATRIX_TICKS));
-  const tickvals = indices.filter((r) => r % every === 0);
-  const ticktext = tickvals.map((r) => rows[r].label);
+  const ticks = rowTicks(rows, MATRIX_TICKS);
+  const tickvals = ticks.map((t) => t.row);
+  const ticktext = ticks.map((t) => t.label);
   const text = rows.map((a) => rows.map((b) => `${a.label} · ${b.label}`));
   const labelled = { automargin: true, tickvals, ticktext, zeroline: false, showgrid: false };
   return {

@@ -2,6 +2,7 @@ import { maxBy } from 'es-toolkit';
 
 import { extentOf } from '@/features/circuit-viewer/morphologies/extent';
 import { binMiddle } from '@/features/lfp-viewer/summary';
+import { computeTicks } from '@/features/spike-viewer/renderer/axis-overlay';
 
 import type { LfpField } from '@/features/lfp-viewer/summary';
 
@@ -30,7 +31,12 @@ export type FieldRow = {
   /** What a click on the row picks: its contact the field swings most at. */
   lead: number;
   label: string;
+  /** Where the row lies along the field, in µm, as the mean of its contacts: on rows named by it. */
+  at?: number;
 };
+
+/** A label on a map's row axis, at a row or between two. */
+export type RowTick = { row: number; label: string };
 
 type FieldStructure = {
   /** The share of the field's variance that all contacts have in common, from 0 to 1. */
@@ -231,12 +237,51 @@ export function buildRows(
       Math.floor(((r + 1) * contacts) / count)
     );
     const middle = members[Math.floor(members.length / 2)];
-    let label = `e${members[0]}`;
+    const row: FieldRow = {
+      contacts: members,
+      lead: maxBy(members, swing) ?? members[0],
+      label: `e${members[0]}`,
+    };
     if (contacts > count && coordinate) {
-      label = unit === 'microns' ? signedMicrons(coordinate[middle]) : `#${r + 1}`;
+      if (unit === 'microns') {
+        row.label = signedMicrons(coordinate[middle]);
+        row.at = members.reduce((sum, c) => sum + coordinate[c], 0) / members.length;
+      } else {
+        row.label = `#${r + 1}`;
+      }
     }
-    return { contacts: members, lead: maxBy(members, swing) ?? members[0], label };
+    return row;
   });
+}
+
+/**
+ * About `target` labels down a map's rows. Rows that lie along the field get round distances, each
+ * between the rows it falls between, as rows hold equal counts of contacts however they are spread.
+ */
+export function rowTicks(rows: readonly FieldRow[], target: number): RowTick[] {
+  if (rows.length === 0) return [];
+  const at: number[] = [];
+  for (const row of rows) {
+    if (row.at === undefined) {
+      return computeTicks(0, rows.length - 1, target, true).map((r) => ({
+        row: r,
+        label: rows[r].label,
+      }));
+    }
+    at.push(row.at);
+  }
+  const top = at[0];
+  const bottom = at[at.length - 1];
+  const rowAt = (t: number) => {
+    for (let r = 0; r < at.length - 1; r++) {
+      if (at[r + 1] <= t) return at[r] === at[r + 1] ? r : r + (at[r] - t) / (at[r] - at[r + 1]);
+    }
+    return at.length - 1;
+  };
+  return computeTicks(bottom, top, target)
+    .filter((t) => t <= top)
+    .reverse()
+    .map((t) => ({ row: rowAt(t), label: signedMicrons(t) }));
 }
 
 export function fieldRows(
