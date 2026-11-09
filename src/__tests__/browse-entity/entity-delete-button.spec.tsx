@@ -4,7 +4,7 @@
  * not evict the rows it never touched.
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -38,7 +38,10 @@ const projectRow = {
   authorized_project_id: 'proj-1',
 } as unknown as EntityCoreIdentifiableNamed;
 
-function renderDeleteButton(selectedRows: EntityCoreIdentifiableNamed[]) {
+function renderDeleteButton(
+  selectedRows: EntityCoreIdentifiableNamed[],
+  isRowShown?: (row: EntityCoreIdentifiableNamed) => boolean
+) {
   return render(
     <QueryClientProvider client={new QueryClient()}>
       <EntityDeleteButton<EntityCoreIdentifiableNamed>
@@ -46,6 +49,7 @@ function renderDeleteButton(selectedRows: EntityCoreIdentifiableNamed[]) {
         clearSelectedRows={vi.fn()}
         dataType={ExtendedEntitiesTypeDict.CellMorphology}
         workspace={workspace}
+        isRowShown={isRowShown}
       />
     </QueryClientProvider>
   );
@@ -62,5 +66,24 @@ describe('EntityDeleteButton — nothing deletable in the basket', () => {
   it('renders once the basket holds a row this project owns', () => {
     renderDeleteButton([publicRow, projectRow]);
     expect(screen.getByTestId('bulk-delete-button')).toBeInTheDocument();
+  });
+});
+
+describe('EntityDeleteButton — a basket kept across a scope switch', () => {
+  it('names the rows it deletes that the listing does not show', async () => {
+    // the user selected a private row, then switched the listing to public data
+    const other = { ...projectRow, id: 'j2' } as EntityCoreIdentifiableNamed;
+    renderDeleteButton([projectRow, other], (row) => row.id === 'j2');
+    fireEvent.click(screen.getByTestId('bulk-delete-button'));
+    expect(await screen.findByTestId('delete-hidden-note')).toHaveTextContent(
+      '1 of them is not in the scope shown now.'
+    );
+  });
+
+  it('says nothing more while every row it deletes is shown', async () => {
+    renderDeleteButton([projectRow], () => true);
+    fireEvent.click(screen.getByTestId('bulk-delete-button'));
+    await screen.findByText(/Are you sure you want to delete/);
+    expect(screen.queryByTestId('delete-hidden-note')).toBeNull();
   });
 });

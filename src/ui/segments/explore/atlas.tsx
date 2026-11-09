@@ -38,7 +38,9 @@ type Props = {
 
 export function Atlas({ children }: Props) {
   const isAllSpeciesMode = useAtomValue(speciesSelectionModeAtom) === SpeciesSelectionMode.All;
-  const viewer = useAtlasViewer();
+  const { viewer, error } = useAtlasViewer();
+  // the Data page has nothing to show without its atlas: the route's error page offers a retry
+  if (error) throw error;
 
   return (
     <AtlasMorph view="full">

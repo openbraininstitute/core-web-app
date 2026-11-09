@@ -36,7 +36,13 @@ import {
 } from '@/features/data-grid/bindings/entitycore/columns/scope';
 import { createEntitycorePagedDataSource } from '@/features/data-grid/bindings/entitycore/data-source.paged';
 import {
+  SCOPE_COLUMN_ID,
+  scopeKindFor,
+  scopeKindOf,
+} from '@/features/data-grid/bindings/entitycore/scope-filter';
+import {
   createDefaultOperatorRegistry,
+  FilterValueKind,
   GridActionType,
   GridController,
   SelectionMode,
@@ -81,6 +87,7 @@ import type { FC, ReactNode } from 'react';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { TAnyEntityGridDefinition } from '@/features/data-grid/bindings/entitycore';
+import type { IScopeRow } from '@/features/data-grid/bindings/entitycore/scope-filter';
 import type {
   IGridDataSource,
   IGridState,
@@ -98,6 +105,11 @@ import type { IListingVariant } from '@/features/views/listing/variants/types';
 
 /** Module-level so the slice subscription's reader identity stays stable. */
 const selectFreeTextSearch = (state: IGridState): string => state.freeTextSearch;
+/** The kind of row the scope filter shows, module-level for the same reason. */
+const selectScopeKind = (state: IGridState) => {
+  const value = state.filters[SCOPE_COLUMN_ID]?.value;
+  return scopeKindFor(value?.kind === FilterValueKind.Text ? value.text : undefined);
+};
 
 export interface IBrowseEntityGridProps extends BrowseEntityScopeProps {
   definition: TAnyEntityGridDefinition;
@@ -342,6 +354,7 @@ export function EntityDataGrid({
   );
 
   const freeTextSearch = useGridStateSlice(controller, selectFreeTextSearch);
+  const shownScope = useGridStateSlice(controller, selectScopeKind);
 
   const extraOrderBy = extraQueryParams?.order_by;
   const defaultDataSource = useMemo(
@@ -554,6 +567,12 @@ export function EntityDataGrid({
                   clearSelectedRows={clearSelection}
                   deselectRows={deselectRows}
                   workspace={{ virtualLabId, projectId }}
+                  // the basket outlives a scope switch, so the confirm names what is out of view
+                  isRowShown={
+                    requireScopeSelector
+                      ? (row) => scopeKindOf(row as IScopeRow, projectId) === shownScope
+                      : undefined
+                  }
                 />
               )}
             </div>

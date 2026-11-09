@@ -13,18 +13,22 @@ export function useRowClassRedraw<T>(
   apiRef: RefObject<GridApi<T> | null>,
   classOf?: (data: T) => string | undefined
 ) {
+  // rebuilt from the nodes each pass, so it holds only the rows the grid has now
   const seen = useRef(new Map<string, string | undefined>());
 
   const redraw = useCallback(() => {
     const api = apiRef.current;
     if (!api || api.isDestroyed() || !classOf) return;
     const changed: Array<IRowNode<T>> = [];
+    const previous = seen.current;
+    const current = new Map<string, string | undefined>();
     api.forEachNode((node) => {
       if (node.data == null || node.id == null) return;
       const next = classOf(node.data);
-      if (seen.current.has(node.id) && seen.current.get(node.id) !== next) changed.push(node);
-      seen.current.set(node.id, next);
+      if (previous.has(node.id) && previous.get(node.id) !== next) changed.push(node);
+      current.set(node.id, next);
     });
+    seen.current = current;
     if (changed.length) api.redrawRows({ rowNodes: changed });
   }, [apiRef, classOf]);
 

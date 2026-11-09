@@ -103,47 +103,6 @@ export function ScopeMark({ kind, muted }: { kind: TScopeKind; muted?: boolean }
   );
 }
 
-/**
- * The hover card for the scope icons: white, as wide as its text up to 250px, hanging
- * below the icon with its arrow a short way in from the left edge.
- */
-function LightTooltip({
-  label,
-  ariaLabel,
-  children,
-}: {
-  label: ReactNode;
-  /** screen-reader copy of the content, which can hold a button */
-  ariaLabel: string;
-  /** the hovered element; Radix hands it a ref and its handlers */
-  children: ReactElement;
-}) {
-  return (
-    <Tooltip delayDuration={TOOLTIP_DELAY_MS}>
-      <TooltipTrigger asChild>{children}</TooltipTrigger>
-      <TooltipContent
-        side="bottom"
-        align="start"
-        // the card starts 12px left of the trigger, which the arrow below accounts for
-        alignOffset={-12}
-        sideOffset={8}
-        aria-label={ariaLabel}
-        // Radix flips its own arrow for a bottom card and hides the top borders, so the
-        // arrow is drawn here instead
-        showArrow={false}
-        className="text-primary-9 relative w-max max-w-[250px] border border-gray-200 bg-white shadow-md"
-      >
-        {label}
-        <span
-          aria-hidden
-          className="absolute -top-[6px] size-2.5 rotate-45 border-t border-l border-gray-200 bg-white"
-          style={{ left: 'calc(12px + var(--radix-tooltip-trigger-width) / 2 - 5px)' }}
-        />
-      </TooltipContent>
-    </Tooltip>
-  );
-}
-
 /** Rendered only while its card is open, so the project is fetched on demand. */
 function ProjectScopeHint({
   published,
@@ -178,8 +137,9 @@ function ProjectScopeHint({
 }
 
 /**
- * The scope's hover card, shared by the header toggles and the row icons.
- * `canChangeProject` offers "Change project": the column header's icons only, not every row's.
+ * The scope's hover card, shared by the header toggles and the row icons: white, as wide as
+ * its text up to 250px, hanging below the icon with its arrow a short way in from the left
+ * edge. `canChangeProject` offers "Change project": the column header's icons only.
  */
 function ScopeTooltip({
   kind,
@@ -191,18 +151,32 @@ function ScopeTooltip({
   children: ReactElement;
 }) {
   return (
-    <LightTooltip
-      ariaLabel={SCOPE_LABELS[kind]}
-      label={
-        kind === 'public' ? (
+    <Tooltip delayDuration={TOOLTIP_DELAY_MS}>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipContent
+        side="bottom"
+        align="start"
+        // the card starts 12px left of the trigger, which the arrow below accounts for
+        alignOffset={-12}
+        sideOffset={8}
+        aria-label={SCOPE_LABELS[kind]}
+        // Radix flips its own arrow for a bottom card and hides the top borders, so the
+        // arrow is drawn here instead
+        showArrow={false}
+        className="text-primary-9 relative w-max max-w-[250px] border border-gray-200 bg-white shadow-md"
+      >
+        {kind === 'public' ? (
           <span>{SCOPE_LABELS.public}</span>
         ) : (
           <ProjectScopeHint published={kind === 'published'} canChangeProject={canChangeProject} />
-        )
-      }
-    >
-      {children}
-    </LightTooltip>
+        )}
+        <span
+          aria-hidden
+          className="absolute -top-[6px] size-2.5 rotate-45 border-t border-l border-gray-200 bg-white"
+          style={{ left: 'calc(12px + var(--radix-tooltip-trigger-width) / 2 - 5px)' }}
+        />
+      </TooltipContent>
+    </Tooltip>
   );
 }
 

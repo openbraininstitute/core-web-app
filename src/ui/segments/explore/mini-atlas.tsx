@@ -4,7 +4,7 @@ import { useAtomValue } from 'jotai';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import { Loader } from '@/components/loader';
@@ -133,7 +133,7 @@ function AllSpeciesBrains() {
 /** The region's atlas beside the data table; `children` is its lower part, or stands alone. */
 export function MiniAtlas({ children }: { children?: (inCard: boolean) => ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
-  const viewer = useAtlasViewer();
+  const { viewer, error: viewerError } = useAtlasViewer();
   const { virtualLabId, projectId } = useWorkspace();
   const searchParams = useSearchParams();
   const isAllSpeciesMode = useAtomValue(speciesSelectionModeAtom) === SpeciesSelectionMode.All;
@@ -147,6 +147,10 @@ export function MiniAtlas({ children }: { children?: (inCard: boolean) => ReactN
   const speciesImage = taxonomyId ? SPECIES_IMAGE_MAP[taxonomyId] : undefined;
   const hasAtlas = !!hierarchyMeta?.atlasId;
 
+  useEffect(() => {
+    if (viewerError) logError('Failed to load the 3D brain atlas viewer', viewerError);
+  }, [viewerError]);
+
   const query = searchParams.toString();
   const atlasHref = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data${query ? `?${query}` : ''}`;
 
@@ -154,7 +158,11 @@ export function MiniAtlas({ children }: { children?: (inCard: boolean) => ReactN
     return (
       // with no species chosen, every species' brain side by side
       <div className={CARD_CLASS}>
-        <div id="mini-atlas-all" data-testid="mini-atlas-all" className={cn(ATLAS_BOX_CLASS, 'isolate')}>
+        <div
+          id="mini-atlas-all"
+          data-testid="mini-atlas-all"
+          className={cn(ATLAS_BOX_CLASS, 'isolate')}
+        >
           <AllSpeciesBrains />
           <AtlasExpandLink href={atlasHref} />
         </div>
@@ -177,7 +185,8 @@ export function MiniAtlas({ children }: { children?: (inCard: boolean) => ReactN
     <div className={CARD_CLASS}>
       <AtlasMorph view="mini">
         <div id="mini-atlas" data-testid="mini-atlas" className={cn(ATLAS_BOX_CLASS, 'group')}>
-          {hasAtlas ? (
+          {/* the picture stands in for a viewer that failed to load or to draw */}
+          {hasAtlas && !viewerError ? (
             <ErrorBoundary
               fallback={picture ?? null}
               onError={(error) => logError('Failed to show the mini 3D brain atlas', error)}

@@ -130,6 +130,17 @@ function buildBulkDeleteNotification(result: DeletionResult): {
   };
 }
 
+/** What the confirm says of the rows it deletes that the listing does not show. */
+function hiddenRowsNote(hidden: number, deleted: number): string | null {
+  if (hidden === 0) return null;
+  if (hidden === deleted) {
+    return deleted === 1
+      ? 'It is not in the scope shown now.'
+      : 'None of them are in the scope shown now.';
+  }
+  return `${hidden} of them ${hidden === 1 ? 'is' : 'are'} not in the scope shown now.`;
+}
+
 export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
   children,
   selectedRows,
@@ -140,10 +151,16 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
   selectionCount,
   className,
   expanding = false,
+  isRowShown,
 }: RenderButtonProps<T> & {
   children?: ReactNode;
   workspace?: WorkspaceContext;
   className?: string;
+  /**
+   * Whether the listing shows a row now. A selection outlives the scope it was made in, so
+   * the confirm counts the rows it deletes that are out of view.
+   */
+  isRowShown?: (row: T) => boolean;
   /** Render as the grid's expanding pill (icon at rest, label on hover/focus-visible). */
   expanding?: boolean;
 }) {
@@ -166,6 +183,8 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
       <SelectionCountBadge count={badgeCount} className="text-destructive" />
     ) : undefined;
   const label = isSingular ? '1 item selected' : `${entityCount} items selected`;
+  const hiddenCount = isRowShown ? projectRows.filter((row) => !isRowShown(row)).length : 0;
+  const hiddenNote = hiddenRowsNote(hiddenCount, entityCount);
   const keptCount = selectedRows.length - entityCount;
   const keptNote =
     keptCount > 0
@@ -304,6 +323,11 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
           <div className="font-bold text-sm text-primary-8">
             Are you sure you want to delete {label}?
           </div>
+          {hiddenNote && (
+            <div data-testid="delete-hidden-note" className="text-sm text-primary-8">
+              {hiddenNote}
+            </div>
+          )}
           {keptNote && <div className="text-sm text-primary-8">{keptNote}</div>}
           <small className="font-light text-primary-6">This action cannot be undone.</small>
         </div>
