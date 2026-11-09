@@ -86,7 +86,7 @@ function renderItem(
         />
       );
     case 'section':
-      return <SanityContentWidget key={key} value={item} />;
+      return <SanityContentWidget key={key} value={item} sectionSlug={sectionSlug} />;
     case 'previewBlock':
       return <SanityContentPreview key={key} value={item} />;
     case 'imageBlock':

@@ -45,9 +45,13 @@ import type { ContentForRichTextWidget } from '@/services/sanity/types/rtf-conte
 
 interface SanityContentWidgetProps {
   value: ContentForRichTextWidget;
+  sectionSlug?: string;
 }
 
-export default async function SanityContentWidget({ value }: SanityContentWidgetProps) {
+export default async function SanityContentWidget({
+  value,
+  sectionSlug,
+}: SanityContentWidgetProps) {
   switch (value.name) {
     case 'downloadButton': {
       const data = await getMissionDownload();
@@ -59,7 +63,7 @@ export default async function SanityContentWidget({ value }: SanityContentWidget
     }
     case 'tripleBloc': {
       const data = await getVirtualLabsBlocks();
-      return <WidgetVirtualLabsPanel data={data} />;
+      return <WidgetVirtualLabsPanel data={data} compact={sectionSlug === 'mission'} />;
     }
     case 'highlight': {
       const [text, links] = await Promise.all([getFoundationsText(), getFoundationsLinks()]);
