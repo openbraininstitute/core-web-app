@@ -374,7 +374,7 @@ export function VirtualLabsPoints() {
           </li>
         ))}
       </ul>
-      <div className={labs.action}>
+      <div className={labs.action} data-chapter-action>
         <button type="button" onClick={actions?.enter} className={labs.button}>
           Get Started
         </button>
@@ -520,7 +520,7 @@ export function StageVideo({
 export function StartNow() {
   const actions = useWalkthroughActions();
   return (
-    <div className="pt-[10px]">
+    <div className="pt-[10px]" data-chapter-action>
       <button type="button" onClick={actions?.enter} className={labs.button}>
         Get Started
       </button>

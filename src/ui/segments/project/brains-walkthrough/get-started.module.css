@@ -195,3 +195,18 @@
   box-shadow: none;
   background: white;
 }
+
+/* Leave the full-width chapter copy clear above the compact phone footer. */
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .customers {
+    bottom: 204px;
+    gap: 6px;
+  }
+  .logoGroup {
+    padding-block: 0;
+  }
+  .logoLink {
+    height: 40px;
+    padding-block: 0;
+  }
+}

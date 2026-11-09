@@ -5,20 +5,44 @@
   --chapter-copy-size: clamp(15px, 1.15vw, 17px);
   --chapter-copy-leading: 1.55;
   --chapter-content-top: clamp(140px, 18vh, 180px);
-  /* A title's capitals start this far into its line (Gabarito at line-height 1.06); its media starts level with them. */
-  --chapter-media-top: calc(var(--chapter-content-top) + var(--chapter-title-size) * 0.185);
+  --chapter-media-top: var(--chapter-content-top);
   --chapter-media-foot: max(100px, 12vh);
 }
-/* Beside its words, a chapter's media stays put in the page, its top level with the title. */
+/* All public chapter media uses Explore's frame, including differently shaped source films. */
 @media (min-width: 64rem), (orientation: landscape) {
+  .publicTour {
+    --chapter-media-width: min(
+      calc((62vw - 24px) * 0.88),
+      calc((var(--chapter-h) - var(--chapter-media-top) - var(--chapter-media-foot)) * 1512 / 948)
+    );
+    --chapter-media-height: calc(var(--chapter-media-width) * 948 / 1512);
+  }
   .publicTour [data-chapter-media] {
     top: var(--chapter-media-top);
-    bottom: var(--chapter-media-foot);
+    right: calc(24px + (62vw - 24px) * 0.06);
+    bottom: auto;
+    left: auto;
+    width: var(--chapter-media-width);
+    height: var(--chapter-media-height);
+    margin: 0;
+    padding: 0;
+    display: flex;
     align-items: flex-start;
+    justify-content: center;
     transform: none;
   }
+  .publicTour [data-chapter-media] > figure {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+  }
   .publicTour [data-chapter-media] video {
-    max-height: calc(var(--chapter-h) - var(--chapter-media-top) - var(--chapter-media-foot));
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    margin: 0;
+    object-fit: contain;
+    translate: none;
   }
 }
 .publicText {
@@ -33,11 +57,17 @@
   max-width: none;
   margin: 0;
   padding: var(--chapter-content-top) 0 96px var(--chapter-text-inset);
-  gap: 14px;
+  gap: 22px;
 }
-.publicTour .publicText > p:first-child {
-  position: absolute;
-  top: clamp(108px, 14vh, 148px);
+.publicTour .publicText [data-chapter-kicker] {
+  position: static;
+  margin: -8px 0 0;
+  font-size: var(--chapter-copy-size);
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #365479;
 }
 .publicTour .publicText h1,
 .publicTour .publicText h2 {
@@ -48,7 +78,9 @@
   letter-spacing: -0.025em;
   color: #082d63;
   text-align: left;
-  min-height: calc(var(--chapter-title-size) * 2.12);
+  width: 100%;
+  max-width: none;
+  min-height: 0;
 }
 .publicText > div {
   align-items: flex-start;
@@ -68,6 +100,8 @@
 }
 .publicText [data-chapter-action] {
   justify-content: flex-start;
+  margin-top: 12px;
+  padding-top: 0;
 }
 .publicText [data-chapter-body] {
   color: #365479;
@@ -86,7 +120,7 @@
   font-size: var(--chapter-copy-size);
 }
 .publicText [data-chapter-body] li p + p {
-  font-size: 13px;
+  font-size: var(--chapter-copy-size);
 }
 .publicText [data-chapter-body] > div {
   align-items: flex-start;
@@ -105,9 +139,6 @@
   .publicTour .publicText[data-chapter-text="agents"] {
     width: 100%;
     padding: calc(var(--stage-video-top) + var(--stage-video-h) + 28px) 20px 104px;
-  }
-  .publicTour .publicText > p:first-child {
-    position: static;
   }
   .publicTour .publicText h1,
   .publicTour .publicText h2 {
@@ -338,7 +369,7 @@
 
 @media (max-width: 63.999rem) and (orientation: portrait) {
   .publicTour .publicText[data-chapter-text="join"] {
-    padding-top: 116px;
+    padding-top: calc(var(--stage-video-top) + var(--stage-video-h) + 28px);
   }
 }
 
@@ -356,11 +387,40 @@
 }
 @media (max-width: 63.999rem) and (orientation: portrait) {
   .publicTour .publicText[data-chapter-text="join"] {
-    width: 64%;
-    padding-right: 0;
+    width: 100%;
     gap: 12px;
   }
-  .publicTour .publicText[data-chapter-text="join"] h1 {
-    font-size: clamp(26px, 7vw, 34px);
+}
+
+/* Upright screens share one media frame before the chapter copy. */
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .publicTour [data-chapter-media] {
+    top: var(--stage-video-top);
+    bottom: auto;
+    left: 16px;
+    right: 16px;
+    width: auto;
+    height: var(--stage-video-h);
+    max-width: 600px;
+    margin-inline: auto;
+    transform: none;
+  }
+  .publicTour [data-chapter-media] > figure,
+  .publicTour [data-chapter-media] video {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    margin: 0;
+    object-fit: contain;
+    translate: none;
+  }
+}
+
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .publicTour .publicText {
+    gap: 16px;
+  }
+  .publicText [data-chapter-action] {
+    margin-top: 8px;
   }
 }

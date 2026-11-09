@@ -1002,7 +1002,7 @@ function ChapterText({
         publicOpening && publicTour.publicText
       )}
     >
-      {kicker && (
+      {kicker && !publicOpening && (
         <p className="text-[11px] leading-[16px] font-semibold tracking-[0.16em] uppercase">
           {kicker}
         </p>
@@ -1029,6 +1029,7 @@ function ChapterText({
           {title}
         </h2>
       )}
+      {kicker && publicOpening && <p data-chapter-kicker>{kicker}</p>}
       {body && (
         <div
           data-chapter-body

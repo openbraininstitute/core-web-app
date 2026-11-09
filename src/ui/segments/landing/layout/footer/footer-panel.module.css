@@ -51,6 +51,15 @@
   border: 0;
 }
 
+/* Keep app-wide link interaction colors from changing the public footer palette. */
+.footerPanel a,
+.footerPanel a:visited,
+.footerPanel a:hover,
+.footerPanel a:focus,
+.footerPanel a:active {
+  color: inherit;
+}
+
 .links a,
 .legal a {
   padding-block: 4px;
