@@ -8,14 +8,15 @@ export interface ChapterPlayback {
   progress: number;
   playing: boolean;
   toggle: () => void;
-  /** The visitor took over (scrolled, swiped, picked a chapter): stop until they press play again. */
+  /** The visitor took over (scrolled, swiped, picked a chapter): stop moving on until they press play. */
   hold: () => void;
 }
 
 /**
  * Videos finish once; chapters made of interactive models get a timed viewing interval, which stands
- * still while a mouse is over the scene, so a model being turned is never swept away. Once paused, by
- * the button or by `hold`, playback stays paused across chapters until the visitor presses play.
+ * still while a mouse is over the scene, so a model being turned is never swept away. Once the visitor
+ * takes over (`hold`) or presses pause, the tour stops moving on, across chapters, until they press play;
+ * only the pause button stops the video on screen, and every chapter's video still plays, looping.
  */
 export function useChapterPlayback({
   stage,
@@ -33,7 +34,7 @@ export function useChapterPlayback({
   const [state, setState] = useState({ id: chapterId, progress: 0, playing: false });
   const toggle = useRef(() => {});
   const holdCurrent = useRef(() => {});
-  // Outlives a chapter: the visitor's choice to stop carries on to the next screens.
+  // Outlives a chapter: once the visitor takes over, the tour no longer moves on by itself.
   const held = useRef(false);
 
   useEffect(() => {
@@ -42,27 +43,30 @@ export function useChapterPlayback({
     if (!host) return;
     const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
     let visible = document.visibilityState !== 'hidden';
-    let paused = held.current;
+    // The current chapter's video, stopped by the pause button.
+    let paused = false;
     let hovering = false;
     let completed = false;
     let elapsed = 0;
     let last = Date.now();
     let video: HTMLVideoElement | null = null;
+    let videoLoops = false;
     let detachVideo = () => {};
     const publish = (progress: number, playing: boolean) =>
       setState({ id: chapterId, progress, playing });
     const complete = () => {
-      if (completed || !visible || preference.matches || paused) return;
+      if (completed || !visible || preference.matches || paused || held.current) return;
       completed = true;
       publish(1, false);
       onComplete();
     };
     const update = () => {
       const now = Date.now();
-      const running = visible && !preference.matches && !paused && !completed;
+      const running = visible && !preference.matches && !paused && !completed && !held.current;
       if (video) {
+        // Held, a video loops in place: the line no longer counts down to the next screen.
         const progress =
-          Number.isFinite(video.duration) && video.duration > 0
+          !held.current && Number.isFinite(video.duration) && video.duration > 0
             ? video.currentTime / video.duration
             : 0;
         publish(Math.min(1, progress), running && !video.paused);
@@ -82,7 +86,9 @@ export function useChapterPlayback({
       if (!candidate) return;
       elapsed = 0;
       const originalLoop = candidate.loop;
-      candidate.loop = false;
+      videoLoops = originalLoop;
+      // It ends, to move on, only while the tour plays by itself.
+      candidate.loop = held.current ? originalLoop : false;
       // A neighbouring scene stays mounted while scrolling. Re-entering an ended video must
       // start a fresh viewing, rather than immediately sending the visitor forward again.
       candidate.currentTime = 0;
@@ -118,22 +124,26 @@ export function useChapterPlayback({
       update();
     };
     toggle.current = () => {
-      if (video) {
-        if (video.paused) {
-          paused = false;
+      if (held.current || paused) {
+        held.current = false;
+        paused = false;
+        if (video) {
+          video.loop = false;
           void video.play().catch(() => {});
-        } else {
-          paused = true;
+        }
+      } else {
+        held.current = true;
+        paused = true;
+        if (video) {
+          video.loop = videoLoops;
           video.pause();
         }
-      } else paused = !paused;
-      held.current = paused;
+      }
       last = Date.now();
       update();
     };
     holdCurrent.current = () => {
-      paused = true;
-      video?.pause();
+      if (video) video.loop = videoLoops;
       update();
     };
     const pointerMove = (event: PointerEvent) => {
@@ -147,7 +157,7 @@ export function useChapterPlayback({
     host.addEventListener('pointermove', pointerMove, { passive: true });
     host.addEventListener('pointerleave', pointerLeave);
     bind();
-    publish(0, visible && !preference.matches && !paused);
+    publish(0, visible && !preference.matches && !paused && !held.current);
     const observer = new MutationObserver(bind);
     observer.observe(host, {
       childList: true,

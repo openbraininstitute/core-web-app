@@ -154,6 +154,64 @@ describe('chapter playback', () => {
     expect(onComplete).toHaveBeenCalledTimes(1);
   });
 
+  it('keeps videos playing once the visitor takes over, only no longer moving on', () => {
+    const play = vi.mocked(HTMLMediaElement.prototype.play);
+    const pause = vi.mocked(HTMLMediaElement.prototype.pause);
+    const addVideo = () => {
+      host.replaceChildren();
+      const layer = document.createElement('div');
+      layer.dataset.stageCurrent = 'true';
+      const video = document.createElement('video');
+      video.loop = true;
+      Object.defineProperty(video, 'duration', { value: 20 });
+      layer.append(video);
+      host.append(layer);
+      return video;
+    };
+    const first = addVideo();
+    const onComplete = vi.fn();
+    const stage = { current: host };
+    const { result, rerender } = renderHook(
+      ({ chapterId }) => useChapterPlayback({ stage, chapterId, enabled: true, onComplete }),
+      { initialProps: { chapterId: 'labs' } }
+    );
+    pause.mockClear();
+    act(() => result.current.hold());
+    expect(pause.mock.calls.length).toBe(0);
+    // It loops in place rather than ending into the next screen.
+    expect(first.loop).toBe(true);
+    expect(result.current.playing).toBe(false);
+    const next = addVideo();
+    play.mockClear();
+    rerender({ chapterId: 'notebooks' });
+    expect(play.mock.calls.length).toBeGreaterThan(0);
+    expect(next.loop).toBe(true);
+    fireEvent.ended(next);
+    expect(onComplete).not.toHaveBeenCalled();
+    // Play resumes the tour from the screen on: this video now ends into the next one.
+    act(() => result.current.toggle());
+    expect(next.loop).toBe(false);
+    fireEvent.ended(next);
+    expect(onComplete).toHaveBeenCalledTimes(1);
+  });
+
+  it('pauses the video on screen only from the pause button', () => {
+    const layer = document.createElement('div');
+    layer.dataset.stageCurrent = 'true';
+    const video = document.createElement('video');
+    layer.append(video);
+    host.append(layer);
+    const pause = vi.mocked(HTMLMediaElement.prototype.pause);
+    const onComplete = vi.fn();
+    const stage = { current: host };
+    const { result } = renderHook(() =>
+      useChapterPlayback({ stage, chapterId: 'labs', enabled: true, onComplete })
+    );
+    pause.mockClear();
+    act(() => result.current.toggle());
+    expect(pause.mock.calls.length).toBe(1);
+  });
+
   it('holds the viewing interval while a mouse is over the current scene', () => {
     const layer = document.createElement('div');
     layer.dataset.stageCurrent = 'true';
