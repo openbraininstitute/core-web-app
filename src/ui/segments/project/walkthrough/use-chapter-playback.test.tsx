@@ -17,8 +17,20 @@ beforeEach(() => {
     'matchMedia',
     vi.fn(() => ({ matches: reduced, addEventListener: vi.fn(), removeEventListener: vi.fn() }))
   );
-  vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
-  vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
+  vi.spyOn(HTMLMediaElement.prototype, 'play').mockImplementation(function (
+    this: HTMLMediaElement
+  ) {
+    Object.defineProperty(this, 'paused', { configurable: true, value: false });
+    this.dispatchEvent(new Event('play'));
+    return Promise.resolve();
+  });
+  vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(function (
+    this: HTMLMediaElement
+  ) {
+    const wasPlaying = !this.paused;
+    Object.defineProperty(this, 'paused', { configurable: true, value: true });
+    if (wasPlaying) this.dispatchEvent(new Event('pause'));
+  });
   host = document.createElement('div');
   document.body.append(host);
 });
@@ -45,6 +57,7 @@ describe('chapter playback', () => {
       useChapterPlayback({ stage, chapterId: 'labs', enabled: true, onComplete })
     );
     expect(video.loop).toBe(false);
+    expect(result.current.playing).toBe(true);
     video.currentTime = 10;
     fireEvent.timeUpdate(video);
     expect(result.current.progress).toBe(0.5);
@@ -180,7 +193,10 @@ describe('chapter playback', () => {
     expect(pause.mock.calls.length).toBe(0);
     // It loops in place rather than ending into the next screen.
     expect(first.loop).toBe(true);
-    expect(result.current.playing).toBe(false);
+    expect(result.current.playing).toBe(true);
+    first.currentTime = 10;
+    fireEvent.timeUpdate(first);
+    expect(result.current.progress).toBe(0.5);
     const next = addVideo();
     play.mockClear();
     rerender({ chapterId: 'notebooks' });
@@ -188,8 +204,14 @@ describe('chapter playback', () => {
     expect(next.loop).toBe(true);
     fireEvent.ended(next);
     expect(onComplete).not.toHaveBeenCalled();
+    // The displayed Pause action pauses the playing film even when the tour is held.
+    expect(result.current.playing).toBe(true);
+    act(() => result.current.toggle());
+    expect(result.current.playing).toBe(false);
+    expect(next.paused).toBe(true);
     // Play resumes the tour from the screen on: this video now ends into the next one.
     act(() => result.current.toggle());
+    expect(result.current.playing).toBe(true);
     expect(next.loop).toBe(false);
     fireEvent.ended(next);
     expect(onComplete).toHaveBeenCalledTimes(1);

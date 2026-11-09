@@ -64,12 +64,12 @@ export function useChapterPlayback({
       const now = Date.now();
       const running = visible && !preference.matches && !paused && !completed && !held.current;
       if (video) {
-        // Held, a video loops in place: the line no longer counts down to the next screen.
+        // Manual navigation holds the tour, not the film: controls still reflect actual playback.
         const progress =
-          !held.current && Number.isFinite(video.duration) && video.duration > 0
+          Number.isFinite(video.duration) && video.duration > 0
             ? video.currentTime / video.duration
             : 0;
-        publish(Math.min(1, progress), running && !video.paused);
+        publish(Math.min(1, progress), visible && !video.paused && !video.ended);
         if (video.ended) complete();
       } else {
         if (running && !hovering) elapsed += now - last;
@@ -124,7 +124,8 @@ export function useChapterPlayback({
       update();
     };
     toggle.current = () => {
-      if (held.current || paused) {
+      const resume = video ? video.paused || video.ended : held.current || paused;
+      if (resume) {
         held.current = false;
         paused = false;
         if (video) {
@@ -157,7 +158,7 @@ export function useChapterPlayback({
     host.addEventListener('pointermove', pointerMove, { passive: true });
     host.addEventListener('pointerleave', pointerLeave);
     bind();
-    publish(0, visible && !preference.matches && !paused && !held.current);
+    update();
     const observer = new MutationObserver(bind);
     observer.observe(host, {
       childList: true,

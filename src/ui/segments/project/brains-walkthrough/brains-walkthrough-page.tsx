@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
 
 import { getSocialMediaLinks } from '@/services/sanity/api/get-social-media';
 import FooterPanel from '@/ui/segments/landing/layout/footer/footer-panel';
@@ -148,12 +149,30 @@ function BrainScene({ scene, near }: { scene: TBrainScene; near: boolean }) {
 
 /** Reuse the information pages' footer at the final public chapter. */
 function PublicTourFooter() {
+  const footer = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const element = footer.current;
+    const tour = element?.parentElement;
+    if (!element || !tour) return;
+    const measure = () =>
+      tour.style.setProperty(
+        '--public-footer-height',
+        `${element.getBoundingClientRect().height}px`
+      );
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    measure();
+    return () => {
+      observer.disconnect();
+      tour.style.removeProperty('--public-footer-height');
+    };
+  }, []);
   const { data: socialMediaLinks = [] } = useQuery({
     queryKey: ['public-tour', 'footer-social-links'],
     queryFn: getSocialMediaLinks,
   });
   return (
-    <div className="pointer-events-auto fixed inset-x-0 bottom-0 z-[67]">
+    <div ref={footer} className="pointer-events-auto fixed inset-x-0 bottom-0 z-[67]">
       <FooterPanel socialMediaLinks={socialMediaLinks} />
     </div>
   );

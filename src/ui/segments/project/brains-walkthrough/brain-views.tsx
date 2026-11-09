@@ -437,11 +437,11 @@ export function EarlyAdopters() {
                         maskImage: `url(${adopter.imageURL})`,
                         maskSize: 'contain',
                         maskRepeat: 'no-repeat',
-                        maskPosition: 'center',
+                        maskPosition: 'center bottom',
                         WebkitMaskImage: `url(${adopter.imageURL})`,
                         WebkitMaskSize: 'contain',
                         WebkitMaskRepeat: 'no-repeat',
-                        WebkitMaskPosition: 'center',
+                        WebkitMaskPosition: 'center bottom',
                       }}
                     />
                   </a>
@@ -470,7 +470,7 @@ export function NotebooksVideo({ near = true }: { near?: boolean }) {
     (card) => card.title === 'Notebooks' && card.thumbnailType === 'video'
   )?.video;
   if (!src) return null;
-  return <StageVideo video={{ src, poster: '' }} presentation="animation" near={near} />;
+  return <StageVideo video={{ src, poster: '' }} near={near} />;
 }
 
 /**
