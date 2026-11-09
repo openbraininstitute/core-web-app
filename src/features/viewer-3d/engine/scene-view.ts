@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
+import { WHEEL_ZOOMS } from '../wheel-zooms';
 import { distanceFor, fitHalfHeight, halfHeightAt, orthoClip, orthoPixelScale } from './camera';
 import { boxCorners, clipRange, fitDistance, orbitRadius } from './framing';
 import { type Axis, axisView, type Sign } from './gizmo';
@@ -385,6 +386,7 @@ export abstract class SceneView implements ViewControls {
 
   private onWheel = (e: WheelEvent): void => {
     if (e.ctrlKey || document.fullscreenElement?.contains(this.container)) return;
+    if (this.container.closest(`[${WHEEL_ZOOMS}]`)) return;
     e.stopPropagation();
     for (const listener of this.wheelListeners) listener();
   };

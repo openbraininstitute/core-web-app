@@ -26,6 +26,7 @@ import { useCircuitDrawsEachCell } from '@/features/scan-config/components/circu
 import { NEUTRAL_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
 import { useViewerSpikes } from '@/features/spike-viewer/hooks/use-session-spikes';
 import useSpikeTrace from '@/features/spike-viewer/hooks/use-spike-trace';
+import { WHEEL_ZOOMS } from '@/features/viewer-3d/wheel-zooms';
 import { PillGroup, PillSelect } from '@/ui/molecules/select/pill-select';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -316,7 +317,8 @@ export function LfpScene({
   const spikesLoading = spikesOn && !shownSpikes && !spikeRead?.problem;
 
   return (
-    <div className="relative h-full min-h-0 overflow-hidden rounded-2xl">
+    // Its panes fill the screen, so a wheel over the scene has no page to scroll.
+    <div className="relative h-full min-h-0 overflow-hidden rounded-2xl" {...{ [WHEEL_ZOOMS]: '' }}>
       {drawsEachCell !== undefined && (
         <CircuitScene
           circuit={circuit}
