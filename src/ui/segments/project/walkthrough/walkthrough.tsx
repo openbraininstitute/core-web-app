@@ -93,6 +93,10 @@ const GLIDE_PER_EXTRA_SCREEN_MS = 400;
 /** How far a wheel or trackpad must go to turn the page, px; and how long it must then rest before it can again, ms. */
 const WHEEL_TURN_PX = 24;
 const WHEEL_REST_MS = 180;
+/** Keys that move the page: pressing one is taking over the tour from its playback. */
+/** How far a finger travels up or down before it is a swipe taking over the tour, px. */
+const SWIPE_PX = 12;
+const SCROLL_KEYS = new Set(['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End', ' ']);
 
 /** Where a page of `sections` comes to rest: each one's top, and the foot of one taller than the screen. */
 function chapterStops(root: HTMLElement, sections: HTMLElement[]): number[] {
@@ -239,6 +243,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   const navigationUntil = useRef(0);
   const pendingIntroChapter = useRef<string | null>(null);
   const wheelHeldUntil = useRef(0);
+  const touchFrom = useRef<{ x: number; y: number } | null>(null);
   const glide = useRef<{ stop: () => void } | null>(null);
   const [finishing, setFinishing] = useState(false);
   const [colorSlot, setColorSlot] = useState<HTMLElement | null>(null);
@@ -646,12 +651,27 @@ export function Walkthrough<C extends IWalkthroughChapter>({
             ref={setRoot}
             onWheelCapture={() => {
               navigationUntil.current = Date.now() + 1000;
+              // Not the tail of the gesture that left the landing: that one starts the tour.
+              if (introDone && performance.now() > wheelHeldUntil.current) playback.hold();
             }}
-            onTouchStartCapture={() => {
+            onTouchStartCapture={(event) => {
               navigationUntil.current = Date.now() + 1000;
+              const touch = event.touches[0];
+              touchFrom.current = touch ? { x: touch.clientX, y: touch.clientY } : null;
             }}
-            onKeyDownCapture={() => {
+            // An up or down swipe, not a tap (tapping the play button must not first stop it) nor a
+            // sideways one (the chapter bar scrolls sideways on a phone).
+            onTouchMoveCapture={(event) => {
+              const from = touchFrom.current;
+              const touch = event.touches[0];
+              if (!introDone || !from || !touch) return;
+              const dx = Math.abs(touch.clientX - from.x);
+              const dy = Math.abs(touch.clientY - from.y);
+              if (dy > SWIPE_PX && dy > dx) playback.hold();
+            }}
+            onKeyDownCapture={(event) => {
               navigationUntil.current = Date.now() + 1000;
+              if (introDone && SCROLL_KEYS.has(event.key)) playback.hold();
             }}
             className={cn(
               'text-primary-9 bg-white transition-[opacity,scale] ease-in-out',
@@ -681,7 +701,11 @@ export function Walkthrough<C extends IWalkthroughChapter>({
               chapter: on,
               enter: askEnter,
               ready: floatReady,
-              goTo,
+              // Picking a chapter by hand is taking over the tour.
+              goTo: (id) => {
+                playback.hold();
+                goTo(id);
+              },
               playback,
             })}
             {intro && !introDone && !introContent && (

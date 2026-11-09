@@ -134,4 +134,45 @@ describe('chapter playback', () => {
     act(() => vi.advanceTimersByTime(30000));
     expect(onComplete).not.toHaveBeenCalled();
   });
+
+  it('stays held across chapters once the visitor takes over, until play is pressed', () => {
+    const onComplete = vi.fn();
+    const stage = { current: host };
+    const { result, rerender } = renderHook(
+      ({ chapterId }) => useChapterPlayback({ stage, chapterId, enabled: true, onComplete }),
+      { initialProps: { chapterId: 'models' } }
+    );
+    act(() => vi.advanceTimersByTime(6000));
+    act(() => result.current.hold());
+    expect(result.current.playing).toBe(false);
+    rerender({ chapterId: 'notebooks' });
+    act(() => vi.advanceTimersByTime(30000));
+    expect(result.current.playing).toBe(false);
+    expect(onComplete).not.toHaveBeenCalled();
+    act(() => result.current.toggle());
+    act(() => vi.advanceTimersByTime(24000));
+    expect(onComplete).toHaveBeenCalledTimes(1);
+  });
+
+  it('holds the viewing interval while a mouse is over the current scene', () => {
+    const layer = document.createElement('div');
+    layer.dataset.stageCurrent = 'true';
+    const model = document.createElement('canvas');
+    layer.append(model);
+    host.append(layer);
+    const onComplete = vi.fn();
+    const stage = { current: host };
+    const { result } = renderHook(() =>
+      useChapterPlayback({ stage, chapterId: 'models', enabled: true, onComplete })
+    );
+    act(() => vi.advanceTimersByTime(12000));
+    fireEvent.pointerMove(model, { pointerType: 'mouse' });
+    act(() => vi.advanceTimersByTime(60000));
+    expect(result.current.progress).toBe(0.5);
+    expect(result.current.playing).toBe(true);
+    expect(onComplete).not.toHaveBeenCalled();
+    fireEvent.pointerLeave(host);
+    act(() => vi.advanceTimersByTime(12000));
+    expect(onComplete).toHaveBeenCalledTimes(1);
+  });
 });

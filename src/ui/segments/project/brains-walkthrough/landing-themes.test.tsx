@@ -30,13 +30,21 @@ describe('chapter timeline', () => {
       publicAppearance: true,
     };
     const { container, rerender } = render(
-      <ThemeLine {...props} playback={{ progress: 0.25, playing: true, toggle: vi.fn() }} />
+      <ThemeLine
+        {...props}
+        playback={{ progress: 0.25, playing: true, toggle: vi.fn(), hold: vi.fn() }}
+      />
     );
     const line = container.querySelector('[class*="timelinePlayback"]');
     expect(line).toBeInTheDocument();
     expect(line).toHaveStyle({ left: '50px', width: '100px' });
     expect(line?.firstElementChild).toHaveStyle({ transform: 'scaleX(0.25)' });
-    rerender(<ThemeLine {...props} playback={{ progress: 0.5, playing: true, toggle: vi.fn() }} />);
+    rerender(
+      <ThemeLine
+        {...props}
+        playback={{ progress: 0.5, playing: true, toggle: vi.fn(), hold: vi.fn() }}
+      />
+    );
     expect(line?.firstElementChild).toHaveStyle({ transform: 'scaleX(0.5)' });
   });
 });

@@ -8,9 +8,15 @@ export interface ChapterPlayback {
   progress: number;
   playing: boolean;
   toggle: () => void;
+  /** The visitor took over (scrolled, swiped, picked a chapter): stop until they press play again. */
+  hold: () => void;
 }
 
-/** Videos finish once; chapters made of interactive models get a timed viewing interval. */
+/**
+ * Videos finish once; chapters made of interactive models get a timed viewing interval, which stands
+ * still while a mouse is over the scene, so a model being turned is never swept away. Once paused, by
+ * the button or by `hold`, playback stays paused across chapters until the visitor presses play.
+ */
 export function useChapterPlayback({
   stage,
   chapterId,
@@ -26,6 +32,9 @@ export function useChapterPlayback({
 }): ChapterPlayback {
   const [state, setState] = useState({ id: chapterId, progress: 0, playing: false });
   const toggle = useRef(() => {});
+  const holdCurrent = useRef(() => {});
+  // Outlives a chapter: the visitor's choice to stop carries on to the next screens.
+  const held = useRef(false);
 
   useEffect(() => {
     if (!enabled) return;
@@ -33,7 +42,8 @@ export function useChapterPlayback({
     if (!host) return;
     const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
     let visible = document.visibilityState !== 'hidden';
-    let paused = false;
+    let paused = held.current;
+    let hovering = false;
     let completed = false;
     let elapsed = 0;
     let last = Date.now();
@@ -58,7 +68,7 @@ export function useChapterPlayback({
         publish(Math.min(1, progress), running && !video.paused);
         if (video.ended) complete();
       } else {
-        if (running) elapsed += now - last;
+        if (running && !hovering) elapsed += now - last;
         publish(Math.min(1, elapsed / duration), running);
         if (elapsed >= duration) complete();
       }
@@ -117,11 +127,27 @@ export function useChapterPlayback({
           video.pause();
         }
       } else paused = !paused;
+      held.current = paused;
       last = Date.now();
       update();
     };
+    holdCurrent.current = () => {
+      paused = true;
+      video?.pause();
+      update();
+    };
+    const pointerMove = (event: PointerEvent) => {
+      if (event.pointerType !== 'mouse') return;
+      hovering =
+        event.target instanceof Element && !!event.target.closest('[data-stage-current="true"]');
+    };
+    const pointerLeave = () => {
+      hovering = false;
+    };
+    host.addEventListener('pointermove', pointerMove, { passive: true });
+    host.addEventListener('pointerleave', pointerLeave);
     bind();
-    publish(0, visible && !preference.matches);
+    publish(0, visible && !preference.matches && !paused);
     const observer = new MutationObserver(bind);
     observer.observe(host, {
       childList: true,
@@ -138,7 +164,10 @@ export function useChapterPlayback({
       detachVideo();
       document.removeEventListener('visibilitychange', visibility);
       preference.removeEventListener('change', visibility);
+      host.removeEventListener('pointermove', pointerMove);
+      host.removeEventListener('pointerleave', pointerLeave);
       toggle.current = () => {};
+      holdCurrent.current = () => {};
     };
   }, [chapterId, enabled, stage, onComplete, duration]);
 
@@ -146,5 +175,9 @@ export function useChapterPlayback({
     progress: state.id === chapterId ? state.progress : 0,
     playing: enabled && state.id === chapterId && state.playing,
     toggle: () => toggle.current(),
+    hold: () => {
+      held.current = true;
+      holdCurrent.current();
+    },
   };
 }

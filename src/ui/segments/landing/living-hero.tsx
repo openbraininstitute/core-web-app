@@ -13,13 +13,18 @@ import styles from './living-hero.module.css';
 
 const SLIDE_EASE = [0.65, 0, 0.35, 1] as const;
 export const SCIENCE_SCENES = [
-  { label: 'Build models', group: 'build', duration: 10000 },
-  { label: 'Explore models', group: 'explore', duration: 14500 },
-  { label: 'Inspect neurons', group: 'inspect', duration: 10000 },
-  { label: 'Simulate activity', group: 'simulate', duration: 12000 },
+  { label: 'Build models', group: 'build' },
+  { label: 'Explore models', group: 'explore' },
+  { label: 'Inspect neurons', group: 'inspect' },
+  { label: 'Simulate activity', group: 'simulate' },
 ] as const;
+/** How long the opening stands, while the page is visible, before it glides on to the first chapter, ms. */
+export const LANDING_AUTO_CONTINUE_MS = 8000;
 
-/** The public opening stays in place until the visitor chooses a chapter or scrolls. */
+/**
+ * The public opening shows one of the science scenes, picked at random on each visit, then glides on to the
+ * Virtual Labs chapter by itself unless the visitor gets there first (a chapter, the arrow or a scroll).
+ */
 export function LivingHero({
   onContinue,
   onChapter,
@@ -27,14 +32,18 @@ export function LivingHero({
   onContinue: () => void;
   onChapter: (id: string) => void;
 }) {
-  const [scene, setScene] = useState(0);
-  const [playing, setPlaying] = useState(true);
+  // Picked once mounted, so the server's markup and the first client render agree.
+  const [scene, setScene] = useState<number | null>(null);
   const [reduced, setReduced] = useState(true);
   const [visible, setVisible] = useState(true);
   const touchY = useRef<number | null>(null);
   const heroRef = useRef<HTMLElement>(null);
-  const active = SCIENCE_SCENES[scene];
-  const animate = playing && !reduced && visible;
+  const active = scene === null ? null : SCIENCE_SCENES[scene];
+  const animate = !reduced && visible;
+
+  useEffect(() => {
+    setScene(Math.floor(Math.random() * SCIENCE_SCENES.length));
+  }, []);
 
   useEffect(() => {
     const media = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -50,14 +59,29 @@ export function LivingHero({
     };
   }, []);
 
+  // The parent hands a fresh `onContinue` each render; the countdown must not restart with it.
+  const continueRef = useRef(onContinue);
   useEffect(() => {
-    if (!animate) return;
-    const timer = window.setTimeout(
-      () => setScene((scene + 1) % SCIENCE_SCENES.length),
-      SCIENCE_SCENES[scene].duration
-    );
-    return () => window.clearTimeout(timer);
-  }, [animate, scene]);
+    continueRef.current = onContinue;
+  }, [onContinue]);
+
+  // Counts only while the page is shown: a tab opened in the background still opens on the landing.
+  const shownFor = useRef(0);
+  useEffect(() => {
+    if (!visible || shownFor.current >= LANDING_AUTO_CONTINUE_MS) return;
+    const started = performance.now();
+    const timer = window.setTimeout(() => {
+      shownFor.current = LANDING_AUTO_CONTINUE_MS;
+      continueRef.current();
+    }, LANDING_AUTO_CONTINUE_MS - shownFor.current);
+    return () => {
+      shownFor.current = Math.min(
+        LANDING_AUTO_CONTINUE_MS,
+        shownFor.current + performance.now() - started
+      );
+      window.clearTimeout(timer);
+    };
+  }, [visible]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -135,18 +159,20 @@ export function LivingHero({
             of thought
           </h1>
           <p className={styles.caption} aria-live="polite" data-testid="science-caption">
-            <AnimatePresence initial={false}>
-              <motion.span
-                key={active.label}
-                className={styles.captionWords}
-                initial={{ x: reduced ? 0 : '100%' }}
-                animate={{ x: 0 }}
-                exit={{ x: reduced ? 0 : '-100%' }}
-                transition={{ duration: reduced ? 0 : 1, ease: SLIDE_EASE }}
-              >
-                {active.label}
-              </motion.span>
-            </AnimatePresence>
+            {active && (
+              <AnimatePresence initial={false}>
+                <motion.span
+                  key={active.label}
+                  className={styles.captionWords}
+                  initial={{ x: reduced ? 0 : '100%' }}
+                  animate={{ x: 0 }}
+                  exit={{ x: reduced ? 0 : '-100%' }}
+                  transition={{ duration: reduced ? 0 : 1, ease: SLIDE_EASE }}
+                >
+                  {active.label}
+                </motion.span>
+              </AnimatePresence>
+            )}
           </p>
           <Link className={styles.cta} href="/app/virtual-lab">
             Try it now
@@ -154,29 +180,32 @@ export function LivingHero({
           <p className={styles.reassurance}>In your browser. Nothing to install.</p>
         </div>
         <div className={styles.cubeBackdrop}>
-          <ModelCubeField
-            group={active.group}
-            playing={false}
-            reduced
-            onSelect={(group) => {
-              setScene(SCIENCE_SCENES.findIndex((item) => item.group === group));
-              setPlaying(true);
-            }}
-          />
+          {active && (
+            <ModelCubeField
+              group={active.group}
+              playing={false}
+              reduced
+              onSelect={(group) =>
+                setScene(SCIENCE_SCENES.findIndex((item) => item.group === group))
+              }
+            />
+          )}
         </div>
         <div className={styles.showcase}>
-          <AnimatePresence initial={false}>
-            <motion.div
-              key={active.group}
-              className={styles.layer}
-              initial={{ x: reduced ? 0 : '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: reduced ? 0 : '-100%' }}
-              transition={{ duration: reduced ? 0 : 1, ease: SLIDE_EASE }}
-            >
-              <FeaturedCubeModel group={active.group} playing={animate} reduced={reduced} />
-            </motion.div>
-          </AnimatePresence>
+          {active && (
+            <AnimatePresence initial={false}>
+              <motion.div
+                key={active.group}
+                className={styles.layer}
+                initial={{ x: reduced ? 0 : '100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: reduced ? 0 : '-100%' }}
+                transition={{ duration: reduced ? 0 : 1, ease: SLIDE_EASE }}
+              >
+                <FeaturedCubeModel group={active.group} playing={animate} reduced={reduced} />
+              </motion.div>
+            </AnimatePresence>
+          )}
         </div>
       </div>
       <button

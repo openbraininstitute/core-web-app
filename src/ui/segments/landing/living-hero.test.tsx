@@ -8,7 +8,7 @@ vi.mock('@/ui/segments/project/brains-walkthrough/chapters', () => ({
 
 vi.mock('next/dynamic', () => ({ default: () => () => null }));
 
-import { LivingHero, SCIENCE_SCENES } from './living-hero';
+import { LANDING_AUTO_CONTINUE_MS, LivingHero, SCIENCE_SCENES } from './living-hero';
 
 let reduced = false;
 beforeEach(() => {
@@ -19,6 +19,11 @@ beforeEach(() => {
     vi.fn(() => ({ matches: reduced, addEventListener: vi.fn(), removeEventListener: vi.fn() }))
   );
 });
+/** Makes the hero's random pick land on the given scene. */
+function pick(index: number) {
+  vi.spyOn(Math, 'random').mockReturnValue((index + 0.5) / SCIENCE_SCENES.length);
+}
+
 afterEach(() => {
   cleanup();
   vi.useRealTimers();
@@ -27,51 +32,63 @@ afterEach(() => {
 });
 
 describe('public science opening', () => {
-  it('cycles the scientific visuals while preserving the headline, CTA and opening screen', () => {
-    const onContinue = vi.fn();
-    render(<LivingHero onContinue={onContinue} onChapter={vi.fn()} />);
+  it('shows one randomly picked scene with the headline and CTA, without rotating', () => {
+    SCIENCE_SCENES.forEach((scene, index) => {
+      pick(index);
+      render(<LivingHero onContinue={vi.fn()} onChapter={vi.fn()} />);
+      expect(screen.getByTestId('model-cube-field')).toHaveAttribute('data-group', scene.group);
+      expect(screen.getByTestId('science-caption')).toHaveTextContent(scene.label);
+      expect(screen.getAllByRole('button', { pressed: true })).toHaveLength(2);
+      act(() => vi.advanceTimersByTime(LANDING_AUTO_CONTINUE_MS - 1));
+      expect(screen.getByTestId('science-caption')).toHaveTextContent(scene.label);
+      cleanup();
+    });
+    pick(0);
+    render(<LivingHero onContinue={vi.fn()} onChapter={vi.fn()} />);
     expect(screen.getByRole('link', { name: /Try it now/ })).toHaveAttribute(
       'href',
       '/app/virtual-lab'
     );
-    expect(screen.queryByText('Explore data.')).not.toBeInTheDocument();
-    expect(screen.queryByRole('group', { name: 'Scientific visuals' })).not.toBeInTheDocument();
-    for (let index = 0; index < SCIENCE_SCENES.length; index++) {
-      expect(screen.getByTestId('model-cube-field')).toHaveAttribute(
-        'data-group',
-        SCIENCE_SCENES[index].group
-      );
-      expect(screen.getAllByRole('button', { pressed: true })).toHaveLength(2);
-      act(() => vi.advanceTimersByTime(SCIENCE_SCENES[index].duration));
-      expect(screen.getByTestId('science-caption')).toHaveTextContent(
-        SCIENCE_SCENES[(index + 1) % SCIENCE_SCENES.length].label
-      );
-    }
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
       'Neuroscience at the speed of thought'
     );
-    expect(onContinue).not.toHaveBeenCalled();
   });
 
-  it('keeps rotating without a homepage pause control or playback line', () => {
+  it('glides on to the first chapter by itself, once, within ten seconds', () => {
+    expect(LANDING_AUTO_CONTINUE_MS).toBeLessThan(10000);
+    const onContinue = vi.fn();
+    const { rerender } = render(<LivingHero onContinue={onContinue} onChapter={vi.fn()} />);
+    act(() => vi.advanceTimersByTime(LANDING_AUTO_CONTINUE_MS / 2));
+    // A fresh callback from the parent must not restart the countdown.
+    rerender(<LivingHero onContinue={onContinue} onChapter={vi.fn()} />);
+    act(() => vi.advanceTimersByTime(LANDING_AUTO_CONTINUE_MS / 2 - 1));
+    expect(onContinue).not.toHaveBeenCalled();
+    act(() => vi.advanceTimersByTime(1));
+    expect(onContinue).toHaveBeenCalledTimes(1);
+    act(() => vi.advanceTimersByTime(LANDING_AUTO_CONTINUE_MS * 2));
+    expect(onContinue).toHaveBeenCalledTimes(1);
+  });
+
+  it('lets the visitor switch scene from the cubes', () => {
+    pick(1);
     render(<LivingHero onContinue={vi.fn()} onChapter={vi.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: 'Inspect neuron meshes' }));
+    expect(screen.getByTestId('science-caption')).toHaveTextContent('Inspect neurons');
     expect(screen.queryByRole('button', { name: /Pause/ })).not.toBeInTheDocument();
-    act(() => vi.advanceTimersByTime(SCIENCE_SCENES[2].duration));
-    expect(screen.getByTestId('science-caption')).toHaveTextContent('Simulate activity');
   });
 
-  it('shows stills and does not auto-rotate for reduced motion', () => {
+  it('shows stills for reduced motion', () => {
     reduced = true;
+    pick(2);
     render(<LivingHero onContinue={vi.fn()} onChapter={vi.fn()} />);
     expect(screen.getByTestId('inspect-mesh').getAttribute('src')).toContain(
       'em-cell-mesh-poster.png'
     );
-    act(() => vi.advanceTimersByTime(18000));
-    expect(screen.getByTestId('science-caption')).toHaveTextContent('Build models');
+    expect(screen.getByTestId('science-caption')).toHaveTextContent('Inspect neurons');
   });
 
   it('activates the selected cube family and matches its caption', () => {
+    pick(0);
     render(<LivingHero onContinue={vi.fn()} onChapter={vi.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: 'Simulate fly-neuron activity' }));
     expect(screen.getByTestId('model-cube-field')).toHaveAttribute('data-group', 'simulate');
