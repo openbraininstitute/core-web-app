@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { COLOUR_TABLE } from '@/features/lfp-viewer/colour-scale';
-import { contactColour, SELECTED_COLOUR } from '@/features/lfp-viewer/contact-colours';
+import { contactColour } from '@/features/lfp-viewer/contact-colours';
 import { binAt, fieldValue } from '@/features/lfp-viewer/summary';
 import { TIME_CURSOR_COLOR } from '@/features/sonata-viewer/time-cursor';
 import { nextEventsHover, TimelineCard } from '@/features/spike-viewer/components/timeline-card';
@@ -63,10 +63,7 @@ type Props = {
   rows: readonly FieldRow[];
   /** The contacts drawn as traces, top to bottom. */
   traces: readonly number[];
-  /**
-   * Whether the traces and the map's rows are the ticked contacts' alone, a row each, not every one's:
-   * a change starts the traces at the top.
-   */
+  /** Whether the traces are the ticked contacts' alone, not every one's: a change starts them at the top. */
   tracingTicked: boolean;
   /** What each trace is called, in the order of `traces`. */
   traceLabels: readonly string[];
@@ -192,8 +189,95 @@ function marginName(
   g.fillText(text, left - 6, top + height / 2);
 }
 
+/** A contact's name and notch in the left margin, at `y`. */
+function marginMark(
+  g: CanvasRenderingContext2D,
+  left: number,
+  y: number,
+  text: string,
+  colour: string
+) {
+  marginName(g, left - 4, { top: y - 7, height: 14 }, text, colour);
+  marginNotch(g, left, y, colour);
+}
+
+/** A strip over the plot for what isn't among its lanes or rows, its dashed edge towards them. */
+function peekStrip(
+  g: CanvasRenderingContext2D,
+  left: number,
+  width: number,
+  { top, height }: { top: number; height: number },
+  edgeAtTop: boolean
+) {
+  g.fillStyle = PEEK_BACKDROP;
+  g.fillRect(left, top, width, height);
+  g.strokeStyle = AXIS;
+  g.setLineDash([3, 3]);
+  g.beginPath();
+  const edge = edgeAtTop ? top + 0.5 : top + height - 0.5;
+  g.moveTo(left, edge);
+  g.lineTo(left + width, edge);
+  g.stroke();
+  g.setLineDash([]);
+}
+
+function notTicked(g: CanvasRenderingContext2D, left: number, top: number) {
+  g.fillStyle = LABEL;
+  g.font = '10px sans-serif';
+  g.textAlign = 'left';
+  g.textBaseline = 'top';
+  g.fillText('not ticked', left + 4, top + 3);
+}
+
 function heatColour(scale: ColourScale, uv: number): number {
   return COLOUR_TABLE[Math.round(((scale.position(uv) + 1) / 2) * 255)];
+}
+
+/** A pixel per row and bin over the whole run, in the map's colours; a window crops it. */
+function heatImage(
+  bins: number,
+  rows: number,
+  scale: ColourScale,
+  valueAt: (row: number, bin: number) => number
+): HTMLCanvasElement {
+  const image = new ImageData(bins, rows);
+  const pixels = new Uint32Array(image.data.buffer);
+  for (let r = 0; r < rows; r++) {
+    for (let b = 0; b < bins; b++) pixels[r * bins + b] = heatColour(scale, valueAt(r, b));
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = bins;
+  canvas.height = rows;
+  canvas.getContext('2d')?.putImageData(image, 0, 0);
+  return canvas;
+}
+
+/** The bins `firstBin` to `lastBin` of a heat image, unsmoothed, into `box`. */
+function drawHeat(
+  g: CanvasRenderingContext2D,
+  image: HTMLCanvasElement,
+  [firstBin, lastBin]: [number, number],
+  xOfBin: (bin: number) => number,
+  box: { left: number; top: number; width: number; height: number }
+) {
+  const [x0, x1] = [xOfBin(firstBin), xOfBin(lastBin)];
+  g.imageSmoothingEnabled = false;
+  g.save();
+  g.beginPath();
+  g.rect(box.left, box.top, box.width, box.height);
+  g.clip();
+  g.drawImage(
+    image,
+    firstBin,
+    0,
+    lastBin - firstBin,
+    image.height,
+    x0,
+    box.top,
+    x1 - x0,
+    box.height
+  );
+  g.restore();
 }
 
 function rowValue(field: LfpField, row: FieldRow, bin: number): number {
@@ -402,49 +486,7 @@ export function FieldPlot({
     const [source, at] = laneSource(contact);
     return fieldValue(source, at, binAt(source, time));
   };
-  // A contact the map has no row of, as while others are ticked: at the foot, as the traces show it.
-  const previewMapRow = (g: CanvasRenderingContext2D, contact: number) => {
-    const [firstBin, lastBin] = binRange(field, from, to);
-    if (lastBin <= firstBin || typeof document === 'undefined') return;
-    const strip = Math.min(plot.height / 2, Math.max(PEEK_PX, plot.height / rows.length));
-    const top = plot.bottom - strip;
-    const heatTop = top + PREVIEW_TEXT_PX;
-    const image = new ImageData(lastBin - firstBin, 1);
-    const pixels = new Uint32Array(image.data.buffer);
-    for (let b = firstBin; b < lastBin; b++) {
-      pixels[b - firstBin] = heatColour(scale, fieldValue(field, contact, b));
-    }
-    const heat = document.createElement('canvas');
-    heat.width = image.width;
-    heat.height = 1;
-    heat.getContext('2d')?.putImageData(image, 0, 0);
-    g.fillStyle = PEEK_BACKDROP;
-    g.fillRect(plot.left, top, plot.width, strip);
-    g.strokeStyle = AXIS;
-    g.setLineDash([3, 3]);
-    g.beginPath();
-    g.moveTo(plot.left, top + 0.5);
-    g.lineTo(plot.right, top + 0.5);
-    g.stroke();
-    g.setLineDash([]);
-    g.imageSmoothingEnabled = false;
-    const x0 = xOf(field.start + firstBin * field.binMs);
-    const x1 = xOf(field.start + lastBin * field.binMs);
-    g.save();
-    g.beginPath();
-    g.rect(plot.left, heatTop, plot.width, plot.bottom - heatTop);
-    g.clip();
-    g.drawImage(heat, x0, heatTop, x1 - x0, plot.bottom - heatTop);
-    g.restore();
-    g.fillStyle = LABEL;
-    g.font = '10px sans-serif';
-    g.textAlign = 'left';
-    g.textBaseline = 'top';
-    g.fillText('not ticked', plot.left + 4, top + 3);
-    const y = (heatTop + plot.bottom) / 2;
-    marginName(g, plot.left - 4, { top: y - 7, height: 14 }, `e${contact}`, PREVIEW_COLOUR);
-    marginNotch(g, plot.left, y, PREVIEW_COLOUR);
-  };
+  const xOfBin = (bin: number) => xOf(field.start + bin * field.binMs);
   const hoveredLane = hoveredContact === null ? -1 : traces.indexOf(hoveredContact);
   const hoveredColour =
     (hoveredLane >= 0 && contactColour(colours, selectedContact, traces[hoveredLane])) || INK;
@@ -488,22 +530,19 @@ export function FieldPlot({
     }
   }, [selectedContact]);
 
-  // The map's image, a pixel per row and bin over the whole run; a window crops it.
   const mapImage = useMemo(() => {
     if (mode !== 'map' || field.bins === 0 || typeof document === 'undefined') return null;
-    const image = new ImageData(field.bins, rows.length);
-    const pixels = new Uint32Array(image.data.buffer);
-    rows.forEach((row, r) => {
-      for (let b = 0; b < field.bins; b++) {
-        pixels[r * field.bins + b] = heatColour(scale, rowValue(field, row, b));
-      }
-    });
-    const canvas = document.createElement('canvas');
-    canvas.width = field.bins;
-    canvas.height = rows.length;
-    canvas.getContext('2d')?.putImageData(image, 0, 0);
-    return canvas;
+    return heatImage(field.bins, rows.length, scale, (r, b) => rowValue(field, rows[r], b));
   }, [mode, field, scale, rows]);
+  // A contact of the table hovered that the map has no row of, as while others are ticked.
+  const previewed =
+    mode === 'map' && hoveredContact !== null && rowWith(rows, hoveredContact) < 0
+      ? hoveredContact
+      : null;
+  const previewImage = useMemo(() => {
+    if (previewed === null || field.bins === 0 || typeof document === 'undefined') return null;
+    return heatImage(field.bins, 1, scale, (_, b) => fieldValue(field, previewed, b));
+  }, [previewed, field, scale]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: xOf and the plot's edges follow from size, from and to
   useEffect(() => {
@@ -516,25 +555,7 @@ export function FieldPlot({
 
     const [firstBin, lastBin] = binRange(field, from, to);
     if (mode === 'map' && mapImage && lastBin > firstBin) {
-      g.imageSmoothingEnabled = false;
-      const x0 = xOf(field.start + firstBin * field.binMs);
-      const x1 = xOf(field.start + lastBin * field.binMs);
-      g.save();
-      g.beginPath();
-      g.rect(plot.left, plot.top, plotWidth, plotHeight);
-      g.clip();
-      g.drawImage(
-        mapImage,
-        firstBin,
-        0,
-        lastBin - firstBin,
-        rows.length,
-        x0,
-        plot.top,
-        x1 - x0,
-        plotHeight
-      );
-      g.restore();
+      drawHeat(g, mapImage, [firstBin, lastBin], xOfBin, plot);
       g.fillStyle = LABEL;
       g.textAlign = 'right';
       g.textBaseline = 'middle';
@@ -542,16 +563,13 @@ export function FieldPlot({
       for (const r of computeTicks(0, rows.length - 1, plotHeight / 40, true)) {
         g.fillText(rows[r].label, plot.left - 6, rowY(r));
       }
-      // Ticked, each row is a contact, notched in its trace's colour.
-      if (tracingTicked) {
-        rows.forEach((row, r) => {
-          const colour = contactColour(colours, selectedContact, row.lead);
-          if (colour) marginNotch(g, plot.left, rowY(r), colour);
-        });
-      } else {
-        const selectedRow = rowWith(rows, selectedContact);
-        if (selectedRow >= 0) marginNotch(g, plot.left, rowY(selectedRow), SELECTED_COLOUR);
-      }
+      // In a ticked contact's colour, or the selected one's, as the traces draw them.
+      rows.forEach((row, r) => {
+        const colour = row.contacts
+          .map((c) => contactColour(colours, selectedContact, c))
+          .find(Boolean);
+        if (colour) marginNotch(g, plot.left, rowY(r), colour);
+      });
     }
 
     if (mode === 'traces' && traces.length > 0) {
@@ -629,7 +647,6 @@ export function FieldPlot({
     from,
     to,
     selectedContact,
-    tracingTicked,
   ]);
 
   // On a canvas of its own, so that hovering rows of the table doesn't draw every trace anew.
@@ -644,7 +661,21 @@ export function FieldPlot({
       const contact = hoveredContact ?? hover?.contact ?? null;
       const row = rowWith(rows, contact);
       if (row < 0) {
-        if (contact !== null) previewMapRow(g, contact);
+        const [firstBin, lastBin] = binRange(field, from, to);
+        if (contact === null || !previewImage || lastBin <= firstBin) return;
+        // At the foot, as the traces show a contact they don't draw.
+        const strip = Math.min(plot.height / 2, Math.max(PEEK_PX, plot.height / rows.length));
+        const top = plot.bottom - strip;
+        const heatTop = top + PREVIEW_TEXT_PX;
+        peekStrip(g, plot.left, plot.width, { top, height: strip }, true);
+        drawHeat(g, previewImage, [firstBin, lastBin], xOfBin, {
+          left: plot.left,
+          top: heatTop,
+          width: plot.width,
+          height: plot.bottom - heatTop,
+        });
+        notTicked(g, plot.left, top);
+        marginMark(g, plot.left, (heatTop + plot.bottom) / 2, `e${contact}`, PREVIEW_COLOUR);
         return;
       }
       const band = mapRowBand(row, rows.length, plot.top, plot.height, MAP_ROW_MIN_PX);
@@ -657,8 +688,7 @@ export function FieldPlot({
       const y = band.top + band.height / 2;
       // The table's contact by its name; the map's own row by its label, which may be of several.
       const name = hoveredContact !== null ? `e${hoveredContact}` : rows[row].label;
-      marginName(g, plot.left - 4, { top: y - 7, height: 14 }, name, INK);
-      marginNotch(g, plot.left, y, INK);
+      marginMark(g, plot.left, y, name, INK);
       return;
     }
     if (hoveredContact === null) return;
@@ -677,16 +707,7 @@ export function FieldPlot({
     const strip = Math.min(plot.height / 2, Math.max(PEEK_PX, lane));
     const stripTop = off === 'above' ? plot.top : plot.bottom - strip;
     if (off) {
-      g.fillStyle = PEEK_BACKDROP;
-      g.fillRect(plot.left, stripTop, plot.width, strip);
-      g.strokeStyle = AXIS;
-      g.setLineDash([3, 3]);
-      g.beginPath();
-      const edge = off === 'above' ? stripTop + strip - 0.5 : stripTop + 0.5;
-      g.moveTo(plot.left, edge);
-      g.lineTo(plot.right, edge);
-      g.stroke();
-      g.setLineDash([]);
+      peekStrip(g, plot.left, plot.width, { top: stripTop, height: strip }, off === 'below');
       // Kept to its strip, however far gain swings it, so that it reads apart from the lanes.
       g.beginPath();
       g.rect(plot.left, stripTop, plot.width, strip);
@@ -697,13 +718,7 @@ export function FieldPlot({
     g.strokeStyle = colour;
     g.lineWidth = HOVERED_WIDTH;
     laneStroker()(g, contact, y);
-    if (row < 0) {
-      g.fillStyle = LABEL;
-      g.font = '10px sans-serif';
-      g.textAlign = 'left';
-      g.textBaseline = 'top';
-      g.fillText('not ticked', plot.left + 4, stripTop + 3);
-    }
+    if (row < 0) notTicked(g, plot.left, stripTop);
     g.restore();
     if (off) {
       const text = row < 0 ? `e${contact}` : `${traceLabels[row]} ${off === 'above' ? '↑' : '↓'}`;
@@ -728,6 +743,7 @@ export function FieldPlot({
     maxScroll,
     from,
     to,
+    previewImage,
   ]);
 
   const hoverContact = hover?.contact ?? null;

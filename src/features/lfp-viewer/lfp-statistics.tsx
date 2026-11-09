@@ -199,24 +199,13 @@ function usePlayerTime(timeCursor: TimeCursor, active: boolean): number | null {
  * it needs from the summary only once picked.
  */
 export function LfpStatistics(props: StatisticsProps) {
-  const {
-    summary,
-    positions,
-    grid,
-    direction,
-    spikeFiles,
-    selectedContact,
-    contactPicked,
-    ticked,
-  } = props;
+  const { summary, positions, grid, direction, spikeFiles } = props;
   const [plot, setPlot] = useState<PlotKind>('psd');
-  const aboutContact =
-    CONTACT_PLOTS.has(plot) && !(plot === 'psd' && ticked.length > 0) && selectedContact !== null;
   const lines = useMemo(
     () => (positions ? contactLines(positions, grid, direction?.axis) : []),
     [positions, grid, direction]
   );
-  const plotPicker = (
+  const picker = (
     <PillSelect
       label="Plot"
       value={plot}
@@ -248,16 +237,6 @@ export function LfpStatistics(props: StatisticsProps) {
       onChange={(v) => setPlot(v as PlotKind)}
     />
   );
-  const picker = (
-    <>
-      {plotPicker}
-      {aboutContact && !contactPicked && (
-        <span className="whitespace-nowrap text-xs text-neutral-400">
-          e{selectedContact} · where the field swings most
-        </span>
-      )}
-    </>
-  );
   const shared = { ...props, picker };
   if (plot === 'spectrogram') return <SpectrogramPlot {...shared} />;
   if (plot === 'triggered') return <TriggeredPlot {...shared} />;
@@ -276,8 +255,12 @@ const ROWS_PROBLEMS: Record<RowsProblem, string> = {
   'too-many': 'That is too many rows to read at once: tick fewer contacts or groups',
 };
 const PICK_A_CONTACT = 'Pick a contact in the table';
-/** The plots about the selected contact; the power spectrum only while none are ticked. */
-const CONTACT_PLOTS = new Set<PlotKind>(['psd', 'spectrogram', 'triggered', 'coherence', 'csd']);
+
+/** A contact's name in a note: the selected one says why it is, where it wasn't picked. */
+const nameIn =
+  (selected: number | null, picked: boolean) =>
+  (contact: number): string =>
+    contact === selected && !picked ? `e${contact}, where the field swings most` : `e${contact}`;
 const NO_POSITIONS = 'Needs the contacts’ positions';
 const NO_LINE = 'Needs contacts evenly spaced on a line';
 const NO_SPIKES = 'This simulation has no spikes';
@@ -295,6 +278,7 @@ function SpectrumPlot({
   summary,
   chosen,
   selectedContact,
+  contactPicked,
   ticked,
   lineColour,
   visible,
@@ -329,7 +313,7 @@ function SpectrumPlot({
   return (
     <PlotFrame
       picker={picker}
-      note={`Welch, whole run${contacts.length > 0 ? ` · ${contacts.map((c) => `e${c}`).join(', ')}` : ''}`}
+      note={`Welch, whole run${contacts.length > 0 ? ` · ${contacts.map(nameIn(selectedContact, contactPicked)).join(', ')}` : ''}`}
       help="Power at each frequency over the whole run: the mean of all contacts, and the selected contact or those ticked, as recorded. Groups added up show only the selected or ticked, as spectra don't add"
       visible={visible}
       figure={figure}
@@ -350,6 +334,7 @@ function SpectrogramPlot({
   summary,
   chosen,
   selectedContact,
+  contactPicked,
   timeline,
   timeCursor,
   window,
@@ -377,7 +362,11 @@ function SpectrogramPlot({
   return (
     <PlotFrame
       picker={picker}
-      note={selectedContact === null ? undefined : `e${selectedContact} · as recorded`}
+      note={
+        selectedContact === null
+          ? undefined
+          : `${nameIn(selectedContact, contactPicked)(selectedContact)} · as recorded`
+      }
       help="Power at each frequency over time at the selected contact, in dB of µV²/Hz. It follows the field's zoom, and shows the 50 dB below its strongest"
       visible={visible}
       figure={figure}
@@ -443,6 +432,7 @@ function TriggeredFigure({
   summary,
   chosen,
   selectedContact,
+  contactPicked,
   ticked,
   lineColour,
   visible,
@@ -501,7 +491,7 @@ function TriggeredFigure({
       controls={controls}
       note={
         result
-          ? `${result.triggers.toLocaleString()} of ${(triggers?.length ?? 0).toLocaleString()} spikes used${
+          ? `${selectedContact === null ? '' : `${nameIn(selectedContact, contactPicked)(selectedContact)} · `}${result.triggers.toLocaleString()} of ${(triggers?.length ?? 0).toLocaleString()} spikes used${
               result.events === 1 ? ' · one moment, so a single trial and not an average' : ''
             }`
           : undefined
@@ -565,7 +555,7 @@ function CorrelationPlot({
     <PlotFrame
       picker={picker}
       note={note}
-      help="How alike contacts are over the whole run, in the field's rows and order. It follows Shared signal: where most of the field is shared every pair reads near 1, so remove it to see what differs. Where a row holds several contacts, the recorded matrix averages their pairs and otherwise the rows’ mean signals are compared, which reads higher as noise cancels"
+      help="How alike contacts are over the whole run, in the field's rows and order, every row whatever is ticked. It follows Shared signal: where most of the field is shared every pair reads near 1, so remove it to see what differs. Where a row holds several contacts, the recorded matrix averages their pairs and otherwise the rows’ mean signals are compared, which reads higher as noise cancels"
       visible={visible}
       figure={figure}
       empty={stored.isError ? FAILED : undefined}
@@ -580,6 +570,7 @@ function CoherencePlot({
   chosen,
   rows,
   selectedContact,
+  contactPicked,
   ticked,
   lineColour,
   visible,
@@ -628,7 +619,11 @@ function CoherencePlot({
   return (
     <PlotFrame
       picker={picker}
-      note={result ? `${result.segments} segments · as recorded` : undefined}
+      note={
+        result && selectedContact !== null
+          ? `against ${nameIn(selectedContact, contactPicked)(selectedContact)} · ${result.segments} segments · as recorded`
+          : undefined
+      }
       help="How well contacts follow the selected one at each frequency, whatever their delay: 1 is in step, near 0 unrelated. Compares those ticked, else a few along the rows"
       visible={visible}
       figure={figure}

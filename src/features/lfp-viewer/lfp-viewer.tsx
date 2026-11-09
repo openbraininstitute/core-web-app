@@ -601,7 +601,6 @@ function LfpReportView({
                   grid={grid}
                   hideBelow={hideBelowShare * scale.limit}
                   selectedContact={pickedContact}
-                  ticked={ticked}
                   colours={colours}
                   onShowAll={showAll}
                   hoveredContact={rowHovered ?? traceHovered}

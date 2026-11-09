@@ -341,7 +341,7 @@ function latticeOf(shown: number[], { stack, sliceOf }: ContactGrid): VoxelLatti
 export function placeVoxels(
   grid: ContactGrid,
   slice: GridSlice | null,
-  only: ReadonlySet<number> | null = null
+  only: { has(contact: number): boolean } | null = null
 ): VoxelPlacement {
   const { positions, frame } = grid;
   const contacts = positions.length / 3;

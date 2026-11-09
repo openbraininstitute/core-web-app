@@ -130,9 +130,7 @@ type Props = {
   /** Below this |V|, in µV, a contact is drawn as at zero. */
   hideBelow: number;
   selectedContact: number | null;
-  /** The ticked contacts, drawn alone while there are any. */
-  ticked: readonly number[];
-  /** The ticked contacts' colours, which their traces are drawn in. */
+  /** The ticked contacts' colours, which their traces are drawn in: drawn alone while there are any. */
   colours: ReadonlyMap<number, string>;
   /** Unticks them all, so that every contact is drawn again. */
   onShowAll: () => void;
@@ -159,7 +157,6 @@ export function LfpScene({
   grid,
   hideBelow,
   selectedContact,
-  ticked,
   colours,
   onShowAll,
   hoveredContact,
@@ -212,7 +209,7 @@ export function LfpScene({
   }, [active, timeCursor, field, scale, hideBelow]);
 
   const fieldLevels = levels?.length === field.contacts ? levels : null;
-  const only = useMemo(() => (ticked.length > 0 ? new Set(ticked) : null), [ticked]);
+  const only = colours.size > 0 ? colours : null;
   const bands = useMemo(
     () => bandsOf(colours, selectedContact, hoveredContact),
     [colours, selectedContact, hoveredContact]
@@ -223,11 +220,11 @@ export function LfpScene({
     if (!positions || !fieldLevels) return undefined;
     const xyzOf = (c: number) => [positions[c * 3], positions[c * 3 + 1], positions[c * 3 + 2]];
     const groups: ICircuitOverlayGroup[] = [];
-    // Voxels and slices show the rest.
-    if (view === 'points') {
+    // Voxels and slices show the rest; with some ticked, all of those are banded.
+    if (view === 'points' && !only) {
       const byLevel: number[][] = LEVEL_COLORS.map(() => []);
       for (let c = 0; c < field.contacts; c++) {
-        if (!bands.has(c) && (!only || only.has(c))) byLevel[fieldLevels[c]].push(...xyzOf(c));
+        if (!bands.has(c)) byLevel[fieldLevels[c]].push(...xyzOf(c));
       }
       byLevel.forEach((coordinates, level) => {
         if (coordinates.length === 0) return;
@@ -268,10 +265,10 @@ export function LfpScene({
   );
   const selection = useMemo(
     () =>
-      ticked.length > 0
-        ? { count: ticked.length, total: field.contacts, noun: 'contact', onReset: onShowAll }
+      colours.size > 0
+        ? { count: colours.size, total: field.contacts, noun: 'contact', onReset: onShowAll }
         : undefined,
-    [ticked.length, field.contacts, onShowAll]
+    [colours.size, field.contacts, onShowAll]
   );
   const fieldVoxels = useMemo(
     () => (placement && fieldLevels ? voxelsOf(placement, fieldLevels) : null),
