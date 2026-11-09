@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import styles from './model-mosaic.module.css';
 import labs from './virtual-labs.module.css';
 
-/** The supplied mosaic film, with additional models tracked into its moving grid. */
+/** The supplied mosaic film, sped up 1.744x to 10 s: one brain, then the grid of models it opens into. */
 export function ModelMosaic() {
   const host = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
