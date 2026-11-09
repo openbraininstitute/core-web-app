@@ -2,6 +2,7 @@ import {
   getCellMorphologies,
   getCellMorphology,
 } from '@/api/entitycore/queries/experimental/cell-morphology';
+import { CellMorphologyEntityExpand } from '@/api/entitycore/types/entities/cell-morphology';
 import { CellMorphologyGenerationTypeDictionary } from '@/api/entitycore/types/entities/cell-morphology-protocol';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -15,6 +16,7 @@ import type {
   ICellMorphology,
   ICellMorphologyExpanded,
 } from '@/api/entitycore/types/entities/cell-morphology';
+import type { TMeasurableEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
 export const protocolTypeFilter = {
@@ -33,7 +35,10 @@ function narrowFilters(filters?: CellMorphologyFilter) {
 }
 
 export const SynthesizedCellMorphology: EntityCoreTypeConfig<
-  ICellMorphology | ICellMorphologyExpanded
+  ICellMorphology | ICellMorphologyExpanded,
+  never,
+  never,
+  TMeasurableEntityExpandParam
 > = {
   group: EntityTypeGroup.Models,
   title: 'Synthesized morphology',
@@ -45,6 +50,7 @@ export const SynthesizedCellMorphology: EntityCoreTypeConfig<
       allowedFacets: true,
       ilikeSearchEnabled: true,
       extraQueryKeyBuilder: { ...protocolTypeFilter },
+      entityExpand: CellMorphologyEntityExpand,
     },
     query: {
       list: (...params) => {

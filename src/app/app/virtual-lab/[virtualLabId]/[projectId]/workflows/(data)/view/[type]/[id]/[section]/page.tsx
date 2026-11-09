@@ -32,6 +32,8 @@ export default async function Page({
       type: snakeCase(type) as TExtendedEntitiesTypeDict,
       ctx: context,
       id,
+      // the overview renders expanded data (e.g. Morphometrics' measurement annotation)
+      withEntityExpand: true,
     })
   );
 

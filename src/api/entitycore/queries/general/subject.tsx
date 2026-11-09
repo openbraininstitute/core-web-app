@@ -1,6 +1,7 @@
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
 
+import type { TAnyEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { ISubject } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { ISubjectFilter, TSubjectCreate } from '@/api/entitycore/types/shared/subject';
@@ -18,13 +19,16 @@ const baseUri = '/subject';
 export async function getSubjects({
   filters,
   context,
+  expand,
 }: {
   filters?: Partial<ISubjectFilter>;
   context?: WorkspaceContext | null;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }): Promise<EntityCoreResponse<ISubject>> {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<ISubject>>(baseUri, {
     queryParams: compactRecord({
+      expand,
       ...filters,
     }),
     headers: {
@@ -45,12 +49,15 @@ export async function getSubjects({
 export async function getSubject({
   id,
   context,
+  expand,
 }: {
   id: string;
   context?: WorkspaceContext | null;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }): Promise<EntityCoreResponse<ISubject>> {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<ISubject>>(`${baseUri}/${id}`, {
+    queryParams: { expand },
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',

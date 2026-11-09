@@ -104,7 +104,8 @@ export function defineTaskConfigCampaign({
         status: ({ id, context }) => Task.status({ campaignId: id, context: context ?? undefined }),
         resolve,
         count: (params) => Task.count({ ...params, campaignConfigType }),
-        one: (params) => getTaskConfig({ id: params.id, context: params.context }),
+        one: (params) =>
+          getTaskConfig({ id: params.id, context: params.context, expand: params.expand }),
         create: (data) => createTaskConfig({ data, context: data.context }),
       },
       expandRow: async (record, context) =>
