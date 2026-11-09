@@ -4,6 +4,7 @@ import SocialMediaLinks from '@/ui/segments/landing/components/social-media-link
 import { informationFont } from '@/ui/segments/landing/information-font';
 import { classNames } from '@/util/utils';
 
+import NewsletterDisclosure from './newsletter-disclosure';
 import NewsLetterSubscription from './newsletter-subscription';
 
 import type { ContentForSocialMediaLink } from '@/services/sanity/api/get-social-media';
@@ -18,6 +19,7 @@ interface FooterPanelProps {
 const FOOTER_LINKS = [
   { label: 'About OBI', href: '/about' },
   { label: 'Team', href: '/team' },
+  { label: 'Features', href: '/features' },
   { label: 'Pricing', href: '/pricing' },
   { label: 'News', href: '/news' },
   { label: 'Contact', href: '/contact' },
@@ -66,13 +68,24 @@ export default function FooterPanel({ className, socialMediaLinks }: FooterPanel
             </Link>
           ))}
         </nav>
-        <SocialMediaLinks className={styles.socialmedia} links={socialMediaLinks} />
-        <details className={styles.newsletter}>
-          <summary>
-            Subscribe <span aria-hidden="true">+</span>
-          </summary>
-          <NewsLetterSubscription className={styles.subscribe} />
-        </details>
+        <div className={styles.actions}>
+          <SocialMediaLinks className={styles.socialmedia} links={socialMediaLinks} />
+          <NewsletterDisclosure className={styles.newsletter}>
+            <summary>
+              Subscribe for updates
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path
+                  d="m4 6 4 4 4-4"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </summary>
+            <NewsLetterSubscription className={styles.subscribe} />
+          </NewsletterDisclosure>
+        </div>
       </div>
     </footer>
   );

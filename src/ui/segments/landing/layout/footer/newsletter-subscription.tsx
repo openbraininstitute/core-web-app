@@ -38,7 +38,7 @@ function getValidationError(formValues: FooterNewsletterForm): string | null {
 }
 
 const formClassName = classNames(
-  'relative m-0 flex flex-col items-start justify-between border border-neutral-3 !p-5 text-primary-8 mb-10! lg:mb-0!'
+  'relative m-0 flex flex-col items-start gap-3 border border-neutral-3 !p-4 text-primary-8'
 );
 
 const titleClassName = classNames(
@@ -58,7 +58,7 @@ const checkboxClassName = classNames(
 );
 
 const submitButtonClassName = classNames(
-  'mt-12 inline-block cursor-pointer rounded-full border border-neutral-3 bg-white px-8 py-2 text-sm text-primary-8',
+  'mt-0 inline-block cursor-pointer rounded-full border border-neutral-3 bg-white px-8 py-2 text-sm text-primary-8',
   'transition-colors duration-200 ease-out hover:bg-primary-8 hover:text-light',
   'disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 disabled:grayscale'
 );

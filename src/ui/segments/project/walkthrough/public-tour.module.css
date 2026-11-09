@@ -424,3 +424,9 @@
     margin-top: 8px;
   }
 }
+
+/* The closing chapter rises together when its footer opens, preserving media/logo spacing. */
+.publicTour .publicText[data-chapter-text="join"],
+.publicTour :global([data-stage-scene="join"]) > [data-chapter-media] {
+  translate: 0 calc(-1 * var(--public-footer-extra, 0px));
+}

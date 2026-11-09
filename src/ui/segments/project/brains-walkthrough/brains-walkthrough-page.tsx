@@ -154,17 +154,20 @@ function PublicTourFooter() {
     const element = footer.current;
     const tour = element?.parentElement;
     if (!element || !tour) return;
-    const measure = () =>
-      tour.style.setProperty(
-        '--public-footer-height',
-        `${element.getBoundingClientRect().height}px`
-      );
+    let collapsedHeight = element.getBoundingClientRect().height;
+    const measure = () => {
+      const height = element.getBoundingClientRect().height;
+      if (!element.querySelector('details[open]')) collapsedHeight = height;
+      tour.style.setProperty('--public-footer-height', `${height}px`);
+      tour.style.setProperty('--public-footer-extra', `${Math.max(0, height - collapsedHeight)}px`);
+    };
     const observer = new ResizeObserver(measure);
     observer.observe(element);
     measure();
     return () => {
       observer.disconnect();
       tour.style.removeProperty('--public-footer-height');
+      tour.style.removeProperty('--public-footer-extra');
     };
   }, []);
   const { data: socialMediaLinks = [] } = useQuery({
