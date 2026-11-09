@@ -254,7 +254,7 @@ export function mergedRanges(ranges: readonly ByteRange[]): ByteRange[] {
 
 /**
  * Ranges' bytes, in the order given, with as few requests as the server takes: those that touch
- * asked for as one, as a group's chunks of a level mostly do.
+ * asked for as one, as most of a group's chunks of a level do.
  */
 export async function readRanges(
   request: LfpSummaryRequest,

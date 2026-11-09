@@ -31,7 +31,7 @@ function meanTrace(psd: Float32Array, bands: number, from: number, x: readonly n
 /**
  * Welch power spectra on log axes: the mean over every contact in slate, and
  * each of `contacts` in a colour of its own. 0 Hz is left out, as a log axis
- * cannot hold it. `psd` holds every contact, or, with `onlyTheseRows`, just
+ * cannot hold it. `psd` holds every contact, or, with `onlyTheseRows`, only
  * `contacts`' in their order, with no mean to draw.
  */
 export function psdFigure({

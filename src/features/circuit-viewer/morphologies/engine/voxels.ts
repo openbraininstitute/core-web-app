@@ -21,7 +21,7 @@ const IDENTITY_FRAME: VoxelFrame = [
   [0, 1, 0],
   [0, 0, 1],
 ];
-/** Below this opacity a box is left out rather than drawn too faint to see. */
+/** Below this opacity a box is too faint to see, and is left out. */
 export const LEAST_OPACITY = 0.004;
 /** The faces are shaded from this direction, so that a box reads as one: from this much light to all of it. */
 export const SHADED_FROM = [0.35, 0.85, 0.4] as const;

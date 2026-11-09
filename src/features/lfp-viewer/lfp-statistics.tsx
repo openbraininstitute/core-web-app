@@ -94,7 +94,7 @@ type StatisticsProps = {
   grid: ContactGrid | null;
   direction: FieldDirection | null;
   selectedContact: number | null;
-  /** Whether the selected contact was picked, rather than the one the field swings most at. */
+  /** Whether the user picked the selected contact. Else it is the one the field swings most at. */
   contactPicked: boolean;
   ticked: readonly number[];
   /** A contact's line's colour: a ticked one's own, as its trace has it. */

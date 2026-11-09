@@ -1689,7 +1689,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   /**
    * Draws the contacts as they are now in meshes drawn after the cells, made larger only when the contacts outgrow
    * them: those among the cells, the hidden parts first and on the same geometry, or over morphologies, whose branches
-   * hide nearly all of them, then the rest over everything. Asks for a frame only where that changed what is drawn.
+   * hide most of them, then the rest over everything. Asks for a frame only where that changed what is drawn.
    */
   private drawElectrodes(): void {
     const highlighted = this.highlightedElectrode;

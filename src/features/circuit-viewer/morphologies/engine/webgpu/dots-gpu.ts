@@ -40,7 +40,7 @@ fn dotQuad(contact: vec3f, look: vec4f, corner: vec2f, modelView: mat4x4f, proje
   let outer = r + (ring + band + halo) * um;
   let opacity = mix(opacities.x, opacities.y, away);
   let place = projection * vec4f(c.xy + corner * outer, c.z + lift * r, 1.0);
-  // Clip z runs from 0 to w here: to just past 0, keeping the order among the contacts.
+  // Clip z runs from 0 to w here: squeezed towards 0, keeping the order among the contacts.
   let z = place.z * mix(1.0, ${FRONT_DEPTH.toFixed(4)}, front);
   return mat4x4f(vec4f(place.x, place.y, z, place.w),
                  vec4f(r / outer, opacity, (r + ring * um) / outer, (r + (ring + band) * um) / outer),

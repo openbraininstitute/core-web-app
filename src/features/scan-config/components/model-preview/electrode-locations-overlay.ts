@@ -35,7 +35,7 @@ export interface ICircuitOverlayGroup {
    * Contacts and origin spheres share this so one drag moves the whole array.
    */
   id: string;
-  /** Drawn among the cells, faint where they hide it, rather than in front of everything. */
+  /** Drawn among the cells, faint where they hide it. Else it is drawn in front of everything. */
   among?: boolean;
   /** Drawn with a halo, as contacts among the cells are where nothing hides them. */
   halo?: boolean;

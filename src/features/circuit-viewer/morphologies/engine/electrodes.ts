@@ -8,7 +8,7 @@
  * A contact may be drawn among the cells instead, in two passes whose depth tests are each other's opposite: solid and
  * ringed with a halo where nothing is nearer the eye, faint where something is, and fainter the further it is across
  * its array.
- * Over morphologies that says little, as nearly every contact has a branch in front of it. There it is drawn over the
+ * Over morphologies that says little, as most contacts have a branch in front of them. There it is drawn over the
  * cells with a halo to stand out on them, and its depth shows in its size and opacity across the array.
  */
 
@@ -120,7 +120,7 @@ void main() {
 	vCorner = position.xy;
 	vOpacity = mix( uOpacities.x, uOpacities.y, away );
 	gl_Position = projectionMatrix * vec4( c.xy + position.xy * outer, c.z + uLift * r, 1.0 );
-	// Clip z runs from -w to w here: to just past -w, keeping the order among the contacts.
+	// Clip z runs from -w to w here: squeezed towards -w, keeping the order among the contacts.
 	gl_Position.z = mix( gl_Position.z, ${FRONT_DEPTH.toFixed(4)} * gl_Position.z - ${(1 - FRONT_DEPTH).toFixed(4)} * gl_Position.w, uFront );
 }
 `;
@@ -180,7 +180,7 @@ export interface DotOptions {
 /**
  * The contacts' material, with a ring one CSS pixel wide on a screen of `pixelRatio`. Dots drawn `among` the cells, as
  * synapses are, have no ring unless `ringed`, and anything nearer the eye hides them. The shader moves them towards the
- * eye by their radius, so that they sit on the surface they lie on rather than inside it.
+ * eye by their radius, so that they sit on the surface they lie on.
  */
 export function electrodeMaterial(
   uniforms: ElectrodeUniforms & Pick<ImpostorUniforms, 'uViewport'>,

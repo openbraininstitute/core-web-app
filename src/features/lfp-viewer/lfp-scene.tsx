@@ -275,7 +275,7 @@ export function LfpScene({
     () => (placement && fieldLevels ? voxelsOf(placement, fieldLevels) : null),
     [placement, fieldLevels]
   );
-  // Its box outlined rather than made more opaque, which would read as a stronger field.
+  // Its box is outlined: more opacity would read as a stronger field.
   // In its trace's colour, as the traces draw it.
   const outlinedBox = useMemo(
     () => (placement && hoveredContact !== null ? placement.shown.indexOf(hoveredContact) : -1),

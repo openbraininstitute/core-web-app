@@ -703,7 +703,7 @@ export function FieldPlot({
     // Over the plot alone, not its time axis, though the trace may reach past it as on the traces' canvas.
     g.fillStyle = HOVER_WASH;
     g.fillRect(plot.left, plot.top, plot.width, plot.height);
-    // Scrolled out of view, it is drawn at the edge it lies past, rather than the lanes scrolled to it.
+    // Scrolled out of view, it is drawn at the edge it lies past, and the lanes stay where they are.
     const strip = Math.min(plot.height / 2, Math.max(PEEK_PX, lane));
     const stripTop = off === 'above' ? plot.top : plot.bottom - strip;
     if (off) {

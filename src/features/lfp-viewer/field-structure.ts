@@ -290,7 +290,7 @@ export function withoutShared(field: LfpField): LfpField {
   for (let c = 0; c < contacts; c++) {
     for (let i = 0; i < perContact; i++) mean[i] += data[c * perContact + i];
   }
-  // Summed first: a signal every contact shares then leaves exactly nothing, not rounding noise.
+  // Summed first, so that a signal every contact shares leaves an exact zero.
   for (let i = 0; i < perContact; i++) mean[i] /= contacts;
 
   let largest = 0;
