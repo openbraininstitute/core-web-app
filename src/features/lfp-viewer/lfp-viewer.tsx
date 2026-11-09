@@ -240,7 +240,7 @@ function LfpReportView({
   // which the player shows, as a voltage report's are.
   const [rowHovered, setRowHovered] = useState<number | null>(null);
   const [traceHovered, setTraceHovered] = useState<number | null>(null);
-  // The contact the statistics are about, at first and after a reset the one the field swings most at.
+  // The contact the statistics are about until one is picked: the one the field swings most at.
   const [defaultContact] = useState<number | null>(() =>
     ptp < 0
       ? null
@@ -249,12 +249,12 @@ function LfpReportView({
           swing
         ) ?? null)
   );
-  const [selectedContact, setSelectedContact] = useState(defaultContact);
-  // Clicked again, a contact gives the selection back, as a voltage report's trace gives back every cell.
-  const toggleSelected = useCallback(
-    (contact: number) =>
-      setSelectedContact((selected) => (selected === contact ? defaultContact : contact)),
-    [defaultContact]
+  // Marked in every view only once picked; clicked again, it is let go, as a spike replay's held cell.
+  const [pickedContact, setPickedContact] = useState<number | null>(null);
+  const statsContact = pickedContact ?? defaultContact;
+  const togglePicked = useCallback(
+    (contact: number) => setPickedContact((picked) => (picked === contact ? null : contact)),
+    []
   );
   const contactRows = useCallback(
     (contact: number) =>
@@ -268,12 +268,8 @@ function LfpReportView({
   );
   const clickHint = useCallback(
     (contact: number) =>
-      contact !== selectedContact
-        ? 'Click to select this contact'
-        : contact !== defaultContact && defaultContact !== null
-          ? `Click to go back to e${defaultContact}`
-          : 'Selected',
-    [selectedContact, defaultContact]
+      contact === pickedContact ? 'Click to let it go' : 'Click to select this contact',
+    [pickedContact]
   );
   const traces = useMemo(() => tracedContacts(rows, ticked), [rows, ticked]);
   const laneHeight = laneHeightOf(chosenHeight, traces.length);
@@ -288,10 +284,7 @@ function LfpReportView({
     [tracingTicked, traces, labels, rows]
   );
   const showAll = useCallback(() => setPicks([]), []);
-  const colourOfLine = useMemo(
-    () => lineColour(colours, selectedContact),
-    [colours, selectedContact]
-  );
+  const colourOfLine = useMemo(() => lineColour(colours, statsContact), [colours, statsContact]);
   // The lanes on show and a screen of them either side are read over the window, finer than the
   // overview: only while drawn, and once positions are in, as they can change which contacts are
   // traced. A contact's row read so holds nothing of the mean to take off. They move a screen at a
@@ -530,8 +523,8 @@ function LfpReportView({
         laneHeight={LANE_HEIGHTS[laneHeight]}
         window={shownWindow}
         onWindowChange={setTimeWindow}
-        selectedContact={selectedContact}
-        onContactClick={toggleSelected}
+        selectedContact={pickedContact}
+        onContactClick={togglePicked}
         onContactHover={setTraceHovered}
         hoveredContact={rowHovered}
         contactRows={contactRows}
@@ -554,15 +547,15 @@ function LfpReportView({
       ticked={ticked}
       onTick={(contact) => setPicks((shown) => togglePickIn(shown, contact))}
       reset={{
-        picked: picks.length > 0 || timeWindow !== null || selectedContact !== defaultContact,
+        picked: picks.length > 0 || timeWindow !== null || pickedContact !== null,
         onReset: () => {
           setPicks([]);
           setTimeWindow(null);
-          setSelectedContact(defaultContact);
+          setPickedContact(null);
         },
       }}
       onContactHover={setRowHovered}
-      selectedContact={selectedContact}
+      selectedContact={pickedContact}
     />
   );
 
@@ -607,7 +600,7 @@ function LfpReportView({
                   contacts={contacts}
                   grid={grid}
                   hideBelow={hideBelowShare * scale.limit}
-                  selectedContact={selectedContact}
+                  selectedContact={pickedContact}
                   ticked={ticked}
                   colours={colours}
                   onShowAll={showAll}
@@ -634,7 +627,8 @@ function LfpReportView({
                   positions={positions}
                   grid={grid}
                   direction={direction}
-                  selectedContact={selectedContact}
+                  selectedContact={statsContact}
+                  contactPicked={pickedContact !== null}
                   ticked={ticked}
                   lineColour={colourOfLine}
                   spikeFiles={spikeFiles}

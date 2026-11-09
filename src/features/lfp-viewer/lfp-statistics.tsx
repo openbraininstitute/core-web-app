@@ -94,6 +94,8 @@ type StatisticsProps = {
   grid: ContactGrid | null;
   direction: FieldDirection | null;
   selectedContact: number | null;
+  /** Whether the selected contact was picked, rather than the one the field swings most at. */
+  contactPicked: boolean;
   ticked: readonly number[];
   /** A contact's line's colour: a ticked one's own, as its trace has it. */
   lineColour: LineColour;
@@ -197,13 +199,24 @@ function usePlayerTime(timeCursor: TimeCursor, active: boolean): number | null {
  * it needs from the summary only once picked.
  */
 export function LfpStatistics(props: StatisticsProps) {
-  const { summary, positions, grid, direction, spikeFiles } = props;
+  const {
+    summary,
+    positions,
+    grid,
+    direction,
+    spikeFiles,
+    selectedContact,
+    contactPicked,
+    ticked,
+  } = props;
   const [plot, setPlot] = useState<PlotKind>('psd');
+  const aboutContact =
+    CONTACT_PLOTS.has(plot) && !(plot === 'psd' && ticked.length > 0) && selectedContact !== null;
   const lines = useMemo(
     () => (positions ? contactLines(positions, grid, direction?.axis) : []),
     [positions, grid, direction]
   );
-  const picker = (
+  const plotPicker = (
     <PillSelect
       label="Plot"
       value={plot}
@@ -235,6 +248,16 @@ export function LfpStatistics(props: StatisticsProps) {
       onChange={(v) => setPlot(v as PlotKind)}
     />
   );
+  const picker = (
+    <>
+      {plotPicker}
+      {aboutContact && !contactPicked && (
+        <span className="whitespace-nowrap text-xs text-neutral-400">
+          e{selectedContact} · where the field swings most
+        </span>
+      )}
+    </>
+  );
   const shared = { ...props, picker };
   if (plot === 'spectrogram') return <SpectrogramPlot {...shared} />;
   if (plot === 'triggered') return <TriggeredPlot {...shared} />;
@@ -253,6 +276,8 @@ const ROWS_PROBLEMS: Record<RowsProblem, string> = {
   'too-many': 'That is too many rows to read at once: tick fewer contacts or groups',
 };
 const PICK_A_CONTACT = 'Pick a contact in the table';
+/** The plots about the selected contact; the power spectrum only while none are ticked. */
+const CONTACT_PLOTS = new Set<PlotKind>(['psd', 'spectrogram', 'triggered', 'coherence', 'csd']);
 const NO_POSITIONS = 'Needs the contacts’ positions';
 const NO_LINE = 'Needs contacts evenly spaced on a line';
 const NO_SPIKES = 'This simulation has no spikes';
