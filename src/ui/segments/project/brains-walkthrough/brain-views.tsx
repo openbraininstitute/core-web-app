@@ -391,7 +391,8 @@ export const TEACHING_VIDEO = {
 
 /**
  * A simulation's results explored: voltages, rasters, PSTHs and spike statistics beside the circuit in 3D,
- * from the user's recording "3 extra. Intereactive analyze sims", 2:00 to 4:22, its menu bar cut off.
+ * from the user's recording "3 extra. Intereactive analyze sims", 2:00 to 4:22, its menu bar cut off, cut down
+ * to two moments of 4.8 s each, a little sped up: rasters and PSTHs beside the circuit, then the 3D brain turned.
  */
 export const ANALYSIS_VIDEO = {
   src: '/images/start/walkthrough/interactive-analysis.mp4',
