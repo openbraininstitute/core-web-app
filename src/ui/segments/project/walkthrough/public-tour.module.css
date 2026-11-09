@@ -297,8 +297,9 @@
     display: none;
   }
 
+  /* At least this tall, and taller where a prompt wraps onto more lines, so its end is never cut off. */
   .publicTour .publicText[data-chapter-text="agents"] [data-agent-prompt] {
-    height: 92px;
+    min-height: 92px;
   }
 
   .chapterTimeline .navPause {

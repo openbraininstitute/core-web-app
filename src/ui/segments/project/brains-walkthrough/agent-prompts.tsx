@@ -139,7 +139,7 @@ export function AgentPrompts() {
             data-agent-prompt
             data-active={on}
             className={cn(
-              'flex h-[100px] w-full shrink-0 flex-col gap-[8px] border bg-white px-[16px] pt-[12px] pb-[10px] shadow-[0_6px_22px_rgba(0,39,102,0.07)] transition-[border-color,box-shadow,opacity] duration-300',
+              'flex w-full shrink-0 flex-col gap-[8px] border bg-white px-[16px] pt-[12px] pb-[10px] shadow-[0_6px_22px_rgba(0,39,102,0.07)] transition-[border-color,box-shadow,opacity] duration-300',
               claude
                 ? 'rounded-[16px] border-[#e8e3d9]'
                 : obi
@@ -164,17 +164,25 @@ export function AgentPrompts() {
               )}
               {prompt.label}
             </div>
+            {/* The whole prompt, unseen, holds the box at the height it will need, so its last line is never cut
+                off at any width and the box does not grow as it is typed. */}
             <p
               className={cn(
-                'min-h-0 flex-1 overflow-y-auto text-[14px] leading-[20px] transition-opacity duration-300',
+                'grid text-[14px] leading-[20px] transition-opacity duration-300',
                 typed ? 'text-[#1f1e1d]' : 'text-neutral-400',
                 sending && 'opacity-40'
               )}
             >
-              {typed || prompt.placeholder}
-              {on && state.phase === 'typing' && (
-                <span className="ml-[1px] inline-block h-[16px] w-[2px] translate-y-[3px] animate-pulse bg-[#1f1e1d]" />
-              )}
+              <span aria-hidden className="invisible col-start-1 row-start-1">
+                {prompt.text}
+                <span className="ml-[1px] inline-block w-[2px]" />
+              </span>
+              <span className="col-start-1 row-start-1">
+                {typed || prompt.placeholder}
+                {on && state.phase === 'typing' && (
+                  <span className="ml-[1px] inline-block h-[16px] w-[2px] translate-y-[3px] animate-pulse bg-[#1f1e1d]" />
+                )}
+              </span>
             </p>
             <div className="flex items-center justify-between gap-[12px]">
               {/* The platform plugged in: connecting as the box's turn starts, connected from then on. */}
