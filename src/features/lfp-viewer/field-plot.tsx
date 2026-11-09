@@ -150,6 +150,38 @@ export function mapRowBand(
   return { top, height };
 }
 
+/** The map row that holds a contact; -1 for none. */
+function rowWith(rows: readonly FieldRow[], contact: number | null): number {
+  return contact === null ? -1 : rows.findIndex((row) => row.contacts.includes(contact));
+}
+
+/** A notch in the left margin at `y`, by a plot whose left edge is `left`. */
+function marginNotch(g: CanvasRenderingContext2D, left: number, y: number, colour: string) {
+  g.fillStyle = colour;
+  g.beginPath();
+  g.moveTo(left - 4, y);
+  g.lineTo(left, y - 4);
+  g.lineTo(left, y + 4);
+  g.fill();
+}
+
+/** A name in the left margin, on a backdrop over the labels drawn there, from `top` for `height`. */
+function marginName(
+  g: CanvasRenderingContext2D,
+  left: number,
+  { top, height }: { top: number; height: number },
+  text: string,
+  colour: string
+) {
+  g.fillStyle = PEEK_BACKDROP;
+  g.fillRect(0, top, left - 1, height);
+  g.fillStyle = colour;
+  g.font = 'bold 10px sans-serif';
+  g.textAlign = 'right';
+  g.textBaseline = 'middle';
+  g.fillText(text, left - 6, top + height / 2);
+}
+
 function rowValue(field: LfpField, row: FieldRow, bin: number): number {
   let sum = 0;
   for (const contact of row.contacts) sum += fieldValue(field, contact, bin);
@@ -354,6 +386,8 @@ export function FieldPlot({
     return fieldValue(source, at, binAt(source, time));
   };
   const hoveredLane = hoveredContact === null ? -1 : traces.indexOf(hoveredContact);
+  const hoveredColour =
+    (hoveredLane >= 0 && contactColour(colours, selectedContact, traces[hoveredLane])) || INK;
 
   useEffect(() => {
     if (mode === 'traces') onLanesInView({ first: screenFirst, perScreen, width: plot.width });
@@ -449,19 +483,8 @@ export function FieldPlot({
       for (const r of computeTicks(0, rows.length - 1, plotHeight / 40, true)) {
         g.fillText(rows[r].label, plot.left - 6, rowY(r));
       }
-      const selectedRow =
-        selectedContact === null
-          ? -1
-          : rows.findIndex((row) => row.contacts.includes(selectedContact));
-      if (selectedRow >= 0) {
-        const y = rowY(selectedRow);
-        g.fillStyle = SELECTED_COLOUR;
-        g.beginPath();
-        g.moveTo(plot.left - 4, y);
-        g.lineTo(plot.left, y - 4);
-        g.lineTo(plot.left, y + 4);
-        g.fill();
-      }
+      const selectedRow = rowWith(rows, selectedContact);
+      if (selectedRow >= 0) marginNotch(g, plot.left, rowY(selectedRow), SELECTED_COLOUR);
     }
 
     if (mode === 'traces' && traces.length > 0) {
@@ -551,7 +574,7 @@ export function FieldPlot({
     if (mode === 'map') {
       // The table's row hovered, or the map's own under the pointer, as the spike raster marks its cell's.
       const contact = hoveredContact ?? hover?.contact ?? null;
-      const row = contact === null ? -1 : rows.findIndex((r) => r.contacts.includes(contact));
+      const row = rowWith(rows, contact);
       if (row < 0) return;
       const band = mapRowBand(row, rows.length, plot.top, plot.height, MAP_ROW_MIN_PX);
       // White inside ink, so that it shows on either end of the colour scale.
@@ -561,24 +584,13 @@ export function FieldPlot({
       g.strokeStyle = INK;
       g.strokeRect(plot.left + 0.5, band.top + 0.5, plot.width - 1, band.height - 1);
       const y = band.top + band.height / 2;
-      g.fillStyle = PEEK_BACKDROP;
-      g.fillRect(0, y - 7, plot.left - 1, 14);
-      g.fillStyle = INK;
-      g.beginPath();
-      g.moveTo(plot.left - 1, y);
-      g.lineTo(plot.left - 5, y - 4);
-      g.lineTo(plot.left - 5, y + 4);
-      g.fill();
-      g.font = 'bold 10px sans-serif';
-      g.textAlign = 'right';
-      g.textBaseline = 'middle';
-      g.fillText(`e${contact}`, plot.left - 7, y);
+      marginName(g, plot.left - 4, { top: y - 7, height: 14 }, `e${contact}`, INK);
+      marginNotch(g, plot.left, y, INK);
       return;
     }
-    const row = hoveredContact !== null ? traces.indexOf(hoveredContact) : -1;
-    if (row < 0) return;
-    const contact = hoveredContact as number;
-    const colour = contactColour(colours, selectedContact, contact) ?? INK;
+    if (hoveredLane < 0) return;
+    const row = hoveredLane;
+    const contact = traces[row];
     const off = laneOffView(row, lane, scroll, plot.height);
     g.save();
     g.beginPath();
@@ -603,18 +615,13 @@ export function FieldPlot({
       g.setLineDash([]);
     }
     const y = off ? stripTop + strip / 2 : laneY(row);
-    g.strokeStyle = colour;
+    g.strokeStyle = hoveredColour;
     g.lineWidth = HOVERED_WIDTH;
     laneStroker()(g, contact, y);
     g.restore();
     if (off) {
-      g.fillStyle = PEEK_BACKDROP;
-      g.fillRect(0, stripTop, plot.left - 1, strip);
-      g.fillStyle = colour;
-      g.font = 'bold 10px sans-serif';
-      g.textAlign = 'right';
-      g.textBaseline = 'middle';
-      g.fillText(`${traceLabels[row]} ${off === 'above' ? '↑' : '↓'}`, plot.left - 6, y);
+      const text = `${traceLabels[row]} ${off === 'above' ? '↑' : '↓'}`;
+      marginName(g, plot.left, { top: stripTop, height: strip }, text, hoveredColour);
     }
   }, [
     hoveredContact,
@@ -802,8 +809,8 @@ export function FieldPlot({
             aria-hidden
             className="pointer-events-none absolute right-0 h-0.5 w-2.5 rounded-full"
             style={{
-              top: plot.top + (((hoveredLane + 0.5) * lane) / lanesHeight) * plot.height - 1,
-              background: contactColour(colours, selectedContact, traces[hoveredLane]) ?? INK,
+              top: plot.top + ((hoveredLane + 0.5) / traces.length) * plot.height - 1,
+              background: hoveredColour,
             }}
           />
         )}

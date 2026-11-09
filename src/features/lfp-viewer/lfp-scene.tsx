@@ -13,7 +13,7 @@ import {
   SCALE_GRADIENT,
   SCENE_LEVELS,
 } from '@/features/lfp-viewer/colour-scale';
-import { SELECTED_COLOUR } from '@/features/lfp-viewer/contact-colours';
+import { contactColour, SELECTED_COLOUR } from '@/features/lfp-viewer/contact-colours';
 import {
   gridAxisNames,
   openingSliceAxis,
@@ -264,13 +264,16 @@ export function LfpScene({
     [placement, fieldLevels]
   );
   // Its box outlined rather than made more opaque, which would read as a stronger field.
+  // In its trace's colour, as the traces draw it.
   const outlinedBox =
     placement && hoveredContact !== null ? placement.shown.indexOf(hoveredContact) : -1;
   const outlineColor =
-    hoveredContact === null ? null : (colours.get(hoveredContact) ?? OUTLINE_COLOR);
+    outlinedBox < 0
+      ? OUTLINE_COLOR
+      : (contactColour(colours, selectedContact, hoveredContact as number) ?? OUTLINE_COLOR);
   const voxels = useMemo(
     () =>
-      fieldVoxels && outlineColor && outlinedBox >= 0
+      fieldVoxels && outlinedBox >= 0
         ? { ...fieldVoxels, outline: { box: outlinedBox, color: outlineColor } }
         : fieldVoxels,
     [fieldVoxels, outlinedBox, outlineColor]

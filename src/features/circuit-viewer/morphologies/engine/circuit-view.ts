@@ -1459,6 +1459,22 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
 
   setVoxels(voxels: VoxelLayer | null): void {
     const before = this.voxelSet;
+    const was = before?.layer;
+    // Only its outline moved, as a hover moves it: the boxes stand as they were written.
+    if (
+      before &&
+      voxels &&
+      was &&
+      voxels.centres === was.centres &&
+      voxels.sizes === was.sizes &&
+      voxels.looks === was.looks &&
+      voxels.frame === was.frame
+    ) {
+      this.voxelSet = { layer: voxels, order: before.order };
+      this.drawVoxelOutline(this.voxels?.visible ? voxels : null);
+      this.invalidate();
+      return;
+    }
     this.voxelSet = voxels && {
       layer: voxels,
       order: before?.layer.centres === voxels.centres ? before.order : new VoxelOrder(voxels),
@@ -1746,17 +1762,16 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.drawHiddenVoxels(mesh, layer);
     set?.order.seenFrom(this.voxelEye());
     const written = set && writeVoxels(set.layer, this.centre, set.order.boxes, mesh.geometry);
-    const outlined = this.drawVoxelOutline(mesh.visible ? layer : null);
-    if (written || changed || outlined) this.invalidate();
+    this.drawVoxelOutline(mesh.visible ? layer : null);
+    if (written || changed || layer?.outline) this.invalidate();
   }
 
-  /** The layer's outlined box, placed as `writeVoxels` places it; whether anything drawn changed. */
-  private drawVoxelOutline(layer: VoxelLayer | null): boolean {
-    const box = layer?.outline?.box ?? -1;
-    if (!layer?.outline || box < 0 || box * 3 >= layer.centres.length) {
-      if (!this.voxelOutline?.visible) return false;
-      this.voxelOutline.visible = false;
-      return true;
+  /** The layer's outlined box, placed as `writeVoxels` places it. */
+  private drawVoxelOutline(layer: VoxelLayer | null): void {
+    const outline = layer?.outline;
+    if (!layer || !outline || outline.box < 0 || outline.box * 3 >= layer.centres.length) {
+      if (this.voxelOutline) this.voxelOutline.visible = false;
+      return;
     }
     if (!this.voxelOutline) {
       const lines = new THREE.LineSegments(
@@ -1769,10 +1784,9 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       this.scene.add(lines);
       this.voxelOutline = lines;
     }
-    placeOnBox(this.voxelOutline, layer, box, this.centre);
-    this.voxelOutline.material.color.set(layer.outline.color);
+    placeOnBox(this.voxelOutline, layer, outline.box, this.centre);
+    this.voxelOutline.material.color.set(outline.color);
     this.voxelOutline.visible = true;
-    return true;
   }
 
   /** Draws the boxes of `mesh`, in the order written there, before it, where something nearer the eye hides them. */
