@@ -36,8 +36,10 @@ export default async function SectionRouter({
     case EnumSection.PrivacyPolicy:
     case EnumSection.ComingSoon:
     case EnumSection.Story:
-    case EnumSection.Contact:
       return <SectionGeneric section={section} />;
+    case EnumSection.Contact:
+      // Contact email actions are shown directly in the hero.
+      return null;
     case EnumSection.Pricing: {
       const [prices, creditsPacks, plans] = await Promise.all([
         getSinglePrices(),

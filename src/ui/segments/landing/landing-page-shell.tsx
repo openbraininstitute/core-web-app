@@ -23,7 +23,6 @@ const SNAPPING = new Set<EnumSection>([
   EnumSection.Showcases,
   EnumSection.Pricing,
   EnumSection.News,
-  EnumSection.Contact,
 ]);
 
 export type LandingPageError = {
@@ -53,6 +52,7 @@ export default function LandingPageShell({
         className,
         learnFonts,
         styles.landingPage,
+        section === EnumSection.Contact && styles.contactPage,
         section !== EnumSection.Home && `${informationFont.variable} ${styles.informationPage}`,
         snaps && 'landing-page-snap'
       )}

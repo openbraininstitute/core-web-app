@@ -14,17 +14,28 @@ import HexaTileHero from './hexa-tile-hero';
 import { InformationDescription, InformationTitle } from './information-text';
 import NextPanel from './next-panel';
 
+import type { ContentForEmail } from '@/services/sanity/api/get-email-content';
 import type { ContentForHero } from '@/services/sanity/api/get-hero-content';
 
 import styles from './hero.module.css';
+
+export interface HeroContactEmail extends ContentForEmail {
+  kind: 'support' | 'general';
+}
 
 interface HeroClientProps {
   className?: string;
   section: EnumSection;
   data: ContentForHero;
+  contactEmails?: HeroContactEmail[];
 }
 
-export default function HeroClient({ className, section, data }: HeroClientProps) {
+export default function HeroClient({
+  className,
+  section,
+  data,
+  contactEmails = [],
+}: HeroClientProps) {
   const {
     title,
     backgroundType,
@@ -54,7 +65,8 @@ export default function HeroClient({ className, section, data }: HeroClientProps
         styles.hero,
         hasMedia ? styles.withMedia : styles.wordsOnly,
         hasMedia && section !== EnumSection.Home && styles.immersive,
-        tileAnimation && styles.hexagonHero
+        tileAnimation && styles.hexagonHero,
+        section === EnumSection.Contact && styles.contactHero
       )}
     >
       {hasMedia && (
@@ -138,12 +150,29 @@ export default function HeroClient({ className, section, data }: HeroClientProps
                 )}
               </div>
             )}
+            {section === EnumSection.Contact && contactEmails.length > 0 && (
+              <div className={styles.contactEmails}>
+                {contactEmails.map(({ kind, email, label }) => (
+                  <a
+                    key={kind}
+                    href={`mailto:${email}`}
+                    data-testid={`contact-email-${kind}`}
+                    className={styles.contactEmail}
+                  >
+                    <span className={styles.contactEmailLabel}>{label}</span>
+                    <span className={styles.contactEmailAddress}>{email}</span>
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
-      <footer>
-        <NextPanel testId={`${heroTestIdPrefix}-next`}>{next}</NextPanel>
-      </footer>
+      {section !== EnumSection.Contact && (
+        <footer>
+          <NextPanel testId={`${heroTestIdPrefix}-next`}>{next}</NextPanel>
+        </footer>
+      )}
     </div>
   );
 }

@@ -5,9 +5,9 @@ import FooterServer from './layout/footer/footer-server';
 import HeroServer from './layout/hero/hero-server';
 import Menu from './layout/menu/menu';
 import SectionRouter from './sections/section-router';
+import { EnumSection } from './sections/sections';
 
 import type { LandingPageError } from './landing-page-shell';
-import type { EnumSection } from './sections/sections';
 
 export type LandingPageProps = {
   className?: string;
@@ -20,10 +20,14 @@ export default async function LandingPage({ className, section, error }: Landing
     <LandingPageShell className={className} section={section} error={error}>
       <Menu />
       <HeroServer section={section} />
-      <PaddedBlock>
-        <SectionRouter section={section} />
-      </PaddedBlock>
-      <VerticalSpace height="30px" />
+      {section !== EnumSection.Contact && (
+        <>
+          <PaddedBlock>
+            <SectionRouter section={section} />
+          </PaddedBlock>
+          <VerticalSpace height="30px" />
+        </>
+      )}
       <FooterServer />
     </LandingPageShell>
   );

@@ -211,3 +211,17 @@
 .informationPage h1 {
   font-weight: 300;
 }
+
+/* Contact is one complete screen: the hero fills the space above the natural footer. */
+.contactPage {
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+}
+.contactPage > [data-page-section] {
+  flex: 1;
+  min-height: 0;
+}
+.contactPage > footer {
+  flex-shrink: 0;
+}
