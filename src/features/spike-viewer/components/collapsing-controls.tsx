@@ -56,14 +56,12 @@ export function CollapsingControls({
       )}
     >
       <div ref={boxRef} className="relative min-w-0 flex-1">
-        {/* The row at its own width, out of sight and out of reach, to know whether it fits. */}
-        <div
-          ref={rowRef}
-          aria-hidden
-          inert
-          className="invisible absolute top-0 left-0 flex w-max items-center gap-2"
-        >
-          {children}
+        {/* The row at its own width, out of sight and out of reach, to know whether it fits.
+            Clipped, so that a row wider than the box doesn't widen what scrolls around it. */}
+        <div aria-hidden inert className="invisible absolute inset-0 overflow-hidden">
+          <div ref={rowRef} className="absolute top-0 left-0 flex w-max items-center gap-2">
+            {children}
+          </div>
         </div>
         {collapsed ? (
           <Popover>
