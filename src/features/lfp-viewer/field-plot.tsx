@@ -41,6 +41,8 @@ const HOVERED_WIDTH = 2.5;
 /** The hovered trace scrolled out of view is drawn at the edge it lies past, in a strip at least this high. */
 const PEEK_PX = 28;
 const PEEK_BACKDROP = 'rgba(255, 255, 255, 0.92)';
+/** A hovered contact that isn't traced, as a voltage report greys its hovered cell's. */
+const PREVIEW_COLOUR = '#8c8c8c';
 /** A hovered map row is outlined at least this high, however thin its row. */
 const MAP_ROW_MIN_PX = 4;
 /** A drag shorter than this is a click. */
@@ -59,6 +61,8 @@ type Props = {
   rows: readonly FieldRow[];
   /** The contacts drawn as traces, top to bottom. */
   traces: readonly number[];
+  /** Whether the traces are the ticked contacts' alone, not every one's: a change starts them at the top. */
+  tracingTicked: boolean;
   /** What each trace is called, in the order of `traces`. */
   traceLabels: readonly string[];
   /** The ticked contacts' colours, which their traces are drawn in. */
@@ -122,13 +126,14 @@ export function reachingPrevious(
   return [Math.min(low, previousHigh), Math.max(high, previousLow)];
 }
 
-/** Whether lane `row` lies wholly above the lanes in view, wholly below, or shows. */
+/** Whether lane `row` lies wholly above the lanes in view, wholly below, or shows; a contact not traced (-1), below. */
 export function laneOffView(
   row: number,
   lane: number,
   scroll: number,
   viewHeight: number
 ): 'above' | 'below' | null {
+  if (row < 0) return 'below';
   const top = row * lane - scroll;
   if (top + lane <= 0) return 'above';
   if (top >= viewHeight) return 'below';
@@ -287,6 +292,7 @@ export function FieldPlot({
   scale,
   rows,
   traces,
+  tracingTicked,
   traceLabels,
   colours,
   traceRows,
@@ -346,6 +352,8 @@ export function FieldPlot({
   const lanesHeight = traces.length * lane;
   const maxScroll = mode === 'traces' ? Math.max(0, lanesHeight - plot.height) : 0;
   const [chosenScroll, setScroll] = useState(0);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: only going between every contact and the ticked
+  useEffect(() => setScroll(0), [tracingTicked]);
   const scroll = Math.min(chosenScroll, maxScroll);
   // Scrolling, the lanes are cut at the plot's edges; all on show, gain may take them past.
   const clipTop = maxScroll > 0 ? plot.top : 0;
@@ -590,9 +598,10 @@ export function FieldPlot({
       marginNotch(g, plot.left, y, INK);
       return;
     }
-    if (hoveredLane < 0) return;
+    if (hoveredContact === null) return;
     const row = hoveredLane;
-    const contact = traces[row];
+    const contact = hoveredContact;
+    // Not traced, as only the ticked are: shown at the foot, in grey, as a voltage report shows its hovered cell.
     const off = laneOffView(row, lane, scroll, plot.height);
     g.save();
     g.beginPath();
@@ -602,7 +611,7 @@ export function FieldPlot({
     g.fillStyle = HOVER_WASH;
     g.fillRect(plot.left, plot.top, plot.width, plot.height);
     // Scrolled out of view, it is drawn at the edge it lies past, rather than the lanes scrolled to it.
-    const strip = Math.min(plot.height, Math.max(PEEK_PX, lane));
+    const strip = Math.min(plot.height / 2, Math.max(PEEK_PX, lane));
     const stripTop = off === 'above' ? plot.top : plot.bottom - strip;
     if (off) {
       g.fillStyle = PEEK_BACKDROP;
@@ -621,13 +630,21 @@ export function FieldPlot({
       g.clip();
     }
     const y = off ? stripTop + strip / 2 : laneY(row);
-    g.strokeStyle = hoveredColour;
+    const colour = row < 0 ? PREVIEW_COLOUR : hoveredColour;
+    g.strokeStyle = colour;
     g.lineWidth = HOVERED_WIDTH;
     laneStroker()(g, contact, y);
+    if (row < 0) {
+      g.fillStyle = LABEL;
+      g.font = '10px sans-serif';
+      g.textAlign = 'left';
+      g.textBaseline = 'top';
+      g.fillText('not ticked', plot.left + 4, stripTop + 3);
+    }
     g.restore();
     if (off) {
-      const text = `${traceLabels[row]} ${off === 'above' ? '↑' : '↓'}`;
-      marginName(g, plot.left, { top: stripTop, height: strip }, text, hoveredColour);
+      const text = row < 0 ? `e${contact}` : `${traceLabels[row]} ${off === 'above' ? '↑' : '↓'}`;
+      marginName(g, plot.left, { top: stripTop, height: strip }, text, colour);
     }
   }, [
     hoveredContact,

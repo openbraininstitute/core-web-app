@@ -271,15 +271,14 @@ describe('tracedContacts', () => {
     expect(tracedContacts(rows([3, 1, 2, 0]), [0, 3])).toEqual([3, 0]);
   });
 
-  it('traces every contact while none are ticked and they are few', () => {
+  it('traces every contact while none are ticked, however many', () => {
     expect(tracedContacts(rows([3, 1, 2, 0]), [])).toEqual([3, 1, 2, 0]);
+    expect(tracedContacts(rows(Array.from({ length: 300 }, (_, c) => c)), [])).toHaveLength(300);
   });
 
-  it('spreads the default traces over many, from the first row to the last', () => {
-    const traced = tracedContacts(rows(Array.from({ length: 100 }, (_, c) => c)), []);
-    expect(traced).toHaveLength(32);
-    expect(traced[0]).toBe(0);
-    expect(traced[31]).toBe(99);
+  it('traces every ticked contact, however many', () => {
+    const ticked = Array.from({ length: 100 }, (_, c) => c * 2);
+    expect(tracedContacts(rows(Array.from({ length: 300 }, (_, c) => c)), ticked)).toEqual(ticked);
   });
 });
 

@@ -9,6 +9,10 @@ describe('laneOffView', () => {
     expect(laneOffView(15, 10, 50, 100)).toBe('below');
   });
 
+  it('is below for a contact that is not traced', () => {
+    expect(laneOffView(-1, 10, 0, 100)).toBe('below');
+  });
+
   it('is in view where any of it shows', () => {
     expect(laneOffView(5, 10, 50, 100)).toBeNull();
     expect(laneOffView(14, 10, 50, 100)).toBeNull();

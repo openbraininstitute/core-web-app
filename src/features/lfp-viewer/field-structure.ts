@@ -22,10 +22,6 @@ const LINE_ABOVE_CHANCE = 4;
 const LINE_EXPLAINS_MOST = 0.5;
 /** Differences up to this many steps of a stored field are its rounding. */
 const ROUNDING_STEPS = 1;
-/** Traces drawn while none are ticked: spread evenly over the contacts. */
-export const DEFAULT_TRACES = 32;
-/** Ticked contacts traced at most, a range read each. */
-export const MAX_TRACES = 64;
 
 export type RowOrder = 'along' | 'similar' | 'contacts';
 
@@ -262,17 +258,24 @@ export function traceLabels(traces: readonly number[], along: Float32Array | nul
   return microns && new Set(microns).size === microns.length ? microns : traces.map((c) => `e${c}`);
 }
 
-// In the rows' order, so that both views read from top to bottom alike.
+/** Each trace's height in px, for those that scroll: Fit has every one in the pane. */
+export const LANE_HEIGHTS = { fit: null, small: 16, medium: 32, large: 64 } as const;
+export type LaneHeight = keyof typeof LANE_HEIGHTS;
+/** Above this many traces they open at Small, scrolling, as Fit would squeeze them. */
+const FIT_AT_MOST = 64;
+
+/** The height picked, or until one is, Fit for as few traces as it shows well and Small for more. */
+export function laneHeightOf(chosen: LaneHeight | null, traced: number): LaneHeight {
+  return chosen ?? (traced > FIT_AT_MOST ? 'small' : 'fit');
+}
+
+// The ticked alone, or every contact while none are, as the spike raster and a voltage report draw theirs;
+// in the rows' order, so that both views read from top to bottom alike.
 export function tracedContacts(rows: readonly FieldRow[], ticked: readonly number[]): number[] {
   const ordered = rows.flatMap((row) => row.contacts);
-  if (ticked.length > 0) {
-    const shown = new Set(ticked.slice(0, MAX_TRACES));
-    return ordered.filter((c) => shown.has(c));
-  }
-  const n = Math.min(DEFAULT_TRACES, ordered.length);
-  return Array.from({ length: n }, (_, i) =>
-    n === 1 ? ordered[0] : ordered[Math.round((i * (ordered.length - 1)) / (n - 1))]
-  );
+  if (ticked.length === 0) return ordered;
+  const shown = new Set(ticked);
+  return ordered.filter((c) => shown.has(c));
 }
 
 export function withoutShared(field: LfpField): LfpField {

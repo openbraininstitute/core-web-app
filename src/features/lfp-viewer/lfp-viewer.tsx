@@ -16,11 +16,11 @@ import { FieldFromControls } from '@/features/lfp-viewer/field-from';
 import { FieldPlot } from '@/features/lfp-viewer/field-plot';
 import {
   coordinatesAlong,
-  DEFAULT_TRACES,
   describeField,
   fieldDirection,
   fieldRows,
-  MAX_TRACES,
+  LANE_HEIGHTS,
+  laneHeightOf,
   openingOrder,
   sharedShareOf,
   tracedContacts,
@@ -68,7 +68,7 @@ import type { ISimulationResult } from '@/api/entitycore/types/entities/simulati
 import type { IAsset } from '@/api/entitycore/types/shared/global';
 import type { LfpSummarySource } from '@/api/small-scale-simulator/simulation-result/lfp-summary';
 import type { FieldPlotMode, LanesInView } from '@/features/lfp-viewer/field-plot';
-import type { RowOrder } from '@/features/lfp-viewer/field-structure';
+import type { LaneHeight, RowOrder } from '@/features/lfp-viewer/field-structure';
 import type {
   ContactPositions,
   FieldChoice,
@@ -81,11 +81,6 @@ import type { WorkspaceContext } from '@/types/common';
 /** "Hide below" in 3D, as shares of the scale's limit. */
 const HIDE_BELOW_SHARES = [0, 0.05, 0.1, 0.25];
 const GAINS = [0.5, 1, 2, 4, 8];
-/** Each trace's height in px, for those that scroll: Fit has every one in the pane. */
-const LANE_HEIGHTS = { fit: null, small: 16, medium: 32, large: 64 } as const;
-type LaneHeight = keyof typeof LANE_HEIGHTS;
-/** Above this many contacts the traces open at Small, scrolling, as Fit would squeeze them. */
-const FIT_AT_MOST = 64;
 const TRACES_TITLE = 'Extracellular field';
 const TABLE_TITLE = 'Electrodes';
 const SCENE_TITLE = '3D Player';
@@ -230,11 +225,7 @@ function LfpReportView({
     [order, structure, positions, direction, swing]
   );
   const [gain, setGain] = useState(1);
-  // Every contact, as a probe's traces are, the ticked in their colours; or the ticked alone.
-  const [tracedOnly, setTracedOnly] = useState(false);
-  const [laneHeight, setLaneHeight] = useState<LaneHeight>(() =>
-    index.contacts > FIT_AT_MOST ? 'small' : 'fit'
-  );
+  const [chosenHeight, setChosenHeight] = useState<LaneHeight | null>(null);
   const [timeWindow, setTimeWindow] = useState<[number, number] | null>(null);
   const shownWindow = useMemo<[number, number]>(
     () => timeWindow ?? [start, end],
@@ -283,12 +274,8 @@ function LfpReportView({
           : 'Selected',
     [selectedContact, defaultContact]
   );
-  const allContacts = useMemo(() => rows.flatMap((row) => row.contacts), [rows]);
-  const tracedOnes = useMemo(
-    () => (tracedOnly ? tracedContacts(rows, ticked) : null),
-    [tracedOnly, rows, ticked]
-  );
-  const traces = tracedOnes ?? allContacts;
+  const traces = useMemo(() => tracedContacts(rows, ticked), [rows, ticked]);
+  const laneHeight = laneHeightOf(chosenHeight, traces.length);
   const along = useMemo(
     () => (positions && direction ? coordinatesAlong(positions, direction.axis) : null),
     [positions, direction]
@@ -409,9 +396,9 @@ function LfpReportView({
             <>
               <span className="whitespace-nowrap text-xs text-neutral-400">
                 {index.contacts.toLocaleString()} contacts · {index.populations.join(', ')}
-                {tracedOnly &&
-                  ticked.length > MAX_TRACES &&
-                  ` · the first ${MAX_TRACES} of ${ticked.length} ticked traced`}
+                {mode === 'traces' &&
+                  ticked.length > 0 &&
+                  ` · ${ticked.length.toLocaleString()} ticked traced`}
                 {order === 'along' &&
                   direction &&
                   ` · along (${direction.axis.map((d) => d.toFixed(2)).join(', ')})`}
@@ -426,11 +413,12 @@ function LfpReportView({
                 Drag to zoom · Double-click to reset · Click a trace to select its contact for the
                 statistics, again to go back to the one the field swings most at; in the map, the
                 row&apos;s contact · The player moves with the bar below · Tick contacts in the
-                table to draw their traces in a colour of their own, there and in the 3D player;
-                Show ticked draws those alone · Scroll through traces that don&apos;t fit · Removing
-                the shared signal leaves the table and spectra as recorded · A group of cells&apos;
-                overview holds means over its bins, the total&apos;s their extremes, so zoomed out
-                the total&apos;s peaks read higher
+                table to trace them alone, each in a colour of its own, there and in the 3D player;
+                with none ticked, every contact is traced; a row hovered that isn&apos;t traced
+                shows at the foot · Scroll through traces that don&apos;t fit · Removing the shared
+                signal leaves the table and spectra as recorded · A group of cells&apos; overview
+                holds means over its bins, the total&apos;s their extremes, so zoomed out the
+                total&apos;s peaks read higher
               </PlotHelp>
             </>
           }
@@ -476,22 +464,6 @@ function LfpReportView({
           />
           {mode === 'traces' && (
             <PillSelect
-              label="Show"
-              value={tracedOnly ? 'ticked' : 'all'}
-              options={[
-                { value: 'all', label: 'All contacts' },
-                {
-                  value: 'ticked',
-                  label: 'Ticked',
-                  detail:
-                    ticked.length > 0 ? undefined : `None ticked: ${DEFAULT_TRACES} spread out`,
-                },
-              ]}
-              onChange={(v) => setTracedOnly(v === 'ticked')}
-            />
-          )}
-          {mode === 'traces' && (
-            <PillSelect
               label="Height"
               value={laneHeight}
               options={[
@@ -500,7 +472,7 @@ function LfpReportView({
                 { value: 'medium', label: 'Medium' },
                 { value: 'large', label: 'Large' },
               ]}
-              onChange={(v) => setLaneHeight(v as LaneHeight)}
+              onChange={(v) => setChosenHeight(v as LaneHeight)}
             />
           )}
           {mode === 'traces' && (
@@ -543,6 +515,7 @@ function LfpReportView({
         scale={scale}
         rows={rows}
         traces={traces}
+        tracingTicked={ticked.length > 0}
         traceLabels={labels}
         colours={colours}
         traceRows={traceRows.rows}
