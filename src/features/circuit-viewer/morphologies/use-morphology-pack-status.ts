@@ -4,6 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 
 import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
 import {
+  MorphologyPackNoPackReason,
+  MorphologyPackState,
   type MorphologyPackStatus,
   requestMorphologyPack,
 } from '@/api/small-scale-simulator/circuit/morphology-pack';
@@ -11,7 +13,7 @@ import { circuitMorphologiesFlag, useFlag } from '@/features/feature-flags';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 const POLL_MS = 10_000;
-const FAILED: MorphologyPackStatus = { state: 'failed' };
+const FAILED: MorphologyPackStatus = { state: MorphologyPackState.Failed };
 
 /**
  * The circuit's morphology pack as Bluenaas has it, its build queued the first time it is asked for: `undefined` until
@@ -43,7 +45,8 @@ export function useMorphologyPackStatus(
     staleTime: 5_000,
     refetchOnWindowFocus: false,
     retry: 1,
-    refetchInterval: (query) => (poll && query.state.data?.state === 'building' ? POLL_MS : false),
+    refetchInterval: (query) =>
+      poll && query.state.data?.state === MorphologyPackState.Building ? POLL_MS : false,
   });
   if (!asked) return null;
   if (isError) return FAILED;
@@ -55,12 +58,12 @@ export function morphologyPackNote(
   status: MorphologyPackStatus | null | undefined
 ): string | undefined {
   switch (status?.state) {
-    case 'building':
+    case MorphologyPackState.Building:
       return 'Preparing morphologies, this takes a few minutes';
-    case 'failed':
+    case MorphologyPackState.Failed:
       return "Couldn't prepare morphologies";
-    case 'refused':
-      return status.reason === 'too_large'
+    case MorphologyPackState.Refused:
+      return status.reason === MorphologyPackNoPackReason.TooLarge
         ? 'Not available for a circuit this large'
         : 'No morphologies to show';
     default:

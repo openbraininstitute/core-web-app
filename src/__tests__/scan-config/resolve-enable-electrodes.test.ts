@@ -5,7 +5,8 @@ import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit'
 import {
   resolveEnableCellHover,
   resolveEnableElectrodes,
-  resolveEnableMorphologyLocations,
+  resolveExplicitLocationsBlockTypes,
+  resolveSingleMorphology,
 } from '@/features/scan-config/components/model-preview/resolve-enable-electrodes';
 
 describe('resolveEnableElectrodes', () => {
@@ -76,31 +77,66 @@ describe('resolveEnableCellHover', () => {
   });
 });
 
-describe('resolveEnableMorphologyLocations', () => {
-  it('takes explicit locations on one neuron', () => {
-    // The single cell, and the synaptome — a single-scale circuit holding one neuron.
-    expect(resolveEnableMorphologyLocations({ type: EntityTypeDict.Memodel })).toBe(true);
+const EXPLICIT = 'ExplicitMorphologyLocations';
+const PER_NEURON = 'PerNeuronExplicitMorphologyLocations';
+const BOTH = [EXPLICIT, PER_NEURON];
+const types = (model: Parameters<typeof resolveExplicitLocationsBlockTypes>[0], accepted = BOTH) =>
+  resolveExplicitLocationsBlockTypes(model, accepted);
+
+describe('resolveExplicitLocationsBlockTypes', () => {
+  it('fills explicit blocks on an MEModel, which has no node ids', () => {
+    expect(types({ type: EntityTypeDict.Memodel })).toEqual([EXPLICIT]);
+  });
+
+  it('fills either on one neuron, a new block plain', () => {
+    expect(types({ type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single })).toEqual(
+      BOTH
+    );
+  });
+
+  it('fills only per-neuron blocks on a circuit drawing several neurons', () => {
+    for (const scale of [
+      CircuitScaleDictionary.PairNeuron,
+      CircuitScaleDictionary.SmallMicrocircuit,
+    ]) {
+      expect(types({ type: EntityTypeDict.Circuit, scale })).toEqual([PER_NEURON]);
+    }
+  });
+
+  it('never offers a block the workflow schema does not take', () => {
+    expect(types({ type: EntityTypeDict.Memodel }, [PER_NEURON])).toEqual([]);
     expect(
-      resolveEnableMorphologyLocations({
+      types({ type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.PairNeuron }, [EXPLICIT])
+    ).toEqual([]);
+    expect(
+      types({ type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single }, [PER_NEURON])
+    ).toEqual([PER_NEURON]);
+  });
+
+  it('fills nothing where morphologies are not drawn, or on other models', () => {
+    for (const scale of [CircuitScaleDictionary.Microcircuit, CircuitScaleDictionary.Region]) {
+      expect(types({ type: EntityTypeDict.Circuit, scale })).toEqual([]);
+    }
+    expect(types({ type: EntityTypeDict.IonChannelModel })).toEqual([]);
+    expect(types({})).toEqual([]);
+  });
+});
+
+describe('resolveSingleMorphology', () => {
+  it('is true on one morphology only', () => {
+    expect(resolveSingleMorphology({ type: EntityTypeDict.Memodel })).toBe(true);
+    expect(
+      resolveSingleMorphology({
         type: EntityTypeDict.Circuit,
         scale: CircuitScaleDictionary.Single,
       })
     ).toBe(true);
-  });
-
-  it('does not on a circuit that generates its locations', () => {
-    for (const scale of [
-      CircuitScaleDictionary.PairNeuron,
-      CircuitScaleDictionary.SmallMicrocircuit,
-      CircuitScaleDictionary.Microcircuit,
-      CircuitScaleDictionary.Region,
-    ]) {
-      expect(resolveEnableMorphologyLocations({ type: EntityTypeDict.Circuit, scale })).toBe(false);
-    }
-  });
-
-  it('does not on anything else the preview accepts', () => {
-    expect(resolveEnableMorphologyLocations({ type: EntityTypeDict.IonChannelModel })).toBe(false);
-    expect(resolveEnableMorphologyLocations({})).toBe(false);
+    expect(
+      resolveSingleMorphology({
+        type: EntityTypeDict.Circuit,
+        scale: CircuitScaleDictionary.PairNeuron,
+      })
+    ).toBe(false);
+    expect(resolveSingleMorphology({})).toBe(false);
   });
 });

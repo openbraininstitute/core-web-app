@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { placementAt } from '@/features/circuit-nodes/geometry-utils';
+import { debugFlag, useFlag } from '@/features/feature-flags';
 import {
   loadAfferentSynapses,
   Report,
@@ -72,6 +73,7 @@ export function useAfferentSynapses({
   loadTree,
 }: Options): TSmallCircuitSynapseGroup[] {
   const ctx = useWorkspace();
+  const debugging = !!useFlag(debugFlag.key);
   const [groups, setGroups] = useState<TSmallCircuitSynapseGroup[]>([]);
 
   const circuitId = circuit.id;
@@ -81,7 +83,7 @@ export function useAfferentSynapses({
   useEffect(() => {
     if (!enabled) return;
 
-    const report = new Report();
+    const report = new Report(debugging);
     if (!placementSettled || !edges || !circuitAssetId) {
       report
         .logTask(
@@ -159,7 +161,17 @@ export function useAfferentSynapses({
     return () => {
       cancelled = true;
     };
-  }, [enabled, ctx, circuitId, circuitAssetId, edges, placementSettled, geometry, loadTree]);
+  }, [
+    enabled,
+    debugging,
+    ctx,
+    circuitId,
+    circuitAssetId,
+    edges,
+    placementSettled,
+    geometry,
+    loadTree,
+  ]);
 
   return groups;
 }

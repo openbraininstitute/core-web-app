@@ -6,6 +6,7 @@ import type {
   IBrainAtlasRegion,
   IBrainAtlasRegionFilter,
 } from '@/api/entitycore/types/entities/brain-atlas';
+import type { TAnyEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { WorkspaceContext } from '@/types/common';
 import type { EntityCoreResponse } from '../../types/shared/response';
 
@@ -22,13 +23,16 @@ const baseUri = '/brain-atlas';
 export async function getBrainAtlases({
   filters,
   context,
+  expand,
 }: {
   filters?: Partial<IBrainAtlasFilter>;
   context?: WorkspaceContext | null;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IBrainAtlas>>(baseUri, {
     queryParams: {
+      expand,
       ...filters,
     },
     headers: {
@@ -50,12 +54,15 @@ export async function getBrainAtlases({
 export async function getBrainAtlas({
   id,
   context,
+  expand,
 }: {
   id: string;
   context?: WorkspaceContext | null;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<IBrainAtlas>(`${baseUri}/${id}`, {
+    queryParams: { expand },
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',

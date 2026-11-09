@@ -40,6 +40,8 @@ export function useMemodelVisualizationSource({
     cellColors: BY_SECTION,
     hidden: NOTHING_HIDDEN,
     locationCells: THE_CELL,
+    locationFirstCell: 0,
+    locationNodeCount: 1,
     error: null,
     anchor: ORIGIN,
   };

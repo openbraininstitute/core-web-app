@@ -5,6 +5,7 @@ import type {
   ISimulatableExtracellularRecordingArray,
   ISimulatableExtracellularRecordingArrayFilter,
 } from '@/api/entitycore/types/entities/simulatable-extracellular-recording-array';
+import type { TAnyEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -22,14 +23,17 @@ export async function getSimulatableExtracellularRecordingArrays({
   withFacets,
   filters,
   context,
+  expand,
 }: {
   withFacets?: boolean;
   filters?: Partial<ISimulatableExtracellularRecordingArrayFilter>;
   context?: WorkspaceContext | null;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<ISimulatableExtracellularRecordingArray>>(baseUri, {
     queryParams: compactRecord({
+      expand,
       ...filters,
       with_facets: withFacets,
     }),
@@ -51,12 +55,15 @@ export async function getSimulatableExtracellularRecordingArrays({
 export async function getSimulatableExtracellularRecordingArray({
   id,
   context,
+  expand,
 }: {
   id: string;
   context?: WorkspaceContext | null;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<ISimulatableExtracellularRecordingArray>(`${baseUri}/${id}`, {
+    queryParams: { expand },
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',

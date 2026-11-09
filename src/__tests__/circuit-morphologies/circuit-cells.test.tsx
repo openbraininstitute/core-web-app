@@ -1,5 +1,5 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   CircuitCells,
@@ -81,7 +81,10 @@ const h = vi.hoisted(() => {
     setDetailRules = vi.fn();
     detailListeners = new Set<(detail: DetailStats | null) => void>();
 
-    constructor(readonly host: HTMLElement) {
+    constructor(
+      readonly host: HTMLElement,
+      readonly onLost: () => void
+    ) {
       state.viewers.push(this);
     }
 
@@ -137,6 +140,8 @@ const h = vi.hoisted(() => {
   };
   return state;
 });
+
+vi.mock('next/dynamic', () => import('@/__tests__/viewer-3d/lazy-next-dynamic'));
 
 vi.mock('@/features/circuit-viewer/morphologies/engine/circuit-morphology-viewer', () => ({
   CircuitMorphologyViewer: h.FakeViewer,
@@ -247,8 +252,10 @@ const drag = (host: HTMLElement) => {
   fireEvent.pointerUp(host, { ...at, clientX: 40, clientY: 10 });
 };
 
-/** The flag that shows the debug tools. */
-const DEBUG = '@openbraininstitute/morphoviewer:debug';
+// Its first import can outlast a test.
+beforeAll(async () => {
+  await import('@/features/circuit-viewer/morphologies/debug/circuit-debug');
+}, 30_000);
 
 afterEach(() => {
   h.viewers = [];
@@ -463,57 +470,93 @@ describe('CircuitCells', () => {
     expect(onGlowAvailable.mock.calls).toEqual([[false], [false]]);
   });
 
-  it('shows nothing of what the engine draws outside the debug tools', () => {
+  it('without a place for the Debug menu, shows nothing of it', async () => {
     const { viewer } = view();
     tellDetail(viewer, { ...DETAIL, leftOut: 2 });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve));
+    });
+    expect(screen.queryByRole('button', { name: 'Debug' })).toBeNull();
     expect(screen.queryByTestId('detail-readout')).toBeNull();
   });
 
-  describe('in the debug tools', () => {
-    beforeEach(() => localStorage.setItem(DEBUG, 'on'));
-    afterEach(() => localStorage.removeItem(DEBUG));
+  describe('with a place for the Debug menu', () => {
+    let target: HTMLElement;
 
-    it('tells why WebGL 2 draws the view, whenever one is made', () => {
+    beforeEach(() => {
+      target = document.body.appendChild(document.createElement('div'));
+    });
+    afterEach(() => target.remove());
+
+    /** The view, with its Debug menu open. */
+    async function opened(props: Partial<CircuitCellsProps> = {}) {
+      const made = view({ debugTarget: target, ...props });
+      fireEvent.click(await screen.findByRole('button', { name: 'Debug' }));
+      return made;
+    }
+
+    it('tells why WebGL 2 draws the view, whenever one is made', async () => {
       const onFallback = vi.fn();
-      view({ onFallback });
+      await opened({ onFallback });
       expect(onFallback.mock.calls).toEqual([['missing']]);
 
-      fireEvent.change(screen.getByRole('combobox'), { target: { value: 'webgl' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Always WebGL 2' }));
       expect(onFallback.mock.calls).toEqual([['missing'], [null]]);
     });
 
     it('shows what the engine draws, with its budget and tolerance to lower', async () => {
-      const { viewer } = view();
+      const { viewer } = await opened();
       tellDetail(viewer, { ...DETAIL, leftOut: 2 });
-      const readout = await waitFor(() => screen.getByTestId('detail-readout'));
-      expect(readout.textContent).toContain(
-        '1,200 segments drawn of 1,500 wanted, 2 boxes left out'
-      );
-      expect(readout.textContent).toContain('0.125 µm × 3, 0.25 µm × 4, 1 µm × 5');
-      expect(screen.getByTestId('room').textContent).toBe(
-        'Budget taken: 1,280 of 2,000,000, in blocks of 64'
-      );
-      const [budget, pixels] = screen.getAllByRole('combobox');
-      fireEvent.change(budget, { target: { value: '200000' } });
-      fireEvent.change(pixels, { target: { value: '4' } });
+      expect(
+        screen.getByText('1,200 segments drawn of 1,500 wanted, 2 boxes left out')
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText('Boxes by level: 0.125 µm × 3, 0.25 µm × 4, 1 µm × 5')
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText('Budget taken: 1,280 of 2,000,000, in blocks of 64')
+      ).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'At most 200,000 segments' }));
+      fireEvent.click(screen.getByRole('button', { name: 'A tolerance within 4 device pixels' }));
       expect(viewer.setDetailRules.mock.calls).toEqual([[{ budget: 200_000 }], [{ pixels: 4 }]]);
     });
 
-    it('says what draws the view, and makes it again with WebGL 2 when asked', async () => {
-      const { viewer } = view();
-      const told = await waitFor(() => screen.getByTestId('renderer'));
-      expect(told.textContent).toBe('Drawn with WebGL 2: no WebGPU in this browser');
+    it('stays open while the view is made again with WebGL 2, as asked', async () => {
+      const { viewer } = await opened();
+      expect(screen.getByText('Drawn with WebGL 2: no WebGPU in this browser')).toBeInTheDocument();
 
-      fireEvent.change(screen.getByRole('combobox'), { target: { value: 'webgl' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Always WebGL 2' }));
 
       expect(viewer.dispose).toHaveBeenCalledTimes(1);
       const again = h.viewers.at(-1) as InstanceType<typeof h.FakeViewer>;
       expect(again).not.toBe(viewer);
       expect(again.setSomas).toHaveBeenCalledExactlyOnceWith(SOMAS, COLORS, undefined);
       expect(again.setData).toHaveBeenCalledExactlyOnceWith(DATA, false);
-      expect(screen.getByTestId('renderer').textContent).toBe(
-        'Drawn with WebGL 2: chosen in the debug tools'
-      );
+      expect(screen.getByText('Drawn with WebGL 2: chosen in the debug tools')).toBeInTheDocument();
+    });
+
+    it('makes no new view for the renderer already chosen', async () => {
+      const { viewer } = await opened();
+      fireEvent.click(screen.getByRole('button', { name: 'Chosen by the browser' }));
+
+      expect(viewer.dispose).not.toHaveBeenCalled();
+      expect(h.viewers.at(-1)).toBe(viewer);
+    });
+
+    it('goes with the graphics, once they are given up on', async () => {
+      await opened();
+      for (let losses = 0; losses < 4; losses++) {
+        act(() => (h.viewers.at(-1) as InstanceType<typeof h.FakeViewer>).onLost());
+      }
+
+      expect(screen.getByText('The graphics were reset')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /debug$/i })).toBeNull();
+    });
+
+    it('tells the cells and how the host has them come in', async () => {
+      await opened({ debugLoad: { loaded: 1, failed: 0, total: 2 } });
+      expect(screen.getByText('2 cells placed')).toBeInTheDocument();
+      expect(screen.getByText('Morphologies: 1 of 2 loaded')).toBeInTheDocument();
     });
   });
 

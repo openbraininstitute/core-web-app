@@ -209,6 +209,7 @@ export const ScanConfigUIElementDict = {
   FloatOptional: 'float_optional',
   SelectEFeaturesByProtocol: 'select_efeatures_by_protocol',
   MorphologyLocationSelection: 'morphology_location_selection',
+  PerNeuronMorphologyLocationSelection: 'per_neuron_morphology_location_selection',
   TaskResultSelector: 'task_result_selector',
   EtypeSelector: 'etype_selector',
   EModelOptimisationParameters: 'emodel_optimisation_parameters',
@@ -622,6 +623,21 @@ export interface IMorphologyLocationSelection extends TBlockElement {
   };
 }
 
+/**
+ * A list of `{ node_id, section_id, offset }` rows: one location each, on the neuron it names.
+ *
+ * The multi-neuron counterpart of {@link IMorphologyLocationSelection}. `node_id` is the SONATA
+ * node id within the population on show, taken from the cell the viewer pick landed on.
+ */
+export interface IPerNeuronMorphologyLocationSelection extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.PerNeuronMorphologyLocationSelection;
+  items: {
+    properties: IMorphologyLocationSelection['items']['properties'] & {
+      node_id: { title?: string; description?: string; minimum?: number };
+    };
+  };
+}
+
 export interface DiscreteProbabilities extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.DiscreteProbabilities;
   items: { type: 'integer' };
@@ -763,6 +779,7 @@ export type ParamSchema =
   | SelectRecordableIonChannelVariable
   | MorphologySectionTypeSelection
   | IMorphologyLocationSelection
+  | IPerNeuronMorphologyLocationSelection
   | VoltageDuration
   | StringSelection
   | DiscreteProbabilities

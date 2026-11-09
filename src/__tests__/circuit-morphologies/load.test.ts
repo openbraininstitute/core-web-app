@@ -35,7 +35,12 @@ import type { CacheBounds } from '@/features/viewer-3d/load/asset-cache';
 import type { WorkerHandle } from '@/features/viewer-3d/load/worker-handle';
 
 const URL_A = 'https://bluenaas.test/circuit/a/morphology-pack';
-const BOUNDS: CacheBounds = { name: 'test-mpack', ttlMs: 60_000, maxBytes: 2 ** 20 };
+/**
+ * The test's own bucket. `terminate` does not stop an in-process worker, so a load an earlier test left running still
+ * keeps its pack once it is in, into whichever Cache Storage is stubbed then: it must not be this test's bucket.
+ */
+let BOUNDS: CacheBounds;
+let tests = 0;
 /** The pack's own, in its order: a page with these numbers its cells as the pack does. */
 const POPULATIONS = [
   { name: 'excitatory', cells: 3 },
@@ -70,6 +75,7 @@ let workers: TestWorker[];
 let progress: [number, number][];
 
 beforeEach(() => {
+  BOUNDS = { name: `test-mpack-${++tests}`, ttlMs: 60_000, maxBytes: 2 ** 20 };
   storage = new FakeCacheStorage();
   workers = [];
   progress = [];
@@ -524,14 +530,9 @@ describe('loadCircuitMorphologies', () => {
     it('checks the digest of a pack too large for the cache, and does not keep it', async () => {
       const bytes = small();
       rangeServer(bytes, []);
-      const { maxBytes } = BOUNDS;
       BOUNDS.maxBytes = bytes.byteLength - 1;
-      try {
-        const { whole } = await load({ request: requestOf(bytes, '00'.repeat(32)) });
-        await expect(whole).rejects.toMatchObject({ name: 'PackChanged' });
-      } finally {
-        BOUNDS.maxBytes = maxBytes;
-      }
+      const { whole } = await load({ request: requestOf(bytes, '00'.repeat(32)) });
+      await expect(whole).rejects.toMatchObject({ name: 'PackChanged' });
     });
 
     it('stops reading a body longer than the pack, and says the pack changed', async () => {
@@ -577,6 +578,10 @@ describe('loadCircuitMorphologies', () => {
 
     it('keeps packs a month', () => {
       expect(PACK_CACHE.ttlMs).toBe(30 * 24 * 60 * 60 * 1000);
+    });
+
+    it('keeps up to 1 GiB of packs', () => {
+      expect(PACK_CACHE.maxBytes).toBe(2 ** 30);
     });
   });
 

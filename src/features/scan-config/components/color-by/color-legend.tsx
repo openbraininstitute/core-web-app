@@ -2,6 +2,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { ColorPicker } from 'antd';
 import { useEffect, useState } from 'react';
 
+import { PyramidalNeuronIcon } from '@/components/icons/PyramidalNeuron';
 import { cn } from '@/utils/css-class';
 import { fullscreenPopupContainer } from '@/utils/fullscreen';
 
@@ -13,7 +14,7 @@ import type { ViewerTheme } from './contrast';
 
 /**
  * in-house flag for manual color editing. When off, swatches are plain (read-only)
- * dots. Editing is not always required, so it lives behind this flag.
+ * icons. Editing is not always required, so it lives behind this flag.
  */
 const COLOR_EDITING_ENABLED = true;
 
@@ -138,10 +139,13 @@ function CategoricalList({
               type="button"
               data-swatch-trigger
               aria-label={`Change color for ${entry.value}`}
-              className="size-3 shrink-0 rounded-full ring-1 ring-black/10"
-              style={{ backgroundColor: entry.color }}
+              className="flex size-5 shrink-0 items-center justify-center"
+              style={{ color: entry.color }}
               onClick={editable && !open ? () => setOpenValue(entry.value) : undefined}
-            />
+            >
+              {/* A faint dark halo, so a pale colour's thin strokes still read on the light panel. */}
+              <PyramidalNeuronIcon className="size-5 drop-shadow-[0_0_0.5px_rgba(0,0,0,0.45)]" />
+            </button>
           );
 
           return (

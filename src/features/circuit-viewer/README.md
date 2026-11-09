@@ -7,7 +7,7 @@ The 3D view of a circuit, a simulation's spikes over it and the electrodes place
 
 In short:
 
-- A circuit shows first as its somas, one per cell, coloured by the property chosen. Its morphologies come from its morphology pack: one file Bluenaas builds for each circuit the first time it is asked, with the morphologies simplified at three levels, placed and cut into boxes of space. The viewer reads the coarsest level first, then finer levels box by box where the view needs them.
+- A circuit shows first as its somas, one per cell, coloured by the property chosen. Its morphologies come from its morphology pack: one file Bluenaas builds for each circuit the first time it is asked, with the morphologies simplified at three levels (two for the largest circuits), placed and cut into boxes of space. The viewer reads the coarsest level first, then finer levels box by box where the view needs them.
 - WebGPU culls on the GPU what is hidden and draws up to 4M segments finer than the coarsest level, which it keeps drawn where it fits. WebGL 2 draws up to 2M segments, chosen by what is in the frame and how large it is on screen. Where the morphologies in view come to more than that, their somas are drawn instead, and the status says to zoom in.
 - A single cell, and a pair or small circuit without a pack, are drawn a morphology per cell, read from OBI-One one cell at a time, with section ids for picking a location.
 - The morphologies are behind the `circuit-morphologies` flag (`circuitMorphologiesFlag`), off by default, offered in local, preview and staging. Without it, circuits above small scale are drawn as somas only.
@@ -126,7 +126,7 @@ Elsewhere:
 
 - The populations' checklist warns when the selected population is hidden ("Show") or every one is ("Show all").
 - A circuit drawn a morphology per cell shows "Couldn't load the visualization", with Try again where the source itself did not fail. While it loads, a veil counts the nodes downloaded and the morphologies drawn, after 300 ms ([visualization-loading-indicator.tsx](../scan-config/components/shared/visualization-loading-indicator.tsx)).
-## Settings and debug mode
+## Settings and the Debug menu
 
 The settings menu ([viewer-controls-menu.tsx](../scan-config/components/color-by/viewer-controls-menu.tsx)) shows the rows its host passes:
 
@@ -143,11 +143,14 @@ The settings menu ([viewer-controls-menu.tsx](../scan-config/components/color-by
 
 The defaults are `DEFAULT_VIEWER_CONFIG` ([use-viewer-config.ts](../scan-config/components/color-by/use-viewer-config.ts)). Axons start shown on circuits above small scale and hidden on pair and small ones. There is one look, Studio (`createLooks` in [looks.ts](../viewer-3d/engine/looks.ts)).
 
-Debug mode is not a flag. It is the `localStorage` key `@openbraininstitute/morphoviewer:debug` ([debug-mode.ts](debug-mode.ts)), shared with the morphology viewer, and it turns on:
+The Debug menu sits beside the settings where the `debug` flag is on (`debugFlag` in [flags.ts](../feature-flags/flags.ts)). The Feature Flags tab lists it in local, preview and staging, off by default. Its code ([morphologies/debug/](morphologies/debug/circuit-debug.tsx)) is fetched only with the flag on. `CircuitScene` reads the flag and the chrome gives a place for the menu, which `CircuitCells` fills through a portal, as it holds the view, so there is no menu before the cells are placed, or after the graphics give out for good. The menu has:
 
-- the readout under the view ([detail-readout.tsx](morphologies/detail-readout.tsx)): the segments drawn and wanted, the budget taken, the boxes by level, the floor, what the culling drew, and why a tier was chosen;
-- selects for the budget, the tolerance in pixels, the culling and the renderer (Auto or WebGL 2), to compare on a machine;
-- a download of the nodes as JSON, and the synapses' diagnostics.
+- what draws the view and why, and a choice of the renderer (Auto or WebGL 2), to compare on a machine;
+- the cells, and how the morphologies are coming in: the pack's bytes, or the morphologies loaded and failed;
+- the segments drawn and wanted, the budget taken, the boxes by level, the floor and what the culling drew, with the budget, the tolerance in pixels and the culling to set;
+- Readout, which keeps those numbers over the view, as a drag on the view closes the menu.
+
+The flag also sends the synapses' diagnostics to the console.
 
 ## Interaction
 
@@ -162,7 +165,7 @@ Debug mode is not a flag. It is the `localStorage` key `@openbraininstitute/morp
 | To change | Look in |
 | --- | --- |
 | Which circuits are drawn how | `circuitDrawsEachCell` in [draws-morphologies.ts](../scan-config/components/circuit-viz/sources/draws-morphologies.ts) |
-| The budgets and the tolerance in pixels | `SEGMENT_BUDGET` and `DETAIL_PIXELS` in [engine/detail.ts](morphologies/engine/detail.ts); the Debug choices in [detail-readout.tsx](morphologies/detail-readout.tsx) |
+| The budgets and the tolerance in pixels | `SEGMENT_BUDGET` and `DETAIL_PIXELS` in [engine/detail.ts](morphologies/engine/detail.ts); the Debug choices in [debug/circuit-debug.tsx](morphologies/debug/circuit-debug.tsx) |
 | When WebGPU is used | [engine/create-view.ts](morphologies/engine/create-view.ts), [engine/probe.ts](morphologies/engine/probe.ts) |
 | The pack's cache | `PACK_CACHE` in [load/worker-api.ts](morphologies/load/worker-api.ts), made by `bucket` in [asset-cache.ts](../viewer-3d/load/asset-cache.ts) |
 | Status texts | [load-status.tsx](morphologies/load-status.tsx) |

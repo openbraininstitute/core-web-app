@@ -1,8 +1,9 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
 
-import { useCircuitViewerDebugMode } from '@/features/circuit-viewer/debug-mode';
 import {
   DEFAULT_SPIKE_AFTERGLOW_IN_SECONDS,
   DEFAULT_SPIKE_GLOW,
@@ -17,7 +18,6 @@ import { useWheelHint } from '@/features/viewer-3d/viewer-frame';
 import { useLatest } from '@/ui/hooks/use-latest';
 import { logError } from '@/utils/logger';
 
-import { DetailReadout } from './detail-readout';
 import { type ElectrodeTracker, trackElectrodes } from './electrodes';
 import {
   type CreatedView,
@@ -30,6 +30,7 @@ import { trackPointer } from './pointer';
 
 import type { CircuitViewerSignals } from '@/features/circuit-viewer/signals';
 import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
+import type { CircuitDebugLoad } from './debug/detail-lines';
 import type {
   CellColors,
   CircuitMorphologyData,
@@ -41,6 +42,10 @@ import type {
   ViewLocations,
   VoxelLayer,
 } from './types';
+
+const CircuitDebug = dynamic(() => import('./debug/circuit-debug').then((m) => m.CircuitDebug), {
+  ssr: false,
+});
 
 const NO_ELECTRODES: readonly ElectrodeGroup[] = [];
 const NO_MARKERS: readonly LocationMarker[] = [];
@@ -102,6 +107,9 @@ export interface CircuitCellsProps {
   onFallback?: (fallback: Fallback | null) => void;
   /** Told whether spiking cells can give off light here: drawn as morphologies, on WebGPU. */
   onGlowAvailable?: (available: boolean) => void;
+  debugTarget?: HTMLElement | null;
+  /** How the host's morphologies are coming in, for the Debug menu. */
+  debugLoad?: CircuitDebugLoad;
 }
 
 /** Up to this many somas are put in their Morton order on the page: a worker would take longer to start. */
@@ -143,6 +151,8 @@ export function CircuitCells({
   onLeftOut,
   onFallback,
   onGlowAvailable,
+  debugTarget,
+  debugLoad,
 }: CircuitCellsProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   /** What the view is made for: a new one, made again once the graphics give out, on WebGL 2 after WebGPU. */
@@ -153,7 +163,6 @@ export function CircuitCells({
   const viewer = created?.view ?? null;
   const theme = themeFromBackground(backgroundColor);
   const wheelHint = useWheelHint(viewer);
-  const debugMode = useCircuitViewerDebugMode();
   const fellBack = useLatest(onFallback);
 
   useEffect(() => {
@@ -404,19 +413,21 @@ export function CircuitCells({
           {showScalebar && <Scalebar viewer={viewer} color={theme.foreground} />}
           <AxesGizmo viewer={viewer} ring={theme.foreground} />
           <WheelHint visible={wheelHint} theme={theme} />
-          {debugMode && created && (
-            <DetailReadout
-              viewer={viewer}
-              theme={theme}
-              renderer={{
-                tier: created.tier,
-                reason: created.reason,
-                choice: making.choice,
-                onChoice: (choice) => setMaking({ choice }),
-              }}
-            />
-          )}
         </div>
+      )}
+      {/* Whatever the view: it stays open while another is made for the renderer it asked for. */}
+      {debugTarget && !gaveUp && (
+        <ErrorBoundary fallback={null}>
+          <CircuitDebug
+            target={debugTarget}
+            created={created}
+            choice={making.choice}
+            onChoice={(choice) => setMaking((was) => (was.choice === choice ? was : { choice }))}
+            cells={somas.positions.length / 3}
+            load={debugLoad}
+            theme={theme}
+          />
+        </ErrorBoundary>
       )}
     </div>
   );

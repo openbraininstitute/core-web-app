@@ -3,7 +3,8 @@ import { sectionTypeLabel } from '../section-type-label';
 import type { LocationLabel } from './use-location-selection';
 
 /**
- * Persistent `Type[section]` tags pinned to each selected location.
+ * Persistent `Type[section]` tags pinned to each selected location, prefixed with the node id
+ * when locations belong to a neuron each.
  *
  * Unlike the hover popover, these show the whole selection at once. Positions arrive on every
  * repaint, so tags follow their points as the camera orbits.
@@ -21,6 +22,7 @@ export function MorphologyLocationLabels({ labels }: { labels: LocationLabel[] }
             className="absolute -translate-y-1/2 translate-x-2 whitespace-nowrap rounded bg-neutral-8/80 px-1.5 py-0.5 text-[10px] font-medium text-white tabular-nums"
             style={{ left: `${screen.x * 100}%`, top: `${screen.y * 100}%` }}
           >
+            {marker.nodeId !== undefined && `#${marker.nodeId} `}
             {sectionTypeLabel(marker.sectionType) ?? 'Section'}[{marker.sonataSectionId ?? '—'}]
           </span>
         ) : null
