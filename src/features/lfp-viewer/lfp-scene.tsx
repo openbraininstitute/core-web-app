@@ -265,8 +265,10 @@ export function LfpScene({
   );
   // Its box outlined rather than made more opaque, which would read as a stronger field.
   // In its trace's colour, as the traces draw it.
-  const outlinedBox =
-    placement && hoveredContact !== null ? placement.shown.indexOf(hoveredContact) : -1;
+  const outlinedBox = useMemo(
+    () => (placement && hoveredContact !== null ? placement.shown.indexOf(hoveredContact) : -1),
+    [placement, hoveredContact]
+  );
   const outlineColor =
     outlinedBox < 0
       ? OUTLINE_COLOR

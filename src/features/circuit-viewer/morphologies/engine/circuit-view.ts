@@ -479,6 +479,8 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   /** The edges of the layer's outlined box, drawn through whatever is nearer, so that it is found deep among them. */
   private voxelOutline: THREE.LineSegments<THREE.EdgesGeometry, THREE.LineBasicMaterial> | null =
     null;
+  /** The outlined box and its colour as last drawn; null for none. */
+  private outlined: string | null = null;
   private synapseGroups: readonly SynapseGroup[] = [];
   protected synapseUniforms = {
     ...this.electrodeUniforms,
@@ -1471,8 +1473,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       voxels.frame === was.frame
     ) {
       this.voxelSet = { layer: voxels, order: before.order };
-      this.drawVoxelOutline(this.voxels?.visible ? voxels : null);
-      this.invalidate();
+      if (this.drawVoxelOutline(this.voxels?.visible ? voxels : null)) this.invalidate();
       return;
     }
     this.voxelSet = voxels && {
@@ -1762,21 +1763,28 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.drawHiddenVoxels(mesh, layer);
     set?.order.seenFrom(this.voxelEye());
     const written = set && writeVoxels(set.layer, this.centre, set.order.boxes, mesh.geometry);
-    this.drawVoxelOutline(mesh.visible ? layer : null);
-    if (written || changed || layer?.outline) this.invalidate();
+    const outlined = this.drawVoxelOutline(mesh.visible ? layer : null);
+    if (written || changed || outlined) this.invalidate();
   }
 
-  /** The layer's outlined box, placed as `writeVoxels` places it. */
-  private drawVoxelOutline(layer: VoxelLayer | null): void {
+  /** The layer's outlined box, placed as `writeVoxels` places it; whether which box, or its colour, changed. */
+  private drawVoxelOutline(layer: VoxelLayer | null): boolean {
     const outline = layer?.outline;
-    if (!layer || !outline || outline.box < 0 || outline.box * 3 >= layer.centres.length) {
+    const shown =
+      layer && outline && outline.box >= 0 && outline.box * 3 < layer.centres.length
+        ? `${outline.box} ${outline.color}`
+        : null;
+    const changed = shown !== this.outlined;
+    this.outlined = shown;
+    if (!layer || !outline || shown === null) {
       if (this.voxelOutline) this.voxelOutline.visible = false;
-      return;
+      return changed;
     }
     if (!this.voxelOutline) {
+      // Opaque, so that it is drawn in render order with the contacts, which are blended over yet opaque.
       const lines = new THREE.LineSegments(
         new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1)),
-        new THREE.LineBasicMaterial({ depthTest: false, depthWrite: false, transparent: true })
+        new THREE.LineBasicMaterial({ depthTest: false, depthWrite: false })
       );
       lines.name = 'voxel outline';
       // After the boxes, before the contacts, whose dot stays on top.
@@ -1787,6 +1795,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     placeOnBox(this.voxelOutline, layer, outline.box, this.centre);
     this.voxelOutline.material.color.set(outline.color);
     this.voxelOutline.visible = true;
+    return changed;
   }
 
   /** Draws the boxes of `mesh`, in the order written there, before it, where something nearer the eye hides them. */

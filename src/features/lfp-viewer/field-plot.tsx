@@ -584,7 +584,9 @@ export function FieldPlot({
       g.strokeStyle = INK;
       g.strokeRect(plot.left + 0.5, band.top + 0.5, plot.width - 1, band.height - 1);
       const y = band.top + band.height / 2;
-      marginName(g, plot.left - 4, { top: y - 7, height: 14 }, `e${contact}`, INK);
+      // The table's contact by its name; the map's own row by its label, which may be of several.
+      const name = hoveredContact !== null ? `e${hoveredContact}` : rows[row].label;
+      marginName(g, plot.left - 4, { top: y - 7, height: 14 }, name, INK);
       marginNotch(g, plot.left, y, INK);
       return;
     }
@@ -613,6 +615,10 @@ export function FieldPlot({
       g.lineTo(plot.right, edge);
       g.stroke();
       g.setLineDash([]);
+      // Kept to its strip, however far gain swings it, so that it reads apart from the lanes.
+      g.beginPath();
+      g.rect(plot.left, stripTop, plot.width, strip);
+      g.clip();
     }
     const y = off ? stripTop + strip / 2 : laneY(row);
     g.strokeStyle = hoveredColour;
@@ -802,16 +808,11 @@ export function FieldPlot({
             scroll={scroll}
             total={lanesHeight}
             onScroll={(s) => setScroll(Math.min(maxScroll, Math.max(0, s)))}
-          />
-        )}
-        {maxScroll > 0 && mode === 'traces' && hoveredLane >= 0 && (
-          <div
-            aria-hidden
-            className="pointer-events-none absolute right-0 h-0.5 w-2.5 rounded-full"
-            style={{
-              top: plot.top + ((hoveredLane + 0.5) / traces.length) * plot.height - 1,
-              background: hoveredColour,
-            }}
+            mark={
+              mode === 'traces' && hoveredLane >= 0
+                ? { at: (hoveredLane + 0.5) * lane, colour: hoveredColour }
+                : null
+            }
           />
         )}
         {drag && Math.abs(drag.x1 - drag.x0) >= DRAG_PX && (
@@ -857,35 +858,47 @@ function ScrollThumb({
   scroll,
   total,
   onScroll,
+  mark,
 }: {
   top: number;
   height: number;
   scroll: number;
   total: number;
   onScroll: (scroll: number) => void;
+  /** A point among the lanes, in px from the first's top, marked on the track: in the thumb wherever it is on show. */
+  mark: { at: number; colour: string } | null;
 }) {
   const [grab, setGrab] = useState<{ y: number; scroll: number } | null>(null);
   const thumb = Math.max(16, (height * height) / total);
   const room = Math.max(1, height - thumb);
-  const at = top + (scroll / Math.max(1, total - height)) * room;
+  const perPx = room / Math.max(1, total - height);
   return (
-    <div
-      aria-hidden
-      className={`absolute right-0.5 w-1.5 cursor-grab rounded-full ${grab ? 'bg-neutral-400' : 'bg-neutral-300 hover:bg-neutral-400'}`}
-      style={{ top: at, height: thumb }}
-      onPointerDown={(e) => {
-        e.stopPropagation();
-        e.currentTarget.setPointerCapture(e.pointerId);
-        setGrab({ y: e.clientY, scroll });
-      }}
-      onPointerMove={(e) => {
-        e.stopPropagation();
-        if (grab) onScroll(grab.scroll + ((e.clientY - grab.y) * (total - height)) / room);
-      }}
-      onPointerUp={(e) => {
-        e.stopPropagation();
-        setGrab(null);
-      }}
-    />
+    <>
+      <div
+        aria-hidden
+        className={`absolute right-0.5 w-1.5 cursor-grab rounded-full ${grab ? 'bg-neutral-400' : 'bg-neutral-300 hover:bg-neutral-400'}`}
+        style={{ top: top + scroll * perPx, height: thumb }}
+        onPointerDown={(e) => {
+          e.stopPropagation();
+          e.currentTarget.setPointerCapture(e.pointerId);
+          setGrab({ y: e.clientY, scroll });
+        }}
+        onPointerMove={(e) => {
+          e.stopPropagation();
+          if (grab) onScroll(grab.scroll + (e.clientY - grab.y) / perPx);
+        }}
+        onPointerUp={(e) => {
+          e.stopPropagation();
+          setGrab(null);
+        }}
+      />
+      {mark && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute right-0 h-0.5 w-2.5 rounded-full"
+          style={{ top: top + mark.at * perPx - 1, background: mark.colour }}
+        />
+      )}
+    </>
   );
 }
