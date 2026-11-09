@@ -1,13 +1,26 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useMemo } from 'react';
 
-import { SimpleGrid } from '@/features/data-grid/presets/simple-grid';
 import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
-import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
+import type {
+  SimpleGrid as EagerSimpleGrid,
+  ISimpleColumn,
+} from '@/features/data-grid/presets/simple-grid';
 import type { CreditsPack, SinglePrice } from '@/services/sanity';
+
+// loaded when the table renders: Turbopack otherwise puts AG Grid (~300 KiB gz) in the chunk shared by every
+// landing page client component, so it downloaded on pages without a price table; the cast keeps the generic
+const SimpleGrid = dynamic(() =>
+  import('@/features/data-grid/presets/simple-grid').then((m) => m.SimpleGrid)
+) as typeof EagerSimpleGrid;
+
+// SimpleGrid's default header and row heights; reserving them keeps the content below still while AG Grid loads
+const GRID_HEADER_HEIGHT = 48;
+const GRID_ROW_HEIGHT = 44;
 
 type PriceTableProps = {
   prices: SinglePrice[];
@@ -138,11 +151,15 @@ export default function PriceTable({
           >
             Credits
           </h3>
-          <SimpleGrid<CreditsPack>
-            columns={creditsPackColumns}
-            rows={sortedCreditsPacks}
-            getRowId={(record) => `credits-${record.quantity}-${record.price}-${record.discount}`}
-          />
+          <div
+            style={{ minHeight: GRID_HEADER_HEIGHT + sortedCreditsPacks.length * GRID_ROW_HEIGHT }}
+          >
+            <SimpleGrid<CreditsPack>
+              columns={creditsPackColumns}
+              rows={sortedCreditsPacks}
+              getRowId={(record) => `credits-${record.quantity}-${record.price}-${record.discount}`}
+            />
+          </div>
         </div>
       )}
     </div>

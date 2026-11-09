@@ -1,7 +1,9 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useCallback, useState } from 'react';
 
+import { IconSpinner } from '@/components/icons/spinner';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   WorkspaceManagerKindDict,
@@ -15,7 +17,22 @@ import {
   type WorkspaceActionType,
 } from '@/ui/segments/workspaces/space-manager/event';
 
-import { WorkspaceManagerModal } from './modal';
+// loaded on first open: the modal pulls AG Grid (~300 KiB gz) into every project route otherwise;
+// the fallback is the modal's own overlay, so the click shows a response while the chunk downloads
+const WorkspaceManagerModal = dynamic(
+  () => import('./modal').then((m) => m.WorkspaceManagerModal),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        className="bg-primary-8/10 text-primary-9 fixed inset-0 z-[1000] grid place-items-center backdrop-blur-xs"
+        data-testid="workspace-manager-modal-loading"
+      >
+        <IconSpinner size="3em" />
+      </div>
+    ),
+  }
+);
 
 type TProjectPreviewPayload = {
   projectId?: string | null;
