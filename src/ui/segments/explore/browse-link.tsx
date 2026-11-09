@@ -300,7 +300,7 @@ export function BrowseLink({
   const activeEntityType = snakeCase(type ?? getEntityTypeFromUrlOnEntityScope(pathname) ?? '');
   const isActiveEntity = activeEntityType === extendedType && variantSlug === variant?.slug;
 
-  const { dataKey, count: tableCount } = useTableQueryCount({
+  const { stateKey, count: tableCount } = useTableQueryCount({
     extendedType,
     scope,
     workspace: { virtualLabId, projectId },
@@ -311,7 +311,7 @@ export function BrowseLink({
   });
 
   // the listing's filters outlive its grid, so the count must not drop them on navigation
-  const savedFilters = useSavedListingFilters(dataKey);
+  const savedFilters = useSavedListingFilters(stateKey);
 
   const scopesListingByBrainRegion = dataBrowseListingUsesBrainRegionHierarchy(extendedType);
 

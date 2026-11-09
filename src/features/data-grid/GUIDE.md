@@ -670,7 +670,7 @@ State is persisted in **two deliberately separate slices** (`react/persistence/s
 
 | slice | storage | key | keeps | lifetime |
 | --- | --- | --- | --- | --- |
-| session | `sessionStorage` | `data-grid:v1:s:<instanceKey>` | `filters`, `sort`, `page`, `pageSize`, `freeTextSearch` | the browser tab |
+| session | `sessionStorage` | `data-grid:202611091:state:<instanceKey>` (Data: no vlab/project in it) | `filters`, `sort`, `page`, `pageSize`, `freeTextSearch` | the browser tab |
 | layout | `localStorage` | `data-grid:v1:l:<section>/<dataType>` | `columnOrder`, `hiddenColumns`, `columnWidths` | across sessions |
 
 The split is a product decision, not an implementation detail: a saved **layout** is a

@@ -59,7 +59,7 @@ import { GenericError } from '@/ui/molecules/generic-error';
 import { EntityDeleteButton } from '@/ui/segments/data-table/elements/delete-button';
 import { EntityDownloadButton } from '@/ui/segments/data-table/elements/download-button';
 import { EntityTypeSelector } from '@/ui/segments/data-table/elements/entity-selector';
-import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
+import { makeDataKey, makeListingStateKey } from '@/ui/segments/data-table/elements/helpers';
 import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { UploadDataButton } from '@/ui/segments/explore/upload-data-button';
 import { MiniDetailView } from '@/ui/segments/mini-detail-view';
@@ -207,14 +207,11 @@ export function EntityDataGrid({
   const brainRegionId = defaultBrainRegion ?? selectedBrainRegion?.id;
   const hasBrainRegion = Boolean(brainRegionId);
 
-  const { dataKey } = makeDataKey({
-    virtualLabId,
-    projectId,
-    section,
-    dataType,
-    scope,
-    id,
-  });
+  const keyParts = { virtualLabId, projectId, section, dataType, scope, id };
+  const { dataKey } = makeDataKey(keyParts);
+  // Data's saved filters are shared by every workspace; elsewhere this is `dataKey`
+  const stateKey = makeListingStateKey(keyParts);
+  const stateKeyIsShared = stateKey !== dataKey;
 
   // Publish the grid's filtered total under this dataKey so the data sidebar's
   // "x of y" counters follow the grid's filters/search. Cleared on unmount so a
@@ -303,23 +300,25 @@ export function EntityDataGrid({
           species: speciesKey,
           factors: extraFactors,
         },
-        instanceKey: dataKey,
-        // The session slice is keyed by the full `dataKey`, but the layout slice by
-        // section + entity type only, so a layout is shared across projects/scopes. The
-        // selection slice drops the scope too, which is what carries the basket across a
-        // scope toggle — and it does so at construction, so the store is never observed
-        // empty mid-swap.
+        instanceKey: stateKey,
+        // The session slice is keyed by `stateKey` (no workspace in Data, so filters follow
+        // the user across projects, the page reset in another one), the layout slice by
+        // section + entity type only. The selection slice keeps the workspace, since its
+        // rows belong to one project, but drops the scope, which carries the basket across a
+        // scope toggle — at construction, so the store is never observed empty mid-swap.
         persistence: createDefaultPersistence(
           layoutKeyFor(section, dataType),
           selectionScope === SelectionScope.Shared
             ? selectionKeyFor({ section, dataType, virtualLabId, projectId, id })
-            : undefined
+            : undefined,
+          stateKeyIsShared ? `${virtualLabId}/${projectId}` : undefined
         ),
         defaultPageSize: DEFAULT_PAGE_SIZE,
       }),
     [
       definition,
-      dataKey,
+      stateKey,
+      stateKeyIsShared,
       dataType,
       section,
       scope,

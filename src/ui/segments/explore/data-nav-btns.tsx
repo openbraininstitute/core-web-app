@@ -18,7 +18,7 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { BreadcrumbChip, BreadcrumbTrail } from '@/ui/molecules/breadcrumb';
 import Close from '@/ui/molecules/close';
 import { useDataListStateSnapshotActions } from '@/ui/segments/data-table/elements/context';
-import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
+import { makeDataKey, makeListingStateKey } from '@/ui/segments/data-table/elements/helpers';
 import { isBrowser } from '@/utils/environment';
 import { resolveBaseEntityType, resolveConcreteEntityPathParam } from '@/utils/url-builder';
 
@@ -62,16 +62,18 @@ export function DataBreadcrumb({
 
   // the listing is keyed by the base type (a whole brain lists under circuit)
   const listingType = resolveBaseEntityType(type);
-  const keyFor = (variantOfListing?: IListingVariant) =>
-    makeDataKey({
-      virtualLabId,
-      projectId,
-      section: WorkspaceSection.Data,
-      dataType: listingType,
-      scope: DATA_SECTION_SCOPE,
-      id: listingInstanceId(undefined, variantOfListing),
-    }).dataKey;
-  const dataKey = keyFor();
+  const partsFor = (variantOfListing?: IListingVariant) => ({
+    virtualLabId,
+    projectId,
+    section: WorkspaceSection.Data,
+    dataType: listingType,
+    scope: DATA_SECTION_SCOPE,
+    id: listingInstanceId(undefined, variantOfListing),
+  });
+  const dataKey = makeDataKey(partsFor()).dataKey;
+  // where the grid saves its filters, the same in every workspace
+  const stateKeyFor = (variantOfListing?: IListingVariant) =>
+    makeListingStateKey(partsFor(variantOfListing));
 
   const { reset: runStorageReset } = useDataListStateSnapshotActions({
     dataKey,
@@ -84,10 +86,10 @@ export function DataBreadcrumb({
   const onLinkClick = () => {
     if (!isBrowser()) return;
     runStorageReset();
-    createSessionStatePersistence().clear?.(dataKey);
+    createSessionStatePersistence().clear?.(stateKeyFor());
   };
   const onVariantLinkClick = () => {
-    if (isBrowser()) createSessionStatePersistence().clear?.(keyFor(variant));
+    if (isBrowser()) createSessionStatePersistence().clear?.(stateKeyFor(variant));
   };
 
   const dataHome = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data`;
