@@ -26,15 +26,31 @@ describe('entitycore expand forwarding', () => {
     h.get.mockResolvedValue({ id: 'm-1' });
   });
 
-  it("retrieveEntity sends the type's own entityExpand", async () => {
-    await retrieveEntity({ type: ExtendedEntitiesTypeDict.CellMorphology, id: 'm-1', ctx });
+  it("retrieveEntity sends the type's own entityExpand when asked", async () => {
+    await retrieveEntity({
+      type: ExtendedEntitiesTypeDict.CellMorphology,
+      id: 'm-1',
+      ctx,
+      withEntityExpand: true,
+    });
 
     expect(sentExpand()).toEqual(['measurement_annotation']);
     expect(h.get.mock.calls[0][0]).toBe('/cell-morphology/m-1');
   });
 
+  it('retrieveEntity sends no expand by default', async () => {
+    await retrieveEntity({ type: ExtendedEntitiesTypeDict.CellMorphology, id: 'm-1', ctx });
+
+    expect(sentExpand()).toBeUndefined();
+  });
+
   it('retrieveEntity sends no expand for a type without entityExpand', async () => {
-    await retrieveEntity({ type: ExtendedEntitiesTypeDict.Emodel, id: 'e-1', ctx });
+    await retrieveEntity({
+      type: ExtendedEntitiesTypeDict.Emodel,
+      id: 'e-1',
+      ctx,
+      withEntityExpand: true,
+    });
 
     expect(sentExpand()).toBeUndefined();
   });

@@ -21,10 +21,13 @@ export async function retrieveEntity({
   type,
   id,
   ctx,
+  withEntityExpand = false,
 }: {
   type: TExtendedEntitiesTypeDict;
   id: string;
   ctx: WorkspaceContext;
+  /** Also request the type's `entityExpand`; only for views that render the expanded data. */
+  withEntityExpand?: boolean;
 }) {
   if (!type || !id) throw new Error('Type and ID are required to download an entity.');
 
@@ -41,10 +44,13 @@ export async function retrieveEntity({
     expand?: ReadonlyArray<TAnyEntityExpandParam>;
   }) => ReturnType<typeof request>;
 
+  // opt-in: expanded fields cost extra loads on the API, so plain reads skip them
+  const expand = withEntityExpand ? entityType.api.config.entityExpand : undefined;
+
   let entity: AwaitedType<ReturnType<typeof request>> | undefined;
 
   try {
-    entity = await one({ id, context: ctx, expand: entityType.api.config.entityExpand });
+    entity = await one({ id, context: ctx, expand });
   } catch {
     throw new Error(`Failed to fetch entity of type ${type} with ID ${id}`);
   }

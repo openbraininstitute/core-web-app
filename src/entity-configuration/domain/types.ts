@@ -47,9 +47,9 @@ export type EntityCoreTypeConfig<
       extraQueryKeyBuilder?: Record<string, any>;
       ilikeSearchEnabled?: boolean;
       /**
-       * entitycore `expand` paths `retrieveEntity` requests for one entity of this type. Inlines
-       * related data in the same request instead of a follow-up fetch; `query.one` must forward
-       * `expand`.
+       * entitycore `expand` paths `retrieveEntity({ withEntityExpand: true })` requests for one
+       * entity of this type (the detail pages). Inlines related data in the same request instead
+       * of a follow-up fetch; `query.one` must forward `expand`.
        */
       entityExpand?: ReadonlyArray<E>;
     };
