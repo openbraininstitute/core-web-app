@@ -37,7 +37,7 @@ export function createHexaTileRenderer(
     IMG_MAX_H = 0.45;
   const IMG_CX = 1340,
     IMG_CY = 520;
-  const FLIP_INTERVAL = 10000,
+  const FLIP_INTERVAL = 6000,
     FLIP_DUR = 600,
     FLIP_SPREAD = 600;
   const SHINE_HMAX = 1.5,
@@ -795,7 +795,8 @@ void main() {
   let request = 0;
   let previous = 0;
   let lastDraw = 0;
-  let elapsed = 0;
+  // Start the first tile turn immediately once the decoded artwork is visible.
+  let elapsed = FLIP_INTERVAL;
   let ready = false;
   let visible = false;
   let reduced = false;

@@ -48,8 +48,6 @@ export default function HeroClient({
     next,
   } = data;
   const [videoReady, setVideoReady] = React.useState(false);
-  const [flipCycle, setFlipCycle] = React.useState(0);
-  const onImageFlip = React.useCallback((cycle: number) => setFlipCycle(cycle), []);
   const tileAnimation = section !== EnumSection.Home;
   const hasMedia =
     tileAnimation ||
@@ -74,7 +72,7 @@ export default function HeroClient({
           className={classNames(styles.media, tileAnimation && styles.hexagonMedia)}
           data-header-media
         >
-          {tileAnimation && <HexaTileHero key={sectionSlug} onFlip={onImageFlip} />}
+          {tileAnimation && <HexaTileHero key={sectionSlug} />}
           {!tileAnimation && backgroundType === 'video' && (
             <>
               {posterURL && posterWidth && posterHeight && (
@@ -113,7 +111,7 @@ export default function HeroClient({
       )}
       {section === EnumSection.ComingSoon ? (
         <div className={styles.comingSoon}>
-          <ComingSoon cycle={flipCycle} />
+          <ComingSoon />
         </div>
       ) : (
         <div className={styles.text}>
@@ -125,7 +123,7 @@ export default function HeroClient({
                 section === EnumSection.Home ? 'home-hero-heading' : `${heroTestIdPrefix}-heading`
               }
             >
-              {tileAnimation ? <InformationTitle text={title} cycle={flipCycle} /> : title}
+              {tileAnimation ? <InformationTitle text={title} /> : title}
             </h1>
             {section === EnumSection.Home && (
               <Link
@@ -143,11 +141,7 @@ export default function HeroClient({
             )}
             {content && (
               <div className={styles.content}>
-                {tileAnimation ? (
-                  <InformationDescription text={content} cycle={flipCycle} />
-                ) : (
-                  content
-                )}
+                {tileAnimation ? <InformationDescription text={content} /> : content}
               </div>
             )}
             {section === EnumSection.Contact && contactEmails.length > 0 && (
@@ -177,7 +171,7 @@ export default function HeroClient({
   );
 }
 
-function ComingSoon({ cycle }: { cycle: number }) {
+function ComingSoon() {
   return (
     <main
       className={classNames(
@@ -192,7 +186,7 @@ function ComingSoon({ cycle }: { cycle: number }) {
             aria-label="Releasing soon"
             className="mb-4 font-serif text-4xl font-bold tracking-[0.040em] text-primary-9 select-none sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl"
           >
-            <InformationTitle text="Releasing soon" cycle={cycle} />
+            <InformationTitle text="Releasing soon" />
           </h1>
           <p className="mx-auto mr-4 max-w-3xl text-justify text-lg font-medium text-primary-9 select-none sm:text-left md:text-xl">
             The platform will be launched soon with access to features such as single cell modeling

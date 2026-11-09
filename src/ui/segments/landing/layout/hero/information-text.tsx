@@ -2,12 +2,11 @@ import type { CSSProperties } from 'react';
 
 import styles from './information-text.module.css';
 
-/** Replay the export's letter turn without changing the page's title or its wrapping. */
-export function InformationTitle({ text, cycle }: { text: string; cycle: number }) {
+/** Animate once on mount without changing the page's title or its wrapping. */
+export function InformationTitle({ text }: { text: string }) {
   let character = 0;
-  const outEnd = Math.max(0, Array.from(text).length - 1) * 27 + 280;
   return (
-    <span key={cycle} data-text-cycle={cycle} aria-hidden="true">
+    <span data-information-title aria-hidden="true">
       {text.split(/(\s+)/).map((word) => {
         if (/^\s+$/.test(word)) {
           character += word.length;
@@ -23,8 +22,7 @@ export function InformationTitle({ text, cycle }: { text: string; cycle: number 
                   className={styles.letter}
                   style={
                     {
-                      '--letter-out-delay': `${at * 27}ms`,
-                      '--letter-in-delay': `${outEnd + at * 45}ms`,
+                      '--letter-in-delay': `${at * 45}ms`,
                     } as CSSProperties
                   }
                 >
@@ -39,9 +37,9 @@ export function InformationTitle({ text, cycle }: { text: string; cycle: number 
   );
 }
 
-export function InformationDescription({ text, cycle }: { text: string; cycle: number }) {
+export function InformationDescription({ text }: { text: string }) {
   return (
-    <span key={cycle} className={styles.description} data-description-cycle={cycle}>
+    <span className={styles.description} data-information-description>
       {text}
     </span>
   );

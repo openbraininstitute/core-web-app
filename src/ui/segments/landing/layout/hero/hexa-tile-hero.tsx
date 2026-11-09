@@ -8,7 +8,7 @@ import { randomTileImageOrder } from './tile-image-order';
 import styles from './hexa-tile-hero.module.css';
 
 /** Only the supplied export's visual stage; the host page owns all copy and navigation. */
-export default function HexaTileHero({ onFlip }: { onFlip?: (cycle: number) => void }) {
+export default function HexaTileHero() {
   const host = useRef<HTMLDivElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -54,9 +54,6 @@ export default function HexaTileHero({ onFlip }: { onFlip?: (cycle: number) => v
         try {
           renderer = createHexaTileRenderer(surface, {
             imageOrder,
-            onFlip: (cycle) => {
-              if (!disposed) onFlip?.(cycle);
-            },
             onReady: () => {
               if (!disposed) setReady(true);
             },
@@ -80,7 +77,7 @@ export default function HexaTileHero({ onFlip }: { onFlip?: (cycle: number) => v
       preference.removeEventListener('change', update);
       document.removeEventListener('visibilitychange', update);
     };
-  }, [onFlip]);
+  }, []);
   return (
     <div ref={host} className={styles.artwork} data-hexa-tile-hero aria-hidden="true">
       <div ref={stage} className={styles.stage}>
