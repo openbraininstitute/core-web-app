@@ -378,7 +378,6 @@ export function VirtualLabsPoints() {
         <button type="button" onClick={actions?.enter} className={labs.button}>
           Get Started
         </button>
-        <span className={labs.note}>In your browser. Nothing to install.</span>
       </div>
     </div>
   );
