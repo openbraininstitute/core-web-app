@@ -38,6 +38,11 @@ const LABEL = '#8c8c8c';
 /** Over the other traces while a row of the table is hovered, as a voltage report mutes its other lines. */
 const HOVER_WASH = 'rgba(255, 255, 255, 0.6)';
 const HOVERED_WIDTH = 2.5;
+/** The hovered trace scrolled out of view is drawn at the edge it lies past, in a strip at least this high. */
+const PEEK_PX = 28;
+const PEEK_BACKDROP = 'rgba(255, 255, 255, 0.92)';
+/** A hovered map row is outlined at least this high, however thin its row. */
+const MAP_ROW_MIN_PX = 4;
 /** A drag shorter than this is a click. */
 const DRAG_PX = 4;
 /** A click this soon after another is a double-click's second, which zooms back out. */
@@ -115,6 +120,34 @@ export function reachingPrevious(
   [previousLow, previousHigh]: [number, number]
 ): [number, number] {
   return [Math.min(low, previousHigh), Math.max(high, previousLow)];
+}
+
+/** Whether lane `row` lies wholly above the lanes in view, wholly below, or shows. */
+export function laneOffView(
+  row: number,
+  lane: number,
+  scroll: number,
+  viewHeight: number
+): 'above' | 'below' | null {
+  const top = row * lane - scroll;
+  if (top + lane <= 0) return 'above';
+  if (top >= viewHeight) return 'below';
+  return null;
+}
+
+/** Where a map row is outlined: its own band, grown about its middle to `minHeight` where thinner, kept in the plot. */
+export function mapRowBand(
+  row: number,
+  rows: number,
+  plotTop: number,
+  plotHeight: number,
+  minHeight: number
+): { top: number; height: number } {
+  const rowHeight = plotHeight / rows;
+  const height = Math.min(plotHeight, Math.max(minHeight, rowHeight));
+  const middle = plotTop + (row + 0.5) * rowHeight;
+  const top = Math.min(plotTop + plotHeight - height, Math.max(plotTop, middle - height / 2));
+  return { top, height };
 }
 
 function rowValue(field: LfpField, row: FieldRow, bin: number): number {
@@ -320,6 +353,7 @@ export function FieldPlot({
     const [source, at] = laneSource(contact);
     return fieldValue(source, at, binAt(source, time));
   };
+  const hoveredLane = hoveredContact === null ? -1 : traces.indexOf(hoveredContact);
 
   useEffect(() => {
     if (mode === 'traces') onLanesInView({ first: screenFirst, perScreen, width: plot.width });
@@ -514,10 +548,38 @@ export function FieldPlot({
     if (!canvas || size.width === 0) return;
     const g = clearedCanvas(canvas, size);
     if (!g) return;
-    const row = mode === 'traces' && hoveredContact !== null ? traces.indexOf(hoveredContact) : -1;
-    // Nor while its lane is scrolled out of view, which would wash over the traces and show none.
-    const y = laneY(row);
-    if (row < 0 || y + lane / 2 <= plot.top || y - lane / 2 >= plot.bottom) return;
+    if (mode === 'map') {
+      // The table's row hovered, or the map's own under the pointer, as the spike raster marks its cell's.
+      const contact = hoveredContact ?? hover?.contact ?? null;
+      const row = contact === null ? -1 : rows.findIndex((r) => r.contacts.includes(contact));
+      if (row < 0) return;
+      const band = mapRowBand(row, rows.length, plot.top, plot.height, MAP_ROW_MIN_PX);
+      // White inside ink, so that it shows on either end of the colour scale.
+      g.lineWidth = 1;
+      g.strokeStyle = '#ffffff';
+      g.strokeRect(plot.left + 1.5, band.top + 1.5, plot.width - 3, band.height - 3);
+      g.strokeStyle = INK;
+      g.strokeRect(plot.left + 0.5, band.top + 0.5, plot.width - 1, band.height - 1);
+      const y = band.top + band.height / 2;
+      g.fillStyle = PEEK_BACKDROP;
+      g.fillRect(0, y - 7, plot.left - 1, 14);
+      g.fillStyle = INK;
+      g.beginPath();
+      g.moveTo(plot.left - 1, y);
+      g.lineTo(plot.left - 5, y - 4);
+      g.lineTo(plot.left - 5, y + 4);
+      g.fill();
+      g.font = 'bold 10px sans-serif';
+      g.textAlign = 'right';
+      g.textBaseline = 'middle';
+      g.fillText(`e${contact}`, plot.left - 7, y);
+      return;
+    }
+    const row = hoveredContact !== null ? traces.indexOf(hoveredContact) : -1;
+    if (row < 0) return;
+    const contact = hoveredContact as number;
+    const colour = contactColour(colours, selectedContact, contact) ?? INK;
+    const off = laneOffView(row, lane, scroll, plot.height);
     g.save();
     g.beginPath();
     g.rect(plot.left, clipTop, plot.width, clipHeight);
@@ -525,15 +587,43 @@ export function FieldPlot({
     // Over the plot alone, not its time axis, though the trace may reach past it as on the traces' canvas.
     g.fillStyle = HOVER_WASH;
     g.fillRect(plot.left, plot.top, plot.width, plot.height);
-    g.strokeStyle = contactColour(colours, selectedContact, hoveredContact as number) ?? INK;
+    // Scrolled out of view, it is drawn at the edge it lies past, rather than the lanes scrolled to it.
+    const strip = Math.min(plot.height, Math.max(PEEK_PX, lane));
+    const stripTop = off === 'above' ? plot.top : plot.bottom - strip;
+    if (off) {
+      g.fillStyle = PEEK_BACKDROP;
+      g.fillRect(plot.left, stripTop, plot.width, strip);
+      g.strokeStyle = AXIS;
+      g.setLineDash([3, 3]);
+      g.beginPath();
+      const edge = off === 'above' ? stripTop + strip - 0.5 : stripTop + 0.5;
+      g.moveTo(plot.left, edge);
+      g.lineTo(plot.right, edge);
+      g.stroke();
+      g.setLineDash([]);
+    }
+    const y = off ? stripTop + strip / 2 : laneY(row);
+    g.strokeStyle = colour;
     g.lineWidth = HOVERED_WIDTH;
-    laneStroker()(g, hoveredContact as number, laneY(row));
+    laneStroker()(g, contact, y);
     g.restore();
+    if (off) {
+      g.fillStyle = PEEK_BACKDROP;
+      g.fillRect(0, stripTop, plot.left - 1, strip);
+      g.fillStyle = colour;
+      g.font = 'bold 10px sans-serif';
+      g.textAlign = 'right';
+      g.textBaseline = 'middle';
+      g.fillText(`${traceLabels[row]} ${off === 'above' ? '↑' : '↓'}`, plot.left - 6, y);
+    }
   }, [
     hoveredContact,
+    hover?.contact,
     size,
     mode,
+    rows,
     traces,
+    traceLabels,
     colours,
     selectedContact,
     traceRows,
@@ -705,6 +795,16 @@ export function FieldPlot({
             scroll={scroll}
             total={lanesHeight}
             onScroll={(s) => setScroll(Math.min(maxScroll, Math.max(0, s)))}
+          />
+        )}
+        {maxScroll > 0 && mode === 'traces' && hoveredLane >= 0 && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute right-0 h-0.5 w-2.5 rounded-full"
+            style={{
+              top: plot.top + (((hoveredLane + 0.5) * lane) / lanesHeight) * plot.height - 1,
+              background: contactColour(colours, selectedContact, traces[hoveredLane]) ?? INK,
+            }}
           />
         )}
         {drag && Math.abs(drag.x1 - drag.x0) >= DRAG_PX && (
