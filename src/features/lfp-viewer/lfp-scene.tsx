@@ -28,6 +28,7 @@ import { useViewerSpikes } from '@/features/spike-viewer/hooks/use-session-spike
 import useSpikeTrace from '@/features/spike-viewer/hooks/use-spike-trace';
 import { WHEEL_ZOOMS } from '@/features/viewer-3d/wheel-zooms';
 import { PillGroup, PillSelect } from '@/ui/molecules/select/pill-select';
+import { holdPageSelection } from '@/ui/molecules/slider/touch';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
@@ -396,15 +397,17 @@ export function LfpScene({
                 }}
               />
               <div className="flex items-center gap-3 px-2.5">
-                <Slider
-                  ariaLabelForHandle="Slice position"
-                  className="!my-0 w-32"
-                  min={0}
-                  max={grid.slices[slice.axis] - 1}
-                  value={slice.index}
-                  onChange={setChosenIndex}
-                  tooltip={{ open: false }}
-                />
+                <div className="contents" onPointerDownCapture={holdPageSelection}>
+                  <Slider
+                    ariaLabelForHandle="Slice position"
+                    className="!my-0 w-32"
+                    min={0}
+                    max={grid.slices[slice.axis] - 1}
+                    value={slice.index}
+                    onChange={setChosenIndex}
+                    tooltip={{ open: false }}
+                  />
+                </div>
                 <span className="text-xs font-normal whitespace-nowrap text-neutral-600 tabular-nums">
                   {sliceLabel(grid, slice)}
                 </span>
