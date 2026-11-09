@@ -46,8 +46,6 @@ const RECOLOR_MS = 50;
 const HOVERED_COLOR = '#8c8c8c';
 /** Darker than the hovered ring: a line a pixel wide in grey is lost among the boxes. */
 const OUTLINE_COLOR = '#141414';
-/** Plain, as no level is: where the contacts left out while some are ticked lie. */
-const UNTICKED_COLOR = '#9a9a9a';
 /** Shorter than a replay's: at the usual fade, most cells of a busy circuit are lit at any moment, hiding the field. */
 const SPIKE_AFTERGLOW_IN_SECONDS = 0.1;
 const CONTACT_VIEWS = [
@@ -220,29 +218,11 @@ export function LfpScene({
     [colours, selectedContact, hoveredContact]
   );
   const bandLevels = fieldLevels && [...bands.keys()].map((c) => fieldLevels[c]).join();
-  // Those the view would show but the ticks leave out, as plain dots, so that the ticked are seen in place.
-  const untickedDots = useMemo<ICircuitOverlayGroup | null>(() => {
-    if (!positions || !only) return null;
-    const coordinates: number[] = [];
-    for (let c = 0; c < field.contacts; c++) {
-      if (only.has(c) || bands.has(c)) continue;
-      if (slice && grid && grid.sliceOf[slice.axis][c] !== slice.index) continue;
-      coordinates.push(positions[c * 3], positions[c * 3 + 1], positions[c * 3 + 2]);
-    }
-    if (coordinates.length === 0) return null;
-    return {
-      name: 'unticked',
-      id: 'lfp-unticked',
-      color: UNTICKED_COLOR,
-      coordinates: Float32Array.from(coordinates),
-      among: true,
-    };
-  }, [positions, only, bands, field.contacts, slice, grid]);
   // biome-ignore lint/correctness/useExhaustiveDependencies: outside the points view, only the banded contacts' levels are drawn
   const drawn = useMemo<ICircuitOverlayGroup[] | undefined>(() => {
     if (!positions || !fieldLevels) return undefined;
     const xyzOf = (c: number) => [positions[c * 3], positions[c * 3 + 1], positions[c * 3 + 2]];
-    const groups: ICircuitOverlayGroup[] = untickedDots ? [untickedDots] : [];
+    const groups: ICircuitOverlayGroup[] = [];
     // Voxels and slices show the rest.
     if (view === 'points') {
       const byLevel: number[][] = LEVEL_COLORS.map(() => []);
@@ -281,15 +261,7 @@ export function LfpScene({
       });
     }
     return groups;
-  }, [
-    positions,
-    field.contacts,
-    view === 'points' ? fieldLevels : bandLevels,
-    view,
-    bands,
-    only,
-    untickedDots,
-  ]);
+  }, [positions, field.contacts, view === 'points' ? fieldLevels : bandLevels, view, bands, only]);
   const placement = useMemo(
     () => (grid && view !== 'points' ? placeVoxels(grid, slice, only) : null),
     [grid, view, slice, only]
