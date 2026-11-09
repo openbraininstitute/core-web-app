@@ -1,22 +1,20 @@
 'use client';
 
-import { AnimatePresence, motion } from 'framer-motion';
-import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
 import { BRAIN_THEME_LINKS } from '@/ui/segments/project/brains-walkthrough/chapters';
 import { THEME_NAV_RAIL, ThemeLine } from '@/ui/segments/project/brains-walkthrough/landing-themes';
 
-import { FeaturedCubeModel, ModelCubeField } from './model-cube-field';
+import { informationFont } from './information-font';
+import { LandingTileStage } from './landing-tile-stage';
 
 import styles from './living-hero.module.css';
 
-const SLIDE_EASE = [0.65, 0, 0.35, 1] as const;
 export const SCIENCE_SCENES = [
-  { label: 'Build models', group: 'build' },
-  { label: 'Explore models', group: 'explore' },
-  { label: 'Inspect neurons', group: 'inspect' },
   { label: 'Simulate activity', group: 'simulate' },
+  { label: 'Explore data', group: 'explore' },
+  { label: 'Build models', group: 'build' },
+  { label: 'Virtual labs', group: 'labs' },
 ] as const;
 /** How long the opening stands, while the page is visible, before it glides on to the first chapter, ms. */
 export const LANDING_AUTO_CONTINUE_MS = 8000;
@@ -38,8 +36,7 @@ export function LivingHero({
   const [visible, setVisible] = useState(true);
   const touchY = useRef<number | null>(null);
   const heroRef = useRef<HTMLElement>(null);
-  const active = scene === null ? null : SCIENCE_SCENES[scene];
-  const animate = !reduced && visible;
+  const interacted = useRef(false);
 
   useEffect(() => {
     setScene(Math.floor(Math.random() * SCIENCE_SCENES.length));
@@ -72,7 +69,7 @@ export function LivingHero({
     const started = performance.now();
     const timer = window.setTimeout(() => {
       shownFor.current = LANDING_AUTO_CONTINUE_MS;
-      continueRef.current();
+      if (!interacted.current) continueRef.current();
     }, LANDING_AUTO_CONTINUE_MS - shownFor.current);
     return () => {
       shownFor.current = Math.min(
@@ -134,7 +131,7 @@ export function LivingHero({
   return (
     <section
       ref={heroRef}
-      className={styles.hero}
+      className={`${styles.hero} ${informationFont.variable}`}
       aria-label="Discover the Open Brain Platform"
       data-walkthrough-intro
       onTouchStart={(event) => {
@@ -151,63 +148,17 @@ export function LivingHero({
         touchY.current = null;
       }}
     >
-      <div className={styles.composition}>
-        <div className={styles.copy}>
-          <h1 className={styles.headline}>
-            Neuroscience <br />
-            at the speed <br />
-            of thought
-          </h1>
-          <p className={styles.caption} aria-live="polite" data-testid="science-caption">
-            {active && (
-              <AnimatePresence initial={false}>
-                <motion.span
-                  key={active.label}
-                  className={styles.captionWords}
-                  initial={{ x: reduced ? 0 : '100%' }}
-                  animate={{ x: 0 }}
-                  exit={{ x: reduced ? 0 : '-100%' }}
-                  transition={{ duration: reduced ? 0 : 1, ease: SLIDE_EASE }}
-                >
-                  {active.label}
-                </motion.span>
-              </AnimatePresence>
-            )}
-          </p>
-          <Link className={styles.cta} href="/app/virtual-lab">
-            Try it now
-          </Link>
-          <p className={styles.reassurance}>In your browser. Nothing to install.</p>
-        </div>
-        <div className={styles.cubeBackdrop}>
-          {active && (
-            <ModelCubeField
-              group={active.group}
-              playing={false}
-              reduced
-              onSelect={(group) =>
-                setScene(SCIENCE_SCENES.findIndex((item) => item.group === group))
-              }
-            />
-          )}
-        </div>
-        <div className={styles.showcase}>
-          {active && (
-            <AnimatePresence initial={false}>
-              <motion.div
-                key={active.group}
-                className={styles.layer}
-                initial={{ x: reduced ? 0 : '100%' }}
-                animate={{ x: 0 }}
-                exit={{ x: reduced ? 0 : '-100%' }}
-                transition={{ duration: reduced ? 0 : 1, ease: SLIDE_EASE }}
-              >
-                <FeaturedCubeModel group={active.group} playing={animate} reduced={reduced} />
-              </motion.div>
-            </AnimatePresence>
-          )}
-        </div>
-      </div>
+      {scene !== null && (
+        <LandingTileStage
+          scene={scene}
+          reduced={reduced}
+          visible={visible}
+          onSelect={setScene}
+          onInteraction={() => {
+            interacted.current = true;
+          }}
+        />
+      )}
       <button
         type="button"
         className={styles.nextChapter}

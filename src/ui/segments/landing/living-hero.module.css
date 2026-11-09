@@ -1,7 +1,5 @@
 .hero {
   --ink: #082d63;
-  --secondary: #4c6283;
-  --surface: #fff;
   position: fixed;
   inset: 0;
   z-index: 60;
@@ -9,121 +7,9 @@
   flex-direction: column;
   overflow: auto;
   overflow-x: hidden;
-  background: var(--surface);
+  background: white;
   color: var(--ink);
-  font-family: var(--font-gabarito), sans-serif;
-  padding: 110px 6% 22px;
-  transition:
-    background-color 1s ease,
-    color 1s ease;
-}
-.composition {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  min-height: 470px;
-  padding-bottom: 34px;
-}
-.copy {
-  position: relative;
-  z-index: 3;
-  width: 36%;
-  margin-left: 23%;
-  padding-right: 25px;
-  text-align: left;
-}
-.headline {
-  font-size: clamp(42px, 4.6vw, 74px);
-  font-weight: 400;
-  line-height: 1.06;
-  letter-spacing: -0.025em;
-  margin: 0 0 34px;
-  max-width: 660px;
-}
-.caption {
-  position: relative;
-  overflow: hidden;
-  font-size: clamp(26px, 2.5vw, 40px);
-  font-weight: 400;
-  letter-spacing: -0.025em;
-  line-height: 1.4;
-  height: 1.4em;
-  margin: 0 0 38px;
-}
-.captionWords {
-  position: absolute;
-  inset: 0;
-  display: block;
-  white-space: nowrap;
-}
-.cta {
-  composes: pill from "./cta-pill.module.css";
-}
-.reassurance {
-  color: var(--secondary);
-  font-size: 12px;
-  margin-top: 15px;
-}
-.showcase {
-  position: absolute;
-  inset: 110px -4% 140px 61%;
-  pointer-events: none;
-  overflow: hidden;
-  z-index: 2;
-}
-.cubeBackdrop {
-  overflow: clip;
-  position: absolute;
-  inset: 88px 16% 110px -16%;
-  mask-image:
-    linear-gradient(to right, #000 0%, #000 45%, #00000055 76%, transparent 100%),
-    linear-gradient(to bottom, #000 0%, #000 62%, transparent 100%);
-  mask-composite: intersect;
-}
-.cubeBackdrop > div > div {
-  transform: scaleX(-1);
-}
-.cubeBackdrop img {
-  transform: scaleX(-1);
-}
-.media {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  isolation: isolate;
-}
-.media video,
-.media img {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-.layer {
-  position: absolute;
-  inset: 0;
-  background: transparent;
-}
-.layer[data-scene="1"] img {
-  object-fit: cover;
-}
-.liveSimulation,
-.liveCanvas {
-  position: absolute;
-  inset: 0;
-}
-.liveCanvas {
-  opacity: 0;
-  transition: opacity 1.2s;
-}
-.liveCanvas[data-ready="true"] {
-  opacity: 1;
-}
-.liveSimulation > img {
-  object-fit: contain;
-}
-.hero button {
-  cursor: pointer;
+  padding: 0;
 }
 .nextChapter {
   position: fixed;
@@ -137,6 +23,7 @@
   width: 40px;
   height: 40px;
   color: var(--ink);
+  cursor: pointer;
   transition: opacity 200ms;
 }
 .nextChapter:hover {
@@ -144,106 +31,21 @@
 }
 .nextChapter:focus-visible {
   outline: 2px solid var(--ink);
-  outline-offset: 3px;
+  outline-offset: 4px;
 }
-@media (max-width: 63.999rem) and (orientation: portrait) {
-  .nextChapter {
-    bottom: 36px;
-    border-radius: 50%;
-    background: #ffffffd9;
-  }
-}
-@media (min-width: 1700px) {
-  .copy {
-    width: 36%;
-  }
-  .showcase {
-    left: 61%;
-  }
-}
-@media (max-width: 760px) {
+@media (max-width: 799px) {
   .hero {
-    padding: 92px 6% 100px;
-  }
-  .composition {
-    flex-direction: column;
-    align-items: stretch;
-    min-height: calc(100svh - 192px);
-    gap: 20px;
-    padding-bottom: 0;
-  }
-  .copy {
-    width: 100%;
-    padding-right: 0;
-    margin-left: 0;
-  }
-  .headline {
-    font-size: clamp(34px, 10vw, 44px);
-    margin-bottom: 22px;
-  }
-  .caption {
-    font-size: clamp(24px, 6.5vw, 28px);
-    margin-bottom: 24px;
-  }
-  .showcase {
-    position: relative;
-    inset: auto;
-    flex: 1;
-    width: 100%;
-    min-height: 150px;
-    max-height: 300px;
-  }
-  .cubeBackdrop {
-    inset: 100px 5% 250px -75%;
-    opacity: 0.3;
-    mask-image:
-      linear-gradient(to right, #000 0%, transparent 82%),
-      linear-gradient(to bottom, #000 0%, #000 62%, transparent 100%);
+    padding: 72px 0 100px;
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .hero,
-  .layer,
-  .liveCanvas,
-  .cta {
-    transition: none;
-  }
-}
-
-@media (max-height: 500px) and (orientation: landscape) {
-  .hero {
-    padding: 76px 5% 88px;
-  }
-  .composition {
-    align-items: center;
-    min-height: 220px;
-    padding-bottom: 0;
-  }
-  .copy {
-    width: 48%;
-    margin-left: 0;
-  }
-  .headline {
-    font-size: 30px;
-    margin-bottom: 14px;
-  }
-  .caption {
-    font-size: 22px;
-    margin-bottom: 16px;
-  }
-  .reassurance {
-    margin-top: 8px;
-  }
-  .showcase {
-    position: absolute;
-    inset: 86px 0 92px 50%;
-    min-height: 0;
-  }
-}
-
 @media (pointer: coarse) {
   .nextChapter {
     width: 44px;
     height: 44px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nextChapter {
+    transition: none;
   }
 }
