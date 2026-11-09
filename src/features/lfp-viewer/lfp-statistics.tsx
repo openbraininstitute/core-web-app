@@ -286,14 +286,15 @@ function SpectrumPlot({
 }: PlotProps) {
   const { index } = summary;
   const { spectra } = chosen;
+  // The mean alone until a contact is ticked or picked: it needs none to be about.
   const contacts = useMemo(
     () =>
       ticked.length > 0
         ? ticked.slice(0, MAX_COMPARED)
-        : selectedContact !== null
+        : contactPicked && selectedContact !== null
           ? [selectedContact]
           : [],
-    [ticked, selectedContact]
+    [ticked, contactPicked, selectedContact]
   );
   // Groups added up have no stored spectrum, so their contacts' are worked out from their rows.
   const { field, problem } = useContactRows(source, summary, chosen, spectra ? [] : contacts, open);
@@ -313,8 +314,8 @@ function SpectrumPlot({
   return (
     <PlotFrame
       picker={picker}
-      note={`Welch, whole run${contacts.length > 0 ? ` · ${contacts.map(nameIn(selectedContact, contactPicked || ticked.length > 0)).join(', ')}` : ''}`}
-      help="Power at each frequency over the whole run: the mean of all contacts, and the selected contact or those ticked, as recorded. Groups added up show only the selected or ticked, as spectra don't add"
+      note={`Welch, whole run${contacts.length > 0 ? ` · ${contacts.map((c) => `e${c}`).join(', ')}` : ''}`}
+      help="Power at each frequency over the whole run: the mean of all contacts, and the picked contact or those ticked, as recorded. Groups added up show only the picked or ticked, as spectra don't add"
       visible={visible}
       figure={figure}
       empty={
