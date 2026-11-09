@@ -105,6 +105,8 @@ interface ColumnLookup {
   filterField(columnId: string, targetId?: string): string;
   /** a column's own value → params mapping, when it has one */
   filterParams(columnId: string): IColumnFilter['toParams'];
+  /** each column whose filter has a `defaultValue`, with that value */
+  filterDefaults(): ReadonlyArray<readonly [string, string]>;
   sortFields(columnId: string): string[];
 }
 
@@ -113,9 +115,15 @@ export function buildColumnLookup<Row>(schema: IGridSchema<Row>): ColumnLookup {
   // Advanced filters share the `filters` record, keyed by `adv:<group>:<filter>`, and
   // resolve to a field the same way — one strategy table serves both.
   const advanced = advancedFilterDefsByKey(schema);
+  const defaults = schema.columns.flatMap((c) =>
+    c.filter?.defaultValue === undefined ? [] : [[c.id, c.filter.defaultValue] as const]
+  );
   return {
     filterParams(columnId) {
       return byId.get(columnId)?.filter?.toParams;
+    },
+    filterDefaults() {
+      return defaults;
     },
     filterField(columnId, targetId) {
       if (isAdvancedFilterKey(columnId)) {
@@ -130,8 +138,6 @@ export function buildColumnLookup<Row>(schema: IGridSchema<Row>): ColumnLookup {
     },
     sortFields(columnId) {
       const c = byId.get(columnId);
-      // sorted by fetching groups of rows instead (see the paged data source)
-      if (c?.sortOrders) return [];
       const sf = c?.sortField ?? c?.field ?? columnId;
       return Array.isArray(sf) ? sf : [sf];
     },
@@ -144,6 +150,11 @@ function serializeFilters(
   workspace: ISerializeOptions['workspace'] = {}
 ): TEntitycoreParams {
   const out: TEntitycoreParams = {};
+  // a filter that always narrows the listing sends its default while it holds no value
+  for (const [columnId, value] of lookup.filterDefaults()) {
+    if (!(columnId in filters))
+      Object.assign(out, lookup.filterParams(columnId)?.(value, workspace));
+  }
   for (const entry of Object.values(filters)) {
     const toParams = lookup.filterParams(entry.columnId);
     if (toParams && entry.value.kind === FilterValueKind.Text) {

@@ -8,6 +8,7 @@ import {
   withoutScopeColumn,
   withScopeColumn,
 } from '@/features/data-grid/bindings/entitycore/columns/scope';
+import { createEntitycorePagedDataSource } from '@/features/data-grid/bindings/entitycore/data-source.paged';
 import { serializeQuery } from '@/features/data-grid/bindings/entitycore/query-serializer';
 import { getEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
 import {
@@ -16,7 +17,6 @@ import {
   ScopeCell,
   ScopeHeader,
 } from '@/features/data-grid/bindings/entitycore/renderers/scope-cells';
-import { ScopeFilter } from '@/features/data-grid/bindings/entitycore/scope-filter';
 import {
   createDefaultOperatorRegistry,
   FilterValueKind,
@@ -24,6 +24,7 @@ import {
   GridController,
   OperatorId,
   resolveColumns,
+  SortDirection,
 } from '@/features/data-grid/core';
 import { EMPTY_PLACEHOLDER } from '@/features/data-grid/renderers/aggrid/empty-cell';
 import { defaultFlags } from '@/features/feature-flags/config';
@@ -32,6 +33,7 @@ import { FlagsProvider } from '@/features/feature-flags/provider';
 
 import type { ReactElement } from 'react';
 import type { TAnyEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
+import type { IGridQuery } from '@/features/data-grid/core';
 import type { FeatureFlags } from '@/features/feature-flags/flags';
 
 vi.mock('@/ui/hooks/use-workspace', () => ({
@@ -71,48 +73,70 @@ describe('scope column', () => {
     expect(withoutScopeColumn(morphology())).toBe(reduced);
   });
 
-  it.each([
-    [ScopeFilter.Public, { authorized_public: 'true' }],
-    [ScopeFilter.PublicOnly, { authorized_public: 'true' }],
-    [ScopeFilter.PublicFromProject, { authorized_public: 'true', authorized_project_id: PROJECT }],
-    [ScopeFilter.Project, { authorized_project_id: PROJECT }],
-    [ScopeFilter.Published, { authorized_public: 'true', authorized_project_id: PROJECT }],
-    [ScopeFilter.Private, { authorized_public: 'false' }],
-    [ScopeFilter.NotPublished, { authorized_public: undefined, authorized_project_id: undefined }],
-  ])('filters %s on the bare authorized params', (text, expected) => {
+  const scopeParams = (filters: IGridQuery['filters'], projectId: string | undefined = PROJECT) => {
     const { schema } = withScopeColumn(morphology());
-    const params = serializeQuery(
-      {
-        page: 1,
-        pageSize: 20,
-        sort: [],
-        filters: {
-          scope: {
-            columnId: 'scope',
-            operator: OperatorId.Eq,
-            targetId: 'scope',
-            value: { kind: FilterValueKind.Text, text },
-          },
-        },
-      },
-      schema,
-      { workspace: { projectId: PROJECT } }
+    const params = serializeQuery({ page: 1, pageSize: 20, sort: [], filters }, schema, {
+      workspace: { projectId },
+    });
+    return Object.fromEntries(
+      Object.entries(params).filter(([key]) => key.startsWith('authorized_'))
     );
-    expect({
-      authorized_public: params.authorized_public,
-      authorized_project_id: params.authorized_project_id,
-    }).toEqual(expected);
+  };
+  const scopeEntry = (text: string) => ({
+    scope: {
+      columnId: 'scope',
+      operator: OperatorId.Eq,
+      targetId: 'scope',
+      value: { kind: FilterValueKind.Text, text },
+    },
   });
 
-  it("leaves the project's made-public data out of public data from other projects", () => {
-    const { filter } = scopeColumn();
-    const published = { authorized_public: 'true', authorized_project_id: PROJECT };
-    expect(filter?.toExcept?.(ScopeFilter.PublicOnly, { projectId: PROJECT })).toEqual(published);
-    expect(filter?.toExcept?.(ScopeFilter.Public, { projectId: PROJECT })).toBeUndefined();
-    expect(filter?.toExcept?.(ScopeFilter.NotPublished, { projectId: PROJECT })).toEqual(
-      published
+  it.each([
+    ['public', { authorized_public: 'true', authorized_project_id__neq: PROJECT }],
+    ['project', { authorized_public: 'false' }],
+    ['published', { authorized_public: 'true', authorized_project_id: PROJECT }],
+  ])('filters %s with one request on the bare authorized params', (text, expected) => {
+    expect(scopeParams(scopeEntry(text))).toEqual(expected);
+  });
+
+  it('shows public data from other projects with no filter set, or one of an older format', () => {
+    const otherProjects = { authorized_public: 'true', authorized_project_id__neq: PROJECT };
+    expect(scopeParams({})).toEqual(otherProjects);
+    expect(scopeParams(scopeEntry('not-published'))).toEqual(otherProjects);
+    // without a project nothing is the project's, so public data is all of it
+    expect(scopeParams({}, '')).toEqual({ authorized_public: 'true' });
+  });
+
+  it("lists public data from other projects in one request that keeps the user's sort", async () => {
+    const list = vi.fn(async () => ({
+      data: [{ id: 'r0' }],
+      pagination: { page: 2, page_size: 30, total_items: 31 },
+    }));
+    const source = createEntitycorePagedDataSource({
+      dataType: 'cell_morphology' as never,
+      schema: withScopeColumn(morphology()).schema as never,
+      context: { virtualLabId: 'vl', projectId: PROJECT },
+      listQueryFn: list as never,
+    });
+    const result = await source.fetch({
+      page: 2,
+      pageSize: 30,
+      filters: {},
+      sort: [{ columnId: 'name', direction: SortDirection.Desc }],
+    });
+
+    expect(result).toEqual({ rows: [{ id: 'r0' }], total: 31 });
+    expect(list).toHaveBeenCalledTimes(1);
+    expect(list).toHaveBeenCalledWith(
+      expect.objectContaining({
+        filters: expect.objectContaining({
+          authorized_public: 'true',
+          authorized_project_id__neq: PROJECT,
+          order_by: ['-name'],
+          page: 2,
+        }),
+      })
     );
-    expect(filter?.toExcept?.(ScopeFilter.PublicOnly, {})).toBeUndefined();
   });
 
   it('labels rows for search and export, and leaves an unknown row blank', () => {
@@ -122,10 +146,8 @@ describe('scope column', () => {
     expect(column.getValue?.({})).toBe('');
   });
 
-  it('sorts by listing each kind of row first in turn', () => {
-    const column = scopeColumn();
-    expect(column.sortable).toBe(true);
-    expect(column.sortOrders?.map((o) => o.id)).toEqual(['public', 'project', 'published']);
+  it('is not sortable, scope being no ordering field', () => {
+    expect(scopeColumn().sortable).toBe(false);
   });
 
   it('has its renderers registered for every listing', () => {
@@ -152,53 +174,42 @@ describe('scope header', () => {
     return { controller, filter, pressed };
   }
 
-  it('shows exactly three toggles, all on and filtering nothing by default', () => {
+  it('shows three kinds, exactly one on: public data from other projects by default', () => {
     const { filter, pressed } = renderHeader();
+    expect(screen.getByRole('group', { name: 'Scope' })).toBeInTheDocument();
     expect(screen.getAllByRole('button')).toHaveLength(3);
-    for (const kind of ['public', 'project', 'published']) {
-      expect(pressed(`scope-header-${kind}`)).toBe('true');
-    }
+    const kinds = ['public', 'project', 'published'];
+    expect(kinds.map((kind) => pressed(`scope-header-${kind}`))).toEqual([
+      'true',
+      'false',
+      'false',
+    ]);
     expect(filter()).toBeUndefined();
   });
 
-  it.each([
-    ['public', ScopeFilter.Project],
-    ['project', ScopeFilter.Public],
-    ['published', ScopeFilter.NotPublished],
-  ])('a click on %s switches only that kind off', (kind, expected) => {
+  it.each(['project', 'published'])('a click on %s shows only that kind', (kind) => {
     const { filter, pressed } = renderHeader();
     fireEvent.click(screen.getByTestId(`scope-header-${kind}`));
-    expect(filter()).toBe(expected);
+    expect(filter()).toBe(kind);
     for (const other of ['public', 'project', 'published']) {
-      expect(pressed(`scope-header-${other}`)).toBe(String(other !== kind));
+      expect(pressed(`scope-header-${other}`)).toBe(String(other === kind));
     }
   });
 
-  it('switches each kind back on alone, and back to everything', () => {
-    const { filter } = renderHeader();
-    fireEvent.click(screen.getByTestId('scope-header-public'));
-    fireEvent.click(screen.getByTestId('scope-header-project'));
-    expect(filter()).toBe(ScopeFilter.Published);
-    fireEvent.click(screen.getByTestId('scope-header-public'));
-    expect(filter()).toBe(ScopeFilter.Public);
-    fireEvent.click(screen.getByTestId('scope-header-project'));
-    expect(filter()).toBeUndefined();
-  });
-
-  it('keeps the last kind on', () => {
+  it('goes back to the default by clearing the filter; a click on the kind on does nothing', () => {
     const { filter, pressed } = renderHeader();
-    fireEvent.click(screen.getByTestId('scope-header-public'));
-    fireEvent.click(screen.getByTestId('scope-header-published'));
-    expect(filter()).toBe(ScopeFilter.Private);
     fireEvent.click(screen.getByTestId('scope-header-project'));
-    expect(filter()).toBe(ScopeFilter.Private);
-    expect(pressed('scope-header-project')).toBe('true');
+    fireEvent.click(screen.getByTestId('scope-header-project'));
+    expect(filter()).toBe('project');
+    fireEvent.click(screen.getByTestId('scope-header-public'));
+    expect(filter()).toBeUndefined();
+    expect(pressed('scope-header-public')).toBe('true');
   });
 
   it('keeps the selection while switching, so a picker keeps its picks', () => {
     const { controller } = renderHeader();
     act(() => controller.store.dispatch({ type: GridActionType.SetSelection, ids: ['r1'] }));
-    fireEvent.click(screen.getByTestId('scope-header-public'));
+    fireEvent.click(screen.getByTestId('scope-header-project'));
     expect(controller.store.getSnapshot().selection).toEqual(['r1']);
   });
 });

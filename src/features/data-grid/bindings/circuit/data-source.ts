@@ -19,13 +19,7 @@ import {
 } from '@/ui/segments/explore/circuit/helpers';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
-import {
-  createEntitycorePagedDataSource,
-  exceptInForce,
-  groupsInForce,
-  inGroup,
-  rowMatches,
-} from '../entitycore/data-source.paged';
+import { createEntitycorePagedDataSource } from '../entitycore/data-source.paged';
 import { serializeQuery } from '../entitycore/query-serializer';
 
 import type { QueryClient } from '@tanstack/react-query';
@@ -33,7 +27,7 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { HierarchyTreeResponse } from '@/api/entitycore/types/shared/hierarchy';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
-import type { IGridDataSource, IGridPage, IGridQuery, IGridSchema, IRowGroup } from '../../core';
+import type { IGridDataSource, IGridPage, IGridQuery, IGridSchema } from '../../core';
 
 /** Marker param, injected by the plugin body via `extraParams`, selecting the view. */
 export const CIRCUIT_VIEW_PARAM = '__view';
@@ -47,12 +41,6 @@ export interface ICircuitDataSourceOptions {
   workspace: WorkspaceContext;
   /** shared React Query client — the 3 hierarchy fetches reuse the hook cache keys. */
   queryClient: QueryClient;
-}
-
-/** Whether a circuit, or any circuit under it, is one of a group's. */
-function holds(node: unknown, group: IRowGroup): boolean {
-  const { sub_circuits: children } = node as { sub_circuits?: ReadonlyArray<unknown> };
-  return inGroup(node, group) || (children ?? []).some((child) => holds(child, group));
 }
 
 /**
@@ -200,11 +188,7 @@ export function createCircuitDataSource(
         }),
       { concurrency: HIERARCHY_CONCURRENCY }
     );
-    // what a filter leaves out that no param can is dropped here
-    const except = exceptInForce(query, schema, workspace);
-    const matching = flatMap(filteredResponses, (r) => r.data).filter(
-      (c) => !except || !rowMatches(c, except)
-    );
+    const matching = flatMap(filteredResponses, (r) => r.data);
     const filteredResult: EntityCoreResponse<ICircuit> = {
       data: matching.map((c) => ({ ...c, isFiltered: true })),
       facets: undefined,
@@ -221,16 +205,7 @@ export function createCircuitDataSource(
       filteredResult
     ) as unknown as ICircuit[];
 
-    // the tree is fixed, but a column's own order can still lift the roots that are what
-    // it lists first, then the roots holding some of it further down
-    const leading = groupsInForce(query, schema, workspace)?.[0];
-    const rank = (root: ICircuit) => {
-      if (!leading || inGroup(root, leading)) return 0;
-      return holds(root, leading) ? 1 : 2;
-    };
-    const rows = leading ? [...roots].sort((a, b) => rank(a) - rank(b)) : roots;
-
-    return { rows, total: countMatchingNodes(roots), singlePage: true };
+    return { rows: roots, total: countMatchingNodes(roots), singlePage: true };
   }
 
   return {

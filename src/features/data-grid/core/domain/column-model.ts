@@ -108,29 +108,10 @@ export interface IColumnFilter {
    */
   toParams?: (value: string, workspace: IGridWorkspace) => Record<string, unknown>;
   /**
-   * Rows an Eq value leaves out that no param can, as a filter of their own; the data
-   * source passes over them in the listing `toParams` gives.
+   * The Eq value `toParams` is given while the filter holds none, for a filter that always
+   * narrows the listing; clearing the filter goes back to it.
    */
-  toExcept?: (
-    value: string,
-    workspace: IGridWorkspace
-  ) => Record<string, unknown> | undefined;
-}
-
-/** A filter's rows, less any rows of `except`, which no param can leave out. */
-export interface IRowGroup {
-  filter: Record<string, unknown>;
-  except?: Record<string, unknown>;
-}
-
-/** One way to list a column the backend cannot order by, as groups of rows. */
-export interface IColumnSortOrder {
-  id: string;
-  /**
-   * The groups listed one after the other, together every row; null when the order means
-   * nothing in the workspace (`projectId` is its project).
-   */
-  groups: (workspace: IGridWorkspace) => ReadonlyArray<IRowGroup> | null;
+  defaultValue?: string;
 }
 
 /**
@@ -150,12 +131,6 @@ export interface IColumnModel<Row = unknown> {
   sortable?: boolean;
   /** backend field(s) for order_by; defaults to field ?? id */
   sortField?: string | string[];
-  /**
-   * For a column the backend cannot order by, the orders its header cycles through in
-   * place of a direction; the sort entry's `order` names the one in force. Never reaches
-   * order_by.
-   */
-  sortOrders?: ReadonlyArray<IColumnSortOrder>;
   /** value accessor (sort fallback, free-text search, export) */
   getValue?: (row: Row) => TCellValue;
   /** cell renderer key resolved by the rendering adapter's cell-renderer registry */

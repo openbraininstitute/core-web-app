@@ -7,10 +7,9 @@ import { getProject } from '@/api/virtual-lab-svc/queries/project';
 import {
   SCOPE_KINDS,
   SCOPE_LABELS,
+  scopeKindFor,
   scopeKindOf,
-  shownBy,
   showScope,
-  toggled,
 } from '@/features/data-grid/bindings/entitycore/scope-filter';
 import { FilterValueKind } from '@/features/data-grid/core';
 import { useGridState } from '@/features/data-grid/react/use-grid-state';
@@ -225,36 +224,35 @@ export function ScopeCell({ row }: ICellRendererProps<IScopeRow>): ReactNode | n
 }
 
 /**
- * A toggle per kind of row, and no more than these three, in place of the scope column's
- * label and filter: the globe for public data from other projects, the people for the
- * project's private data, and the globe with a badge for the project's data made public.
- * Each is coloured when its rows are shown and grey when not, and a click switches it alone.
- * All on (the default) filters nothing; the last one on stays on.
+ * One button per kind of row in place of the scope column's label and filter, of which
+ * exactly one is on: the globe for public data from other projects (the default), the
+ * people for the project's private data, and the globe with a badge for the project's data
+ * made public. Each kind is one request, so the listing keeps its sort and counts.
  */
 export function ScopeHeader({ columnId, ctx }: IHeaderRendererProps) {
   const state = useGridState(ctx.controller);
   const entry = state.filters[columnId];
-  const shown = shownBy(entry?.value.kind === FilterValueKind.Text ? entry.value.text : '');
+  const shown = scopeKindFor(entry?.value.kind === FilterValueKind.Text ? entry.value.text : '');
   return (
-    <div className="flex h-full w-full items-center justify-center gap-0.5">
+    <fieldset
+      aria-label="Scope"
+      className="flex h-full w-full min-w-0 items-center justify-center gap-0.5"
+    >
       {SCOPE_KINDS.map((kind) => {
-        const isOn = shown.has(kind);
-        const next = toggled(shown, kind);
+        const isOn = kind === shown;
         return (
           <ScopeTooltip key={kind} kind={kind} canChangeProject>
             <button
               type="button"
               aria-pressed={isOn}
-              aria-disabled={!next}
               aria-label={SCOPE_LABELS[kind]}
               data-testid={`scope-header-${kind}`}
-              onClick={() => next && showScope(ctx.controller, columnId, next)}
+              onClick={() => !isOn && showScope(ctx.controller, columnId, kind)}
               className={cn(
                 'flex size-6 items-center justify-center rounded-full text-lg transition-colors',
                 'focus-visible:ring-primary-6 outline-none focus-visible:ring-2',
                 // an on mark carries its own colour; an off one takes this grey
-                !isOn && 'text-gray-300 hover:text-gray-500',
-                next ? 'hover:bg-gray-100' : 'cursor-default'
+                isOn ? 'cursor-default' : 'text-gray-300 hover:bg-gray-100 hover:text-gray-500'
               )}
             >
               <ScopeMark kind={kind} muted={!isOn} />
@@ -262,6 +260,6 @@ export function ScopeHeader({ columnId, ctx }: IHeaderRendererProps) {
           </ScopeTooltip>
         );
       })}
-    </div>
+    </fieldset>
   );
 }
