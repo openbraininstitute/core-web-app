@@ -7950,77 +7950,80 @@ function drawAP(g: G, P: Pose, narrow: boolean) {
     // through those open; each as big as the strip and the room between them allow
     const count = narrow ? 4 : 8;
     const k = Math.min((sBottom - sTop) / 64, (x1 - x0 - 52 * s) / count / 46);
-    const ym = (sTop + sBottom) / 2;
-    const xs = Array.from({ length: count }, (_, j) =>
-      lerp(x0 + 26 * s, x1 - 26 * s, (j + 0.5) / count)
-    );
-    const heads = new Path2D();
-    for (let x = x0 - 30 * s; x < x1 + 8 * s; x += 9 * k) {
-      if (xs.some((cx) => Math.abs(cx - x) < 17 * k)) continue;
-      for (const side of [-1, 1]) {
-        heads.moveTo(x + 3.6 * k, ym + side * 10 * k);
-        heads.arc(x, ym + side * 10 * k, 3.6 * k, 0, Math.PI * 2);
+    // (none while the plots above still fill the room, coming in or going: no room for it yet)
+    if (k > 0.3) {
+      const ym = (sTop + sBottom) / 2;
+      const xs = Array.from({ length: count }, (_, j) =>
+        lerp(x0 + 26 * s, x1 - 26 * s, (j + 0.5) / count)
+      );
+      const heads = new Path2D();
+      for (let x = x0 - 30 * s; x < x1 + 8 * s; x += 9 * k) {
+        if (xs.some((cx) => Math.abs(cx - x) < 17 * k)) continue;
+        for (const side of [-1, 1]) {
+          heads.moveTo(x + 3.6 * k, ym + side * 10 * k);
+          heads.arc(x, ym + side * 10 * k, 3.6 * k, 0, Math.PI * 2);
+        }
       }
-    }
-    ctx.globalAlpha = gs;
-    ctx.fillStyle = rgba(headOf(L), 0.95);
-    ctx.fill(heads);
-    ctx.globalAlpha = 1;
-    named('outside', left, ym - 22 * k, 0.75 * P.apGated, 'left', faint, 10.5);
-    named('inside', left, ym + 22 * k, 0.75 * P.apGated, 'left', faint, 10.5);
-    const stateAt = (t: number, sodium: boolean, q: number) => {
-      const th = (q + 0.5) / 4;
-      const share = sodium ? runAt(AP_RUN.na, t) / AP_MOST.Na : runAt(AP_RUN.k, t) / AP_MOST.K;
-      const open = smooth(clamp01((share - th) * 6 + 0.5));
-      const plugged = sodium
-        ? (1 - open) * smooth(clamp01((1 - runAt(AP_RUN.h, t) / HH_REST.h - th) * 6 + 0.5))
-        : 0;
-      return { open, plugged };
-    };
-    xs.forEach((cx, j) => {
-      const sodium = j % 2 === 0;
-      // (its place among its kind, as a share of four, whatever the count)
-      const q = (Math.floor(j / 2) * 4) / (count / 2);
-      const { open, plugged } = stateAt(tc, sodium, q);
-      const colour = sodium ? IONS.Na.colour : IONS.K.colour;
-      // the ions through it while it is open: sodium down and in, potassium up and out
-      for (let e = Math.floor((tc - 0.9) / 0.3); e <= Math.floor(tc / 0.3); e++) {
-        const t0 = e * 0.3;
-        if (t0 < 0 || stateAt(t0, sodium, q).open < 0.5) continue;
-        const p = (tc - t0) / 0.9;
-        if (p < 0 || p > 1) continue;
-        const yy = ym + (sodium ? 1 : -1) * lerp(-30, 30, p) * k;
-        disc(g, cx, yy, 3.2 * k, colour, 1, gs * Math.min(1, 5 * p, 5 * (1 - p)));
-      }
-      // the channel, at the strip's scale: two halves round the pore, apart as far as it is open
       ctx.globalAlpha = gs;
-      for (const side of [-1, 1]) {
-        ctx.beginPath();
-        ctx.roundRect(cx + side * (7 + 4 * open) * k - 6 * k, ym - 19 * k, 12 * k, 38 * k, 5 * k);
-        ctx.fillStyle = rgba(mix(L.page, L.ink, 0.22), 0.98);
-        ctx.fill();
-        ctx.strokeStyle = rgba(colour, 0.85);
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-      }
+      ctx.fillStyle = rgba(headOf(L), 0.95);
+      ctx.fill(heads);
       ctx.globalAlpha = 1;
-      // sodium's second gate: hanging below, or swung up into the pore while inactivated
-      if (sodium) {
-        const [bx, by] = [lerp(cx - 8 * k, cx, plugged), lerp(ym + 30 * k, ym + 21 * k, plugged)];
+      named('outside', left, ym - 22 * k, 0.75 * P.apGated, 'left', faint, 10.5);
+      named('inside', left, ym + 22 * k, 0.75 * P.apGated, 'left', faint, 10.5);
+      const stateAt = (t: number, sodium: boolean, q: number) => {
+        const th = (q + 0.5) / 4;
+        const share = sodium ? runAt(AP_RUN.na, t) / AP_MOST.Na : runAt(AP_RUN.k, t) / AP_MOST.K;
+        const open = smooth(clamp01((share - th) * 6 + 0.5));
+        const plugged = sodium
+          ? (1 - open) * smooth(clamp01((1 - runAt(AP_RUN.h, t) / HH_REST.h - th) * 6 + 0.5))
+          : 0;
+        return { open, plugged };
+      };
+      xs.forEach((cx, j) => {
+        const sodium = j % 2 === 0;
+        // (its place among its kind, as a share of four, whatever the count)
+        const q = (Math.floor(j / 2) * 4) / (count / 2);
+        const { open, plugged } = stateAt(tc, sodium, q);
+        const colour = sodium ? IONS.Na.colour : IONS.K.colour;
+        // the ions through it while it is open: sodium down and in, potassium up and out
+        for (let e = Math.floor((tc - 0.9) / 0.3); e <= Math.floor(tc / 0.3); e++) {
+          const t0 = e * 0.3;
+          if (t0 < 0 || stateAt(t0, sodium, q).open < 0.5) continue;
+          const p = (tc - t0) / 0.9;
+          if (p < 0 || p > 1) continue;
+          const yy = ym + (sodium ? 1 : -1) * lerp(-30, 30, p) * k;
+          disc(g, cx, yy, 3.2 * k, colour, 1, gs * Math.min(1, 5 * p, 5 * (1 - p)));
+        }
+        // the channel, at the strip's scale: two halves round the pore, apart as far as it is open
         ctx.globalAlpha = gs;
-        ctx.strokeStyle = rgba(mix(IONS.Na.colour, L.ink, 0.35), 0.8);
-        ctx.lineWidth = 1.2;
-        ctx.beginPath();
-        ctx.moveTo(cx - 9 * k, ym + 19 * k);
-        ctx.quadraticCurveTo(cx - 13 * k, ym + 26 * k, bx, by);
-        ctx.stroke();
-        ctx.fillStyle = rgba(mix(IONS.Na.colour, L.ink, 0.35), 1);
-        ctx.beginPath();
-        ctx.arc(bx, by, 3.8 * k, 0, Math.PI * 2);
-        ctx.fill();
+        for (const side of [-1, 1]) {
+          ctx.beginPath();
+          ctx.roundRect(cx + side * (7 + 4 * open) * k - 6 * k, ym - 19 * k, 12 * k, 38 * k, 5 * k);
+          ctx.fillStyle = rgba(mix(L.page, L.ink, 0.22), 0.98);
+          ctx.fill();
+          ctx.strokeStyle = rgba(colour, 0.85);
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
         ctx.globalAlpha = 1;
-      }
-    });
+        // sodium's second gate: hanging below, or swung up into the pore while inactivated
+        if (sodium) {
+          const [bx, by] = [lerp(cx - 8 * k, cx, plugged), lerp(ym + 30 * k, ym + 21 * k, plugged)];
+          ctx.globalAlpha = gs;
+          ctx.strokeStyle = rgba(mix(IONS.Na.colour, L.ink, 0.35), 0.8);
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(cx - 9 * k, ym + 19 * k);
+          ctx.quadraticCurveTo(cx - 13 * k, ym + 26 * k, bx, by);
+          ctx.stroke();
+          ctx.fillStyle = rgba(mix(IONS.Na.colour, L.ink, 0.35), 1);
+          ctx.beginPath();
+          ctx.arc(bx, by, 3.8 * k, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+      });
+    }
   }
 
   // the words at the foot, as each slide comes to them
