@@ -336,13 +336,18 @@ function latticeOf(shown: number[], { stack, sliceOf }: ContactGrid): VoxelLatti
 
 /**
  * Where the grid's contacts are drawn as boxes: all of them, or those of one slice as a sheet of
- * tiles, brought onto its plane.
+ * tiles, brought onto its plane; of those, `only` the ticked where some are.
  */
-export function placeVoxels(grid: ContactGrid, slice: GridSlice | null): VoxelPlacement {
+export function placeVoxels(
+  grid: ContactGrid,
+  slice: GridSlice | null,
+  only: ReadonlySet<number> | null = null
+): VoxelPlacement {
   const { positions, frame } = grid;
   const contacts = positions.length / 3;
   const shown: number[] = [];
   for (let contact = 0; contact < contacts; contact++) {
+    if (only && !only.has(contact)) continue;
     if (!slice || grid.sliceOf[slice.axis][contact] === slice.index) shown.push(contact);
   }
   const lattice = latticeOf(shown, grid);

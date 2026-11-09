@@ -252,6 +252,11 @@ export function fieldRows(
   return buildRows(mode.length, order === 'similar' ? mode : null, 'place', swing);
 }
 
+/** The map's rows while some are ticked: one of each traced contact, called as its trace is. */
+export function rowsOfTraced(traces: readonly number[], labels: readonly string[]): FieldRow[] {
+  return traces.map((contact, i) => ({ contacts: [contact], lead: contact, label: labels[i] }));
+}
+
 /** What each trace is called: where it lies along the field, unless two traced lie alike. */
 export function traceLabels(traces: readonly number[], along: Float32Array | null): string[] {
   const microns = along && traces.map((c) => signedMicrons(along[c]));

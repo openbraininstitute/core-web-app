@@ -46,6 +46,8 @@ const RECOLOR_MS = 50;
 const HOVERED_COLOR = '#8c8c8c';
 /** Darker than the hovered ring: a line a pixel wide in grey is lost among the boxes. */
 const OUTLINE_COLOR = '#141414';
+/** Plain, as no level is: where the contacts left out while some are ticked lie. */
+const UNTICKED_COLOR = '#9a9a9a';
 /** Shorter than a replay's: at the usual fade, most cells of a busy circuit are lit at any moment, hiding the field. */
 const SPIKE_AFTERGLOW_IN_SECONDS = 0.1;
 const CONTACT_VIEWS = [
@@ -130,8 +132,12 @@ type Props = {
   /** Below this |V|, in µV, a contact is drawn as at zero. */
   hideBelow: number;
   selectedContact: number | null;
+  /** The ticked contacts, drawn alone while there are any. */
+  ticked: readonly number[];
   /** The ticked contacts' colours, which their traces are drawn in. */
   colours: ReadonlyMap<number, string>;
+  /** Unticks them all, so that every contact is drawn again. */
+  onShowAll: () => void;
   /** The contact under the pointer in the traces or the table. */
   hoveredContact: number | null;
   timeCursor: TimeCursor;
@@ -155,7 +161,9 @@ export function LfpScene({
   grid,
   hideBelow,
   selectedContact,
+  ticked,
   colours,
+  onShowAll,
   hoveredContact,
   timeCursor,
   speed,
@@ -206,21 +214,40 @@ export function LfpScene({
   }, [active, timeCursor, field, scale, hideBelow]);
 
   const fieldLevels = levels?.length === field.contacts ? levels : null;
+  const only = useMemo(() => (ticked.length > 0 ? new Set(ticked) : null), [ticked]);
   const bands = useMemo(
     () => bandsOf(colours, selectedContact, hoveredContact),
     [colours, selectedContact, hoveredContact]
   );
   const bandLevels = fieldLevels && [...bands.keys()].map((c) => fieldLevels[c]).join();
+  // Those the view would show but the ticks leave out, as plain dots, so that the ticked are seen in place.
+  const untickedDots = useMemo<ICircuitOverlayGroup | null>(() => {
+    if (!positions || !only) return null;
+    const coordinates: number[] = [];
+    for (let c = 0; c < field.contacts; c++) {
+      if (only.has(c) || bands.has(c)) continue;
+      if (slice && grid && grid.sliceOf[slice.axis][c] !== slice.index) continue;
+      coordinates.push(positions[c * 3], positions[c * 3 + 1], positions[c * 3 + 2]);
+    }
+    if (coordinates.length === 0) return null;
+    return {
+      name: 'unticked',
+      id: 'lfp-unticked',
+      color: UNTICKED_COLOR,
+      coordinates: Float32Array.from(coordinates),
+      among: true,
+    };
+  }, [positions, only, bands, field.contacts, slice, grid]);
   // biome-ignore lint/correctness/useExhaustiveDependencies: outside the points view, only the banded contacts' levels are drawn
   const drawn = useMemo<ICircuitOverlayGroup[] | undefined>(() => {
     if (!positions || !fieldLevels) return undefined;
     const xyzOf = (c: number) => [positions[c * 3], positions[c * 3 + 1], positions[c * 3 + 2]];
-    const groups: ICircuitOverlayGroup[] = [];
+    const groups: ICircuitOverlayGroup[] = untickedDots ? [untickedDots] : [];
     // Voxels and slices show the rest.
     if (view === 'points') {
       const byLevel: number[][] = LEVEL_COLORS.map(() => []);
       for (let c = 0; c < field.contacts; c++) {
-        if (!bands.has(c)) byLevel[fieldLevels[c]].push(...xyzOf(c));
+        if (!bands.has(c) && (!only || only.has(c))) byLevel[fieldLevels[c]].push(...xyzOf(c));
       }
       byLevel.forEach((coordinates, level) => {
         if (coordinates.length === 0) return;
@@ -254,10 +281,25 @@ export function LfpScene({
       });
     }
     return groups;
-  }, [positions, field.contacts, view === 'points' ? fieldLevels : bandLevels, view, bands]);
+  }, [
+    positions,
+    field.contacts,
+    view === 'points' ? fieldLevels : bandLevels,
+    view,
+    bands,
+    only,
+    untickedDots,
+  ]);
   const placement = useMemo(
-    () => (grid && view !== 'points' ? placeVoxels(grid, slice) : null),
-    [grid, view, slice]
+    () => (grid && view !== 'points' ? placeVoxels(grid, slice, only) : null),
+    [grid, view, slice, only]
+  );
+  const selection = useMemo(
+    () =>
+      ticked.length > 0
+        ? { count: ticked.length, total: field.contacts, noun: 'contact', onReset: onShowAll }
+        : undefined,
+    [ticked.length, field.contacts, onShowAll]
   );
   const fieldVoxels = useMemo(
     () => (placement && fieldLevels ? voxelsOf(placement, fieldLevels) : null),
@@ -318,6 +360,7 @@ export function LfpScene({
           active={active}
           colorByNoneLabel="Uniform"
           uncolouredCells={NEUTRAL_NEURON_COLOR}
+          selection={selection}
           legend={
             <div className="rounded-lg bg-white/90 px-2.5 py-1.5 text-[10px] text-neutral-500 shadow-sm">
               <div className="h-2 w-40 rounded-full" style={{ background: SCALE_GRADIENT }} />

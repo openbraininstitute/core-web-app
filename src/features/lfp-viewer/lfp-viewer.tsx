@@ -22,6 +22,7 @@ import {
   LANE_HEIGHTS,
   laneHeightOf,
   openingOrder,
+  rowsOfTraced,
   sharedShareOf,
   tracedContacts,
   traceLabels,
@@ -281,6 +282,12 @@ function LfpReportView({
     [positions, direction]
   );
   const labels = useMemo(() => traceLabels(traces, along), [traces, along]);
+  const tracingTicked = ticked.length > 0;
+  const mapRows = useMemo(
+    () => (tracingTicked ? rowsOfTraced(traces, labels) : rows),
+    [tracingTicked, traces, labels, rows]
+  );
+  const showAll = useCallback(() => setPicks([]), []);
   const colourOfLine = useMemo(
     () => lineColour(colours, selectedContact),
     [colours, selectedContact]
@@ -396,9 +403,7 @@ function LfpReportView({
             <>
               <span className="whitespace-nowrap text-xs text-neutral-400">
                 {index.contacts.toLocaleString()} contacts · {index.populations.join(', ')}
-                {mode === 'traces' &&
-                  ticked.length > 0 &&
-                  ` · ${ticked.length.toLocaleString()} ticked traced`}
+                {tracingTicked && ` · ${ticked.length.toLocaleString()} ticked shown`}
                 {order === 'along' &&
                   direction &&
                   ` · along (${direction.axis.map((d) => d.toFixed(2)).join(', ')})`}
@@ -413,12 +418,12 @@ function LfpReportView({
                 Drag to zoom · Double-click to reset · Click a trace to select its contact for the
                 statistics, again to go back to the one the field swings most at; in the map, the
                 row&apos;s contact · The player moves with the bar below · Tick contacts in the
-                table to trace them alone, each in a colour of its own, there and in the 3D player;
-                with none ticked, every contact is traced; a row hovered that isn&apos;t traced
-                shows at the foot · Scroll through traces that don&apos;t fit · Removing the shared
-                signal leaves the table and spectra as recorded · A group of cells&apos; overview
-                holds means over its bins, the total&apos;s their extremes, so zoomed out the
-                total&apos;s peaks read higher
+                table to show them alone, each in a colour of its own, in the traces, the map and
+                the 3D player; with none ticked, every contact is shown; a row hovered that
+                isn&apos;t ticked shows at the foot · Scroll through traces that don&apos;t fit ·
+                Removing the shared signal leaves the table and spectra as recorded · A group of
+                cells&apos; overview holds means over its bins, the total&apos;s their extremes, so
+                zoomed out the total&apos;s peaks read higher
               </PlotHelp>
             </>
           }
@@ -513,9 +518,9 @@ function LfpReportView({
         mode={mode}
         field={field}
         scale={scale}
-        rows={rows}
+        rows={mapRows}
         traces={traces}
-        tracingTicked={ticked.length > 0}
+        tracingTicked={tracingTicked}
         traceLabels={labels}
         colours={colours}
         traceRows={traceRows.rows}
@@ -603,7 +608,9 @@ function LfpReportView({
                   grid={grid}
                   hideBelow={hideBelowShare * scale.limit}
                   selectedContact={selectedContact}
+                  ticked={ticked}
                   colours={colours}
+                  onShowAll={showAll}
                   hoveredContact={rowHovered ?? traceHovered}
                   timeCursor={timeCursor}
                   speed={speed}

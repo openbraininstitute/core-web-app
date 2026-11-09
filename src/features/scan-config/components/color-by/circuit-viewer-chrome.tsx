@@ -102,7 +102,14 @@ export interface ICircuitViewerChromeProps {
    * the way back to them all: said at the top centre while some are. With a
    * cell `held`, the way back lets that one go first.
    */
-  selection?: { count: number; total: number; onReset: () => void; held?: boolean };
+  selection?: {
+    count: number;
+    total: number;
+    onReset: () => void;
+    held?: boolean;
+    /** What is selected, one of them: a neuron unless said. */
+    noun?: string;
+  };
 }
 
 /**
@@ -132,6 +139,7 @@ export function CircuitViewerChrome({
     colorBy?.mapping &&
     colorBy.mapping.mode !== 'none';
   const showLegendToggle = !!selectedProperty;
+  const noun = selection?.noun ?? 'neuron';
   // Two states the checklist can leave the scene in, worked out here rather
   // than in the viewers: the chrome is the one layer over both of them, and it
   // already holds the way back.
@@ -308,14 +316,14 @@ export function CircuitViewerChrome({
             <strong className="text-primary-9 font-semibold">
               {selection.count.toLocaleString()}
             </strong>
-            of {selection.total.toLocaleString()} {selection.total === 1 ? 'neuron' : 'neurons'}{' '}
-            selected
+            of {selection.total.toLocaleString()} {noun}
+            {selection.total === 1 ? '' : 's'} selected
           </span>
           <button
             type="button"
             onClick={selection.onReset}
-            title={selection.held ? 'Let the neuron go' : 'Show every neuron again'}
-            aria-label={selection.held ? 'Let the neuron go' : 'Show every neuron again'}
+            title={selection.held ? `Let the ${noun} go` : `Show every ${noun} again`}
+            aria-label={selection.held ? `Let the ${noun} go` : `Show every ${noun} again`}
             className={ROUND_PILL_CLASS}
           >
             <RiResetLeftLine className="size-4" />

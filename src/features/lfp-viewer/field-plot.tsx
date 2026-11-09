@@ -43,6 +43,8 @@ const PEEK_PX = 28;
 const PEEK_BACKDROP = 'rgba(255, 255, 255, 0.92)';
 /** A hovered contact that isn't traced, as a voltage report greys its hovered cell's. */
 const PREVIEW_COLOUR = '#8c8c8c';
+/** Above a previewed map row, where it says it isn't ticked. */
+const PREVIEW_TEXT_PX = 13;
 /** A hovered map row is outlined at least this high, however thin its row. */
 const MAP_ROW_MIN_PX = 4;
 /** A drag shorter than this is a click. */
@@ -61,7 +63,10 @@ type Props = {
   rows: readonly FieldRow[];
   /** The contacts drawn as traces, top to bottom. */
   traces: readonly number[];
-  /** Whether the traces are the ticked contacts' alone, not every one's: a change starts them at the top. */
+  /**
+   * Whether the traces and the map's rows are the ticked contacts' alone, a row each, not every one's:
+   * a change starts the traces at the top.
+   */
   tracingTicked: boolean;
   /** What each trace is called, in the order of `traces`. */
   traceLabels: readonly string[];
@@ -185,6 +190,10 @@ function marginName(
   g.textAlign = 'right';
   g.textBaseline = 'middle';
   g.fillText(text, left - 6, top + height / 2);
+}
+
+function heatColour(scale: ColourScale, uv: number): number {
+  return COLOUR_TABLE[Math.round(((scale.position(uv) + 1) / 2) * 255)];
 }
 
 function rowValue(field: LfpField, row: FieldRow, bin: number): number {
@@ -393,6 +402,49 @@ export function FieldPlot({
     const [source, at] = laneSource(contact);
     return fieldValue(source, at, binAt(source, time));
   };
+  // A contact the map has no row of, as while others are ticked: at the foot, as the traces show it.
+  const previewMapRow = (g: CanvasRenderingContext2D, contact: number) => {
+    const [firstBin, lastBin] = binRange(field, from, to);
+    if (lastBin <= firstBin || typeof document === 'undefined') return;
+    const strip = Math.min(plot.height / 2, Math.max(PEEK_PX, plot.height / rows.length));
+    const top = plot.bottom - strip;
+    const heatTop = top + PREVIEW_TEXT_PX;
+    const image = new ImageData(lastBin - firstBin, 1);
+    const pixels = new Uint32Array(image.data.buffer);
+    for (let b = firstBin; b < lastBin; b++) {
+      pixels[b - firstBin] = heatColour(scale, fieldValue(field, contact, b));
+    }
+    const heat = document.createElement('canvas');
+    heat.width = image.width;
+    heat.height = 1;
+    heat.getContext('2d')?.putImageData(image, 0, 0);
+    g.fillStyle = PEEK_BACKDROP;
+    g.fillRect(plot.left, top, plot.width, strip);
+    g.strokeStyle = AXIS;
+    g.setLineDash([3, 3]);
+    g.beginPath();
+    g.moveTo(plot.left, top + 0.5);
+    g.lineTo(plot.right, top + 0.5);
+    g.stroke();
+    g.setLineDash([]);
+    g.imageSmoothingEnabled = false;
+    const x0 = xOf(field.start + firstBin * field.binMs);
+    const x1 = xOf(field.start + lastBin * field.binMs);
+    g.save();
+    g.beginPath();
+    g.rect(plot.left, heatTop, plot.width, plot.bottom - heatTop);
+    g.clip();
+    g.drawImage(heat, x0, heatTop, x1 - x0, plot.bottom - heatTop);
+    g.restore();
+    g.fillStyle = LABEL;
+    g.font = '10px sans-serif';
+    g.textAlign = 'left';
+    g.textBaseline = 'top';
+    g.fillText('not ticked', plot.left + 4, top + 3);
+    const y = (heatTop + plot.bottom) / 2;
+    marginName(g, plot.left - 4, { top: y - 7, height: 14 }, `e${contact}`, PREVIEW_COLOUR);
+    marginNotch(g, plot.left, y, PREVIEW_COLOUR);
+  };
   const hoveredLane = hoveredContact === null ? -1 : traces.indexOf(hoveredContact);
   const hoveredColour =
     (hoveredLane >= 0 && contactColour(colours, selectedContact, traces[hoveredLane])) || INK;
@@ -443,8 +495,7 @@ export function FieldPlot({
     const pixels = new Uint32Array(image.data.buffer);
     rows.forEach((row, r) => {
       for (let b = 0; b < field.bins; b++) {
-        const uv = rowValue(field, row, b);
-        pixels[r * field.bins + b] = COLOUR_TABLE[Math.round(((scale.position(uv) + 1) / 2) * 255)];
+        pixels[r * field.bins + b] = heatColour(scale, rowValue(field, row, b));
       }
     });
     const canvas = document.createElement('canvas');
@@ -491,8 +542,16 @@ export function FieldPlot({
       for (const r of computeTicks(0, rows.length - 1, plotHeight / 40, true)) {
         g.fillText(rows[r].label, plot.left - 6, rowY(r));
       }
-      const selectedRow = rowWith(rows, selectedContact);
-      if (selectedRow >= 0) marginNotch(g, plot.left, rowY(selectedRow), SELECTED_COLOUR);
+      // Ticked, each row is a contact, notched in its trace's colour.
+      if (tracingTicked) {
+        rows.forEach((row, r) => {
+          const colour = contactColour(colours, selectedContact, row.lead);
+          if (colour) marginNotch(g, plot.left, rowY(r), colour);
+        });
+      } else {
+        const selectedRow = rowWith(rows, selectedContact);
+        if (selectedRow >= 0) marginNotch(g, plot.left, rowY(selectedRow), SELECTED_COLOUR);
+      }
     }
 
     if (mode === 'traces' && traces.length > 0) {
@@ -570,6 +629,7 @@ export function FieldPlot({
     from,
     to,
     selectedContact,
+    tracingTicked,
   ]);
 
   // On a canvas of its own, so that hovering rows of the table doesn't draw every trace anew.
@@ -583,7 +643,10 @@ export function FieldPlot({
       // The table's row hovered, or the map's own under the pointer, as the spike raster marks its cell's.
       const contact = hoveredContact ?? hover?.contact ?? null;
       const row = rowWith(rows, contact);
-      if (row < 0) return;
+      if (row < 0) {
+        if (contact !== null) previewMapRow(g, contact);
+        return;
+      }
       const band = mapRowBand(row, rows.length, plot.top, plot.height, MAP_ROW_MIN_PX);
       // White inside ink, so that it shows on either end of the colour scale.
       g.lineWidth = 1;
