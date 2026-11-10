@@ -203,17 +203,15 @@ export default async function Configuration({
       label: AssetLabel.task_config,
     }).getOneOrNull();
     // the download redirects to S3, which serves it as binary/octet-stream, so parse it here
-    const { data: config } = asset
-      ? await tryCatch(
-          downloadAsset({
-            ctx: context,
-            entityType: EntityTypeDict.TaskConfig,
-            entityId: workflow.coordinateConfig.id,
-            id: asset.id,
-            asRawResponse: true,
-          }).then((response) => response.json() as Promise<Json>)
-        )
-      : { data: null };
+    const config: Json | null = asset
+      ? await downloadAsset({
+          ctx: context,
+          entityType: EntityTypeDict.TaskConfig,
+          entityId: workflow.coordinateConfig.id,
+          id: asset.id,
+          asRawResponse: true,
+        }).then((response) => response.json() as Promise<Json>)
+      : null;
 
     return (
       <div className="flex w-full flex-col gap-4">
