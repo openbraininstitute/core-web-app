@@ -191,7 +191,7 @@ class ConnectivitySessions {
           // Sent ahead of the request, which fails if this did.
           const sent =
             item instanceof Uint32Array ? proxy.holdCells(id, item) : proxy.holdProperty(id, item);
-          sent.catch(() => {});
+          sent.catch(() => session.held.delete(item));
         }
         session.held.set(item, id);
         return id;
