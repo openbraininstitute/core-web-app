@@ -126,6 +126,7 @@ export default function CircuitNodesTable({
     filteredCount,
     columns,
     datasource,
+    exportCsv,
     status,
     getColumn,
     setDerivedColumns,
@@ -341,6 +342,7 @@ export default function CircuitNodesTable({
             rowCount,
             filteredCount,
             datasource,
+            exportCsv,
             visibleColumns,
             setVisibleColumns,
             selection,
@@ -401,6 +403,7 @@ function renderBody({
   rowCount,
   filteredCount,
   datasource,
+  exportCsv,
   visibleColumns,
   setVisibleColumns,
   selection,
@@ -418,6 +421,7 @@ function renderBody({
   rowCount: number;
   filteredCount: number | null;
   datasource: ReturnType<typeof useNodesWorker>['datasource'];
+  exportCsv: ReturnType<typeof useNodesWorker>['exportCsv'];
   visibleColumns: Set<string>;
   setVisibleColumns: (next: Set<string>) => void;
   selection: GridSelection | undefined;
@@ -468,6 +472,7 @@ function renderBody({
       rowCount={rowCount}
       filteredCount={filteredCount}
       datasource={datasource}
+      exportCsv={exportCsv}
       visibleColumns={visibleColumns}
       onVisibleColumnsChange={setVisibleColumns}
       downloadName={downloadName}

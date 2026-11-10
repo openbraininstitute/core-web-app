@@ -19,16 +19,17 @@ import { saveAs } from 'file-saver';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { useAppModal } from '@/components/notification';
 import { CategoricalFilter } from '@/features/circuit-nodes/components/categorical-filter';
 import { ColumnChooser } from '@/features/circuit-nodes/components/column-chooser';
 import { ColumnHeader } from '@/features/circuit-nodes/components/column-header';
 import { NumericFilter } from '@/features/circuit-nodes/components/numeric-filter';
 import { TextFilter } from '@/features/circuit-nodes/components/text-filter';
-import { readAllRows, toCsv } from '@/features/circuit-nodes/nodes-csv';
 import { PREFERRED_COLUMNS } from '@/features/circuit-nodes/types';
 import { PaneSideResizeHandle } from '@/features/circuit-viewer/pane-resize-handle';
 import { PillToggle, ROUND_PILL_CLASS } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
+import { formatBytes } from '@/utils/format';
 import { useFullscreenElement } from '@/utils/fullscreen';
 import { logError } from '@/utils/logger';
 
@@ -49,6 +50,7 @@ import type {
 } from 'ag-grid-community';
 import type {
   ColumnMeta,
+  CsvExport,
   FilterModel,
   SortDirection,
   SortItem,
@@ -57,6 +59,25 @@ import type {
 const PREFERRED_NAME_SET = new Set(PREFERRED_COLUMNS.map((p) => p.name));
 
 const CATEGORICAL_SET_FILTER_MAX = 100;
+
+/** A CSV past this size is asked about before it is written. */
+const CSV_CONFIRM_BYTES = 100 * 1024 * 1024;
+
+function confirmCsv(
+  modal: ReturnType<typeof useAppModal>,
+  rows: number,
+  bytes: number
+): Promise<boolean> {
+  return new Promise((resolve) => {
+    modal.confirm({
+      title: 'Download a large CSV?',
+      content: `${rows.toLocaleString('en-US')} rows, about ${formatBytes(bytes, 0)}. Writing it takes a while, and it is held in memory until saved.`,
+      okText: 'Download',
+      onOk: () => resolve(true),
+      onCancel: () => resolve(false),
+    });
+  });
+}
 
 /** Marks the filters, which open outside the grid, for their styles. */
 function markFilterPopup({ type, ePopup }: PostProcessPopupParams) {
@@ -91,6 +112,8 @@ type Props = {
   rowCount: number;
   filteredCount: number | null;
   datasource: IDatasource;
+  /** The rows `datasource` lists for a sort and filter, as CSV. */
+  exportCsv: CsvExport;
   visibleColumns: Set<string>;
   onVisibleColumnsChange: (next: Set<string>) => void;
   pinnedColumns?: readonly PinnedColumn[];
@@ -574,6 +597,7 @@ export function NodesGrid({
   headerStart,
   headerExtra,
   downloadName = 'nodes',
+  exportCsv,
   headerSlot,
   reset,
   resetRequest,
@@ -947,39 +971,58 @@ export function NodesGrid({
   }, [resetRequest]);
 
   // The rows the filter keeps, in the sort and columns on show, every one of them rather
-  // than those paged in so far: read from the host's datasource as the grid reads them.
-  const [downloading, setDownloading] = useState(false);
+  // than those paged in so far, and none of those nested under them: written by the host
+  // a part at a time, so that no row and no text of them all is held here.
+  const exportCsvRef = useRef(exportCsv);
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    exportCsvRef.current = exportCsv;
+  });
+  useEffect(
+    () => () => {
+      mountedRef.current = false;
+    },
+    []
+  );
+  const modal = useAppModal();
+  const [downloaded, setDownloaded] = useState<number | null>(null);
+  const downloading = downloaded !== null;
   const downloadCsv = async () => {
     const api = gridRef.current?.api;
     if (!api || downloading) return;
-    setDownloading(true);
+    setDownloaded(0);
     try {
-      const shown = api
+      const columns = api
         .getAllDisplayedColumns()
         .map((c) => c.getColId())
         .filter((id) => id !== PICK_COLUMN.colId);
-      const sortModel = api
+      const sort = api
         .getColumnState()
         .filter((c) => c.sort)
         .sort((a, b) => (a.sortIndex ?? 0) - (b.sortIndex ?? 0))
-        .map((c) => ({ colId: c.colId, sort: c.sort as SortDirection }));
-      const rows = await readAllRows({
-        datasource: datasourceRef.current,
-        api,
-        context: gridContext,
-        sortModel,
-        filterModel: api.getFilterModel(),
-      });
-      // The rows of the table's own nodes: nested rows are a view of theirs.
-      const listed = rows.filter((row) => !(NESTED_ROW in row));
-      saveAs(
-        new Blob([toCsv(shown, listed)], { type: 'text/csv;charset=utf-8' }),
-        `${downloadName}.csv`
+        .map((c) => ({ column: c.colId, direction: c.sort as SortDirection }));
+      const parts: Blob[] = [];
+      let whole = false;
+      await exportCsvRef.current(
+        { sort, filter: api.getFilterModel() as FilterModel, columns },
+        async (part, done, total) => {
+          // A blob each, which the browser may keep out of memory.
+          parts.push(new Blob([part]));
+          whole = done >= total;
+          if (!mountedRef.current) return false;
+          if (parts.length === 1 && !whole) {
+            const bytes = (part.byteLength / done) * total;
+            if (bytes > CSV_CONFIRM_BYTES && !(await confirmCsv(modal, total, bytes))) return false;
+          }
+          setDownloaded(done / total);
+          return true;
+        }
       );
+      if (whole) saveAs(new Blob(parts, { type: 'text/csv;charset=utf-8' }), `${downloadName}.csv`);
     } catch (error) {
       logError('The rows on show could not be downloaded:', error);
     } finally {
-      setDownloading(false);
+      if (mountedRef.current) setDownloaded(null);
     }
   };
   const isOn = (quick: QuickFilter) =>
@@ -1124,7 +1167,11 @@ export function NodesGrid({
         type="button"
         onClick={downloadCsv}
         disabled={downloading}
-        title={downloading ? 'Preparing the CSV…' : 'Download the shown rows as CSV'}
+        title={
+          downloading
+            ? `Preparing the CSV… ${Math.round(downloaded * 100)}%`
+            : 'Download the shown rows as CSV'
+        }
         aria-label="Download the shown rows as CSV"
         className={cn(ROUND_PILL_CLASS, 'disabled:opacity-60')}
       >

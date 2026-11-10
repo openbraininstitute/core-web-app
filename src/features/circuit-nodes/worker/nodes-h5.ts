@@ -1,12 +1,14 @@
 import { Dataset, File, Group } from 'h5wasm';
 import { match } from 'ts-pattern';
 
+import { csvLines } from '@/features/circuit-nodes/nodes-csv';
 import {
   type ColumnFilter,
   type ColumnKind,
   ColumnKindDict,
   type ColumnMeta,
   type ColumnValues,
+  type CsvRequest,
   type DerivedColumn,
   type FilterModel,
   type GetRowsRequest,
@@ -31,6 +33,8 @@ const MORPHOLOGY_COLUMN = 'morphology';
 
 const LOADED_COLUMN_CACHE_SIZE = 12;
 const VIEW_CACHE_SIZE = 8;
+/** Rows to a part of a CSV: a few megabytes of text. */
+const CSV_BLOCK_ROWS = 50_000;
 
 type CategoricalHandle = {
   kind: 'categorical';
@@ -376,6 +380,56 @@ export class NodesSession {
     return { rows, total };
   }
 
+  /**
+   * The rows a sort and filter list, as CSV in parts of `blockRows` rows, the first under the
+   * columns' names: the cells `getRows` gives, in its order. Each part comes with the rows
+   * written so far and their total.
+   */
+  *csvParts(
+    { sort, filter, columns }: CsvRequest,
+    blockRows = CSV_BLOCK_ROWS
+  ): Generator<{ part: Uint8Array<ArrayBuffer>; done: number; total: number }> {
+    const sortItems = (sort ?? []).filter((s) => this.columnIndex.has(s.column));
+    const filterEntries = Object.entries(filter ?? {}).filter(([col]) => this.columnIndex.has(col));
+    const viewKey = this.buildViewKey(sortItems, filterEntries);
+    const view = viewKey === null ? null : this.resolveView(viewKey, sortItems, filterEntries);
+    const total = view ? view.length : this.rowCount;
+
+    // A view gathers from whole columns, more of them than the column cache holds: held
+    // here for the length of the export, so that no block reads one from the file again.
+    const held = new Map<string, LoadedColumn>();
+    if (view) {
+      for (const name of columns) {
+        const kind = this.columnIndex.get(name)?.kind;
+        if (kind === 'categorical' || kind === 'numeric' || kind === 'string') {
+          held.set(name, this.loadColumn(name));
+        }
+      }
+    }
+
+    const encoder = new TextEncoder();
+    let text = csvLines(
+      columns.map((name) => [name]),
+      1
+    );
+    if (total === 0) {
+      yield { part: encoder.encode(text), done: 0, total };
+      return;
+    }
+    let start = 0;
+    do {
+      const end = Math.min(total, start + blockRows);
+      const indices = view ? view.subarray(start, end) : range(start, end);
+      const cells = columns.map((name) =>
+        this.readColumnPage(name, indices, view !== null, start, end, held.get(name))
+      );
+      text += csvLines(cells, end - start);
+      yield { part: encoder.encode(text), done: end, total };
+      text = '';
+      start = end;
+    } while (start < total);
+  }
+
   private buildViewKey(
     sortItems: SortItem[],
     filterEntries: [string, ColumnFilter][]
@@ -579,7 +633,8 @@ export class NodesSession {
     indices: number[] | Uint32Array,
     useGather: boolean,
     sliceStart: number,
-    sliceEnd: number
+    sliceEnd: number,
+    held?: LoadedColumn
   ): (string | number)[] {
     const handle = this.columnIndex.get(name);
     if (!handle) return new Array(indices.length).fill('');
@@ -612,7 +667,7 @@ export class NodesSession {
       return decodeSliceForPage(handle, sliced);
     }
 
-    const data = this.loadColumn(name);
+    const data = held ?? this.loadColumn(name);
     const out = new Array<string | number>(indices.length);
     if (handle.kind === 'categorical') {
       const arr = data as Uint32Array;

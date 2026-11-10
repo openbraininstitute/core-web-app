@@ -33,6 +33,7 @@ import type { PickAllState, PinnedColumn } from '@/features/circuit-nodes/compon
 import type { SceneMatrix } from '@/features/circuit-nodes/connectivity/table-matrix';
 import type {
   ColumnMeta,
+  CsvExport,
   FilterModel,
   ParsedCircuitConfig,
   SortItem,
@@ -186,6 +187,7 @@ export function ReportNodesTable({
     filteredCount,
     columns,
     datasource,
+    exportCsv,
     error,
     progress,
     getColumn,
@@ -251,6 +253,12 @@ export function ReportNodesTable({
         datasource.getRows({ ...params, filterModel: { ...params.filterModel, ...scopeModel } }),
     };
   }, [datasource, recordedReady, scope, rowCount, recordedCount, scopeModel]);
+
+  const exportListed = useCallback<CsvExport>(
+    (request, onPart) =>
+      exportCsv({ ...request, filter: { ...request.filter, ...scopeModel } }, onPart),
+    [exportCsv, scopeModel]
+  );
 
   // Columns the host added - the config's neuron sets - ahead of the file's.
   const tableColumns = useMemo(
@@ -515,6 +523,7 @@ export function ReportNodesTable({
           rowCount={scope === 'all' ? rowCount : recordedCount}
           filteredCount={filtering ? filteredCount : null}
           datasource={shownSource}
+          exportCsv={exportListed}
           onFilterModelChange={setFilterModel}
           initialFilterModel={filterModel}
           pinnedColumns={pinnedColumns}

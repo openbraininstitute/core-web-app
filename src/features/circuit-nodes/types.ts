@@ -98,6 +98,21 @@ export type GetRowsResponse = {
   total: number;
 };
 
+/** The rows a sort and filter list, as CSV under the columns' names. */
+export type CsvRequest = Omit<GetRowsRequest, 'start' | 'end'>;
+
+/**
+ * Takes the next part of a CSV, with how many of its rows are written so far and how many
+ * there are; false ends it there.
+ */
+export type CsvPartHandler = (
+  part: Uint8Array<ArrayBuffer>,
+  done: number,
+  total: number
+) => boolean | Promise<boolean>;
+
+export type CsvExport = (request: CsvRequest, onPart: CsvPartHandler) => Promise<void>;
+
 export type OpenRequest = {
   populationKey: string;
   fileKey: string;

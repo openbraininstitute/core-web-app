@@ -13,6 +13,8 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import type { IDatasource } from 'ag-grid-community';
 import type {
   ColumnMeta,
+  CsvPartHandler,
+  CsvRequest,
   DerivedColumn,
   FilterModel,
   NodeGeometryOptions,
@@ -138,6 +140,14 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
     [key]
   );
 
+  const exportCsv = useCallback(
+    async (request: CsvRequest, onPart: CsvPartHandler) => {
+      if (!key) throw new Error('Nodes worker not ready');
+      return nodesWorkerRegistry.exportCsv(key, request, onPart);
+    },
+    [key]
+  );
+
   const getGeometry = useCallback(
     async (options?: NodeGeometryOptions) => {
       if (!key) throw new Error('Nodes worker not ready');
@@ -188,6 +198,7 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
     columns: state.columns,
     datasource,
     getColumn,
+    exportCsv,
     getGeometry,
     setDerivedColumns,
     getFilteredIndices,

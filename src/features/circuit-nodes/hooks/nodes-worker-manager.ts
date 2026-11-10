@@ -5,6 +5,8 @@ import { config } from '@/config';
 import type {
   ColumnMeta,
   ColumnValues,
+  CsvPartHandler,
+  CsvRequest,
   DerivedColumn,
   DownloadProgress,
   FilterModel,
@@ -138,6 +140,12 @@ class NodesWorkerRegistry {
       throw new Error('Nodes worker not ready');
     }
     return session.proxy.getRows(req);
+  }
+
+  exportCsv(key: string, request: CsvRequest, onPart: CsvPartHandler): Promise<void> {
+    const session = this.sessions.get(key);
+    if (!session?.proxy) return Promise.reject(new Error('Nodes worker not ready'));
+    return session.proxy.exportCsv(request, Comlink.proxy(onPart));
   }
 
   getColumn(key: string, name: string): Promise<ColumnValues> {

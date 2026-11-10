@@ -48,7 +48,12 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { QuickFilter } from '@/features/circuit-nodes/components/nodes-grid';
 import type { SceneMatrix } from '@/features/circuit-nodes/connectivity/table-matrix';
 import type { ScopedFilter, ScopedTicks } from '@/features/circuit-nodes/hooks/use-table-ticks';
-import type { FilterModel, ParsedCircuitConfig, SortItem } from '@/features/circuit-nodes/types';
+import type {
+  CsvExport,
+  FilterModel,
+  ParsedCircuitConfig,
+  SortItem,
+} from '@/features/circuit-nodes/types';
 import type { TimeCursor } from '@/features/sonata-viewer/time-cursor';
 import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
 import type { SpikeSession } from '@/features/spike-viewer/hooks/use-spike-session';
@@ -179,6 +184,7 @@ export function SpikeStatisticsView({
     filteredCount,
     columns,
     datasource,
+    exportCsv,
     error,
     getColumn,
     setDerivedColumns,
@@ -327,6 +333,15 @@ export function SpikeStatisticsView({
     });
   }, [settled, registered, tableSource, sessionKey, windowReady, windowCount, rowCount]);
   const tableShown = shownTable?.session === sessionKey ? shownTable : null;
+  const tableWindowed = tableShown?.windowed ?? false;
+  const exportShown = useCallback<CsvExport>(
+    (request, onPart) =>
+      exportCsv(
+        tableWindowed ? { ...request, filter: { ...request.filter, ...IN_WINDOW } } : request,
+        onPart
+      ),
+    [exportCsv, tableWindowed]
+  );
 
   // The config's neuron sets as columns of their own, ahead of the file's, so
   // they list right after its preferred ones, and offered to group by.
@@ -557,6 +572,7 @@ export function SpikeStatisticsView({
           rowCount={tableShown.rowCount}
           filteredCount={Object.keys(filterModel).length > 0 ? filteredCount : null}
           datasource={tableShown.source}
+          exportCsv={exportShown}
           pinnedColumns={PINNED_COLUMNS}
           pinnedVersion={gridVersion}
           onFilterModelChange={setFilterModel}
