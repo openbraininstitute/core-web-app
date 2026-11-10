@@ -1,4 +1,5 @@
 import { entityAssetsPath, entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
+import { logWarn } from '@/utils/logger';
 
 import type {
   IResearchLog,
@@ -157,9 +158,13 @@ export async function saveResearchLogDocument({
     body: form,
   });
   if (previousAssetId) {
-    await api.delete<void>(`${entityAssetsPath(ENTITY_TYPE, logId)}/${previousAssetId}`, {
-      headers: getEntityCoreContext(context).headers,
-    });
+    // only the log's creator and project admins may delete; for anyone else the old document
+    // stays, and the newer one is still the one read (getResearchLogDocument)
+    await api
+      .delete<void>(`${entityAssetsPath(ENTITY_TYPE, logId)}/${previousAssetId}`, {
+        headers: getEntityCoreContext(context).headers,
+      })
+      .catch((e) => logWarn('Kept the previous research log document:', e));
   }
   return created;
 }

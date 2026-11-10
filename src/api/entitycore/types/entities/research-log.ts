@@ -38,7 +38,15 @@ export function getResearchLogFiles(log: Pick<IResearchLog, 'assets'>): IAsset |
   return log.assets?.find((a) => a.label === 'research_log_files' && a.status !== 'deleted');
 }
 
-/** The research log's markdown document asset, if one has been uploaded. */
+// saves are named logbook-<ms>.md, so the newest document is the one with the largest stamp
+const savedAt = (asset: IAsset) => Number(/-(\d+)\.md$/.exec(asset.path)?.[1] ?? 0);
+
+/**
+ * The research log's markdown document asset, if one has been uploaded. A save that could not
+ * delete the old document (only its creator and project admins may) leaves two; the newest wins.
+ */
 export function getResearchLogDocument(log: Pick<IResearchLog, 'assets'>): IAsset | undefined {
-  return log.assets?.find((a) => a.label === 'research_log_document' && a.status !== 'deleted');
+  return log.assets
+    ?.filter((a) => a.label === 'research_log_document' && a.status !== 'deleted')
+    .sort((a, b) => savedAt(b) - savedAt(a))[0];
 }

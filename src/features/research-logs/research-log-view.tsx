@@ -8,8 +8,10 @@ import {
   EditOutlined,
   FileAddOutlined,
   LinkOutlined,
+  LoadingOutlined,
   PlusOutlined,
 } from '@ant-design/icons';
+import { EditorView } from '@codemirror/view';
 import { App } from 'antd';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
@@ -36,14 +38,19 @@ import {
   useSaveResearchLog,
 } from './hooks';
 import { LinkEntitiesWindow, type LinkedEntity } from './link-entities-window';
+import { AgentActivityToast, AgentHighlightStyle } from './live/agent-activity';
+import { EditWindows } from './live/edit-windows';
+import { insertParagraphs, LiveEditor } from './live/live-editor';
+import { LivePresence } from './live/presence';
+import { agentRanges, useAgentActivity } from './live/use-agent-activity';
+import { useLiveAutosave } from './live/use-live-autosave';
+import { useLiveLog, useLiveText } from './live/use-live-log';
+import { useCanEditLog, useEditLogDetails } from './log-actions';
 import { ResearchLogMarkdown } from './markdown';
+import { useShutRailWhile } from './research-logs-layout';
 
 import type { ReactNode } from 'react';
 import type { IResearchLog } from '@/api/entitycore/types/entities/research-log';
-
-/** A text field set in the typography it edits, so entering edit mode changes nothing visually. */
-const inlineField =
-  'rounded-lg border-0 bg-transparent p-0 outline-none transition-colors placeholder:text-neutral-3 hover:bg-primary-1/50 focus:bg-primary-1/60 -mx-2 w-[calc(100%+1rem)] px-2';
 
 export function ResearchLogView({ id }: { id: string }) {
   const { data: log, isLoading, isError } = useResearchLog(id);
@@ -63,21 +70,14 @@ function Loaded({ log }: { log: IResearchLog }) {
   const { data: saved, isLoading } = useResearchLogDocument(log.id, log);
   const save = useSaveResearchLog(log.id);
   const remove = useDeleteResearchLog();
+  const editDetails = useEditLogDetails();
+  const canEditLog = useCanEditLog(log);
 
   // a markdown file kept beside the log, which a link in the log opened in place of it
   const filePath = params.get('file');
   const openFile = (path: string) =>
     router.push(`${href(log.id)}?file=${encodeURIComponent(path)}`);
   const [editing, setEditing] = useState(params.get('edit') === '1');
-  const [name, setName] = useState(log.name);
-  const [description, setDescription] = useState(log.description);
-
-  // a rename made elsewhere (the rail's pill, the grid's card) shows here unless it is being edited
-  useEffect(() => {
-    if (editing) return;
-    setName(log.name);
-    setDescription(log.description);
-  }, [editing, log.name, log.description]);
 
   // the document in view is the log (key '') or the page it opened (key = the page's path)
   const docKey = filePath ?? '';
@@ -117,7 +117,53 @@ function Loaded({ log }: { log: IResearchLog }) {
       .filter(([key, text]) => text !== bases[key])
   );
   const hasPages = Object.keys(pages).length > 0;
-  const dirty = name !== log.name || description !== log.description || mainChanged || hasPages;
+  const dirty = mainChanged || hasPages;
+
+  // live co-editing of the log itself (not its pages), once the shared document has arrived;
+  // without a co-editing server, or before it answers, the log is edited the old way
+  const live = useLiveLog(log.id);
+  const liveMode = !!live?.ready && !filePath;
+  const liveText = useLiveText(live?.ready ? live.text : undefined);
+  const autosave = useLiveAutosave(live, log.id);
+  const editorView = useRef<EditorView | null>(null);
+  const liveAwareness = live?.provider.awareness;
+  useEffect(() => {
+    liveAwareness?.setLocalStateField('editing', editing && !filePath);
+  }, [liveAwareness, editing, filePath]);
+  // the source and the report side by side, each in a window of its own
+  const liveEditing = !!live && liveMode && editing;
+  // an edit takes the rail's width; it opens again after
+  useShutRailWhile(editing);
+
+  // what an agent just wrote: tinted where it shows, and announced with the way to it
+  const agentChanges = useAgentActivity(live);
+  const agentKey = agentChanges.map((c) => c.id).join(',');
+  const agentTextRanges = agentRanges(agentChanges, live?.doc);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const showAgentChange = () => {
+    const latest = agentChanges[agentChanges.length - 1];
+    const range = latest ? agentRanges([latest], live?.doc)[0] : undefined;
+    if (!range) return;
+    editorView.current?.dispatch({
+      effects: EditorView.scrollIntoView(range.from, { y: 'center' }),
+    });
+    // and the rendered report's tinted block, in the preview or the reading view
+    for (const report of rootRef.current?.querySelectorAll('[data-report]') ?? []) {
+      const blocks = report.querySelectorAll('div.rl-agent-new');
+      blocks[blocks.length - 1]?.scrollIntoView({ block: 'center' });
+    }
+  };
+
+  /** Live edits are already everyone's: Done saves anything left unsaved. */
+  const onLiveDone = async () => {
+    try {
+      await autosave.saveNow();
+      setEditing(false);
+      router.replace(href(log.id));
+    } catch (e) {
+      notification.error({ message: 'Could not save', description: String(e) });
+    }
+  };
 
   /** Writes the blocks of the document in view. */
   const writeBlocks = (next: string[]) => {
@@ -163,8 +209,6 @@ function Loaded({ log }: { log: IResearchLog }) {
   };
 
   const cancel = () => {
-    setName(log.name);
-    setDescription(log.description);
     setDrafts({});
     setBases({});
     setActive(null);
@@ -177,10 +221,6 @@ function Loaded({ log }: { log: IResearchLog }) {
   const onSave = async () => {
     try {
       await save.mutateAsync({
-        meta: {
-          ...(name.trim() && name !== log.name ? { name: name.trim() } : {}),
-          ...(description !== log.description ? { description } : {}),
-        },
         ...(mainChanged ? { markdown: mainMarkdown, previousAssetId: doc?.id } : {}),
         ...(hasPages ? { pages, filesAssetId } : {}),
       });
@@ -213,11 +253,15 @@ function Loaded({ log }: { log: IResearchLog }) {
 
   const linkEntities = (entities: LinkedEntity[]) => {
     const origin = window.location.origin;
-    const at = insertBlocks(
-      entities.map(
-        (entity) => `[${entity.name.replace(/[[\]]/g, '')}](${origin}/app/entity/${entity.id})`
-      )
+    const links = entities.map(
+      (entity) => `[${entity.name.replace(/[[\]]/g, '')}](${origin}/app/entity/${entity.id})`
     );
+    if (liveMode && editorView.current) {
+      insertParagraphs(editorView.current, links);
+      setLinkOpen(false);
+      return;
+    }
+    const at = insertBlocks(links);
     setAnchor(at + entities.length - 1);
     setLinkOpen(false);
   };
@@ -226,128 +270,144 @@ function Loaded({ log }: { log: IResearchLog }) {
   const headerTitle = filePath ? (filePath.split('/').pop() ?? filePath) : log.name;
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-4">
-      <div className={cn(BOX_CLASS, 'flex min-h-0 flex-1 flex-col overflow-hidden')}>
-        {/* holds still while the report scrolls under it: the way back, the title, the actions */}
-        <header className="border-neutral-2 shrink-0 border-b px-6 pt-3 pb-3">
-          <div className="flex items-center gap-3">
-            {editing && !filePath ? null : (
-              <IconAction
-                label={filePath ? `Back to ${log.name}` : 'All research logs'}
-                onClick={() => router.push(filePath ? href(log.id) : href())}
-                testId="back-research-log"
-              >
-                <ArrowLeftOutlined />
-              </IconAction>
-            )}
-            <div className="min-w-0 flex-1">
-              {editing && !filePath ? (
-                <GrowingField
-                  value={name}
-                  onChange={setName}
-                  placeholder="Name"
-                  label="Name"
-                  className="text-primary-9 text-2xl font-bold"
-                />
-              ) : (
-                <h1 className="text-primary-9 truncate text-2xl font-bold" title={headerTitle}>
+    <div ref={rootRef} className="relative flex h-full min-h-0 flex-col gap-4">
+      {live && <AgentHighlightStyle />}
+      {!liveEditing && (
+        <div className={cn(BOX_CLASS, 'flex min-h-0 flex-1 flex-col overflow-hidden')}>
+          {/* holds still while the report scrolls under it: the way back, the title, the actions */}
+          <header className="border-neutral-2 shrink-0 border-b px-6 pt-3 pb-3">
+            <div className="flex items-center gap-3">
+              {editing && !filePath ? null : (
+                <IconAction
+                  label={filePath ? `Back to ${log.name}` : 'All research logs'}
+                  onClick={() => router.push(filePath ? href(log.id) : href())}
+                  testId="back-research-log"
+                >
+                  <ArrowLeftOutlined />
+                </IconAction>
+              )}
+              <div className="flex min-w-0 flex-1 items-center gap-2">
+                <h1
+                  className="text-primary-9 min-w-0 truncate text-2xl font-bold"
+                  title={headerTitle}
+                >
                   {headerTitle}
                 </h1>
-              )}
-            </div>
-            <div className="flex shrink-0 gap-2">
-              {editing ? (
-                <>
-                  <IconAction label="Cancel" onClick={cancel}>
-                    <CloseOutlined />
-                  </IconAction>
+                {/* the log's own name and description, apart from its document */}
+                {!filePath && canEditLog && (
+                  <Tooltip delayDuration={200}>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label="Edit name and description"
+                        onClick={() => editDetails(log)}
+                        className="text-neutral-4 hover:text-primary-9 hover:bg-neutral-1 flex size-8 shrink-0 items-center justify-center rounded-full transition-colors"
+                      >
+                        <EditOutlined />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">Edit name and description</TooltipContent>
+                  </Tooltip>
+                )}
+              </div>
+              {live && !filePath && <LivePresence live={live} save={autosave} />}
+              <div className="flex shrink-0 gap-2">
+                {editing ? (
+                  <>
+                    <IconAction label="Cancel" onClick={cancel}>
+                      <CloseOutlined />
+                    </IconAction>
+                    <IconAction
+                      label={save.isPending ? 'Saving…' : 'Save'}
+                      onClick={onSave}
+                      disabled={!dirty || save.isPending}
+                      className="bg-accent-dark text-white hover:bg-accent-dark/90"
+                    >
+                      <CheckOutlined />
+                    </IconAction>
+                  </>
+                ) : !filePath || (filesAssetId && !pageMissing) ? (
                   <IconAction
-                    label={save.isPending ? 'Saving…' : 'Save'}
-                    onClick={onSave}
-                    disabled={!dirty || save.isPending}
-                    className="bg-accent-dark text-white hover:bg-accent-dark/90"
+                    label="Edit"
+                    onClick={() => setEditing(true)}
+                    testId="edit-research-log"
+                    className="bg-primary-9 text-white hover:bg-primary-9/90"
                   >
-                    <CheckOutlined />
+                    <EditOutlined />
                   </IconAction>
-                </>
-              ) : !filePath || (filesAssetId && !pageMissing) ? (
-                <IconAction
-                  label="Edit"
-                  onClick={() => setEditing(true)}
-                  testId="edit-research-log"
-                  className="bg-primary-9 text-white hover:bg-primary-9/90"
-                >
-                  <EditOutlined />
-                </IconAction>
-              ) : null}
-              {!editing && (
-                <IconAction
-                  label="Delete"
-                  onClick={onDelete}
-                  disabled={remove.isPending}
-                  testId="delete-research-log"
-                  className="bg-destructive text-white hover:bg-destructive/90"
-                >
-                  <DeleteOutlined />
-                </IconAction>
-              )}
+                ) : null}
+                {!editing && (
+                  <IconAction
+                    label="Delete"
+                    onClick={onDelete}
+                    disabled={remove.isPending}
+                    testId="delete-research-log"
+                    className="bg-destructive text-white hover:bg-destructive/90"
+                  >
+                    <DeleteOutlined />
+                  </IconAction>
+                )}
+              </div>
             </div>
-          </div>
-          {editing && (
-            <div className="mt-2 flex flex-wrap gap-2">
-              <Button
-                rounded
-                variant="outline"
-                size="sm"
-                className="border-none shadow-md"
-                onClick={addBlock}
-              >
-                <PlusOutlined /> Text
-              </Button>
-              <Button
-                rounded
-                variant="outline"
-                size="sm"
-                className="border-none shadow-md"
-                onClick={() => setLinkOpen(true)}
-              >
-                <LinkOutlined /> Link entities
-              </Button>
-              <NewPageButton onCreate={createPage} />
-            </div>
-          )}
-        </header>
+            {editing && !liveMode && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                <Button
+                  rounded
+                  variant="outline"
+                  size="sm"
+                  className="border-none shadow-md"
+                  onClick={addBlock}
+                >
+                  <PlusOutlined /> Text
+                </Button>
+                <Button
+                  rounded
+                  variant="outline"
+                  size="sm"
+                  className="border-none shadow-md"
+                  onClick={() => setLinkOpen(true)}
+                >
+                  <LinkOutlined /> Link entities
+                </Button>
+                <NewPageButton onCreate={createPage} />
+              </div>
+            )}
+          </header>
 
-        <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-8 pt-4 pb-8">
-          {filePath && !editing ? (
-            <LogFile logId={log.id} path={filePath} filesAssetId={filesAssetId} onOpen={openFile} />
-          ) : (
-            <article className="mx-auto max-w-3xl">
-              {!filePath && (
-                <>
-                  {editing ? (
-                    <GrowingField
-                      value={description}
-                      onChange={setDescription}
-                      placeholder="Add a one-line summary"
-                      label="Summary"
-                      className="text-primary-9 text-lg"
-                    />
-                  ) : log.description ? (
-                    <p className="text-primary-9 text-lg">{log.description}</p>
-                  ) : null}
-                  <p className="text-neutral-4 border-neutral-2 mt-1 mb-4 border-b pb-4 text-xs">
-                    {log.created_by?.pref_label ?? 'Unknown author'} · updated{' '}
-                    {new Date(log.update_date).toLocaleString()}
-                  </p>
-                </>
-              )}
+          <div data-report className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-8 pt-4 pb-8">
+            {filePath && !editing ? (
+              <LogFile
+                logId={log.id}
+                path={filePath}
+                filesAssetId={filesAssetId}
+                onOpen={openFile}
+              />
+            ) : (
+              <article className="mx-auto max-w-3xl">
+                {!filePath && (
+                  <>
+                    {log.description ? (
+                      <p className="text-primary-9 text-lg">{log.description}</p>
+                    ) : null}
+                    <p className="text-neutral-4 border-neutral-2 mt-1 mb-4 border-b pb-4 text-xs">
+                      {log.created_by?.pref_label ?? 'Unknown author'} · updated{' '}
+                      {new Date(log.update_date).toLocaleString()}
+                    </p>
+                  </>
+                )}
 
-              {loadingDoc ? (
-                <Skeleton className="h-48 w-full rounded-xl" />
-              ) : editing ? (
-                <>
-                  {current.map((source, i) => (
+                {liveMode ? (
+                  <ResearchLogMarkdown
+                    markdown={liveText}
+                    logId={log.id}
+                    filesAssetId={filesAssetId}
+                    onOpenFile={openFile}
+                    highlights={agentTextRanges}
+                  />
+                ) : loadingDoc ? (
+                  <Skeleton className="h-48 w-full rounded-xl" />
+                ) : editing ? (
+                  current.map((source, i) => (
                     <EditableBlock
                       // biome-ignore lint/suspicious/noArrayIndexKey: blocks have no identity beyond position
                       key={i}
@@ -362,20 +422,81 @@ function Loaded({ log }: { log: IResearchLog }) {
                       filesAssetId={filesAssetId}
                       basePath={dirOf(docKey)}
                     />
-                  ))}
-                </>
-              ) : (
+                  ))
+                ) : (
+                  <ResearchLogMarkdown
+                    markdown={markdown}
+                    logId={log.id}
+                    filesAssetId={filesAssetId}
+                    onOpenFile={openFile}
+                  />
+                )}
+              </article>
+            )}
+          </div>
+        </div>
+      )}
+
+      {liveEditing && live && (
+        <EditWindows
+          // who has it open, how saving stands, and the way out, in whichever window is first
+          actions={
+            <>
+              <LivePresence live={live} save={autosave} />
+              <SaveAndClose
+                saving={autosave.saving}
+                dirty={autosave.dirty && !live.readOnly}
+                onClick={onLiveDone}
+              />
+            </>
+          }
+          // the source, as everyone types it
+          start={{
+            title: 'Markdown',
+            actions: (
+              <Button
+                rounded
+                variant="outline"
+                size="sm"
+                className="bg-neutral-1 border-none shadow-none"
+                onClick={() => setLinkOpen(true)}
+                disabled={live.readOnly}
+              >
+                <LinkOutlined /> Link entities
+              </Button>
+            ),
+            content: (
+              <LiveEditor
+                text={live.text}
+                awareness={live.provider.awareness}
+                readOnly={live.readOnly}
+                onView={(view) => {
+                  editorView.current = view;
+                }}
+                agentChanges={{ key: agentKey, ranges: agentTextRanges }}
+                className="px-6 pt-4"
+              />
+            ),
+          }}
+          // the report it makes, as it will read
+          end={{
+            title: 'Preview',
+            content: (
+              <article data-report className="mx-auto max-w-3xl px-8 pt-4 pb-8">
                 <ResearchLogMarkdown
-                  markdown={markdown}
+                  markdown={liveText}
                   logId={log.id}
                   filesAssetId={filesAssetId}
                   onOpenFile={openFile}
+                  highlights={agentTextRanges}
                 />
-              )}
-            </article>
-          )}
-        </div>
-      </div>
+              </article>
+            ),
+          }}
+        />
+      )}
+
+      {liveMode && <AgentActivityToast changes={agentChanges} onShow={showAgentChange} />}
 
       {linkOpen && <LinkEntitiesWindow onAdd={linkEntities} onClose={() => setLinkOpen(false)} />}
     </div>
@@ -416,6 +537,38 @@ function LogFile({
   );
 }
 
+/** Leaves live editing, saving first whatever the autosave has not yet; a dot while there is some. */
+function SaveAndClose({
+  saving,
+  dirty,
+  onClick,
+}: {
+  saving: boolean;
+  dirty: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={saving}
+      className="bg-accent-dark hover:bg-accent-dark/90 relative flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-sm font-semibold whitespace-nowrap text-white shadow-md transition-colors disabled:opacity-70"
+    >
+      {saving ? <LoadingOutlined /> : <CheckOutlined />}
+      {saving ? 'Saving…' : dirty ? 'Save & close' : 'Close'}
+      {dirty && !saving && (
+        <>
+          <span
+            aria-hidden
+            className="absolute -top-0.5 -right-0.5 size-3 rounded-full bg-amber-400 ring-2 ring-white"
+          />
+          <span className="sr-only">(unsaved changes)</span>
+        </>
+      )}
+    </button>
+  );
+}
+
 /** A round icon-only button with its name on hover. */
 function IconAction({
   label,
@@ -451,44 +604,6 @@ function IconAction({
       </TooltipTrigger>
       <TooltipContent side="bottom">{label}</TooltipContent>
     </Tooltip>
-  );
-}
-
-/** A wrapping single-value field that grows with its text, so it lays out like the heading it edits. */
-function GrowingField({
-  value,
-  onChange,
-  placeholder,
-  label,
-  className,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  placeholder: string;
-  label: string;
-  className?: string;
-}) {
-  const ref = useRef<HTMLTextAreaElement>(null);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: the text is what changes the height
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    el.style.height = 'auto';
-    el.style.height = `${el.scrollHeight}px`;
-  }, [value]);
-  return (
-    <textarea
-      ref={ref}
-      rows={1}
-      value={value}
-      placeholder={placeholder}
-      aria-label={label}
-      onChange={(e) => onChange(e.target.value.replace(/\n/g, ' '))}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter') e.currentTarget.blur();
-      }}
-      className={cn(inlineField, 'block resize-none overflow-hidden', className)}
-    />
   );
 }
 

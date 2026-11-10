@@ -67,6 +67,33 @@ function onlyChild(children: ReactNode): ReactElement<ComponentProps<'a'>> | nul
     : null;
 }
 
+type HastNode = {
+  type: string;
+  position?: { start: { offset?: number }; end: { offset?: number } };
+};
+type RehypePlugin = NonNullable<ComponentProps<typeof ReactMarkdown>['rehypePlugins']>[number];
+
+/**
+ * Wraps each top-level block holding any of `ranges` (offsets into the markdown) in a
+ * `div.rl-agent-new`, which tints it: how an agent's new text shows in the rendered report.
+ */
+function markRanges(ranges: { from: number; to: number }[]): RehypePlugin {
+  return (() => (tree: { children: HastNode[] }) => {
+    tree.children = tree.children.map((node) => {
+      const from = node.position?.start.offset;
+      const to = node.position?.end.offset;
+      if (node.type !== 'element' || from === undefined || to === undefined) return node;
+      if (!ranges.some((r) => r.from < to && r.to > from)) return node;
+      return {
+        type: 'element',
+        tagName: 'div',
+        properties: { className: ['rl-agent-new'] },
+        children: [node],
+      } as HastNode;
+    });
+  }) as unknown as RehypePlugin;
+}
+
 /**
  * Renders a research log's markdown. A paragraph holding nothing but a link to an entity
  * (`/app/entity/<id>`) becomes a card; in-line entity links stay links.
@@ -77,6 +104,7 @@ export function ResearchLogMarkdown({
   filesAssetId,
   basePath = '',
   onOpenFile,
+  highlights,
 }: {
   markdown: string;
   logId?: string;
@@ -85,6 +113,8 @@ export function ResearchLogMarkdown({
   basePath?: string;
   /** Opens a markdown file of the log's files folder, for a link that points at one. */
   onOpenFile?: (path: string) => void;
+  /** Stretches of the markdown to tint, by offset: an agent's new text. */
+  highlights?: { from: number; to: number }[];
 }) {
   const components: Components = {
     p({ children }) {
@@ -175,7 +205,11 @@ export function ResearchLogMarkdown({
 
   return (
     <div className="text-primary-9 leading-relaxed">
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={highlights?.length ? [markRanges(highlights)] : []}
+        components={components}
+      >
         {markdown}
       </ReactMarkdown>
     </div>

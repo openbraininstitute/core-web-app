@@ -4,7 +4,7 @@ import { GlobalOutlined, PlusOutlined, SearchOutlined, TeamOutlined } from '@ant
 import { motion } from 'motion/react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 
 import {
   PaneSideResizeHandle,
@@ -41,6 +41,28 @@ const ruleOffset = () => parseFloat(getComputedStyle(document.documentElement).f
 const dateLabel = (iso: string) =>
   new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 
+/** Lets the page shut the rail, as editing a log does, and put it back. */
+const RailContext = createContext<{ shut: boolean; setShut: (shut: boolean) => void } | null>(null);
+
+/**
+ * Shuts the rail while `active`, so an edit has the width; afterwards it opens again if it was
+ * open before. The rail's bar still opens it meanwhile.
+ */
+export function useShutRailWhile(active: boolean) {
+  const rail = useContext(RailContext);
+  const setShut = rail?.setShut;
+  const shutNow = useRef(rail?.shut);
+  shutNow.current = rail?.shut;
+  useEffect(() => {
+    if (!active || !setShut) return;
+    const wasShut = shutNow.current;
+    setShut(true);
+    return () => {
+      if (!wasShut) setShut(false);
+    };
+  }, [active, setShut]);
+}
+
 /** A rail of pills on one white card, with the page beside it. */
 export function ResearchLogsLayout({ children }: { children: ReactNode }) {
   return (
@@ -72,149 +94,151 @@ function Shell({ children }: { children: ReactNode }) {
   }, [logId, closePanel]);
 
   return (
-    <div
-      data-testid="research-logs-layout"
-      className="bg-background h-full w-full overflow-hidden pt-2 pr-1"
-    >
-      {/* as the Data page does: with an entity open, the rail makes way and the log shifts left */}
-      <motion.div
-        ref={gridRef}
-        className="mx-2 mb-2 ml-3 grid h-full max-h-[calc(100vh-8rem)] w-[calc(100%-10px)] grid-rows-[minmax(0,1fr)] gap-4 overflow-hidden p-2"
-        initial={false}
-        animate={{
-          gridTemplateColumns: panelOpen
-            ? '3fr 2fr'
-            : railShut
-              ? `${SHUT_BAR_SIZE}px 1fr`
-              : `${railWidth}px 1fr`,
-          gridTemplateAreas: panelOpen ? "'body mini-view'" : "'aside body'",
-        }}
-        // while the bar is dragged the columns follow the pointer, not a spring behind it
-        transition={
-          dragging ? { duration: 0 } : { type: 'spring', stiffness: 320, damping: 30, mass: 0.6 }
-        }
-        style={{ willChange: 'grid-template-columns, grid-template-areas' }}
+    <RailContext.Provider value={{ shut: railShut, setShut: setRailShut }}>
+      <div
+        data-testid="research-logs-layout"
+        className="bg-background h-full w-full overflow-hidden pt-2 pr-1"
       >
-        <aside
-          className={cn(
-            BOX_CLASS,
-            'flex h-full min-h-0 flex-col gap-3 overflow-hidden p-3 [grid-area:aside]',
-            { hidden: panelOpen || railShut }
-          )}
+        {/* as the Data page does: with an entity open, the rail makes way and the log shifts left */}
+        <motion.div
+          ref={gridRef}
+          className="mx-2 mb-2 ml-3 grid h-full max-h-[calc(100vh-8rem)] w-[calc(100%-10px)] grid-rows-[minmax(0,1fr)] gap-4 overflow-hidden p-2"
+          initial={false}
+          animate={{
+            gridTemplateColumns: panelOpen
+              ? '3fr 2fr'
+              : railShut
+                ? `${SHUT_BAR_SIZE}px 1fr`
+                : `${railWidth}px 1fr`,
+            gridTemplateAreas: panelOpen ? "'body mini-view'" : "'aside body'",
+          }}
+          // while the bar is dragged the columns follow the pointer, not a spring behind it
+          transition={
+            dragging ? { duration: 0 } : { type: 'spring', stiffness: 320, damping: 30, mass: 0.6 }
+          }
+          style={{ willChange: 'grid-template-columns, grid-template-areas' }}
         >
-          <div className="flex shrink-0 items-center justify-between gap-2">
-            <ScopeToggles />
-            <Button
-              rounded
-              variant="success"
-              type="button"
-              onClick={start}
-              disabled={isPending}
-              className="h-10 gap-2 border border-white/20 px-4 font-semibold"
-            >
-              New <PlusOutlined className="text-sm" />
-            </Button>
-          </div>
-
-          <label className="text-primary-9 bg-neutral-1 flex h-10 shrink-0 items-center gap-2 rounded-full px-4">
-            <SearchOutlined />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search logs..."
-              className="placeholder:text-neutral-3 w-full bg-transparent outline-none"
-            />
-          </label>
-
-          <nav className="secondary-scrollbar flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pb-2">
-            {isLoading ? (
-              <Skeleton className="h-14 w-full rounded-full" />
-            ) : data?.data.length === 0 ? (
-              <p className="text-neutral-4 px-3 text-sm">
-                {search ? 'No logs match.' : 'No research logs here.'}
-              </p>
-            ) : (
-              data?.data.map((log) => {
-                const active = log.id === logId;
-                return (
-                  <div key={log.id} className="group/log relative shrink-0">
-                    <Button
-                      asChild
-                      rounded
-                      variant="outline"
-                      size="lg"
-                      active={active}
-                      className={cn(
-                        'h-auto w-full border-none py-3 text-base',
-                        !active && 'bg-neutral-1 shadow-none'
-                      )}
-                    >
-                      <Link href={href(log.id)} className="flex! w-full flex-col items-start!">
-                        <span className="w-full truncate text-left font-bold text-current">
-                          {log.name}
-                        </span>
-                        <span
-                          className={cn(
-                            'w-full truncate text-left text-xs font-light',
-                            active ? 'text-white' : 'text-neutral-4'
-                          )}
-                        >
-                          {log.created_by?.pref_label ?? 'Unknown author'} ·{' '}
-                          {dateLabel(log.update_date)}
-                        </span>
-                      </Link>
-                    </Button>
-                    <LogActions log={log} className="absolute top-1/2 right-3 -translate-y-1/2" />
-                  </div>
-                );
-              })
+          <aside
+            className={cn(
+              BOX_CLASS,
+              'flex h-full min-h-0 flex-col gap-3 overflow-hidden p-3 [grid-area:aside]',
+              { hidden: panelOpen || railShut }
             )}
-          </nav>
-        </aside>
-
-        {railShut && !panelOpen && (
-          <ShutPaneBar
-            title="Reports"
-            upright
-            onOpen={() => setRailShut(false)}
-            className="h-full [grid-area:aside]"
-          />
-        )}
-
-        <main className="relative min-h-0 [grid-area:body]">
-          {!panelOpen && (
-            // the grab bar goes halfway across the gap between the two cards: this zero-width
-            // anchor is that far (half the gap) left of the page, and the bar centres on it
-            <div className="pointer-events-none absolute inset-y-0 -left-2 w-0 *:pointer-events-auto">
-              <PaneSideResizeHandle
-                containerRef={gridRef}
-                minWidth={0}
-                onResize={(left) => {
-                  const wanted = left - ruleOffset();
-                  if (wanted < RAIL_FLOOR / 2) {
-                    setRailShut(true);
-                    return;
-                  }
-                  setRailShut(false);
-                  setRailWidth(Math.min(RAIL_WIDTH, Math.max(RAIL_FLOOR, wanted)));
-                }}
-                onDragChange={setDragging}
-              />
+          >
+            <div className="flex shrink-0 items-center justify-between gap-2">
+              <ScopeToggles />
+              <Button
+                rounded
+                variant="success"
+                type="button"
+                onClick={start}
+                disabled={isPending}
+                className="h-10 gap-2 border border-white/20 px-4 font-semibold"
+              >
+                New <PlusOutlined className="text-sm" />
+              </Button>
             </div>
-          )}
-          {children}
-        </main>
 
-        <div
-          data-testid="research-log-entity-panel"
-          className={cn('h-full min-h-0 w-full min-w-0 [grid-area:mini-view]', {
-            hidden: !panelOpen,
-          })}
-        >
-          <EntityPanelView />
-        </div>
-      </motion.div>
-    </div>
+            <label className="text-primary-9 bg-neutral-1 flex h-10 shrink-0 items-center gap-2 rounded-full px-4">
+              <SearchOutlined />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search logs..."
+                className="placeholder:text-neutral-3 w-full bg-transparent outline-none"
+              />
+            </label>
+
+            <nav className="secondary-scrollbar flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pb-2">
+              {isLoading ? (
+                <Skeleton className="h-14 w-full rounded-full" />
+              ) : data?.data.length === 0 ? (
+                <p className="text-neutral-4 px-3 text-sm">
+                  {search ? 'No logs match.' : 'No research logs here.'}
+                </p>
+              ) : (
+                data?.data.map((log) => {
+                  const active = log.id === logId;
+                  return (
+                    <div key={log.id} className="group/log relative shrink-0">
+                      <Button
+                        asChild
+                        rounded
+                        variant="outline"
+                        size="lg"
+                        active={active}
+                        className={cn(
+                          'h-auto w-full border-none py-3 text-base',
+                          !active && 'bg-neutral-1 shadow-none'
+                        )}
+                      >
+                        <Link href={href(log.id)} className="flex! w-full flex-col items-start!">
+                          <span className="w-full truncate text-left font-bold text-current">
+                            {log.name}
+                          </span>
+                          <span
+                            className={cn(
+                              'w-full truncate text-left text-xs font-light',
+                              active ? 'text-white' : 'text-neutral-4'
+                            )}
+                          >
+                            {log.created_by?.pref_label ?? 'Unknown author'} ·{' '}
+                            {dateLabel(log.update_date)}
+                          </span>
+                        </Link>
+                      </Button>
+                      <LogActions log={log} className="absolute top-1/2 right-3 -translate-y-1/2" />
+                    </div>
+                  );
+                })
+              )}
+            </nav>
+          </aside>
+
+          {railShut && !panelOpen && (
+            <ShutPaneBar
+              title="Reports"
+              upright
+              onOpen={() => setRailShut(false)}
+              className="h-full [grid-area:aside]"
+            />
+          )}
+
+          <main className="relative min-h-0 min-w-0 [grid-area:body]">
+            {!panelOpen && (
+              // the grab bar goes halfway across the gap between the two cards: this zero-width
+              // anchor is that far (half the gap) left of the page, and the bar centres on it
+              <div className="pointer-events-none absolute inset-y-0 -left-2 w-0 *:pointer-events-auto">
+                <PaneSideResizeHandle
+                  containerRef={gridRef}
+                  minWidth={0}
+                  onResize={(left) => {
+                    const wanted = left - ruleOffset();
+                    if (wanted < RAIL_FLOOR / 2) {
+                      setRailShut(true);
+                      return;
+                    }
+                    setRailShut(false);
+                    setRailWidth(Math.min(RAIL_WIDTH, Math.max(RAIL_FLOOR, wanted)));
+                  }}
+                  onDragChange={setDragging}
+                />
+              </div>
+            )}
+            {children}
+          </main>
+
+          <div
+            data-testid="research-log-entity-panel"
+            className={cn('h-full min-h-0 w-full min-w-0 [grid-area:mini-view]', {
+              hidden: !panelOpen,
+            })}
+          >
+            <EntityPanelView />
+          </div>
+        </motion.div>
+      </div>
+    </RailContext.Provider>
   );
 }
 
