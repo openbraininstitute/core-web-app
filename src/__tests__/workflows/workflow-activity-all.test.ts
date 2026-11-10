@@ -307,6 +307,17 @@ describe('createAllWorkflowsDataSource', () => {
       expect(one.calls).toHaveLength(2);
     });
 
+    it('takes a page asked for again while still on its way as a refetch too', async () => {
+      const one = source(ExtendedEntitiesTypeDict.MicrocircuitSimulation, many('m', 3, 1));
+      const all = dataSource([one]);
+      await all.fetch(query());
+
+      await Promise.all([all.fetch(query({ page: 2 })), all.fetch(query({ page: 2 }))]);
+
+      // the first of the two is answered by the rows held, the second asks again
+      expect(one.calls).toHaveLength(2);
+    });
+
     it('starts a source again when its total changed, so no row is listed twice', async () => {
       const rows = many('m', 6, 1);
       const one = source(ExtendedEntitiesTypeDict.MicrocircuitSimulation, rows);
@@ -370,6 +381,21 @@ describe('createAllWorkflowsDataSource', () => {
       await all.fetch(query({ page: 2 }));
 
       expect(list).toHaveBeenCalledTimes(2);
+    });
+
+    it('has failed where it gives no answer at all', async () => {
+      const onFailedSources = vi.fn();
+      const silent = { ...failing(), list: async () => undefined };
+      const all = createAllWorkflowsDataSource({
+        sources: [silent, small()],
+        schema,
+        context: workspace,
+        onFailedSources,
+      });
+
+      await all.fetch(query());
+
+      expect(onFailedSources).toHaveBeenLastCalledWith(['ME-model']);
     });
 
     it('tells of none once every source answers', async () => {

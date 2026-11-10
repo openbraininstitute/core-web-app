@@ -198,8 +198,9 @@ async function firstRows(
       withFacets: false,
       context,
     });
-    const data = res?.data ?? [];
-    total = res?.pagination?.total_items ?? 0;
+    if (!res) throw new Error(`No answer for the ${source.label} workflows`);
+    const data = res.data ?? [];
+    total = res.pagination?.total_items ?? 0;
     rows.push(...data);
     if (data.length < pageSize || rows.length >= total) break;
   }
@@ -337,6 +338,8 @@ export function createAllWorkflowsDataSource({
       held = { key, since: Date.now(), served: new Set(), bySource: new Map() };
     }
     const mine = held;
+    // before the answer: asked for again meanwhile, it is a refetch all the same
+    mine.served.add(query.page);
     const settled = await Promise.allSettled(
       sources.map((source) => rowsUpTo(source, mine.bySource.get(source), filters, end, context))
     );
@@ -361,7 +364,6 @@ export function createAllWorkflowsDataSource({
     if (sources.length > 0 && results.length === 0) {
       throw (settled[0] as PromiseRejectedResult).reason;
     }
-    mine.served.add(query.page);
     onFailedSources?.(failed);
     const rows = results.flatMap((result) => result.rows).sort(compareRows(query, schema));
     return {
