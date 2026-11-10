@@ -23,7 +23,7 @@ import type { ReactElement, ReactNode } from 'react';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 
 const navigate = vi.fn();
-const updateEntityDetails = vi.fn();
+const updateEntity = vi.fn();
 
 vi.mock('@bprogress/next', () => ({ useRouter: () => ({ push: navigate }) }));
 vi.mock('next/navigation', () => ({ useSearchParams: () => new URLSearchParams() }));
@@ -35,7 +35,7 @@ vi.mock('@/components/notification', () => ({
 }));
 vi.mock('@/api/entitycore/queries/general/entity', async (importOriginal) => ({
   ...(await importOriginal<object>()),
-  updateEntityDetails: (args: unknown) => updateEntityDetails(args),
+  updateEntity: (args: unknown) => updateEntity(args),
 }));
 
 /** Every render inside a query client: the cell refreshes the listings after an edit. */
@@ -91,7 +91,7 @@ const isDisabled = (label: string) =>
 
 beforeEach(() => {
   navigate.mockClear();
-  updateEntityDetails.mockReset();
+  updateEntity.mockReset();
 });
 
 describe('WorkflowActivityActionsCell', () => {
@@ -341,7 +341,7 @@ describe('editing the name and description of a row', () => {
   });
 
   it('saves the trimmed name and description to the entity, then closes', async () => {
-    updateEntityDetails.mockResolvedValue({});
+    updateEntity.mockResolvedValue({});
     open();
 
     fireEvent.change(field('Name'), { target: { value: '  Renamed  ' } });
@@ -349,7 +349,7 @@ describe('editing the name and description of a row', () => {
     fireEvent.click(save());
 
     await waitFor(() =>
-      expect(updateEntityDetails).toHaveBeenCalledWith({
+      expect(updateEntity).toHaveBeenCalledWith({
         type: EntityTypeDict.Memodel,
         id: ROW_ID,
         data: { name: 'Renamed', description: 'What it is for' },
@@ -371,7 +371,7 @@ describe('editing the name and description of a row', () => {
   });
 
   it('says why a save failed and stays open', async () => {
-    updateEntityDetails.mockRejectedValue(new Error('Not allowed'));
+    updateEntity.mockRejectedValue(new Error('Not allowed'));
     open();
 
     fireEvent.change(field('Name'), { target: { value: 'Renamed' } });

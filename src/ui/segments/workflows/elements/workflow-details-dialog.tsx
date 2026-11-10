@@ -3,7 +3,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { useCallback, useId, useRef, useState } from 'react';
 
-import { updateEntityDetails } from '@/api/entitycore/queries/general/entity';
+import { updateEntity } from '@/api/entitycore/queries/general/entity';
 import { Input } from '@/ui/molecules/input';
 import { Textarea } from '@/ui/molecules/input/text-area';
 import { Modal } from '@/ui/molecules/modal';
@@ -45,7 +45,7 @@ export function WorkflowDetailsDialog({
 
   const save = useMutation({
     mutationFn: () =>
-      updateEntityDetails({
+      updateEntity({
         type: row.type,
         id: row.id,
         data: { name: name.trim(), description: description.trim() },

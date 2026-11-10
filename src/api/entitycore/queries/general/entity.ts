@@ -68,12 +68,18 @@ export async function getEntity({
   });
 }
 
+/** What every entity's route takes on `PATCH`; a type that takes more widens it. */
+export type EntityUpdate = { name?: string; description?: string };
+
 /**
- * Renames an entity and rewrites its description through its own route's `PATCH`, which takes
- * both on every type a workflow listing shows (task configs, simulation campaigns, the legacy
- * single-neuron ones).
+ * Updates an entity through its own route's `PATCH`, with only the fields given. The route is
+ * the type's name in kebab case, which holds for every type a workflow listing shows (task
+ * configs, simulation campaigns, the legacy single-neuron ones).
  */
-export async function updateEntityDetails({
+export async function updateEntity<
+  T extends IEntity = IEntity,
+  U extends EntityUpdate = EntityUpdate,
+>({
   type,
   id,
   data,
@@ -81,9 +87,9 @@ export async function updateEntityDetails({
 }: {
   type: TEntityTypeDict;
   id: string;
-  data: { name: string; description: string };
+  data: U;
   context?: WorkspaceContext | null;
-}): Promise<IEntity> {
+}): Promise<T> {
   const api = await entityCoreApi();
   return await api.patch(`/${kebabCase(type)}/${id}`, {
     body: data,
