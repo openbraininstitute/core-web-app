@@ -6,11 +6,6 @@ import { type RefObject, useCallback, useEffect, useRef, useState } from 'react'
 import { SERIF } from '@/features/learn/components/heuristics/shared';
 import { ViewOverlay } from '@/features/viewer-3d/bare';
 import { getAdoptersContent } from '@/services/sanity/api/get-adopters-content';
-import { getClient } from '@/services/sanity/client';
-import {
-  ProjectHomeGetStartedQuery,
-  type TProjectHomeData,
-} from '@/ui/segments/project/get-started/query';
 import { ModelView } from '@/ui/segments/project/models/model-views';
 import { PackView } from '@/ui/segments/project/models/pack-view';
 import { FLY_PACK, L6_PACK, MICRONS_PACK } from '@/ui/segments/project/models/repo-packs';
@@ -18,7 +13,6 @@ import {
   useWalkthroughActions,
   useWalkthroughEntered,
 } from '@/ui/segments/project/walkthrough/walkthrough';
-import { keyBuilder as keyBuilderExternal } from '@/ui/use-query-keys/third-parties';
 import { cn } from '@/utils/css-class';
 
 import { BrainGlass } from './brain-glass';
@@ -469,22 +463,14 @@ export function EarlyAdopters() {
 }
 
 /**
- * The notebooks' animation, as the platform's home shows it on its Notebooks card: from Sanity, whose Get Started
- * cards carry it.
+ * A notebook opened from the platform's Notebooks page into JupyterLab: its code, then the interactive spine
+ * viewer it builds. From the user's recording "notebooks", its first 3.6 s at 1.25x, the rest slowed to 7.2 s,
+ * its frames interpolated. 10 s.
  */
-export function NotebooksVideo({ near = true }: { near?: boolean }) {
-  const client = getClient();
-  const { data: home } = useQuery({
-    queryKey: keyBuilderExternal.projectHomeGetStarted(),
-    queryFn: () =>
-      client.fetch<TProjectHomeData>(ProjectHomeGetStartedQuery, {}, { next: { revalidate: 0 } }),
-  });
-  const src = home?.getStarted?.find(
-    (card) => card.title === 'Notebooks' && card.thumbnailType === 'video'
-  )?.video;
-  if (!src) return null;
-  return <StageVideo video={{ src, poster: '' }} near={near} />;
-}
+export const NOTEBOOKS_VIDEO = {
+  src: '/images/start/walkthrough/notebooks.mp4',
+  poster: '/images/start/walkthrough/notebooks.jpg',
+};
 
 /**
  * A recording across the stage beside a screen's words, in the middle of its height, or on the public tour level

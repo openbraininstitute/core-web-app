@@ -4,7 +4,10 @@ import { useEffect, useRef } from 'react';
 
 import styles from './get-started.module.css';
 
-/** The production homepage film with soft edges fading into the white page. */
+/**
+ * A mosaic of the tour's own films, nine moving at once: Virtual Labs, an EM neuron, a simulation set up, a
+ * morphology, the models, the Allen V1 circuit, a notebook, simulation results and a class. 10 s.
+ */
 export function GetStartedBrain({ near = true }: { near?: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   useEffect(() => {
@@ -34,14 +37,14 @@ export function GetStartedBrain({ near = true }: { near?: boolean }) {
     <div data-chapter-media className={styles.brainArtwork}>
       <video
         ref={videoRef}
-        src={near ? '/video/get-started-brain.mp4' : undefined}
-        poster="/video/get-started-brain.jpg"
+        src={near ? '/images/start/walkthrough/get-started-mosaic.mp4' : undefined}
+        poster="/images/start/walkthrough/get-started-mosaic.jpg"
         muted
         loop
         playsInline
         preload="metadata"
-        className={styles.brainVideo}
-        aria-label="Open Brain Institute homepage brain animation"
+        className={styles.mosaicVideo}
+        aria-label="A mosaic of the platform: virtual labs, neurons, circuits, simulations, notebooks and teaching"
       />
     </div>
   );

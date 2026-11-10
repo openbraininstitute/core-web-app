@@ -17,7 +17,7 @@ import {
   BrainsOpening,
   CONFIGURATION_VIDEO,
   EarlyAdopters,
-  NotebooksVideo,
+  NOTEBOOKS_VIDEO,
   StageVideo,
   TEACHING_VIDEO,
   VirtualLabsPreview,
@@ -134,7 +134,7 @@ function BrainScene({ scene, near }: { scene: TBrainScene; near: boolean }) {
   if (scene === 'agents') return near ? <AgentPromptsStage /> : null;
   if (scene === 'teaching') return <StageVideo video={TEACHING_VIDEO} near={near} />;
   if (scene === 'analysis') return <StageVideo video={ANALYSIS_VIDEO} near={near} />;
-  if (scene === 'notebooks') return <NotebooksVideo near={near} />;
+  if (scene === 'notebooks') return <StageVideo video={NOTEBOOKS_VIDEO} near={near} />;
   if (scene === 'models') return <ModelMosaic />;
   // Getting started, beside the early adopters already on the platform.
   if (scene === 'join')
