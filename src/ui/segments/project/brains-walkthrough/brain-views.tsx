@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { type RefObject, useCallback, useEffect, useRef, useState } from 'react';
 
 import { SERIF } from '@/features/learn/components/heuristics/shared';
 import { ViewOverlay } from '@/features/viewer-3d/bare';
@@ -389,14 +389,27 @@ export const TEACHING_VIDEO = {
   poster: '/images/start/walkthrough/education-poster.jpg',
 };
 
+/** A moment of a stage video and what it shows, from `from` seconds into it. */
+export type TVideoTitle = { from: number; text: string };
+
 /**
- * A simulation's results explored: voltages, rasters, PSTHs and spike statistics beside the circuit in 3D,
- * from the user's recording "3 extra. Intereactive analyze sims", 2:00 to 4:22, its menu bar cut off, cut down
- * to two moments of 4.8 s each, a little sped up: rasters and PSTHs beside the circuit, then the 3D brain turned.
+ * Data and models explored, then a simulation's results, each cropped to its viewer: from the user's recordings,
+ * the species on the data page (1.4 s), then 1.8 s each at 1.33-1.5x of a morphology coloured by distance turning,
+ * single-cell electrophysiology, a MICrONS EM mesh zoomed into, Kv6.2 ion channel recordings and the Allen V1
+ * circuit by layer turning; last 2.6 s of rasters, activity in 3D and PSTHs from the analysis recording. 13 s.
  */
 export const ANALYSIS_VIDEO = {
-  src: '/images/start/walkthrough/interactive-analysis.mp4',
-  poster: '/images/start/walkthrough/interactive-analysis.jpg',
+  src: '/images/start/walkthrough/explore-data-models.mp4',
+  poster: '/images/start/walkthrough/explore-data-models.jpg',
+  titles: [
+    { from: 0, text: 'Explore multiple species data' },
+    { from: 1.4, text: 'Neuron morphology' },
+    { from: 3.2, text: 'Single-cell electrophysiology' },
+    { from: 5.0, text: 'EM-reconstructed neuron · MICrONS' },
+    { from: 6.8, text: 'Ion channel recordings · Kv6.2' },
+    { from: 8.6, text: 'Circuit model · Allen V1' },
+    { from: 10.4, text: 'Simulation results · rasters, 3D activity, PSTHs' },
+  ],
 };
 
 /** A continuous band of customer logos, each linked to its organization. */
@@ -484,11 +497,30 @@ export function StageVideo({
   near = true,
   className,
 }: {
-  video: { src: string; poster: string };
+  video: { src: string; poster: string; titles?: readonly TVideoTitle[] };
   presentation?: 'recording' | 'animation';
   near?: boolean;
   className?: string;
 }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const title = useVideoTitle(videoRef, video.titles);
+  const film = (
+    <video
+      ref={videoRef}
+      src={near ? video.src : undefined}
+      poster={video.poster || undefined}
+      autoPlay
+      muted
+      loop
+      playsInline
+      className={cn(
+        labs.blendedVideo,
+        labs.stageRecordingVideo,
+        presentation === 'animation' && labs.animationVideo,
+        video.titles && 'w-full!'
+      )}
+    />
+  );
   return (
     <div
       data-chapter-media
@@ -499,21 +531,53 @@ export function StageVideo({
         className
       )}
     >
-      <video
-        src={near ? video.src : undefined}
-        poster={video.poster || undefined}
-        autoPlay
-        muted
-        loop
-        playsInline
-        className={cn(
-          labs.blendedVideo,
-          labs.stageRecordingVideo,
-          presentation === 'animation' && labs.animationVideo
-        )}
-      />
+      {video.titles ? (
+        // What each moment of the film shows, over its corner, the way the film's own frame holds it.
+        <div className="relative mx-auto w-[88%]">
+          {film}
+          {title && (
+            <p
+              aria-live="polite"
+              className="absolute bottom-[clamp(10px,1.6vw,20px)] left-[clamp(10px,1.6vw,20px)] rounded-full bg-[#002766]/88 px-[12px] py-[5px] text-[clamp(11px,0.95vw,14px)] leading-[1.3] font-medium text-white shadow-[0_4px_14px_rgba(0,39,102,0.2)]"
+            >
+              {title}
+            </p>
+          )}
+        </div>
+      ) : (
+        film
+      )}
     </div>
   );
+}
+
+/** The title of the moment a video is at, followed frame by frame while it plays. */
+function useVideoTitle(
+  videoRef: RefObject<HTMLVideoElement | null>,
+  titles?: readonly TVideoTitle[]
+) {
+  const [title, setTitle] = useState(titles?.[0]?.text);
+  useEffect(() => {
+    const element = videoRef.current;
+    if (!element || !titles?.length) return;
+    let frame = 0;
+    const update = () => {
+      const at = element.currentTime;
+      setTitle(titles.findLast((moment) => moment.from <= at)?.text ?? titles[0].text);
+    };
+    // Each frame while the page draws them; the video's own time updates when it does not (in the background).
+    const follow = () => {
+      update();
+      frame = requestAnimationFrame(follow);
+    };
+    frame = requestAnimationFrame(follow);
+    element.addEventListener('timeupdate', update);
+    return () => {
+      cancelAnimationFrame(frame);
+      element.removeEventListener('timeupdate', update);
+    };
+  }, [videoRef, titles]);
+  return title;
 }
 
 /** One clear next step into the platform's sign-in and account creation flow. */

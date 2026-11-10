@@ -76,20 +76,15 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     theme: 'Explore',
     label: 'Analysis',
     scene: 'analysis',
-    title: 'Interactive tools for analysis',
+    title: 'Explore data, models and results',
     hero: true,
     column: VIDEO_CHAPTER,
     body: (
-      <>
-        <p>
-          Explore a simulation&apos;s results as soon as they are in: voltage traces, spike rasters,
-          PSTHs and spike statistics, beside the circuit in 3D.
-        </p>
-        <p>
-          Filter the neurons in the table and every plot follows, ordered and grouped by cell type
-          or by any property of the circuit.
-        </p>
-      </>
+      <p>
+        Explore many types of experimental data, such as neuron morphologies, electrophysiology, EM
+        reconstructions and ion channel recordings, across multiple species; models at every scale,
+        from single neurons to circuits; and the outputs of your virtual experiments.
+      </p>
     ),
     after: <ChapterAction label="Get Started" destination="data" />,
   },
