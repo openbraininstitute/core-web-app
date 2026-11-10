@@ -142,8 +142,8 @@ export interface CullCounts extends CullTally {
 }
 
 /**
- * What the culling's tests left, read back: their counts, a bit a block of the arena with a segment kept, and the rest
- * their frame was drawn still in (`DetailStream.rest`), -1 for one drawn moving.
+ * What the culling's tests left, read back: their counts, a bit a block of the arena with a segment kept, and what was
+ * told of their frame (`DetailStream.frameRest`).
  */
 export interface CullRead extends CullTally {
   marked: Uint32Array;

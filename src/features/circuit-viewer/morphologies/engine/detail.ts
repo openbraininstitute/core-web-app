@@ -1,11 +1,11 @@
 /**
  * Chooses the level each box of a pack is drawn at, for a view. A box gets the coarsest level whose tolerance spans no
- * more than a few device pixels where the box comes nearest the eye. Boxes go coarser while what is in view is over the
- * budget, and every box in view is left out if even the coarsest levels are over it. A box outside the view is not
- * drawn. Where every box's coarsest level is kept drawn (a base), every box is drawn at least at that level, which the
- * budget does not count, and no finer than it may be (by what is seen, where that is given). With
- * `DetailRules.wholeFloor`, if every box fits the budget at some level finer than the coarsest, every box, in view or
- * not, is drawn at least at the finest such level.
+ * more than a few device pixels where the box comes nearest the eye, or the finest coarser one it fits the budget at by
+ * itself. Boxes go coarser while what is in view is over the budget, and every box in view is left out if even the
+ * coarsest levels are over it. A box outside the view is not drawn. Where every box's coarsest level is kept drawn (a
+ * base), every box is drawn at least at that level, which the budget does not count, and no finer than it may be (by
+ * what is seen, where that is given). With `DetailRules.wholeFloor`, if every box fits the budget at some level finer
+ * than the coarsest, every box, in view or not, is drawn at least at the finest such level.
  */
 import * as THREE from 'three';
 
@@ -141,6 +141,8 @@ export function chooseDetail(
       capped[b] = 1;
       level = Math.min(arrived[b], coarsest);
     }
+    // Left over the budget by itself, a box near the focus would take every box farther off coarser before it.
+    while (level < top && roomFor(levels[level].segments[b]) > budget) level++;
     chosen[b] = level;
     away[b] = middle.distanceTo(view.focus);
   }

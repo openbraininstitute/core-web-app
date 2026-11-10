@@ -367,7 +367,7 @@ export class CircuitMorphologyGPU extends CircuitView {
   }
 
   /**
-   * Sets up the pack's segments, if there is a pack, for the frame drawn in `rest` (`restOf`). With culling, the kept
+   * Sets up the pack's segments, if there is a pack, for the frame `rest` tells of (`restOf`). With culling, the kept
    * segments are drawn to depth and the culling's tests run before the frame is drawn. Where culling is off or failed,
    * every segment is drawn.
    */

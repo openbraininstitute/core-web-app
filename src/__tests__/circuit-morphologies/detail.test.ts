@@ -301,6 +301,62 @@ describe('chooseDetail', () => {
       expect(Array.from(levels)).toEqual([0, 1, 2, 2]);
     });
 
+    describe('a box over it by itself', () => {
+      // The box at the focus is ten times the others at each level.
+      const large = () => {
+        const pack = boxesAt(depths);
+        for (const { segments } of pack.levels) segments[0] *= 10;
+        return pack;
+      };
+
+      it('with a base, goes to the finest level it fits at, and leaves the others as they were', () => {
+        const { levels, room } = chooseDetail(
+          large(),
+          view(),
+          { ...RULES, budget: 800 },
+          bySegment,
+          true
+        );
+        expect(Array.from(levels)).toEqual([1, 0, 0, 0]);
+        expect(room).toBe(800);
+      });
+
+      it('with a base, keeps the finer levels of the others, where it can only go to its base', () => {
+        const { levels, room } = chooseDetail(
+          large(),
+          view(),
+          { ...RULES, budget: 300 },
+          bySegment,
+          true
+        );
+        expect(Array.from(levels)).toEqual([2, 0, 0, 0]);
+        expect(room).toBe(300);
+      });
+
+      it('wants finer all the same, whatever it is drawn at', () => {
+        const { finer } = chooseDetail(
+          large(),
+          view(),
+          { ...RULES, budget: 300 },
+          bySegment,
+          true,
+          () => 0
+        );
+        expect(Array.from(finer)).toEqual([1, 1, 1, 1]);
+      });
+
+      it('with no base, leaves out every box where it is over at the coarsest too', () => {
+        const { levels, leftOut } = chooseDetail(
+          large(),
+          view(),
+          { ...RULES, budget: 99 },
+          bySegment
+        );
+        expect(Array.from(levels)).toEqual([-1, -1, -1, -1]);
+        expect(leftOut).toBe(4);
+      });
+    });
+
     it('counts the room each box takes against it, and tells its segments', () => {
       // Two blocks of room at the finest, one at the others.
       const { levels, segments, leftOut } = chooseDetail(
