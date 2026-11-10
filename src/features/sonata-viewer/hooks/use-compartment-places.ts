@@ -1,6 +1,7 @@
 'use client';
 
 import { useQueryClient } from '@tanstack/react-query';
+import pLimit from 'p-limit';
 import { useEffect, useState } from 'react';
 
 import { circuitMorphologyPath } from '@/api/one/circuit-visualization';
@@ -12,10 +13,14 @@ import {
 } from '@/features/scan-config/components/circuit-viz/sources/resolve-morphology-path';
 import { sectionPaths } from '@/features/sonata-viewer/path-distance';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { logError } from '@/utils/logger';
 
 import type { ColumnValues, ParsedCircuitConfig } from '@/features/circuit-nodes/types';
 import type { Compartment } from '@/features/sonata-viewer/compartment-rows';
 import type { SectionPath } from '@/features/sonata-viewer/path-distance';
+
+/** Morphologies asked for at once: a report may record thousands of cells. */
+const MORPHOLOGY_LOADS = 8;
 
 /**
  * Where each of a report's compartments is on its cell, by trace: how far along its
@@ -72,7 +77,9 @@ export function useCompartmentPlaces({
           : morphologies.kind === 'string'
             ? morphologies.values[nodeId]
             : undefined;
-      const pathsOf = new Map<string, Promise<Map<number, SectionPath>>>();
+      const limit = pLimit(MORPHOLOGY_LOADS);
+      const pathsOf = new Map<string, Promise<Map<number, SectionPath> | null>>();
+      const failed = new Set<string>();
       const distances = new Map<number, number>();
       const types = new Map<number, string>();
       await Promise.all(
@@ -81,14 +88,23 @@ export function useCompartmentPlaces({
           if (!name) return;
           let pending = pathsOf.get(name);
           if (!pending) {
-            pending = loadSections(queryClient, {
-              path: circuitMorphologyPath(circuitId, morphologyFileOf(location, name), name),
-              virtualLabId,
-              projectId,
-            }).then(sectionPaths);
+            pending = limit(() =>
+              loadSections(queryClient, {
+                path: circuitMorphologyPath(circuitId, morphologyFileOf(location, name), name),
+                virtualLabId,
+                projectId,
+              })
+            )
+              .then(sectionPaths)
+              // one morphology that will not load leaves its cells unmeasured, and no other
+              .catch(() => {
+                failed.add(name);
+                return null;
+              });
             pathsOf.set(name, pending);
           }
           const paths = await pending;
+          if (!paths) return;
           // A section's several compartments in turn, for their segments' centres.
           const inSection = new Map<number, number>();
           for (const c of list) {
@@ -108,9 +124,14 @@ export function useCompartmentPlaces({
           }
         })
       );
+      if (failed.size > 0) {
+        logError(`${failed.size} morphologies could not be measured on:`, [...failed].slice(0, 5));
+      }
       if (!cancelled) setFound({ compartments, offsets, places: { distances, types } });
     };
-    measure().catch(() => {});
+    measure().catch((error: unknown) =>
+      logError('The compartments could not be measured on their cells:', error)
+    );
     return () => {
       cancelled = true;
     };
