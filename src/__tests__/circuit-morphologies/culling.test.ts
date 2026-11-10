@@ -9,7 +9,6 @@ import { Culling, DRAWS } from '@/features/circuit-viewer/morphologies/engine/we
 import { fakeGpu } from './fake-gpu';
 
 import type { ArenaBuffers } from '@/features/circuit-viewer/morphologies/engine/webgpu/arena-gpu';
-import type { CullTest } from '@/features/circuit-viewer/morphologies/engine/webgpu/culling';
 import type { CullTally } from '@/features/circuit-viewer/morphologies/types';
 
 const h = vi.hoisted(() => ({ logError: vi.fn() }));
@@ -44,8 +43,8 @@ function cullingOn(options?: Parameters<typeof fakeGpu>[0]) {
   const culling = new Culling(renderer, device, arenaStorage(), counted);
   culling.setArena(ARENA);
   culling.targetOf(16, 8);
-  const run = (rest = 1, test: CullTest = 'everyCell') =>
-    culling.run(camera, shift, 12, HOLE, 100, rest, cells, test);
+  const run = (rest = 1, hiding = false) =>
+    culling.run(camera, shift, 12, HOLE, 100, rest, cells, hiding);
   /** The next read mapped, finding `counts` and the blocks `marked`. */
   const map = async (counts: CullTally, marked?: number[]) => {
     gpu.found = wordsOf(counts, marked);
@@ -180,43 +179,22 @@ describe("the culling's counts and its failures", () => {
 });
 
 describe('the culling while the cell table hides cells', () => {
-  /** Which of the draws' words the last write of them starts again: where, and how many. */
+  /** Where the last write of the draws' arguments starts, in bytes and in words of what it writes. */
   const lastReset = (writes: ReturnType<typeof cullingOn>['writes']) => {
-    const [, offset, , dataOffset, size] = writes.mock.calls.at(-1) ?? [];
-    return { offset, dataOffset, size };
+    const [, offset, , dataOffset] = writes.mock.calls.at(-1) ?? [];
+    return { offset, dataOffset };
   };
 
   it('starts every list again where none is hidden', () => {
     const { run, writes } = cullingOn();
     run();
-    expect(lastReset(writes)).toEqual({ offset: 0, dataOffset: 0, size: 20 });
+    expect(lastReset(writes)).toEqual({ offset: 0, dataOffset: 0 });
   });
 
-  it('starts only the seen lists again in the test of the cells on show', () => {
+  it('starts only the seen lists again, so the kept list still hides what comes back', () => {
     const { run, writes } = cullingOn();
-    run(1, 'onShow');
-    expect(lastReset(writes)).toEqual({
-      offset: DRAWS.seenFlat,
-      dataOffset: DRAWS.seenFlat / 4,
-      size: 10,
-    });
-  });
-
-  it('starts only the kept lists again in the test of every cell for them', () => {
-    const { run, writes } = cullingOn();
-    run(1, 'keptOnly');
-    expect(lastReset(writes)).toEqual({ offset: 0, dataOffset: 0, size: DRAWS.seenFlat / 4 });
-  });
-
-  it('reads back only the test that marks what it sees', async () => {
-    const { counted, run, map, maps } = cullingOn();
-    run(1, 'keptOnly');
-    expect(maps).toHaveLength(0);
-
-    run(1, 'onShow');
-    expect(maps).toHaveLength(1);
-    await map(A);
-    expect(counted).toHaveBeenCalledExactlyOnceWith(read(A));
+    run(1, true);
+    expect(lastReset(writes)).toEqual({ offset: DRAWS.seenFlat, dataOffset: DRAWS.seenFlat / 4 });
   });
 
   it('counts nothing as kept from an arena before, even in tests that leave the kept list alone', () => {
@@ -230,7 +208,7 @@ describe('the culling while the cell table hides cells', () => {
 
   it('fails for good where three made no texture of the cell table', () => {
     const { culling, run } = cullingOn({ textures: false });
-    expect(run(1, 'onShow')).toBe(false);
+    expect(run(1, true)).toBe(false);
     expect(culling.failed).toBe(true);
   });
 });

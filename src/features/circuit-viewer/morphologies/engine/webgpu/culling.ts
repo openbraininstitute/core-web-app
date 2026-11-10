@@ -31,20 +31,6 @@ const INSTANCES = 1;
 /** Draws that draw no quads: six indices and no instances each. */
 const NO_DRAWS = new Uint32Array(DRAWS_BYTES / 4).map((_, k) => (k % 5 === 0 ? 6 : 0));
 
-/**
- * What a test is of: every cell, filling both lists; or, while the cell table hides cells, those on show, filling the
- * seen lists alone, and every cell again, filling the kept lists alone. The word the segments' pass reads it by.
- */
-export const CULL_TESTS = { everyCell: 0, onShow: 1, keptOnly: 2 } as const;
-export type CullTest = keyof typeof CULL_TESTS;
-
-/** Which of the draws' words a test starts again, the rest being left to the other test. */
-const RESET_WORDS: Record<CullTest, [start: number, count: number]> = {
-  everyCell: [0, DRAWS_BYTES / 4],
-  onShow: [DRAWS.seenFlat / 4, (DRAWS_BYTES - DRAWS.seenFlat) / 4],
-  keptOnly: [0, DRAWS.seenFlat / 4],
-};
-
 type Pipelines = Record<'blocks' | 'args' | 'segments', GPUComputePipeline>;
 
 /** What the passes bind; made again when the pyramid's targets or the arena change. */
@@ -62,7 +48,7 @@ interface Bound {
  * frame: they build that depth's pyramid (`DepthPyramid`), test the blocks, test the segments into the lists of those
  * kept and those seen (flat and tubes), and fill the draws' arguments, which three's quads are drawn by (`quads`).
  * What the tests count, and the blocks they mark, are read back each frame and handed to `counted`. Once the culling
- * fails, `counted` gets null. While the cell table hides cells, two tests take the place of the one (`CullTest`).
+ * fails, `counted` gets null. While the cell table hides cells, the kept list is left as it was (`run`).
  */
 export class Culling {
   private renderer: THREE.WebGPURenderer;
@@ -155,8 +141,9 @@ export class Culling {
    * draws for three's draw that follows. `shift`: what the arena's positions are moved by; `tubeFrom`: the least radius
    * in pixels of a tube; `hidden`: the section type not drawn (`ImpostorUniforms.uHidden`); `end`: where the arena's
    * segments end; `rest`: the rest the frame is drawn still in, or -1 for a frame drawn moving, handed on with the
-   * frame's read; `cells`: the cell table's texture; `test`: what it is of (`CullTest`). A test of the kept lists alone
-   * is read back by nobody, its marks and counts being the other test's. Returns false where nothing was tested.
+   * frame's read; `cells`: the cell table's texture; `hiding`: whether it hides cells, whose segments then go on no list
+   * and mark no block, and the kept list is left as it was, to hide those cells' segments once they are back. Returns
+   * false where nothing was tested.
    */
   run(
     camera: THREE.Camera & { near: number; far: number },
@@ -166,7 +153,7 @@ export class Culling {
     end: number,
     rest: number,
     cells: THREE.Texture,
-    test: CullTest
+    hiding: boolean
   ): boolean {
     const { device, arena } = this;
     if (!arena || this.broken) return false;
@@ -180,7 +167,7 @@ export class Culling {
       pass,
       camera,
       shift,
-      [tubeFrom, LEAST_PX, CULL_TESTS[test]],
+      [tubeFrom, LEAST_PX, hiding ? 1 : 0],
       [blocks, this.storage.capacity.value, hidden]
     );
     // three made it when it drew the kept segments.
@@ -195,8 +182,8 @@ export class Culling {
     // The segments' materials read it too.
     if (farthest) this.storage.farthest.value = farthest;
     const bound = this.bindings(pipelines, levels, table, arena);
-    const [reset, words] = RESET_WORDS[test];
-    device.queue.writeBuffer(this.drawsBuffer, reset * 4, NO_DRAWS, reset, words);
+    const reset = hiding ? DRAWS.seenFlat / 4 : 0;
+    device.queue.writeBuffer(this.drawsBuffer, reset * 4, NO_DRAWS, reset);
     const run = (pipeline: GPUComputePipeline, group: GPUBindGroup, x: number) => {
       pass.setPipeline(pipeline);
       pass.setBindGroup(0, group);
@@ -209,10 +196,6 @@ export class Culling {
     pass.dispatchWorkgroupsIndirect(this.dispatch, 0);
     pass.end();
     this.indirect.copy(encoder, this.drawsBuffer);
-    if (test === 'keptOnly') {
-      device.queue.submit([encoder.finish()]);
-      return true;
-    }
     this.rest = rest;
     this.submit(encoder, arena.marked);
     return true;
