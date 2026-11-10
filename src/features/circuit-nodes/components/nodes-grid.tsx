@@ -978,12 +978,12 @@ export function NodesGrid({
   useEffect(() => {
     exportCsvRef.current = exportCsv;
   });
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
       mountedRef.current = false;
-    },
-    []
-  );
+    };
+  }, []);
   const modal = useAppModal();
   const [downloaded, setDownloaded] = useState<number | null>(null);
   const downloading = downloaded !== null;
@@ -1022,7 +1022,7 @@ export function NodesGrid({
     } catch (error) {
       logError('The rows on show could not be downloaded:', error);
     } finally {
-      if (mountedRef.current) setDownloaded(null);
+      setDownloaded(null);
     }
   };
   const isOn = (quick: QuickFilter) =>

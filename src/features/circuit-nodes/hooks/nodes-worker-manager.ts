@@ -61,6 +61,8 @@ interface Session {
   epoch: number;
   disposed: boolean;
   disposeTimer: ReturnType<typeof setTimeout> | null;
+  /** Ends each export under way, which a worker that is gone would leave waiting. */
+  exportEnders: Set<(error: Error) => void>;
 }
 
 /**
@@ -106,6 +108,7 @@ class NodesWorkerRegistry {
         epoch: 0,
         disposed: false,
         disposeTimer: null,
+        exportEnders: new Set(),
       };
       this.sessions.set(key, session);
     }
@@ -145,7 +148,14 @@ class NodesWorkerRegistry {
   exportCsv(key: string, request: CsvRequest, onPart: CsvPartHandler): Promise<void> {
     const session = this.sessions.get(key);
     if (!session?.proxy) return Promise.reject(new Error('Nodes worker not ready'));
-    return session.proxy.exportCsv(request, Comlink.proxy(onPart));
+    const { proxy } = session;
+    return new Promise<void>((resolve, reject) => {
+      session.exportEnders.add(reject);
+      proxy
+        .exportCsv(request, Comlink.proxy(onPart))
+        .then(resolve, reject)
+        .finally(() => session.exportEnders.delete(reject));
+    });
   }
 
   getColumn(key: string, name: string): Promise<ColumnValues> {
@@ -279,6 +289,8 @@ class NodesWorkerRegistry {
     const { proxy, worker } = session;
     session.proxy = null;
     session.worker = null;
+    for (const end of session.exportEnders) end(new Error('The nodes were closed'));
+    session.exportEnders.clear();
     // terminating the worker frees the whole WASM heap (the ~700MB file); a
     // release of the comlink proxy first avoids dangling message ports.
     if (proxy) {
