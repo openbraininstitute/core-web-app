@@ -287,7 +287,6 @@ export function useConnectivityDownloadGate(
   const ctx = useWorkspace();
   const key = assetId && entry ? `${circuitId}/${assetId}/${entry.path}` : null;
   const path = entry?.path;
-  // without the listing's size it may be any size, so it asks too
   const large = entry != null && (entry.size == null || entry.size > CONFIRM_DOWNLOAD_BYTES);
   const allowed = useSyncExternalStore(
     subscribeAllowed,

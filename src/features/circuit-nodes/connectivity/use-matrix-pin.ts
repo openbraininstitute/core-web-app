@@ -111,7 +111,7 @@ export function useMatrixPin({
     };
   }, [ready, scope]);
 
-  // Let go, from here or by the table's filter, the column goes too: it holds a code per row.
+  // Let go here or by clearing the table's filter, the column goes too.
   const wasPinned = useRef(false);
   const isPinned = pinned !== null;
   // biome-ignore lint/correctness/useExhaustiveDependencies: once each time the pathway goes

@@ -216,9 +216,8 @@ const byTime = (field: string) => (a: Row, b: Row) =>
   microseconds(fieldOf(a, field)) - microseconds(fieldOf(b, field));
 
 /**
- * Orders merged rows as EntityCore orders each source: the grid's sort, else newest first, then
- * newest first and the id, as its `ensure_stable_sorting` adds. Any other tie-break would let a
- * page's rows differ from the server's, and rows go missing between pages.
+ * Orders merged rows as EntityCore orders each source: the grid's sort, then newest first and the
+ * id (`ensure_stable_sorting`). Any other tie-break lets rows go missing between pages.
  */
 function compareRows(query: IGridQuery, schema: IGridSchema<Row>) {
   const [sort] = query.sort;

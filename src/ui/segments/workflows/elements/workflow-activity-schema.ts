@@ -108,7 +108,6 @@ export function buildWorkflowActivitySchema({
         sortable: true,
         sortField: 'name',
         getValue: (row) => row.name ?? '',
-        // takes the width the fitted columns leave, so the table fills a wide screen
         width: { minWidth: 160, flex: 2 },
         essential: true,
         filter: {
