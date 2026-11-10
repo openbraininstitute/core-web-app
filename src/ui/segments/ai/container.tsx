@@ -1,9 +1,10 @@
 'use client';
 
 import { AnimatePresence, motion } from 'motion/react';
+import dynamic from 'next/dynamic';
 
 import IconPlus from '@/components/icons/Plus';
-import AiAssistant from '@/features/ai-assistant';
+import { IconSpinner } from '@/components/icons/spinner';
 import { aiButtonFlag, useFlag } from '@/features/feature-flags';
 import { usePanelState } from '@/ui/segments/ai/hooks';
 import { PanelState } from '@/ui/segments/ai/types';
@@ -11,6 +12,16 @@ import { cn } from '@/utils/css-class';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 
 import styles from '@/ui/segments/ai/container.module.css';
+
+// loaded when the panel opens: the chat stack (KaTeX, markdown, AI SDK) is ~245 KiB gz and the panel starts collapsed
+const AiAssistant = dynamic(() => import('@/features/ai-assistant'), {
+  ssr: false,
+  loading: () => (
+    <div className="grid h-full place-items-center" data-testid="ai-assistant-loading">
+      <IconSpinner size="2em" />
+    </div>
+  ),
+});
 
 export function Container() {
   const { state, setState } = usePanelState();

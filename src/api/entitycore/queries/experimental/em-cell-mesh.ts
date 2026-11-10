@@ -6,6 +6,7 @@ import type {
   IEMCellMesh,
   IEmCellMeshQueryFilters,
 } from '@/api/entitycore/types/entities/em-cell-mesh';
+import type { TMeasurableEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -21,14 +22,17 @@ export async function getEmCellMeshes({
   withFacets,
   filters,
   context,
+  expand,
 }: {
   withFacets?: boolean;
   filters?: IEmCellMeshQueryFilters;
   context?: WorkspaceContext | null;
+  expand?: ReadonlyArray<TMeasurableEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IEMCellMesh>>(baseUri, {
     queryParams: {
+      expand,
       ...filters,
       with_facets: withFacets,
     },
@@ -50,12 +54,15 @@ export async function getEmCellMeshes({
 export async function getEmCellMesh({
   id,
   context,
+  expand,
 }: {
   id: string;
   context?: WorkspaceContext | null;
+  expand?: ReadonlyArray<TMeasurableEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<IEMCellMesh>(`${baseUri}/${id}`, {
+    queryParams: { expand },
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',

@@ -24,6 +24,12 @@ const PLACED_SEGMENTS = Math.floor((4 * 2 ** 20) / SEGMENT_BYTES);
  * longer than that lateness needs.
  */
 export const LINGER = { moving: 30, still: 4 } as const;
+/**
+ * The rest (`frameRest`) of a frame tested just after a box was put or taken out, or a base in view came in. Last
+ * frame's kept segments, which hide things from the tests, have lost what the box had drawn, or lack the base. So the
+ * tests see through it, and what they mark says nothing of what is seen.
+ */
+export const SEES_THROUGH = -2;
 
 /** How many culling reads there were, and for each box the read that last marked it (0 for none). */
 interface Marks {
@@ -113,6 +119,7 @@ function arenaPlan(
  * longer seen goes back to its base as the view moves, and keeps what it has at rest. A box let go of while the view
  * rests is not asked for again until the view moves or the rules change. While the view moves, a box wanted coarser
  * goes back to its base at once, unless it is wanted at the floor (`Detail.floor`), which it never goes coarser than.
+ * The marks of a frame that sees through a box just put or taken out do not count (`SEES_THROUGH`).
  *
  * For a pack still coming in, a box is asked for at a level only once that level's bytes are in, and is wanted no
  * finer than what is in, as if the pixels wanted no more.
@@ -129,6 +136,8 @@ export class DetailStream {
   private rules: DetailRules | null = null;
   private still = false;
   private sight: Sight;
+  /** Whether the kept segments have lost or lack anything since a frame was last tested (`SEES_THROUGH`). */
+  private occludersLost = false;
   /** The boxes let go of while the view has rested where it is now. */
   private letGo = new Set<number>();
   /**
@@ -272,6 +281,7 @@ export class DetailStream {
     stream.told = this.told;
     stream.sight = this.sight;
     stream.still = this.still;
+    stream.occludersLost = true;
     return stream;
   }
 
@@ -285,9 +295,24 @@ export class DetailStream {
     return this.arena.boxesMarked(marked);
   }
 
-  /** Which rest the view is in: one more each time it comes to rest, in place or after a jump (`update`). */
+  /**
+   * Which rest the view is in: one more each time it comes to rest, in place or after a jump (`update`), and each time a
+   * box is put or taken out, as the marks of a frame tested before that are of blocks that may now hold another box.
+   */
   get rest(): number {
     return this.sight.rest;
+  }
+
+  /**
+   * What to tell of the frame about to be tested, asked once a test: `SEES_THROUGH`, or else `rest`, -1 for one drawn
+   * `moving`.
+   */
+  frameRest(moving: boolean): number {
+    if (this.occludersLost) {
+      this.occludersLost = false;
+      return SEES_THROUGH;
+    }
+    return moving ? -1 : this.sight.rest;
   }
 
   /**
@@ -404,7 +429,9 @@ export class DetailStream {
       const level = wanted[box];
       const to = this.atOnce(box, level);
       if (to === null) continue;
-      uploaded += arena.remove(box);
+      const removed = arena.remove(box);
+      uploaded += removed;
+      if (removed > 0) this.boxMoved();
       drawn[box] = to;
       if (this.still && this.isBase(level)) this.letGo.add(box);
       changed = true;
@@ -417,6 +444,8 @@ export class DetailStream {
         break;
       }
       uploaded += arena.putBase(box, segments);
+      // Those out of view are not tested, and stopping the marks for them would hold back the finer levels wanted.
+      if (detail.order.subarray(0, detail.inView).includes(box)) this.occludersLost = true;
       if (arena.sizeOf(box) === undefined) drawn[box] = this.coarsest;
       this.bases.delete(box);
       changed = true;
@@ -441,11 +470,17 @@ export class DetailStream {
         break;
       }
       uploaded += arena.replace(box, segments);
+      this.boxMoved();
       drawn[box] = level;
       this.ready.delete(box);
       changed = true;
     }
     return { changed, more };
+  }
+
+  private boxMoved(): void {
+    this.occludersLost = true;
+    this.sight.rest++;
   }
 
   /** Stops reading and placing, and lets go of what the arena uploads to. */

@@ -4,6 +4,7 @@ import type {
   IAnalysisNotebookResult,
   TAnalysisNotebookResultFilter,
 } from '@/api/entitycore/types/entities/analysis-notebook-result';
+import type { TAnyEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -16,14 +17,17 @@ export async function getAnalysisNotebookResults({
   withFacets,
   filters,
   context,
+  expand,
 }: {
   withFacets?: boolean;
   filters?: TAnalysisNotebookResultFilter;
   context?: WorkspaceContext | null;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IAnalysisNotebookResult>>(baseUri, {
     queryParams: {
+      expand,
       ...filters,
       with_facets: withFacets,
     },
@@ -41,12 +45,15 @@ export async function getAnalysisNotebookResults({
 export async function getAnalysisNotebookResult({
   id,
   context,
+  expand,
 }: {
   id: string;
   context?: WorkspaceContext | null;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<IAnalysisNotebookResult>(`${baseUri}/${id}`, {
+    queryParams: { expand },
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',
