@@ -3,7 +3,7 @@ import Plotly from 'plotly.js-dist-min';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import createPlotlyComponent from 'react-plotly.js/factory';
 
-import { CHART_LINE_COLOR, TRACE_COLORS } from '@/features/sonata-viewer/constants';
+import { CHART_LINE_COLOR, slotColour } from '@/features/sonata-viewer/constants';
 import { usePlotListeners } from '@/features/sonata-viewer/hooks/use-plot-listeners';
 import { TIME_CURSOR_COLOR } from '@/features/sonata-viewer/time-cursor';
 import { useCellRow } from '@/features/spike-viewer/cell-row';
@@ -170,6 +170,7 @@ export default function ReportDetailsView({
   onTimeWindowChange,
   cellRows,
   onCellClick,
+  onCellHover,
   events,
 }: {
   population: PopulationMetadata;
@@ -191,6 +192,8 @@ export default function ReportDetailsView({
   cellRows?: CellRowSource;
   /** Told the node id of a line clicked. */
   onCellClick?: (nodeId: number) => void;
+  /** Told the node id of the line under the pointer; null once there is none. */
+  onCellHover?: (nodeId: number | null) => void;
   /** The traces the nodes table's filter keeps; null shows them all. */
   visibleTraces: number[] | null;
   /** The traces of the cells picked in the nodes table, in the order they were picked. */
@@ -241,6 +244,7 @@ export default function ReportDetailsView({
         onTimeWindowChange={onTimeWindowChange}
         cellRows={cellRows}
         onCellClick={onCellClick}
+        onCellHover={onCellHover}
         events={events}
       />
     </div>
@@ -260,6 +264,7 @@ function SharedTracesPlot({
   onTimeWindowChange,
   cellRows,
   onCellClick,
+  onCellHover,
   events,
 }: {
   population: PopulationMetadata;
@@ -271,6 +276,7 @@ function SharedTracesPlot({
   onTimeWindowChange?: (window: TimeRange | null) => void;
   cellRows?: CellRowSource;
   onCellClick?: (nodeId: number) => void;
+  onCellHover?: (nodeId: number | null) => void;
   lines: Line[];
   hovered: number[];
   /** Name each line in a legend: the picked cells, each in its own colour. */
@@ -371,7 +377,7 @@ function SharedTracesPlot({
 
       let color: string = CHART_LINE_COLOR;
       if (line.preview) color = picking ? PREVIEW_COLOR : CHART_LINE_COLOR;
-      else if (colored) color = TRACE_COLORS[(line.slot as number) % TRACE_COLORS.length];
+      else if (colored) color = slotColour(line.slot as number);
       else if (line.slot !== null) color = OTHER_COLOR;
       // every cell drawn in one colour: the hovered one keeps it, the rest step back
       else if (emphasis && !isHovered) color = MUTED_COLOR;
@@ -453,6 +459,13 @@ function SharedTracesPlot({
   }, [x, y, size, legend, timeUnits, units, valueLabel]);
 
   const [tip, setTip] = useState<TraceHover>();
+  const tipCell = tip ? (population.traces[tip.traceIndex]?.nodeId ?? null) : null;
+  // Taken back once it moves on, or the plot goes from under the pointer.
+  useEffect(() => {
+    if (tipCell === null) return;
+    onCellHover?.(tipCell);
+    return () => onCellHover?.(null);
+  }, [tipCell, onCellHover]);
   // The graph once drawn, for the timings over it; a timing's card over a line's, which gives way.
   const [graph, setGraph] = useState<HTMLElement | null>(null);
   const [timingHovered, setTimingHovered] = useState(false);

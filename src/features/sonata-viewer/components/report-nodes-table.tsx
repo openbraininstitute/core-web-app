@@ -91,6 +91,8 @@ type Props = {
   headerExtra?: ReactNode;
   /** A cell to bring into view, such as one clicked in a scene; a new key asks again. */
   focusRow?: { nodeId: number; key: number };
+  /** A row to keep marked, such as the cell a trace clicked holds. */
+  markedNodeId?: number | null;
 };
 
 /**
@@ -121,6 +123,7 @@ export function ReportNodesTable({
   reset,
   headerExtra,
   focusRow,
+  markedNodeId,
 }: Props) {
   const nodePopulation = circuitConfig?.nodes.find((n) => n.name === population.name);
   const sessionKey = nodePopulation
@@ -338,6 +341,7 @@ export function ReportNodesTable({
       reset={reset}
       headerExtra={headerExtra}
       focusRow={focusRow}
+      markedNodeId={markedNodeId}
       rowIndexOf={rowAmongListed}
       onRowClick={onCellClick}
       selectedNodeIds={selectedNodeIds}

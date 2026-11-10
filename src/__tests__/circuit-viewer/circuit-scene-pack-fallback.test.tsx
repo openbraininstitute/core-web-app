@@ -1,9 +1,11 @@
 import { act, render, screen } from '@testing-library/react';
+import chroma from 'chroma-js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { CircuitScene } from '@/features/circuit-viewer/circuit-scene';
 import { circuitMorphologiesFlag } from '@/features/feature-flags/flags';
+import { NEUTRAL_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { MorphologyPackStatus } from '@/api/small-scale-simulator/circuit/morphology-pack';
@@ -66,9 +68,15 @@ vi.mock('@/features/scan-config/components/circuit-viz/circuit-viz', () => ({
 
 vi.mock('@/features/scan-config/components/color-by/circuit-viewer-chrome', () => ({
   STATUS_PLACE: {},
-  CircuitViewerChrome: ({ viz }: { viz: { menu: typeof h.menu } }) => {
+  CircuitViewerChrome: ({
+    viz,
+    legendSlotRef,
+  }: {
+    viz: { menu: typeof h.menu; colorBy?: unknown };
+    legendSlotRef: (element: HTMLElement | null) => void;
+  }) => {
     h.menu = viz.menu;
-    return null;
+    return viz.colorBy ? <div data-testid="legend-slot" ref={legendSlotRef} /> : null;
   },
 }));
 
@@ -106,6 +114,39 @@ const READY: MorphologyPackStatus = { state: 'ready', size: 1234, sha256: 'ab12'
 
 const circuitOf = (id: string, scale: ICircuit['scale']) =>
   ({ id, name: id, scale }) as unknown as ICircuit;
+
+describe('CircuitScene, for a host with a colour scale of its own', () => {
+  const micro = circuitOf('micro', CircuitScaleDictionary.Microcircuit);
+
+  it('puts its key under the colour-by key', () => {
+    render(<CircuitScene circuit={micro} largeCircuit legend={<span>the key</span>} />);
+    expect(screen.getByTestId('legend-slot')).toContainElement(screen.getByText('the key'));
+  });
+
+  it('puts its key in the corner where there is no colour-by', () => {
+    render(
+      <CircuitScene
+        circuit={micro}
+        largeCircuit
+        features={{ colorBy: false }}
+        legend={<span>the key</span>}
+      />
+    );
+    expect(screen.queryByTestId('legend-slot')).toBeNull();
+    expect(screen.getByText('the key').parentElement?.className).toContain('right-3');
+  });
+
+  it('draws cells coloured by no property in its colour, and blue for any other host', () => {
+    render(<CircuitScene circuit={micro} largeCircuit uncolouredCells={NEUTRAL_NEURON_COLOR} />);
+    expect(h.large?.defaultColor).toBe(NEUTRAL_NEURON_COLOR);
+    expect(chroma(NEUTRAL_NEURON_COLOR).get('hsl.s')).toBeLessThan(0.1);
+    expect(h.large?.uncolouredCells).toBe(NEUTRAL_NEURON_COLOR);
+
+    render(<CircuitScene circuit={micro} largeCircuit />);
+    expect(chroma(h.large?.defaultColor ?? '').get('hsl.s')).toBeGreaterThan(0.5);
+    expect(h.large?.uncolouredCells).toBeUndefined();
+  });
+});
 
 describe('CircuitScene on the pack', () => {
   beforeEach(() => {

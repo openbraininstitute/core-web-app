@@ -27,7 +27,11 @@ import {
 } from '@/features/offline-auth-management';
 import { useModelQuery } from '@/features/scan-config/components/atoms';
 import { useCostConfirmation } from '@/features/scan-config/components/cost-confirmation-modal';
-import { FileViewer, hasStatistics } from '@/features/scan-config/components/file-viewer';
+import {
+  FileViewer,
+  hasStatistics,
+  isSpikeFile,
+} from '@/features/scan-config/components/file-viewer';
 import {
   SimulationFiles,
   useSimulationResultFiles,
@@ -257,11 +261,12 @@ export function SimulationsTab({
             renderer: ActivityCustomFileRenderer.Default,
           }))
       : [];
-    const reports = [...resultFiles.filter((f) => hasStatistics(f)), ...inputs].sort(byReportKind);
+    const reports = [...resultFiles.filter(hasStatistics), ...inputs].sort(byReportKind);
     return shownReport && !reports.some((f) => f.asset.id === shownReport.asset.id)
       ? [shownReport, ...reports]
       : reports;
   }, [resultFiles, activeSimulation, shownReport]);
+  const spikeFiles = useMemo(() => reportFiles.filter(isSpikeFile), [reportFiles]);
   const activeSimulationJobIdFromLaunch = activeSimulation
     ? jobIdMap.get(activeSimulation.id)
     : undefined;
@@ -537,6 +542,7 @@ export function SimulationsTab({
                     neuronSets={neuronSets}
                     simulationPicker={simulationPicker}
                     timeline={timeline}
+                    spikeFiles={spikeFiles}
                   >
                     <FileViewer
                       file={selectedFile}

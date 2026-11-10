@@ -65,6 +65,7 @@ export function LargeCircuitPreview({
   onSubjectCellClick,
   nodeColors,
   defaultColor = DEFAULT_NEURON_COLOR,
+  uncolouredCells,
   recededColor,
   onPopulationClick,
   onPositionlessPopulationsChange,
@@ -74,6 +75,7 @@ export function LargeCircuitPreview({
   signals,
   onZoomChange,
   overlays,
+  voxels,
   overlaysInteractive = false,
   onOverlayTransform,
   highlightedOverlayId = null,
@@ -144,7 +146,8 @@ export function LargeCircuitPreview({
   const [fallback, setFallback] = React.useState<Fallback | null>(null);
 
   // `null`, the soma's own colour, leaves it to the viewer's ramp, where a
-  // colour of ours would flatten an uncoloured cloud to a single hue.
+  // colour of ours would flatten an uncoloured cloud to a single hue. A host
+  // that asks for that says so with `uncolouredCells`.
   // Only while a cell is pointed out, so the background alone repaints no more than before.
   const pointed = pointingOut(highlightedCell, shown !== null, recededColor);
   const { fadedColor } = pointed;
@@ -154,7 +157,8 @@ export function LargeCircuitPreview({
         populations: somas.populations,
         subject: subjectName,
         nodeColors,
-        receded,
+        own: uncolouredCells ?? null,
+        receded: receded ?? uncolouredCells,
         hidden,
         shownCells,
         highlightedCell,
@@ -164,6 +168,7 @@ export function LargeCircuitPreview({
       somas.populations,
       subjectName,
       nodeColors,
+      uncolouredCells,
       receded,
       hidden,
       shownCells,
@@ -196,6 +201,7 @@ export function LargeCircuitPreview({
           cellHover={pointed.hover && (features?.cellHover ?? true)}
           onCellClick={canPickPopulation ? handleCellClick : undefined}
           electrodes={overlays}
+          voxels={voxels}
           electrodeRadius={electrodeRadius}
           selectedElectrode={highlightedOverlayId}
           onElectrodeTransform={overlaysInteractive ? onOverlayTransform : undefined}

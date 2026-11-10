@@ -5,6 +5,14 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 
 import { CircuitMorphologyViewer } from '@/features/circuit-viewer/morphologies/engine/circuit-morphology-viewer';
 import {
+  BAND_PX,
+  HALO_PX,
+  HALOED_LEAST_PX,
+  minRadius,
+  OVER_OPACITIES,
+  OVER_SIZES,
+} from '@/features/circuit-viewer/morphologies/engine/electrodes';
+import {
   CELL_MASK,
   HOLE,
   NO_CELL,
@@ -12,6 +20,7 @@ import {
 } from '@/features/circuit-viewer/morphologies/engine/impostors';
 import { BLOCK, roomFor } from '@/features/circuit-viewer/morphologies/engine/segment-arena';
 import { NEON } from '@/features/circuit-viewer/morphologies/engine/spike-light';
+import { HIDDEN_SHARE } from '@/features/circuit-viewer/morphologies/engine/voxels';
 import {
   type MortonSorted,
   mortonSorted,
@@ -34,6 +43,8 @@ import type {
   CircuitSomas,
   ElectrodeGroup,
   MorphologyChunks,
+  VoxelFrame,
+  VoxelLayer,
 } from '@/features/circuit-viewer/morphologies/types';
 import type { Sections } from '@/features/scan-config/types';
 import type { Look } from '@/features/viewer-3d/engine/looks';
@@ -136,6 +147,7 @@ interface Internals {
   camera: THREE.Camera;
   scene: THREE.Scene;
   electrodes: Quads | null;
+  pixelRatio: number;
   spots: THREE.Scene;
   spotUniforms: { uSegments: { value: number } };
   markerUniforms: { uRadius: { value: number } };
@@ -638,6 +650,211 @@ describe('the circuit morphology viewer', () => {
     ]);
   });
 
+  it('draws contacts among somas solid where nothing is nearer, faint where something is, and the rest over them', () => {
+    const { viewer, inner } = make();
+    viewer.setSomas(somas());
+    const [a, b] = arrays();
+    frames(inner);
+    viewer.setElectrodes([{ ...a, among: true }, b], null);
+    expect(frames(inner)).toBe(1);
+
+    expect(inner.electrodes?.geometry.instanceCount).toBe(1);
+    const solid = inner.scene.getObjectByName('contacts among the cells') as Quads;
+    const faint = inner.scene.getObjectByName('hidden contacts') as Quads;
+    for (const mesh of [solid, faint]) {
+      expect(mesh.geometry.instanceCount).toBe(2);
+      expect(rounded(mesh.geometry.getAttribute('aContact').array)).toEqual(
+        rounded([110, 220, 300, 100, 200, 300].map((v, i) => v - inner.centre[i % 3]))
+      );
+    }
+    // After the cells, the hidden parts first, and under what is over everything.
+    expect(faint.renderOrder).toBeLessThan(solid.renderOrder);
+    expect(solid.renderOrder).toBeLessThan(inner.electrodes?.renderOrder ?? 0);
+
+    const solidMaterial = solid.material as THREE.ShaderMaterial;
+    expect(solidMaterial.depthFunc).toBe(THREE.LessEqualDepth);
+    expect([solidMaterial.depthTest, solidMaterial.depthWrite]).toEqual([true, true]);
+    expect(solidMaterial.uniforms.uRing.value).toBeGreaterThan(0);
+    expect(solidMaterial.uniforms.uOpacities.value.toArray()).toEqual([1, 1]);
+    expect(solidMaterial.uniforms.uSizes.value.toArray()).toEqual([1, 1]);
+
+    const faintMaterial = faint.material as THREE.ShaderMaterial;
+    expect(faintMaterial.depthFunc).toBe(THREE.GreaterDepth);
+    expect([faintMaterial.depthTest, faintMaterial.depthWrite]).toEqual([true, false]);
+    expect(faintMaterial.blending).toBe(THREE.CustomBlending);
+    expect(faintMaterial.uniforms.uRing.value).toBe(0);
+    // Both passes place a contact at the same depth, so that each of its pixels gets one of them.
+    expect(faintMaterial.uniforms.uLift.value).toBe(solidMaterial.uniforms.uLift.value);
+    // Round the middle of the contacts among the cells, from one side to the other seen face on.
+    const fade = faintMaterial.uniforms.uFade.value;
+    expect([fade.x, fade.y, fade.z]).toEqual([105, 210, 300].map((v, i) => v - inner.centre[i]));
+    expect(fade.w).toBeCloseTo(Math.hypot(5, 10) / Math.sqrt(3));
+    // A halo where it is solid, none where it is hidden, at one size so that a contact part hidden stays one disc.
+    expect(solidMaterial.uniforms.uHalo.value).toBe(HALO_PX * inner.pixelRatio);
+    expect(faintMaterial.uniforms.uHalo.value).toBe(0);
+    expect(solidMaterial.uniforms.uMinRadius.value).toBe(HALOED_LEAST_PX * inner.pixelRatio);
+    expect(faintMaterial.uniforms.uMinRadius.value).toBe(solidMaterial.uniforms.uMinRadius.value);
+    // What is over everything keeps its own look unless it asks.
+    expect(inner.materials.electrode.uniforms.uHalo.value).toBe(0);
+    expect(inner.scene.getObjectByName('contacts over morphologies')).toBeUndefined();
+  });
+
+  describe('contacts among the cells where those are morphologies', () => {
+    const groups = (): ElectrodeGroup[] => {
+      const [a, b] = arrays();
+      return [
+        { ...a, among: true },
+        { ...b, halo: true },
+      ];
+    };
+    const named = (inner: Internals, name: string) => inner.scene.getObjectByName(name) as Quads;
+    const shown = (inner: Internals, name: string) => named(inner, name)?.visible === true;
+
+    it('draws them in front of it all with a halo, larger and more opaque on the near side', () => {
+      const { viewer, inner } = make();
+      viewer.setData(circuit());
+      viewer.setElectrodes(groups(), null);
+
+      const over = named(inner, 'contacts over morphologies');
+      expect(over.geometry.instanceCount).toBe(2);
+      expect(rounded(over.geometry.getAttribute('aContact').array)).toEqual([10, 20, 0, 0, 0, 0]);
+      expect(over.renderOrder).toBeLessThan(inner.electrodes?.renderOrder ?? 0);
+      expect(shown(inner, 'hidden contacts')).toBe(false);
+      expect(shown(inner, 'contacts among the cells')).toBe(false);
+
+      const material = over.material as THREE.ShaderMaterial;
+      expect(material.depthFunc).toBe(THREE.LessEqualDepth);
+      expect([material.depthTest, material.depthWrite]).toEqual([true, true]);
+      expect(material.blending).toBe(THREE.CustomBlending);
+      expect(material.uniforms.uFront.value).toBe(1);
+      expect(material.uniforms.uRing.value).toBeGreaterThan(0);
+      expect(material.uniforms.uHalo.value).toBe(HALO_PX * inner.pixelRatio);
+      expect(material.uniforms.uMinRadius.value).toBe(HALOED_LEAST_PX * inner.pixelRatio);
+      expect(material.uniforms.uFade.value.w).toBeGreaterThan(0);
+      expect(material.uniforms.uSizes.value.toArray()).toEqual(OVER_SIZES);
+      expect(material.uniforms.uOpacities.value.toArray()).toEqual(OVER_OPACITIES);
+    });
+
+    it('gives a halo to a contact over everything that asks for one, and no other', () => {
+      const { viewer, inner } = make();
+      viewer.setData(circuit());
+      viewer.setElectrodes(groups(), null);
+      expect(inner.materials.electrode.uniforms.uHalo.value).toBe(HALO_PX * inner.pixelRatio);
+      expect(inner.materials.electrode.uniforms.uOpacities.value.toArray()).toEqual([1, 1]);
+
+      viewer.setElectrodes(arrays(), null);
+      expect(inner.materials.electrode.uniforms.uHalo.value).toBe(0);
+      expect(inner.materials.electrode.uniforms.uMinRadius.value).toBe(minRadius(0));
+    });
+
+    it('keeps the least radius of a contact with a halo as its radius changes, over somas and morphologies alike', () => {
+      const { viewer, inner } = make();
+      viewer.setSomas(somas());
+      viewer.setElectrodes(groups(), null);
+      viewer.setData(circuit());
+      viewer.setElectrodeRadius(5);
+      const least = HALOED_LEAST_PX * inner.pixelRatio;
+      expect(inner.materials.electrode.uniforms.uMinRadius.value).toBe(least);
+
+      viewer.setData(null);
+      expect(inner.materials.electrode.uniforms.uMinRadius.value).toBe(least);
+    });
+
+    it('changes over as morphologies replace the somas and as the somas come back', () => {
+      const { viewer, inner } = make();
+      viewer.setSomas(somas());
+      viewer.setElectrodes(groups(), null);
+      expect(shown(inner, 'contacts among the cells')).toBe(true);
+      const hidden = named(inner, 'hidden contacts').material as THREE.ShaderMaterial;
+      expect(hidden.uniforms.uHalo.value).toBe(0);
+
+      frames(inner);
+      viewer.setData(circuit());
+      expect(frames(inner)).toBeGreaterThan(0);
+      expect(shown(inner, 'contacts over morphologies')).toBe(true);
+      expect(shown(inner, 'contacts among the cells')).toBe(false);
+      expect(hidden.uniforms.uHalo.value).toBeGreaterThan(0);
+
+      viewer.setData(null);
+      expect(shown(inner, 'contacts over morphologies')).toBe(false);
+      expect(shown(inner, 'contacts among the cells')).toBe(true);
+      expect(hidden.uniforms.uHalo.value).toBe(0);
+    });
+  });
+
+  describe('boxes among the cells', () => {
+    const layer = (boxes: number): VoxelLayer => ({
+      centres: new Float32Array(3 * boxes).fill(100),
+      sizes: new Float32Array(3 * boxes).fill(10),
+      looks: new Float32Array(4 * boxes).fill(0.5),
+      lattice: {
+        axes: [0, 1, 2],
+        planes: Uint32Array.of(0, boxes),
+        rows: Uint32Array.from({ length: boxes + 1 }, (_, i) => i),
+      },
+    });
+    const hiddenOf = (inner: Internals) => inner.scene.getObjectByName('hidden voxels') as Quads;
+    const boxesOf = (inner: Internals) => inner.scene.getObjectByName('voxels') as Quads;
+
+    it('draws them whole where nothing is nearer, fainter first where something is, in one order', () => {
+      const { viewer, inner } = make();
+      viewer.setData(circuit());
+      viewer.setVoxels(layer(2));
+
+      const whole = boxesOf(inner);
+      const hidden = hiddenOf(inner);
+      expect(hidden.renderOrder).toBeLessThan(whole.renderOrder);
+      expect(hidden.geometry).toBe(whole.geometry);
+
+      const wholeMaterial = whole.material as THREE.ShaderMaterial;
+      expect(wholeMaterial.depthFunc).toBe(THREE.LessEqualDepth);
+      expect([wholeMaterial.depthTest, wholeMaterial.depthWrite]).toEqual([true, false]);
+      expect(wholeMaterial.uniforms.uShare.value).toBe(1);
+
+      const hiddenMaterial = hidden.material as THREE.ShaderMaterial;
+      expect(hiddenMaterial.depthFunc).toBe(THREE.GreaterDepth);
+      expect([hiddenMaterial.depthTest, hiddenMaterial.depthWrite]).toEqual([true, false]);
+      expect(hiddenMaterial.blending).toBe(THREE.CustomBlending);
+      expect(hiddenMaterial.uniforms.uShare.value).toBe(HIDDEN_SHARE);
+    });
+
+    it('follows the boxes into a larger mesh, and turns with them', () => {
+      const { viewer, inner } = make();
+      viewer.setData(circuit());
+      viewer.setVoxels(layer(1));
+      const frame: VoxelFrame = [
+        [0, 1, 0],
+        [-1, 0, 0],
+        [0, 0, 1],
+      ];
+      viewer.setVoxels({ ...layer(3), frame });
+
+      expect(hiddenOf(inner).geometry).toBe(boxesOf(inner).geometry);
+      expect(hiddenOf(inner).geometry.instanceCount).toBe(3);
+      expect(hiddenOf(inner).quaternion.equals(boxesOf(inner).quaternion)).toBe(true);
+      expect(hiddenOf(inner).quaternion.w).not.toBe(1);
+    });
+
+    it('stops with them', () => {
+      const { viewer, inner } = make();
+      viewer.setData(circuit());
+      viewer.setVoxels(layer(1));
+      const hidden = hiddenOf(inner);
+
+      viewer.setVoxels(null);
+      expect([boxesOf(inner).visible, hidden.visible]).toEqual([false, false]);
+    });
+  });
+
+  it('leaves the passes among the cells undrawn for a host that asks for none', () => {
+    const { viewer, inner } = make();
+    viewer.setData(circuit());
+    viewer.setElectrodes(arrays(), null);
+    expect(inner.scene.getObjectByName('contacts among the cells')).toBeUndefined();
+    expect(inner.scene.getObjectByName('hidden contacts')).toBeUndefined();
+    expect(inner.materials.electrode.uniforms.uOpacities.value.toArray()).toEqual([1, 1]);
+  });
+
   it('draws synapses after the cells and among them, behind what is nearer, centred as the data is', () => {
     const { viewer, inner } = make();
     viewer.setData(circuit());
@@ -682,6 +899,24 @@ describe('the circuit morphology viewer', () => {
     const plain = [...sRGB('#1b6ef3'), 1];
     const lighter = rounded(rgb('#12a150').map((c) => c / 255 + (1 - c / 255) * 0.55));
     expect(looks).toEqual([...plain, ...plain, ...lighter, 1.55]);
+  });
+
+  it('draws a band round the contacts of a group that has one, in its colour, and none round the rest', () => {
+    const { viewer, inner } = make();
+    viewer.setData(circuit());
+    const [a, b] = arrays();
+    viewer.setElectrodes([a, { ...b, band: '#ff0000' }], null);
+
+    const bands = rounded(inner.electrodes?.geometry.getAttribute('aBand').array ?? []);
+    expect(bands).toEqual([...[0, 0, 0, 0], ...[0, 0, 0, 0], ...[1, 0, 0, 1]]);
+    expect(rounded(looksOf(inner) ?? []).slice(8)).toEqual([...sRGB('#12a150'), 1]);
+    const material = inner.materials.electrode as THREE.ShaderMaterial;
+    expect(material.uniforms.uBand.value).toBe(BAND_PX * inner.pixelRatio);
+
+    viewer.setElectrodes(arrays(), null);
+    expect(rounded(inner.electrodes?.geometry.getAttribute('aBand').array ?? [])).toEqual(
+      Array(12).fill(0)
+    );
   });
 
   it('draws a contact in grey where its colour cannot be read', () => {

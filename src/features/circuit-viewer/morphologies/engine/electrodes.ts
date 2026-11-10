@@ -2,7 +2,14 @@
  * Draws electrode contacts as the somas view draws them: each is a flat disc in the colour the host gives its array,
  * in front of the cells even where they are nearer the eye. A contact is as wide as its radius in µm, but never under
  * a pixel or two across, so a probe stays visible from afar. A ring in the theme's foreground colour goes round each
- * contact, so that it stands out on cells of its own colour.
+ * contact, so that it stands out on cells of its own colour. A contact may have a band of a second colour round its
+ * ring, so that the disc can say one thing and the band another.
+ *
+ * A contact may be drawn among the cells instead, in two passes whose depth tests are each other's opposite: solid and
+ * ringed with a halo where nothing is nearer the eye, faint where something is, and fainter the further it is across
+ * its array.
+ * Over morphologies that says little, as most contacts have a branch in front of them. There it is drawn over the
+ * cells with a halo to stand out on them, and its depth shows in its size and opacity across the array.
  */
 
 import chroma from 'chroma-js';
@@ -19,6 +26,20 @@ const HIGHLIGHT_LIGHTEN = 0.55;
 const UNREADABLE = '#808080';
 /** The ring's width, in CSS pixels, outside the disc. */
 export const RING_PX = 1;
+/** The width, in CSS pixels, of a contact's band, outside its ring. */
+export const BAND_PX = 2.5;
+/** The halo's width, in CSS pixels, outside the ring and the band. */
+export const HALO_PX = 1.5;
+/** The least radius, in CSS pixels, of a contact with a halo, whose colour must show inside it however far the zoom. */
+export const HALOED_LEAST_PX = 3;
+/** How opaque a hidden contact is on the near side of its array, and on the far side. */
+export const HIDDEN_OPACITIES = [0.6, 0.2] as const;
+/** How opaque a contact over morphologies is on the near side of its array and on the far side, and how large. */
+export const OVER_OPACITIES = [1, 0.45] as const;
+export const OVER_SIZES = [1.25, 0.8] as const;
+/** The share of the depth range that contacts over the cells are squeezed into, in front of all else. */
+export const FRONT_DEPTH = 0.001;
+const LEAST_FADE_REACH_UM = 1;
 
 export interface ElectrodeUniforms {
   /** A contact's radius, in µm. */
@@ -32,6 +53,12 @@ export interface ElectrodeUniforms {
    * the full resolution, so a frame drawn at less still draws them as wide on screen.
    */
   uScale: { value: number };
+  /** Where opacity and size fall with depth, if they do: xyz the array's middle, w how far from it, in µm, the fade runs. */
+  uFade: { value: THREE.Vector4 };
+  /** The halo's width, in device pixels of the full resolution; 0 for none. */
+  uHalo: { value: number };
+  /** The halo's colour, in sRGB. */
+  uHaloColour: { value: THREE.Vector3 };
 }
 
 /** The least radius in device pixels for contacts `radius` µm wide, counted the way the somas view counts it. */
@@ -40,12 +67,18 @@ export function minRadius(radius: number): number {
 }
 
 /**
- * How far from its centre the vertex shader draws a contact `radius` µm wide, ring included: in CSS pixels, where one
- * CSS pixel spans `um` µm, on a screen of `pixelRatio`.
+ * How far from its centre the vertex shader draws a contact `radius` µm wide, ring and band included: in CSS pixels,
+ * where one CSS pixel spans `um` µm, on a screen of `pixelRatio`.
  */
-export function drawnRadius(radius: number, lit: boolean, um: number, pixelRatio: number): number {
+export function drawnRadius(
+  radius: number,
+  lit: boolean,
+  um: number,
+  pixelRatio: number,
+  banded = false
+): number {
   const disc = (radius * (lit ? HIGHLIGHT_SCALE : 1)) / um;
-  return Math.max(disc, minRadius(radius) / pixelRatio) + RING_PX;
+  return Math.max(disc, minRadius(radius) / pixelRatio) + RING_PX + (banded ? BAND_PX : 0);
 }
 
 const VERTEX = /* glsl */ `
@@ -53,55 +86,122 @@ uniform vec4 uViewport;
 uniform float uRadius;
 uniform float uMinRadius;
 uniform float uRing;
+uniform float uBand;
 uniform float uLift;
 uniform float uScale;
+uniform vec4 uFade;
+uniform float uHalo;
+uniform vec2 uOpacities;
+uniform vec2 uSizes;
+uniform float uFront;
 in vec3 aContact;
 in vec4 aLook;
+in vec4 aBand;
 out vec3 vColour;
+out vec3 vBand;
 out vec2 vCorner;
 out float vInner;
+out float vRingEnd;
+out float vBandEnd;
+out float vOpacity;
 ${PIXEL_UM}
 void main() {
 	vec3 c = ( modelViewMatrix * vec4( aContact, 1.0 ) ).xyz;
 	float um = pixelUm( c.z ) * uScale;
-	float r = max( uRadius * aLook.a, uMinRadius * um );
-	float outer = r + uRing * um;
+	float away = clamp( 0.5 + ( ( modelViewMatrix * vec4( uFade.xyz, 1.0 ) ).z - c.z ) / ( 2.0 * uFade.w ), 0.0, 1.0 );
+	float r = max( uRadius * aLook.a, uMinRadius * um ) * mix( uSizes.x, uSizes.y, away );
+	float band = uBand * aBand.a;
+	float outer = r + ( uRing + band + uHalo ) * um;
 	vInner = r / outer;
+	vRingEnd = ( r + uRing * um ) / outer;
+	vBandEnd = ( r + ( uRing + band ) * um ) / outer;
 	vColour = aLook.rgb;
+	vBand = aBand.rgb;
 	vCorner = position.xy;
+	vOpacity = mix( uOpacities.x, uOpacities.y, away );
 	gl_Position = projectionMatrix * vec4( c.xy + position.xy * outer, c.z + uLift * r, 1.0 );
+	// Clip z runs from -w to w here: squeezed towards -w, keeping the order among the contacts.
+	gl_Position.z = mix( gl_Position.z, ${FRONT_DEPTH.toFixed(4)} * gl_Position.z - ${(1 - FRONT_DEPTH).toFixed(4)} * gl_Position.w, uFront );
 }
 `;
 
 // The colours as they came, in sRGB: no tone mapping and no conversion.
 const FRAGMENT = /* glsl */ `
 uniform vec3 uRingColour;
+uniform vec3 uHaloColour;
 in vec3 vColour;
+in vec3 vBand;
 in vec2 vCorner;
 in float vInner;
+in float vRingEnd;
+in float vBandEnd;
+in float vOpacity;
 
 void main() {
 	float d = length( vCorner );
 	if ( d > 1.0 ) discard;
-	gl_FragColor = vec4( d > vInner ? uRingColour : vColour, 1.0 );
+	gl_FragColor = vec4(
+		d > vBandEnd ? uHaloColour : d > vRingEnd ? vBand : d > vInner ? uRingColour : vColour,
+		vOpacity
+	);
 }
 `;
 
 /**
+ * Blending set out in full on `material`: three blends a material marked transparent only after every opaque one,
+ * whatever its order, and the contacts are to be drawn over these boxes.
+ */
+export function blendOver(material: THREE.Material): void {
+  material.blending = THREE.CustomBlending;
+  material.blendEquation = THREE.AddEquation;
+  material.blendSrc = THREE.SrcAlphaFactor;
+  material.blendDst = THREE.OneMinusSrcAlphaFactor;
+  material.blendSrcAlpha = THREE.OneFactor;
+  material.blendDstAlpha = THREE.OneMinusSrcAlphaFactor;
+  material.depthTest = false;
+  material.depthWrite = false;
+}
+
+/** Has `material` draw only where something nearer the eye is drawn already, blended over it. */
+export function drawWhereHidden(material: THREE.Material): void {
+  blendOver(material);
+  material.depthTest = true;
+  material.depthFunc = THREE.GreaterDepth;
+}
+
+export interface DotOptions {
+  among?: boolean;
+  ringed?: boolean;
+  opacities?: readonly [number, number];
+  sizes?: readonly [number, number];
+  front?: boolean;
+}
+
+/**
  * The contacts' material, with a ring one CSS pixel wide on a screen of `pixelRatio`. Dots drawn `among` the cells, as
- * synapses are, have no ring, and anything nearer the eye hides them. The shader moves them towards the eye by their
- * radius, so that they sit on the surface they lie on rather than inside it.
+ * synapses are, have no ring unless `ringed`, and anything nearer the eye hides them. The shader moves them towards the
+ * eye by their radius, so that they sit on the surface they lie on.
  */
 export function electrodeMaterial(
   uniforms: ElectrodeUniforms & Pick<ImpostorUniforms, 'uViewport'>,
   pixelRatio: number,
-  { among = false } = {}
+  {
+    among = false,
+    ringed = !among,
+    opacities = [1, 1],
+    sizes = [1, 1],
+    front = false,
+  }: DotOptions = {}
 ): THREE.ShaderMaterial {
   const material = new THREE.ShaderMaterial({
     uniforms: {
       ...uniforms,
-      uRing: { value: among ? 0 : RING_PX * pixelRatio },
+      uRing: { value: ringed ? RING_PX * pixelRatio : 0 },
+      uBand: { value: ringed ? BAND_PX * pixelRatio : 0 },
       uLift: { value: among ? 1 : 0 },
+      uOpacities: { value: new THREE.Vector2(...opacities) },
+      uSizes: { value: new THREE.Vector2(...sizes) },
+      uFront: { value: front ? 1 : 0 },
     },
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,
@@ -112,26 +212,70 @@ export function electrodeMaterial(
   return material;
 }
 
+/** Has `material` draw in front of all else, blended over it, with the nearest of its own dots over the rest. */
+function drawInFront(material: THREE.Material): void {
+  blendOver(material);
+  material.depthTest = true;
+  material.depthWrite = true;
+}
+
+/**
+ * The materials of contacts drawn among the cells, where nothing is nearer the eye and where something is, and over
+ * morphologies, each made by the tier's `make`.
+ */
+export function contactMaterials<U, M extends THREE.Material>(
+  uniforms: U,
+  fadingUniforms: U,
+  make: (uniforms: U, options: DotOptions) => M
+) {
+  const contactAmong = make(uniforms, { among: true, ringed: true });
+  contactAmong.depthWrite = true;
+  const contactHidden = make(fadingUniforms, { among: true, opacities: HIDDEN_OPACITIES });
+  drawWhereHidden(contactHidden);
+  const contactOver = make(fadingUniforms, {
+    opacities: OVER_OPACITIES,
+    sizes: OVER_SIZES,
+    front: true,
+  });
+  drawInFront(contactOver);
+  return { contactAmong, contactHidden, contactOver };
+}
+
 /**
  * Dots in one colour, three floats each in the circuit's frame: an electrode array's contacts, a group of synapses, or
- * a location marker. Only an electrode array has an `id`, by which it is highlighted.
+ * a location marker. Only an electrode array has an `id`, by which it is highlighted. A dot with a ring has a band in
+ * `band` round it.
  */
 export interface DotGroup {
   id?: string;
   color: string;
+  band?: string;
   coordinates: ArrayLike<number>;
 }
 
+/** Sets `fade` to run across the dots of `groups`, with `centre` taken off: from one side to the other, seen face on. */
+export function fadeAcross(groups: readonly DotGroup[], centre: Vec3, fade: THREE.Vector4): void {
+  const box = new THREE.Box3();
+  growRoundDots(box, groups, centre, 0);
+  if (box.isEmpty()) return;
+  const middle = box.getCenter(new THREE.Vector3());
+  const half = box.getSize(new THREE.Vector3()).multiplyScalar(0.5);
+  const reach = Math.max(half.length() / Math.sqrt(3), LEAST_FADE_REACH_UM);
+  fade.set(middle.x, middle.y, middle.z, reach);
+}
+
 /**
- * Writes the dots of `groups` into `contacts`, three floats each with `centre` subtracted, and their looks into
- * `looks`, four floats each: the colour in sRGB and the scale. Returns true where that changed a float.
+ * Writes the dots of `groups` into `contacts`, three floats each with `centre` subtracted, their looks into `looks`,
+ * four floats each: the colour in sRGB and the scale, and their bands into `bands`, four floats each: the colour in sRGB
+ * and 1, or 0 for none. Returns true where that changed a float.
  */
 export function writeDots(
   groups: readonly DotGroup[],
   highlighted: string | null,
   centre: Vec3,
   contacts: Float32Array,
-  looks: Float32Array
+  looks: Float32Array,
+  bands: Float32Array
 ): boolean {
   let changed = false;
   const write = (array: Float32Array, at: number, value: number) => {
@@ -146,13 +290,40 @@ export function writeDots(
     const own = chroma.valid(group.color) ? group.color : UNREADABLE;
     const colour = lit ? chroma.mix(own, '#ffffff', HIGHLIGHT_LIGHTEN, 'rgb') : chroma(own);
     const look = [...colour.gl().slice(0, 3), lit ? HIGHLIGHT_SCALE : 1];
+    const band =
+      group.band === undefined
+        ? [0, 0, 0, 0]
+        : [
+            ...chroma(chroma.valid(group.band) ? group.band : UNREADABLE)
+              .gl()
+              .slice(0, 3),
+            1,
+          ];
     const xyz = group.coordinates;
     for (let i = 0; i + 2 < xyz.length; i += 3, k++) {
       for (let c = 0; c < 3; c++) write(contacts, 3 * k + c, xyz[i + c] - centre[c]);
       for (let c = 0; c < 4; c++) write(looks, 4 * k + c, look[c]);
+      for (let c = 0; c < 4; c++) write(bands, 4 * k + c, band[c]);
     }
   }
   return changed;
+}
+
+/** Grows `box` round the dots of `groups`, each reaching `radius` µm from where it is, with `centre` taken off. */
+export function growRoundDots(
+  box: THREE.Box3,
+  groups: readonly DotGroup[],
+  centre: Vec3,
+  radius: number
+): void {
+  const corner = new THREE.Vector3();
+  for (const { coordinates: xyz } of groups) {
+    for (let i = 0; i + 2 < xyz.length; i += 3) {
+      corner.set(xyz[i] - centre[0], xyz[i + 1] - centre[1], xyz[i + 2] - centre[2]);
+      box.expandByPoint(corner.addScalar(-radius));
+      box.expandByPoint(corner.addScalar(2 * radius));
+    }
+  }
 }
 
 export function countDots(groups: readonly DotGroup[]): number {

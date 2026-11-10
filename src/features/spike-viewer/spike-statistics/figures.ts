@@ -1,5 +1,6 @@
 import { PICK_COLORS } from '@/features/sonata-viewer/constants';
 import {
+  axis,
   axisTitle,
   BASE_LAYOUT,
   cellCount,
@@ -532,12 +533,6 @@ export function scatterFigure(
     };
   };
 
-  const axis = (label: string) => ({
-    title: axisTitle(label),
-    automargin: true,
-    gridcolor: GRID_COLOR,
-    zeroline: false,
-  });
   return {
     data: data as Data[],
     tooltip,

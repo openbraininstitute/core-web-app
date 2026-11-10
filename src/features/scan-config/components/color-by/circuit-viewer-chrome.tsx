@@ -9,6 +9,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { createPortal } from 'react-dom';
 
 import { PopulationsMenu } from '@/features/circuit-nodes/components/populations-menu';
+import { GIZMO_SIZE } from '@/features/viewer-3d/chrome/axes-gizmo';
 import { PILL_CLASS, ROUND_PILL_CLASS } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 
@@ -33,6 +34,8 @@ import styles from './chrome-animations.module.css';
 const LEFT_TOP = 12;
 const GAP = 8;
 const LEFT_HEIGHT = 32 + GAP + 32;
+/** What the colour-by column leaves free below it: the axes gizmo, in its corner, and a gap. */
+const ABOVE_GIZMO = LEFT_TOP + GIZMO_SIZE + LEFT_TOP + GAP;
 // `top-3`, a button's `size-8` and `gap-2`, in rem as the root font is not 16px.
 const BESIDE_RECENTRE = '3.25rem';
 
@@ -101,7 +104,14 @@ export interface ICircuitViewerChromeProps {
    * the way back to them all: said at the top centre while some are. With a
    * cell `held`, the way back lets that one go first.
    */
-  selection?: { count: number; total: number; onReset: () => void; held?: boolean };
+  selection?: {
+    count: number;
+    total: number;
+    onReset: () => void;
+    held?: boolean;
+    /** What is selected, one of them: a neuron unless said. */
+    noun?: string;
+  };
 }
 
 /**
@@ -132,6 +142,7 @@ export function CircuitViewerChrome({
     colorBy?.mapping &&
     colorBy.mapping.mode !== 'none';
   const showLegendToggle = !!selectedProperty;
+  const noun = selection?.noun ?? 'neuron';
   // Two states the checklist can leave the scene in, worked out here rather
   // than in the viewers: the chrome is the one layer over both of them, and it
   // already holds the way back.
@@ -309,14 +320,14 @@ export function CircuitViewerChrome({
             <strong className="text-primary-9 font-semibold">
               {selection.count.toLocaleString()}
             </strong>
-            of {selection.total.toLocaleString()} {selection.total === 1 ? 'neuron' : 'neurons'}{' '}
-            selected
+            of {selection.total.toLocaleString()} {noun}
+            {selection.total === 1 ? '' : 's'} selected
           </span>
           <button
             type="button"
             onClick={selection.onReset}
-            title={selection.held ? 'Let the neuron go' : 'Show every neuron again'}
-            aria-label={selection.held ? 'Let the neuron go' : 'Show every neuron again'}
+            title={selection.held ? `Let the ${noun} go` : `Show every ${noun} again`}
+            aria-label={selection.held ? `Let the ${noun} go` : `Show every ${noun} again`}
             className={ROUND_PILL_CLASS}
           >
             <RiResetLeftLine className="size-4" />
@@ -360,9 +371,10 @@ export function CircuitViewerChrome({
           aria-hidden={!showVizChrome}
           inert={!showVizChrome || undefined}
           style={
-            toolbarWidth != null
-              ? ({ '--color-by-toolbar-width': `${toolbarWidth}px` } as React.CSSProperties)
-              : undefined
+            {
+              maxHeight: `calc(100% - ${ABOVE_GIZMO}px)`,
+              ...(toolbarWidth != null && { '--color-by-toolbar-width': `${toolbarWidth}px` }),
+            } as React.CSSProperties
           }
         >
           {/* Measured here rather than on the column, which holds the key that
@@ -414,10 +426,11 @@ export function CircuitViewerChrome({
           </Placed>
           {showKey && legendOpen && colorBy.mapping && (
             <div
-              className={cn(styles.panelReveal, 'min-w-0')}
+              className={cn(styles.panelReveal, 'flex min-h-0 min-w-0 flex-col')}
               style={{ width: 'var(--color-by-toolbar-width)' }}
             >
               <ColorLegend
+                className="flex min-h-0 flex-col"
                 mapping={colorBy.mapping}
                 onChangeCategoryColor={colorBy.onChangeCategoryColor}
                 theme={theme}

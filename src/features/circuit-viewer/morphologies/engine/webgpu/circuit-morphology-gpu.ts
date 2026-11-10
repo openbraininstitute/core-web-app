@@ -135,6 +135,8 @@ export class CircuitMorphologyGPU extends CircuitView {
         cloud: this.cloudUniforms,
         segments: this.spotUniforms,
         electrodes: this.electrodeUniforms,
+        amongContacts: this.amongContactUniforms,
+        fadingContacts: this.fadingContactUniforms,
         synapses: this.synapseUniforms,
         markers: this.markerUniforms,
       });
@@ -228,7 +230,9 @@ export class CircuitMorphologyGPU extends CircuitView {
 
   /**
    * Morphologies and opaque somas get ambient occlusion in still frames, and in moving frames while the motion keeps it
-   * (`aoMoving`). Other moving frames and translucent somas get none. The occlusion's targets are the size of the
+   * (`aoMoving`). Other moving frames and translucent somas get none, nor any frame with boxes (`voxels.ts`): the
+   * surfaces it reads are one per pixel, and a box would leave its own in place of what shows through it, in patches
+   * that change as the boxes do. The occlusion's targets are the size of the
    * canvas, so it is let go of once nothing it shades is drawn. Where spiking cells glow, morphologies are drawn
    * through its target while any cell is lit, moving or not, and it is made again when whether they glow changes.
    */
@@ -271,7 +275,7 @@ export class CircuitMorphologyGPU extends CircuitView {
     this.cull(this.restOf(moving));
     this.cullSomas();
     const glowing = this.glowing && this.glowWorks;
-    const shaded = this.drawsMorphologies || this.drawsOpaqueSomas;
+    const shaded = (this.drawsMorphologies || this.drawsOpaqueSomas) && !this.drawsVoxels;
     if (!shaded || this.occlusion?.glows !== glowing) this.dropOcclusion();
     const occluded = !moving || this.aoMoving;
     const through = shaded && (occluded || (glowing && this.spiking.lit.length > 0));

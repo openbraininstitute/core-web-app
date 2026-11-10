@@ -287,6 +287,7 @@ export enum AssetLabel {
   circuit_extraction_config = 'circuit_extraction_config',
   task_config = 'task_config',
   skeletonization_config = 'skeletonization_config',
+  lfp_report = 'lfp_report',
   lod_mesh_block = 'lod_mesh_block',
   electrode_array_weight_matrix = 'electrode_array_weight_matrix',
   electrode_array_image = 'electrode_array_image',

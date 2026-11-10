@@ -5,6 +5,7 @@ import { Slider } from 'antd';
 
 import { Scrubber } from '@/features/spike-viewer/spike-replay/scrubber';
 import { Button } from '@/ui/molecules/button';
+import { holdPageSelection } from '@/ui/molecules/slider/touch';
 import { classNames } from '@/util/utils';
 import { fullscreenPopupContainer } from '@/utils/fullscreen';
 
@@ -141,19 +142,21 @@ export function TransportBar({
         <RiRestartLine className="size-4" />
       </Button>
 
-      <Slider
-        className="min-w-0 flex-1"
-        value={timeInMs}
-        min={timeMinInMs}
-        max={timeMaxInMs}
-        step={step}
-        disabled={disabled}
-        onChange={onSeek}
-        tooltip={{
-          formatter: (value) => `${(value ?? 0).toFixed(1)} ms`,
-          getPopupContainer: fullscreenPopupContainer,
-        }}
-      />
+      <div className="contents" onPointerDownCapture={disabled ? undefined : holdPageSelection}>
+        <Slider
+          className="min-w-0 flex-1"
+          value={timeInMs}
+          min={timeMinInMs}
+          max={timeMaxInMs}
+          step={step}
+          disabled={disabled}
+          onChange={onSeek}
+          tooltip={{
+            formatter: (value) => `${(value ?? 0).toFixed(1)} ms`,
+            getPopupContainer: fullscreenPopupContainer,
+          }}
+        />
+      </div>
 
       <span className="shrink-0 tabular-nums text-xs text-gray-600">
         {timeInMs.toFixed(1)} / {timeMaxInMs.toFixed(1)} ms

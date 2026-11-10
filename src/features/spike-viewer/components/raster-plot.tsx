@@ -118,7 +118,7 @@ export default function RasterPlot({
           />
         </div>
       )}
-      {eventsHover && <TimelineCard hover={eventsHover} />}
+      {eventsHover && <TimelineCard hover={eventsHover} clickHint />}
       {spikeHover && <SpikeCard hover={spikeHover} cellRows={cellRows} />}
       {/* Under the raster's controls, which sit over its top. */}
       <ZoomHint visible={hintUp} className="top-12" />

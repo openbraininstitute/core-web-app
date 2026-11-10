@@ -15,6 +15,9 @@ import type { ReactNode } from 'react';
 export type SimulationReport = {
   variable_name: string;
   unit: string;
+  type?: string;
+  /** An extracellular report's electrodes file, which obi-one names by its recording array's id. */
+  electrodes_file?: string;
 };
 
 type SimulationReportsContextValue = Record<string, SimulationReport> | null;
@@ -35,8 +38,12 @@ export function SimulationReportsProvider({
   );
 }
 
+export function useSimulationReports(): SimulationReportsContextValue {
+  return useContext(SimulationReportsContext);
+}
+
 export function useSimulationReport(assetFileName?: string): SimulationReport | null {
-  const reports = useContext(SimulationReportsContext);
+  const reports = useSimulationReports();
   if (!reports || !assetFileName) return null;
   const reportKey = assetFileName.replace(/\.h5$/, '');
   return reports[reportKey] ?? null;

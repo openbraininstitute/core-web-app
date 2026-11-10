@@ -6,6 +6,7 @@ import {
   type CircuitCellsProps,
 } from '@/features/circuit-viewer/morphologies/circuit-cells';
 import { CircuitViewerSignals } from '@/features/circuit-viewer/signals';
+import { createTimeCursor } from '@/features/sonata-viewer/time-cursor';
 
 import type {
   CellColors,
@@ -34,6 +35,7 @@ const h = vi.hoisted(() => {
     pick = vi.fn(async (_x: number, _y: number): Promise<number | null> => 4);
     moving = false;
     setElectrodes = vi.fn();
+    setVoxels = vi.fn();
     setElectrodeRadius = vi.fn();
     /** Every point is on array A's first contact. */
     electrodeAt = vi.fn(
@@ -779,6 +781,46 @@ describe('CircuitCells', () => {
     // Let go of, the seek stays where it went.
     update({ spikes: { ...transport, playing: true } });
     expect(viewer.seekSpikes).toHaveBeenCalledTimes(1);
+  });
+
+  it('follows a time cursor, back to it after new spikes, and no further once let go of', () => {
+    const data = {
+      cellIndices: Uint32Array.of(1),
+      times: Float32Array.of(5),
+      timeMinInMs: 0,
+      timeMaxInMs: 10,
+    };
+    const timeCursor = createTimeCursor();
+    timeCursor.set(3);
+    const { viewer, update, unmount } = view({ spikes: { data, timeCursor } });
+    expect(viewer.seekSpikes).toHaveBeenCalledExactlyOnceWith(3);
+    expect(viewer.setSpikes.mock.invocationCallOrder[0]).toBeLessThan(
+      viewer.seekSpikes.mock.invocationCallOrder[0]
+    );
+
+    timeCursor.set(4);
+    expect(viewer.seekSpikes).toHaveBeenLastCalledWith(4);
+    timeCursor.set(null);
+    expect(viewer.seekSpikes).toHaveBeenCalledTimes(2);
+
+    timeCursor.set(6);
+    update({ spikes: { data: { ...data }, timeCursor } });
+    expect(viewer.setSpikes).toHaveBeenCalledTimes(2);
+    expect(viewer.seekSpikes).toHaveBeenLastCalledWith(6);
+    expect(viewer.setSpikes.mock.invocationCallOrder[1]).toBeLessThan(
+      viewer.seekSpikes.mock.invocationCallOrder.at(-1) as number
+    );
+
+    update({ spikes: { data } });
+    const seeks = viewer.seekSpikes.mock.calls.length;
+    timeCursor.set(7);
+    expect(viewer.seekSpikes).toHaveBeenCalledTimes(seeks);
+
+    update({ spikes: { data, timeCursor } });
+    unmount();
+    const atUnmount = viewer.seekSpikes.mock.calls.length;
+    timeCursor.set(8);
+    expect(viewer.seekSpikes).toHaveBeenCalledTimes(atUnmount);
   });
 
   it("tells of the replay's moment and of its playing, through whichever listeners it has by then", () => {

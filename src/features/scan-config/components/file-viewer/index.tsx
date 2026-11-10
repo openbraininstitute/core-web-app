@@ -5,8 +5,14 @@ import { match, P } from 'ts-pattern';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { Loader } from '@/components/loader';
 import { EphysViewer } from '@/features/ephys-viewer';
+import { LfpViewer } from '@/features/lfp-viewer';
 import { isAssetBackedFile } from '@/features/scan-config/types';
+import { isLfpReport } from '@/features/scan-config/use-cases/simulations/report-picker';
 import { SonataViewer } from '@/features/sonata-viewer';
+import {
+  useSimulationReport,
+  useSimulationReports,
+} from '@/features/sonata-viewer/simulation-reports-context';
 import { SpikeViewer } from '@/features/spike-viewer';
 import { cn } from '@/utils/css-class';
 
@@ -55,7 +61,7 @@ function isCodeFile(file: TAssetBackedFile): boolean {
 }
 
 /** A spike report, or a replay's input spikes: both drawn by the spike viewer. */
-function isSpikeFile(file: TAssetBackedFile): boolean {
+export function isSpikeFile(file: TAssetBackedFile): boolean {
   return (
     file.asset.content_type === AssetContentType.h5 &&
     (file.asset.label === AssetLabel.spike_report || file.asset.label === AssetLabel.replay_spikes)
@@ -70,9 +76,16 @@ export function isVoltageReportFile(file: TAssetBackedFile): boolean {
   );
 }
 
-/** A file whose statistics open beside it in a results layout: spikes, or a voltage report. */
+/** An extracellular report registered as one; launch-system's runs label theirs voltage reports. */
+function isLfpReportFile(file: TAssetBackedFile): boolean {
+  return (
+    file.asset.content_type === AssetContentType.h5 && file.asset.label === AssetLabel.lfp_report
+  );
+}
+
+/** A file whose statistics open beside it in a results layout: spikes, a voltage or an extracellular report. */
 export function hasStatistics(file: TAssetBackedFile): boolean {
-  return isSpikeFile(file) || isVoltageReportFile(file);
+  return isSpikeFile(file) || isVoltageReportFile(file) || isLfpReportFile(file);
 }
 
 /**
@@ -121,7 +134,7 @@ function renderFileContent(
       (f) => <H5SpikeFileViewer file={f} context={context} />
     )
     .with(
-      { asset: { content_type: AssetContentType.h5, label: AssetLabel.voltage_report } },
+      P.when((f) => isVoltageReportFile(f) || isLfpReportFile(f)),
       (f) => <H5SonataFileViewer file={f} context={context} />
     )
     .otherwise((f) => <PlaceholderFileViewer file={f} />);
@@ -152,7 +165,9 @@ export function FileViewer({ file, context, loading = false, className = '' }: F
   const isSpikeReport = !!displayFile && isSpikeFile(displayFile);
   // the voltage viewer lays out its own inset too, to line its header up with the files column's
   const isVoltageReport = !!displayFile && isVoltageReportFile(displayFile);
-  const edgeToEdge = isCode || isImage || isDirectory || isPdf || isSpikeReport || isVoltageReport;
+  const isLfpReport = !!displayFile && isLfpReportFile(displayFile);
+  const edgeToEdge =
+    isCode || isImage || isDirectory || isPdf || isSpikeReport || isVoltageReport || isLfpReport;
 
   const viewerContent = renderFileContent(displayFile, context);
 
@@ -268,6 +283,20 @@ function H5SpikeFileViewer({ file, context }: H5FileViewerProps) {
 
 function H5SonataFileViewer({ file, context }: H5FileViewerProps) {
   const { entity, asset } = file;
+  const reports = useSimulationReports();
+  const report = useSimulationReport(asset.path.split('/').pop());
+  // The runs launch-system registers label an LFP report a voltage report; its config entry says what it is.
+  if (isLfpReport(file, reports)) {
+    return (
+      <LfpViewer
+        key={`${entity.id}-${asset.id}`}
+        entity={entity as ISimulationResult}
+        asset={asset}
+        ctx={context}
+        report={report}
+      />
+    );
+  }
   return (
     <SonataViewer
       key={`${entity.id}-${asset.id}`}

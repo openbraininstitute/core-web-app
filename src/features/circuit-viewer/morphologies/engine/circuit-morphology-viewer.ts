@@ -11,9 +11,10 @@ import {
   type PickWindow,
 } from './circuit-view';
 import { SEGMENT_BUDGET } from './detail';
-import { electrodeMaterial } from './electrodes';
+import { contactMaterials, electrodeMaterial } from './electrodes';
 import { idMaterial, impostor } from './impostors';
 import { somaCloudIdMaterial, somaCloudMaterial } from './soma-cloud';
+import { voxelMaterial, voxelMaterials } from './voxels';
 
 /** Reorders `pixels`, a square `side` wide that WebGL reads bottom row first, to top row first. */
 function topDown(pixels: Uint8Array, side: number): Uint8Array {
@@ -78,6 +79,12 @@ export class CircuitMorphologyViewer extends CircuitView {
         soma: idMaterial('soma', uniforms, spotUniforms),
       },
       electrode: electrodeMaterial(this.electrodeUniforms, pixelRatio),
+      ...contactMaterials(
+        this.amongContactUniforms,
+        this.fadingContactUniforms,
+        (uniforms, options) => electrodeMaterial(uniforms, pixelRatio, options)
+      ),
+      ...voxelMaterials(voxelMaterial),
       synapse: electrodeMaterial(this.synapseUniforms, pixelRatio, { among: true }),
       marker: electrodeMaterial(this.markerUniforms, pixelRatio),
     };

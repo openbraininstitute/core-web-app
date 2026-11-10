@@ -1,4 +1,5 @@
 import { downloadAsset } from '@/api/entitycore/queries/assets';
+import { getSimulatableExtracellularRecordingArray } from '@/api/entitycore/queries/model/simulatable-extracellular-recording-array';
 import { getAsset } from '@/api/entitycore/selectors/assets';
 import { EntityTypeDict, type TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { AssetLabel, type IAsset } from '@/api/entitycore/types/shared/global';
@@ -39,4 +40,20 @@ export async function downloadElectrodeLocations({
     asRawResponse: true,
   });
   return (await response.json()) as TElectrodeLocationsDictionarySummary;
+}
+
+/** An array with no stored locations draws nothing, and is not an error. */
+const NO_LOCATIONS: TElectrodeLocationsDictionarySummary = {};
+
+/** A recording array's stored electrode locations: one read and cache entry for every view of it. */
+export function arrayLocationsQuery(ctx: WorkspaceContext, arrayId: string) {
+  return {
+    queryKey: ['referenced-electrode-array-locations', ctx.virtualLabId, ctx.projectId, arrayId],
+    queryFn: async (): Promise<TElectrodeLocationsDictionarySummary> => {
+      const array = await getSimulatableExtracellularRecordingArray({ id: arrayId, context: ctx });
+      const asset = findElectrodeLocationsAsset(array.assets);
+      if (!asset) return NO_LOCATIONS;
+      return downloadElectrodeLocations({ ctx, entityId: arrayId, assetId: asset.id });
+    },
+  };
 }

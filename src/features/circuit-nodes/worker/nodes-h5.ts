@@ -2,6 +2,12 @@ import { Dataset, File, Group } from 'h5wasm';
 import { match } from 'ts-pattern';
 
 import {
+  combinedTest,
+  listedValues,
+  numberTest,
+  textTest,
+} from '@/features/circuit-nodes/row-filters';
+import {
   type ColumnFilter,
   type ColumnKind,
   ColumnKindDict,
@@ -794,18 +800,10 @@ function compareAt(handle: ColumnHandle, data: LoadedColumn, a: number, b: numbe
 /** A filter as a test on a row, with its bounds parsed and its comparison chosen once, not per row. */
 function rowTest(handle: ColumnHandle, data: LoadedColumn, filter: GenericFilter): RowTest {
   if ('operator' in filter) {
-    const tests = filter.conditions.map((c) => rowTest(handle, data, c));
-    if (tests.length === 0) return () => true;
-    if (filter.operator === 'OR') {
-      return (row) => {
-        for (const test of tests) if (test(row)) return true;
-        return false;
-      };
-    }
-    return (row) => {
-      for (const test of tests) if (!test(row)) return false;
-      return true;
-    };
+    return combinedTest(
+      filter.operator,
+      filter.conditions.map((c) => rowTest(handle, data, c))
+    );
   }
   if (filter.filterType === 'text') {
     const test = textTest(filter);
@@ -839,48 +837,6 @@ function numberAt(handle: ColumnHandle, data: LoadedColumn, row: number): number
     return (data as Uint32Array)[row];
   }
   return Number((data as string[])[row]);
-}
-
-/** The values of an Equals filter, which matches any of them: "3, 5, 9" for numbers. */
-function listedValues(text: string, separator: RegExp = /[\s,;]+/): string[] {
-  return text
-    .split(separator)
-    .map((v) => v.trim())
-    .filter((v) => v !== '');
-}
-
-function textTest(f: TextFilter): (value: string) => boolean {
-  const q = (f.filter ?? '').toLowerCase();
-  // Text can hold spaces, so only commas part its values.
-  const any = new Set(listedValues(q, /,/));
-  return match(f.type)
-    .with('contains', () => (v: string) => v.toLowerCase().includes(q))
-    .with('equals', () => (v: string) => any.has(v.toLowerCase()))
-    .with('notEqual', () => (v: string) => v.toLowerCase() !== q)
-    .with('startsWith', () => (v: string) => v.toLowerCase().startsWith(q))
-    .with('endsWith', () => (v: string) => v.toLowerCase().endsWith(q))
-    .exhaustive();
-}
-
-function numberTest(f: NumberFilter): (v: number) => boolean {
-  const q = Number(f.filter);
-  const q2 = Number(f.filterTo ?? f.filter);
-  const lo = Math.min(q, q2);
-  const hi = Math.max(q, q2);
-  const any = new Set(
-    listedValues(f.filter ?? '')
-      .map(Number)
-      .filter((v) => !Number.isNaN(v))
-  );
-  return match(f.type)
-    .with('equals', () => (v: number) => any.has(v))
-    .with('notEqual', () => (v: number) => v !== q)
-    .with('lessThan', () => (v: number) => v < q)
-    .with('lessThanOrEqual', () => (v: number) => v <= q)
-    .with('greaterThan', () => (v: number) => v > q)
-    .with('greaterThanOrEqual', () => (v: number) => v >= q)
-    .with('inRange', () => (v: number) => v >= lo && v <= hi)
-    .exhaustive();
 }
 
 /**

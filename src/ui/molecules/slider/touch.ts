@@ -12,6 +12,18 @@ export function holdSelection(element: HTMLElement) {
   };
 }
 
+/** Keep a drag that leaves its control from selecting the page's text, until the pointer is released. */
+export function holdPageSelection() {
+  const release = holdSelection(document.body);
+  const ended = new AbortController();
+  const end = () => {
+    release();
+    ended.abort();
+  };
+  window.addEventListener('pointerup', end, { signal: ended.signal });
+  window.addEventListener('pointercancel', end, { signal: ended.signal });
+}
+
 export function capturePointer(element: Element, pointerId: number) {
   try {
     element.setPointerCapture(pointerId);

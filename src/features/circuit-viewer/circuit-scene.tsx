@@ -56,6 +56,7 @@ import { PaneResizeHandle } from './pane-resize-handle';
 import { useSceneTablePane } from './scene-table-pane';
 import { useCellFocus } from './use-cell-focus';
 
+import type { ReactNode } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
@@ -64,7 +65,7 @@ import type {
   CircuitCellsHostProps,
   CircuitViewerHostProps,
 } from '@/features/circuit-viewer/host-props';
-import type { ElectrodeTransform } from '@/features/circuit-viewer/morphologies/types';
+import type { ElectrodeTransform, VoxelLayer } from '@/features/circuit-viewer/morphologies/types';
 import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
 import type { ICircuitViewerChromeProps } from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
 import type { IViewerModeOption } from '@/features/scan-config/components/color-by/mode-toggle';
@@ -86,6 +87,13 @@ export interface IElectrodeOverlayOptions {
    * then also owns it: the viewer's own show/hide toggle stops gating them.
    */
   visibleIds?: readonly string[];
+  /**
+   * Groups drawn as they are beside the array's, in their own colours, such as
+   * contacts coloured by a recorded field: not scoped, styled or toggled from the menu.
+   */
+  drawn?: ICircuitOverlayGroup[];
+  /** Boxes of a field, drawn through the cells and under the groups. */
+  voxels?: VoxelLayer | null;
 }
 
 /** The MEModel on show. Only its id and name are read here. */
@@ -147,6 +155,10 @@ interface ICircuitSceneOptions {
   colorByTarget?: HTMLElement | null;
   /** What colouring by no property is called in the colour-by control, where "All" would mislead. */
   colorByNoneLabel?: string;
+  /** The colour of cells coloured by no property, as it is, where blue would mislead; blue when omitted. */
+  uncolouredCells?: string;
+  /** A key of the host's: under the colour-by key, or in that corner where there is none. */
+  legend?: ReactNode;
   /**
    * One flag per cell of the population on show, 0 for a cell filtered out:
    * left undrawn, but kept in its place, so spikes still find theirs.
@@ -241,6 +253,8 @@ export function CircuitScene({
   fullscreen,
   colorByTarget,
   colorByNoneLabel,
+  uncolouredCells,
+  legend,
   shownCells,
   highlightedCell,
   onCellClick,
@@ -264,7 +278,12 @@ export function CircuitScene({
     explicitLocationsBlockTypes,
     singleMorphology,
   } = form ?? {};
-  const { arrayEntity, visibleIds: visibleOverlayIds } = electrodes ?? {};
+  const {
+    arrayEntity,
+    visibleIds: visibleOverlayIds,
+    drawn: drawnOverlays,
+    voxels,
+  } = electrodes ?? {};
   const enableElectrodes = features?.electrodes ?? false;
   // An MEModel is one cell with no nodes file: nothing to colour by, list, or highlight.
   const enableColorBy = Boolean(circuit) && (features?.colorBy ?? true);
@@ -476,6 +495,7 @@ export function CircuitScene({
     morphologiesNote,
     defaultRepresentation: smallForThePack ? 'morphologies' : undefined,
     defaultNeuronOpacity,
+    uncolouredCells,
     population,
     subject: memodel,
   });
@@ -570,10 +590,14 @@ export function CircuitScene({
   const hostOwnsVisibility = visibleOverlayIds !== undefined;
   const visibleOverlays =
     enableElectrodes && (hostOwnsVisibility || config.showElectrodes) ? scopedOverlays : undefined;
-  const styledOverlays = useMemo(
-    () => styleOverlaysForSelection(visibleOverlays, highlightedOverlayId, config.backgroundColor),
-    [visibleOverlays, highlightedOverlayId, config.backgroundColor]
-  );
+  const styledOverlays = useMemo(() => {
+    const styled = styleOverlaysForSelection(
+      visibleOverlays,
+      highlightedOverlayId,
+      config.backgroundColor
+    );
+    return drawnOverlays ? [...(styled ?? []), ...drawnOverlays] : styled;
+  }, [drawnOverlays, visibleOverlays, highlightedOverlayId, config.backgroundColor]);
   // Handles appear only when something drawn can actually be moved: a scene of
   // referenced-only arrays (a simulation's recordings) stays static even though
   // the host passed a write path for the rest of the form.
@@ -653,6 +677,7 @@ export function CircuitScene({
       spin: config.spin,
       signals,
       overlays: styledOverlays,
+      voxels,
       overlaysInteractive,
       onOverlayTransform: handleOverlayTransform,
       highlightedOverlayId,
@@ -677,6 +702,7 @@ export function CircuitScene({
       config.showZoomSlider,
       signals,
       styledOverlays,
+      voxels,
       overlaysInteractive,
       handleOverlayTransform,
       highlightedOverlayId,
@@ -700,6 +726,7 @@ export function CircuitScene({
             highlightedCell: sceneHighlightedCell,
             nodeColors: overrideColors ?? (enableColorBy ? nodeColors : undefined),
             defaultColor,
+            uncolouredCells,
             recededColor,
             onPopulationClick: handlePopulationClick,
             onSubjectCellClick: sceneCellClick,
@@ -717,6 +744,7 @@ export function CircuitScene({
       enableColorBy,
       nodeColors,
       defaultColor,
+      uncolouredCells,
       recededColor,
       handlePopulationClick,
       sceneCellClick,
@@ -847,6 +875,12 @@ export function CircuitScene({
           zoom: config.showZoomSlider ? zoom : undefined,
         }}
       />
+      {legend &&
+        (chromeColorBy ? (
+          legendSlot && createPortal(legend, legendSlot)
+        ) : (
+          <div className="pointer-events-none absolute top-3 right-3 z-10">{legend}</div>
+        ))}
 
       {paneTable?.target &&
         circuit &&

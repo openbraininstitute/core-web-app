@@ -70,6 +70,7 @@ vi.mock('@/features/circuit-nodes/hooks/nodes-session-keeper', () => ({
 vi.mock('@/features/scan-config/components/file-viewer', () => ({
   FileViewer: () => null,
   hasStatistics: () => false,
+  isSpikeFile: () => false,
 }));
 vi.mock('@/features/scan-config/components/simulation-files', () => ({
   SimulationFiles: () => null,

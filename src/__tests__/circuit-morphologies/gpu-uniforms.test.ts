@@ -12,6 +12,9 @@ const dots = (radius: number, minRadius: number) => ({
   uMinRadius: { value: minRadius },
   uRingColour: { value: new THREE.Vector3(0.1, 0.2, 0.3) },
   uScale: { value: 1 },
+  uFade: { value: new THREE.Vector4() },
+  uHalo: { value: 0 },
+  uHaloColour: { value: new THREE.Vector3() },
 });
 
 function held() {
@@ -20,6 +23,8 @@ function held() {
     cloud: somaCloudUniforms(),
     segments: { uSegments: { value: 0 } },
     electrodes: dots(5, 2),
+    amongContacts: dots(5, 2),
+    fadingContacts: dots(5, 2),
     synapses: dots(0.5, 2),
     markers: dots(3, 6),
   };

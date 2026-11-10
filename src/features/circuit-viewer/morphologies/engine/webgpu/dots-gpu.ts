@@ -1,54 +1,81 @@
 import {
   attribute,
   cameraProjectionMatrix,
+  dot,
+  float,
+  max,
   modelViewMatrix,
+  normalGeometry,
   positionGeometry,
+  step,
   varying,
+  vec2,
+  vec3,
+  vec4,
   viewport,
   wgslFn,
 } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
-import { RING_PX } from '../electrodes';
+import { BAND_PX, contactMaterials, FRONT_DEPTH, RING_PX } from '../electrodes';
+import { LEAST_OPACITY, SHADE_LEAST, SHADED_FROM, voxelMaterials } from '../voxels';
 import { col, typed, VIEW } from './cells-wgsl';
 
+import type { DotOptions } from '../electrodes';
 import type { DotUniforms, GpuUniforms } from './gpu-uniforms';
 
 /**
  * A dot's corner in clip space, as `electrodes.ts` places it; the second column holds where its ring starts, as a share
- * of the whole radius.
+ * of the whole radius, its opacity, where its band starts, and where its halo starts.
  */
 const dotQuad = wgslFn(
   /* wgsl */ `
 fn dotQuad(contact: vec3f, look: vec4f, corner: vec2f, modelView: mat4x4f, projection: mat4x4f, vp: vec4f,
-           radius: f32, minRadius: f32, ring: f32, lift: f32, scale: f32) -> mat4x4f {
+           radius: f32, minRadius: f32, ring: f32, band: f32, lift: f32, scale: f32, fade: vec4f, halo: f32,
+           opacities: vec2f, sizes: vec2f, front: f32) -> mat4x4f {
   let c = (modelView * vec4f(contact, 1.0)).xyz;
   let um = pixelUm(c.z, projection, vp) * scale;
-  let r = max(radius * look.a, minRadius * um);
-  let outer = r + ring * um;
-  return mat4x4f(projection * vec4f(c.xy + corner * outer, c.z + lift * r, 1.0), vec4f(r / outer, 0.0, 0.0, 0.0),
+  let away = clamp(0.5 + ((modelView * vec4f(fade.xyz, 1.0)).z - c.z) / (2.0 * fade.w), 0.0, 1.0);
+  let r = max(radius * look.a, minRadius * um) * mix(sizes.x, sizes.y, away);
+  let outer = r + (ring + band + halo) * um;
+  let opacity = mix(opacities.x, opacities.y, away);
+  let place = projection * vec4f(c.xy + corner * outer, c.z + lift * r, 1.0);
+  // Clip z runs from 0 to w here: squeezed towards 0, keeping the order among the contacts.
+  let z = place.z * mix(1.0, ${FRONT_DEPTH.toFixed(4)}, front);
+  return mat4x4f(vec4f(place.x, place.y, z, place.w),
+                 vec4f(r / outer, opacity, (r + ring * um) / outer, (r + (ring + band) * um) / outer),
                  vec4f(0.0), vec4f(0.0));
 }`,
   [VIEW]
 );
 
 const dotColour = wgslFn(/* wgsl */ `
-fn dotColour(corner: vec2f, inner: f32, colour: vec3f, ringColour: vec3f) -> vec4f {
-  return vec4f(select(colour, ringColour, length(corner) > inner), 1.0);
+fn dotColour(corner: vec2f, inner: f32, ringEnd: f32, bandEnd: f32, colour: vec3f, ringColour: vec3f,
+             band: vec3f, haloColour: vec3f, opacity: f32) -> vec4f {
+  let d = length(corner);
+  let banded = select(select(colour, ringColour, d > inner), band, d > ringEnd);
+  return vec4f(select(banded, haloColour, d > bandEnd), opacity);
 }`);
 
 /**
  * Dots of `electrodes.ts` on WebGPU, with their colours written as given, in sRGB. By default they are drawn in front
  * of the cells, with a ring a CSS pixel wide on a screen of `pixelRatio`. With `among`, they are drawn among the cells,
- * with no ring, hidden by what is nearer the eye, and brought towards the eye by their radius.
+ * with no ring unless `ringed`, hidden by what is nearer the eye, and brought towards the eye by their radius.
  */
 function dotMaterial(
   u: GpuUniforms,
   dots: DotUniforms,
   pixelRatio: number,
-  among = false
+  {
+    among = false,
+    ringed = !among,
+    opacities = [1, 1],
+    sizes = [1, 1],
+    front = false,
+  }: DotOptions = {}
 ): THREE.MeshBasicNodeMaterial {
   const look = attribute('aLook', 'vec4');
+  const band = attribute('aBand', 'vec4');
   const quad = typed<'mat4'>(
     dotQuad({
       contact: attribute('aContact', 'vec3'),
@@ -59,9 +86,15 @@ function dotMaterial(
       vp: viewport,
       radius: dots.radius,
       minRadius: dots.minRadius,
-      ring: among ? 0 : RING_PX * pixelRatio,
+      ring: ringed ? RING_PX * pixelRatio : 0,
+      band: band.w.mul(ringed ? BAND_PX * pixelRatio : 0),
       lift: among ? 1 : 0,
       scale: u.dotScale,
+      fade: dots.fade,
+      halo: dots.halo,
+      opacities: vec2(...opacities),
+      sizes: vec2(...sizes),
+      front: front ? 1 : 0,
     })
   ).toVar();
   const corner = varying(positionGeometry.xy);
@@ -72,8 +105,13 @@ function dotMaterial(
     dotColour({
       corner,
       inner: varying(col(quad, 1).x),
+      ringEnd: varying(col(quad, 1).z),
+      bandEnd: varying(col(quad, 1).w),
       colour: varying(look.xyz),
       ringColour: u.ringColour,
+      band: varying(band.xyz),
+      haloColour: u.haloColour,
+      opacity: varying(col(quad, 1).y),
     })
   );
   material.maskNode = corner.length().lessThanEqual(1);
@@ -82,11 +120,29 @@ function dotMaterial(
   return material;
 }
 
-/** The electrodes', synapses' and markers' materials on WebGPU. */
+/** The boxes of `voxels.ts` on WebGPU, with their colours written as given, in sRGB. */
+function voxelMaterial(share = 1): THREE.MeshBasicNodeMaterial {
+  const look = attribute('aLook', 'vec4');
+  const shade = float(SHADE_LEAST).add(
+    float(1 - SHADE_LEAST).mul(max(dot(normalGeometry, vec3(...SHADED_FROM)), 0))
+  );
+  const material = new THREE.MeshBasicNodeMaterial();
+  material.positionNode = attribute('aCentre', 'vec3').add(
+    positionGeometry.mul(attribute('aSize', 'vec3')).mul(step(LEAST_OPACITY, look.a))
+  );
+  material.colorNode = vec4(look.xyz.mul(shade), look.a.mul(share));
+  return material;
+}
+
+/** The electrodes', boxes', synapses' and markers' materials on WebGPU. */
 export function dotMaterials(u: GpuUniforms, pixelRatio: number) {
   return {
     electrode: dotMaterial(u, u.electrodes, pixelRatio),
-    synapse: dotMaterial(u, u.synapses, pixelRatio, true),
+    ...contactMaterials(u.amongContacts, u.fadingContacts, (dots, options) =>
+      dotMaterial(u, dots, pixelRatio, options)
+    ),
+    ...voxelMaterials(voxelMaterial),
+    synapse: dotMaterial(u, u.synapses, pixelRatio, { among: true }),
     marker: dotMaterial(u, u.markers, pixelRatio),
   };
 }

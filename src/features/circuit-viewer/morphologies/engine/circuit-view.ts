@@ -27,7 +27,17 @@ import {
 import { CellTable, type GlowRowsWriter, somaTexture } from './cell-table';
 import { DETAIL_PIXELS, pixelSpan } from './detail';
 import { DetailStream } from './detail-stream';
-import { countDots, type DotGroup, drawnRadius, minRadius, writeDots } from './electrodes';
+import {
+  countDots,
+  type DotGroup,
+  drawnRadius,
+  fadeAcross,
+  growRoundDots,
+  HALO_PX,
+  HALOED_LEAST_PX,
+  minRadius,
+  writeDots,
+} from './electrodes';
 import {
   AXON,
   CELL_MASK,
@@ -49,6 +59,15 @@ import {
   somaCloudUniforms,
 } from './soma-cloud';
 import { NEON, SPIKE_HUE } from './spike-light';
+import {
+  growRoundVoxels,
+  inVoxelFrame,
+  placeOnBox,
+  turnToVoxelFrame,
+  VoxelOrder,
+  voxelGeometry,
+  writeVoxels,
+} from './voxels';
 
 import type { SectionType } from '@/features/circuit-viewer/section-type';
 import type { CircuitSpikes } from '@/features/circuit-viewer/types';
@@ -74,6 +93,7 @@ import type {
   SectionSpot,
   SynapseGroup,
   Vec3,
+  VoxelLayer,
 } from '../types';
 import type { UploadsOf } from './segment-arena';
 
@@ -82,6 +102,9 @@ import type { UploadsOf } from './segment-arena';
  * colour.
  */
 const FOREGROUND: ThemeColors = { light: '#1a1a1a', dark: '#ffffff' };
+/** The halo round contacts over morphologies. */
+const HALO: ThemeColors = { light: '#ffffff', dark: '#1a1a1a' };
+const NO_DOTS: readonly ElectrodeGroup[] = [];
 
 /** How far around the pixel asked for a pick looks, in CSS pixels, as the somas view does. */
 const PICK_REACH = 4;
@@ -97,6 +120,8 @@ const MARKER_MIN_RADIUS = 3;
 const MARKER_REACH = 9;
 /** A synapse's radius in µm, and the least radius it is drawn with in device pixels, as in the small-circuit view. */
 const SYNAPSE_RADIUS = 0.5;
+/** How far back an orthographic view sees the boxes from, far past any circuit, as its rays do not meet. */
+const ORTHOGRAPHIC_EYE_UM = 1e8;
 const SYNAPSE_MIN_RADIUS = 2;
 /** How long the nudge lasts, in ms, and how much nearer it brings the view at its peak, as in morphoviewer. */
 const NUDGE_MS = 900;
@@ -306,6 +331,14 @@ export interface CircuitMaterials {
   /** The lit cells drawn over the frame, through what covers them, where the tier draws them (`throughs`). */
   through?: { segment: THREE.Material[]; soma: THREE.Material };
   electrode: THREE.Material;
+  /** A contact among the cells where nothing is nearer the eye, and where something is. */
+  contactAmong: THREE.Material;
+  contactHidden: THREE.Material;
+  /** A contact among the cells where those are morphologies. */
+  contactOver: THREE.Material;
+  /** Boxes where nothing is nearer the eye and where something is. */
+  voxel: THREE.Material;
+  voxelHidden: THREE.Material;
   synapse: THREE.Material;
   marker: THREE.Material;
 }
@@ -421,26 +454,49 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     uMinRadius: { value: minRadius(0) },
     uRingColour: { value: new THREE.Vector3() },
     uScale: { value: 1 },
+    uFade: { value: new THREE.Vector4() },
+    uHalo: { value: 0 },
+    uHaloColour: { value: new THREE.Vector3() },
+  };
+  protected amongContactUniforms = {
+    ...this.electrodeUniforms,
+    uMinRadius: { value: minRadius(0) },
+    uHalo: { value: 0 },
+  };
+  protected fadingContactUniforms = {
+    ...this.amongContactUniforms,
+    uFade: { value: new THREE.Vector4() },
+    uHalo: { value: 0 },
   };
   private electrodes: Quads | null = null;
+  private contactsAmong: Quads | null = null;
+  private contactsHidden: Quads | null = null;
+  private contactsOver: Quads | null = null;
+  private voxelSet: { layer: VoxelLayer; order: VoxelOrder } | null = null;
+  private voxels: Quads | null = null;
+  /** The boxes of `voxels` again, where something nearer the eye hides them. */
+  private hiddenVoxels: Quads | null = null;
+  /** The edges of the layer's outlined box, drawn through whatever is nearer, so that it is found deep among them. */
+  private voxelOutline: THREE.LineSegments<THREE.EdgesGeometry, THREE.LineBasicMaterial> | null =
+    null;
+  /** The outlined box and its colour as last drawn; null for none. */
+  private outlined: string | null = null;
   private synapseGroups: readonly SynapseGroup[] = [];
   protected synapseUniforms = {
-    uViewport: this.uniforms.uViewport,
+    ...this.electrodeUniforms,
     uRadius: { value: SYNAPSE_RADIUS },
     uMinRadius: { value: SYNAPSE_MIN_RADIUS },
-    uRingColour: this.electrodeUniforms.uRingColour,
-    uScale: this.electrodeUniforms.uScale,
+    uHalo: { value: 0 },
   };
   private synapseDots: Quads | null = null;
   private markers: readonly LocationMarker[] = [];
   /** Each marker's point in the circuit's frame and its section's type; null for one that is not drawn. */
   private markerPoints: ({ point: Vec3; type: SectionType } | null)[] = [];
   protected markerUniforms = {
-    uViewport: this.uniforms.uViewport,
+    ...this.electrodeUniforms,
     uRadius: { value: MARKER_RADIUS },
     uMinRadius: { value: MARKER_MIN_RADIUS },
-    uRingColour: this.electrodeUniforms.uRingColour,
-    uScale: this.electrodeUniforms.uScale,
+    uHalo: { value: 0 },
   };
   private markerDots: Quads | null = null;
   private markerListeners = new Set<(markers: readonly (MarkerOnScreen | null)[]) => void>();
@@ -478,6 +534,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.detailRules = { budget, pixels: DETAIL_PIXELS, wholeFloor: true, culling: true };
     this.pickSide = 2 * Math.ceil(PICK_REACH * pixelRatio) + 1;
     this.markerUniforms.uMinRadius.value = MARKER_MIN_RADIUS * pixelRatio;
+    this.amongContactUniforms.uHalo.value = HALO_PX * pixelRatio;
     const [look] = createLooks(pixelRatio, ['color'], ['studio']);
     this.look = look;
     // Light rigs ride on the camera so the look keeps its lighting while orbiting.
@@ -498,6 +555,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       this.uniforms.uSpikeHue.value.set(r, g, b, hue ? 1 : 0);
       this.dark = dark;
       this.electrodeUniforms.uRingColour.value.fromArray(chroma(FOREGROUND[theme]).gl());
+      this.electrodeUniforms.uHaloColour.value.fromArray(chroma(HALO[theme]).gl());
     };
     // A gesture takes over the view: otherwise the nudge's zoom would stop the gesture's glide every frame.
     this.controls.addEventListener('start', () => {
@@ -530,6 +588,11 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   /** Whether the somas are drawn alone and opaque. */
   protected get drawsOpaqueSomas(): boolean {
     return this.cloud?.shown === true && !this.translucent;
+  }
+
+  /** Whether boxes are drawn over the cells. */
+  protected get drawsVoxels(): boolean {
+    return this.voxels?.visible === true;
   }
 
   /** Whether the tier draws ambient occlusion. */
@@ -633,6 +696,11 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     ]);
     for (const material of materials) material.dispose();
     this.electrodes?.geometry.dispose();
+    this.contactsAmong?.geometry.dispose();
+    this.contactsOver?.geometry.dispose();
+    this.voxels?.geometry.dispose();
+    this.voxelOutline?.geometry.dispose();
+    this.voxelOutline?.material.dispose();
     this.markerDots?.geometry.dispose();
     this.synapseDots?.geometry.dispose();
     this.spikeTimeListeners.clear();
@@ -688,8 +756,10 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.showCloud(data === null);
     if (!data) {
       // Without the somas, the morphologies were all there was.
-      if (under) this.bound();
-      else this.clear();
+      if (under) {
+        this.bound();
+        this.drawElectrodes();
+      } else this.clear();
       return;
     }
 
@@ -757,9 +827,11 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
 
     if (under) {
       this.uniforms.uShift.value.fromArray(data.centre).sub(new THREE.Vector3(...this.centre));
+      this.drawElectrodes();
     } else {
       this.centre = data.centre;
       this.drawElectrodes();
+      this.drawVoxels();
       this.drawSynapses();
     }
     this.drawMarkers();
@@ -879,6 +951,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
    * This runs here, not in `work`, because the camera's near and far planes are set for the frame first.
    */
   protected override beforeDraw(moving: boolean): void {
+    this.orderVoxels();
     this.shapeCloud();
     this.cutDown(moving);
     const detailed = this.layer?.detailed;
@@ -955,6 +1028,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.wholeCloud();
     this.bound();
     this.drawElectrodes();
+    this.drawVoxels();
     this.drawSynapses();
     if (reframe) this.resetView();
     if (!ordered) return;
@@ -1382,6 +1456,33 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.electrodeGroups = electrodes;
     this.highlightedElectrode = highlighted;
     this.drawElectrodes();
+    this.bound();
+  }
+
+  setVoxels(voxels: VoxelLayer | null): void {
+    const before = this.voxelSet;
+    const was = before?.layer;
+    // Only its outline moved, as a hover moves it: the boxes stand as they were written.
+    if (
+      before &&
+      voxels &&
+      was &&
+      voxels.centres === was.centres &&
+      voxels.sizes === was.sizes &&
+      voxels.looks === was.looks &&
+      voxels.frame === was.frame
+    ) {
+      this.voxelSet = { layer: voxels, order: before.order };
+      if (this.drawVoxelOutline(this.voxels?.visible ? voxels : null)) this.invalidate();
+      return;
+    }
+    this.voxelSet = voxels && {
+      layer: voxels,
+      order: before?.layer.centres === voxels.centres ? before.order : new VoxelOrder(voxels),
+    };
+    this.drawVoxels();
+    const { centres, sizes } = before?.layer ?? {};
+    if (voxels?.centres !== centres || voxels?.sizes !== sizes) this.bound();
   }
 
   setSynapses(groups: readonly SynapseGroup[]): void {
@@ -1392,8 +1493,10 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
 
   setElectrodeRadius(radius: number): void {
     this.electrodeUniforms.uRadius.value = radius;
-    this.electrodeUniforms.uMinRadius.value = minRadius(radius);
-    if (this.electrodes?.visible) this.invalidate();
+    this.styleContacts();
+    this.bound();
+    const { electrodes, contactsAmong, contactsOver } = this;
+    if (electrodes?.visible || contactsAmong?.visible || contactsOver?.visible) this.invalidate();
   }
 
   electrodeAt(x: number, y: number): ElectrodeHit | null {
@@ -1413,7 +1516,8 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
         point.applyMatrix4(camera.matrixWorldInverse);
         const depth = -point.z;
         if (perspective && depth <= camera.near) continue;
-        const drawn = drawnRadius(radius, lit, perspective ? span * depth : span, this.pixelRatio);
+        const um = perspective ? span * depth : span;
+        const drawn = drawnRadius(radius, lit, um, this.pixelRatio, group.band !== undefined);
         const reach = Math.max(drawn, CONTACT_REACH);
         point.applyMatrix4(camera.projectionMatrix);
         const away = Math.hypot(((point.x + 1) / 2) * width - x, ((1 - point.y) / 2) * height - y);
@@ -1583,16 +1687,163 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   }
 
   /**
-   * Draws the contacts as they are now in a mesh drawn after the cells and over them, made larger only when the
-   * contacts outgrow it. Asks for a frame only where that changed what is drawn.
+   * Draws the contacts as they are now in meshes drawn after the cells, made larger only when the contacts outgrow
+   * them: those among the cells, the hidden parts first and on the same geometry, or over morphologies, whose branches
+   * hide most of them, then the rest over everything. Asks for a frame only where that changed what is drawn.
    */
   private drawElectrodes(): void {
-    this.electrodes = this.drawDots(this.electrodes, this.electrodeGroups, {
+    const highlighted = this.highlightedElectrode;
+    const groups = this.electrodeGroups.filter((group) => group.among);
+    const over = this.electrodeGroups.filter((group) => !group.among);
+    const overBranches = this.drawsMorphologies;
+    const among = overBranches ? NO_DOTS : groups;
+    this.styleContacts();
+    fadeAcross(groups, this.centre, this.fadingContactUniforms.uFade.value);
+    this.contactsAmong = this.drawDots(this.contactsAmong, among, {
+      material: this.materials.contactAmong,
+      name: 'contacts among the cells',
+      order: 0.9,
+      highlighted,
+    });
+    if (this.contactsAmong) {
+      this.contactsHidden = this.drawnAgain(this.contactsHidden, this.contactsAmong, {
+        material: this.materials.contactHidden,
+        name: 'hidden contacts',
+        order: 0.8,
+      });
+    }
+    this.contactsOver = this.drawDots(this.contactsOver, overBranches ? groups : NO_DOTS, {
+      material: this.materials.contactOver,
+      name: 'contacts over morphologies',
+      order: 0.95,
+      highlighted,
+    });
+    this.electrodes = this.drawDots(this.electrodes, over, {
       material: this.materials.electrode,
       name: 'electrodes',
       order: 1,
-      highlighted: this.highlightedElectrode,
+      highlighted,
     });
+  }
+
+  /**
+   * Sets the halo and the least radius of contacts: those among the cells have both, but for the parts hidden among
+   * somas, which have no halo to read as behind what hides them, and the rest have them if they ask.
+   */
+  private styleContacts(): void {
+    const { electrodeUniforms: over, fadingContactUniforms: fading, pixelRatio } = this;
+    const halo = HALO_PX * pixelRatio;
+    const smallest = minRadius(over.uRadius.value);
+    const least = Math.max(smallest, HALOED_LEAST_PX * pixelRatio);
+    const asked = this.electrodeGroups.some((group) => !group.among && group.halo);
+    // Shared with those among the cells.
+    fading.uMinRadius.value = least;
+    fading.uHalo.value = this.drawsMorphologies ? halo : 0;
+    over.uHalo.value = asked ? halo : 0;
+    over.uMinRadius.value = asked ? least : smallest;
+  }
+
+  /**
+   * Draws the boxes in a mesh drawn after the synapses and before the contacts, made larger only when they outgrow it.
+   * Asks for a frame only where that changed what is drawn.
+   */
+  private drawVoxels(): void {
+    const set = this.voxelSet;
+    const layer = set?.layer ?? null;
+    const count = layer ? layer.centres.length / 3 : 0;
+    if (count === 0 && !this.voxels?.visible) return;
+    const changed = !this.voxels || count !== this.voxels.geometry.instanceCount;
+    const mesh = this.fitted(this.voxels, 'aCentre', count, () => voxelGeometry(count), {
+      material: this.materials.voxel,
+      name: 'voxels',
+      order: 0.75,
+    });
+    this.voxels = mesh;
+    turnToVoxelFrame(mesh, layer?.frame);
+    this.drawHiddenVoxels(mesh, layer);
+    set?.order.seenFrom(this.voxelEye());
+    const written = set && writeVoxels(set.layer, this.centre, set.order.boxes, mesh.geometry);
+    const outlined = this.drawVoxelOutline(mesh.visible ? layer : null);
+    if (written || changed || outlined) this.invalidate();
+  }
+
+  /** The layer's outlined box, placed as `writeVoxels` places it; whether which box, or its colour, changed. */
+  private drawVoxelOutline(layer: VoxelLayer | null): boolean {
+    const outline = layer?.outline;
+    const shown =
+      layer && outline && outline.box >= 0 && outline.box * 3 < layer.centres.length
+        ? `${outline.box} ${outline.color}`
+        : null;
+    const changed = shown !== this.outlined;
+    this.outlined = shown;
+    if (!layer || !outline || shown === null) {
+      if (this.voxelOutline) this.voxelOutline.visible = false;
+      return changed;
+    }
+    if (!this.voxelOutline) {
+      // Opaque, so that it is drawn in render order with the contacts, which are blended over yet opaque.
+      const lines = new THREE.LineSegments(
+        new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1)),
+        new THREE.LineBasicMaterial({ depthTest: false, depthWrite: false })
+      );
+      lines.name = 'voxel outline';
+      // After the boxes, before the contacts, whose dot stays on top.
+      lines.renderOrder = 0.78;
+      this.scene.add(lines);
+      this.voxelOutline = lines;
+    }
+    placeOnBox(this.voxelOutline, layer, outline.box, this.centre);
+    this.voxelOutline.material.color.set(outline.color);
+    this.voxelOutline.visible = true;
+    return changed;
+  }
+
+  /** Draws the boxes of `mesh`, in the order written there, before it, where something nearer the eye hides them. */
+  private drawHiddenVoxels(mesh: Quads, layer: VoxelLayer | null): void {
+    const hidden = this.drawnAgain(this.hiddenVoxels, mesh, {
+      material: this.materials.voxelHidden,
+      name: 'hidden voxels',
+      order: 0.7,
+    });
+    hidden.visible = mesh.visible;
+    turnToVoxelFrame(hidden, layer?.frame);
+    this.hiddenVoxels = hidden;
+  }
+
+  /** `pass`, or a new one in its place, drawing what `mesh` holds with a material of its own wherever `mesh` is drawn. */
+  private drawnAgain(
+    pass: Quads | null,
+    mesh: Quads,
+    { material, name, order }: { material: THREE.Material; name: string; order: number }
+  ): Quads {
+    let again = pass;
+    if (again?.geometry !== mesh.geometry) {
+      if (again) this.letGo(again);
+      again = quads(mesh.geometry, material);
+      again.name = name;
+      again.renderOrder = order;
+      this.scene.add(again);
+    }
+    again.visible = mesh.visible;
+    return again;
+  }
+
+  /** Where the boxes are seen from, in their frame: for an orthographic view, from far back along its direction. */
+  private voxelEye(): Vec3 {
+    const { camera, centre } = this;
+    const layerFrame = this.voxelSet?.layer.frame;
+    const eye = camera.position.clone();
+    if (camera instanceof THREE.OrthographicCamera) {
+      eye.addScaledVector(camera.getWorldDirection(new THREE.Vector3()), -ORTHOGRAPHIC_EYE_UM);
+    }
+    return inVoxelFrame([eye.x + centre[0], eye.y + centre[1], eye.z + centre[2]], layerFrame);
+  }
+
+  /** Part of this frame, so that it asks for none. */
+  private orderVoxels(): void {
+    const { voxelSet: set, voxels } = this;
+    if (!set || !voxels || !set.order.seenFrom(this.voxelEye())) return;
+    writeVoxels(set.layer, this.centre, set.order.boxes, voxels.geometry);
   }
 
   /** Draws the synapses where the circuit's frame puts them, after the cells, which hide the synapses behind them. */
@@ -1641,39 +1892,63 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     const count = countDots(groups);
     if (count === 0 && !mesh?.visible) return mesh;
     const changed = !mesh || count !== mesh.geometry.instanceCount;
-    let dots = mesh;
-    if (!dots || count > dots.geometry.getAttribute('aContact').count) {
-      dots?.geometry.dispose();
-      if (dots) this.letGo(dots);
-      const geometry = quadGeometry(count);
-      geometry
-        .setAttribute(
-          'aContact',
-          new THREE.InstancedBufferAttribute(new Float32Array(3 * count), 3)
-        )
-        .setAttribute('aLook', new THREE.InstancedBufferAttribute(new Float32Array(4 * count), 4));
-      dots = quads(geometry, material);
-      dots.name = name;
-      dots.renderOrder = order;
-      this.scene.add(dots);
-    }
-    dots.geometry.instanceCount = count;
-    dots.visible = count > 0;
+    const dots = this.fitted(
+      mesh,
+      'aContact',
+      count,
+      () =>
+        quadGeometry(count)
+          .setAttribute(
+            'aContact',
+            new THREE.InstancedBufferAttribute(new Float32Array(3 * count), 3)
+          )
+          .setAttribute('aLook', new THREE.InstancedBufferAttribute(new Float32Array(4 * count), 4))
+          .setAttribute(
+            'aBand',
+            new THREE.InstancedBufferAttribute(new Float32Array(4 * count), 4)
+          ),
+      { material, name, order }
+    );
     const contacts = dots.geometry.getAttribute('aContact') as THREE.InstancedBufferAttribute;
     const looks = dots.geometry.getAttribute('aLook') as THREE.InstancedBufferAttribute;
+    const bands = dots.geometry.getAttribute('aBand') as THREE.InstancedBufferAttribute;
     const written = writeDots(
       groups,
       highlighted,
       this.centre,
       contacts.array as Float32Array,
-      looks.array as Float32Array
+      looks.array as Float32Array,
+      bands.array as Float32Array
     );
     if (written) {
       contacts.needsUpdate = true;
       looks.needsUpdate = true;
+      bands.needsUpdate = true;
     }
     if (written || changed) this.invalidate();
     return dots;
+  }
+
+  /** `mesh` set to draw `count` instances, or a new one in its place if they outgrow its `attribute`. */
+  private fitted(
+    mesh: Quads | null,
+    attribute: string,
+    count: number,
+    makeGeometry: () => THREE.InstancedBufferGeometry,
+    { material, name, order }: { material: THREE.Material; name: string; order: number }
+  ): Quads {
+    let fit = mesh;
+    if (!fit || count > fit.geometry.getAttribute(attribute).count) {
+      fit?.geometry.dispose();
+      if (fit) this.letGo(fit);
+      fit = quads(makeGeometry(), material);
+      fit.name = name;
+      fit.renderOrder = order;
+      this.scene.add(fit);
+    }
+    fit.geometry.instanceCount = count;
+    fit.visible = count > 0;
+    return fit;
   }
 
   /** How the tier writes rows of the glow straight to the GPU; without one, three uploads them. */
@@ -1699,8 +1974,8 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   }
 
   /**
-   * Sets `bounds` round everything there is: every soma of the cloud, drawn or not and as large as one glowing in full,
-   * and the morphologies.
+   * Sets `bounds` round the cells: every soma of the cloud, drawn or not and as large as one glowing in full, and the
+   * morphologies. `clipBounds` also takes in the electrodes and the boxes, however far they lie from the cells.
    */
   private bound(): void {
     const all = new THREE.Box3();
@@ -1708,6 +1983,9 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     if (box) all.copy(this.somaBox(box, this.cloudUniforms.uRadius.value * (1 + GLOW_SWELL)));
     if (this.layer) all.union(this.shifted(this.layer.data.bounds));
     if (!all.isEmpty()) this.bounds.copy(all);
+    growRoundDots(all, this.electrodeGroups, this.centre, this.electrodeUniforms.uRadius.value);
+    if (this.voxelSet) growRoundVoxels(all, this.voxelSet.layer, this.centre);
+    this.clipBounds = all.isEmpty() ? null : all;
   }
 
   /** Shows the cloud and its pick, or hides them while the morphologies take their place. */

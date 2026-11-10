@@ -128,7 +128,7 @@ export class CellTable {
   /**
    * Paints each cell in its column's colour, or in `own` where the cell has no column or the column has no colour of
    * its own. A cell in section colours takes its soma's colour, and `sectionColors` becomes the last section colours in
-   * the palette.
+   * the palette. A soma in `own` runs along the blue ramp instead.
    */
   paint(colors: CellColors | null, own: string): void {
     const ownRgba = opaque(own);

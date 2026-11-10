@@ -138,6 +138,8 @@ type Props = {
   rowIndexOf?: (nodeId: number, sort: SortItem[], filter: FilterModel) => Promise<number>;
   /** A row to keep marked, by node id, such as the cell picked in a view beside the table. */
   markedNodeId?: number | null;
+  /** What the rows are, as the count names them: `Nodes` by default. */
+  rowsName?: string;
 };
 
 export type QuickFilter = { label: string; title?: string; model: FilterModel };
@@ -291,7 +293,8 @@ function buildColumnDefs({
     const isNumeric = c.kind === 'numeric';
     const useSetFilter =
       c.kind === 'categorical' && (c.library?.length ?? 0) < CATEGORICAL_SET_FILTER_MAX;
-    const width = PREFERRED_WIDTH_BY_NAME.get(c.name) ?? (isNumeric ? 100 : 120);
+    const preferred = PREFERRED_WIDTH_BY_NAME.get(c.name);
+    const width = preferred ?? (isNumeric ? 100 : 120);
     return {
       field: c.name,
       headerName: c.label ?? capitalize(c.name.replace(/_/g, ' ')),
@@ -307,8 +310,9 @@ function buildColumnDefs({
       filter: useSetFilter ? CategoricalFilter : isNumeric ? NumericFilter : TextFilter,
       filterParams: useSetFilter ? { library: c.library } : undefined,
       suppressHeaderMenuButton: true,
-      minWidth: 60,
-      width,
+      // Columns of a set width share out what the rest leave of the grid, never narrower than set.
+      // The others are sized to their values, which drops a flex.
+      ...(preferred === undefined ? { minWidth: 60, width } : { flex: 1, minWidth: width, width }),
       cellClass: isNumeric ? 'ag-right-aligned-cell' : undefined,
       valueFormatter: isNumeric
         ? (p: ValueFormatterParams) =>
@@ -391,6 +395,7 @@ export function NodesGrid({
   focusRow,
   rowIndexOf,
   markedNodeId = null,
+  rowsName = 'Nodes',
 }: Props) {
   const gridRef = useRef<AgGridReact>(null);
 
@@ -769,7 +774,7 @@ export function NodesGrid({
             {pickColumn ? (
               // Ticks and the filter each narrow what is drawn, ticks first, so both are told.
               <>
-                Nodes:{' '}
+                {rowsName}:{' '}
                 <span className={selectedNodeIds.size > 0 ? styles.gridStatHighlight : undefined}>
                   {selectedNodeIds.size.toLocaleString()}
                 </span>
@@ -780,13 +785,15 @@ export function NodesGrid({
                 /{total.toLocaleString()} showing
               </>
             ) : filteredCount === null ? (
-              <>{total.toLocaleString()} nodes</>
+              <>
+                {total.toLocaleString()} {rowsName.toLowerCase()}
+              </>
             ) : (
               <>
                 <strong className={styles.gridStatHighlight}>
                   {filteredCount.toLocaleString()}
                 </strong>{' '}
-                of {total.toLocaleString()} nodes
+                of {total.toLocaleString()} {rowsName.toLowerCase()}
               </>
             )}
           </span>

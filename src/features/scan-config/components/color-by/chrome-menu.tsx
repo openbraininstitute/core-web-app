@@ -3,6 +3,7 @@ import { Slider, Switch } from 'antd';
 import { type ReactNode, useCallback, useEffect, useState } from 'react';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
+import { holdPageSelection } from '@/ui/molecules/slider/touch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
@@ -217,6 +218,7 @@ export function MenuSlider({
         'group flex w-full flex-col gap-1 rounded-lg px-2 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100',
         disabled && 'hover:bg-transparent'
       )}
+      onPointerDownCapture={disabled ? undefined : holdPageSelection}
     >
       <div className="flex items-center justify-between gap-2">
         <span className={cn('flex items-center', disabled && 'opacity-50')}>{label}</span>
