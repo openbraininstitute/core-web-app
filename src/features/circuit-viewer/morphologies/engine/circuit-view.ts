@@ -850,11 +850,13 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
 
   /**
    * What to tell of the frame about to be tested (`DetailStream.frameRest`). A frame that sees through is followed by
-   * another at rest, whose read counts.
+   * another at rest, whose read counts. Where nothing culls, no frame is tested, and the first one tested once culling
+   * is back sees through.
    */
   protected restOf(moving: boolean): number {
+    if (!this.culls) return moving ? -1 : (this.layer?.detailed?.stream.rest ?? -1);
     const rest = this.layer?.detailed?.stream.frameRest(moving) ?? -1;
-    if (rest === SEES_THROUGH) this.invalidateAtRest(!moving && this.culls);
+    if (rest === SEES_THROUGH) this.invalidateAtRest(!moving);
     return rest;
   }
 

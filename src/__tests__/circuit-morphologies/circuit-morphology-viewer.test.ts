@@ -1937,14 +1937,45 @@ describe('the morphologies read a box at a time', () => {
       };
       expect(asked(false)).toBe(true);
       expect(asked(true)).toBe(false);
+
       viewer.setDetailRules({ culling: false });
-      expect(asked(false)).toBe(false);
+      frameRest.mockClear();
+      inner.dirty = false;
+      expect(inner.restOf(false)).toBe(stream.rest);
+      expect(inner.restOf(true)).toBe(-1);
+      expect(frameRest).not.toHaveBeenCalled();
+      expect(inner.dirty).toBe(false);
 
       frameRest.mockReturnValue(stream.rest);
       viewer.setDetailRules({ culling: true });
       inner.dirty = false;
       inner.restOf(false);
       expect(inner.dirty).toBe(false);
+    });
+
+    it('takes no marks from the first frame tested once culling is back, a box placed while it was off', async () => {
+      const { viewer, inner, stream } = await drawn();
+      const see = vi.spyOn(stream, 'see');
+      viewer.setDetailRules({ culling: false });
+      inner.restOf(false);
+      viewer.setDetailRules({ culling: true });
+
+      const read = (rest: number) => ({
+        tested: 0,
+        kept: 0,
+        drawn: 0,
+        marked: new Uint32Array(1),
+        rest,
+      });
+      const first = inner.restOf(false);
+      expect(first).toBe(SEES_THROUGH);
+      inner.tellCulled(read(first));
+      expect(see).not.toHaveBeenCalled();
+
+      const next = inner.restOf(false);
+      expect(next).toBe(stream.rest);
+      inner.tellCulled(read(next));
+      expect(see).toHaveBeenCalledOnce();
     });
   });
 
