@@ -18,37 +18,45 @@ export type TSimulationLaunchTarget = {
   requiresOfflineTokenConsent: boolean;
 };
 
-const SMALL_SCALE_TASK_TYPES: Partial<Record<TCircuitScaleDictionary, TObiOneTaskType>> = {
-  [CircuitScaleDictionary.Single]: ObiOneTaskTypeDict.SingleNeuronSynaptomeSimulationExecution,
-  [CircuitScaleDictionary.PairNeuron]: ObiOneTaskTypeDict.CircuitSimulation,
-  [CircuitScaleDictionary.SmallMicrocircuit]: ObiOneTaskTypeDict.CircuitSimulation,
+// Small scales run as machine jobs, which don't need an offline token.
+const SMALL_CIRCUIT_TARGET: TSimulationLaunchTarget = {
+  taskType: ObiOneTaskTypeDict.CircuitSimulation,
+  requiresOfflineTokenConsent: false,
 };
 
-const TASK_LAUNCH_SCALES: ReadonlySet<TCircuitScaleDictionary> = new Set([
-  CircuitScaleDictionary.Microcircuit,
-  CircuitScaleDictionary.Region,
-  CircuitScaleDictionary.System,
-  CircuitScaleDictionary.WholeBrain,
-]);
+const LARGE_CIRCUIT_TARGET: TSimulationLaunchTarget = {
+  taskType: ObiOneTaskTypeDict.CircuitSimulation,
+  requiresOfflineTokenConsent: true,
+};
+
+const SCALE_TARGETS: Record<TCircuitScaleDictionary, TSimulationLaunchTarget> = {
+  [CircuitScaleDictionary.Single]: {
+    taskType: ObiOneTaskTypeDict.SingleNeuronSynaptomeSimulationExecution,
+    requiresOfflineTokenConsent: false,
+  },
+  [CircuitScaleDictionary.PairNeuron]: SMALL_CIRCUIT_TARGET,
+  [CircuitScaleDictionary.SmallMicrocircuit]: SMALL_CIRCUIT_TARGET,
+  [CircuitScaleDictionary.Microcircuit]: LARGE_CIRCUIT_TARGET,
+  [CircuitScaleDictionary.Region]: LARGE_CIRCUIT_TARGET,
+  [CircuitScaleDictionary.System]: LARGE_CIRCUIT_TARGET,
+  [CircuitScaleDictionary.WholeBrain]: LARGE_CIRCUIT_TARGET,
+};
 
 export function resolveSimulationLaunchTarget({
   entityType,
   scale,
   targetSimulator,
-  smallScalesViaLaunchSystem,
 }: {
   entityType: TEntityTypeDict | null;
   scale: TCircuitScaleDictionary | null;
   targetSimulator: string | null;
-  smallScalesViaLaunchSystem: boolean;
 }): TSimulationLaunchTarget | null {
-  // Small scales run as machine jobs, which don't need an offline token.
-  const smallScaleTarget = (taskType: TObiOneTaskType) =>
-    smallScalesViaLaunchSystem ? { taskType, requiresOfflineTokenConsent: false } : null;
-
   // `circuit_simulation` loads `simulation.entity_id` as a Circuit, which a me-model isn't.
   if (entityType === EntityTypeDict.Memodel) {
-    return smallScaleTarget(ObiOneTaskTypeDict.SingleNeuronSimulationExecution);
+    return {
+      taskType: ObiOneTaskTypeDict.SingleNeuronSimulationExecution,
+      requiresOfflineTokenConsent: false,
+    };
   }
   if (targetSimulator === 'Brian2') {
     return {
@@ -61,12 +69,7 @@ export function resolveSimulationLaunchTarget({
   }
   if (scale === null) return null;
 
-  const smallScaleTaskType = SMALL_SCALE_TASK_TYPES[scale];
-  if (smallScaleTaskType) return smallScaleTarget(smallScaleTaskType);
-
-  return TASK_LAUNCH_SCALES.has(scale)
-    ? { taskType: ObiOneTaskTypeDict.CircuitSimulation, requiresOfflineTokenConsent: true }
-    : null;
+  return SCALE_TARGETS[scale] ?? null;
 }
 
 // TODO Remove this after the data is migrated

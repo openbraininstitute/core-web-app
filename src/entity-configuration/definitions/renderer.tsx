@@ -302,7 +302,7 @@ export const renderMorphologyMeasurement = (
 ): ReactNode => {
   if (!morphology || !('measurement_annotation' in morphology)) return EmptyValue;
 
-  const measurementKinds = morphology.measurement_annotation.measurement_kinds;
+  const measurementKinds = morphology.measurement_annotation?.measurement_kinds;
 
   const measurementKind = measurementKinds?.find(
     (mk) => mk.structural_domain === structuralDomain && mk.pref_label === label

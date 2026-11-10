@@ -7,7 +7,7 @@ import {
 } from '@ant-design/icons';
 import { RiCheckFill, RiFileCopyLine, RiPlayFill } from '@remixicon/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Modal, Popconfirm } from 'antd';
+import { Dropdown, Modal, Popconfirm } from 'antd';
 import { domAnimation, LazyMotion, m } from 'framer-motion';
 import Link from 'next/link';
 import { type ReactNode, useState } from 'react';
@@ -29,6 +29,7 @@ import { config } from '@/config';
 import { type TViewVariant, ViewVariant } from '@/constants';
 import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
 import { studentProjectIds } from '@/features/notebooks/assignment-id-conflict';
+import { SessionSizePanel } from '@/features/notebooks/components/session-size-panel';
 import { useRunNotebook } from '@/features/notebooks/hooks/use-run-notebook';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive, downloadFailedNotification } from '@/services/entity-download';
@@ -119,12 +120,14 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
     'description' in record ? (record.description as string | undefined) : undefined;
   const assets = 'assets' in record && record.assets ? (record.assets as IAsset[]) : [];
 
-  const { run, runTargets, runningTarget, running, creditsModal } = useRunNotebook({
-    id: record.id,
-    assets,
-  });
+  const { run, runTargets, runningTarget, running, creditsModal, profiles, defaultProfile } =
+    useRunNotebook({
+      id: record.id,
+      assets,
+    });
 
   const [pendingDownload, setPendingDownload] = useState(false);
+  const [openSizeMenu, setOpenSizeMenu] = useState<string | null>(null);
 
   const handleDownload = async () => {
     setPendingDownload(true);
@@ -147,6 +150,10 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
   const notebookName = 'name' in record ? (record.name as string) : '';
   const isCourseTemplateProject =
     !!virtualLabData?.course && virtualLabData.course.template_project_id === projectId;
+  // Students (course projects that aren't the instructor's template project) don't choose a
+  // session size: hide the size picker and run with the backend default to control spend.
+  const isCourseStudentProject =
+    !!virtualLabData?.course && virtualLabData.course.template_project_id !== projectId;
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -291,21 +298,59 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
         )}
 
         {isTemplate ? (
-          runTargets.map((target) => (
+          isCourseStudentProject ? (
             <MiniActionIcon
-              key={target.key}
-              label={target.label}
-              testId={`notebook-run-${target.key}-button`}
+              label="Run notebook"
+              testId="notebook-run-default-button"
               theme={theme}
-              onClick={() => run(target)}
+              onClick={() => run()}
             >
-              {runningTarget === target.key ? (
+              {running ? (
                 <LoadingOutlined spin className="text-primary-3" />
               ) : (
-                <target.Icon className="size-6" />
+                <RiPlayFill className="text-xl" />
               )}
             </MiniActionIcon>
-          ))
+          ) : (
+            runTargets.map((target) => (
+              <Dropdown
+                key={target.key}
+                trigger={['click']}
+                open={openSizeMenu === target.key}
+                onOpenChange={(open) => setOpenSizeMenu(open ? target.key : null)}
+                popupRender={() => (
+                  <SessionSizePanel
+                    profiles={profiles}
+                    defaultProfile={defaultProfile}
+                    onSelect={(profileName) => {
+                      setOpenSizeMenu(null);
+                      run(target, profileName);
+                    }}
+                  />
+                )}
+              >
+                {/* Plain Button (not MiniActionIcon) so antd Dropdown can attach
+                    its click trigger to a real DOM element. */}
+                <Button
+                  rounded
+                  title={target.label}
+                  data-testid={`notebook-run-${target.key}-button`}
+                  className={cn(
+                    'group hover:bg-primary-7/40 h-12 w-12 border border-white/16 shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]',
+                    {
+                      'hover:bg-white! hover:text-primary-8!': theme === ViewVariant.Light,
+                    }
+                  )}
+                >
+                  {runningTarget === target.key ? (
+                    <LoadingOutlined spin className="text-primary-3" />
+                  ) : (
+                    <target.Icon className="size-6" />
+                  )}
+                </Button>
+              </Dropdown>
+            ))
+          )
         ) : (
           <MiniActionIcon
             label="Run"

@@ -7,6 +7,7 @@ import type {
   TCreateTaskConfig,
   TUpdateTaskConfig,
 } from '@/api/entitycore/types/entities/task-config';
+import type { TAnyEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -19,14 +20,17 @@ export async function getTaskConfigs<T extends Record<string, unknown>>({
   withFacets,
   filters,
   context,
+  expand,
 }: {
   withFacets?: boolean;
   filters?: Partial<ITaskConfigFilter>;
   context?: WorkspaceContext | null;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<ITaskConfig<T>>>(baseUri, {
     queryParams: compactRecord({
+      expand,
       ...filters,
       with_facets: withFacets,
     }),
@@ -44,12 +48,15 @@ export async function getTaskConfigs<T extends Record<string, unknown>>({
 export async function getTaskConfig<T extends Record<string, unknown>>({
   id,
   context,
+  expand,
 }: {
   id: string;
   context?: WorkspaceContext | null;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<ITaskConfig<T>>(`${baseUri}/${id}`, {
+    queryParams: { expand },
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',

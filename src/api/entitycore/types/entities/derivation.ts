@@ -17,6 +17,8 @@ import type {
  * - emodel_circuit: The entity was derived from an e-model circuit.
  * - em_dense_reconstruction_dataset_cell_morphology: A cell morphology derived from an EM
  *   dense reconstruction dataset (used to list a dataset's neurons).
+ * - circuit_simplification: The entity was derived by simplifying a circuit.
+ * - research_log_input / research_log_output: An entity used or produced by a research log.
  * - unspecified: A derivation that does not require a specific type.
  */
 export const DerivationType = {
@@ -39,6 +41,18 @@ export const DerivationType = {
   EmDenseReconstructionDatasetCellMorphology: {
     key: 'em_dense_reconstruction_dataset_cell_morphology',
     label: 'EM dense reconstruction dataset cell morphology',
+  },
+  CircuitSimplification: {
+    key: 'circuit_simplification',
+    label: 'Circuit simplification',
+  },
+  ResearchLogInput: {
+    key: 'research_log_input',
+    label: 'Research log input',
+  },
+  ResearchLogOutput: {
+    key: 'research_log_output',
+    label: 'Research log output',
   },
   Unspecified: {
     key: 'unspecified',
