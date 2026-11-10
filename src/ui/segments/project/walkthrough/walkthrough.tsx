@@ -26,6 +26,7 @@ import { cn } from '@/utils/css-class';
 
 import { AccountFlow, Initials, readDummyAccount } from './account-flow';
 import { ChapterFrameBackground } from './chapter-frame-background';
+import { reverseOf, stopFrom, type TReverse } from './stops';
 import { type ChapterPlayback, useChapterPlayback } from './use-chapter-playback';
 
 import type { CSSProperties, ReactNode } from 'react';
@@ -112,13 +113,17 @@ function chapterStops(root: HTMLElement, sections: HTMLElement[]): number[] {
   });
 }
 
-/** The next place to rest from here, down (1) or up (-1); null if the page ends first. */
-function nextStop(root: HTMLElement, sections: HTMLElement[], way: 1 | -1): number | null {
-  const ahead = chapterStops(root, sections).filter((stop) =>
-    way > 0 ? stop > root.scrollTop + 2 : stop < root.scrollTop - 2
-  );
-  if (!ahead.length) return null;
-  return way > 0 ? Math.min(...ahead) : Math.max(...ahead);
+/**
+ * The next place to rest, down (1) or up (-1), from `at`, the page's own place unless it is gliding somewhere, when
+ * it is where it is going: a turn while it glides goes on from there, rather than to where it is already headed.
+ */
+function nextStop(
+  root: HTMLElement,
+  sections: HTMLElement[],
+  way: 1 | -1,
+  at = root.scrollTop
+): number | null {
+  return stopFrom(chapterStops(root, sections), at, way);
 }
 
 /** Whether the chapter on screen goes on past it that way, to be read through by hand. */
@@ -245,6 +250,12 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   const navigationUntil = useRef(0);
   const pendingIntroChapter = useRef<string | null>(null);
   const wheelHeldUntil = useRef(0);
+  // Which way the wheel turned the page last, for its momentum to be held; a turn the other way is a new gesture.
+  const heldWay = useRef<1 | -1 | 0>(0);
+  // How far the wheel has gone against that way while it is held.
+  const reversed = useRef<TReverse>({ px: 0, events: 0 });
+  // Where the page is gliding to, while it does.
+  const glideTarget = useRef<number | null>(null);
   const touchFrom = useRef<{ x: number; y: number } | null>(null);
   const glide = useRef<{ stop: () => void } | null>(null);
   const [finishing, setFinishing] = useState(false);
@@ -282,6 +293,17 @@ export function Walkthrough<C extends IWalkthroughChapter>({
     const holdGesture = (event: WheelEvent) => {
       const now = performance.now();
       if (now >= wheelHeldUntil.current) return;
+      // Going the other way, and on going, is no momentum of the last turn but the visitor going back: let it
+      // through. A stray tick as a trackpad gesture ends is not.
+      const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? root.clientHeight : 1;
+      const reverse = reverseOf(reversed.current, event.deltaY * unit, heldWay.current);
+      reversed.current = reverse;
+      if (reverse.back) {
+        wheelHeldUntil.current = 0;
+        heldWay.current = 0;
+        reversed.current = { px: 0, events: 0 };
+        return;
+      }
       event.preventDefault();
       event.stopPropagation();
       wheelHeldUntil.current = Math.max(wheelHeldUntil.current, now + WHEEL_REST_MS);
@@ -296,12 +318,14 @@ export function Walkthrough<C extends IWalkthroughChapter>({
       if (!root) return 0;
       glide.current?.stop();
       glide.current = null;
+      glideTarget.current = null;
       const distance = Math.abs(to - root.scrollTop);
       if (distance < 2) return 0;
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         root.scrollTop = to;
         return 0;
       }
+      glideTarget.current = to;
       const extraScreens = Math.max(Math.round(distance / root.clientHeight) - 1, 0);
       const ms = INTRO.scroll + extraScreens * GLIDE_PER_EXTRA_SCREEN_MS;
       glide.current = animate(root.scrollTop, to, {
@@ -312,6 +336,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
         },
         onComplete: () => {
           glide.current = null;
+          glideTarget.current = null;
         },
       });
       return ms;
@@ -329,7 +354,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   const turnPage = useCallback(
     (way: 1 | -1): number | null => {
       if (!root) return null;
-      const to = nextStop(root, placedSections(), way);
+      const to = nextStop(root, placedSections(), way, glideTarget.current ?? root.scrollTop);
       if (to === null) return null;
       const ms = glideTo(to);
       navigationUntil.current = Date.now() + Math.max(ms, 1000);
@@ -546,6 +571,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
     if (!root || !stageScrolls || !introDone || accountFlow) return;
     let travelled = 0;
     let lastWheel = 0;
+    let lastWay = 0;
     let readingUntil = 0;
     const onWheel = (e: WheelEvent) => {
       if (e.ctrlKey || e.deltaY === 0 || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
@@ -562,15 +588,19 @@ export function Walkthrough<C extends IWalkthroughChapter>({
         readingUntil = now + WHEEL_REST_MS;
         return;
       }
-      if (nextStop(root, placedSections(), way) === null) return;
+      if (nextStop(root, placedSections(), way, glideTarget.current ?? root.scrollTop) === null)
+        return;
       e.preventDefault();
-      if (now - lastWheel > 300) travelled = 0;
+      if (now - lastWheel > 300 || way !== lastWay) travelled = 0;
       lastWheel = now;
+      lastWay = way;
       const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? root.clientHeight : 1;
       travelled += Math.abs(e.deltaY) * unit;
       if (travelled < WHEEL_TURN_PX) return;
       travelled = 0;
       wheelHeldUntil.current = now + (turnPage(way) ?? 0) + WHEEL_REST_MS;
+      heldWay.current = way;
+      reversed.current = { px: 0, events: 0 };
     };
     let from: { x: number; y: number } | null = null;
     let paging = false;
