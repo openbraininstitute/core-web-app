@@ -55,6 +55,25 @@ describe('readConnectivityMatrix', () => {
     ]);
   });
 
+  it('reads the same neurons however little of their table is read at a time', () => {
+    expect(readConnectivityMatrix(FILE, { vertexChunkBytes: 1 })).toEqual(
+      readConnectivityMatrix(FILE)
+    );
+  });
+
+  it('opens no matrix whose file and connections together pass the memory it may take', async () => {
+    const { FS } = await ready;
+    const file = FS?.stat(FILE).size ?? 0;
+    expect(file).toBeGreaterThan(0);
+    // Four connections: a presynaptic and a postsynaptic neuron and a synapse count each.
+    const needed = file + 4 * 12;
+
+    expect(readConnectivityMatrix(FILE, { maxMemoryBytes: needed }).pre).toHaveLength(4);
+    expect(() => readConnectivityMatrix(FILE, { maxMemoryBytes: needed - 1 })).toThrow(
+      'The matrix has 4 connections, more than the browser can open'
+    );
+  });
+
   it('says so of a file that holds no matrix', () => {
     const other = new H5File('other.h5', 'w');
     other.create_group('nodes');

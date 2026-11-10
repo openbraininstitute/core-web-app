@@ -14,6 +14,18 @@ const ARRAY = 10;
 /** Connections read at a time: big enough to be quick, small enough not to double the heap. */
 const EDGE_CHUNK = 1 << 20;
 
+/** Bytes of the neurons' table read at a time. */
+const VERTEX_CHUNK_BYTES = 16 * 1024 * 1024;
+
+/**
+ * The most memory reading a matrix may take: its file, which stays whole in the worker until
+ * it is read, and the arrays read from it, a few bytes per connection. Past this the worker
+ * can run out of memory, which closes the tab without a word.
+ */
+export const MAX_MATRIX_MEMORY_BYTES = 3 * 1024 * 1024 * 1024;
+
+export type ReadOptions = { maxMemoryBytes?: number; vertexChunkBytes?: number };
+
 /**
  * A neuron property of the matrix: a library and a code per neuron (-1 for none),
  * kept in the library's order where `ordered`, such as ranges of a number; or a number.
@@ -40,6 +52,21 @@ class UnreadableMatrixError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'UnreadableMatrixError';
+  }
+}
+
+function tooManyConnections(count: number): UnreadableMatrixError {
+  return new UnreadableMatrixError(
+    `The matrix has ${count.toLocaleString('en-US')} connections, more than the browser can open`
+  );
+}
+
+/** The size of a file in the worker's file system, 0 where it cannot be told. */
+function fileBytes(filename: string): number {
+  try {
+    return Module.FS?.stat(filename).size ?? 0;
+  } catch {
+    return 0;
   }
 }
 
@@ -153,7 +180,10 @@ function readLibrary(file: File, path: string): string[] | null {
  * one row per neuron, its node id the index and its columns in blocks by kind,
  * a categorical one as codes into a table of its own.
  */
-function readVertices(file: File): Pick<ConnectivityMatrix, 'size' | 'nodeIds' | 'properties'> {
+function readVertices(
+  file: File,
+  chunkBytes: number
+): Pick<ConnectivityMatrix, 'size' | 'nodeIds' | 'properties'> {
   const path = `${MATRIX}/vertex_properties`;
   const table = file.get(`${path}/table`);
   if (!(table instanceof Dataset) || !table.metadata.compound_type) {
@@ -161,10 +191,10 @@ function readVertices(file: File): Pick<ConnectivityMatrix, 'size' | 'nodeIds' |
   }
   const { shape, size: rowSize, compound_type: compound } = table.metadata;
   const size = shape?.[0] ?? 0;
-  const bytes = readRows(table, 0, size);
-  const view = new DataView(bytes.buffer);
   const nodeIds = Float64Array.from({ length: size }, (_, i) => i);
   const properties: VertexProperty[] = [];
+  // What each column takes of the rows read, `first` being the first of them.
+  const fills: ((bytes: Uint8Array, view: DataView, first: number, rows: number) => void)[] = [];
 
   for (const member of compound.members) {
     const element = member.type === ARRAY && member.array_type ? member.array_type : member;
@@ -172,7 +202,11 @@ function readVertices(file: File): Pick<ConnectivityMatrix, 'size' | 'nodeIds' |
     const at = (row: number, k: number) => row * rowSize + member.offset + k * element.size;
     if (member.name === 'index') {
       if (element.type === INTEGER || element.type === FLOAT) {
-        for (let row = 0; row < size; row++) nodeIds[row] = numberAt(view, at(row, 0), element);
+        fills.push((_, view, first, rows) => {
+          for (let row = 0; row < rows; row++) {
+            nodeIds[first + row] = numberAt(view, at(row, 0), element);
+          }
+        });
       }
       continue;
     }
@@ -182,31 +216,51 @@ function readVertices(file: File): Pick<ConnectivityMatrix, 'size' | 'nodeIds' |
     for (let k = 0; k < width; k++) {
       const name = names[k] ?? (width === 1 ? member.name : `${member.name}_${k}`);
       if (library && element.type === INTEGER) {
-        const codes = Int32Array.from({ length: size }, (_, row) => {
-          const code = numberAt(view, at(row, k), element);
-          return code >= 0 && code < library.length ? code : -1;
+        const codes = new Int32Array(size);
+        fills.push((_, view, first, rows) => {
+          for (let row = 0; row < rows; row++) {
+            const code = numberAt(view, at(row, k), element);
+            codes[first + row] = code >= 0 && code < library.length ? code : -1;
+          }
         });
         properties.push({ name, kind: 'categorical', library, codes });
       } else if (element.type === STRING) {
         // Text kept as text: a category per value it takes.
         const index = new Map<string, number>();
-        const codes = Int32Array.from({ length: size }, (_, row) => {
-          const value = stringAt(bytes, at(row, k), element.size);
-          let code = index.get(value);
-          if (code === undefined) {
-            code = index.size;
-            index.set(value, code);
+        const values: string[] = [];
+        const codes = new Int32Array(size);
+        fills.push((bytes, _, first, rows) => {
+          for (let row = 0; row < rows; row++) {
+            const value = stringAt(bytes, at(row, k), element.size);
+            let code = index.get(value);
+            if (code === undefined) {
+              code = index.size;
+              index.set(value, code);
+              values.push(value);
+            }
+            codes[first + row] = code;
           }
-          return code;
         });
-        properties.push({ name, kind: 'categorical', library: [...index.keys()], codes });
+        properties.push({ name, kind: 'categorical', library: values, codes });
       } else if (element.type === INTEGER || element.type === FLOAT) {
-        const values = Float64Array.from({ length: size }, (_, row) =>
-          numberAt(view, at(row, k), element)
-        );
+        const values = new Float64Array(size);
+        fills.push((_, view, first, rows) => {
+          for (let row = 0; row < rows; row++) {
+            values[first + row] = numberAt(view, at(row, k), element);
+          }
+        });
         properties.push({ name, kind: 'numeric', values });
       }
     }
+  }
+
+  // A stretch of the table at a time: read whole, a table of millions is in memory twice over.
+  const chunk = Math.max(1, Math.floor(chunkBytes / Math.max(1, rowSize)));
+  for (let first = 0; first < size; first += chunk) {
+    const rows = Math.min(chunk, size - first);
+    const bytes = readRows(table, first, rows);
+    const view = new DataView(bytes.buffer);
+    for (const fill of fills) fill(bytes, view, first, rows);
   }
   return { size, nodeIds, properties };
 }
@@ -269,7 +323,14 @@ function frameRows(file: File, frame: string): number {
  * Read a ConnectomeUtilities connectivity matrix, as obi-one's extraction
  * writes one for a circuit's `circuit_connectivity_matrices` asset.
  */
-export function readConnectivityMatrix(filename: string): ConnectivityMatrix {
+export function readConnectivityMatrix(
+  filename: string,
+  {
+    maxMemoryBytes = MAX_MATRIX_MEMORY_BYTES,
+    vertexChunkBytes = VERTEX_CHUNK_BYTES,
+  }: ReadOptions = {}
+): ConnectivityMatrix {
+  const held = fileBytes(filename);
   const file = new File(filename, 'r');
   try {
     const group = file.get(MATRIX);
@@ -283,23 +344,36 @@ export function readConnectivityMatrix(filename: string): ConnectivityMatrix {
     if (shape.length === 2 && shape[0] !== shape[1]) {
       throw new UnreadableMatrixError('The matrix is not square, so has no one set of neurons');
     }
-    const vertices = readVertices(file);
     const count = frameRows(file, 'edge_indices');
     const rows = frameColumn(file, 'edge_indices', 'row');
     const cols = frameColumn(file, 'edge_indices', 'col');
     if (!rows || !cols) throw new UnreadableMatrixError('The matrix lists no connections');
-    const pre = new Uint32Array(count);
-    const post = new Uint32Array(count);
+    const edge = textOf(attribute(group, 'NEUROTOP_DEFAULT_EDGE'));
+    const located = edge ? frameColumn(file, 'edges', edge) : null;
+    const weights = located && frameRows(file, 'edges') === count ? located : null;
+
+    // Told before anything of that size is asked for: the file is still held, and the arrays
+    // come on top of it.
+    const perConnection =
+      2 * Uint32Array.BYTES_PER_ELEMENT + (weights ? Float32Array.BYTES_PER_ELEMENT : 0);
+    if (held + count * perConnection > maxMemoryBytes) throw tooManyConnections(count);
+
+    const vertices = readVertices(file, vertexChunkBytes);
+    let pre: Uint32Array;
+    let post: Uint32Array;
+    let synapses: Float32Array | null;
+    try {
+      pre = new Uint32Array(count);
+      post = new Uint32Array(count);
+      synapses = weights ? new Float32Array(count) : null;
+    } catch (error) {
+      // What an allocation the browser will not make throws.
+      if (error instanceof RangeError) throw tooManyConnections(count);
+      throw error;
+    }
     readFrameColumn(rows, pre);
     readFrameColumn(cols, post);
-
-    const edge = textOf(attribute(group, 'NEUROTOP_DEFAULT_EDGE'));
-    const weights = edge ? frameColumn(file, 'edges', edge) : null;
-    let synapses: Float32Array | null = null;
-    if (weights && frameRows(file, 'edges') === count) {
-      synapses = new Float32Array(count);
-      readFrameColumn(weights, synapses);
-    }
+    if (weights && synapses) readFrameColumn(weights, synapses);
     return { ...vertices, pre, post, synapses };
   } finally {
     file.close();
