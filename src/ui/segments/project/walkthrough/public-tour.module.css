@@ -11,15 +11,21 @@
 /* All public chapter media uses Explore's frame, including differently shaped source films. */
 @media (min-width: 64rem), (orientation: landscape) {
   .publicTour {
-    --chapter-media-width: min(
-      calc((62vw - 24px) * 0.88),
-      calc((var(--chapter-h) - var(--chapter-media-top) - var(--chapter-media-foot)) * 1512 / 948)
-    );
-    --chapter-media-height: calc(var(--chapter-media-width) * 948 / 1512);
+    --chapter-frame-unit: min(calc(100vw / 1920), calc(var(--chapter-h) / 1080));
+    --chapter-frame-x: calc((100vw - var(--chapter-frame-unit) * 1920) / 2);
+    --chapter-frame-y: calc((var(--chapter-h) - var(--chapter-frame-unit) * 1080) / 2);
+    --chapter-media-width: calc(var(--chapter-frame-unit) * 1040);
+    --chapter-media-height: calc(var(--chapter-frame-unit) * 585);
   }
   .publicTour [data-chapter-media] {
-    top: var(--chapter-media-top);
-    right: calc(24px + (62vw - 24px) * 0.06);
+    top: calc(var(--chapter-frame-y) + var(--chapter-frame-unit) * 209);
+    right: calc(
+      100vw -
+      var(--chapter-frame-x) -
+      var(--chapter-frame-unit) *
+      1832 -
+      var(--chapter-scrollbar-width, 0px)
+    );
     bottom: auto;
     left: auto;
     width: var(--chapter-media-width);
@@ -52,6 +58,7 @@
   color: #082d63;
 }
 .publicTour .publicText {
+  background: transparent;
   align-self: flex-start;
   width: 38%;
   max-width: none;
@@ -429,4 +436,12 @@
 .publicTour .publicText[data-chapter-text="join"],
 .publicTour :global([data-stage-scene="join"]) > [data-chapter-media] {
   translate: 0 calc(-1 * var(--public-footer-extra, 0px));
+}
+
+/* Rounded films sit directly on the tile field without a rectangular backplate shadow. */
+.publicTour [data-chapter-media] video {
+  border-radius: clamp(12px, 1.4vw, 20px);
+  box-shadow: none;
+  background: transparent;
+  object-fit: cover;
 }

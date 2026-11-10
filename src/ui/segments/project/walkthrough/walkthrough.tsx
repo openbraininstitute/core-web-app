@@ -25,6 +25,7 @@ import { HOME_DESIGNS } from '@/ui/segments/project/home-designs';
 import { cn } from '@/utils/css-class';
 
 import { AccountFlow, Initials, readDummyAccount } from './account-flow';
+import { ChapterFrameBackground } from './chapter-frame-background';
 import { type ChapterPlayback, useChapterPlayback } from './use-chapter-playback';
 
 import type { CSSProperties, ReactNode } from 'react';
@@ -685,6 +686,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
               introContent && informationFont.variable,
               introContent && publicTour.publicTour
             )}
+            data-public-tour={introContent ? true : undefined}
             style={
               {
                 '--chapter-h': height ? `${height}px` : 'calc(100vh - 6rem)',
@@ -699,6 +701,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
               } as CSSProperties
             }
           >
+            {introContent && <ChapterFrameBackground active={introDone || introLeft} />}
             {floating?.({
               entered: introDone || introLeft,
               revealed: introDone,
