@@ -173,13 +173,21 @@ export function rowWorkflow(row: unknown): IRowWorkflow | undefined {
 /** EntityCore's largest page. */
 const MAX_PAGE_SIZE = 1000;
 
-/** A source's first `count` rows in the requested order, and how many it holds in all. */
+/** A source's first rows in the requested order, and how many it holds in all. */
+interface ISourceRows {
+  rows: Row[];
+  total: number;
+}
+
+const tagged = ({ label, activity, targetType }: IAllWorkflowsSource, rows: Row[]): Row[] =>
+  rows.map((row) => ({ ...row, [ROW_WORKFLOW]: { activity, targetType, label } }));
+
 async function firstRows(
   source: IAllWorkflowsSource,
   filters: TEntitycoreParams,
   count: number,
   context: WorkspaceContext
-): Promise<{ rows: Row[]; total: number }> {
+): Promise<ISourceRows> {
   const rows: Row[] = [];
   let total = 0;
   for (let page = 1; rows.length < count; page++) {
@@ -195,14 +203,47 @@ async function firstRows(
     rows.push(...data);
     if (data.length < pageSize || rows.length >= total) break;
   }
-  const { label, activity, targetType } = source;
-  return {
-    rows: rows.slice(0, count).map((row) => ({
-      ...row,
-      [ROW_WORKFLOW]: { activity, targetType, label },
-    })),
-    total,
-  };
+  return { rows: tagged(source, rows.slice(0, count)), total };
+}
+
+/**
+ * A source's first `count` rows, asking only for those past the ones `held`. EntityCore pages by
+ * number, so the rows held are taken as its first page and the next of that size is asked for;
+ * a jump further than that, or a total that changed meanwhile, starts the source again.
+ */
+async function rowsUpTo(
+  source: IAllWorkflowsSource,
+  held: ISourceRows | undefined,
+  filters: TEntitycoreParams,
+  count: number,
+  context: WorkspaceContext
+): Promise<ISourceRows> {
+  const have = held?.rows.length ?? 0;
+  if (held && (have >= count || have >= held.total)) return held;
+  if (held && 2 * have >= count && have <= MAX_PAGE_SIZE) {
+    const res = await source.list({
+      filters: { ...filters, page: 2, page_size: have },
+      withFacets: false,
+      context,
+    });
+    if (res?.pagination?.total_items === held.total) {
+      const ids = new Set(held.rows.map(({ id }) => id));
+      const more = (res.data ?? []).filter(({ id }) => !ids.has(id));
+      return { rows: [...held.rows, ...tagged(source, more)], total: held.total };
+    }
+  }
+  return firstRows(source, filters, count, context);
+}
+
+/** Rows fetched for one filter and sort are kept this long for the pages that follow. */
+const HELD_ROWS_MAX_AGE_MS = 60_000;
+
+interface IHeldRows {
+  key: string;
+  since: number;
+  /** a page asked for again is a refetch, which the rows held must not answer */
+  served: Set<number>;
+  bySource: Map<IAllWorkflowsSource, ISourceRows>;
 }
 
 const fieldOf = (row: Row, field: string): string =>
@@ -258,18 +299,22 @@ function mergeFacets(all: ReadonlyArray<TFacets | undefined>): TFacets {
 
 /**
  * The All listing: one request per workflow, merged. A page needs every source's rows up to
- * its end, since any of them may hold the rows that belong on it; the total is their sum.
+ * its end, since any of them may hold the rows that belong on it; the total is their sum. The
+ * rows fetched are held for the next pages of the same filter and sort. A source that fails is
+ * left out and told of through `onFailedSources`, called on every page with those that failed.
  */
 export function createAllWorkflowsDataSource({
   sources,
   schema,
   context,
   transformParams,
+  onFailedSources,
 }: {
   sources: ReadonlyArray<IAllWorkflowsSource>;
   schema: IGridSchema<Row>;
   context: WorkspaceContext;
   transformParams?: (params: TEntitycoreParams) => TEntitycoreParams;
+  onFailedSources?: (labels: string[]) => void;
 }): IGridDataSource<Row> {
   const filtersFor = (query: IGridQuery): TEntitycoreParams => {
     // every source's endpoint takes `ilike_search`
@@ -277,13 +322,47 @@ export function createAllWorkflowsDataSource({
     return transformParams ? transformParams(params) : params;
   };
 
+  let held: IHeldRows | null = null;
+
   const fetch = async (query: IGridQuery): Promise<IGridPage<Row>> => {
     const { page: _page, page_size: _pageSize, ...filters } = filtersFor(query);
     const start = (query.page - 1) * query.pageSize;
     const end = start + query.pageSize;
-    const results = await Promise.all(
-      sources.map((source) => firstRows(source, filters, end, context))
+    const key = JSON.stringify(filters);
+    if (
+      held?.key !== key ||
+      held.served.has(query.page) ||
+      Date.now() - held.since > HELD_ROWS_MAX_AGE_MS
+    ) {
+      held = { key, since: Date.now(), served: new Set(), bySource: new Map() };
+    }
+    const mine = held;
+    const settled = await Promise.allSettled(
+      sources.map((source) => rowsUpTo(source, mine.bySource.get(source), filters, end, context))
     );
+    const results: ISourceRows[] = [];
+    const failed: string[] = [];
+    settled.forEach((result, i) => {
+      if (result.status === 'rejected') {
+        failed.push(sources[i].label);
+        return;
+      }
+      results.push(result.value);
+      // two pages may be on their way at once: the longer answer stays
+      const before = mine.bySource.get(sources[i]);
+      if (
+        !before ||
+        before.total !== result.value.total ||
+        result.value.rows.length >= before.rows.length
+      ) {
+        mine.bySource.set(sources[i], result.value);
+      }
+    });
+    if (sources.length > 0 && results.length === 0) {
+      throw (settled[0] as PromiseRejectedResult).reason;
+    }
+    mine.served.add(query.page);
+    onFailedSources?.(failed);
     const rows = results.flatMap((result) => result.rows).sort(compareRows(query, schema));
     return {
       rows: rows.slice(start, end),
@@ -293,10 +372,14 @@ export function createAllWorkflowsDataSource({
 
   const fetchFacets = async (query: IGridQuery): Promise<TFacets | undefined> => {
     const filters = { ...filtersFor(query), ...FACETS_ONLY_PAGE };
-    const results = await Promise.all(
+    const settled = await Promise.allSettled(
       sources.map((source) => source.list({ filters, withFacets: true, context }))
     );
-    return mergeFacets(results.map((result) => result?.facets));
+    const results = settled.flatMap((result) => (result.status === 'fulfilled' ? [result] : []));
+    if (sources.length > 0 && results.length === 0) {
+      throw (settled[0] as PromiseRejectedResult).reason;
+    }
+    return mergeFacets(results.map((result) => result.value?.facets));
   };
 
   return { fetch, fetchFacets };

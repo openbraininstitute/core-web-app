@@ -1,8 +1,9 @@
 'use client';
 
 import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 
+import { useAppNotification } from '@/components/notification';
 import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
 import { createEntitycorePagedDataSource } from '@/features/data-grid/bindings/entitycore/data-source.paged';
 import {
@@ -139,6 +140,21 @@ export function WorkflowActivity() {
   );
   const freeTextSearch = useGridStateSlice(controller, selectFreeTextSearch);
 
+  const notification = useAppNotification();
+  const lastFailed = useRef('');
+  // Through a ref: a data source made again would let go of the rows it holds.
+  const tellFailed = useRef((_labels: string[]) => {});
+  tellFailed.current = (labels) => {
+    const failed = labels.join(', ');
+    if (failed && failed !== lastFailed.current) {
+      notification.warning({
+        message: 'Some workflows could not be listed',
+        description: `Their activities are missing from this table: ${failed}.`,
+      });
+    }
+    lastFailed.current = failed;
+  };
+
   // The grid contributes page/sort/filter/search; the entity's domain config owns the
   // endpoint (All asks each workflow's), and `params` below pins the workspace scope.
   const dataSource = useMemo(
@@ -156,6 +172,7 @@ export function WorkflowActivity() {
             schema,
             context: { virtualLabId, projectId },
             transformParams: withWorkflowIdSearch,
+            onFailedSources: (labels) => tellFailed.current(labels),
           }),
     [listedType, listedActivity, schema, virtualLabId, projectId, flags]
   );

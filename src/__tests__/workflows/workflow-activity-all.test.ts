@@ -54,7 +54,7 @@ const at = (day: number) => `2026-10-${String(day).padStart(2, '0')}T12:00:00Z`;
 /** EntityCore's order: `order_by`, then newest first and the id (`ensure_stable_sorting`). */
 const serverOrder = (orderBy: string[]) => (a: TRow, b: TRow) => {
   for (const key of [...orderBy, '-creation_date', 'id']) {
-    const field = key.replace(/^-/, '') as keyof TRow;
+    const field = key.replace(/^[-+]/, '') as keyof TRow;
     const order = a[field] < b[field] ? -1 : a[field] > b[field] ? 1 : 0;
     if (order) return key.startsWith('-') ? -order : order;
   }
@@ -267,6 +267,141 @@ describe('createAllWorkflowsDataSource', () => {
       label: `label of ${ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation}`,
     });
     expect(category?.getValue?.(page.rows[0] as EntityCoreObjectTypes)).toBe('Simulation');
+  });
+
+  describe('the rows held between pages', () => {
+    const many = (prefix: string, count: number, firstDay: number) =>
+      Array.from({ length: count }, (_, i) => row(`${prefix}${i}`, firstDay + i));
+    const ids = (page: { rows: { id: string }[] }) => page.rows.map((r) => r.id);
+
+    it('asks, for the next page, only the sources with more rows, and only for those rows', async () => {
+      const few = source(ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation, many('s', 2, 1));
+      const lots = source(ExtendedEntitiesTypeDict.MicrocircuitSimulation, many('m', 8, 10));
+      const all = dataSource([few, lots]);
+
+      const first = await all.fetch(query());
+      const second = await all.fetch(query({ page: 2 }));
+      const third = await all.fetch(query({ page: 3 }));
+
+      expect(ids(first)).toEqual(['m7', 'm6', 'm5']);
+      expect(ids(second)).toEqual(['m4', 'm3', 'm2']);
+      expect(ids(third)).toEqual(['m1', 'm0', 's1']);
+      expect(few.calls).toHaveLength(1);
+      expect(lots.calls.map(({ page, page_size }) => [page, page_size])).toEqual([
+        [1, 3],
+        [2, 3],
+        [2, 6],
+      ]);
+    });
+
+    it('asks the server again for a page it has already given, as a refetch does', async () => {
+      const rows = many('m', 3, 1);
+      const one = source(ExtendedEntitiesTypeDict.MicrocircuitSimulation, rows);
+      const all = dataSource([one]);
+      await all.fetch(query());
+
+      rows[2] = { ...rows[2], name: 'renamed' };
+      const again = await all.fetch(query());
+
+      expect(again.rows[0].name).toBe('renamed');
+      expect(one.calls).toHaveLength(2);
+    });
+
+    it('starts a source again when its total changed, so no row is listed twice', async () => {
+      const rows = many('m', 6, 1);
+      const one = source(ExtendedEntitiesTypeDict.MicrocircuitSimulation, rows);
+      const all = dataSource([one]);
+      const first = await all.fetch(query());
+
+      rows.push(row('new', 20));
+      const second = await all.fetch(query({ page: 2 }));
+
+      expect(ids(first)).toEqual(['m5', 'm4', 'm3']);
+      expect(ids(second)).toEqual(['m3', 'm2', 'm1']);
+      expect(new Set(ids(second)).size).toBe(3);
+      expect(second.total).toBe(7);
+    });
+
+    it('holds nothing over a change of sort', async () => {
+      const one = source(ExtendedEntitiesTypeDict.MicrocircuitSimulation, many('m', 3, 1));
+      const all = dataSource([one]);
+      await all.fetch(query());
+
+      const byName = await all.fetch(
+        query({ page: 2, sort: [{ columnId: 'name', direction: SortDirection.Asc }] })
+      );
+
+      expect(byName.rows).toEqual([]);
+      expect(one.calls).toHaveLength(2);
+      expect(one.calls[1]).toMatchObject({ order_by: ['+name'], page: 1, page_size: 6 });
+    });
+  });
+
+  describe('a source that fails', () => {
+    const failing = (): IAllWorkflowsSource => ({
+      activity: ActivityValues.Build,
+      targetType: ExtendedEntitiesTypeDict.MEModelBuildCampaign,
+      label: 'ME-model',
+      list: () => Promise.reject(new Error('down')),
+    });
+
+    it('is left out of the page and told of, the rest listed', async () => {
+      const onFailedSources = vi.fn();
+      const all = createAllWorkflowsDataSource({
+        sources: [failing(), small()],
+        schema,
+        context: workspace,
+        onFailedSources,
+      });
+
+      const page = await all.fetch(query());
+
+      expect(page.rows.map((r) => r.id)).toEqual(['s6', 's4', 's1']);
+      expect(page.total).toBe(3);
+      expect(onFailedSources).toHaveBeenLastCalledWith(['ME-model']);
+    });
+
+    it('is asked again on the next page', async () => {
+      const broken = failing();
+      const list = vi.spyOn(broken, 'list');
+      const all = dataSource([broken, small()]);
+
+      await all.fetch(query());
+      await all.fetch(query({ page: 2 }));
+
+      expect(list).toHaveBeenCalledTimes(2);
+    });
+
+    it('tells of none once every source answers', async () => {
+      const onFailedSources = vi.fn();
+      const all = createAllWorkflowsDataSource({
+        sources: [small()],
+        schema,
+        context: workspace,
+        onFailedSources,
+      });
+
+      await all.fetch(query());
+
+      expect(onFailedSources).toHaveBeenLastCalledWith([]);
+    });
+
+    it('fails the listing where every source does', async () => {
+      const all = dataSource([failing(), failing()]);
+
+      await expect(all.fetch(query())).rejects.toThrow('down');
+      await expect(all.fetchFacets?.(query())).rejects.toThrow('down');
+    });
+
+    it('is left out of the facets', async () => {
+      const counted = source(ExtendedEntitiesTypeDict.MicrocircuitSimulation, [], {
+        created_by: [{ id: 'ana', label: 'Ana', count: 2 }],
+      });
+
+      const facets = await dataSource([failing(), counted]).fetchFacets?.(query());
+
+      expect(facets?.created_by).toEqual([{ id: 'ana', label: 'Ana', count: 2 }]);
+    });
   });
 
   it('sums the facet counts of the sources', async () => {
