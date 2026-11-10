@@ -4,7 +4,7 @@ import { Spin } from 'antd';
 import { useMemo } from 'react';
 import { createPortal } from 'react-dom';
 
-import { KeptNodesGridPlaceholder } from '@/features/circuit-nodes/components/kept-nodes-grid';
+import { KeptTablePlaceholder } from '@/features/circuit-nodes/connectivity/table-matrix';
 import { ReportNodesTable } from '@/features/sonata-viewer/components/report-nodes-table';
 import {
   PlotsOverTable,
@@ -113,7 +113,7 @@ export function ReportStatisticsPanel({
         <ReportNodesTable {...table} pinnedColumns={pinnedColumns} pinnedVersion={values} />
       ) : (
         // The table kept from the view before, over the same cells, until the statistics are in.
-        <KeptNodesGridPlaceholder
+        <KeptTablePlaceholder
           session={sessionKey}
           fallback={
             <div className="flex h-full min-h-0 items-center justify-center">

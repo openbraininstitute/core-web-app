@@ -9,6 +9,7 @@ import {
   KeptNodesGridPlaceholder,
 } from '@/features/circuit-nodes/components/kept-nodes-grid';
 import {
+  KeptTablePlaceholder,
   TableOrMatrix,
   useTableMatrixView,
 } from '@/features/circuit-nodes/connectivity/table-matrix';
@@ -445,7 +446,7 @@ export function ReportNodesTable({
 
   if (!circuitConfig) {
     return (
-      <KeptNodesGridPlaceholder
+      <KeptTablePlaceholder
         fallback={
           <Centered>
             <Spin />
@@ -471,6 +472,7 @@ export function ReportNodesTable({
   return (
     <TableOrMatrix
       view={matrixView}
+      session={sessionKey}
       circuit={circuit}
       population={nodePopulation.name}
       rowCount={rowCount}

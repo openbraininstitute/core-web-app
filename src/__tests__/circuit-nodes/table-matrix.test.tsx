@@ -1,5 +1,6 @@
 import { act, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { createStore, Provider } from 'jotai';
+import { useEffect } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -7,7 +8,10 @@ import {
   useReportTableView,
 } from '@/features/circuit-nodes/connectivity/report-table-view';
 import {
+  KeptTablePlaceholder,
+  TableMatrixKeeper,
   TableOrMatrix,
+  useKeptTableTitle,
   useTableMatrixView,
 } from '@/features/circuit-nodes/connectivity/table-matrix';
 import { tablePaneTitle } from '@/features/circuit-nodes/types';
@@ -20,12 +24,16 @@ import type { ViewMode } from '@/features/circuit-nodes/types';
 
 const h = vi.hoisted(() => ({
   view: null as ComponentProps<typeof ConnectivityView> | null,
+  mounts: 0,
   entries: [] as { population: string; path: string; size: number | null }[],
 }));
 
 vi.mock('@/features/circuit-nodes/connectivity/connectivity-view', () => ({
   ConnectivityView: (props: ComponentProps<typeof ConnectivityView>) => {
     h.view = props;
+    useEffect(() => {
+      h.mounts += 1;
+    }, []);
     return <div data-testid="matrix">{props.entry?.population}</div>;
   },
 }));
@@ -62,26 +70,40 @@ const WITH_MATRIX = { id: 'c1', assets: [{ id: 'asset' }] } as unknown as ICircu
 const ANOTHER_WITH_MATRIX = { id: 'c2', assets: [{ id: 'asset' }] } as unknown as ICircuit;
 const WITHOUT_MATRIX = { id: 'c3', assets: [] } as unknown as ICircuit;
 const ENTRY = { path: 'm.h5', size: null };
+const PINNED = {
+  pre: Uint32Array.from([0]),
+  post: Uint32Array.from([1]),
+  square: { matrix: 'm', pre: { start: 0, end: 1 }, post: { start: 1, end: 2 } },
+  name: 'A → B',
+  matrixCells: null,
+};
 
 function Table({
   circuit = WITH_MATRIX,
   onMatrixChange,
+  onPick = vi.fn(),
+  cells = null,
+  nodeColumns,
 }: {
   circuit?: ICircuit;
   onMatrixChange?: (matrix: SceneMatrix | undefined) => void;
+  onPick?: () => void;
+  cells?: Uint32Array | null | undefined;
+  nodeColumns?: ComponentProps<typeof TableOrMatrix>['nodeColumns'];
 }) {
   const view = useTableMatrixView(circuit);
   return (
     <TableOrMatrix
       view={view}
+      session={`${circuit.id}/S1`}
       circuit={circuit}
       population="S1"
       rowCount={10}
-      cells={null}
-      nodeColumns={undefined}
+      cells={cells}
+      nodeColumns={nodeColumns}
       onReset={vi.fn()}
       onMatrixChange={onMatrixChange}
-      pin={{ pinned: null, onPick: vi.fn() }}
+      pin={{ pinned: PINNED, onPick }}
       headerStart={<span>The population</span>}
     >
       <div data-testid="rows">{view.menu}</div>
@@ -107,6 +129,7 @@ const openMatrix = () => fireEvent.click(screen.getAllByRole('button', { name: '
 
 beforeEach(() => {
   h.view = null;
+  h.mounts = 0;
   h.entries = [{ population: 'S1__S1__chemical', ...ENTRY }];
 });
 
@@ -189,6 +212,103 @@ describe('a report’s table and its matrix', () => {
 
     fireEvent.click(screen.getAllByRole('button', { name: 'view: connectivity' })[0]);
     expect(onMatrixChange).toHaveBeenLastCalledWith(undefined);
+  });
+});
+
+describe('the matrix kept across report views', () => {
+  function Loading() {
+    return (
+      <div>
+        <span data-testid="title">{useKeptTableTitle()}</span>
+        <KeptTablePlaceholder fallback={<span>waiting</span>} />
+      </div>
+    );
+  }
+
+  function renderKept() {
+    const store = createStore();
+    const page = (content: React.ReactNode) => (
+      <Provider store={store}>
+        <TableMatrixKeeper>{content}</TableMatrixKeeper>
+      </Provider>
+    );
+    const view = render(page(<Table />));
+    return { ...view, show: (content: React.ReactNode) => view.rerender(page(content)) };
+  }
+
+  it('stays mounted while the next report loads, and in the next report over the same cells', () => {
+    const { show } = renderKept();
+    openMatrix();
+    expect(h.mounts).toBe(1);
+
+    show(<Loading />);
+    expect(screen.getByTestId('matrix')).toBeInTheDocument();
+    expect(screen.getByTestId('title')).toHaveTextContent('Connectivity');
+    expect(screen.queryByText('waiting')).toBeNull();
+
+    show(<Table />);
+    expect(screen.getByTestId('matrix')).toBeInTheDocument();
+    expect(h.mounts).toBe(1);
+  });
+
+  it('is let go with the rows on show, and the loading pane is the table again', () => {
+    const { show } = renderKept();
+    openMatrix();
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'view: connectivity' })[0]);
+    expect(screen.queryByTestId('matrix')).toBeNull();
+
+    show(<Loading />);
+    expect(screen.getByTestId('title')).toHaveTextContent('Neuron Table');
+    expect(screen.getByText('waiting')).toBeInTheDocument();
+  });
+
+  it('keeps its cells until the next report knows its own, and an equal array as it was', () => {
+    const columns = { columns: [], getColumn: vi.fn() };
+    const kept = Uint32Array.from([1, 2]);
+    const { show } = renderKept();
+    show(<Table cells={kept} nodeColumns={columns} />);
+    openMatrix();
+
+    show(<Table cells={undefined} nodeColumns={undefined} />);
+    expect(h.view?.selection?.cells).toBe(kept);
+
+    show(<Table cells={Uint32Array.from([1, 2])} nodeColumns={columns} />);
+    expect(h.view?.selection?.cells).toBe(kept);
+
+    const other = Uint32Array.from([3]);
+    show(<Table cells={other} nodeColumns={columns} />);
+    expect(h.view?.selection?.cells).toBe(other);
+    expect(h.mounts).toBe(1);
+  });
+
+  it('is mounted anew for other cells', () => {
+    const { show } = renderKept();
+    openMatrix();
+
+    show(<Table circuit={ANOTHER_WITH_MATRIX} />);
+    expect(screen.queryByTestId('matrix')).toBeNull();
+    show(<Table />);
+
+    expect(screen.getByTestId('matrix')).toBeInTheDocument();
+    expect(h.mounts).toBe(2);
+  });
+
+  it('lets the pinned pathway go on a click on nothing in it', () => {
+    const onPick = vi.fn();
+    const store = createStore();
+    render(
+      <Provider store={store}>
+        <TableMatrixKeeper>
+          <Table onPick={onPick} />
+        </TableMatrixKeeper>
+      </Provider>
+    );
+    openMatrix();
+
+    fireEvent.click(screen.getByTestId('matrix'));
+
+    expect(onPick).toHaveBeenCalledExactlyOnceWith(null);
   });
 });
 

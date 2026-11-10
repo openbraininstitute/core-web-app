@@ -121,8 +121,8 @@ const scrolls = new WeakMap<HTMLElement, { top: number; left: number }>();
 const VERTICAL = '.ag-body-viewport';
 const HORIZONTAL = ['.ag-center-cols-viewport', '.ag-body-horizontal-scroll-viewport'];
 
-/** Room for the kept grid: it is moved in here, not mounted anew. */
-function KeptGridSlot({ node }: { node: HTMLDivElement }) {
+/** Room for the kept grid, or the kept matrix: it is moved in here, not mounted anew. */
+export function KeptGridSlot({ node }: { node: HTMLDivElement }) {
   const ref = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const slot = ref.current;

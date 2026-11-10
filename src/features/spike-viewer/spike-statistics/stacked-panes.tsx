@@ -6,7 +6,10 @@ import { atom, useAtom } from 'jotai';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { KeptNodesGridPlaceholder } from '@/features/circuit-nodes/components/kept-nodes-grid';
+import {
+  KeptTablePlaceholder,
+  useKeptTableTitle,
+} from '@/features/circuit-nodes/connectivity/table-matrix';
 import {
   PaneResizeHandle,
   SHUT_BAR_SIZE,
@@ -233,6 +236,7 @@ export function LoadingFilePanes({
   panelTitles: readonly string[];
 }) {
   const sidePanel = useResultsSidePanel();
+  const tableTitle = useKeptTableTitle();
   const [panelTop, panelBottom] = panelTitles;
   return (
     <>
@@ -253,10 +257,10 @@ export function LoadingFilePanes({
           ),
         }}
         bottom={{
-          title: 'Neuron Table',
+          title: tableTitle,
           boxClassName: 'px-3 pt-1 pb-2',
           content: (
-            <KeptNodesGridPlaceholder
+            <KeptTablePlaceholder
               fallback={<Skeleton className="my-2 min-h-0 flex-1 rounded-lg" />}
             />
           ),
@@ -275,7 +279,7 @@ export function LoadingFilePanes({
         )}
       {sidePanel?.fileStrip &&
         createPortal(
-          <ShutPaneBar upright title={[title, 'Neuron Table']} onOpen={sidePanel.openColumns} />,
+          <ShutPaneBar upright title={[title, tableTitle]} onOpen={sidePanel.openColumns} />,
           sidePanel.fileStrip
         )}
       {sidePanel?.panelStrip &&
