@@ -51,6 +51,16 @@ type TRow = { id: string; name: string; creation_date: string; type: string };
 
 const at = (day: number) => `2026-10-${String(day).padStart(2, '0')}T12:00:00Z`;
 
+/** EntityCore's order: `order_by`, then newest first and the id (`ensure_stable_sorting`). */
+const serverOrder = (orderBy: string[]) => (a: TRow, b: TRow) => {
+  for (const key of [...orderBy, '-creation_date', 'id']) {
+    const field = key.replace(/^-/, '') as keyof TRow;
+    const order = a[field] < b[field] ? -1 : a[field] > b[field] ? 1 : 0;
+    if (order) return key.startsWith('-') ? -order : order;
+  }
+  return 0;
+};
+
 /** A source holding `rows` that answers pages the way EntityCore does: in its own order. */
 function source(
   targetType: IAllWorkflowsSource['targetType'],
@@ -67,7 +77,7 @@ function source(
       calls.push(filters);
       const page = Number(filters.page ?? 1);
       const pageSize = Number(filters.page_size ?? 30);
-      const ordered = [...rows].sort((a, b) => b.creation_date.localeCompare(a.creation_date));
+      const ordered = [...rows].sort(serverOrder([filters.order_by].flat() as string[]));
       return {
         data: ordered.slice((page - 1) * pageSize, page * pageSize) as never[],
         pagination: { page, page_size: pageSize, total_items: rows.length },
@@ -228,6 +238,23 @@ describe('createAllWorkflowsDataSource', () => {
     );
 
     expect(page.rows.map((r) => r.name)).toEqual(['Alpha', 'beta', 'gamma']);
+  });
+
+  it('breaks ties as EntityCore does, so no row goes missing between pages', async () => {
+    // the same name, so the order falls to creation date, newest first, and not to the id
+    const sameName = source(ExtendedEntitiesTypeDict.MicrocircuitSimulation, [
+      row('f', 4, 'L5PC'),
+      row('c', 3, 'L5PC'),
+      row('a', 2, 'L5PC'),
+      row('b', 1, 'L5PC'),
+    ]);
+    const all = dataSource([sameName]);
+    const byName = { pageSize: 2, sort: [{ columnId: 'name', direction: SortDirection.Asc }] };
+
+    const first = await all.fetch(query(byName));
+    const second = await all.fetch(query({ ...byName, page: 2 }));
+
+    expect([...first.rows, ...second.rows].map((r) => r.id)).toEqual(['f', 'c', 'a', 'b']);
   });
 
   it('hands every row its workflow, which the Category column reads', async () => {

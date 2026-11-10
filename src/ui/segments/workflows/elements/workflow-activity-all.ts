@@ -205,21 +205,35 @@ async function firstRows(
   };
 }
 
-/** Orders merged rows as EntityCore orders each source: the grid's sort, else newest first. */
+const fieldOf = (row: Row, field: string): string =>
+  String((row as unknown as Record<string, unknown>)[field] ?? '');
+
+/** In microseconds, as EntityCore stores them; `Date.parse` stops at milliseconds. */
+const microseconds = (iso: string): number =>
+  Date.parse(iso) * 1000 + Number((/\.(\d+)/.exec(iso)?.[1] ?? '').padEnd(6, '0').slice(3, 6));
+
+const byTime = (field: string) => (a: Row, b: Row) =>
+  microseconds(fieldOf(a, field)) - microseconds(fieldOf(b, field));
+
+/**
+ * Orders merged rows as EntityCore orders each source: the grid's sort, else newest first, then
+ * newest first and the id, as its `ensure_stable_sorting` adds. Any other tie-break would let a
+ * page's rows differ from the server's, and rows go missing between pages.
+ */
 function compareRows(query: IGridQuery, schema: IGridSchema<Row>) {
   const [sort] = query.sort;
   const column = schema.columns.find(({ id }) => id === sort?.columnId);
   const field = [column?.sortField].flat()[0] ?? 'creation_date';
   const descending = sort ? sort.direction === SortDirection.Desc : true;
-  const sortValue = (row: Row): string =>
-    String((row as unknown as Record<string, unknown>)[field] ?? '');
-  return (a: Row, b: Row) => {
-    const order =
-      field === 'creation_date' || field === 'update_date'
-        ? Date.parse(sortValue(a)) - Date.parse(sortValue(b))
-        : sortValue(a).localeCompare(sortValue(b), undefined, { sensitivity: 'base' });
-    return (descending ? -order : order) || a.id.localeCompare(b.id);
-  };
+  const bySort =
+    field === 'creation_date' || field === 'update_date'
+      ? byTime(field)
+      : (a: Row, b: Row) => fieldOf(a, field).localeCompare(fieldOf(b, field));
+  const byCreation = byTime('creation_date');
+  return (a: Row, b: Row) =>
+    (descending ? bySort(b, a) : bySort(a, b)) ||
+    byCreation(b, a) ||
+    (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 }
 
 /** One facet list per key, counts summed over the sources. */
