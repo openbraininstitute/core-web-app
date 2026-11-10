@@ -445,3 +445,10 @@
   background: transparent;
   object-fit: cover;
 }
+
+/* Upright on a phone the footer comes at the end of the last chapter, which grows to read down to it. */
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .publicTour :global(section#walkthrough-join) {
+    padding-bottom: var(--public-footer-height, 0px);
+  }
+}

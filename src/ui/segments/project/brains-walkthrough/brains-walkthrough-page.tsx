@@ -1,7 +1,8 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { getSocialMediaLinks } from '@/services/sanity/api/get-social-media';
 import FooterPanel from '@/ui/segments/landing/layout/footer/footer-panel';
@@ -147,8 +148,30 @@ function BrainScene({ scene, near }: { scene: TBrainScene; near: boolean }) {
   return null;
 }
 
-/** Reuse the information pages' footer at the final public chapter. */
+/** Upright on a phone, as the tour lays its screens out one above the other. */
+const STACKED = '(max-width: 63.999rem) and (orientation: portrait)';
+
+/**
+ * Reuse the information pages' footer at the final public chapter: along the foot of the screen; upright on a phone,
+ * where it would take half the screen, at the end of the chapter instead, read down to after its words and logos.
+ */
 function PublicTourFooter() {
+  // The last chapter, on a phone, to hold the footer at its end.
+  const [host, setHost] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    const stacked = window.matchMedia(STACKED);
+    const update = () =>
+      setHost(stacked.matches ? document.getElementById('walkthrough-join') : null);
+    update();
+    stacked.addEventListener('change', update);
+    return () => stacked.removeEventListener('change', update);
+  }, []);
+  const panel = <MeasuredFooter placed={host ? 'absolute' : 'fixed'} />;
+  return host ? createPortal(panel, host) : panel;
+}
+
+/** The footer, telling what it sits in how tall it is, for what must stay clear of it there. */
+function MeasuredFooter({ placed }: { placed: 'absolute' | 'fixed' }) {
   const footer = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const element = footer.current;
@@ -175,7 +198,11 @@ function PublicTourFooter() {
     queryFn: getSocialMediaLinks,
   });
   return (
-    <div ref={footer} className="pointer-events-auto fixed inset-x-0 bottom-0 z-[67]">
+    <div
+      ref={footer}
+      data-public-footer
+      className={`pointer-events-auto inset-x-0 bottom-0 z-[67] ${placed}`}
+    >
       <FooterPanel socialMediaLinks={socialMediaLinks} />
     </div>
   );
