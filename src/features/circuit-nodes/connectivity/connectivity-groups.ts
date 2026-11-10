@@ -158,7 +158,15 @@ function rankedValues(
 }
 
 /** A flag per neuron of the matrix: whether its node id is among `cells`. */
-function includedNeurons(matrix: ConnectivityMatrix, cells: ArrayLike<number>): Uint8Array {
+export function includedNeurons(matrix: ConnectivityMatrix, cells: ArrayLike<number>): Uint8Array {
+  let top = -1;
+  for (const id of matrix.nodeIds) if (id > top) top = id;
+  // A flag per node id, where the ids are not far apart: a set of millions is slow to build.
+  if (top <= 4 * matrix.size + 1_000_000) {
+    const wanted = new Uint8Array(Math.max(0, top + 1));
+    for (let i = 0; i < cells.length; i++) if (cells[i] <= top) wanted[cells[i]] = 1;
+    return Uint8Array.from(matrix.nodeIds, (id) => wanted[id] ?? 0);
+  }
   const wanted = new Set(Array.from(cells));
   return Uint8Array.from(matrix.nodeIds, (id) => (wanted.has(id) ? 1 : 0));
 }
@@ -226,13 +234,20 @@ function neuronsInOrder(
   const { size, nodeIds } = matrix;
   const property = categorical(matrix, orderBy, outside);
   const ordered = property ? rankedValues(property, included) : null;
-  const order = Array.from({ length: size }, (_, i) => i)
-    .filter((neuron) => !included || included[neuron])
-    .sort(
-      (a, b) =>
-        (ordered ? ordered.ranks[a] - ordered.ranks[b] : 0) || nodeIds[a] - nodeIds[b] || a - b
-    );
-  if (!ordered) return { order, runs: null };
+  const byNodeId = Uint32Array.from({ length: size }, (_, i) => i);
+  // As most matrices list them already.
+  if (nodeIds.some((id, i) => i > 0 && id < nodeIds[i - 1])) {
+    byNodeId.sort((a, b) => nodeIds[a] - nodeIds[b] || a - b);
+  }
+  const kept = included ? byNodeId.filter((neuron) => included[neuron]) : byNodeId;
+  if (!ordered) return { order: kept, runs: null };
+
+  // By value, and within one as they were: a count of each value says where its neurons go.
+  const next = new Uint32Array(ordered.values.length + 1);
+  for (const neuron of kept) next[ordered.ranks[neuron] + 1] += 1;
+  for (let rank = 1; rank < next.length; rank++) next[rank] += next[rank - 1];
+  const order = new Uint32Array(kept.length);
+  for (const neuron of kept) order[next[ordered.ranks[neuron]]++] = neuron;
 
   const runs: RowRun[] = [];
   order.forEach((neuron, place) => {
@@ -249,7 +264,7 @@ function neuronCount(n: number): string {
 }
 
 /** A stretch of the order as lines of neurons, whose places run on from one line to the next. */
-function neuronSide(window: SideWindow, order: readonly number[], nodeIds: Float64Array) {
+function neuronSide(window: SideWindow, order: Uint32Array, nodeIds: Float64Array) {
   const { start, end, step } = window;
   const count = end - start;
   const lines = Math.ceil(count / step);
@@ -298,7 +313,7 @@ function valueSide(
 }
 
 /** Each neuron's line on a side showing `window`, or why it has none. */
-function linesOf({ start, end, step }: SideWindow, order: readonly number[], size: number) {
+function linesOf({ start, end, step }: SideWindow, order: Uint32Array, size: number) {
   const lineOf = new Int32Array(size).fill(LEFT_OUT);
   order.forEach((neuron, place) => {
     lineOf[neuron] =
@@ -339,24 +354,46 @@ function countLines(
 }
 
 /**
- * The matrix as `request` asks for it: its connections and synapses, summed by
- * lines. Given `cells`, node ids, only those neurons and the connections between
- * them are counted. `outside` are properties to group or order by besides the
- * matrix's own.
+ * What of a request stays as it is whatever is in view: the values and each neuron's, or the
+ * neurons in their order. Worked out once, and counted over for each stretch zoomed to.
  */
-export function groupConnectivity(
+export type ConnectivityLayout =
+  | { by: 'property'; values: string[]; ranks: Int32Array; neuronsBefore: Float64Array }
+  | { by: 'neuron'; order: Uint32Array; runs: RowRun[] | null };
+
+/** The layout `request` asks for, of the `included` neurons where given, whatever its window. */
+export function layOutConnectivity(
   matrix: ConnectivityMatrix,
   request: ConnectivityRequest,
-  cells: ArrayLike<number> | null = null,
+  included: Uint8Array | null = null,
   outside: readonly NodeProperty[] = []
+): ConnectivityLayout {
+  if (request.by === 'neuron') {
+    return { by: 'neuron', ...neuronsInOrder(matrix, request.orderBy, included, outside) };
+  }
+  const property = categorical(matrix, request.property, outside);
+  if (!property) throw new Error(`The matrix has no property ${request.property} to group by`);
+  const { values, ranks } = rankedValues(property, included);
+  const neuronsBefore = new Float64Array(values.length + 1);
+  countRows(ranks, values.length).forEach((size, place) => {
+    neuronsBefore[place + 1] = neuronsBefore[place] + size;
+  });
+  return { by: 'property', values, ranks, neuronsBefore };
+}
+
+/**
+ * The connections and synapses of a layout, summed by the lines of `request`'s window. Nothing
+ * of the layout is handed out, so what this returns can go to another thread and the layout stay.
+ */
+export function countConnectivity(
+  matrix: ConnectivityMatrix,
+  layout: ConnectivityLayout,
+  request: Pick<ConnectivityRequest, 'maxRows' | 'window'>
 ): ConnectivityGroups {
-  const included = cells ? includedNeurons(matrix, cells) : null;
   const maxRows = request.maxRows ?? Number.POSITIVE_INFINITY;
 
-  if (request.by === 'property') {
-    const property = categorical(matrix, request.property, outside);
-    if (!property) throw new Error(`The matrix has no property ${request.property} to group by`);
-    const { values, ranks } = rankedValues(property, included);
+  if (layout.by === 'property') {
+    const { values, ranks } = layout;
     const places = values.length;
     const whole = sideWindow([-0.5, places - 0.5], places, maxRows);
     const pre = valueSide(request.window?.pre ?? whole, values, ranks, matrix.nodeIds);
@@ -364,17 +401,13 @@ export function groupConnectivity(
       request.window && !sameWindow(request.window.pre, request.window.post)
         ? valueSide(request.window.post, values, ranks, matrix.nodeIds)
         : pre;
-    const neuronsBefore = new Float64Array(places + 1);
-    countRows(ranks, places).forEach((size, place) => {
-      neuronsBefore[place + 1] = neuronsBefore[place] + size;
-    });
     return {
       by: 'property',
       places,
       pre: pre.side,
       post: post.side,
       runs: null,
-      neuronsBefore,
+      neuronsBefore: layout.neuronsBefore.slice(),
       ...countLines(
         matrix,
         pre.lineOf,
@@ -385,7 +418,7 @@ export function groupConnectivity(
     };
   }
 
-  const { order, runs } = neuronsInOrder(matrix, request.orderBy, included, outside);
+  const { order, runs } = layout;
   const places = order.length;
   const whole = sideWindow([-0.5, places - 0.5], places, maxRows);
   const pre = neuronSide(request.window?.pre ?? whole, order, matrix.nodeIds);
@@ -405,6 +438,22 @@ export function groupConnectivity(
       post.labels.length
     ),
   };
+}
+
+/**
+ * The matrix as `request` asks for it: its connections and synapses, summed by
+ * lines. Given `cells`, node ids, only those neurons and the connections between
+ * them are counted. `outside` are properties to group or order by besides the
+ * matrix's own.
+ */
+export function groupConnectivity(
+  matrix: ConnectivityMatrix,
+  request: ConnectivityRequest,
+  cells: ArrayLike<number> | null = null,
+  outside: readonly NodeProperty[] = []
+): ConnectivityGroups {
+  const included = cells ? includedNeurons(matrix, cells) : null;
+  return countConnectivity(matrix, layOutConnectivity(matrix, request, included, outside), request);
 }
 
 /** The node ids of each row's neurons, row after row. */

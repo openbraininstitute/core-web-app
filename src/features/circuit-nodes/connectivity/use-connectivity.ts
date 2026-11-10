@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import * as Comlink from 'comlink';
-import { useCallback, useSyncExternalStore } from 'react';
+import { useCallback, useState, useSyncExternalStore } from 'react';
 
 import {
   buildAssetDownloadRequest,
@@ -10,6 +10,7 @@ import {
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { CONNECTIVITY_H5_CACHE } from '@/features/circuit-nodes/connectivity/cache-name';
+import { LatestOnly } from '@/features/circuit-nodes/connectivity/latest-only';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 import type {
@@ -92,6 +93,10 @@ const IDLE: ConnectivityState = Object.freeze({ status: 'idle' });
 /** How long a matrix is kept once nothing shows it, for a quick way back from the nodes. */
 const KEEP_MS = 60_000;
 
+/** The selections and outside properties a worker holds at most, the last asked by. */
+const HELD_MAX = 6;
+let lastHeldId = 0;
+
 type Session = {
   worker: Worker | null;
   proxy: Comlink.Remote<ConnectivityWorkerApi> | null;
@@ -100,6 +105,10 @@ type Session = {
   users: number;
   disposeTimer: ReturnType<typeof setTimeout> | null;
   buildRequest: () => Promise<{ url: string; headers: Record<string, string> }>;
+  /** A view's requests one at a time, the last of those it made meanwhile. */
+  requests: LatestOnly;
+  /** What the worker was handed to ask by, and the id of each, the last asked by last. */
+  held: Map<Uint32Array | NodeProperty, number>;
 };
 
 /** A worker per matrix file on show, shared by whatever shows it and kept a while after. */
@@ -127,6 +136,8 @@ class ConnectivitySessions {
         users: 0,
         disposeTimer: null,
         buildRequest,
+        requests: new LatestOnly(),
+        held: new Map(),
       };
       this.sessions.set(key, session);
     }
@@ -154,15 +165,46 @@ class ConnectivitySessions {
     if (session?.state.status === 'error') this.open(key, session);
   }
 
+  /**
+   * The matrix's rows as `request` asks, for the view that is `channel`: one request of a
+   * view's at a time, and of those it makes meanwhile only the last, the others failing as
+   * superseded. `cells` and `outside` go to the worker once, and are asked by from then on.
+   */
   group(
     key: string,
+    channel: object,
     request: ConnectivityRequest,
     cells: Uint32Array | null,
     outside: NodeProperty[]
   ): Promise<ConnectivityGroups> {
-    const proxy = this.sessions.get(key)?.proxy;
-    if (!proxy) return Promise.reject(new Error('The connectivity matrix is not open'));
-    return proxy.group(request, cells, outside);
+    const session = this.sessions.get(key);
+    if (!session?.proxy) return Promise.reject(new Error('The connectivity matrix is not open'));
+    return session.requests.run(channel, async () => {
+      const { proxy } = session;
+      if (!proxy) throw new Error('The connectivity matrix is not open');
+      const ids = [...(cells ? [cells] : []), ...outside].map((item) => {
+        let id = session.held.get(item);
+        session.held.delete(item);
+        if (id === undefined) {
+          lastHeldId += 1;
+          id = lastHeldId;
+          // Sent ahead of the request, which fails if this did.
+          const sent =
+            item instanceof Uint32Array ? proxy.holdCells(id, item) : proxy.holdProperty(id, item);
+          sent.catch(() => {});
+        }
+        session.held.set(item, id);
+        return id;
+      });
+      const dropped: number[] = [];
+      for (const [item, id] of session.held) {
+        if (session.held.size <= HELD_MAX) break;
+        session.held.delete(item);
+        dropped.push(id);
+      }
+      if (dropped.length > 0) proxy.forget(dropped).catch(() => {});
+      return proxy.group(request, cells ? ids[0] : null, cells ? ids.slice(1) : ids);
+    });
   }
 
   private setState(session: Session, state: ConnectivityState): void {
@@ -204,12 +246,14 @@ class ConnectivitySessions {
     const { proxy, worker } = session;
     session.proxy = null;
     session.worker = null;
+    session.held.clear();
+    session.requests.reset(new Error('The connectivity matrix was closed'));
     proxy?.[Comlink.releaseProxy]();
     worker?.terminate();
   }
 }
 
-const connectivitySessions = new ConnectivitySessions();
+export const connectivitySessions = new ConnectivitySessions();
 
 /** A matrix of a circuit's connectivity asset, opened in a worker, and its rows on request. */
 export function useConnectivityMatrix(
@@ -243,12 +287,13 @@ export function useConnectivityMatrix(
   const state = useSyncExternalStore(subscribe, () =>
     key ? connectivitySessions.state(key) : IDLE
   );
+  const [channel] = useState(() => ({}));
   const group = useCallback(
     (request: ConnectivityRequest, cells: Uint32Array | null, outside: NodeProperty[]) =>
       key
-        ? connectivitySessions.group(key, request, cells, outside)
+        ? connectivitySessions.group(key, channel, request, cells, outside)
         : Promise.reject(new Error('No connectivity matrix')),
-    [key]
+    [key, channel]
   );
   const retry = useCallback(() => {
     if (key) connectivitySessions.retry(key);
