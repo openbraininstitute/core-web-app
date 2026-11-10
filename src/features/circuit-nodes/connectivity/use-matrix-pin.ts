@@ -1,5 +1,5 @@
 import { atom, useAtom } from 'jotai';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { logError } from '@/utils/logger';
 
@@ -110,6 +110,16 @@ export function useMatrixPin({
       cancelled = true;
     };
   }, [ready, scope]);
+
+  // Let go, from here or by the table's filter, the column goes too: it holds a code per row.
+  const wasPinned = useRef(false);
+  const isPinned = pinned !== null;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: once each time the pathway goes
+  useEffect(() => {
+    const went = wasPinned.current && !isPinned;
+    wasPinned.current = isPinned;
+    if (went && ready) setDerivedColumns(OWNER, []).catch(() => {});
+  }, [isPinned]);
 
   const onPick = (next: PinnedPathway | null) => {
     if (!next) {

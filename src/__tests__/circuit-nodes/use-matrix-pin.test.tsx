@@ -84,11 +84,12 @@ describe('useMatrixPin', () => {
   });
 
   it('lets go of the pathway alone, the other filters staying', async () => {
-    const { result } = pinned();
+    const { result, setDerivedColumns } = pinned();
     await act(async () => result.current.pin.onPick(PINNED));
 
     await act(async () => result.current.pin.onPick(null));
 
+    expect(setDerivedColumns).toHaveBeenLastCalledWith('matrix-pathway', []);
     expect(result.current.filterModel).toEqual(L5);
     expect(result.current.pin.pinned).toBeNull();
     expect(result.current.pin.columns).toEqual([]);
@@ -96,11 +97,12 @@ describe('useMatrixPin', () => {
   });
 
   it('lets go as the filter comes off, by the table’s reset say', async () => {
-    const { result } = pinned();
+    const { result, setDerivedColumns } = pinned();
     await act(async () => result.current.pin.onPick(PINNED));
 
     act(() => result.current.setFilterModel({}));
 
+    expect(setDerivedColumns).toHaveBeenLastCalledWith('matrix-pathway', []);
     expect(result.current.pin.pinned).toBeNull();
     expect(result.current.pin.columns).toEqual([]);
   });
