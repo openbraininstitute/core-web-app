@@ -275,7 +275,8 @@ function allowDownload(key: string): void {
 
 /**
  * Whether a matrix waits for the user's word before downloading: one past
- * {@link CONFIRM_DOWNLOAD_BYTES}, not yet in the browser's cache, and not already allowed.
+ * {@link CONFIRM_DOWNLOAD_BYTES} or of unknown size, not yet in the browser's cache, and not
+ * already allowed.
  * `checking` while the cache is asked.
  */
 export function useConnectivityDownloadGate(
@@ -286,7 +287,8 @@ export function useConnectivityDownloadGate(
   const ctx = useWorkspace();
   const key = assetId && entry ? `${circuitId}/${assetId}/${entry.path}` : null;
   const path = entry?.path;
-  const large = (entry?.size ?? 0) > CONFIRM_DOWNLOAD_BYTES;
+  // without the listing's size it may be any size, so it asks too
+  const large = entry != null && (entry.size == null || entry.size > CONFIRM_DOWNLOAD_BYTES);
   const allowed = useSyncExternalStore(
     subscribeAllowed,
     () => key !== null && allowedDownloads.has(key),

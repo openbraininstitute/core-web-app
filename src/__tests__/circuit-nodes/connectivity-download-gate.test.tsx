@@ -31,7 +31,7 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 
-const entry = (path: string, size: number): ConnectivityEntry => ({
+const entry = (path: string, size: number | null): ConnectivityEntry => ({
   population: 'S1nonbarrel_neurons__S1nonbarrel_neurons__chemical',
   path,
   description: '',
@@ -67,6 +67,13 @@ describe('useConnectivityDownloadGate', () => {
     expect(result.current.waiting).toBe(false);
     // shown again later in the visit, it is not asked about twice
     expect(gate(large).result.current.waiting).toBe(false);
+  });
+
+  it('holds one whose size the listing could not give', async () => {
+    const { result } = gate(entry('unknown.h5', null));
+
+    await waitFor(() => expect(result.current.checking).toBe(false));
+    expect(result.current.waiting).toBe(true);
   });
 
   it('asks nothing of a large matrix the browser already holds', async () => {

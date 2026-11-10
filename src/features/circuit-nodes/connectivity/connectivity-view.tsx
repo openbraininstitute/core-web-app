@@ -301,7 +301,9 @@ export function ConnectivityView({
     return (
       <div className={cn(styles.centered, 'flex-col gap-3 text-center text-sm text-neutral-500')}>
         <span className="text-primary-9 font-semibold">
-          This matrix is {formatBytes(entry.size ?? 0, 1)}
+          {entry.size == null
+            ? "This matrix's size could not be read"
+            : `This matrix is ${formatBytes(entry.size, 1)}`}
         </span>
         <span>It downloads to this browser, which keeps it for next time.</span>
         <button type="button" className={PILL_CLASS} onClick={gate.allow}>
