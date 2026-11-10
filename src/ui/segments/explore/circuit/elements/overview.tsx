@@ -43,10 +43,6 @@ export default function Overview({ circuit, variant = ViewVariant.Light }: Props
     },
   });
 
-  const connectivityMatrices = circuit.assets.filter(
-    (asset) => asset.label === AssetLabel.circuit_connectivity_matrices
-  );
-
   const present = (asset?: IAsset): asset is IAsset => Boolean(asset);
 
   const list = {
@@ -55,7 +51,6 @@ export default function Overview({ circuit, variant = ViewVariant.Light }: Props
       title: 'Network statistics',
       items: [networkPropertiesA, networkPropertiesB].filter(present),
     },
-    connectivity: { title: 'Connectivity matrices', items: connectivityMatrices },
   };
 
   return (

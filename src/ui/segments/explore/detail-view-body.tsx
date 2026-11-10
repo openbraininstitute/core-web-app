@@ -34,7 +34,7 @@ export function DetailViewBody({
           <div className="primary-scrollbar h-full overflow-x-auto overflow-y-auto">{children}</div>
         ) : (
           <div className="primary-scrollbar-dark h-full overflow-x-auto overflow-y-auto">
-            <div className="min-h-full rounded-2xl border border-neutral-2 bg-primary-9 p-10 pt-4 pb-10 text-white">
+            <div className="relative min-h-full rounded-2xl border border-neutral-2 bg-primary-9 p-10 pt-4 pb-10 text-white">
               {nameDisplay}
               <EntityNameDisplayWrapper>{children}</EntityNameDisplayWrapper>
             </div>

@@ -27,7 +27,7 @@ export function Visualization({ circuit }: Props) {
     <div
       id={`visualization-${kebabCase(circuit.type)}-${circuit.id}`}
       data-testid="visualization"
-      className="mt-5"
+      className="mb-8"
     >
       <ProgressiveEntityImage
         asset={visAsset}

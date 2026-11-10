@@ -214,8 +214,9 @@ export default async function Configuration({
       : null;
 
     return (
-      <div className="flex w-full flex-col gap-4">
-        <div className="flex justify-end gap-2">
+      <div className="w-full">
+        {/* pinned to the detail panel (DetailViewBody), level with the entity name above */}
+        <div className="absolute top-4 right-10 flex gap-2">
           {configHref && <WorkflowLink href={configHref}>Workflow config</WorkflowLink>}
           {outputHref && <WorkflowLink href={outputHref}>Workflow output</WorkflowLink>}
         </div>
