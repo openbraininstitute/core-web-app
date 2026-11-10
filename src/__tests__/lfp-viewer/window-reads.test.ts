@@ -50,6 +50,12 @@ const index = {
   datasets: {},
 } as unknown as LfpSummaryIndex;
 
+const residuals = (values: readonly number[], order: number) => {
+  let r = Int16Array.from(values);
+  for (let o = 0; o < order; o++) r = r.map((v, i) => (i === 0 ? v : v - r[i - 1]));
+  return Array.from(r);
+};
+
 describe('windowLevel', () => {
   it('is the coarsest level with a bin a pixel at least', () => {
     // The whole run: 1,954 bins of 2,048 steps for 1,500 px
@@ -227,6 +233,30 @@ describe('tiles of an overview level', () => {
     ]);
   });
 
+  it('are read at their order, a min/max tile predicted along the flat tile, its padding cut first', async () => {
+    const values = Array.from({ length: TILE_BINS * 2 }, (_, i) =>
+      i < 2120 * 2 ? Math.round(9000 * Math.sin(i / 50)) + (i % 2 ? 700 : -700) : 0
+    );
+    const chunk = new Uint8Array(deflated(residuals(values, 1)));
+    const file = new Uint8Array(600 + chunk.length);
+    file.set(chunk, 600);
+    vi.stubGlobal('fetch', vi.fn(answeringRanges(file)));
+    const table = new BigUint64Array(300 * 31 * 2);
+    table.set([BigInt(600), BigInt(chunk.length)], (2 * 31 + 30) * 2);
+    const predictors = new Uint8Array(300 * 31);
+    predictors[2 * 31 + 30] = 1;
+
+    const tile = await readTile(
+      rangeReader({ url: 'u', headers: {} }),
+      index,
+      axis,
+      { group: 0, contact: 2, levelAt: 1, tile: 30 },
+      { table, predictors }
+    );
+
+    expect(Array.from(tile)).toEqual(values.slice(0, 2120 * 2));
+  });
+
   it("are a group's field put together, every contact's tiles one after another", async () => {
     // 2 contacts, 5 bins of means in tiles of 3: a tile and 2 bins each
     const small = {
@@ -268,5 +298,53 @@ describe('tiles of an overview level', () => {
 
     expect(Array.from(field.data)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
     expect(field).toMatchObject({ contacts: 2, bins: 5, binMs: 0.4, kind: 'mean', scale: 0.25 });
+  });
+
+  it("are a group's field, each tile at the order its predictors give", async () => {
+    const small = {
+      contacts: 2,
+      time: { start: 0, dt: 0.1, steps: 20 },
+      datasets: {
+        '/lfp/mtype/level2_chunks': { offset: 0, shape: [2, 2, 2, 2], dtype: '<u8' },
+        '/lfp/mtype/level2_predictors': { offset: 128, shape: [2, 2, 2], dtype: '|u1' },
+      },
+    } as unknown as LfpSummaryIndex;
+    const means = {
+      ...axis,
+      scales: [1, 0.25],
+      levels: [
+        axis.levels[0],
+        {
+          step: 4,
+          kind: 'mean',
+          dataset: '/lfp/mtype/level2',
+          blocks: {
+            chunks: '/lfp/mtype/level2_chunks',
+            steps: 3,
+            predictors: '/lfp/mtype/level2_predictors',
+          },
+        },
+      ],
+    } as unknown as LfpAxis;
+    const orders = [1, 0, 2, 1];
+    const tiles = [
+      [1, 2, 3],
+      [4, -5, 0],
+      [-6, 7, 8],
+      [9, 10, 0],
+    ].map((t, i) => new Uint8Array(deflated(residuals(t, orders[i]))));
+    const file = new Uint8Array(1000);
+    const table = new BigUint64Array(8);
+    tiles.forEach((tile, t) => {
+      file.set(tile, 200 + t * 100);
+      table.set([BigInt(200 + t * 100), BigInt(tile.length)], t * 2);
+    });
+    file.set(new Uint8Array(table.buffer), 64);
+    file.set(orders, 128 + 4);
+    vi.stubGlobal('fetch', vi.fn(answeringRanges(file)));
+
+    const field = await readField(rangeReader({ url: 'u', headers: {} }), small, means, 1, 1);
+
+    expect(Array.from(field.data)).toEqual([1, 2, 3, 4, -5, -6, 7, 8, 9, 10]);
   });
 });

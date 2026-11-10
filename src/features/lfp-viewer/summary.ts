@@ -21,11 +21,8 @@ const blocksSchema = z.object({
   steps: z.number().int().positive(),
   /** µV per int16 unit of each block, group × contact × block, where not the group's. */
   scales: z.string().optional(),
-  /**
-   * How many times each block's values were taken less the one before, group × contact × block,
-   * where they were.
-   */
-  predictors: z.string().optional(),
+  /** How many times each block's values were taken less the one before, group × contact × block. */
+  predictors: z.string(),
 });
 
 const levelSchema = z.object({
@@ -59,7 +56,7 @@ const axisSchema = z.object({
 
 export const lfpSummaryIndexSchema = z.object({
   format: z.literal('lfp-summary'),
-  version: z.literal(2),
+  version: z.literal(1),
   populations: z.array(z.string()),
   time: z.object({ start: z.number(), dt: z.number().positive(), steps: z.number().int() }),
   units: z.string(),
@@ -286,7 +283,10 @@ export async function readSlice(
   return (await read({ offset, length })).slice().buffer;
 }
 
-/** A chunk's int16 values: HDF5's deflate and shuffle filters undone. */
+/**
+ * A chunk's int16 values: HDF5's deflate and shuffle filters undone, then the zigzag that put each
+ * value's sign in its lowest bit.
+ */
 export async function inflateRow(
   chunk: ArrayBuffer | Uint8Array<ArrayBuffer>
 ): Promise<Int16Array> {
@@ -294,7 +294,10 @@ export async function inflateRow(
   const shuffled = new Uint8Array(await new Response(stream).arrayBuffer());
   const steps = shuffled.length / 2;
   const row = new Int16Array(steps);
-  for (let i = 0; i < steps; i++) row[i] = shuffled[i] | (shuffled[steps + i] << 8);
+  for (let i = 0; i < steps; i++) {
+    const code = shuffled[i] | (shuffled[steps + i] << 8);
+    row[i] = (code >>> 1) ^ -(code & 1);
+  }
   return row;
 }
 

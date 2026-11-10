@@ -136,8 +136,8 @@ describe('rowsField', () => {
 });
 
 describe('inflateRow', () => {
-  it('undoes the deflate and the shuffle, the signs too', async () => {
-    const values = [1, -2, 300, -32768, 32767, 0];
+  it('undoes the deflate, the shuffle and the zigzag, the signs and the int16 ends too', async () => {
+    const values = [0, -1, 1, -2, 300, -32768, 32767];
     expect(Array.from(await inflateRow(deflated(values)))).toEqual(values);
   });
 });
@@ -184,7 +184,7 @@ describe('rows in chunks', () => {
       blockRange(tables[1], 1, 1, 0),
       blockRange(tables[0], 1, 0, 0),
     ]);
-    const rows = await Promise.all(chunksRead.map(inflateRow));
+    const rows = await Promise.all(chunksRead.map((chunk) => inflateRow(chunk)));
 
     expect(rows.map((row) => Array.from(row))).toEqual([
       [7, 8, 9],
@@ -379,11 +379,15 @@ describe('the index', () => {
     step: 2 ** k,
     kind,
     dataset: `/lfp/${axis}/level${k}`,
-    blocks: { chunks: `/lfp/${axis}/level${k}_chunks`, steps: tile },
+    blocks: {
+      chunks: `/lfp/${axis}/level${k}_chunks`,
+      steps: tile,
+      predictors: `/lfp/${axis}/level${k}_predictors`,
+    },
   });
   const index = {
     format: 'lfp-summary',
-    version: 2,
+    version: 1,
     populations: ['pop'],
     time: { start: 0, dt: 0.1, steps: 30000 },
     units: 'uV',
@@ -434,8 +438,16 @@ describe('the index', () => {
     expect(parsed.groups_unavailable).toBe('circuit_not_readable');
   });
 
-  it('refuses a summary of the format before', () => {
-    expect(() => lfpSummaryIndexSchema.parse({ ...index, version: 1 })).toThrow();
+  it('refuses a summary of another version', () => {
+    expect(() => lfpSummaryIndexSchema.parse({ ...index, version: 2 })).toThrow();
+  });
+
+  it('refuses a level that does not name its orders', () => {
+    const { predictors: _, ...unordered } = index.axes[0].levels[1].blocks;
+    const level = { ...index.axes[0].levels[1], blocks: unordered };
+    const axes = [{ ...index.axes[0], levels: [index.axes[0].levels[0], level] }];
+    // Read at order 0, its predicted tiles would be drawn as their residuals
+    expect(() => lfpSummaryIndexSchema.parse({ ...index, axes })).toThrow();
   });
 
   const withTotalLevels = (levels: readonly object[]) => ({

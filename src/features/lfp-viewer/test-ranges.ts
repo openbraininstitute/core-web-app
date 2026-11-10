@@ -10,9 +10,10 @@ export const rangeReader =
   async (range) =>
     (await readRanges(request, [range]))[0];
 
-/** A row as HDF5's shuffle and deflate filters leave it. */
+/** A row as zigzag codes, as HDF5's shuffle and deflate filters leave them. */
 export function deflated(values: readonly number[]): ArrayBuffer {
-  const bytes = new Uint8Array(Int16Array.from(values).buffer);
+  const codes = Uint16Array.from(values, (v) => ((v << 1) ^ (v >> 15)) & 0xffff);
+  const bytes = new Uint8Array(codes.buffer);
   const shuffled = new Uint8Array(bytes.length);
   values.forEach((_, i) => {
     shuffled[i] = bytes[i * 2];
