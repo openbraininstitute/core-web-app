@@ -97,3 +97,19 @@ export function measureContentWidths(
   }
   return widths;
 }
+
+const fittedWidths = new Map<string, Map<string, number>>();
+
+/**
+ * Each fitted column's last fitted width in the grids of a section, by column id: a grid made
+ * anew there (another listing) starts its columns at them rather than at AG Grid's default, so
+ * its first fit moves less. Kept by section, as unrelated tables share column ids.
+ */
+export function fittedWidthsOf(section = ''): Map<string, number> {
+  let widths = fittedWidths.get(section);
+  if (!widths) {
+    widths = new Map();
+    fittedWidths.set(section, widths);
+  }
+  return widths;
+}

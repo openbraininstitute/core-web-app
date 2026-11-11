@@ -17,6 +17,7 @@ import {
 } from '@/features/data-grid/renderers/aggrid/detail-rows';
 import { isExpanderClick } from '@/features/data-grid/renderers/aggrid/expand-cell';
 import {
+  fittedWidthsOf,
   measureContentWidths,
   planColumnWidths,
 } from '@/features/data-grid/renderers/aggrid/fit-columns';
@@ -55,12 +56,6 @@ registerDataGridModules();
 const SYNTHETIC_COL_IDS = new Set([EXPAND_COL_ID, 'ag-Grid-SelectionColumn']);
 
 const DEFAULT_ROW_HEIGHT = 44;
-/**
- * Each fitted column's last fitted width, by column id: a grid made anew (another listing)
- * starts its columns there rather than at AG Grid's default, so its first fit moves less.
- */
-const lastFittedWidths = new Map<string, number>();
-
 /** The narrowest a fitted, capped column shrinks to when the columns overrun the grid. */
 const MIN_SHRUNK_WIDTH = 160;
 /** How long fitted cells must hold their width before their columns are refitted. */
@@ -106,6 +101,7 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
   const apiRef = useRef<GridApi<TDisplayRow<Row>> | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const getRowId = controller.schema.getRowId;
+  const lastFittedWidths = fittedWidthsOf(controller.context.section);
   const hoverCard = useRowHoverCard(rowHoverCard);
 
   // Reconciled, not sorted-by-index: a column the stored order never mentions keeps its
@@ -131,7 +127,7 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
         withExpandColumn: Boolean(detail),
         expandColumn,
       }),
-    [orderedColumns, hidden, state.columnWidths, detail, expandColumn]
+    [orderedColumns, hidden, state.columnWidths, lastFittedWidths, detail, expandColumn]
   );
 
   // Columns sized to their content: shown, and not resized by the user, whose width wins.
@@ -182,7 +178,7 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
         .map(([key, newWidth]) => ({ key, newWidth }));
       if (changed.length > 0) api.setColumnWidths(changed);
     });
-  }, [fitted]);
+  }, [fitted, lastFittedWidths]);
   useEffect(() => fitColumns(), [fitColumns]);
 
   // Fitted cells whose content changes width after the fit refit their columns, once the

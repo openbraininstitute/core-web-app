@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { planColumnWidths } from '@/features/data-grid/renderers/aggrid/fit-columns';
+import {
+  fittedWidthsOf,
+  planColumnWidths,
+} from '@/features/data-grid/renderers/aggrid/fit-columns';
 
 const plan = (args: Partial<Parameters<typeof planColumnWidths>[0]>) =>
   Object.fromEntries(
@@ -50,5 +53,15 @@ describe('planColumnWidths', () => {
     expect(plan({ columns: [{ id: 'name', natural: 90, maxWidth: 480 }], available: 50 })).toEqual({
       name: 90,
     });
+  });
+});
+
+describe('fittedWidthsOf', () => {
+  it('keeps a section’s widths for its next grid, apart from those of other sections', () => {
+    fittedWidthsOf('workflow-activity').set('name', 240);
+
+    expect(fittedWidthsOf('workflow-activity').get('name')).toBe(240);
+    expect(fittedWidthsOf('browse').get('name')).toBeUndefined();
+    expect(fittedWidthsOf().get('name')).toBeUndefined();
   });
 });
