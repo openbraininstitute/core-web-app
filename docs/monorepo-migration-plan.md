@@ -4,7 +4,7 @@ Goal of this step: turn `core-web-app` into a Turborepo monorepo with **one app 
 with Docker, CI, Amplify and local tooling already working the monorepo way. Packages
 (`@obi/entitycore`, `@obi/ui`) come in later phases and must plug in without touching the setup again.
 
-Status: Phase 1 implemented on branch `bmedd/core-web-monorepo-migration-03973d` (see 3.11).
+Status: Phase 1 implemented on branch `feat/core-web-monorepo-migration` (see 3.11).
 Amplify preview and GitHub Actions are not run yet.
 
 ---
