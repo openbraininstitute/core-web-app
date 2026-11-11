@@ -7,7 +7,7 @@ import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { simResultBySimIdAtomFamily, useModelQuery } from '@/features/scan-config/components/atoms';
-import { hasStatistics, isVoltageReportFile } from '@/features/scan-config/components/file-viewer';
+import { isVoltageReportFile } from '@/features/scan-config/components/file-viewer';
 import { IoLayout } from '@/features/scan-config/components/shared/io-layout';
 import { TaskIOFileGroup } from '@/features/scan-config/components/shared/task-io-file-group';
 import { TaskIOFileItem } from '@/features/scan-config/components/shared/task-io-file-item';
@@ -297,7 +297,6 @@ export function SimulationFiles({
                 file={file}
                 name={name}
                 label={label}
-                interactive={hasStatistics(file)}
                 onSelect={() => {
                   if (population) {
                     setChosenPopulations((previous) => ({
