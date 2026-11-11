@@ -149,6 +149,52 @@ describe('useMatrixPin', () => {
     expect(result.current.filterModel).not.toBe(filterModel);
   });
 
+  it('is not held past its filter: the same filter set by hand brings back no pathway', async () => {
+    const { result } = pinned();
+    await act(async () => result.current.pin.onPick(PINNED));
+    const withPathway = result.current.filterModel;
+    act(() => result.current.setFilterModel(L5));
+
+    act(() => result.current.setFilterModel(withPathway));
+
+    expect(result.current.pin.pinned).toBeNull();
+    expect(result.current.filterModel).toEqual(L5);
+  });
+
+  it('takes its filter off where another table of the same scope lets the pathway go', async () => {
+    const setDerivedColumns = vi.fn(async () => {});
+    const store = createStore();
+    const table = () =>
+      renderHook(
+        () => {
+          const [filterModel, setFilterModel] = useState<FilterModel>(L5);
+          const pin = useMatrixPin({
+            scope: 's',
+            ready: true,
+            rowCount: 5,
+            filterModel,
+            setFilterModel,
+            setDerivedColumns,
+          });
+          return { filterModel, pin };
+        },
+        {
+          wrapper: ({ children }: { children: ReactNode }) => (
+            <Provider store={store}>{children}</Provider>
+          ),
+        }
+      ).result;
+    const one = table();
+    const other = table();
+    await act(async () => one.current.pin.onPick(PINNED));
+    await act(async () => other.current.pin.onPick(PINNED));
+
+    await act(async () => other.current.pin.onPick(null));
+
+    expect(one.current.pin.pinned).toBeNull();
+    expect(one.current.filterModel).toEqual(L5);
+  });
+
   it('is kept with its scope', async () => {
     const { result, rerender } = pinned();
     await act(async () => result.current.pin.onPick(PINNED));

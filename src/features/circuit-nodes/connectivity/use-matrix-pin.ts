@@ -107,7 +107,19 @@ export function useMatrixPin({
     const went = wasPinned.current && !isPinned;
     wasPinned.current = isPinned;
     if (went && ready) setDerivedColumns(OWNER, []).catch(() => {});
+    // not held past its filter: it keeps the matrix's cells and the pathway's
+    if (went && stored?.scope === scope) setStored(undefined);
   }, [isPinned]);
+
+  // A filter left on the column without its pathway, which another table sharing the session
+  // let go of or pinned over, would keep no row out and still count as a filter.
+  const orphaned = !isPinned && COLUMN in filterModel;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: once each time it is left so
+  useEffect(() => {
+    if (!orphaned) return;
+    const { [COLUMN]: _pathway, ...rest } = filterModel;
+    setFilterModel(rest);
+  }, [orphaned]);
 
   const onPick = (next: PinnedPathway | null) => {
     if (!next) {
