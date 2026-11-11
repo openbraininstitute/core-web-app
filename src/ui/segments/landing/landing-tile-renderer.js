@@ -22,7 +22,7 @@ export function createLandingTileRenderer(
     seed,
     // the arrangement alone, every tile white, nothing to pick, nothing beside the field (behind the chapters)
     backdrop = false,
-    // when (performance.now() clock) the page's logo and words are in: the first white tiles show then
+    // when (performance.now() clock) the first white tiles are to show: as the page's logo and words start coming in
     introAt,
     // with the chosen one beside the field: told when the opening is far enough on for it to show there
     onShowChosen = () => {},
@@ -229,7 +229,7 @@ export function createLandingTileRenderer(
   const EASE = 0.12; // height follows its target by 12 % per frame
   // whether, on a pick, the picture tiles that stay where they are turn over, passing their examples on (off for now)
   const TURN_ON_PICK = false;
-  // the opening: the words fade in first (on the page); then the white tiles rise in a sweep from left to right, taking
+  // the opening: the white tiles rise in a sweep from left to right as the words fade in (on the page), taking
   // INTRO_SWEEP, without waiting for the pictures; then the chosen one shows beside the field and the picture tiles
   // rise, once the pictures are in. White on white a tile shows only by its shadow, which grows as it rises, and the
   // sweep starts with the low faint ones under the words: so it starts INTRO_LEAD before `introAt` (else

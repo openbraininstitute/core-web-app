@@ -3,12 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
-import {
-  firstPaintReady,
-  firstPaintShown,
-  LANDING_WORDS_IN_MS,
-  wordsBegan,
-} from './first-paint-handoff';
+import { firstPaintReady, firstPaintShown, wordsBegan } from './first-paint-handoff';
 
 import styles from './landing-tile-stage.module.css';
 
@@ -149,8 +144,8 @@ export function LandingTileStage({
           engine.current = createLandingTileRenderer(surface, controls, {
             initialIndex: latest.current.scene,
             seed: landingSeed(),
-            // the tiles straight after the logo and words are in
-            introAt: wordsBegan(headline.current?.querySelector('span')) + LANDING_WORDS_IN_MS,
+            // the tiles coming in with the logo and words (user)
+            introAt: wordsBegan(headline.current?.querySelector('span')),
             reduced,
             textInField: phone,
             // phones have no room beside the field: there the big tile on the crescent shows the chosen one
