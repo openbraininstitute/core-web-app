@@ -491,6 +491,8 @@ function ReadyMatrix({
   // Pinned, a pathway stays coloured beside the matrix, whatever is under the pointer.
   useEffect(() => {
     if (!pinned) return;
+    // The pin took over what the hover told: a regroup must not let go of it.
+    hoveredRef.current = null;
     pathwayToRef.current?.({ pre: pinned.pre, post: pinned.post });
     return () => pathwayToRef.current?.(null);
   }, [pinned]);

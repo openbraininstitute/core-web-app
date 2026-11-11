@@ -421,6 +421,24 @@ describe('the matrix zoomed in, neuron by neuron', () => {
     });
   });
 
+  it('keeps a hovered then pinned pathway coloured beside it through another zoom', async () => {
+    const onPathwayChange = vi.fn();
+    h.properties = [];
+    h.neurons = PLACES;
+    h.group = vi.fn(async (request) => answer(request));
+    render(<Matrix cells={null} onPathwayChange={onPathwayChange} />);
+    await drawn();
+
+    act(() => h.plot?.onPointHover?.({ pointNumber: [2, 3] }));
+    click(2, 3);
+    onPathwayChange.mockClear();
+
+    await zoomTo([39.5, 139.5], [19.5, 119.5]);
+    await waitFor(() => expect(h.plot?.figure.layout.yaxis?.ticktext?.at(0)).toBe('20'));
+
+    expect(onPathwayChange).not.toHaveBeenCalled();
+  });
+
   it('tells a zoomed-in square’s own neurons to the view beside it', async () => {
     const onPathwayChange = vi.fn();
     h.properties = [];
