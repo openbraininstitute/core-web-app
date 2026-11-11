@@ -9,6 +9,7 @@ vi.mock('@/ui/segments/project/brains-walkthrough/chapters', () => ({
 vi.mock('./information-font', () => ({ informationFont: { variable: 'information-font' } }));
 
 vi.mock('./landing-tile-stage', () => ({
+  LANDING_WAY_IN: 'landing-way-in',
   LandingTileStage: ({
     scene,
     reduced,
@@ -23,14 +24,24 @@ vi.mock('./landing-tile-stage', () => ({
     <div data-testid="landing-artwork" data-reduced={reduced}>
       <h1>Neuroscience at the speed of thought</h1>
       <p data-testid="science-caption">
-        {['Simulate activity', 'Explore data', 'Build models', 'Virtual labs'][scene]}
+        {
+          [
+            'Simulate whole brains',
+            'Simulate activity',
+            'Explore data',
+            'Build models',
+            'Virtual labs',
+            'Skeletonize meshes',
+            'Skeletonize morphologies and extract spines',
+          ][scene]
+        }
       </p>
       <a href="/app/virtual-lab">Try it now</a>
       <button
         type="button"
         onClick={() => {
           onInteraction();
-          onSelect(2);
+          onSelect(3);
         }}
       >
         Show Build models
@@ -39,7 +50,7 @@ vi.mock('./landing-tile-stage', () => ({
   ),
 }));
 
-import { LANDING_AUTO_CONTINUE_MS, LivingHero, SCIENCE_SCENES } from './living-hero';
+import { FIRST_SCENE, LANDING_AUTO_CONTINUE_MS, LivingHero, SCIENCE_SCENES } from './living-hero';
 
 let reduced = false;
 beforeEach(() => {
@@ -50,10 +61,6 @@ beforeEach(() => {
     vi.fn(() => ({ matches: reduced, addEventListener: vi.fn(), removeEventListener: vi.fn() }))
   );
 });
-/** Makes the hero's random pick land on the given scene. */
-function pick(index: number) {
-  vi.spyOn(Math, 'random').mockReturnValue((index + 0.5) / SCIENCE_SCENES.length);
-}
 
 afterEach(() => {
   cleanup();
@@ -63,20 +70,18 @@ afterEach(() => {
 });
 
 describe('public science opening', () => {
-  it('shows a random export scene with the original headline and working CTA', () => {
-    SCIENCE_SCENES.forEach((scene, index) => {
-      pick(index);
-      render(<LivingHero onContinue={vi.fn()} onChapter={vi.fn()} />);
-      expect(screen.getByTestId('science-caption')).toHaveTextContent(scene.label);
-      expect(screen.getByRole('link', { name: 'Try it now' })).toHaveAttribute(
-        'href',
-        '/app/virtual-lab'
-      );
-      expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
-        'Neuroscience at the speed of thought'
-      );
-      cleanup();
-    });
+  it('opens on the fly brain with the headline and working CTA', () => {
+    render(<LivingHero onContinue={vi.fn()} onChapter={vi.fn()} />);
+    expect(screen.getByTestId('science-caption')).toHaveTextContent(
+      SCIENCE_SCENES[FIRST_SCENE].label
+    );
+    expect(screen.getByRole('link', { name: 'Try it now' })).toHaveAttribute(
+      'href',
+      '/app/virtual-lab'
+    );
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+      'Neuroscience at the speed of thought'
+    );
   });
 
   it('glides on to the first chapter by itself, once, within ten seconds', () => {
@@ -95,7 +100,6 @@ describe('public science opening', () => {
   });
 
   it('lets tile selection update the hero without advancing away during interaction', () => {
-    pick(1);
     const onContinue = vi.fn();
     render(<LivingHero onContinue={onContinue} onChapter={vi.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: 'Show Build models' }));
@@ -106,7 +110,6 @@ describe('public science opening', () => {
 
   it('passes reduced motion to the tile artwork', () => {
     reduced = true;
-    pick(2);
     render(<LivingHero onContinue={vi.fn()} onChapter={vi.fn()} />);
     expect(screen.getByTestId('landing-artwork')).toHaveAttribute('data-reduced', 'true');
   });

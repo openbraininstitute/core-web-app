@@ -2,7 +2,8 @@
  * Canvas artwork adapted from LandingPage_V1; application UI stays in React.
  * @param {HTMLCanvasElement} canvas
  * @param {HTMLDivElement} picksContainer
- * @param {{ initialIndex?: number, reduced?: boolean, onSelect?: (index: number) => void,
+ * @param {{ initialIndex?: number, reduced?: boolean, textInField?: boolean, heroBeside?: boolean,
+ * flightMs?: number, seed?: number, backdrop?: boolean, onShowChosen?: () => void, onSelect?: (index: number) => void,
  * onReady?: () => void, onInteraction?: () => void, onError?: (error: Error) => void }} options
  */
 export function createLandingTileRenderer(
@@ -11,12 +12,38 @@ export function createLandingTileRenderer(
   {
     initialIndex = 0,
     reduced = false,
+    // Whether the headline sits over the field (a phone) rather than beside it (wider screens).
+    textInField = true,
+    // Whether the chosen example is drawn large beside the field, its own tile grown into a big cube there: every tile
+    // is then a pick, its tile moving over and growing as the one there shrinks back to its place.
+    heroBeside = false,
+    flightMs = 1100,
+    // the same seed lays the same tiles out: the chapters' backdrop draws the landing's own arrangement
+    seed,
+    // the arrangement alone, every tile white, nothing to pick, nothing beside the field (behind the chapters)
+    backdrop = false,
+    // with the chosen one beside the field: told when the opening is far enough on for it to show there
+    onShowChosen = () => {},
     onSelect = () => {},
     onReady = () => {},
     onInteraction = () => {},
     onError = () => {},
   } = {}
 ) {
+  // mulberry32, from the seed given; or the browser's own
+  const random =
+    seed == null
+      ? Math.random
+      : (() => {
+          let a = seed >>> 0;
+          return () => {
+            a = (a + 0x6d2b79f5) >>> 0;
+            let t = a;
+            t = Math.imul(t ^ (t >>> 15), t | 1);
+            t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+          };
+        })();
   let disposed = false;
   let visible = true;
   let frameId = 0;
@@ -36,74 +63,145 @@ export function createLandingTileRenderer(
   // zoom = picture width relative to the tile (the subjects have white margins); hero = width on the right
   const FEATURES = [
     {
+      label: 'Simulate whole brains',
+      img: '/static/landing-v1/fly-brain.jpg',
+      // a turning loop: the tile shows its frames as it plays, the picture until then
+      video: '/static/landing-v1/fly-brain.mp4',
+      // small enough that the whole brain and nerve cord sit inside the hexagon, seen from any side
+      zoom: 0.68,
+      hero: 700,
+      alt: "The male fly's brain and nerve cord, lit as its model's neurons fire",
+    },
+    {
       label: 'Simulate activity',
-      img: '/static/landing-v1/simulate.png',
-      zoom: 2.3,
-      hero: 900,
-      alt: 'Simulated cortical microcircuit',
+      img: '/static/landing-v1/microcircuit.jpg',
+      // a cortical column's activity, from the user's Vid4 (cropped to the column, its white made pure)
+      video: '/static/landing-v1/microcircuit.mp4',
+      zoom: 0.7,
+      hero: 640,
+      alt: 'Simulated cortical microcircuit, its neurons firing',
     },
     {
       label: 'Explore data',
       img: '/static/landing-v1/explore.png',
       zoom: 1.35,
-      hero: 560,
+      hero: 760,
       alt: 'Reconstructed fly neurons',
     },
     {
       label: 'Build models',
       img: '/static/landing-v1/build.png',
       zoom: 1.75,
-      hero: 700,
+      hero: 780,
       alt: 'Whole-brain model',
     },
     {
       label: 'Virtual labs',
       img: '/static/landing-v1/virtual-labs.png',
       zoom: 1.45,
-      hero: 580,
+      hero: 760,
       alt: 'Brain atlas',
+    },
+    {
+      label: 'Skeletonize meshes',
+      img: '/static/landing-v1/spiny-neuron.jpg',
+      // the learn branch's spiny view: a MICrONS cell's EM mesh as a veil, its spines by path distance from the soma
+      video: '/static/landing-v1/spiny-neuron.mp4',
+      // in close on its soma and spines in a cube: the whole cell is too fine to read at a cube's size
+      zoom: 1.5,
+      hero: 700,
+      alt: "A neuron's EM mesh, its spines coloured by their distance from the soma",
+    },
+    {
+      label: 'Skeletonize morphologies and extract spines',
+      img: '/static/landing-v1/dendrite-ride.jpg?v=3',
+      // the learn branch's fly-through down the cell's spiniest dendrite, its mesh opaque in the fly model's blue, its
+      // sections' spines each a colour of their own, there and back (a loop with no jump), stepped at half the ride's pace
+      video: '/static/landing-v1/dendrite-ride.mp4?v=3',
+      // it fills its frame to the edges: a white fade round them
+      feather: true,
+      zoom: 1.15,
+      hero: 760,
+      alt: 'Riding down a dendrite past its spines, coloured by their distance from the soma',
     },
   ];
 
+  // TEMPORARY (user): every example the blue fly brain, as the first one is, its names kept; all but the blue ride
+  // along a dendrite, which keeps its own cube (user)
+  const ALL_FLY = true;
+  const KEEP_OWN = new Set(['Skeletonize morphologies and extract spines']);
+  if (ALL_FLY) {
+    const fly = FEATURES[0];
+    FEATURES.forEach((f, i) => {
+      if (i && !KEEP_OWN.has(f.label))
+        Object.assign(f, {
+          img: fly.img,
+          video: fly.video,
+          zoom: fly.zoom,
+          hero: fly.hero,
+          alt: fly.alt,
+        });
+    });
+  }
+
   // ---- hex grid (same as index.html): pointy-top, circumradius R; a tile lifted to height h is R * (1 + 0.7 h) ----
   const R = 55,
-    SCALE_PER_H = 0.7;
+    SCALE_PER_H = 0.7,
+    FLOOR_R0 = 0.72 * R;
   const colW = Math.sqrt(3) * R,
     rowH = 1.5 * R;
   const hForRadius = (r) => (r / R - 1) / SCALE_PER_H;
 
-  // ---- picture tiles: where they should be (snapped to the nearest grid cell) and how big ----
+  // ---- picture tiles, as on the first landing: a big one in the middle third, and medium ones straight beside it on
+  // random sides, slid along its edges. With the chosen one beside the field (out of any cube), one tile fewer than
+  // the examples, and none on the big one's right, which the chosen one has. ----
   const FEATURE_SLOTS = [
-    { x: 420, y: 529, r: 174 }, // big
-    { x: 264, y: 334, r: 97 },
-    { x: 332, y: 761, r: 99 },
-    { x: 668, y: 851, r: 97 }, // medium
+    { x: 960, y: 540, r: 174 },
+    ...Array.from({ length: Math.max(1, FEATURES.length - (heroBeside ? 2 : 1)) }, () => ({
+      x: 0,
+      y: 0,
+      r: 97,
+    })),
   ];
-  // ---- small white tiles scattered around them; a new set is picked on every turn ----
-  // each one is grown until its straight edge almost touches a picture tile; SMALL_R = allowed radius range
+  // where the chosen one goes, in the right third, its tile growing as if to a cube this big as the cube melts away
+  // from round it; and how far a moving tile bows off its way
+  const HERO_TILE = { x: 1590, y: 540, r: 330 },
+    BOW = 90;
+  // the chosen one itself, out of its cube: as wide as the example says, within this box
+  const BIG_W = 720,
+    BIG_H = 820;
+  // ---- small white tiles round them, a new set on every pick, as on the first landing: each grown until its straight
+  // edge almost touches a picture tile; a fade of lower, smaller ones round them; a few tiny ones for depth ----
   const SMALL_COUNT = 8,
     SMALL_R = [65, 84],
     SMALL_GAP = 6,
-    SMALL_ON_BIG = 0.2; // 20 % beside the big tile
-  // medium tiles sit straight beside the big tile, EDGE_GAP px between the facing edges
+    SMALL_ON_BIG = 0.2;
   const EDGE_GAP = 6;
-  // a new random side and slide for every medium tile on every page load (false = fixed slots)
-  const RANDOM_MEDIUMS = true,
-    MED_SPACING = 0;
-  // fade-out around the white tiles: per ring the radius range (lower = smaller), up to FADE_PER per tile;
-  // fade tiles keep FADE_CLEAR px away from the picture tiles so the fade only shows around the white ones
   const FADE_RINGS = [
       [58, 63],
       [55.8, 57.5],
     ],
     FADE_PER = 2,
     FADE_CLEAR = 30;
-  // tiny tiles beside the white / fade tiles, for depth: how many, floor size, lift height
   const TINY_COUNT = 7,
     TINY_R0 = [22, 30],
-    TINY_H = [0.15, 0.4],
-    TINY_MAX_X = 700;
-  const TINY_SHADOW = 0.35; // tiny tiles cast a much lighter shadow, so they stay in the background
+    TINY_H = [0.15, 0.4];
+  // ---- and a flourish of cubes off to the left under the words: along its curve, out to the page's edge, they thin
+  // out, shrink, sink and cast less shadow ----
+  const FLOOR_H = [0.3, 0.6],
+    FLOURISH = {
+      from: [760, 700],
+      bend: [420, 820],
+      to: [30, 680],
+      width: [200, 110],
+      fill: [1, 0.6],
+    },
+    // and cubes spread over the rest of the left third, fewer, smaller and lower towards the page's edge
+    LEFT_FIELD = { x1: 760, fill: 0.62 };
+  // the page in thirds: the words, the examples, the chosen one; nothing in the chosen one's third, no white tiles
+  // over the words
+  const HERO_THIRD_X = 1280,
+    WORDS_BOX = { x0: 0, x1: 560, y0: 360, y1: 700 };
   // start: every tile begins at a random moment within LIFT_SPREAD ms and rises with LIFT_EASE per frame
   const LIFT_EASE = 0.06;
   // first open: each picture tile turns from white to its picture WHILE it grows from the floor - its size follows
@@ -116,11 +214,20 @@ export function createLandingTileRenderer(
     SHADE_WHITE = 0.1; // share of FACE_SHADE on picture tiles / white tiles
   // shine while a tile grows or shrinks under the mouse (1 = same as the lift from the floor)
   const HOVER_SHINE = 0.7;
-  const FACE_MIN = 0.6; // touching edges overlap by at least 60 % of the shorter edge
 
   // ---- motion / look (same values as index.html where they exist) ----
   const EASE = 0.12; // height follows its target by 12 % per frame
-  const LIFT_SPREAD = 600; // tiles start at random moments within this many ms
+  // whether, on a pick, the picture tiles that stay where they are turn over, passing their examples on (off for now)
+  const TURN_ON_PICK = false;
+  // the opening: the words fade in first (on the page); then the tiles rise in a sweep from left to right, starting
+  // INTRO_AFTER ms in and taking INTRO_SWEEP; then the chosen one's box goes and the chosen one shows beside the field
+  const INTRO_AFTER = 750,
+    INTRO_SWEEP = 1300,
+    INTRO_JITTER = 140,
+    // the chosen one beside the field once most of the white tiles are up; the picture tiles after it
+    HERO_AFTER = INTRO_AFTER + 0.7 * INTRO_SWEEP,
+    PICTURES_AFTER = HERO_AFTER + 600,
+    PICTURES_SWEEP = 500;
   const MOTION_GAIN = 40,
     MOTION_DECAY = 0.88;
   const FLIP_DUR = 600,
@@ -144,8 +251,9 @@ export function createLandingTileRenderer(
 
   const stage = canvas.parentElement;
   // ---------- canvas ----------
-  const cv = canvas,
-    ctx = cv.getContext('2d');
+  const cv = canvas;
+  // (a let: a tile fading in or out is drawn into a layer of its own, `ctx` pointed at it meanwhile)
+  let ctx = cv.getContext('2d');
   if (!ctx) throw new Error('Canvas rendering is unavailable');
   const DPR = Math.min(2, window.devicePixelRatio || 1);
   cv.width = 1920 * DPR;
@@ -160,9 +268,9 @@ export function createLandingTileRenderer(
       m = Math.hypot(...l);
     return l.map((v) => v / m);
   })();
-  function rotv(v, e) {
-    const c = Math.cos(YAW),
-      s = Math.sin(YAW);
+  function rotv(v, e, yaw = YAW) {
+    const c = Math.cos(yaw),
+      s = Math.sin(yaw);
     const x1 = v[0] * c + v[2] * s,
       z1 = -v[0] * s + v[2] * c,
       y1 = v[1];
@@ -220,8 +328,8 @@ export function createLandingTileRenderer(
   };
 
   // pictures cut into a hexagon (one per feature, made once, at the big tile's size x2 for sharpness)
-  const SLICE_R = FEATURE_SLOTS[0].r,
-    SLICE_K = 2;
+  const SLICE_R = heroBeside ? HERO_TILE.r : FEATURE_SLOTS[0].r,
+    SLICE_K = heroBeside ? 1.5 : 2;
 
   // blurred hexagon shadows, made once at a few blur levels (sprite hexagon radius 100)
   const SH_R = 100,
@@ -266,13 +374,20 @@ export function createLandingTileRenderer(
     ctx.globalAlpha = 1;
   }
   function makeSlice(f, img) {
+    const c = document.createElement('canvas');
+    c.width = Math.ceil(Math.sqrt(3) * SLICE_R * SLICE_K);
+    c.height = Math.ceil(2 * SLICE_R * SLICE_K);
+    paintSlice(c, f, img);
+    return c;
+  }
+  // (again on every frame of a playing video)
+  function paintSlice(c, f, src) {
     const w = Math.sqrt(3) * SLICE_R,
       h = 2 * SLICE_R;
-    const c = document.createElement('canvas');
-    c.width = Math.ceil(w * SLICE_K);
-    c.height = Math.ceil(h * SLICE_K);
     const g = c.getContext('2d');
-    g.scale(SLICE_K, SLICE_K);
+    g.setTransform(SLICE_K, 0, 0, SLICE_K, 0, 0);
+    g.clearRect(0, 0, w, h);
+    g.save();
     g.beginPath();
     [
       [w / 2, 0],
@@ -287,9 +402,24 @@ export function createLandingTileRenderer(
     g.fill();
     g.clip();
     const iw = w * f.zoom,
-      ih = (iw * img.naturalHeight) / img.naturalWidth;
-    g.drawImage(img, (w - iw) / 2, (h - ih) / 2, iw, ih);
-    return c;
+      ih = (iw * (src.naturalHeight || src.videoHeight)) / (src.naturalWidth || src.videoWidth);
+    g.drawImage(src, (w - iw) / 2, (h - ih) / 2, iw, ih);
+    // one that runs to its frame's edges fades to white well inside the hexagon, so neither shows (`feather`)
+    if (f.feather) {
+      const fade = g.createRadialGradient(
+        w / 2,
+        h / 2,
+        0.6 * SLICE_R,
+        w / 2,
+        h / 2,
+        0.98 * SLICE_R
+      );
+      fade.addColorStop(0, 'rgba(255,255,255,0)');
+      fade.addColorStop(1, 'rgba(255,255,255,1)');
+      g.fillStyle = fade;
+      g.fillRect(0, 0, w, h);
+    }
+    g.restore();
   }
 
   // one tile: cube at (x, y) with outline radius r (slot radius rs for the picture), turn position p (0..1),
@@ -485,7 +615,8 @@ export function createLandingTileRenderer(
   // h follows target like on index.html, plus the cube turn state
   const cells = [];
   for (let row = 1; row * rowH < 1080 - R; row++) {
-    for (let col = 1; col * colW < 1000; col++) {
+    // (from the page's left edge, so the cubes there run off it)
+    for (let col = 0; col * colW < 1900; col++) {
       const x = col * colW + (row % 2 ? colW / 2 : 0),
         y = row * rowH;
       cells.push({
@@ -505,9 +636,27 @@ export function createLandingTileRenderer(
         turnDelay: 0,
         hover: 0,
         hoverTarget: 0,
+        // idle drift: a slow wander about its place, its own phase and pace on each axis (ms per radian)
+        driftPhase: [random() * 2 * Math.PI, random() * 2 * Math.PI],
+        driftPace: [
+          (7000 + random() * 5000) / (2 * Math.PI),
+          (8000 + random() * 5000) / (2 * Math.PI),
+        ],
       });
     }
   }
+  // how far a tile has drifted from its place at `now`: a few px, more for a bigger tile; none with reduced motion
+  const DRIFT_PER_R = 0.04,
+    DRIFT_MAX = 7;
+  const driftAt = (c, now) => {
+    // the honeycomb holds still, its cracks with it; the tiles that stand out of it wander
+    if (reduceMotion || (!c.role && !c.stray)) return [0, 0];
+    const a = Math.min(DRIFT_MAX, DRIFT_PER_R * radiusOf(c));
+    return [
+      a * Math.sin(now / c.driftPace[0] + c.driftPhase[0]),
+      a * Math.sin(now / c.driftPace[1] + c.driftPhase[1]),
+    ];
+  };
   const nearestCell = (x, y, free = () => true) => {
     let best = null,
       bd = Infinity;
@@ -525,9 +674,10 @@ export function createLandingTileRenderer(
 
   // keep the header strip, the text block and the bottom navigation free of tiles
   const KEEP_CLEAR = [
-    { x0: 0, x1: 1920, y0: 0, y1: 120 },
-    { x0: 640, x1: 1100, y0: 250, y1: 640 },
+    { x0: 0, x1: 1920, y0: 0, y1: 50 },
     { x0: 0, x1: 1920, y0: 1010, y1: 1080 },
+    // the arrow down to the next page, at the foot's middle
+    { x0: 740, x1: 1240, y0: 880, y1: 1080 },
   ];
   const openArea = (x, y, r) =>
     KEEP_CLEAR.every((b) => x + r < b.x0 || x - r > b.x1 || y + r < b.y0 || y - r > b.y1);
@@ -547,8 +697,19 @@ export function createLandingTileRenderer(
     return (sep - t.r * APO - gap) / APO;
   };
 
+  // fits = does not come closer than `gap` px to any of the tiles in `others`
+  const fits = (p, others, gap) => others.every((o) => fitRadius(p.x, p.y, o, gap) >= p.r - 0.01);
+  const inBounds = (p) =>
+    p.x - p.r > 40 &&
+    p.y - p.r > 40 &&
+    p.y + p.r < 1040 &&
+    p.x + p.r < HERO_THIRD_X &&
+    openArea(p.x, p.y, p.r);
+  const clearOfWords = (p) =>
+    p.x - p.r > WORDS_BOX.x1 || p.y + p.r < WORDS_BOX.y0 || p.y - p.r > WORDS_BOX.y1;
   // a tile of radius r placed straight beside tile t: its centre sits along one of the 6 edge normals of t, exactly
   // so far that the two facing edges are `gap` px apart; `lat` slides it sideways along that edge
+  const FACE_MIN = 0.6; // touching edges overlap by at least 60 % of the shorter edge
   const DIRS = [0, 60, 120, 180, 240, 300].map((a) => [
     Math.cos((a * Math.PI) / 180),
     Math.sin((a * Math.PI) / 180),
@@ -559,10 +720,6 @@ export function createLandingTileRenderer(
     return { x: t.x + nx * d - ny * lat, y: t.y + ny * d + nx * lat, r };
   };
   const maxLat = (r, t) => Math.max(0, (r + t.r) / 2 - FACE_MIN * Math.min(r, t.r));
-  // fits = does not come closer than `gap` px to any of the tiles in `others`
-  const fits = (p, others, gap) => others.every((o) => fitRadius(p.x, p.y, o, gap) >= p.r - 0.01);
-  const inBounds = (p) =>
-    p.x - p.r > 40 && p.y - p.r > 40 && p.y + p.r < 1040 && openArea(p.x, p.y, p.r);
   // a free grid cell is moved to the exact spot (the floor grid is not drawn, so cells can sit anywhere)
   function claimCell(p, taken) {
     const c = nearestCell(p.x, p.y, (c) => !c.role && !taken.has(c) && c.h < 0.005);
@@ -573,81 +730,131 @@ export function createLandingTileRenderer(
     return c;
   }
 
-  // picture tiles: the big one stays at its slot; each medium goes straight beside the big tile, on the side
-  // closest to where its slot is, slid along the big tile's edge as far as still keeps the edges facing
+  const rand = (lo, hi) => lo + random() * (hi - lo);
+  // where a point is along the flourish (t 0 at its start .. 1 at its end) and how far off its curve
+  const lerp = ([a, b], t) => a + (b - a) * t;
+  const alongFlourish = (x, y) => {
+    let best = { t: 0, off: Infinity };
+    for (let k = 0; k <= 80; k++) {
+      const t = k / 80,
+        u = 1 - t;
+      const px = u * u * FLOURISH.from[0] + 2 * u * t * FLOURISH.bend[0] + t * t * FLOURISH.to[0];
+      const py = u * u * FLOURISH.from[1] + 2 * u * t * FLOURISH.bend[1] + t * t * FLOURISH.to[1];
+      const off = Math.hypot(x - px, y - py);
+      if (off < best.off) best = { t, off };
+    }
+    return best;
+  };
+  // the floor: the flourish's cubes, and the left third's
+  for (const c of cells) {
+    if (!openArea(c.x, c.y, R) || c.x > HERO_THIRD_X) continue;
+    const { t, off } = alongFlourish(c.x, c.y),
+      width = lerp(FLOURISH.width, t);
+    let fade = -1;
+    if (off < width && random() < lerp(FLOURISH.fill, t) * (1 - (off / width) ** 2)) fade = t;
+    else if (c.x < LEFT_FIELD.x1) {
+      const out = 1 - c.x / LEFT_FIELD.x1;
+      if (random() < LEFT_FIELD.fill * (1 - 0.3 * out)) fade = 0.2 + 0.45 * out;
+    }
+    if (fade < 0) continue;
+    c.base = rand(...FLOOR_H) * (1 - 0.4 * fade);
+    c.r0 = FLOOR_R0 * (1 - 0.45 * fade);
+    c.fade = fade;
+    c.order = c.base;
+  }
+
+  // picture tiles: the big one at its slot; each medium straight beside it on a side of its own, slid a random amount
+  // along that edge, all apart. And with the chosen one beside the field, a tile for it there.
   const featureCells = [];
+  const slotPos = [];
   {
     const taken = new Set(),
       big = { ...FEATURE_SLOTS[0] };
-    // fixed layout (the slots), used only if no random layout fits
-    const fixedLayout = () => {
-      const placed = [big];
-      for (const s of FEATURE_SLOTS.slice(1)) {
-        const dx = s.x - big.x,
-          dy = s.y - big.y;
-        const dir = DIRS.reduce(
-          (b, [nx, ny], i) => (dx * nx + dy * ny > dx * DIRS[b][0] + dy * DIRS[b][1] ? i : b),
-          0
-        );
-        const [nx, ny] = DIRS[dir],
-          m = maxLat(s.r, big);
-        placed.push(beside(big, s.r, dir, Math.max(-m, Math.min(m, -dx * ny + dy * nx)), EDGE_GAP));
-      }
-      return placed;
-    };
-    // random layout on every load: each medium goes on a random side of the big tile, slid a random amount
-    // along its edge (the edges always face each other), and must not come close to another medium
+    const sides = heroBeside ? [1, 2, 3, 4, 5] : [0, 1, 2, 3, 4, 5];
     const randomLayout = () => {
-      for (let attempt = 0; attempt < 300; attempt++) {
+      for (let attempt = 0; attempt < 400; attempt++) {
+        const dirs = sides.slice().sort(() => random() - 0.5);
         const placed = [big];
-        for (const s of FEATURE_SLOTS.slice(1)) {
-          for (let t = 0; t < 40; t++) {
-            const m = maxLat(s.r, big);
-            const p = beside(
-              big,
-              s.r,
-              Math.floor(Math.random() * 6),
-              (Math.random() * 2 - 1) * m,
-              EDGE_GAP
-            );
-            if (inBounds(p) && fits(p, placed.slice(1), EDGE_GAP + MED_SPACING)) {
+        FEATURE_SLOTS.slice(1).forEach((s, k) => {
+          if (placed.length !== k + 1) return;
+          for (let t = 0; t < 60; t++) {
+            // a side of the big one each while there are sides; then beside a medium one, outwards from the big one
+            const by =
+              k < dirs.length ? big : placed[1 + Math.floor(random() * (placed.length - 1))];
+            const dir =
+              k < dirs.length
+                ? dirs[k]
+                : sides.filter(
+                    (d) => DIRS[d][0] * (by.x - big.x) + DIRS[d][1] * (by.y - big.y) > 0
+                  )[Math.floor(random() * 3)];
+            if (dir === undefined) continue;
+            const m = maxLat(s.r, by);
+            const p = beside(by, s.r, dir, (random() * 2 - 1) * m, EDGE_GAP);
+            if (inBounds(p) && clearOfWords(p) && fits(p, placed, EDGE_GAP)) {
               placed.push(p);
               break;
             }
           }
-        }
+        });
         if (placed.length === FEATURE_SLOTS.length) return placed;
       }
       return null;
     };
-    const layout = (RANDOM_MEDIUMS && randomLayout()) || fixedLayout();
+    const layout =
+      randomLayout() ??
+      FEATURE_SLOTS.map((s, k) =>
+        k ? beside(big, s.r, sides[(k - 1) % sides.length], 0, EDGE_GAP) : big
+      );
     FEATURE_SLOTS.forEach((s, k) => {
       const p = layout[k];
       const c = claimCell(p, taken);
-      s.r = p.r; // the picture tile's real size from now on
+      s.x = p.x;
+      s.y = p.y;
+      slotPos.push({ x: p.x, y: p.y, r: s.r });
       c.role = 'feature';
       c.slot = k;
+      c.baseR = s.r;
       c.lift = hForRadius(s.r);
       c.order = 100 + c.lift; // picture tiles on top
       featureCells.push(c);
     });
+    if (heroBeside) {
+      // the chosen one's tile, beside the field from the first, shown out of its cube
+      const c = claimCell({ x: HERO_TILE.x, y: HERO_TILE.y, r: 97 }, taken);
+      c.role = 'feature';
+      c.slot = -1;
+      c.baseR = 97;
+      c.lift = hForRadius(97);
+      c.order = 100 + c.lift;
+      c.place = { x: HERO_TILE.x, y: HERO_TILE.y, k: HERO_TILE.r / 97, big: 1 };
+      c.appear = 0;
+      featureCells.push(c);
+    }
   }
+  // which picture tile is at each place now, and which is the chosen one's, beside the field
+  const cellAt = featureCells.filter((c) => c.slot >= 0);
+  let heroCell = featureCells.find((c) => c.slot < 0) ?? null;
 
-  // all other cells stay flat on the floor: only the picture tiles and a few small white tiles are raised
-
-  // small white tiles: each one is put straight beside a picture tile (mostly the medium ones) with its edge
-  // almost touching, at a random size and slide; it must not come close to any other tile
+  // small white tiles: each one is put straight beside a picture tile (mostly the medium ones) with its edge almost
+  // touching, at a random size and slide; it must not come close to any other tile (as on the first landing)
   function pickSmalls(avoid = new Set()) {
-    const feats = featureCells.map((f) => ({ x: f.x, y: f.y, r: FEATURE_SLOTS[f.slot].r }));
+    const feats = slotPos.map((p) => ({ ...p }));
+    const ok = (p) => inBounds(p) && clearOfWords(p);
     const out = [],
       taken = new Set([...avoid, ...cells.filter((c) => c.role === 'small')]);
     for (let tries = 0; tries < 600 && out.length < SMALL_COUNT; tries++) {
-      const t = Math.random() < SMALL_ON_BIG ? feats[0] : feats[1 + Math.floor(Math.random() * 3)];
-      const r = SMALL_R[0] + Math.random() * (SMALL_R[1] - SMALL_R[0]);
-      const m = maxLat(r, t);
-      const p = beside(t, r, Math.floor(Math.random() * 6), (Math.random() * 2 - 1) * m, SMALL_GAP);
+      const t =
+        random() < SMALL_ON_BIG ? feats[0] : feats[1 + Math.floor(random() * (feats.length - 1))];
+      const r = SMALL_R[0] + random() * (SMALL_R[1] - SMALL_R[0]);
+      const p = beside(
+        t,
+        r,
+        Math.floor(random() * 6),
+        (random() * 2 - 1) * maxLat(r, t),
+        SMALL_GAP
+      );
       if (
-        !inBounds(p) ||
+        !ok(p) ||
         !fits(
           p,
           feats.filter((f) => f !== t),
@@ -658,19 +865,18 @@ export function createLandingTileRenderer(
         continue;
       out.push(p);
     }
-    // fade-out: around the white tiles (only there), a few lower and smaller tiles step down to the floor,
-    // each ring lower than the one before; they only grow outwards, away from the big tile
+    // the fade: round the white tiles, a few lower and smaller ones step down to the floor, outwards
     let ring = out.slice();
     for (const [r0, r1] of FADE_RINGS) {
       const next = [];
       for (const w of ring) {
         for (let t = 0, n = 0; t < 30 && n < FADE_PER; t++) {
-          const r = r0 + Math.random() * (r1 - r0);
+          const r = r0 + random() * (r1 - r0);
           const p = beside(
             w,
             r,
-            Math.floor(Math.random() * 6),
-            (Math.random() * 2 - 1) * maxLat(r, w),
+            Math.floor(random() * 6),
+            (random() * 2 - 1) * maxLat(r, w),
             SMALL_GAP
           );
           if (
@@ -678,7 +884,7 @@ export function createLandingTileRenderer(
             Math.hypot(w.x - feats[0].x, w.y - feats[0].y)
           )
             continue;
-          if (!inBounds(p) || !fits(p, feats, FADE_CLEAR) || !fits(p, out, SMALL_GAP)) continue;
+          if (!ok(p) || !fits(p, feats, FADE_CLEAR) || !fits(p, out, SMALL_GAP)) continue;
           out.push(p);
           next.push(p);
           n++;
@@ -686,31 +892,23 @@ export function createLandingTileRenderer(
       }
       ring = next;
     }
-    // a few tiny tiles scattered in the empty spaces around the cluster, for a sense of depth
-    // each one sits straight beside a white or fade tile (edges facing, SMALL_GAP apart), on the outside,
-    // and stays left of TINY_MAX_X so none land on the label line or under the call to action
+    // a few tiny tiles in the spaces round the cluster, for depth, each beside a white or fade tile, outwards
     const whites = out.slice();
     for (let tries = 0, n = 0; tries < 800 && n < TINY_COUNT && whites.length; tries++) {
-      const t = whites[Math.floor(Math.random() * whites.length)];
-      const r0 = TINY_R0[0] + Math.random() * (TINY_R0[1] - TINY_R0[0]);
-      const h = TINY_H[0] + Math.random() * (TINY_H[1] - TINY_H[0]);
+      const t = whites[Math.floor(random() * whites.length)];
+      const r0 = TINY_R0[0] + random() * (TINY_R0[1] - TINY_R0[0]);
+      const h = TINY_H[0] + random() * (TINY_H[1] - TINY_H[0]);
       const r = r0 * (1 + SCALE_PER_H * h);
       const p = beside(
         t,
         r,
-        Math.floor(Math.random() * 6),
-        (Math.random() * 2 - 1) * maxLat(r, t),
+        Math.floor(random() * 6),
+        (random() * 2 - 1) * maxLat(r, t),
         SMALL_GAP
       );
       p.r0 = r0;
       p.h = h;
-      if (
-        p.x + p.r > TINY_MAX_X ||
-        !inBounds(p) ||
-        !fits(p, feats, FADE_CLEAR) ||
-        !fits(p, out, SMALL_GAP)
-      )
-        continue;
+      if (!ok(p) || !fits(p, feats, FADE_CLEAR) || !fits(p, out, SMALL_GAP)) continue;
       if (
         Math.hypot(p.x - feats[0].x, p.y - feats[0].y) <
         Math.hypot(t.x - feats[0].x, t.y - feats[0].y)
@@ -738,8 +936,145 @@ export function createLandingTileRenderer(
     }
   }
 
-  let order = []; // order[slot] = feature shown on picture tile 0..3 (0 = big)
+  // the example in a picture tile: `c.feature`; the one at a place, `onTile(slot)`
+  const onTile = (slot) => cellAt[slot].feature;
+  // A picture tile's place: its middle, how much bigger than its own size, and how far it is beside the field (0 at a
+  // place in the middle .. 1 beside the field, out of its cube); on its way, along a bow, growing or shrinking evenly.
+  const homeOf = (c) => c.home ?? { x: c.x, y: c.y, k: 1, big: 0 };
+  const bigOf = (c) => ({ x: HERO_TILE.x, y: HERO_TILE.y, k: HERO_TILE.r / c.baseR, big: 1 });
+  const slotPlace = (c, slot) => ({
+    x: slotPos[slot].x,
+    y: slotPos[slot].y,
+    k: slotPos[slot].r / c.baseR,
+    big: 0,
+  });
+  const moveTile = (c, now, to, ms) => {
+    if (ms <= 0) {
+      c.place = to;
+      c.move = null;
+      return;
+    }
+    c.move = { from: c.place ?? homeOf(c), to, start: now, ms, bow: to.big ? -BOW : BOW };
+  };
+  const placeOf = (c, now) => {
+    const m = c.move;
+    if (!m) return c.place ?? homeOf(c);
+    const f = Math.min(1, Math.max(0, (now - m.start) / m.ms)),
+      e = turnEase(f);
+    if (f >= 1) {
+      c.place = m.to;
+      c.move = null;
+    }
+    return {
+      x: m.from.x + (m.to.x - m.from.x) * e,
+      y: m.from.y + (m.to.y - m.from.y) * e + m.bow * Math.sin(Math.PI * e),
+      k: m.from.k * (m.to.k / m.from.k) ** e,
+      big: m.from.big + (m.to.big - m.from.big) * e,
+    };
+  };
+  const isBig = (c) => !!c.move || (c.place?.big ?? 0) > 0;
+  // behind the chapters, the tiles move about on each change of chapter: each glides from where it is to a spot of
+  // its own a little way off, staggered (`stir`); `shiftAt` is how far it is from its place
+  const STIR = { reach: [60, 190], ms: 1400, stagger: 400 };
+  const shiftAt = (c, now) => {
+    const m = c.shift;
+    if (!m) return [0, 0];
+    const f = Math.min(1, Math.max(0, (now - m.start) / m.ms)),
+      e = turnEase(f);
+    return [m.from[0] + (m.to[0] - m.from[0]) * e, m.from[1] + (m.to[1] - m.from[1]) * e];
+  };
+  function stir() {
+    const now = performance.now();
+    for (const c of cells) {
+      if (c.h <= 0.01) continue;
+      const from = shiftAt(c, now);
+      const a = random() * 2 * Math.PI,
+        d = rand(...STIR.reach);
+      // kept on the page, and back towards its place the further it has gone
+      const tx = Math.max(-c.x + 40, Math.min(1880 - c.x, 0.4 * from[0] + d * Math.cos(a)));
+      const ty = Math.max(-c.y + 60, Math.min(1010 - c.y, 0.4 * from[1] + d * Math.sin(a)));
+      c.shift = { from, to: [tx, ty], start: now + random() * STIR.stagger, ms: STIR.ms };
+    }
+    stirredUntil = now + STIR.stagger + STIR.ms;
+    kick();
+  }
+  let stirredUntil = 0;
+  const smooth = (t, a, b) => {
+    const u = Math.min(1, Math.max(0, (t - a) / (b - a)));
+    return u * u * (3 - 2 * u);
+  };
+  // a tile drawn at a fraction of its strength: into a layer of its own, then onto the page faded
+  const layer = document.createElement('canvas'),
+    layerCtx = layer.getContext('2d');
+  function drawFaded(alpha, x, y, r, draw) {
+    if (alpha <= 0.001) return;
+    if (alpha >= 0.999 || !layerCtx) {
+      draw();
+      return;
+    }
+    const reach = r + 0.8 * r + 40,
+      size = Math.ceil(2 * reach * DPR);
+    if (layer.width < size || layer.height < size) layer.width = layer.height = size;
+    layerCtx.setTransform(1, 0, 0, 1, 0, 0);
+    layerCtx.clearRect(0, 0, size, size);
+    layerCtx.setTransform(DPR, 0, 0, DPR, (reach - x) * DPR, (reach - y) * DPR);
+    const page = ctx;
+    ctx = layerCtx;
+    draw();
+    ctx = page;
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalAlpha = alpha;
+    ctx.drawImage(layer, 0, 0, size, size, (x - reach) * DPR, (y - reach) * DPR, size, size);
+    ctx.restore();
+  }
+  // an example that runs to its frame's edges, faded to white towards them (`feather`), at the size it is drawn
+  const featherLayer = document.createElement('canvas');
+  function feathered(src, w, h) {
+    const W = Math.max(1, Math.ceil(w * DPR)),
+      H = Math.max(1, Math.ceil(h * DPR));
+    if (featherLayer.width !== W || featherLayer.height !== H) {
+      featherLayer.width = W;
+      featherLayer.height = H;
+    }
+    const g = featherLayer.getContext('2d');
+    if (!g) return src;
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.globalCompositeOperation = 'source-over';
+    g.drawImage(src, 0, 0, W, H);
+    const r = Math.min(W, H) / 2;
+    const fade = g.createRadialGradient(W / 2, H / 2, 0.72 * r, W / 2, H / 2, 1.0 * r);
+    fade.addColorStop(0, 'rgba(255,255,255,0)');
+    fade.addColorStop(1, 'rgba(255,255,255,1)');
+    g.fillStyle = fade;
+    g.fillRect(0, 0, W, H);
+    return featherLayer;
+  }
+  // the example itself, out of its cube: from the size it has in the cube, on its way, to its own beside the field
+  function drawFree(c, at, x, y, t, alpha) {
+    if (alpha <= 0.001) return;
+    const index = c.feature,
+      f = FEATURES[index],
+      v = videos[index],
+      src = v && v.readyState >= 2 ? v : images[index];
+    if (!src) return;
+    const nw = src.videoWidth || src.naturalWidth,
+      nh = src.videoHeight || src.naturalHeight;
+    const full = Math.min(f.hero, BIG_W, (BIG_H * nw) / nh);
+    const rs = c.baseR;
+    const inCube = Math.sqrt(3) * rs * at.k * f.zoom,
+      inBigCube = Math.sqrt(3) * HERO_TILE.r * f.zoom;
+    const w = inCube * (full / inBigCube) ** t,
+      h = (w * nh) / nw;
+    ctx.save();
+    ctx.globalAlpha = alpha * (c.appear ?? 1);
+    // its white goes, as the page's pictures' does
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.drawImage(f.feather ? feathered(src, w, h) : src, x - w / 2, y - h / 2, w, h);
+    ctx.restore();
+  }
   let slices = [];
+  let images = [];
   let busyUntil = 0,
     started = false;
   const target = (c) =>
@@ -751,11 +1086,58 @@ export function createLandingTileRenderer(
       minX = Math.min(...xs),
       maxX = Math.max(...xs);
     for (const c of featureCells) {
-      c.pics[1 - c.orient] = slices[order[c.slot]];
+      c.pics[1 - c.orient] = slices[c.feature];
       c.turnStart = now;
       c.turnDelay = ((c.x - minX) / Math.max(1, maxX - minX)) * FLIP_SPREAD;
     }
     busyUntil = now + FLIP_SPREAD + FLIP_DUR;
+  }
+
+  // ---------- video features: played only while a tile shows them, their frames painted into the slice ----------
+  // Every copy of a video on the page keeps to one clock (the page's time, round its length), so the one in a tile
+  // and the one beside the field pick up where each other left off.
+  const videos = FEATURES.map((f) => {
+    if (!f.video || reduceMotion || backdrop) return null;
+    const v = document.createElement('video');
+    v.muted = true;
+    v.loop = true;
+    v.playsInline = true;
+    v.preload = 'auto';
+    v.defaultPlaybackRate = v.playbackRate = f.rate ?? 1;
+    v.src = f.video;
+    v.addEventListener('playing', () => keepTime(v));
+    return v;
+  });
+  const keepTime = (v) => {
+    if (!v.duration) return;
+    v.playbackRate = v.defaultPlaybackRate;
+    const want = ((performance.now() / 1000) * v.playbackRate) % v.duration,
+      off = Math.abs(v.currentTime - want);
+    if (off > 0.2 && off < v.duration - 0.2) v.currentTime = want;
+  };
+  const lastSync = new Map(),
+    lastFrame = new Map();
+  function runVideos(now) {
+    let playing = false;
+    videos.forEach((v, i) => {
+      if (!v) return;
+      const shown = visible && slices[i] && featureCells.some((c) => c.pics.includes(slices[i]));
+      if (!shown) {
+        if (!v.paused) v.pause();
+        return;
+      }
+      playing = true;
+      if (v.paused) v.play().catch(() => {});
+      if ((lastSync.get(v) ?? -Infinity) + 2000 < now) {
+        keepTime(v);
+        lastSync.set(v, now);
+      }
+      if (v.readyState >= 2 && lastFrame.get(v) !== v.currentTime) {
+        paintSlice(slices[i], FEATURES[i], v);
+        lastFrame.set(v, v.currentTime);
+      }
+    });
+    return playing;
   }
 
   let lastNow = 0;
@@ -763,7 +1145,9 @@ export function createLandingTileRenderer(
     const dt = lastNow ? Math.min(50, now - lastNow) : 16.7;
     lastNow = now;
     const k = 1 - (1 - EASE) ** (dt / 16.7); // EASE per 60 fps frame
-    let active = false;
+    // drifting tiles and playing videos keep the loop going
+    const playing = runVideos(now);
+    let active = playing || (started && !reduceMotion) || now < stirredUntil;
 
     const kLift = 1 - (1 - LIFT_EASE) ** (dt / 16.7); // slower rise for the first lift from the floor
     for (const c of cells) {
@@ -778,6 +1162,13 @@ export function createLandingTileRenderer(
         c.turnStart = now;
         c.turnDelay = 0;
         c.turnDur = INTRO_FLIP_DUR;
+      }
+      if (c.move) active = true;
+      if (c.appearTween) {
+        const f = Math.min(1, Math.max(0, (now - c.appearTween.start) / c.appearTween.ms));
+        c.appear = f * f * (3 - 2 * f);
+        if (f >= 1) c.appearTween = null;
+        active = true;
       }
       if (c.introTurn) {
         // first turn: the height is tied to the turn, rising from the floor to full size as the cube rotates
@@ -826,9 +1217,10 @@ export function createLandingTileRenderer(
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     // fixed stacking order (as on index.html): by each tile's resting height, set when it is placed, so hover,
     // growing and shrinking never change which tile lies on top
+    // (a tile on its way to or from the big cube, or in it, over all the rest)
     const drawn = cells
       .filter((c) => c.h > 0.01 || c.turnStart >= 0)
-      .sort((a, b) => (a.order || 0) - (b.order || 0));
+      .sort((a, b) => (isBig(a) ? 300 : a.order || 0) - (isBig(b) ? 300 : b.order || 0));
     for (const c of drawn) {
       let p = c.orient;
       if (c.turnStart >= 0) {
@@ -842,21 +1234,36 @@ export function createLandingTileRenderer(
         } else p = c.orient === 0 ? (f <= 0 ? 0 : turnEase(f)) : 1 - (f <= 0 ? 0 : turnEase(f));
       }
       if (c.h <= 0.01) continue;
-      const rs = c.role === 'feature' ? FEATURE_SLOTS[c.slot].r : radiusOf(c);
-      drawTile(
-        c.x,
-        c.y,
-        radiusOf(c),
-        rs,
-        p,
-        c.pics[0],
-        c.pics[1],
-        Math.min(1.2, c.h),
-        c.shineX ?? 1,
-        c.motion * (c.hoverMove ? HOVER_SHINE : 1),
-        c.role === 'feature' ? SHADE_PICTURE : SHADE_WHITE,
-        (c.r0 || R) < R ? TINY_SHADOW : 1
-      );
+      const rs = c.role === 'feature' ? c.baseR : radiusOf(c);
+      const at = c.role === 'feature' ? placeOf(c, now) : homeOf(c);
+      const [dx, dy] = driftAt(c, now);
+      const [sx, sy] = shiftAt(c, now);
+      const ox = dx + sx,
+        oy = dy + sy;
+      const draw = () =>
+        drawTile(
+          at.x + ox,
+          at.y + oy,
+          radiusOf(c) * at.k,
+          rs * at.k,
+          p,
+          c.pics[0],
+          c.pics[1],
+          Math.min(1.2, c.h),
+          c.shineX ?? 1,
+          c.motion * (c.hoverMove ? HOVER_SHINE : 1),
+          c.role === 'feature' ? SHADE_PICTURE : SHADE_WHITE,
+          // lighter along the flourish, as it fades out
+          1 - 0.45 * (c.fade || 0)
+        );
+      // on its way to the ring's middle its cube melts away from round the example, which is left there on its own
+      const t = c.role === 'feature' && heroBeside ? at.big : 0;
+      if (t <= 0.001) draw();
+      else {
+        const free = smooth(t, 0.15, 0.85);
+        drawFaded(1 - free, at.x + ox, at.y + oy, radiusOf(c) * at.k, draw);
+        drawFree(c, at, at.x + ox, at.y + oy, t, free);
+      }
     }
     return active;
   }
@@ -887,9 +1294,10 @@ export function createLandingTileRenderer(
   // ---------- hover: every raised tile (big, medium, white) lifts a little under the mouse ----------
   // the tile under the pointer is found on the hexagon itself (highest tile wins where they overlap)
   const insideHex = (c, x, y) => {
-    const r = radiusOf(c),
-      dx = Math.abs(x - c.x),
-      dy = Math.abs(y - c.y);
+    const at = c.role === 'feature' ? (c.place ?? homeOf(c)) : homeOf(c);
+    const r = radiusOf(c) * at.k,
+      dx = Math.abs(x - at.x),
+      dy = Math.abs(y - at.y);
     return dx <= r * APO && dy + dx / Math.sqrt(3) <= r;
   };
   let hovered = null;
@@ -907,17 +1315,47 @@ export function createLandingTileRenderer(
       y = (e.clientY - rect.top) / s;
     let hit = null;
     for (const c of cells)
-      if (c.role && c.h > 0.05 && insideHex(c, x, y) && (!hit || c.h > hit.h)) hit = c;
+      if (c.role && c.h > 0.05 && !isBig(c) && insideHex(c, x, y) && (!hit || c.h > hit.h)) hit = c;
     setHover(hit);
   };
   const pointerLeave = () => setHover(null);
+  // Behind the chapters (the backdrop), as the first landing's chapter tiles did: every tile near the pointer lifts, the
+  // nearer the more, easing off over BACKDROP_HOVER.radius; the pointer is the window's, the chapters being over it.
+  const BACKDROP_HOVER = { radius: 260, boost: 0.9 };
+  const backdropMove = (e) => {
+    if (!visible || reduceMotion) return;
+    const rect = canvas.getBoundingClientRect(),
+      s = rect.width / 1920;
+    const x = (e.clientX - rect.left) / s,
+      y = (e.clientY - rect.top) / s;
+    for (const c of cells) {
+      if (c.h <= 0.01 && c.hoverTarget === 0) continue;
+      const at = homeOf(c);
+      const d = Math.hypot(at.x - x, at.y - y);
+      const k = d < BACKDROP_HOVER.radius ? 1 - d / BACKDROP_HOVER.radius : 0;
+      c.hoverTarget = (k * k * (3 - 2 * k) * BACKDROP_HOVER.boost) / HOVER_BOOST;
+    }
+    kick();
+  };
+  const backdropLeave = (e) => {
+    if (e.relatedTarget) return;
+    for (const c of cells) c.hoverTarget = 0;
+    kick();
+  };
+  if (backdrop) {
+    window.addEventListener('pointermove', backdropMove, { passive: true });
+    window.addEventListener('pointerout', backdropLeave);
+  }
   stage.addEventListener('pointermove', pointerMove);
   stage.addEventListener('pointerleave', pointerLeave);
 
-  // ---------- the three medium tiles are buttons ----------
-  const picks = [1, 2, 3].map((slot) => {
-    const c = featureCells[slot],
-      d = FEATURE_SLOTS[slot].r * 1.6;
+  // ---------- the picture tiles are buttons: all of them with the chosen one beside, else all but the big one ----------
+  const pickSlots = backdrop
+    ? []
+    : FEATURE_SLOTS.map((_, slot) => slot).filter((slot) => heroBeside || slot > 0);
+  const picks = pickSlots.map((slot) => {
+    const c = slotPos[slot],
+      d = c.r * 1.6;
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'pick';
@@ -935,23 +1373,14 @@ export function createLandingTileRenderer(
     return b;
   });
   function updatePickLabels() {
-    picks.forEach((b, k) => b.setAttribute('aria-label', `Show ${FEATURES[order[k + 1]].label}`));
+    picks.forEach((b, k) =>
+      b.setAttribute('aria-label', `Show ${FEATURES[onTile(pickSlots[k])].label}`)
+    );
   }
 
-  // clicked medium tile -> its feature goes to the big tile, the big one's feature goes to the clicked tile
-  function choose(slot) {
-    const now = performance.now();
-    if (now < busyUntil || !slices.length) return;
-    [order[0], order[slot]] = [order[slot], order[0]];
+  // the small white tiles sink to the floor right away; once they are down, a new set rises elsewhere
+  function reshuffleSmalls() {
     const oldSmalls = new Set(cells.filter((c) => c.role === 'small'));
-    if (reduceMotion) {
-      featureCells.forEach((c) => {
-        c.pics[c.orient] = slices[order[c.slot]];
-      });
-    } else {
-      turnAll(now);
-    }
-    // the small white tiles sink to the floor right away; once they are down, a new set rises elsewhere
     applySmalls([]);
     later(
       () => {
@@ -960,20 +1389,103 @@ export function createLandingTileRenderer(
       },
       reduceMotion ? 0 : FLIP_DUR
     );
-    later(() => showFeature(order[0], true), reduceMotion ? 0 : FLIP_SPREAD * 0.4 + FLIP_DUR * 0.4);
+  }
+
+  // with the chosen one beside the field: the clicked tile moves over and grows, out of its cube, into the chosen one's
+  // place, as the one there shrinks back into a cube at the clicked one's place
+  function fly(slot, now) {
+    const tile = cellAt[slot],
+      back = heroCell;
+    if (!back) return;
+    const ms = reduceMotion ? 0 : flightMs;
+    moveTile(tile, now, bigOf(tile), ms);
+    back.home = slotPlace(back, slot);
+    moveTile(back, now, back.home, ms);
+    tile.home = null;
+    cellAt[slot] = back;
+    heroCell = tile;
+    // On the click, the ones that stay where they are turn over as the first landing's did, in a wave from left to
+    // right, each to the example of the next of them, so the centre's changes too (user); the one coming back lands in
+    // the clicked one's place.
+    // (none for now: TURN_ON_PICK, user)
+    const still = TURN_ON_PICK ? cellAt.filter((c, k) => k !== slot) : [];
+    if (still.length > 1) {
+      const examples = still.map((c) => c.feature);
+      still.forEach((c, k) => {
+        c.feature = examples[(k + 1) % examples.length];
+      });
+    }
+    const xs = still.map((c) => homeOf(c).x),
+      minX = Math.min(...xs),
+      maxX = Math.max(...xs);
+    for (const c of still) {
+      if (reduceMotion) {
+        c.pics[c.orient] = slices[c.feature];
+        continue;
+      }
+      c.pics[1 - c.orient] = slices[c.feature];
+      c.turnStart = now;
+      c.turnDelay = ((homeOf(c).x - minX) / Math.max(1, maxX - minX)) * FLIP_SPREAD;
+      c.turnDur = FLIP_DUR;
+    }
+    updatePickLabels();
+    busyUntil =
+      now + (reduceMotion ? 0 : Math.max(ms, TURN_ON_PICK ? FLIP_SPREAD + FLIP_DUR : 0)) + 100;
+    reshuffleSmalls();
+    showFeature(tile.feature);
+    kick();
+  }
+
+  // clicked medium tile -> its feature goes to the big tile, the big one's feature goes to the clicked tile
+  function choose(slot) {
+    const now = performance.now();
+    if (now < busyUntil || !slices.length) return;
+    if (heroBeside) {
+      fly(slot, now);
+      return;
+    }
+    [cellAt[0].feature, cellAt[slot].feature] = [cellAt[slot].feature, cellAt[0].feature];
+    if (reduceMotion) {
+      featureCells.forEach((c) => {
+        c.pics[c.orient] = slices[c.feature];
+      });
+    } else {
+      turnAll(now);
+    }
+    reshuffleSmalls();
+    later(
+      () => showFeature(cellAt[0].feature, true),
+      reduceMotion ? 0 : FLIP_SPREAD * 0.4 + FLIP_DUR * 0.4
+    );
     updatePickLabels();
     kick();
   }
 
   // ---------- start ----------
-  // a random feature is the big one on every visit; the others follow in their usual order
+  // `initialIndex` is the chosen one on opening; the others follow in their usual order
   {
     const m = initialIndex;
-    order = FEATURES.map((_, i) => (m + i) % FEATURES.length);
-
+    if (heroCell) heroCell.feature = m;
+    cellAt.forEach((c, slot) => {
+      c.feature = (m + slot + (heroCell ? 1 : 0)) % FEATURES.length;
+    });
     updatePickLabels();
   }
-  const loaded = FEATURES.map(
+  // the backdrop: the arrangement as it stands, white, from the first frame (the same draws of the seed as below)
+  if (backdrop) {
+    applySmalls(pickSmalls());
+    const now = performance.now();
+    for (const c of cells) {
+      c.start = now;
+      c.h = Math.max(c.base, c.lift);
+      c.lifted = true;
+    }
+    if (heroCell) heroCell.lift = heroCell.h = 0;
+    started = true;
+    kick();
+    onReady();
+  }
+  const loaded = (backdrop ? [] : FEATURES).map(
     (f) =>
       new Promise((res, rej) => {
         const img = new Image();
@@ -984,29 +1496,66 @@ export function createLandingTileRenderer(
   );
   Promise.all(loaded)
     .then((imgs) => {
-      if (disposed) return;
+      if (disposed || backdrop) return;
+      images = imgs;
       slices = FEATURES.map((f, i) => makeSlice(f, imgs[i]));
       // picture tiles start white and turn to their first picture while they rise (same turn as a click)
       featureCells.forEach((c) => {
-        if (reduceMotion) c.pics[0] = slices[order[c.slot]];
+        if (c === heroCell || reduceMotion) c.pics[0] = slices[c.feature];
         else {
           c.pics[0] = null;
-          c.pics[1] = slices[order[c.slot]];
+          c.pics[1] = slices[c.feature];
           c.introPending = true;
         }
       });
       applySmalls(pickSmalls());
 
-      // tiles lift up from the floor
+      // tiles lift up from the floor, in a sweep from left to right
       const now = performance.now();
-      // random order, all starting close together so they rise at the same time rather than one after another
-      for (const c of cells) c.start = now + (reduceMotion ? 0 : 150 + Math.random() * LIFT_SPREAD);
+      // In order (user): the words (on the page), then the white tiles in a sweep from left to right, then the chosen
+      // one beside the field, then the picture tiles in a quicker sweep of their own, rising and turning to their
+      // pictures, then the way in.
+      const shown = cells.filter((c) => c.role || c.base > 0),
+        left = Math.min(...shown.map((c) => c.x)),
+        span = Math.max(1, Math.max(...shown.map((c) => c.x)) - left);
+      const pictures = new Set(cellAt),
+        px = cellAt.map((c) => homeOf(c).x),
+        pLeft = Math.min(...px),
+        pSpan = Math.max(1, Math.max(...px) - pLeft);
+      for (const c of cells)
+        c.start = reduceMotion
+          ? now
+          : pictures.has(c)
+            ? now + PICTURES_AFTER + ((homeOf(c).x - pLeft) / pSpan) * PICTURES_SWEEP
+            : now + INTRO_AFTER + ((c.x - left) / span) * INTRO_SWEEP + random() * INTRO_JITTER;
+      if (heroCell && !reduceMotion) heroCell.start = now + HERO_AFTER;
+      if (!reduceMotion) {
+        if (heroCell)
+          later(() => {
+            if (heroCell) heroCell.appearTween = { start: performance.now(), ms: 900 };
+            kick();
+          }, HERO_AFTER);
+        // the way in, and the chapters along the foot, at the end of it all, exactly as the last picture tile turns
+        // over to its picture (half-way through its turn; user)
+        const lastTurn =
+          Math.max(...cellAt.map((c) => c.start)) - now + INTRO_TURN_DELAY + INTRO_FLIP_DUR * 0.5;
+        later(onShowChosen, lastTurn);
+      } else {
+        if (heroCell) heroCell.appear = 1;
+        onShowChosen();
+      }
       // no clicks until every picture tile has finished its first turn
-      busyUntil = now + 150 + LIFT_SPREAD + INTRO_TURN_DELAY + INTRO_FLIP_DUR + 100;
+      busyUntil =
+        now +
+        Math.max(
+          INTRO_AFTER + INTRO_SWEEP + INTRO_JITTER,
+          PICTURES_AFTER + PICTURES_SWEEP + INTRO_TURN_DELAY + INTRO_FLIP_DUR
+        ) +
+        100;
       started = true;
       kick();
 
-      showFeature(order[0]);
+      showFeature(heroCell ? heroCell.feature : cellAt[0].feature);
       onReady();
     })
     .catch((error) => {
@@ -1014,20 +1563,63 @@ export function createLandingTileRenderer(
     });
 
   return {
+    // (behind the chapters) the tiles move about
+    stir() {
+      if (!reduceMotion) stir();
+    },
+    // the white tiles raised now, where they are, for another renderer of the same seed to raise the same
+    smallsNow() {
+      return cells.flatMap((c, i) =>
+        c.role === 'small' ? [{ i, x: c.x, y: c.y, r0: c.r0, lift: c.lift, order: c.order }] : []
+      );
+    },
+    // (the backdrop) raise those, at once, in place of its own
+    setSmalls(list) {
+      for (const c of cells)
+        if (c.role === 'small') {
+          c.role = null;
+          c.lift = 0;
+          c.h = c.base;
+        }
+      for (const s of list) {
+        const c = cells[s.i];
+        if (!c || c.role) continue;
+        Object.assign(c, {
+          x: s.x,
+          y: s.y,
+          r0: s.r0,
+          lift: s.lift,
+          order: s.order,
+          role: 'small',
+          h: s.lift,
+        });
+        c.lifted = true;
+      }
+      kick();
+    },
     setVisible(value) {
       visible = value;
       if (!visible) {
         cancelAnimationFrame(frameId);
         looping = false;
         lastNow = 0;
+        videos.forEach((v) => v?.pause());
       } else kick();
     },
     dispose() {
       disposed = true;
       cancelAnimationFrame(frameId);
       timers.forEach((timer) => clearTimeout(timer));
+      videos.forEach((v) => {
+        if (!v) return;
+        v.pause();
+        v.removeAttribute('src');
+        v.load();
+      });
       stage.removeEventListener('pointermove', pointerMove);
       stage.removeEventListener('pointerleave', pointerLeave);
+      window.removeEventListener('pointermove', backdropMove);
+      window.removeEventListener('pointerout', backdropLeave);
       picksContainer.replaceChildren();
     },
   };

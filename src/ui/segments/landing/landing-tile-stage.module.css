@@ -2,27 +2,40 @@
   position: absolute;
   inset: 0;
   overflow: hidden;
+  /* white on white, the tiles told apart by their shadows alone */
+  background: #fff;
   font-family: var(--font-info-titillium), Arial, sans-serif;
   color: #13306f;
 }
 .stage {
+  /* In thirds: the words, the examples (the field is in the stage's own px), the chosen one. */
+  --field-shift: 0px;
+  /* the logo over the words in the left third, the way in under them, all together (382 px tall) centred down the page */
+  --words-left: 150px;
+  --words-top: 349px;
+  --logo-h: 120px;
+  --line-h: 50px;
   position: absolute;
   width: 1920px;
   height: 1080px;
-  transform: scale(var(--stage-scale, 1));
-  transform-origin: 0 0;
+  /* zoom, not a transform: a transform would cut the tiles and pictures off the background they multiply onto */
+  zoom: var(--stage-scale, 1);
 }
 .tiles {
   position: absolute;
   inset: 0;
   width: 1920px;
   height: 1080px;
+  translate: var(--field-shift) 0;
+  /* white tiles take the background's colour, keeping their shading */
+  mix-blend-mode: multiply;
 }
 .picks {
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 2;
+  translate: var(--field-shift) 0;
 }
 .picks button {
   position: absolute;
@@ -37,13 +50,22 @@
   outline: 3px solid #13306f;
   outline-offset: 4px;
 }
+.logoAt {
+  position: absolute;
+  /* (at this height the logo is 373 px wide) */
+  left: var(--words-left);
+  top: var(--words-top);
+  width: 1px;
+  height: var(--logo-h);
+  pointer-events: none;
+}
 .headline {
   position: absolute;
   left: 0;
   top: 0;
   margin: 0;
-  font-size: 56px;
-  line-height: 51px;
+  font-size: 44px;
+  line-height: var(--line-h);
   font-weight: 300;
   z-index: 3;
 }
@@ -53,32 +75,33 @@
   animation: enter 800ms both;
 }
 .headline span:nth-child(1) {
-  left: 694px;
-  top: 280px;
+  left: var(--words-left);
+  top: calc(var(--words-top) + var(--logo-h) + 36px);
   animation-delay: 100ms;
 }
 .headline span:nth-child(2) {
-  left: 652px;
-  top: 331px;
+  left: var(--words-left);
+  top: calc(var(--words-top) + var(--logo-h) + 36px + var(--line-h));
   animation-delay: 250ms;
 }
 .headline span:nth-child(3) {
-  left: 714px;
-  top: 382px;
+  left: var(--words-left);
+  top: calc(var(--words-top) + var(--logo-h) + 36px + 2 * var(--line-h));
   animation-delay: 400ms;
 }
+/* Under the headline: what the tiles show (hidden for now), then the way in. */
 .actionRow {
-  position: absolute;
-  left: 572px;
-  top: 530px;
-  width: 827px;
-  height: 88px;
   display: flex;
-  align-items: center;
-  gap: 12px;
+  position: absolute;
+  left: var(--words-left);
+  top: calc(var(--words-top) + var(--logo-h) + 36px + 2 * var(--line-h) + 38px);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 30px;
   z-index: 3;
 }
 .line {
+  display: none;
   height: 2px;
   flex: 1;
   min-width: 30px;
@@ -102,10 +125,12 @@
 .cta {
   position: relative;
   composes: pill from "./cta-pill.module.css";
-  width: 308px;
+  width: auto;
+  padding: 0 46px;
   height: 88px;
+  white-space: nowrap;
   font-family: inherit;
-  font-size: 46px;
+  font-size: 42px;
   line-height: 1;
   font-weight: 300;
   opacity: 0;
@@ -136,16 +161,58 @@
   font-size: 21px;
   font-weight: 300;
 }
+/* Beside the field the chosen one's name is under it, not under the headline; phones keep it under the headline. */
+.actionRow .label {
+  display: none;
+}
+/* what the one beside the field is, in a bubble floating by it, low on its left (the renderer's HERO_TILE, 1590 / 540) */
+.heroLabels {
+  position: absolute;
+  left: 1250px;
+  top: 770px;
+  width: 400px;
+  height: 140px;
+  pointer-events: none;
+  z-index: 3;
+}
+.heroLabel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: 400px;
+  margin: 0;
+  padding: 16px 22px 18px;
+  border-radius: 18px;
+  border: 1px solid rgb(19 48 111 / 0.08);
+  background: rgb(255 255 255 / 0.86);
+  backdrop-filter: blur(8px);
+  box-shadow:
+    0 14px 34px rgb(20 40 90 / 0.14),
+    0 2px 6px rgb(20 40 90 / 0.08);
+  text-align: left;
+  font-size: 25px;
+  line-height: 1.22;
+  font-weight: 300;
+  color: #13306f;
+  animation: bubble-float 5.5s ease-in-out infinite;
+  opacity: 0;
+  transition: opacity 450ms ease;
+}
+.heroLabel[data-active="true"] {
+  opacity: 1;
+  transition: opacity 700ms ease 250ms;
+}
 .heroImage {
   position: absolute;
-  left: 1420px;
+  left: 1355px;
   top: 140px;
   width: 490px;
   height: 820px;
   margin: 0;
   pointer-events: none;
 }
-.heroImage img {
+.heroImage > img,
+.heroImage > video {
   position: absolute;
   left: 50%;
   top: 50%;
@@ -159,9 +226,32 @@
     opacity 800ms ease,
     transform 1200ms ease;
 }
-.heroImage img[data-active="true"] {
+.heroImage > [data-active="true"] {
   opacity: 1;
   transform: translate(-50%, -50%);
+}
+/* In the opening the chosen one comes last, after the words and the tiles. */
+.heroImage:not([data-shown="true"]) > [data-active],
+.heroLabels:not([data-shown="true"]) > [data-active] {
+  opacity: 0;
+}
+/* While an example flies over, the one beside the field is the flying one; it then shows at once where that landed. */
+.heroImage[data-flying="true"] > [data-active] {
+  opacity: 0;
+  transition: none;
+}
+.heroImage[data-instant="true"] > [data-active] {
+  transition: none;
+}
+/* An example on its way between a tile and its place beside the field, moved there by the page. */
+.flying {
+  position: absolute;
+  z-index: 2;
+  max-width: none;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  transform-origin: 50% 50%;
+  will-change: transform, clip-path;
 }
 @keyframes enter {
   from {
@@ -185,14 +275,15 @@
     position: relative;
     width: 100%;
     height: 100%;
-    transform: none;
+    zoom: 1;
   }
   .tiles,
   .picks {
+    translate: none;
     transform: scale(var(--stage-scale));
     transform-origin: 0 0;
     top: 12px;
-    left: calc(50% - 175px);
+    left: calc(50% - 930px * var(--stage-scale));
     width: 1920px;
     height: 1080px;
   }
@@ -217,15 +308,21 @@
     top: calc(clamp(370px, 48svh, 450px) + var(--mobile-title-size) * 3.12 + 22px);
     width: calc(100% - 40px);
     height: auto;
+    flex-direction: row;
+    align-items: center;
     flex-wrap: wrap;
     gap: 16px;
   }
   .line {
     display: none;
   }
-  .label {
+  .actionRow .label {
+    display: block;
     width: 100%;
     font-size: 25px;
+  }
+  .heroLabels {
+    display: none;
   }
   .cta {
     width: 150px;
@@ -249,7 +346,10 @@
   .cta {
     animation: none;
   }
-  .heroImage img {
+  .heroImage > img,
+  .heroImage > video,
+  .heroLabel,
+  .heroLabel[data-active="true"] {
     transition: none;
   }
 }
@@ -308,5 +408,42 @@
   .cta[data-cta-state="alive"]::after {
     animation: none;
     transition: none;
+  }
+}
+
+/* the bubble's kicker, on a line of its own, and its tail, pointing up at the one beside the field */
+.heroLabel strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #008c05;
+}
+.heroLabel::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  right: 46px;
+  width: 16px;
+  height: 16px;
+  rotate: 45deg;
+  background: inherit;
+  border-top: 1px solid rgb(19 48 111 / 0.08);
+  border-left: 1px solid rgb(19 48 111 / 0.08);
+}
+@keyframes bubble-float {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -7px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .heroLabel {
+    animation: none;
   }
 }

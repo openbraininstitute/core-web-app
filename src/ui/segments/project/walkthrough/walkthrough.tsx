@@ -20,12 +20,14 @@ import { learnFonts } from '@/features/learn/fonts';
 import { BareViewers } from '@/features/viewer-3d/bare';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { informationFont } from '@/ui/segments/landing/information-font';
+import { LANDING_LAID_OUT, LANDING_WAY_IN } from '@/ui/segments/landing/landing-tile-stage';
 import { FindOutMore } from '@/ui/segments/landing/layout/find-out-more';
 import { HOME_DESIGNS } from '@/ui/segments/project/home-designs';
 import { cn } from '@/utils/css-class';
 
 import { AccountFlow, Initials, readDummyAccount } from './account-flow';
 import { ChapterFrameBackground } from './chapter-frame-background';
+import { CHAPTER_SWITCH, LandingCubeBackdrop } from './landing-cube-backdrop';
 import { reverseOf, stopFrom, type TReverse } from './stops';
 import { type ChapterPlayback, useChapterPlayback } from './use-chapter-playback';
 
@@ -279,6 +281,81 @@ export function Walkthrough<C extends IWalkthroughChapter>({
     return () => window.clearTimeout(timer);
   }, [introContent, introLeft, introDone, finishIntro]);
 
+  // On the public landing the logo stands over its words, where the landing marks (`data-landing-logo-at`), and glides
+  // up into its corner with the page as the landing goes, and back down with it.
+  const logoRef = useRef<HTMLAnchorElement>(null);
+  const logoPlaced = useRef(false);
+  const logoOnLanding = !!introContent && !introDone && !introLeft;
+  // For now it stays in its corner, level with the top bar's buttons, the landing's words beside it (user); with
+  // LOGO_OVER_WORDS it stands over them as before.
+  // (on wide screens only: on a phone the landing's words sit under its tiles, and the logo stays in its corner)
+  const [wideScreen, setWideScreen] = useState(true);
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 800px)');
+    const update = () => setWideScreen(media.matches);
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
+  const placesLogo = LOGO_OVER_WORDS && logoOnLanding && wideScreen;
+  const [logoIn, setLogoIn] = useState(!introContent);
+  useEffect(() => {
+    if (logoIn) return;
+    const frame = requestAnimationFrame(() => setLogoIn(true));
+    return () => cancelAnimationFrame(frame);
+  }, [logoIn]);
+  const [logoPose, setLogoPose] = useState<{ transform: string; glide: boolean } | null>(null);
+  // The top bar's buttons come in last on the landing, with its way in.
+  const [landingWayIn, setLandingWayIn] = useState(false);
+  useEffect(() => {
+    const show = () => setLandingWayIn(true);
+    window.addEventListener(LANDING_WAY_IN, show);
+    return () => window.removeEventListener(LANDING_WAY_IN, show);
+  }, []);
+  // (for now none on the landing at all: they come in as it goes, user)
+  const buttonsWait = logoOnLanding && (HIDE_BUTTONS_ON_LANDING || !landingWayIn);
+  useEffect(() => {
+    if (!placesLogo) {
+      setLogoPose((was) => (was ? { transform: 'none', glide: true } : was));
+      return;
+    }
+    const place = (glide: boolean) => {
+      const logo = logoRef.current;
+      const bar = logo?.offsetParent;
+      const at = document.querySelector<HTMLElement>('[data-landing-logo-at]');
+      const landing = at?.closest<HTMLElement>('[data-walkthrough-intro]');
+      if (!logo || !(bar instanceof HTMLElement) || !at || !landing) return false;
+      const box = at.getBoundingClientRect();
+      if (!box.height || !logo.offsetHeight) return false;
+      // where the mark is with the landing at rest, which it may be on its way back to
+      const from = landing.getBoundingClientRect();
+      const barBox = bar.getBoundingClientRect();
+      const x = box.left - from.left - (barBox.left + logo.offsetLeft);
+      const y = box.top - from.top - (barBox.top + logo.offsetTop);
+      setLogoPose({
+        transform: `translate(${x}px, ${y}px) scale(${box.height / logo.offsetHeight})`,
+        glide,
+      });
+      return true;
+    };
+    let frame = 0;
+    const tryPlace = () => {
+      if (!place(logoPlaced.current)) {
+        frame = requestAnimationFrame(tryPlace);
+        return;
+      }
+      logoPlaced.current = true;
+    };
+    tryPlace();
+    // again whenever the landing lays itself out anew (its scale), as the mark's own size does not change with it
+    const relaid = () => place(false);
+    window.addEventListener(LANDING_LAID_OUT, relaid);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener(LANDING_LAID_OUT, relaid);
+    };
+  }, [placesLogo]);
+
   const leaveIntro = useCallback(() => {
     const intro = root?.querySelector<HTMLElement>('[data-walkthrough-intro]');
     const first = sections.current[0];
@@ -326,6 +403,8 @@ export function Walkthrough<C extends IWalkthroughChapter>({
         return 0;
       }
       glideTarget.current = to;
+      // what moves with a change of chapter starts with it (the tiles behind them)
+      window.dispatchEvent(new Event(CHAPTER_SWITCH));
       const extraScreens = Math.max(Math.round(distance / root.clientHeight) - 1, 0);
       const ms = INTRO.scroll + extraScreens * GLIDE_PER_EXTRA_SCREEN_MS;
       glide.current = animate(root.scrollTop, to, {
@@ -670,10 +749,15 @@ export function Walkthrough<C extends IWalkthroughChapter>({
     onComplete: advanceChapter,
   });
   // While the intro is up, the first screen waits a page below it, and scrolls up as it leaves.
-  const underIntro: CSSProperties = {
-    transform: intro && !introDone && !introLeft ? 'translateY(100vh)' : 'none',
-    transition: SCROLL,
-  };
+  const underIntro: CSSProperties = LANDING_PEELS
+    ? {
+        transform: intro && !introDone && !introLeft ? 'translateY(100vh)' : 'none',
+        transition: SCROLL,
+      }
+    : {
+        opacity: intro && !introDone && !introLeft ? 0 : 1,
+        transition: `opacity ${INTRO.scroll}ms ease ${INTRO.scroll / 4}ms`,
+      };
 
   const page = (
     <EnteredContext.Provider value={introDone || introLeft}>
@@ -731,7 +815,14 @@ export function Walkthrough<C extends IWalkthroughChapter>({
               } as CSSProperties
             }
           >
-            {introContent && <ChapterFrameBackground active={introDone || introLeft} />}
+            {/* behind the chapters: the first landing's frame of tiles, or, with LANDING_CUBES_BEHIND_CHAPTERS, the
+                landing's own tiles where they stood */}
+            {introContent &&
+              (LANDING_CUBES_BEHIND_CHAPTERS ? (
+                <LandingCubeBackdrop active={introDone || introLeft} />
+              ) : (
+                <ChapterFrameBackground active={introDone || introLeft} />
+              ))}
             {floating?.({
               entered: introDone || introLeft,
               revealed: introDone,
@@ -831,9 +922,27 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                 )}
               >
                 <Link
+                  ref={logoRef}
                   href="/"
                   aria-label="Open Brain Institute homepage"
                   data-walkthrough-logo
+                  style={
+                    logoPose
+                      ? {
+                          transform: logoPose.transform,
+                          transformOrigin: '0 0',
+                          // it fades in with the landing's words, first of all
+                          transition: logoPose.glide
+                            ? `transform ${INTRO.scroll}ms ${SCROLL_EASE}, opacity 900ms ease`
+                            : 'opacity 900ms ease',
+                        }
+                      : // not shown in the corner for a frame before it is placed over the landing's words; in its
+                        // corner, faded in first of all
+                        {
+                          opacity: placesLogo || !logoIn ? 0 : undefined,
+                          transition: 'opacity 900ms ease',
+                        }
+                  }
                   onClick={(event) => {
                     if (!introContent) return;
                     event.preventDefault();
@@ -847,7 +956,14 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                 >
                   <ObiLogo className="block h-[clamp(44px,5vh,56px)] w-auto text-[#002766] max-sm:h-[38px] squat:h-[36px]" />
                 </Link>
-                <div className="pointer-events-auto flex items-center gap-[20px] max-sm:gap-[10px]">
+                <div
+                  className="pointer-events-auto flex items-center gap-[20px] max-sm:gap-[10px]"
+                  style={{
+                    opacity: buttonsWait ? 0 : 1,
+                    transition: 'opacity 700ms ease',
+                    pointerEvents: buttonsWait ? 'none' : undefined,
+                  }}
+                >
                   <FindOutMore
                     shown={introDone || !!introContent}
                     informationTypography={!!introContent}
@@ -1098,6 +1214,14 @@ const GLIDE_EASE = [0.65, 0, 0.35, 1] as const;
 const SCROLL_EASE = `cubic-bezier(${GLIDE_EASE.join(', ')})`;
 /** The page scrolling on from the intro to the first screen, or back. */
 const SCROLL = `transform ${INTRO.scroll}ms ${SCROLL_EASE}`;
+/** Whether the logo stands over the landing's words, gliding to its corner as the landing goes; else it stays there. */
+const LOGO_OVER_WORDS = true;
+/** Whether the top bar's buttons stay hidden over the landing, coming in as it goes; else they come in last on it. */
+const HIDE_BUTTONS_ON_LANDING = false;
+/** Whether the landing goes up off the page as the first chapter comes up under it; else it fades over the same tiles. */
+const LANDING_PEELS = false;
+/** Whether the landing's own tiles stay on behind the chapters (landing-cube-backdrop.tsx); else the frame background. */
+const LANDING_CUBES_BEHIND_CHAPTERS = false;
 
 /**
  * The walkthrough's opening: the logo alone in the middle of a white page, `title` fading in under it and

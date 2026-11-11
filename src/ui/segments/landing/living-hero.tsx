@@ -6,21 +6,26 @@ import { BRAIN_THEME_LINKS } from '@/ui/segments/project/brains-walkthrough/chap
 import { THEME_NAV_RAIL, ThemeLine } from '@/ui/segments/project/brains-walkthrough/landing-themes';
 
 import { informationFont } from './information-font';
-import { LandingTileStage } from './landing-tile-stage';
+import { LANDING_WAY_IN, LandingTileStage } from './landing-tile-stage';
 
 import styles from './living-hero.module.css';
 
 export const SCIENCE_SCENES = [
+  { label: 'Simulate whole brains', group: 'brain' },
   { label: 'Simulate activity', group: 'simulate' },
   { label: 'Explore data', group: 'explore' },
   { label: 'Build models', group: 'build' },
   { label: 'Virtual labs', group: 'labs' },
+  { label: 'Skeletonize meshes', group: 'skeletonize' },
+  { label: 'Skeletonize morphologies and extract spines', group: 'dendrites' },
 ] as const;
+/** The scene the opening shows first: the fly's brain and nerve cord turning as its model runs. */
+export const FIRST_SCENE = 0;
 /** How long the opening stands, while the page is visible, before it glides on to the first chapter, ms. */
 export const LANDING_AUTO_CONTINUE_MS = 8000;
 
 /**
- * The public opening shows one of the science scenes, picked at random on each visit, then glides on to the
+ * The public opening shows the science scenes, the fly's brain first, then glides on to the
  * Virtual Labs chapter by itself unless the visitor gets there first (a chapter, the arrow or a scroll).
  */
 export function LivingHero({
@@ -30,16 +35,28 @@ export function LivingHero({
   onContinue: () => void;
   onChapter: (id: string) => void;
 }) {
-  // Picked once mounted, so the server's markup and the first client render agree.
+  // Set once mounted, as the tiles are drawn in the browser alone.
   const [scene, setScene] = useState<number | null>(null);
   const [reduced, setReduced] = useState(true);
   const [visible, setVisible] = useState(true);
   const touchY = useRef<number | null>(null);
   const heroRef = useRef<HTMLElement>(null);
   const interacted = useRef(false);
+  // The chapters along the foot and the arrow down come in last, with the landing's way in.
+  const [wayIn, setWayIn] = useState(false);
+  useEffect(() => {
+    const show = () => setWayIn(true);
+    window.addEventListener(LANDING_WAY_IN, show);
+    return () => window.removeEventListener(LANDING_WAY_IN, show);
+  }, []);
+  const lastIn = {
+    opacity: wayIn ? 1 : 0,
+    transition: 'opacity 700ms ease',
+    pointerEvents: wayIn ? undefined : 'none',
+  } as const;
 
   useEffect(() => {
-    setScene(Math.floor(Math.random() * SCIENCE_SCENES.length));
+    setScene(FIRST_SCENE);
   }, []);
 
   useEffect(() => {
@@ -164,6 +181,7 @@ export function LivingHero({
         className={styles.nextChapter}
         aria-label="Next screen"
         onClick={onContinue}
+        style={lastIn}
       >
         <svg
           aria-hidden="true"
@@ -179,7 +197,7 @@ export function LivingHero({
           <path d="M6 9l6 6 6-6" />
         </svg>
       </button>
-      <nav className={THEME_NAV_RAIL} aria-label="Platform sections">
+      <nav className={THEME_NAV_RAIL} aria-label="Platform sections" style={lastIn}>
         <ThemeLine links={BRAIN_THEME_LINKS} goTo={onChapter} publicAppearance />
       </nav>
     </section>
