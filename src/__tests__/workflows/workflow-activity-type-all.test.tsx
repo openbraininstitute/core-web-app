@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -35,7 +35,7 @@ vi.mock('@/ui/segments/workflows/elements/workflow-activity-all', async (importO
     createAllWorkflowsDataSource: (
       args: Parameters<typeof actual.createAllWorkflowsDataSource>[0]
     ) => {
-      merged(args.sources);
+      merged(args.sources, args.onGaps);
       return actual.createAllWorkflowsDataSource(args);
     },
   };
@@ -75,6 +75,19 @@ describe('the workflows table’s listing', () => {
     table(`?tactivity=${ActivityValues.Simulate}`);
 
     expect(listedCategories()).toEqual(new Set([ActivityValues.Simulate]));
+  });
+
+  it('says, above the table, which workflows a page is missing and that rows lie beyond it', () => {
+    table('?tactivity=all');
+    expect(screen.queryByRole('status')).toBeNull();
+
+    act(() => merged.mock.lastCall?.[1]({ failed: ['ME-model', 'Synaptome'], unlisted: 12 }));
+
+    expect(screen.getByRole('status').textContent).toContain('ME-model, Synaptome');
+    expect(screen.getByRole('status').textContent).toContain('first 1,000');
+
+    act(() => merged.mock.lastCall?.[1]({ failed: [], unlisted: 0 }));
+    expect(screen.queryByRole('status')).toBeNull();
   });
 
   it('lists one type on its own once it is picked', () => {

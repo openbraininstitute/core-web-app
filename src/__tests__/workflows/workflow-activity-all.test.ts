@@ -16,6 +16,7 @@ import {
   allWorkflowsSources,
   createAllWorkflowsDataSource,
   type IAllWorkflowsSource,
+  MAX_LISTED_ROWS,
   rowWorkflow,
 } from '@/ui/segments/workflows/elements/workflow-activity-all';
 import { buildWorkflowActivitySchema } from '@/ui/segments/workflows/elements/workflow-activity-schema';
@@ -26,6 +27,15 @@ import type { FeatureFlags } from '@/features/feature-flags/flags';
 
 const getTaskConfigs = vi.fn();
 const getSimulationCampaigns = vi.fn();
+const withExecutions = vi.fn();
+
+vi.mock('@/entity-configuration/domain/task-functions', async (importOriginal) => {
+  const original = await importOriginal<{ Task: object }>();
+  return {
+    ...original,
+    Task: { ...original.Task, withExecutions: (args: unknown) => withExecutions(args) },
+  };
+});
 
 vi.mock('@/api/entitycore/queries/task/task-config', async (importOriginal) => ({
   ...(await importOriginal<object>()),
@@ -105,6 +115,7 @@ const query = (over: Partial<IGridQuery> = {}): IGridQuery => ({
 beforeEach(() => {
   getTaskConfigs.mockReset();
   getSimulationCampaigns.mockReset();
+  withExecutions.mockReset();
 });
 
 describe('allWorkflowsSources', () => {
@@ -226,35 +237,193 @@ describe('createAllWorkflowsDataSource', () => {
     }
   });
 
-  it('follows the sort the grid asks for', async () => {
-    const byName = source(ExtendedEntitiesTypeDict.MicrocircuitSimulation, [
+  it('follows the sort by date the grid asks for', async () => {
+    const all = dataSource([small(), micro()]);
+
+    const page = await all.fetch(
+      query({ sort: [{ columnId: 'creationDate', direction: SortDirection.Asc }] })
+    );
+
+    expect(page.rows.map((r) => r.id)).toEqual(['s1', 'm2', 'm3']);
+  });
+
+  it('lists newest first where a sort by name is asked, which it cannot merge', async () => {
+    const one = source(ExtendedEntitiesTypeDict.MicrocircuitSimulation, [
       row('a', 1, 'beta'),
       row('b', 2, 'Alpha'),
       row('c', 3, 'gamma'),
     ]);
 
-    const page = await dataSource([byName]).fetch(
+    const page = await dataSource([one]).fetch(
       query({ sort: [{ columnId: 'name', direction: SortDirection.Asc }] })
     );
 
-    expect(page.rows.map((r) => r.name)).toEqual(['Alpha', 'beta', 'gamma']);
+    expect(page.rows.map((r) => r.id)).toEqual(['c', 'b', 'a']);
+    expect(one.calls[0]).toMatchObject({ order_by: ['-creation_date'] });
+  });
+
+  it('has no sort by name to offer under All, and one under a single type', () => {
+    const name = (entityType?: IAllWorkflowsSource['targetType']) =>
+      buildWorkflowActivitySchema({
+        activity: undefined,
+        activityName: '',
+        entityType,
+        workspace,
+      }).columns.find(({ id }) => id === 'name');
+
+    expect(name()?.sortable).toBe(false);
+    expect(name(ExtendedEntitiesTypeDict.MicrocircuitSimulation)?.sortable).toBe(true);
   });
 
   it('breaks ties as EntityCore does, so no row goes missing between pages', async () => {
-    // the same name, so the order falls to creation date, newest first, and not to the id
-    const sameName = source(ExtendedEntitiesTypeDict.MicrocircuitSimulation, [
-      row('f', 4, 'L5PC'),
-      row('c', 3, 'L5PC'),
-      row('a', 2, 'L5PC'),
-      row('b', 1, 'L5PC'),
+    // made at the same moment, so the order falls to the id, upwards whichever way the sort runs
+    const one = source(ExtendedEntitiesTypeDict.MicrocircuitSimulation, [row('d', 1), row('b', 1)]);
+    const other = source(ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation, [
+      row('c', 1),
+      row('a', 1),
     ]);
-    const all = dataSource([sameName]);
-    const byName = { pageSize: 2, sort: [{ columnId: 'name', direction: SortDirection.Asc }] };
+    const all = dataSource([one, other]);
 
-    const first = await all.fetch(query(byName));
-    const second = await all.fetch(query({ ...byName, page: 2 }));
+    const first = await all.fetch(query({ pageSize: 2 }));
+    const second = await all.fetch(query({ pageSize: 2, page: 2 }));
 
-    expect([...first.rows, ...second.rows].map((r) => r.id)).toEqual(['f', 'c', 'a', 'b']);
+    expect([...first.rows, ...second.rows].map((r) => r.id)).toEqual(['a', 'b', 'c', 'd']);
+  });
+
+  it('reaches no further than its limit of rows, and tells how many lie beyond', async () => {
+    const onGaps = vi.fn();
+    const big = source(
+      ExtendedEntitiesTypeDict.MicrocircuitSimulation,
+      Array.from({ length: 1200 }, (_, i) => row(`m${String(i).padStart(4, '0')}`, 1))
+    );
+    const all = createAllWorkflowsDataSource({
+      sources: [big],
+      schema,
+      context: workspace,
+      onGaps,
+    });
+
+    const last = await all.fetch(query({ page: 10, pageSize: 100 }));
+    const beyond = await all.fetch(query({ page: 11, pageSize: 100 }));
+
+    expect(last.total).toBe(MAX_LISTED_ROWS);
+    expect(last.rows).toHaveLength(100);
+    expect(beyond.rows).toEqual([]);
+    expect(Math.max(...big.calls.map((call) => Number(call.page_size)))).toBe(MAX_LISTED_ROWS);
+    expect(onGaps).toHaveBeenLastCalledWith({ failed: [], unlisted: 200 });
+  });
+
+  describe('a page given up on', () => {
+    const waiting = (rows: TRow[]) => {
+      const inner = source(ExtendedEntitiesTypeDict.MicrocircuitSimulation, rows);
+      const signals: (AbortSignal | undefined)[] = [];
+      const list: IAllWorkflowsSource['list'] = (args) => {
+        signals.push(args.signal);
+        return new Promise((resolve, reject) => {
+          if (!args.signal) return resolve(inner.list(args));
+          args.signal.addEventListener('abort', () => reject(args.signal?.reason));
+        });
+      };
+      return { ...inner, list, signals };
+    };
+
+    it('hands its signal to every source, and is not told of as sources that failed', async () => {
+      const onGaps = vi.fn();
+      const one = waiting([row('m1', 1)]);
+      const all = createAllWorkflowsDataSource({
+        sources: [one, small()],
+        schema,
+        context: workspace,
+        onGaps,
+      });
+      const controller = new AbortController();
+
+      const page = all.fetch(query(), controller.signal);
+      controller.abort(new Error('given up'));
+
+      await expect(page).rejects.toThrow('given up');
+      expect(one.signals).toEqual([controller.signal]);
+      expect(onGaps).not.toHaveBeenCalled();
+    });
+
+    it('does not count as served: asked again, it still builds on the rows held', async () => {
+      const one = waiting([row('m1', 1)]);
+      const other = small();
+      const all = dataSource([one, other]);
+      await all.fetch(query({ pageSize: 2 }));
+      const controller = new AbortController();
+      const page = all.fetch(query({ pageSize: 2, page: 2 }), controller.signal);
+      controller.abort(new Error('given up'));
+      await page.catch(() => {});
+
+      await all.fetch(query({ pageSize: 2, page: 2 }));
+
+      expect(other.calls.at(-1)).toMatchObject({ page: 2, page_size: 2 });
+    });
+
+    it('gives up its facets too', async () => {
+      const one = waiting([row('m1', 1)]);
+      const controller = new AbortController();
+
+      const facets = dataSource([one, small()]).fetchFacets?.(query(), controller.signal);
+      controller.abort(new Error('given up'));
+
+      await expect(facets).rejects.toThrow('given up');
+    });
+  });
+
+  describe("the executions of a page's task configs", () => {
+    const config = (id: string, day: number, taskConfigType: string) => ({
+      ...row(id, day),
+      type: EntityTypeDict.TaskConfig,
+      task_config_type: taskConfigType,
+    });
+    const configs = () =>
+      source(ExtendedEntitiesTypeDict.MEModelBuildCampaign, [
+        config('t1', 1, TaskConfigType.MEModelBuildCampaign),
+        config('t2', 2, TaskConfigType.MEModelBuildCampaign),
+        config('t9', 9, TaskConfigType.MEModelBuildCampaign),
+        config('x3', 3, TaskConfigType.CircuitExtractionCampaign),
+      ]);
+
+    it('are joined in once for the page, which the Status cell then need not ask for', async () => {
+      withExecutions.mockImplementation(async ({ campaigns }: { campaigns: TRow[] }) =>
+        campaigns.map((campaign) => ({ ...campaign, rows: [] }))
+      );
+
+      const page = await dataSource([configs(), small()]).fetch(query({ pageSize: 5, page: 2 }));
+
+      expect(withExecutions).toHaveBeenCalledTimes(1);
+      expect(withExecutions.mock.calls[0][0].campaigns.map((c: TRow) => c.id)).toEqual(['t1']);
+      expect(page.rows.map((r) => [r.id, 'rows' in r])).toEqual([
+        ['s1', false],
+        ['t1', true],
+      ]);
+      expect(rowWorkflow(page.rows[1])?.targetType).toBe(
+        ExtendedEntitiesTypeDict.MEModelBuildCampaign
+      );
+    });
+
+    it('leave the campaigns that expand to their own query, as their listings do', async () => {
+      withExecutions.mockResolvedValue([]);
+
+      const page = await dataSource([configs()]).fetch(query({ pageSize: 4 }));
+
+      expect(withExecutions.mock.calls[0][0].campaigns.map((c: TRow) => c.id)).not.toContain('x3');
+      expect(page.rows.map((r) => r.id)).toContain('x3');
+    });
+
+    it('are left to the Status cell where the join fails', async () => {
+      withExecutions.mockRejectedValue(new Error('down'));
+
+      const page = await dataSource([configs()]).fetch(query());
+
+      expect(page.rows.map((r) => [r.id, 'rows' in r])).toEqual([
+        ['t9', false],
+        ['x3', false],
+        ['t2', false],
+      ]);
+    });
   });
 
   it('hands every row its workflow, which the Category column reads', async () => {
@@ -338,13 +507,13 @@ describe('createAllWorkflowsDataSource', () => {
       const all = dataSource([one]);
       await all.fetch(query());
 
-      const byName = await all.fetch(
-        query({ page: 2, sort: [{ columnId: 'name', direction: SortDirection.Asc }] })
+      const oldestFirst = await all.fetch(
+        query({ page: 2, sort: [{ columnId: 'creationDate', direction: SortDirection.Asc }] })
       );
 
-      expect(byName.rows).toEqual([]);
+      expect(oldestFirst.rows).toEqual([]);
       expect(one.calls).toHaveLength(2);
-      expect(one.calls[1]).toMatchObject({ order_by: ['+name'], page: 1, page_size: 6 });
+      expect(one.calls[1]).toMatchObject({ order_by: ['+creation_date'], page: 1, page_size: 6 });
     });
   });
 
@@ -357,19 +526,19 @@ describe('createAllWorkflowsDataSource', () => {
     });
 
     it('is left out of the page and told of, the rest listed', async () => {
-      const onFailedSources = vi.fn();
+      const onGaps = vi.fn();
       const all = createAllWorkflowsDataSource({
         sources: [failing(), small()],
         schema,
         context: workspace,
-        onFailedSources,
+        onGaps,
       });
 
       const page = await all.fetch(query());
 
       expect(page.rows.map((r) => r.id)).toEqual(['s6', 's4', 's1']);
       expect(page.total).toBe(3);
-      expect(onFailedSources).toHaveBeenLastCalledWith(['ME-model']);
+      expect(onGaps).toHaveBeenLastCalledWith({ failed: ['ME-model'], unlisted: 0 });
     });
 
     it('is asked again on the next page', async () => {
@@ -384,32 +553,32 @@ describe('createAllWorkflowsDataSource', () => {
     });
 
     it('has failed where it gives no answer at all', async () => {
-      const onFailedSources = vi.fn();
+      const onGaps = vi.fn();
       const silent = { ...failing(), list: async () => undefined };
       const all = createAllWorkflowsDataSource({
         sources: [silent, small()],
         schema,
         context: workspace,
-        onFailedSources,
+        onGaps,
       });
 
       await all.fetch(query());
 
-      expect(onFailedSources).toHaveBeenLastCalledWith(['ME-model']);
+      expect(onGaps).toHaveBeenLastCalledWith({ failed: ['ME-model'], unlisted: 0 });
     });
 
     it('tells of none once every source answers', async () => {
-      const onFailedSources = vi.fn();
+      const onGaps = vi.fn();
       const all = createAllWorkflowsDataSource({
         sources: [small()],
         schema,
         context: workspace,
-        onFailedSources,
+        onGaps,
       });
 
       await all.fetch(query());
 
-      expect(onFailedSources).toHaveBeenLastCalledWith([]);
+      expect(onGaps).toHaveBeenLastCalledWith({ failed: [], unlisted: 0 });
     });
 
     it('fails the listing where every source does', async () => {

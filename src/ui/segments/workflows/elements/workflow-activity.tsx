@@ -1,9 +1,8 @@
 'use client';
 
 import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useAppNotification } from '@/components/notification';
 import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
 import { createEntitycorePagedDataSource } from '@/features/data-grid/bindings/entitycore/data-source.paged';
 import {
@@ -27,6 +26,8 @@ import {
   ALL_WORKFLOWS,
   allWorkflowsSources,
   createAllWorkflowsDataSource,
+  type IAllWorkflowsGaps,
+  MAX_LISTED_ROWS,
   type TAllWorkflows,
 } from '@/ui/segments/workflows/elements/workflow-activity-all';
 import {
@@ -54,6 +55,8 @@ const WORKFLOW_ACTIVITY_SECTION = 'workflow-activity';
 const WORKFLOW_ACTIVITY_LAYOUT = `${WORKFLOW_ACTIVITY_SECTION}-v3`;
 
 const selectFreeTextSearch = (state: IGridState): string => state.freeTextSearch;
+
+const NO_GAPS = { failed: '', unlisted: 0 };
 
 const renderHoverCard = (row: EntityCoreObjectTypes) => <WorkflowHoverCard row={row} />;
 
@@ -143,20 +146,15 @@ export function WorkflowActivity() {
   );
   const freeTextSearch = useGridStateSlice(controller, selectFreeTextSearch);
 
-  const notification = useAppNotification();
-  const lastFailed = useRef('');
-  // Through a ref: a data source made again would let go of the rows it holds.
-  const tellFailed = useRef((_labels: string[]) => {});
-  tellFailed.current = (labels) => {
-    const failed = labels.join(', ');
-    if (failed && failed !== lastFailed.current) {
-      notification.warning({
-        message: 'Some workflows could not be listed',
-        description: `Their activities are missing from this table: ${failed}.`,
-      });
-    }
-    lastFailed.current = failed;
-  };
+  const [gaps, setGaps] = useState(NO_GAPS);
+  const tellGaps = useCallback(
+    ({ failed, unlisted }: IAllWorkflowsGaps) =>
+      setGaps((held) => {
+        const next = { failed: failed.join(', '), unlisted };
+        return held.failed === next.failed && held.unlisted === next.unlisted ? held : next;
+      }),
+    []
+  );
 
   // The grid contributes page/sort/filter/search; the entity's domain config owns the
   // endpoint (All asks each workflow's), and `params` below pins the workspace scope.
@@ -175,10 +173,12 @@ export function WorkflowActivity() {
             schema,
             context: { virtualLabId, projectId },
             transformParams: withWorkflowIdSearch,
-            onFailedSources: (labels) => tellFailed.current(labels),
+            onGaps: tellGaps,
           }),
-    [listedType, listedActivity, schema, virtualLabId, projectId, flags]
+    [listedType, listedActivity, schema, virtualLabId, projectId, flags, tellGaps]
   );
+  // biome-ignore lint/correctness/useExhaustiveDependencies: another listing starts without gaps
+  useEffect(() => setGaps(NO_GAPS), [gridKey]);
 
   const params = useMemo(
     () => ({ authorized_project_id: projectId, authorized_public: false }),
@@ -197,6 +197,24 @@ export function WorkflowActivity() {
           id="workflow-activities-table"
           data-testid="workflow-activities-table"
         >
+          {(gaps.failed || gaps.unlisted > 0) && (
+            <div
+              role="status"
+              className="mb-2 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900"
+            >
+              {gaps.failed && (
+                <p>
+                  Some workflows could not be listed, their activities are missing: {gaps.failed}.
+                </p>
+              )}
+              {gaps.unlisted > 0 && (
+                <p>
+                  Only the first {MAX_LISTED_ROWS.toLocaleString('en-US')} activities are listed.
+                  Choose a category and a type, or filter, to reach the rest.
+                </p>
+              )}
+            </div>
+          )}
           <DataGrid<EntityCoreObjectTypes>
             key={gridKey}
             controller={controller}

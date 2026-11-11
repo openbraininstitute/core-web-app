@@ -105,7 +105,8 @@ export function buildWorkflowActivitySchema({
       {
         id: 'name',
         header: 'Name',
-        sortable: true,
+        // not under All: its merge cannot repeat the database's order of names
+        sortable: Boolean(entityType),
         sortField: 'name',
         getValue: (row) => row.name ?? '',
         width: { minWidth: 160, flex: 2 },
