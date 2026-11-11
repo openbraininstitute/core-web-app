@@ -293,23 +293,6 @@ describe('the matrix kept across report views', () => {
     expect(screen.getByTestId('matrix')).toBeInTheDocument();
     expect(h.mounts).toBe(2);
   });
-
-  it('lets the pinned pathway go on a click on nothing in it', () => {
-    const onPick = vi.fn();
-    const store = createStore();
-    render(
-      <Provider store={store}>
-        <TableMatrixKeeper>
-          <Table onPick={onPick} />
-        </TableMatrixKeeper>
-      </Provider>
-    );
-    openMatrix();
-
-    fireEvent.click(screen.getByTestId('matrix'));
-
-    expect(onPick).toHaveBeenCalledExactlyOnceWith(null);
-  });
 });
 
 describe('what a report table’s pane is told it shows', () => {

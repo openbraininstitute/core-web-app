@@ -28,7 +28,6 @@ import {
   connectivityAsset,
   useConnectivityEntries,
 } from '@/features/circuit-nodes/connectivity/use-connectivity';
-import { letGoOnBlankClick } from '@/features/circuit-nodes/connectivity/use-matrix-pin';
 import { tablePaneTitle } from '@/features/circuit-nodes/types';
 
 import type { ReactNode } from 'react';
@@ -251,13 +250,7 @@ function TableMatrix({
     entries?.[0];
 
   return (
-    // Its own, not the view's: a kept matrix's clicks bubble to the keeper, not to the view.
-    // biome-ignore lint/a11y/noStaticElementInteractions: a shortcut for the mouse: the keyboard has the note's X
-    // biome-ignore lint/a11y/useKeyWithClickEvents: a shortcut for the mouse: the keyboard has the note's X
-    <div
-      className="flex h-full min-h-0 flex-col"
-      onClick={(event) => letGoOnBlankClick(pin, event)}
-    >
+    <div className="flex h-full min-h-0 flex-col">
       <div className={styles.gridHeader}>
         <div className="flex min-w-0 flex-1 items-center gap-2">
           {menu}

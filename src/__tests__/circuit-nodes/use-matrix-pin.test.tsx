@@ -1,13 +1,9 @@
-import { act, fireEvent, render, renderHook, screen } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import { createStore, Provider } from 'jotai';
 import { useState } from 'react';
-import { createPortal } from 'react-dom';
 import { describe, expect, it, vi } from 'vitest';
 
-import {
-  letGoOnBlankClick,
-  useMatrixPin,
-} from '@/features/circuit-nodes/connectivity/use-matrix-pin';
+import { useMatrixPin } from '@/features/circuit-nodes/connectivity/use-matrix-pin';
 
 import type { ReactNode } from 'react';
 import type { PinnedPathway } from '@/features/circuit-nodes/connectivity/use-matrix-pin';
@@ -160,71 +156,5 @@ describe('useMatrixPin', () => {
     rerender({ ready: true, scope: 'another' });
 
     expect(result.current.pin.pinned).toBeNull();
-  });
-});
-
-describe('letGoOnBlankClick', () => {
-  function pane(pinnedNow: PinnedPathway | null = PINNED) {
-    const onPick = vi.fn();
-    render(
-      // biome-ignore lint/a11y/noStaticElementInteractions: as the panes it is for
-      // biome-ignore lint/a11y/useKeyWithClickEvents: as the panes it is for
-      <div
-        data-testid="pane"
-        onClick={(event) => letGoOnBlankClick({ pinned: pinnedNow, onPick }, event)}
-      >
-        <span>Each row is 40 values</span>
-        <button type="button">Group by</button>
-        <div role="combobox" aria-controls="menu" aria-expanded="false" tabIndex={0}>
-          menu
-        </div>
-        <div className="modebar">
-          <span>zoom in</span>
-        </div>
-        <svg role="img" aria-label="matrix">
-          <rect data-testid="square" className="nsewdrag" />
-          <rect data-testid="axis" className="xdrag" />
-        </svg>
-        {createPortal(<div>an option</div>, document.body)}
-      </div>
-    );
-    return onPick;
-  }
-
-  it.each([
-    ['the pane', () => screen.getByTestId('pane')],
-    ['a note', () => screen.getByText('Each row is 40 values')],
-    ['an axis', () => screen.getByTestId('axis')],
-  ])('lets go on a click on %s', (_, target) => {
-    const onPick = pane();
-    fireEvent.click(target());
-    expect(onPick).toHaveBeenCalledExactlyOnceWith(null);
-  });
-
-  it.each([
-    ['a button', () => screen.getByRole('button')],
-    ['a menu', () => screen.getByRole('combobox')],
-    ['the plot’s buttons', () => screen.getByText('zoom in')],
-    ['a square, whose click pins', () => screen.getByTestId('square')],
-    ['a menu’s option, out of the pane', () => screen.getByText('an option')],
-  ])('keeps it on a click on %s', (_, target) => {
-    const onPick = pane();
-    fireEvent.click(target());
-    expect(onPick).not.toHaveBeenCalled();
-  });
-
-  it('keeps text just selected, as a pathway’s name to copy', () => {
-    const onPick = pane();
-    const note = screen.getByText('Each row is 40 values');
-    window.getSelection()?.selectAllChildren(note);
-    fireEvent.click(note);
-    window.getSelection()?.removeAllRanges();
-    expect(onPick).not.toHaveBeenCalled();
-  });
-
-  it('does nothing with no pathway pinned', () => {
-    const onPick = pane(null);
-    fireEvent.click(screen.getByTestId('pane'));
-    expect(onPick).not.toHaveBeenCalled();
   });
 });
