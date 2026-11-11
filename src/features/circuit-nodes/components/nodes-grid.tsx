@@ -19,7 +19,7 @@ import { saveAs } from 'file-saver';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { useAppModal } from '@/components/notification';
+import { useAppModal, useAppNotification } from '@/components/notification';
 import { CategoricalFilter } from '@/features/circuit-nodes/components/categorical-filter';
 import { ColumnChooser } from '@/features/circuit-nodes/components/column-chooser';
 import { ColumnHeader } from '@/features/circuit-nodes/components/column-header';
@@ -985,6 +985,7 @@ export function NodesGrid({
     };
   }, []);
   const modal = useAppModal();
+  const notification = useAppNotification();
   const [downloaded, setDownloaded] = useState<number | null>(null);
   const downloading = downloaded !== null;
   const downloadCsv = async () => {
@@ -1021,6 +1022,12 @@ export function NodesGrid({
       if (whole) saveAs(new Blob(parts, { type: 'text/csv;charset=utf-8' }), `${downloadName}.csv`);
     } catch (error) {
       logError('The rows on show could not be downloaded:', error);
+      if (mountedRef.current) {
+        notification.error({
+          message: 'The rows could not be downloaded',
+          description: error instanceof Error ? error.message : undefined,
+        });
+      }
     } finally {
       setDownloaded(null);
     }

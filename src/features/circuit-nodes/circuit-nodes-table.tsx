@@ -214,9 +214,13 @@ export default function CircuitNodesTable({
                 description: `Their property values don't pick out exactly these ${shown.length.toLocaleString()} neurons, and an ID neuron set holds at most ${MAX_ID_SET_CELLS.toLocaleString()}. Select fewer, or filter by property values instead.`,
               });
             })
-            .catch((error: unknown) =>
-              logError('The neurons on show could not be made a neuron set:', error)
-            )
+            .catch((error: unknown) => {
+              logError('The neurons on show could not be made a neuron set:', error);
+              notification.error({
+                message: 'The neuron set could not be created',
+                description: error instanceof Error ? error.message : undefined,
+              });
+            })
             .finally(() => setMakingSet(false));
         }
       : undefined;
