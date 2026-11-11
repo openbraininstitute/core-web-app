@@ -164,9 +164,10 @@ export function createLandingTileRenderer(
     })),
   ];
   // where the chosen one goes, in the right third, its tile growing as if to a cube this big as the cube melts away
-  // from round it; and how far a moving tile bows off its way
+  // from round it; and how far a moving tile bows off its way (none: a straight path, user: the arc "makes the
+  // animation look weird"; it was 90)
   const HERO_TILE = { x: 1590, y: 540, r: 330 },
-    BOW = 90;
+    BOW = 0;
   // the chosen one itself, out of its cube: as wide as the example says, within this box
   const BIG_W = 720,
     BIG_H = 820;
@@ -210,6 +211,9 @@ export function createLandingTileRenderer(
     INTRO_FLIP_DUR = 1100;
   // cube face shading while turning, only on the picture tiles (strength as on index.html)
   const FACE_SHADE = 0.28;
+  // At rest the tiles are flat hexagons, as on the About and Team pages (user): no face is shaded, so a cube seen
+  // along its diagonal shows as a plain hexagon; they read as cubes only while they turn. false = cubes at rest too.
+  const FLAT_AT_REST = true;
   const SHADE_PICTURE = 0.5,
     SHADE_WHITE = 0.1; // share of FACE_SHADE on picture tiles / white tiles
   // shine while a tile grows or shrinks under the mouse (1 = same as the lift from the floor)
@@ -449,10 +453,31 @@ export function createLandingTileRenderer(
 
     // soft shadow, offset down-left, bigger and softer the higher the tile is (as on index.html);
     // drawn from ready-made blurred hexagons, so a hundred tiles stay cheap
+    // flat hexagons (`FLAT_AT_REST`) turn as flat hexagons too: about their upright axis, edge-on half-way, the new
+    // picture on the other side (user: "just rotation of hexagons", not cubes); `across` is how wide it shows
+    const flatTurn = FLAT_AT_REST && p >= 1e-4 && p <= 1 - 1e-4,
+      across = flatTurn ? Math.max(0.02, Math.abs(Math.cos(Math.PI * p))) : 1;
+    const squeezed = (paint) => {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(across, 1);
+      ctx.translate(-x, -y);
+      paint();
+      ctx.restore();
+    };
     if (h > 0.004) {
       const k = Math.sqrt(r / R);
       const sigma = (4 + h * 28) * 0.5 * Math.min(k, 2.4);
-      drawShadow(x - 8 * h * k, y + 14 * h * k, r, sigma, Math.min(0.28, h * 0.3) * 1.1 * shadowK);
+      const shadow = () =>
+        drawShadow(
+          x - 8 * h * k,
+          y + 14 * h * k,
+          r,
+          sigma,
+          Math.min(0.28, h * 0.3) * 1.1 * shadowK
+        );
+      if (flatTurn) squeezed(shadow);
+      else shadow();
     }
 
     const pic = (slice, ref, pts, alpha) => {
@@ -485,6 +510,30 @@ export function createLandingTileRenderer(
       ctx.closePath();
     };
 
+    if (flatTurn) {
+      const slice = p < 0.5 ? pic0 : pic1;
+      squeezed(() => {
+        hexPath(r);
+        ctx.fillStyle = '#fff';
+        ctx.fill();
+        if (slice) {
+          ctx.save();
+          ctx.clip();
+          const k = r / rs,
+            sw = Math.sqrt(3) * rs * k,
+            sh = 2 * rs * k;
+          ctx.drawImage(slice, x - sw / 2, y - sh / 2, sw, sh);
+          ctx.restore();
+        }
+        // a little darker the further it has turned from the light
+        hexPath(r);
+        ctx.globalAlpha = 0.22 * (1 - across) * (shade ? 1 : 0.4);
+        ctx.fillStyle = 'rgb(30, 45, 80)';
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      });
+      return;
+    }
     if (p < 1e-4 || p > 1 - 1e-4) {
       // at rest the faces exactly make up the hexagon and show the picture undistorted: draw it in one piece (no seams)
       const slice = p < 0.5 ? pic0 : pic1;
@@ -501,7 +550,7 @@ export function createLandingTileRenderer(
       }
       ctx.restore();
       // face shading at rest too (picture tiles only): each visible cube face darkened by how much it faces away
-      if (shade) {
+      if (shade && !FLAT_AT_REST) {
         ctx.fillStyle = 'rgb(30, 45, 80)';
         for (const v of vis) {
           tracePath(v.pts);
