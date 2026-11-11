@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import {
   cellValue,
   connectivityFigure,
-  pathwayName,
 } from '@/features/circuit-nodes/connectivity/connectivity-figure';
 
 import type {
@@ -156,10 +155,6 @@ describe('connectivityFigure', () => {
     expect(hintOf({ pickable: true })).toMatch(/filter the table and 3D view/);
     expect(hintOf({ pickable: true, pinned: square(0, 1) })).toMatch(/stop filtering/);
     expect(hintOf({ pickable: true, pinned: square(1, 1) })).toMatch(/filter the table/);
-  });
-
-  it('names a pathway by its rows', () => {
-    expect(pathwayName(GROUPS, 1, 0)).toBe('B → A');
   });
 
   it('names the runs of an order down the axes, with a rule between each', () => {

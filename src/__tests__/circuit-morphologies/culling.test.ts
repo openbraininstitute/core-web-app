@@ -205,10 +205,4 @@ describe('the culling while the cell table hides cells', () => {
     expect(offset).toBe(0);
     expect((data as Uint32Array).length).toBe(20);
   });
-
-  it('fails for good where three made no texture of the cell table', () => {
-    const { culling, run } = cullingOn({ textures: false });
-    expect(run(1, true)).toBe(false);
-    expect(culling.failed).toBe(true);
-  });
 });

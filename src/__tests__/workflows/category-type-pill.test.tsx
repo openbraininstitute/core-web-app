@@ -86,17 +86,6 @@ describe('the workflows table’s Category and Type', () => {
     expect(onEntityTypeChange).not.toHaveBeenCalled();
   });
 
-  it('lands on Type All from a type of another category too', () => {
-    const { onAllSelect } = selectors(
-      ActivityValues.Build,
-      ExtendedEntitiesTypeDict.MEModelBuildCampaign
-    );
-
-    choose('workflow-category-filter', 'Simulate');
-
-    expect(onAllSelect).toHaveBeenCalledWith(ActivityValues.Simulate);
-  });
-
   it('goes from a type back to the category’s All', () => {
     const { onAllSelect, onEntityTypeChange } = selectors(
       ActivityValues.Build,

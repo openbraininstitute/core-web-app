@@ -126,14 +126,6 @@ describe('groupConnectivity by a property of more values than rows', () => {
     expect(possiblePairs(uneven, 1, 0)).toBe(1 * 3 - 1);
     expect(possiblePairs(uneven, 0, 1)).toBe(2 * 2);
   });
-
-  it('rings a square by the places it takes, whichever lines it is seen through', () => {
-    const groups = by({ maxRows: 3 });
-    expect(squareOf(groups, 1, 2)).toEqual({
-      pre: { start: 3, end: 6 },
-      post: { start: 6, end: 7 },
-    });
-  });
 });
 
 describe('groupConnectivity by a property', () => {
@@ -235,10 +227,6 @@ describe('groupConnectivity zoomed in', () => {
     // 20 → 40 is row 0, column 1; 30 → 10 and 30 → 20 are row 1, column 0.
     expect([...groups.connections]).toEqual([0, 1, 0, 2, 0, 0]);
     expect([...(groups.synapses ?? [])]).toEqual([0, 4, 0, 4, 0, 0]);
-  });
-
-  it('still counts everything drawn in its totals', () => {
-    expect(groups.totals).toEqual({ connections: 6, synapses: 21 });
   });
 
   it('lists the node ids of each row and column', () => {

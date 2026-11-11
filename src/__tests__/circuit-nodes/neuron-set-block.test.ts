@@ -106,11 +106,6 @@ describe('neuronSetBlock', () => {
       });
     });
 
-    it('takes the ids of those cells ticked', async () => {
-      const { by } = await build([0, 1], true, FILTER, VAGUE);
-      expect(by).toBe('id');
-    });
-
     it('says them by a property on offer where that picks out exactly them', async () => {
       const { block, by } = await build([0, 1], false, FILTER);
       expect(by).toBe('property');

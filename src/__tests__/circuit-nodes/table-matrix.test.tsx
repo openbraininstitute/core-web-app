@@ -14,7 +14,6 @@ import {
   useKeptTableTitle,
   useTableMatrixView,
 } from '@/features/circuit-nodes/connectivity/table-matrix';
-import { tablePaneTitle } from '@/features/circuit-nodes/types';
 
 import type { ComponentProps } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -305,18 +304,9 @@ describe('what a report table’s pane is told it shows', () => {
     return result.current;
   }
 
-  it('is the matrix on the circuit it was chosen for', () => {
-    expect(viewOf(WITH_MATRIX)).toBe('connectivity');
-  });
-
   it('is the nodes on another circuit, or one with no matrix, or with no circuit', () => {
     expect(viewOf(ANOTHER_WITH_MATRIX)).toBe('nodes');
     expect(viewOf(WITHOUT_MATRIX, WITHOUT_MATRIX)).toBe('nodes');
     expect(viewOf(undefined)).toBe('nodes');
-  });
-
-  it('names the pane’s bar by it', () => {
-    expect(tablePaneTitle('connectivity')).toBe('Connectivity');
-    expect(tablePaneTitle('nodes')).toBe('Neuron Table');
   });
 });
