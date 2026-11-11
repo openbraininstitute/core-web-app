@@ -34,7 +34,15 @@ type RequestOptions = {
   headers?: Record<string, string | undefined>;
   queryParams?: Record<
     string,
-    string | number | string[] | number[] | null | undefined | boolean | Date | (string | null)[]
+    | string
+    | number
+    | ReadonlyArray<string>
+    | ReadonlyArray<number>
+    | null
+    | undefined
+    | boolean
+    | Date
+    | ReadonlyArray<string | null>
   >;
   body?: any;
   signal?: AbortSignal;

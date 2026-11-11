@@ -4,6 +4,7 @@ import {
   getCellMorphologies,
   getCellMorphology,
 } from '@/api/entitycore/queries/experimental/cell-morphology';
+import { CellMorphologyEntityExpand } from '@/api/entitycore/types/entities/cell-morphology';
 import { CellMorphologyGenerationTypeDictionary } from '@/api/entitycore/types/entities/cell-morphology-protocol';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -17,6 +18,7 @@ import type {
   ICellMorphology,
   ICellMorphologyExpanded,
 } from '@/api/entitycore/types/entities/cell-morphology';
+import type { TMeasurableEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
 export const cellMorphologyGenerationTypeFilter = {
@@ -34,7 +36,12 @@ function narrowFilters(filters?: CellMorphologyFilter) {
   };
 }
 
-export const CellMorphology: EntityCoreTypeConfig<ICellMorphology | ICellMorphologyExpanded> = {
+export const CellMorphology: EntityCoreTypeConfig<
+  ICellMorphology | ICellMorphologyExpanded,
+  never,
+  never,
+  TMeasurableEntityExpandParam
+> = {
   group: EntityTypeGroup.Experimental,
   title: 'Morphology',
   extendedType: ExtendedEntitiesTypeDict.CellMorphology,
@@ -45,6 +52,7 @@ export const CellMorphology: EntityCoreTypeConfig<ICellMorphology | ICellMorphol
       allowedFacets: true,
       extraQueryKeyBuilder: { ...cellMorphologyGenerationTypeFilter },
       ilikeSearchEnabled: true,
+      entityExpand: CellMorphologyEntityExpand,
     },
     query: {
       list: (...params) => {

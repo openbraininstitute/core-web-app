@@ -25,5 +25,6 @@ export function parseYouTubeId(input: string | null | undefined): string | null 
   return id && id !== 'videoseries' && ID.test(id) ? id : null;
 }
 
-export const youTubeEmbedUrl = (id: string, autoplay = false) =>
-  `https://www.youtube-nocookie.com/embed/${id}?rel=0&playsinline=1${autoplay ? '&autoplay=1' : ''}`;
+/** Player parameters: https://developers.google.com/youtube/player_parameters */
+export const youTubeEmbedUrl = (id: string, params: Record<string, string> = {}) =>
+  `https://www.youtube-nocookie.com/embed/${id}?${new URLSearchParams({ rel: '0', playsinline: '1', ...params })}`;

@@ -1,6 +1,7 @@
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TMeasurableEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { AwaitedType, WorkspaceContext } from '@/types/common';
 
@@ -20,10 +21,13 @@ export async function retrieveEntity({
   type,
   id,
   ctx,
+  withEntityExpand = false,
 }: {
   type: TExtendedEntitiesTypeDict;
   id: string;
   ctx: WorkspaceContext;
+  /** Also request the type's `entityExpand`; only for views that render the expanded data. */
+  withEntityExpand?: boolean;
 }) {
   if (!type || !id) throw new Error('Type and ID are required to download an entity.');
 
@@ -31,11 +35,22 @@ export async function retrieveEntity({
   if (!entityType) throw new Error(`Unsupported entity type: ${type}`);
 
   const request = entityType.api.query.one;
+  // `request` is a union of every type's `one`, so a direct call intersects their `expand`
+  // params (microsoft/TypeScript#30581). Widen the call only: `expand` is the same type's
+  // `entityExpand`, which its `one` accepts. The return type stays per entity type.
+  const one = request as (query: {
+    id: string;
+    context: WorkspaceContext;
+    expand?: ReadonlyArray<TMeasurableEntityExpandParam>; // widest set (includes the generic one)
+  }) => ReturnType<typeof request>;
+
+  // opt-in: expanded fields cost extra loads on the API, so plain reads skip them
+  const expand = withEntityExpand ? entityType.api.config.entityExpand : undefined;
 
   let entity: AwaitedType<ReturnType<typeof request>> | undefined;
 
   try {
-    entity = await request({ id, context: ctx });
+    entity = await one({ id, context: ctx, expand });
   } catch {
     throw new Error(`Failed to fetch entity of type ${type} with ID ${id}`);
   }
