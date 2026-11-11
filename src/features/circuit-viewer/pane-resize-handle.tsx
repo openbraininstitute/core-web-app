@@ -27,7 +27,6 @@ export function PaneResizeHandle({
 }) {
   function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
     if (e.button !== 0) return;
-    e.preventDefault();
     const container = containerRef.current;
     if (!container) return;
     const {
@@ -53,7 +52,7 @@ export function PaneResizeHandle({
   return (
     <div
       onPointerDown={onPointerDown}
-      className={`group absolute left-0 right-0 ${edge === 'bottom' ? '-bottom-2' : '-top-2'} z-10 flex h-4 cursor-ns-resize items-center justify-center`}
+      className={`group absolute left-0 right-0 ${edge === 'bottom' ? '-bottom-2' : '-top-2'} z-10 flex h-4 cursor-ns-resize select-none items-center justify-center`}
       style={{ touchAction: 'none' }}
     >
       <div className="h-1 w-14 rounded-full bg-neutral-400 transition-all group-hover:w-16 group-hover:bg-neutral-600" />
@@ -82,7 +81,6 @@ export function PaneSideResizeHandle({
 }) {
   function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
     if (e.button !== 0) return;
-    e.preventDefault();
     const container = containerRef.current;
     if (!container) return;
     const { left: containerLeft, width: containerWidth } = container.getBoundingClientRect();
@@ -100,7 +98,7 @@ export function PaneSideResizeHandle({
   return (
     <div
       onPointerDown={onPointerDown}
-      className="group absolute top-0 bottom-0 -left-2 z-10 flex w-4 cursor-ew-resize items-center justify-center"
+      className="group absolute top-0 bottom-0 -left-2 z-10 flex w-4 cursor-ew-resize select-none items-center justify-center"
       style={{ touchAction: 'none' }}
     >
       <div className="h-14 w-1 rounded-full bg-neutral-400 transition-all group-hover:h-16 group-hover:bg-neutral-600" />
