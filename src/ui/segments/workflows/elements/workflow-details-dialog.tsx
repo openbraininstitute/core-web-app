@@ -43,21 +43,21 @@ export function WorkflowDetailsDialog({
   // open effect runs again whenever this changes
   const focusName = useCallback(() => nameRef.current?.select(), []);
 
+  // only what was edited: a field left alone must not undo what someone else saved to it meanwhile
+  const edits = {
+    ...(name.trim() !== (row.name ?? '') ? { name: name.trim() } : {}),
+    ...(description.trim() !== descriptionOf(row) ? { description: description.trim() } : {}),
+  };
+
   const save = useMutation({
-    mutationFn: () =>
-      updateEntity({
-        type: row.type,
-        id: row.id,
-        data: { name: name.trim(), description: description.trim() },
-        context: workspace,
-      }),
+    mutationFn: () => updateEntity({ type: row.type, id: row.id, data: edits, context: workspace }),
     onSuccess: async () => {
       await onSaved();
       onClose();
     },
   });
 
-  const changed = name.trim() !== (row.name ?? '') || description.trim() !== descriptionOf(row);
+  const changed = Object.keys(edits).length > 0;
   const canSave = name.trim().length > 0 && changed && !save.isPending;
 
   const footer = (

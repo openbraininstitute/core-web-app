@@ -373,6 +373,17 @@ describe('editing the name and description of a row', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   });
 
+  it('saves only the field that was edited, leaving the other as the entity has it', async () => {
+    updateEntity.mockResolvedValue({});
+    open();
+
+    fireEvent.change(field('Name'), { target: { value: 'Renamed' } });
+    fireEvent.click(save());
+
+    await waitFor(() => expect(updateEntity).toHaveBeenCalled());
+    expect(updateEntity.mock.calls[0][0].data).toEqual({ name: 'Renamed' });
+  });
+
   it('offers Save only once something changed, and never for an empty name', () => {
     open();
     expect(save().disabled).toBe(true);
