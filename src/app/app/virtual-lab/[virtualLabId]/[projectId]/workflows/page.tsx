@@ -50,7 +50,7 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
   );
 
   const onSelectCategory = (value: TActivityValue | null) => {
-    updateWorkflowState(() => ({ activity: value, entityType: null }));
+    updateWorkflowState(() => ({ activity: value === activity ? null : value, entityType: null }));
   };
 
   const onSelectType = async (value: TExtendedEntitiesTypeDict | null) => {
@@ -94,12 +94,6 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
           transition={{
             duration: 0.2,
             ease: 'easeInOut',
-          }}
-          onClick={(event) => {
-            // On the window itself, between its cards and buttons: back to the categories alone.
-            if (activity && !(event.target as Element).closest('button, [role="button"]')) {
-              onSelectCategory(null);
-            }
           }}
         >
           <CategoryMenu current={activity} onItemClick={onSelectCategory} />
