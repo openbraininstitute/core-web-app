@@ -37,6 +37,7 @@ export function MenuItem<T>({
         'flex flex-col border-white bg-white px-4 py-2',
         'shadow-[16px_16px_30px_0px_#0000000,-12px_-8px_32px_0px_#FFFFFF52]',
         'h-full select-none',
+        'focus-visible:outline-primary-9 focus-visible:outline-2 focus-visible:outline-offset-2',
         disabled
           ? 'cursor-not-allowed border! border-gray-200 bg-gray-100/50'
           : 'group cursor-pointer hover:bg-primary-9 hover:text-white',
@@ -46,7 +47,19 @@ export function MenuItem<T>({
       role="button"
       data-testid={testId}
       aria-disabled={disabled}
+      tabIndex={disabled ? -1 : 0}
       onClick={disabled ? undefined : () => onClick(value)}
+      onKeyDown={
+        disabled
+          ? undefined
+          : (event) => {
+              if (event.target !== event.currentTarget) return;
+              if (event.key !== 'Enter' && event.key !== ' ') return;
+              // Space would scroll the page as well.
+              event.preventDefault();
+              onClick(value);
+            }
+      }
     >
       <CardTitle
         className={cn(

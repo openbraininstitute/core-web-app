@@ -97,26 +97,34 @@ async function expectOpen() {
 }
 
 describe('the workflows page’s top window', () => {
-  it('deselects the category and shuts the Type row on a click on its white space', async () => {
-    await page();
-
-    fireEvent.click(screen.getByTestId('workflow-scrollable-selector'));
-
-    await expectCollapsed();
-  });
-
-  it('does so on a click on a heading, which is no control', async () => {
-    await page();
-
-    fireEvent.click(screen.getByTestId('heading'));
-
-    await expectCollapsed();
-  });
-
-  it('stays through a click on a card, a disabled one or a button', async () => {
+  it('deselects the category and shuts the Type row on a click on its lit card', async () => {
     await page();
 
     fireEvent.click(screen.getByTestId('card'));
+
+    await expectCollapsed();
+  });
+
+  it('takes the keyboard as it takes a click, a disabled card taking neither', async () => {
+    await page();
+    expect(screen.getByTestId('disabled-card')).toHaveAttribute('tabindex', '-1');
+    fireEvent.keyDown(screen.getByTestId('disabled-card'), { key: 'Enter' });
+    await expectOpen();
+
+    screen.getByTestId('card').focus();
+    expect(screen.getByTestId('card')).toHaveFocus();
+    fireEvent.keyDown(screen.getByTestId('card'), { key: 'Enter' });
+    await expectCollapsed();
+
+    fireEvent.keyDown(screen.getByTestId('card'), { key: ' ' });
+    expect(await screen.findByText('lit: simulate')).toBeInTheDocument();
+  });
+
+  it('stays through a click on its white space, a heading, a disabled card or a button', async () => {
+    await page();
+
+    fireEvent.click(screen.getByTestId('workflow-scrollable-selector'));
+    fireEvent.click(screen.getByTestId('heading'));
     fireEvent.click(screen.getByTestId('disabled-card'));
     fireEvent.click(screen.getByTestId('carousel-button'));
 
@@ -136,7 +144,7 @@ describe('the workflows page’s top window', () => {
 
   it('opens again on a click on a category', async () => {
     await page();
-    fireEvent.click(screen.getByTestId('workflow-scrollable-selector'));
+    fireEvent.click(screen.getByTestId('card'));
     await expectCollapsed();
 
     fireEvent.click(screen.getByTestId('card'));
