@@ -1,5 +1,5 @@
 import { atom, useAtom } from 'jotai';
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 
 import { logError } from '@/utils/logger';
 
@@ -93,6 +93,11 @@ export function useMatrixPin({
 }) {
   const [stored, setStored] = useAtom(pinAtom);
   const pinned = stored?.scope === scope && filterModel[COLUMN] ? stored.pinned : null;
+  // The filter as it is once the session has taken the column, not as it was when asked.
+  const filterModelRef = useRef(filterModel);
+  useLayoutEffect(() => {
+    filterModelRef.current = filterModel;
+  });
 
   // A session opened anew over the same cells, as for the next simulation, hears of it again,
   // and the filter's rows are asked for over it.
@@ -102,7 +107,7 @@ export function useMatrixPin({
     let cancelled = false;
     setDerivedColumns(OWNER, [pathwayColumn(pinned, rowCount)])
       .then(() => {
-        if (!cancelled) setFilterModel({ ...filterModel });
+        if (!cancelled) setFilterModel({ ...filterModelRef.current });
       })
       // The session closed underneath; its next ready state tells it again.
       .catch(() => {});
@@ -132,7 +137,7 @@ export function useMatrixPin({
       .then(() => {
         clearTicks?.();
         setStored({ scope, pinned: next });
-        setFilterModel({ ...filterModel, [COLUMN]: IN_PATHWAY });
+        setFilterModel({ ...filterModelRef.current, [COLUMN]: IN_PATHWAY });
       })
       .catch((error: unknown) => logError('The table could not be filtered to a pathway:', error));
   };

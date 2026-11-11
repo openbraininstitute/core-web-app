@@ -118,6 +118,27 @@ describe('useMatrixPin', () => {
     expect(result.current.pin.pinned).toBeNull();
   });
 
+  it('keeps a filter set while the session was taking the column', async () => {
+    const { result, setDerivedColumns } = pinned();
+    let taken = () => {};
+    setDerivedColumns.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          taken = resolve;
+        })
+    );
+    const L6: FilterModel = { mtype: { filterType: 'set', values: ['L6_BPC'] } };
+
+    act(() => result.current.pin.onPick(PINNED));
+    act(() => result.current.setFilterModel(L6));
+    await act(async () => taken());
+
+    expect(result.current.filterModel).toEqual({
+      ...L6,
+      [COLUMN]: { filterType: 'set', values: ['Presynaptic', 'Postsynaptic', 'Both'] },
+    });
+  });
+
   it('tells a session opened anew over the same cells, and asks for the rows over it', async () => {
     const { result, rerender, setDerivedColumns } = pinned();
     await act(async () => result.current.pin.onPick(PINNED));
