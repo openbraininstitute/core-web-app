@@ -69,6 +69,8 @@ export function useCompartmentPlaces({
     const location = resolveMorphologyLocation(circuitConfig.raw, populationName);
     if (!location) return;
     let cancelled = false;
+    // rejecting what it drops, so the measuring it leaves behind ends
+    const limit = pLimit({ concurrency: MORPHOLOGY_LOADS, rejectOnClear: true });
     const measure = async () => {
       const morphologies = await getColumn('morphology');
       const nameOf = (nodeId: number) =>
@@ -77,7 +79,6 @@ export function useCompartmentPlaces({
           : morphologies.kind === 'string'
             ? morphologies.values[nodeId]
             : undefined;
-      const limit = pLimit(MORPHOLOGY_LOADS);
       const pathsOf = new Map<string, Promise<Map<number, SectionPath> | null>>();
       const failed = new Set<string>();
       const distances = new Map<number, number>();
@@ -98,7 +99,7 @@ export function useCompartmentPlaces({
               .then(sectionPaths)
               // one morphology that will not load leaves its cells unmeasured, and no other
               .catch(() => {
-                failed.add(name);
+                if (!cancelled) failed.add(name);
                 return null;
               });
             pathsOf.set(name, pending);
@@ -134,6 +135,8 @@ export function useCompartmentPlaces({
     );
     return () => {
       cancelled = true;
+      // the morphologies not yet asked for; those on their way are shared with the 3D view
+      limit.clearQueue();
     };
   }, [
     enabled,

@@ -53,16 +53,19 @@ function places(cells: number) {
     values: Array.from({ length: cells }, (_, nodeId) => `m${nodeId}`),
   } as unknown as ColumnValues;
   const client = new QueryClient();
+  // the same between renders, as the viewer's are: new ones would start the measuring again
+  const circuitConfig = { raw: {} } as ParsedCircuitConfig;
+  const getColumn = async () => morphology;
   return renderHook(
     () =>
       useCompartmentPlaces({
         enabled: true,
         circuitId: 'circuit',
-        circuitConfig: { raw: {} } as ParsedCircuitConfig,
+        circuitConfig,
         populationName: 'All',
         compartments,
         offsets: undefined,
-        getColumn: async () => morphology,
+        getColumn,
       }),
     {
       wrapper: ({ children }: { children: ReactNode }) => (
@@ -85,6 +88,19 @@ describe('useCompartmentPlaces', () => {
     expect([...(result.current?.distances.keys() ?? [])].sort()).toEqual([0, 2]);
     // halfway along a 100 µm section that starts 10 µm out
     expect(result.current?.distances.get(0)).toBe(60);
+  });
+
+  it('asks for no more morphologies once it is let go of', async () => {
+    const answer: (() => void)[] = [];
+    h.load = () => new Promise((resolve) => answer.push(() => resolve([])));
+    const { unmount } = places(40);
+    await waitFor(() => expect(answer).toHaveLength(8));
+
+    unmount();
+    for (const done of answer) done();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    expect(answer).toHaveLength(8);
   });
 
   it('asks for a few morphologies at a time, not every cell’s at once', async () => {
