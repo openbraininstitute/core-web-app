@@ -144,13 +144,17 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
   );
   // One fit is one change: the widths are measured and planned first and applied together,
   // so the columns to the right of a capped or shrunk one move once, not twice.
+  const fitFrame = useRef(0);
+  useEffect(() => () => cancelAnimationFrame(fitFrame.current), []);
   const fitColumns = useCallback(() => {
     const api = apiRef.current;
     if (!api || api.isDestroyed() || fitted.length === 0) return;
     // a page still loading has nothing to fit to, so the last page's widths stay
     if (api.getDisplayedRowCount() === 0) return;
-    // a frame on, so the cells the rows just brought are committed and measured
-    requestAnimationFrame(() => {
+    // a frame on, so the cells the rows just brought are committed and measured; one fit a
+    // frame, however often it is asked for, as by a resize's every step
+    cancelAnimationFrame(fitFrame.current);
+    fitFrame.current = requestAnimationFrame(() => {
       const root = rootRef.current;
       if (api.isDestroyed() || !root) return;
       const natural = measureContentWidths(
