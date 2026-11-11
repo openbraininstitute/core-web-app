@@ -119,7 +119,7 @@ describe('csvCell', () => {
     expect(csvCell(-5)).toBe('-5');
     expect(csvCell('-5.25')).toBe('-5.25');
     expect(csvCell('+1e3')).toBe('+1e3');
-    expect(csvCell(-12n)).toBe('-12');
+    expect(csvCell(BigInt(-12))).toBe('-12');
     expect(csvCell('L5_TPC:A')).toBe('L5_TPC:A');
   });
 });
