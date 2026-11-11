@@ -65,6 +65,16 @@ export interface IWorkflowActivitySchemaArgs {
   workspace: WorkspaceContext;
 }
 
+const joinedStatuses = (row: EntityCoreObjectTypes): string => {
+  const rows = (row as { rows?: unknown }).rows;
+  if (!Array.isArray(rows)) return '';
+  return rows
+    .map((each: { id?: string; execution?: { status?: string } | null }) =>
+      [each.id, each.execution?.status].join(':')
+    )
+    .join(',');
+};
+
 /**
  * The workflow-activity listing schema. Built per (activity, type, workspace) rather than
  * declared statically: `cellRendererParams` is the only channel into a keyed renderer,
@@ -154,7 +164,9 @@ export function buildWorkflowActivitySchema({
         id: 'status',
         header: 'Status',
         align: Align.Center,
-        getValue: () => '',
+        // never shown: a refetched row re-renders only the cells whose value changed, so the
+        // executions joined into a row must count as one for its badge to follow them
+        getValue: joinedStatuses,
         cellRenderer: WORKFLOW_ACTIVITY_STATUS_RENDERER,
         cellRendererParams: { workspace, activity, entityType },
         // the badge opens its own card of executions on hover

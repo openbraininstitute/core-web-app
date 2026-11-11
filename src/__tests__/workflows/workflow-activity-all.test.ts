@@ -275,6 +275,17 @@ describe('createAllWorkflowsDataSource', () => {
     expect(name(ExtendedEntitiesTypeDict.MicrocircuitSimulation)?.sortable).toBe(true);
   });
 
+  it('gives the Status cell a value that changes with a row’s joined executions', () => {
+    const status = schema.columns.find(({ id }) => id === 'status');
+    const statusValue = (rows?: unknown[]) =>
+      status?.getValue?.({ ...row('t1', 1), rows } as unknown as EntityCoreObjectTypes);
+
+    expect(statusValue()).toBe('');
+    expect(statusValue([{ id: 'c1:e1', execution: { status: 'running' } }])).not.toBe(
+      statusValue([{ id: 'c1:e1', execution: { status: 'done' } }])
+    );
+  });
+
   it('breaks ties as EntityCore does, so no row goes missing between pages', async () => {
     // made at the same moment, so the order falls to the id, upwards whichever way the sort runs
     const one = source(ExtendedEntitiesTypeDict.MicrocircuitSimulation, [row('d', 1), row('b', 1)]);
