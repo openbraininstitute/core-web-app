@@ -1,3 +1,7 @@
+packages:
+  - apps/*
+  - packages/*
+
 overrides:
   # CodeMirror requires a single @codemirror/state instance across all packages.
   # Transitive deps pulled in both 6.6.0 and 6.7.x, which broke EditorState.create

@@ -1,8 +1,13 @@
+import path from 'node:path';
+
 import { type SentryBuildOptions, withSentryConfig } from '@sentry/nextjs';
 
 import type { NextConfig } from 'next/dist/types';
 
 const appVersion = process.env.APP_VERSION;
+
+// pnpm's store (<root>/node_modules/.pnpm) and workspace packages sit above this app
+const workspaceRoot = path.join(import.meta.dirname, '../..');
 
 const isPreviewBuild = !!(process.env.AWS_APP_ID || process.env.AWS_AMPLIFY_BUILD);
 
@@ -40,7 +45,9 @@ const config: NextConfig = {
     serverSourceMaps: !isPreviewBuild,
   },
   reactCompiler: true,
+  outputFileTracingRoot: workspaceRoot,
   turbopack: {
+    root: workspaceRoot,
     rules: {
       '*.groq': {
         loaders: ['raw-loader'],

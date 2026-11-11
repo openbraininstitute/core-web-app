@@ -54,6 +54,19 @@ Core web application for the Open Brain Institute. Built with Next.js, it provid
 
 ## Project structure
 
+The repository is a [Turborepo](https://turborepo.dev) monorepo on pnpm workspaces.
+Apps live in `apps/`, shared packages in `packages/` (none yet). Root scripts run
+through `turbo run`, which orders tasks by workspace dependencies and caches results.
+
+```text
+apps/web/                 The Next.js platform app (package @obi/web)
+packages/                 Shared workspace packages
+turbo.json                Task graph: build, dev, lint, typecheck, test, knip
+scripts/monorepo/         One-off helper to port branches across the move to apps/web
+```
+
+Inside `apps/web`:
+
 ```text
 src/
   app/                    Next.js App Router routes, layouts, route handlers, and errors
@@ -172,7 +185,7 @@ http://localhost:3000
 
 ## Configuration
 
-Configuration is defined in [`src/config/schema.ts`](./src/config/schema.ts) and
+Configuration is defined in [`apps/web/src/config/schema.ts`](./apps/web/src/config/schema.ts) and
 validated with Zod.
 
 Tracked environment files provide shared defaults:
@@ -269,6 +282,10 @@ When `API_ORIGIN` is set, missing service URLs default to
 
 ### Common commands
 
+Run from the repository root. `dev`, `build`, `start`, `lint`, `typecheck`, `test` and `knip`
+go through turbo for every workspace; any other app script runs with
+`pnpm --filter @obi/web <script>` (or `pnpm <script>` inside `apps/web`).
+
 | Command | Purpose |
 | --- | --- |
 | `pnpm run dev` | Start the local Next.js dev server. |
@@ -325,8 +342,8 @@ For shared behavior, platform integrations, or route changes, run the full set.
 pnpm run ci
 pnpm run typecheck
 pnpm run test
-pnpm run test:node
-pnpm run check-imports:all
+pnpm --filter @obi/web test:node
+pnpm --filter @obi/web check-imports:all
 pnpm run knip
 pnpm run build
 ```
@@ -346,7 +363,10 @@ Notes:
 
 ## Docker
 
-The Docker image builds a standalone Next.js server with Node 24 Alpine.
+The Docker image builds a standalone Next.js server with Node 24 Alpine. The Dockerfile is
+`apps/web/Dockerfile` and builds from the repository root (`docker build -f apps/web/Dockerfile .`);
+`turbo prune` keeps only the app and the packages it uses, so the install layer is reused
+until dependencies change.
 
 ```bash
 make build
