@@ -1,0 +1,81 @@
+/*
+ * Where the live landing puts its logo and words (landing-tile-stage.module.css): its 1920 x 1080 stage scaled by
+ * u = min(width / 1920, height / 1080) and centred, the logo at --words-left / --words-top, 120 tall, the words
+ * 36 under it in lines of 50. Entrances as the live ones (LANDING_WORDS_IN_MS).
+ */
+/* see-through: the tiles start rising under it while the words are still coming in */
+.firstPaint {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  container-type: size;
+  pointer-events: none;
+}
+.firstPaint[data-handed-off] {
+  display: none;
+}
+/* the live logo and words are under it, in place: unseen until it goes, which shows them in the same frame */
+@media (min-width: 800px) {
+  :global(body:has([data-landing-first-paint]:not([data-handed-off])) [data-walkthrough-logo]),
+  :global(body:has([data-landing-first-paint]:not([data-handed-off])) [data-walkthrough-intro] h1) {
+    visibility: hidden;
+  }
+}
+.logo,
+.words {
+  --u: min(calc(100cqw / 1920), calc(100cqh / 1080));
+  --x0: calc((100cqw - 1920 * var(--u)) / 2);
+  --y0: calc((100cqh - 1080 * var(--u)) / 2);
+  position: absolute;
+  left: calc(var(--x0) + 150 * var(--u));
+}
+.logo {
+  top: calc(var(--y0) + 349 * var(--u));
+  height: calc(120 * var(--u));
+  width: auto;
+  color: #002766;
+  animation: logoIn 900ms ease both;
+}
+.words {
+  top: calc(var(--y0) + 505 * var(--u));
+  margin: 0;
+  color: #13306f;
+  font-family: var(--font-info-titillium), Arial, sans-serif;
+  font-size: calc(44 * var(--u));
+  font-weight: 300;
+  line-height: calc(50 * var(--u));
+}
+.words span {
+  display: block;
+  white-space: nowrap;
+  animation: enter 800ms both;
+}
+.words span:nth-child(2) {
+  animation-delay: 150ms;
+}
+@keyframes logoIn {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes enter {
+  from {
+    opacity: 0;
+    translate: 0 calc(18 * var(--u));
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@media (max-width: 799px) {
+  .firstPaint {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .logo,
+  .words span {
+    animation: none;
+  }
+}

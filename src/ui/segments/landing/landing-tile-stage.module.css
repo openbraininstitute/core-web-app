@@ -74,15 +74,20 @@
   white-space: nowrap;
   animation: enter 800ms both;
 }
+/* in at once, as the logo is (and as the page's first HTML has them: landing-first-paint.module.css) */
 .headline span:nth-child(1) {
   left: var(--words-left);
   top: calc(var(--words-top) + var(--logo-h) + 36px);
-  animation-delay: 100ms;
+  animation-delay: 0ms;
 }
 .headline span:nth-child(2) {
   left: var(--words-left);
   top: calc(var(--words-top) + var(--logo-h) + 36px + var(--line-h));
-  animation-delay: 250ms;
+  animation-delay: 150ms;
+}
+/* the first HTML's copy already brought them in: these take its place as they are */
+.headline[data-first-painted] span {
+  animation: none;
 }
 .headline span:nth-child(3) {
   left: var(--words-left);

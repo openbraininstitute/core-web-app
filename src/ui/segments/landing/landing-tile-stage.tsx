@@ -3,6 +3,13 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
+import {
+  firstPaintReady,
+  firstPaintShown,
+  LANDING_WORDS_IN_MS,
+  wordsBegan,
+} from './first-paint-handoff';
+
 import styles from './landing-tile-stage.module.css';
 
 /** Sent on the window each time the landing lays itself out anew, for what is placed by it (the page's logo). */
@@ -76,6 +83,10 @@ export function LandingTileStage({
   const [ctaState, setCtaState] = useState('waiting');
   // The chosen one beside the field comes last in the opening, after the words and the tiles.
   const [chosenShown, setChosenShown] = useState(false);
+  // (drawn in the browser alone, inside the walkthrough's portal, so the page can be asked)
+  const [firstPainted] = useState(firstPaintShown);
+  const headline = useRef<HTMLHeadingElement>(null);
+  useEffect(() => firstPaintReady('words'), []);
 
   // The way in comes last of all: once the chosen one has grown into its place beside the field.
   useEffect(() => {
@@ -138,6 +149,8 @@ export function LandingTileStage({
           engine.current = createLandingTileRenderer(surface, controls, {
             initialIndex: latest.current.scene,
             seed: landingSeed(),
+            // the tiles straight after the logo and words are in
+            introAt: wordsBegan(headline.current?.querySelector('span')) + LANDING_WORDS_IN_MS,
             reduced,
             textInField: phone,
             // phones have no room beside the field: there the big tile on the crescent shows the chosen one
@@ -183,7 +196,11 @@ export function LandingTileStage({
         <div ref={picks} className={styles.picks} />
         {/* Where the page's logo stands while the landing is up (the walkthrough moves it here). */}
         <span className={styles.logoAt} data-landing-logo-at aria-hidden="true" />
-        <h1 className={styles.headline}>
+        <h1
+          ref={headline}
+          className={styles.headline}
+          data-first-painted={firstPainted || undefined}
+        >
           <span>Neuroscience at the</span>
           <span>Speed of Thought</span>
         </h1>

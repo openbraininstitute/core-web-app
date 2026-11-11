@@ -19,6 +19,7 @@ import ObiLogo from '@/features/learn/components/ui/ObiLogo';
 import { learnFonts } from '@/features/learn/fonts';
 import { BareViewers } from '@/features/viewer-3d/bare';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { firstPaintReady, firstPaintShown } from '@/ui/segments/landing/first-paint-handoff';
 import { informationFont } from '@/ui/segments/landing/information-font';
 import { LANDING_LAID_OUT, LANDING_WAY_IN } from '@/ui/segments/landing/landing-tile-stage';
 import { FindOutMore } from '@/ui/segments/landing/layout/find-out-more';
@@ -304,7 +305,12 @@ export function Walkthrough<C extends IWalkthroughChapter>({
     const frame = requestAnimationFrame(() => setLogoIn(true));
     return () => cancelAnimationFrame(frame);
   }, [logoIn]);
-  const [logoPose, setLogoPose] = useState<{ transform: string; glide: boolean } | null>(null);
+  const [logoPose, setLogoPose] = useState<{
+    transform: string;
+    glide: boolean;
+    // placed with no fade: the page's first HTML already brought it in there (landing-first-paint.tsx)
+    atOnce?: boolean;
+  } | null>(null);
   // The top bar's buttons come in last on the landing, with its way in.
   const [landingWayIn, setLandingWayIn] = useState(false);
   useEffect(() => {
@@ -317,6 +323,8 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   useEffect(() => {
     if (!placesLogo) {
       setLogoPose((was) => (was ? { transform: 'none', glide: true } : was));
+      // (the first HTML's copy has its logo over the words: it hands over all the same)
+      firstPaintReady('logo');
       return;
     }
     const place = (glide: boolean) => {
@@ -335,6 +343,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
       setLogoPose({
         transform: `translate(${x}px, ${y}px) scale(${box.height / logo.offsetHeight})`,
         glide,
+        atOnce: !glide && firstPaintShown(),
       });
       return true;
     };
@@ -345,6 +354,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
         return;
       }
       logoPlaced.current = true;
+      firstPaintReady('logo');
     };
     tryPlace();
     // again whenever the landing lays itself out anew (its scale), as the mark's own size does not change with it
@@ -934,7 +944,9 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                           // it fades in with the landing's words, first of all
                           transition: logoPose.glide
                             ? `transform ${INTRO.scroll}ms ${SCROLL_EASE}, opacity 900ms ease`
-                            : 'opacity 900ms ease',
+                            : logoPose.atOnce
+                              ? 'none'
+                              : 'opacity 900ms ease',
                         }
                       : // not shown in the corner for a frame before it is placed over the landing's words; in its
                         // corner, faded in first of all

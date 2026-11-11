@@ -3,7 +3,7 @@
  * @param {HTMLCanvasElement} canvas
  * @param {HTMLDivElement} picksContainer
  * @param {{ initialIndex?: number, reduced?: boolean, textInField?: boolean, heroBeside?: boolean,
- * flightMs?: number, seed?: number, backdrop?: boolean, onShowChosen?: () => void, onSelect?: (index: number) => void,
+ * flightMs?: number, seed?: number, backdrop?: boolean, introAt?: number, onShowChosen?: () => void, onSelect?: (index: number) => void,
  * onReady?: () => void, onInteraction?: () => void, onError?: (error: Error) => void }} options
  */
 export function createLandingTileRenderer(
@@ -22,6 +22,8 @@ export function createLandingTileRenderer(
     seed,
     // the arrangement alone, every tile white, nothing to pick, nothing beside the field (behind the chapters)
     backdrop = false,
+    // when (performance.now() clock) the page's logo and words are in: the first white tiles show then
+    introAt,
     // with the chosen one beside the field: told when the opening is far enough on for it to show there
     onShowChosen = () => {},
     onSelect = () => {},
@@ -214,6 +216,10 @@ export function createLandingTileRenderer(
   // At rest the tiles are flat hexagons, as on the About and Team pages (user): no face is shaded, so a cube seen
   // along its diagonal shows as a plain hexagon; they read as cubes only while they turn. false = cubes at rest too.
   const FLAT_AT_REST = true;
+  // They turn over as the About and Team pages' tiles do (user, hexa-tile-renderer.js): a cube seen along its
+  // diagonal tumbling about the horizontal axis, its faces unshaded, with the mid-turn flash and the shine.
+  // true = the flat flip about the upright axis instead (user, before: "just rotation of hexagons").
+  const FLAT_TURN = false;
   const SHADE_PICTURE = 0.5,
     SHADE_WHITE = 0.1; // share of FACE_SHADE on picture tiles / white tiles
   // shine while a tile grows or shrinks under the mouse (1 = same as the lift from the floor)
@@ -223,13 +229,18 @@ export function createLandingTileRenderer(
   const EASE = 0.12; // height follows its target by 12 % per frame
   // whether, on a pick, the picture tiles that stay where they are turn over, passing their examples on (off for now)
   const TURN_ON_PICK = false;
-  // the opening: the words fade in first (on the page); then the tiles rise in a sweep from left to right, starting
-  // INTRO_AFTER ms in and taking INTRO_SWEEP; then the chosen one's box goes and the chosen one shows beside the field
+  // the opening: the words fade in first (on the page); then the white tiles rise in a sweep from left to right, taking
+  // INTRO_SWEEP, without waiting for the pictures; then the chosen one shows beside the field and the picture tiles
+  // rise, once the pictures are in. White on white a tile shows only by its shadow, which grows as it rises, and the
+  // sweep starts with the low faint ones under the words: so it starts INTRO_LEAD before `introAt` (else
+  // INTRO_AFTER ms in), for tiles to be seen from `introAt` on (measured from screencast frames). Drawn late (the
+  // app slow to load), it goes on from where it would be, up to INTRO_LEAD along, its first tiles part risen.
   const INTRO_AFTER = 750,
+    INTRO_LEAD = 600,
     INTRO_SWEEP = 1300,
     INTRO_JITTER = 140,
-    // the chosen one beside the field once most of the white tiles are up; the picture tiles after it
-    HERO_AFTER = INTRO_AFTER + 0.7 * INTRO_SWEEP,
+    // from the white tiles' start: the chosen one beside the field once most of them are up; the picture tiles after it
+    HERO_AFTER = 0.7 * INTRO_SWEEP,
     PICTURES_AFTER = HERO_AFTER + 600,
     PICTURES_SWEEP = 500;
   const MOTION_GAIN = 40,
@@ -455,7 +466,7 @@ export function createLandingTileRenderer(
     // drawn from ready-made blurred hexagons, so a hundred tiles stay cheap
     // flat hexagons (`FLAT_AT_REST`) turn as flat hexagons too: about their upright axis, edge-on half-way, the new
     // picture on the other side (user: "just rotation of hexagons", not cubes); `across` is how wide it shows
-    const flatTurn = FLAT_AT_REST && p >= 1e-4 && p <= 1 - 1e-4,
+    const flatTurn = FLAT_TURN && FLAT_AT_REST && p >= 1e-4 && p <= 1 - 1e-4,
       across = flatTurn ? Math.max(0.02, Math.abs(Math.cos(Math.PI * p))) : 1;
     const squeezed = (paint) => {
       ctx.save();
@@ -607,8 +618,9 @@ export function createLandingTileRenderer(
         const d = Math.abs(p - 0.5) / MID_FLASH_W;
         if (d < 1) white(MID_FLASH * (0.5 + 0.5 * Math.cos(Math.PI * d)));
       }
-      // cube face shading, always on for the picture tiles (at rest it is drawn above, with the picture)
-      if (shade && !atRest) {
+      // cube face shading on the picture tiles (at rest it is drawn above, with the picture); none with the tiles
+      // flat at rest, as on the About pages, which shade no face while turning either
+      if (shade && !atRest && !FLAT_AT_REST) {
         ctx.globalAlpha = (1 - v.lit) * FACE_SHADE * shade;
         ctx.fillStyle = 'rgb(30, 45, 80)';
         ctx.fill();
@@ -1534,6 +1546,36 @@ export function createLandingTileRenderer(
     kick();
     onReady();
   }
+  // The white tiles need no pictures: they rise in their sweep from `introAt`, the pictures in or not. The picture
+  // tiles and the chosen one wait for the pictures (Infinity until then), as a picture tile turns to its picture
+  // while it rises.
+  let introBegin = 0;
+  if (!backdrop) {
+    applySmalls(pickSmalls());
+    const now = performance.now();
+    introBegin = reduceMotion
+      ? now
+      : Math.max(now - INTRO_LEAD, (introAt ?? now + INTRO_AFTER) - INTRO_LEAD);
+    const shown = cells.filter((c) => c.role || c.base > 0),
+      left = Math.min(...shown.map((c) => c.x)),
+      span = Math.max(1, Math.max(...shown.map((c) => c.x)) - left);
+    const pictures = new Set(cellAt);
+    for (const c of cells)
+      c.start = pictures.has(c)
+        ? Infinity
+        : reduceMotion
+          ? now
+          : introBegin + ((c.x - left) / span) * INTRO_SWEEP + random() * INTRO_JITTER;
+    if (heroCell) heroCell.start = Infinity;
+    // those whose turn has come already: as high as they would have risen by now (as the frames' first lift does)
+    for (const c of cells)
+      if (c.start < now) {
+        c.h = c.prevH =
+          Math.max(c.base, c.lift) * (1 - (1 - LIFT_EASE) ** ((now - c.start) / 16.7));
+      }
+    started = true;
+    kick();
+  }
   const loaded = (backdrop ? [] : FEATURES).map(
     (f) =>
       new Promise((res, rej) => {
@@ -1557,33 +1599,27 @@ export function createLandingTileRenderer(
           c.introPending = true;
         }
       });
-      applySmalls(pickSmalls());
-
-      // tiles lift up from the floor, in a sweep from left to right
+      // In order (user): the words (on the page), then the white tiles in a sweep from left to right (rising
+      // already), then the chosen one beside the field, then the picture tiles in a quicker sweep of their own,
+      // rising and turning to their pictures, then the way in. Pictures in late, the chosen one comes at once.
       const now = performance.now();
-      // In order (user): the words (on the page), then the white tiles in a sweep from left to right, then the chosen
-      // one beside the field, then the picture tiles in a quicker sweep of their own, rising and turning to their
-      // pictures, then the way in.
-      const shown = cells.filter((c) => c.role || c.base > 0),
-        left = Math.min(...shown.map((c) => c.x)),
-        span = Math.max(1, Math.max(...shown.map((c) => c.x)) - left);
-      const pictures = new Set(cellAt),
-        px = cellAt.map((c) => homeOf(c).x),
+      const heroAt = reduceMotion ? now : Math.max(now, introBegin + HERO_AFTER);
+      const px = cellAt.map((c) => homeOf(c).x),
         pLeft = Math.min(...px),
         pSpan = Math.max(1, Math.max(...px) - pLeft);
-      for (const c of cells)
+      for (const c of cellAt)
         c.start = reduceMotion
           ? now
-          : pictures.has(c)
-            ? now + PICTURES_AFTER + ((homeOf(c).x - pLeft) / pSpan) * PICTURES_SWEEP
-            : now + INTRO_AFTER + ((c.x - left) / span) * INTRO_SWEEP + random() * INTRO_JITTER;
-      if (heroCell && !reduceMotion) heroCell.start = now + HERO_AFTER;
+          : heroAt +
+            (PICTURES_AFTER - HERO_AFTER) +
+            ((homeOf(c).x - pLeft) / pSpan) * PICTURES_SWEEP;
+      if (heroCell) heroCell.start = heroAt;
       if (!reduceMotion) {
         if (heroCell)
           later(() => {
             if (heroCell) heroCell.appearTween = { start: performance.now(), ms: 900 };
             kick();
-          }, HERO_AFTER);
+          }, heroAt - now);
         // the way in, and the chapters along the foot, at the end of it all, exactly as the last picture tile turns
         // over to its picture (half-way through its turn; user)
         const lastTurn =
@@ -1593,14 +1629,12 @@ export function createLandingTileRenderer(
         if (heroCell) heroCell.appear = 1;
         onShowChosen();
       }
-      // no clicks until every picture tile has finished its first turn
+      // no clicks until every white tile is up and every picture tile has finished its first turn
       busyUntil =
-        now +
         Math.max(
-          INTRO_AFTER + INTRO_SWEEP + INTRO_JITTER,
-          PICTURES_AFTER + PICTURES_SWEEP + INTRO_TURN_DELAY + INTRO_FLIP_DUR
-        ) +
-        100;
+          introBegin + INTRO_SWEEP + INTRO_JITTER,
+          Math.max(...cellAt.map((c) => c.start)) + INTRO_TURN_DELAY + INTRO_FLIP_DUR
+        ) + 100;
       started = true;
       kick();
 
@@ -1608,7 +1642,10 @@ export function createLandingTileRenderer(
       onReady();
     })
     .catch((error) => {
-      if (!disposed) onError(error);
+      if (disposed) return;
+      // the tiles waiting on their pictures rise white
+      for (const c of cells) if (c.start === Infinity) c.start = performance.now();
+      onError(error);
     });
 
   return {
