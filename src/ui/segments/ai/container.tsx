@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic';
 import IconPlus from '@/components/icons/Plus';
 import { IconSpinner } from '@/components/icons/spinner';
 import { aiButtonFlag, useFlag } from '@/features/feature-flags';
+import { DISMISSABLE_ATTRIBUTE } from '@/hooks/use-dismiss-on-outside-interaction';
 import { usePanelState } from '@/ui/segments/ai/hooks';
 import { PanelState } from '@/ui/segments/ai/types';
 import { cn } from '@/utils/css-class';
@@ -42,6 +43,7 @@ export function Container() {
   return (
     <motion.div
       id="workspace-ai"
+      {...{ [DISMISSABLE_ATTRIBUTE]: '' }}
       className={cn(
         styles.aiPanel,
         'text-white [grid-area:ai] z-[30]',
