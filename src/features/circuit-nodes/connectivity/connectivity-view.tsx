@@ -195,6 +195,15 @@ function SelectionNote({
 function PinnedNote({ name, onClear }: { name: string; onClear: () => void }) {
   return (
     <span className="flex min-w-0 items-center gap-2">
+      <button
+        type="button"
+        onClick={onClear}
+        title="Stop filtering to this pathway"
+        aria-label="Stop filtering to this pathway"
+        className={ROUND_PILL_CLASS}
+      >
+        <RiCloseLine className="size-4" />
+      </button>
       <span
         className={cn(
           PILL_CLASS,
@@ -206,15 +215,6 @@ function PinnedNote({ name, onClear }: { name: string; onClear: () => void }) {
           {name}
         </strong>
       </span>
-      <button
-        type="button"
-        onClick={onClear}
-        title="Stop filtering to this pathway"
-        aria-label="Stop filtering to this pathway"
-        className={ROUND_PILL_CLASS}
-      >
-        <RiCloseLine className="size-4" />
-      </button>
     </span>
   );
 }
