@@ -1,8 +1,15 @@
-/** A cell as CSV: quoted where it holds a comma, a quote or a line break. */
+/** Text a spreadsheet would run as a formula on opening the file; a number such as `-5` is not. */
+const runsAsFormula = (text: string) => /^[=+\-@\t\r]/.test(text) && !Number.isFinite(Number(text));
+
+/**
+ * A cell as CSV: quoted where it holds a comma, a quote or a line break. Text that a spreadsheet
+ * would take for a formula is led by an apostrophe, which makes it text there.
+ */
 export function csvCell(value: unknown): string {
   if (value === null || value === undefined) return '';
   if (typeof value === 'number') return String(value);
-  const text = typeof value === 'object' ? JSON.stringify(value) : String(value);
+  const own = typeof value === 'object' ? JSON.stringify(value) : String(value);
+  const text = typeof value === 'string' && runsAsFormula(own) ? `'${own}` : own;
   return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
 

@@ -107,6 +107,23 @@ describe('csvLines', () => {
   });
 });
 
+describe('csvCell', () => {
+  it('keeps a spreadsheet from running a text cell as a formula', () => {
+    expect(csvCell('=HYPERLINK("http://x","y")')).toBe(`"'=HYPERLINK(""http://x"",""y"")"`);
+    expect(csvCell('+cmd|x')).toBe("'+cmd|x");
+    expect(csvCell('@SUM(A1)')).toBe("'@SUM(A1)");
+    expect(csvCell('-L5_TPC')).toBe("'-L5_TPC");
+  });
+
+  it('leaves numbers as they are, negative ones and those held as text or bigint too', () => {
+    expect(csvCell(-5)).toBe('-5');
+    expect(csvCell('-5.25')).toBe('-5.25');
+    expect(csvCell('+1e3')).toBe('+1e3');
+    expect(csvCell(-12n)).toBe('-12');
+    expect(csvCell('L5_TPC:A')).toBe('L5_TPC:A');
+  });
+});
+
 describe('NodesSession.csvParts', () => {
   it('writes the cells the table shows, read straight from the file', () => {
     const { text } = csv();
