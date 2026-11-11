@@ -1,5 +1,6 @@
 import { queryOptions, useQuery } from '@tanstack/react-query';
 
+import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { listExecutionsBySimulationId } from '@/entity-configuration/domain/simulation/simulation-campaign';
 import { getLatestSimulationExecution } from '@/entity-configuration/domain/simulation/status-utils';
 import { buildTaskLogsStreamQueryOptions } from '@/features/task-logs-stream/hooks/use-stream-query';
@@ -35,12 +36,26 @@ export function simulationJobIdQueryOptions({
 
 const quiet = () => {};
 
+/** A log stream each, and a browser keeps six connections to a host over HTTP/1.1. */
+export const MAX_PROGRESS_STREAMS = 4;
+
+/** The running simulations whose progress is followed: the active one, then the first listed. */
+export function progressFollowed(
+  simulationIds: readonly string[],
+  statusOf: ReadonlyMap<string, ActivityStatus>,
+  activeId?: string
+): Set<string> {
+  const running = simulationIds.filter((id) => statusOf.get(id) === ActivityStatus.RUNNING);
+  const first = activeId && running.includes(activeId) ? [activeId] : [];
+  return new Set([...first, ...running].slice(0, MAX_PROGRESS_STREAMS + first.length));
+}
+
 /**
  * How far a running simulation has got, read from the task log the launch system streams for
  * it: 'initialization' from when its task runs until the simulator starts stepping, then the
  * percentage of the run it reports, then 'finalizing' once it has stepped to the end and its
  * results are being written. Null while it isn't running, for a simulation the launch system
- * doesn't run, and when its log can't be read.
+ * doesn't run, until its log starts to arrive, and when it can't be read.
  */
 export function useSimulationProgress({
   simulationId,
@@ -71,7 +86,7 @@ export function useSimulationProgress({
     select: steppedPercent,
   });
 
-  if (!running || !job) return null;
+  if (!running || !job || percent === undefined) return null;
   if (typeof percent === 'number') return percent >= 100 ? 'finalizing' : percent;
   return isError ? null : 'initialization';
 }

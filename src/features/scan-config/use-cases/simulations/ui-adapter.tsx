@@ -6,7 +6,7 @@
 import { RiArrowRightSLine } from '@remixicon/react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Checkbox } from 'antd';
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { statusById as getSimulationStatusById } from '@/entity-configuration/domain/simulation/simulation-campaign';
@@ -27,6 +27,7 @@ import {
 } from '@/features/scan-config/components/skeletons/columns';
 import { getLatestSimExecStatus } from '@/features/scan-config/components/utils';
 import {
+  progressFollowed,
   type TSimulationProgress,
   useSimulationProgress,
 } from '@/features/scan-config/use-cases/simulations/use-simulation-progress';
@@ -91,6 +92,16 @@ export function SimulationsResultsUiAdapter({
   simulationPicker,
   reportPicker,
 }: Props) {
+  const followed = useMemo(
+    () =>
+      progressFollowed(
+        simulations.map(({ id }) => id),
+        statusMap,
+        activeSimulationId
+      ),
+    [simulations, statusMap, activeSimulationId]
+  );
+
   return (
     <ResultsLayout
       campaignId={campaignId}
@@ -123,6 +134,7 @@ export function SimulationsResultsUiAdapter({
                   simulation={simulation}
                   jobId={jobIdBySimulationId?.get(simulation.id)}
                   fallbackStatus={statusMap.get(simulation.id)}
+                  followProgress={followed.has(simulation.id)}
                   pauseStatusPolling={simRequestInProgress}
                   onSelect={() => onActiveSimulationChange(simulation)}
                   onSelectedForSimChange={onSelectedForSimChange}
@@ -169,6 +181,8 @@ type SimulationBlockProps = {
   simulation: ISimulation;
   jobId?: string;
   fallbackStatus?: ActivityStatus;
+  /** Whether its log is streamed for its progress while it runs: only a few are at once. */
+  followProgress: boolean;
   pauseStatusPolling?: boolean;
   onSelect: (simulationId: string) => void;
   selected?: boolean;
@@ -185,6 +199,7 @@ function SimulationListItem({
   simulation,
   jobId,
   fallbackStatus,
+  followProgress,
   pauseStatusPolling,
   onSelect,
   selected,
@@ -224,7 +239,7 @@ function SimulationListItem({
     simulationId: simulation.id,
     jobId,
     context,
-    running: execStatus === ActivityStatus.RUNNING,
+    running: followProgress && execStatus === ActivityStatus.RUNNING,
   });
 
   useBalanceRefreshOnTaskCompletion({ status: execStatus, context });
