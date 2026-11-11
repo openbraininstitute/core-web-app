@@ -3,9 +3,21 @@
 import { signOut } from 'next-auth/react';
 import { useEffect } from 'react';
 
+import { CONNECTIVITY_H5_CACHE } from '@/features/circuit-nodes/connectivity/cache-name';
+import { CIRCUIT_H5_CACHE } from '@/features/circuit-nodes/types';
+import { NWB_H5_CACHE } from '@/features/ephys-viewer/constants';
+
+/** The project files the viewers keep in the browser, which must not stay for whoever is next. */
+const DATA_CACHES = [CIRCUIT_H5_CACHE, CONNECTIVITY_H5_CACHE, NWB_H5_CACHE];
+
+async function clearDataCaches() {
+  if (!('caches' in globalThis)) return;
+  await Promise.allSettled(DATA_CACHES.map((name) => caches.delete(name)));
+}
+
 export default function Logout() {
   useEffect(() => {
-    signOut({ callbackUrl: '/' });
+    clearDataCaches().finally(() => signOut({ callbackUrl: '/' }));
   }, []);
 
   return (
