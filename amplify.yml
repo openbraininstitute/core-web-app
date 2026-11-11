@@ -38,6 +38,13 @@ applications:
               NEXTAUTH_SECRET -e NEXTAUTH_URL -e AUTH_PROXY_URL -e
               GRADING_WEB_LAUNCH_HMAC_SECRET >> .env.production
             - pnpm run build
+        postBuild:
+          commands:
+            # Amplify's Next.js deploy needs .next/standalone/server.js; in the monorepo Next nests
+            # the app under standalone/apps/web. Lift it, copying link targets (-L) because the
+            # links in .next/node_modules point to ../../node_modules relative to the nested path.
+            - cp -RL .next/standalone/apps/web/. .next/standalone/
+            - rm -rf .next/standalone/apps
       artifacts:
         baseDirectory: .next
         files:
