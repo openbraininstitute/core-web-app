@@ -47,6 +47,18 @@ const FEATURES = [
  * page's first HTML: landing-first-paint.module.css). */
 const CTA_AFTER_WORDS = 300;
 
+/** On a phone, what is under the field: the gap, two lines of words, "Try it now" and a margin, px (the module's
+ * phone rules). */
+const PHONE_UNDER_FIELD = 8 + 6 + 2 * 1.04 * 28 + 12 + 48 + 8;
+
+/** How tall the stage is on a phone, px: the field and the words at the foot, the chosen one taking the height left
+ * above them once the stage is as wide as the screen (renderer `phoneStageH`). */
+function phoneStageHeight(width: number, height: number) {
+  const room = height - PHONE_UNDER_FIELD,
+    scale = Math.min(width / 1000, room / 1040);
+  return Math.max(1080, 40 + room / scale);
+}
+
 /** The supplied landing composition, with accessible controls and a stacked phone layout. */
 export function LandingTileStage({
   scene,
@@ -117,10 +129,17 @@ export function LandingTileStage({
     const controls = picks.current;
     if (!container || !composition || !surface || !controls) return;
     let disposed = false;
+    // (laid out once, when the renderer is made)
+    const opened = container.getBoundingClientRect();
+    const phone = opened.width < 800;
+    const stageH = phone ? phoneStageHeight(opened.width, opened.height) : 1080;
+    composition.style.setProperty('--phone-stage-h', String(stageH));
     const resize = new ResizeObserver(() => {
       const { width, height } = container.getBoundingClientRect();
-      const phone = width < 800;
-      const scale = phone ? Math.min(width / 1000, 0.39) : Math.min(width / 1920, height / 1080);
+      // a phone: the stage's middle 1000 px across, and down to the field's foot with the words under it
+      const scale = phone
+        ? Math.min(width / 1000, (height - PHONE_UNDER_FIELD) / (stageH - 40))
+        : Math.min(width / 1920, height / 1080);
       composition.style.setProperty('--stage-scale', String(scale));
       if (!phone) {
         // in the stage's own px, which its zoom scales
@@ -138,7 +157,6 @@ export function LandingTileStage({
       engine.current?.setVisible(latest.current.visible && onScreen.current);
     });
     seen.observe(container);
-    const phone = container.getBoundingClientRect().width < 800;
     void import('./landing-tile-renderer')
       .then(({ createLandingTileRenderer }) => {
         if (disposed) return;
@@ -150,8 +168,10 @@ export function LandingTileStage({
             introAt: wordsBegan(headline.current?.querySelector('span')),
             reduced,
             textInField: phone,
-            // phones have no room beside the field: there the big tile on the crescent shows the chosen one
-            heroBeside: !phone,
+            // beside the field; on a phone above it (user: "the selected model above the small examples")
+            heroBeside: true,
+            heroAbove: phone,
+            phoneStageH: stageH,
             onShowChosen: () => {
               if (!disposed) setChosenShown(true);
             },

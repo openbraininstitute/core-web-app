@@ -3,6 +3,7 @@
  * @param {HTMLCanvasElement} canvas
  * @param {HTMLDivElement} picksContainer
  * @param {{ initialIndex?: number, reduced?: boolean, textInField?: boolean, heroBeside?: boolean,
+ * heroAbove?: boolean, phoneStageH?: number,
  * flightMs?: number, seed?: number, backdrop?: boolean, introAt?: number, onShowChosen?: () => void, onSelect?: (index: number) => void,
  * onReady?: () => void, onInteraction?: () => void, onError?: (error: Error) => void }} options
  */
@@ -17,6 +18,12 @@ export function createLandingTileRenderer(
     // Whether the chosen example is drawn large beside the field, its own tile grown into a big cube there: every tile
     // is then a pick, its tile moving over and growing as the one there shrinks back to its place.
     heroBeside = false,
+    // A phone (with heroBeside): the chosen one above the field, not beside it, the field smaller under it, nothing
+    // over the chosen one; the words are under the canvas. Phones see the stage's x PHONE.x0 .. x1 (landing-tile-stage).
+    heroAbove = false,
+    // how tall the stage is on a phone, px (1080 or more): the field and the words at its foot, and the chosen one
+    // taking whatever height is left above them (user: "Move everything down, so the main example is bigger")
+    phoneStageH = 1080,
     flightMs = 1100,
     // the same seed lays the same tiles out: the chapters' backdrop draws the landing's own arrangement
     seed,
@@ -157,37 +164,49 @@ export function createLandingTileRenderer(
   // ---- picture tiles, as on the first landing: a big one in the middle third, and medium ones straight beside it on
   // random sides, slid along its edges. With the chosen one beside the field (out of any cube), one tile fewer than
   // the examples, and none on the big one's right, which the chosen one has. ----
+  // On a phone (user: "the selected model above the small examples"): the stage's middle 1000 px across, the chosen one
+  // in its top half, the field under it from `fieldTop`, and no tiles over the chosen one.
+  const STAGE_H = heroAbove ? Math.max(1080, phoneStageH) : 1080,
+    FOOT = STAGE_H - 40;
+  const PHONE = { x0: 450, x1: 1410, fieldTop: FOOT - 440, big: 112, medium: 78 };
+  // the chosen one's box on a phone: from the top down to its name, which is over the field's top
+  const PHONE_HERO_H = PHONE.fieldTop - 120;
   const FEATURE_SLOTS = [
-    { x: 960, y: 540, r: 174 },
+    heroAbove ? { x: 930, y: FOOT - 240, r: PHONE.big } : { x: 960, y: 540, r: 174 },
     ...Array.from({ length: Math.max(1, FEATURES.length - (heroBeside ? 2 : 1)) }, () => ({
       x: 0,
       y: 0,
-      r: 97,
+      r: heroAbove ? PHONE.medium : 97,
     })),
   ];
   // where the chosen one goes, in the right third, its tile growing as if to a cube this big as the cube melts away
   // from round it; and how far a moving tile bows off its way (none: a straight path, user: the arc "makes the
   // animation look weird"; it was 90)
-  const HERO_TILE = { x: 1590, y: 540, r: 330 },
+  const HERO_TILE = heroAbove
+      ? { x: 930, y: 10 + PHONE_HERO_H / 2, r: (210 * PHONE_HERO_H) / 480 }
+      : { x: 1590, y: 540, r: 330 },
     BOW = 0;
-  // the chosen one itself, out of its cube: as wide as the example says, within this box
-  const BIG_W = 720,
-    BIG_H = 820;
+  // the chosen one itself, out of its cube: as wide as the example says (smaller in step on a phone), within this box
+  const BIG_W = heroAbove ? 960 : 720,
+    BIG_H = heroAbove ? PHONE_HERO_H : 820,
+    HERO_K = HERO_TILE.r / 330;
   // ---- small white tiles round them, a new set on every pick, as on the first landing: each grown until its straight
   // edge almost touches a picture tile; a fade of lower, smaller ones round them; a few tiny ones for depth ----
+  // (smaller in step with the picture tiles on a phone)
+  const SMALL_K = heroAbove ? PHONE.medium / 97 : 1;
   const SMALL_COUNT = 8,
-    SMALL_R = [65, 84],
+    SMALL_R = [65 * SMALL_K, 84 * SMALL_K],
     SMALL_GAP = 6,
     SMALL_ON_BIG = 0.2;
   const EDGE_GAP = 6;
   const FADE_RINGS = [
-      [58, 63],
-      [55.8, 57.5],
+      [58 * SMALL_K, 63 * SMALL_K],
+      [55.8 * SMALL_K, 57.5 * SMALL_K],
     ],
     FADE_PER = 2,
     FADE_CLEAR = 30;
   const TINY_COUNT = 7,
-    TINY_R0 = [22, 30],
+    TINY_R0 = [22 * SMALL_K, 30 * SMALL_K],
     TINY_H = [0.15, 0.4];
   // ---- and a flourish of cubes off to the left under the words: along its curve, out to the page's edge, they thin
   // out, shrink, sink and cast less shadow ----
@@ -272,7 +291,7 @@ export function createLandingTileRenderer(
   if (!ctx) throw new Error('Canvas rendering is unavailable');
   const DPR = Math.min(2, window.devicePixelRatio || 1);
   cv.width = 1920 * DPR;
-  cv.height = 1080 * DPR;
+  cv.height = STAGE_H * DPR;
 
   // ---------- cube maths (as in the WebGL shader) ----------
   const YAW = Math.PI / 4,
@@ -675,7 +694,7 @@ export function createLandingTileRenderer(
   // every cell: base = its floor-noise height (0 = flat floor, not drawn), role = 'feature' / 'small' / null,
   // h follows target like on index.html, plus the cube turn state
   const cells = [];
-  for (let row = 1; row * rowH < 1080 - R; row++) {
+  for (let row = 1; row * rowH < STAGE_H - R; row++) {
     // (from the page's left edge, so the cubes there run off it)
     for (let col = 0; col * colW < 1900; col++) {
       const x = col * colW + (row % 2 ? colW / 2 : 0),
@@ -761,13 +780,18 @@ export function createLandingTileRenderer(
   // fits = does not come closer than `gap` px to any of the tiles in `others`
   const fits = (p, others, gap) => others.every((o) => fitRadius(p.x, p.y, o, gap) >= p.r - 0.01);
   const inBounds = (p) =>
-    p.x - p.r > 40 &&
-    p.y - p.r > 40 &&
-    p.y + p.r < 1040 &&
-    p.x + p.r < HERO_THIRD_X &&
-    openArea(p.x, p.y, p.r);
+    heroAbove
+      ? p.x - p.r > PHONE.x0 &&
+        p.x + p.r < PHONE.x1 &&
+        p.y - p.r > PHONE.fieldTop &&
+        p.y + p.r < FOOT
+      : p.x - p.r > 40 &&
+        p.y - p.r > 40 &&
+        p.y + p.r < 1040 &&
+        p.x + p.r < HERO_THIRD_X &&
+        openArea(p.x, p.y, p.r);
   const clearOfWords = (p) =>
-    p.x - p.r > WORDS_BOX.x1 || p.y + p.r < WORDS_BOX.y0 || p.y - p.r > WORDS_BOX.y1;
+    heroAbove || p.x - p.r > WORDS_BOX.x1 || p.y + p.r < WORDS_BOX.y0 || p.y - p.r > WORDS_BOX.y1;
   // a tile of radius r placed straight beside tile t: its centre sits along one of the 6 edge normals of t, exactly
   // so far that the two facing edges are `gap` px apart; `lat` slides it sideways along that edge
   const FACE_MIN = 0.6; // touching edges overlap by at least 60 % of the shorter edge
@@ -808,7 +832,12 @@ export function createLandingTileRenderer(
   };
   // the floor: the flourish's cubes, and the left third's
   for (const c of cells) {
-    if (!openArea(c.x, c.y, R) || c.x > HERO_THIRD_X) continue;
+    if (
+      heroAbove
+        ? c.y - R < PHONE.fieldTop || c.y + R > FOOT
+        : !openArea(c.x, c.y, R) || c.x > HERO_THIRD_X
+    )
+      continue;
     const { t, off } = alongFlourish(c.x, c.y),
       width = lerp(FLOURISH.width, t);
     let fade = -1;
@@ -831,7 +860,8 @@ export function createLandingTileRenderer(
   {
     const taken = new Set(),
       big = { ...FEATURE_SLOTS[0] };
-    const sides = heroBeside ? [1, 2, 3, 4, 5] : [0, 1, 2, 3, 4, 5];
+    // (none on the side the chosen one is: its right beside the field, above it on a phone)
+    const sides = heroAbove ? [0, 1, 2, 3] : heroBeside ? [1, 2, 3, 4, 5] : [0, 1, 2, 3, 4, 5];
     const randomLayout = () => {
       for (let attempt = 0; attempt < 400; attempt++) {
         const dirs = sides.slice().sort(() => random() - 0.5);
@@ -1121,7 +1151,7 @@ export function createLandingTileRenderer(
     if (!src) return;
     const nw = src.videoWidth || src.naturalWidth,
       nh = src.videoHeight || src.naturalHeight;
-    const full = Math.min(f.hero, BIG_W, (BIG_H * nw) / nh);
+    const full = Math.min(f.hero * HERO_K, BIG_W, (BIG_H * nw) / nh);
     const rs = c.baseR;
     const inCube = Math.sqrt(3) * rs * at.k * f.zoom,
       inBigCube = Math.sqrt(3) * HERO_TILE.r * f.zoom;

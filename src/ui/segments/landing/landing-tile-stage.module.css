@@ -269,14 +269,26 @@
   }
 }
 @media (max-width: 799px) {
+  /* down to the arrow to the next page (living-hero.module.css: fixed, clamp(64px, 9.5vh, 88px) up, 44 px tall), under
+   * the top bar's 72 */
   .host {
-    --mobile-title-size: clamp(34px, 8vw, 48px);
     position: relative;
-    min-height: 660px;
-    height: calc(100svh - 172px);
+    min-height: 480px;
+    height: calc(100svh - 72px - clamp(64px, 9.5vh, 88px) - 44px);
     overflow: visible;
   }
+  /* From the top: the chosen one, its name, the field under it (the canvas down to the renderer's 1040), then the
+   * words and the way in (PHONE_UNDER_FIELD in landing-tile-stage.tsx sums these). */
   .stage {
+    --canvas-top: 8px;
+    --mobile-title-size: 28px;
+    --words-at: calc(
+      var(--canvas-top) +
+      (var(--phone-stage-h) - 40) *
+      var(--stage-scale) *
+      1px +
+      6px
+    );
     position: relative;
     width: 100%;
     height: 100%;
@@ -287,17 +299,14 @@
     translate: none;
     transform: scale(var(--stage-scale));
     transform-origin: 0 0;
-    top: 12px;
+    top: var(--canvas-top);
     left: calc(50% - 930px * var(--stage-scale));
     width: 1920px;
-    height: 1080px;
-  }
-  .picks {
-    height: 1080px;
+    height: calc(var(--phone-stage-h) * 1px);
   }
   .headline {
     left: 20px;
-    top: clamp(370px, 48svh, 450px);
+    top: var(--words-at);
     width: calc(100% - 40px);
     font-size: var(--mobile-title-size);
     line-height: 1.04;
@@ -310,7 +319,7 @@
   }
   .actionRow {
     left: 20px;
-    top: calc(clamp(370px, 48svh, 450px) + var(--mobile-title-size) * 3.12 + 22px);
+    top: calc(var(--words-at) + var(--mobile-title-size) * 2.08 + 12px);
     width: calc(100% - 40px);
     height: auto;
     flex-direction: row;
@@ -319,14 +328,6 @@
     gap: 16px;
   }
   .line {
-    display: none;
-  }
-  .actionRow .label {
-    display: block;
-    width: 100%;
-    font-size: 25px;
-  }
-  .heroLabels {
     display: none;
   }
   .cta {
@@ -450,5 +451,45 @@
 @media (prefers-reduced-motion: reduce) {
   .heroLabel {
     animation: none;
+  }
+}
+/* A phone: the chosen one's name centred under it (the renderer's PHONE_HERO_H: its box down to the stage's foot less
+ * 590), plain. */
+@media (max-width: 799px) {
+  .heroLabels {
+    left: 20px;
+    top: calc(var(--canvas-top) + (var(--phone-stage-h) - 582) * var(--stage-scale) * 1px);
+    width: calc(100% - 40px);
+    height: auto;
+  }
+  .heroLabel {
+    width: 100%;
+    max-width: none;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    backdrop-filter: none;
+    box-shadow: none;
+    text-align: center;
+    text-wrap: balance;
+    font-size: 13px;
+    line-height: 1.25;
+    animation: none;
+  }
+  .heroLabel::before {
+    display: none;
+  }
+  /* the words and the way in centred under it, as it is */
+  .headline {
+    text-align: center;
+  }
+  .actionRow {
+    justify-content: center;
+  }
+  .heroLabel strong {
+    display: inline;
+    margin: 0 6px 0 0;
+    font-size: 11px;
   }
 }
