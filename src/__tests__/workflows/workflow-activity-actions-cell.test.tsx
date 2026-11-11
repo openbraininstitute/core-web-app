@@ -18,6 +18,7 @@ import { ActivityValues } from '@/ui/segments/workflows/config';
 import { createAllWorkflowsDataSource } from '@/ui/segments/workflows/elements/workflow-activity-all';
 import { WorkflowActivityActionsCell } from '@/ui/segments/workflows/elements/workflow-activity-cells';
 import { buildWorkflowActivitySchema } from '@/ui/segments/workflows/elements/workflow-activity-schema';
+import { WorkflowDetailsEditor } from '@/ui/segments/workflows/elements/workflow-details-editor';
 
 import type { ReactElement, ReactNode } from 'react';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
@@ -38,12 +39,14 @@ vi.mock('@/api/entitycore/queries/general/entity', async (importOriginal) => ({
   updateEntity: (args: unknown) => updateEntity(args),
 }));
 
-/** Every render inside a query client: the cell refreshes the listings after an edit. */
+/** Every render inside a query client and the editor a row's Edit opens, as in the table. */
 function render(ui: ReactElement) {
   const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
   return renderUi(ui, {
     wrapper: ({ children }: { children: ReactNode }) => (
-      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+      <QueryClientProvider client={client}>
+        <WorkflowDetailsEditor>{children}</WorkflowDetailsEditor>
+      </QueryClientProvider>
     ),
   });
 }
@@ -338,6 +341,17 @@ describe('editing the name and description of a row', () => {
     expect(screen.getByRole('dialog')).toBeTruthy();
     expect(field('Name').value).toBe('A campaign');
     expect(field('Description').value).toBe('');
+  });
+
+  it('stays open, with what was typed, when the table lets go of the row’s cell', () => {
+    const { rerender } = render(cell());
+    fireEvent.click(action('Edit name and description') as HTMLElement);
+    fireEvent.change(field('Name'), { target: { value: 'Half typed' } });
+
+    rerender(<span />);
+
+    expect(screen.queryByTestId('workflow-activity-row-actions')).toBeNull();
+    expect(field('Name').value).toBe('Half typed');
   });
 
   it('saves the trimmed name and description to the entity, then closes', async () => {

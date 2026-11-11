@@ -9,10 +9,9 @@ import {
   RiGitBranchLine,
   RiPencilLine,
 } from '@remixicon/react';
-import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { type ITaskConfig, TaskConfigType } from '@/api/entitycore/types/entities/task-config';
@@ -39,12 +38,9 @@ import {
   type TWorkflowActivityTableRow,
 } from '@/ui/segments/workflows/elements/workflow-activity-actions';
 import { rowWorkflow } from '@/ui/segments/workflows/elements/workflow-activity-all';
-import {
-  descriptionOf,
-  WorkflowDetailsDialog,
-} from '@/ui/segments/workflows/elements/workflow-details-dialog';
+import { descriptionOf } from '@/ui/segments/workflows/elements/workflow-details-dialog';
+import { useEditWorkflowDetails } from '@/ui/segments/workflows/elements/workflow-details-editor';
 import { WorkflowStatusCell } from '@/ui/segments/workflows/elements/workflow-status-cell';
-import { keyBuilder } from '@/ui/use-query-keys/data';
 import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
 
@@ -54,9 +50,6 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 import type { ICellRendererProps } from '@/features/data-grid/react';
 import type { WorkspaceContext } from '@/types/common';
 import type { TActivityValue } from '@/ui/segments/workflows/config';
-
-/** Head of every workflow-activity listing's query key, so a row edit can refresh them all. */
-export const WORKFLOW_ACTIVITY_QUERY_KEY = 'workflow-activity';
 
 /** Cell-renderer registry keys owned by the workflow-activity grid. */
 export const WORKFLOW_ACTIVITY_TYPE_RENDERER = 'workflowActivityType';
@@ -233,9 +226,8 @@ export function WorkflowActivityActionsCell({
   const { push: navigate } = useRouter();
   const { virtualLabId, projectId } = useWorkspace();
   const searchParams = useSearchParams();
-  const queryClient = useQueryClient();
   const [, copyId, , hasCopiedId] = useCopyToClipboard();
-  const [editing, setEditing] = useState(false);
+  const editDetails = useEditWorkflowDetails();
 
   const workspace = useMemo(() => ({ virtualLabId, projectId }), [virtualLabId, projectId]);
   const tableRow = row as unknown as TWorkflowActivityTableRow;
@@ -292,7 +284,7 @@ export function WorkflowActivityActionsCell({
       key: 'edit',
       label: 'Edit name and description',
       icon: <RiPencilLine size={ACTION_ICON_SIZE} />,
-      onClick: () => setEditing(true),
+      onClick: () => editDetails(row, entityType),
     },
     {
       key: 'configuration',
@@ -337,18 +329,6 @@ export function WorkflowActivityActionsCell({
       {actions.map(({ key, ...action }) => (
         <ActionButton key={key} testId={`workflow-activity-action-${key}`} {...action} />
       ))}
-      {editing && (
-        <WorkflowDetailsDialog
-          row={row}
-          workspace={workspace}
-          onClose={() => setEditing(false)}
-          onSaved={() => {
-            // the editor's cached copy names the campaign as it was
-            queryClient.removeQueries({ queryKey: keyBuilder.simCampaign({ entityId: row.id }) });
-            return queryClient.invalidateQueries({ queryKey: [WORKFLOW_ACTIVITY_QUERY_KEY] });
-          }}
-        />
-      )}
     </div>
   );
 }

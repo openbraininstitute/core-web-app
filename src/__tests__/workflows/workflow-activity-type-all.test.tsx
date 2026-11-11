@@ -12,6 +12,10 @@ import type { IAllWorkflowsSource } from '@/ui/segments/workflows/elements/workf
 const merged = vi.hoisted(() => vi.fn());
 
 vi.mock('@/features/feature-flags', () => ({ useFlags: () => ({}) }));
+vi.mock('@/ui/segments/workflows/elements/workflow-details-editor', () => ({
+  WORKFLOW_ACTIVITY_QUERY_KEY: 'workflow-activity',
+  WorkflowDetailsEditor: ({ children }: { children: ReactNode }) => children,
+}));
 vi.mock('@/ui/hooks/create-break-point', () => ({ useDefaultBreakpoint: () => 'l' }));
 vi.mock('@/ui/hooks/use-workspace', () => ({
   useWorkspace: () => ({ virtualLabId: 'vlab', projectId: 'proj' }),

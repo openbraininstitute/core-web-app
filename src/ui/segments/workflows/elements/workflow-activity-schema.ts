@@ -197,8 +197,8 @@ export function buildWorkflowActivitySchema({
         header: 'Actions',
         align: Align.Center,
         // never shown: a refetched row re-renders only the cells whose value changed, and the
-        // edit dialog has to open on the row as it now is, so an edit (a new
-        // `update_date`) must count as a change here
+        // actions work on the row as it now is, so an edit (a new `update_date`) must count
+        // as a change here
         getValue: (row) => ('update_date' in row ? (row.update_date ?? '') : ''),
         cellRenderer: WORKFLOW_ACTIVITY_ACTIONS_RENDERER,
         cellRendererParams: { activity, entityType },

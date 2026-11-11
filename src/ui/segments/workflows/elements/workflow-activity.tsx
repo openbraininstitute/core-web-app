@@ -31,11 +31,14 @@ import {
 } from '@/ui/segments/workflows/elements/workflow-activity-all';
 import {
   buildWorkflowActivityCellRenderers,
-  WORKFLOW_ACTIVITY_QUERY_KEY,
   WorkflowHoverCard,
 } from '@/ui/segments/workflows/elements/workflow-activity-cells';
 import { buildWorkflowActivitySchema } from '@/ui/segments/workflows/elements/workflow-activity-schema';
 import { withWorkflowIdSearch } from '@/ui/segments/workflows/elements/workflow-activity-search';
+import {
+  WORKFLOW_ACTIVITY_QUERY_KEY,
+  WorkflowDetailsEditor,
+} from '@/ui/segments/workflows/elements/workflow-details-editor';
 import { cn } from '@/utils/css-class';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
@@ -183,55 +186,57 @@ export function WorkflowActivity() {
   );
 
   return (
-    <section
-      id="activity-table-with-filters"
-      data-testid="activity-table-with-filters"
-      className={cn('flex h-full w-full min-w-0 flex-col before:shadow-lg after:shadow-md')}
-    >
-      <div
-        className="flex h-full w-full min-h-0 flex-col"
-        id="workflow-activities-table"
-        data-testid="workflow-activities-table"
+    <WorkflowDetailsEditor>
+      <section
+        id="activity-table-with-filters"
+        data-testid="activity-table-with-filters"
+        className={cn('flex h-full w-full min-w-0 flex-col before:shadow-lg after:shadow-md')}
       >
-        <DataGrid<EntityCoreObjectTypes>
-          key={gridKey}
-          controller={controller}
-          dataSource={dataSource}
-          renderer={AgGridRenderer}
-          operators={operators}
-          cellRenderers={CELL_RENDERERS}
-          queryKey={[WORKFLOW_ACTIVITY_QUERY_KEY, virtualLabId, projectId, gridKey]}
-          params={params}
-          enabled={allCategories || Boolean(listedActivity)}
-          loadingLabel="activities"
-          rowHoverCard={renderHoverCard}
-          className="min-h-0 flex-1"
-          gridClassName="[&_.ag-header]:bg-background [&_.ag-header-cell]:text-neutral-4"
-          toolbarSlots={{
-            entityType: (
-              <ActivityAndTypeSelectors
-                activity={listedActivity ?? ALL_WORKFLOWS}
-                entityType={layoutType}
-                onActivityChange={(activityType) => updateActivityState({ activityType })}
-                onEntityTypeChange={(entityType) => updateActivityState({ entityType })}
-                onAllSelect={(activityType) =>
-                  updateActivityState({ activityType, entityType: ALL_WORKFLOWS })
-                }
-              />
-            ),
-            search: (
-              <GridSearch
-                openOnMount
-                onSearch={handleSearch}
-                value={freeTextSearch}
-                // wider than the default so the whole hint is readable
-                inputWidthClass="w-96"
-                placeholder="Search entities by name, ID"
-              />
-            ),
-          }}
-        />
-      </div>
-    </section>
+        <div
+          className="flex h-full w-full min-h-0 flex-col"
+          id="workflow-activities-table"
+          data-testid="workflow-activities-table"
+        >
+          <DataGrid<EntityCoreObjectTypes>
+            key={gridKey}
+            controller={controller}
+            dataSource={dataSource}
+            renderer={AgGridRenderer}
+            operators={operators}
+            cellRenderers={CELL_RENDERERS}
+            queryKey={[WORKFLOW_ACTIVITY_QUERY_KEY, virtualLabId, projectId, gridKey]}
+            params={params}
+            enabled={allCategories || Boolean(listedActivity)}
+            loadingLabel="activities"
+            rowHoverCard={renderHoverCard}
+            className="min-h-0 flex-1"
+            gridClassName="[&_.ag-header]:bg-background [&_.ag-header-cell]:text-neutral-4"
+            toolbarSlots={{
+              entityType: (
+                <ActivityAndTypeSelectors
+                  activity={listedActivity ?? ALL_WORKFLOWS}
+                  entityType={layoutType}
+                  onActivityChange={(activityType) => updateActivityState({ activityType })}
+                  onEntityTypeChange={(entityType) => updateActivityState({ entityType })}
+                  onAllSelect={(activityType) =>
+                    updateActivityState({ activityType, entityType: ALL_WORKFLOWS })
+                  }
+                />
+              ),
+              search: (
+                <GridSearch
+                  openOnMount
+                  onSearch={handleSearch}
+                  value={freeTextSearch}
+                  // wider than the default so the whole hint is readable
+                  inputWidthClass="w-96"
+                  placeholder="Search entities by name, ID"
+                />
+              ),
+            }}
+          />
+        </div>
+      </section>
+    </WorkflowDetailsEditor>
   );
 }
