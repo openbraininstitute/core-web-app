@@ -375,7 +375,10 @@ function ReadyMatrix({
   pin: MatrixPin | undefined;
   headerSlot: HTMLElement | null;
 }) {
-  const categorical = summary.properties.filter((p) => p.kind === 'categorical');
+  const categorical = useMemo(
+    () => summary.properties.filter((p) => p.kind === 'categorical'),
+    [summary.properties]
+  );
   const initial = defaultGrouping(summary.properties);
   const [groupBy, setGroupBy] = useState(initial ?? BY_NEURON);
   const [orderBy, setOrderBy] = useState(initial ?? MATRIX_ORDER);

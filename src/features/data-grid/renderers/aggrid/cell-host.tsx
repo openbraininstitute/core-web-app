@@ -1,3 +1,5 @@
+import { useCallback } from 'react';
+
 import { renderCellValue } from '@/features/data-grid/renderers/aggrid/empty-cell';
 
 import type { CustomCellRendererProps } from 'ag-grid-react';
@@ -42,6 +44,12 @@ export function AgCellHost(props: CustomCellRendererProps) {
   const ctx = props.context as IAgGridContext;
   const params = (props.colDef?.cellRendererParams ?? {}) as CellHostParams &
     Record<string, unknown>;
+  const watch = ctx.watchFittedCell;
+  // Kept the same between renders: a new one would unwatch the cell and watch it again
+  const watchRef = useCallback(
+    (el: HTMLSpanElement | null) => (el ? watch?.(el) : undefined),
+    [watch]
+  );
 
   const keyed = renderKeyedCell(ctx.cellRenderers, params.rendererKey, {
     row: props.data,
@@ -50,13 +58,9 @@ export function AgCellHost(props: CustomCellRendererProps) {
     params,
   });
   // a fitted column's cell is watched, since what it shows may arrive after the fit
-  if (keyed !== undefined && params.fitted && ctx.watchFittedCell) {
-    const watch = ctx.watchFittedCell;
+  if (keyed !== undefined && params.fitted && watch) {
     return (
-      <span
-        ref={(el) => (el ? watch(el) : undefined)}
-        className="inline-flex max-w-full items-center"
-      >
+      <span ref={watchRef} className="inline-flex max-w-full items-center">
         {keyed}
       </span>
     );
