@@ -120,10 +120,17 @@ describe('the workflows page’s top window', () => {
     expect(await screen.findByText('lit: simulate')).toBeInTheDocument();
   });
 
-  it('stays through a click on its white space, a heading, a disabled card or a button', async () => {
+  it('does so on a click on the window itself, around its menus', async () => {
     await page();
 
     fireEvent.click(screen.getByTestId('workflow-scrollable-selector'));
+
+    await expectCollapsed();
+  });
+
+  it('stays through a click on a heading, a disabled card or a button', async () => {
+    await page();
+
     fireEvent.click(screen.getByTestId('heading'));
     fireEvent.click(screen.getByTestId('disabled-card'));
     fireEvent.click(screen.getByTestId('carousel-button'));

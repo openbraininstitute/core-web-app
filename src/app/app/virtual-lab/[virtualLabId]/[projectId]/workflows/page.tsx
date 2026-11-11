@@ -15,6 +15,7 @@ import {
   WORKFLOW_HOME_QUERY_KEYS,
 } from '@/ui/segments/workflows/config';
 import { CategoryMenu } from '@/ui/segments/workflows/elements/category-menu';
+import { onSelfClick } from '@/ui/segments/workflows/elements/on-self-click';
 import { TypesMenu } from '@/ui/segments/workflows/elements/types-menu';
 import { WorkflowActivity } from '@/ui/segments/workflows/elements/workflow-activity';
 
@@ -52,6 +53,12 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
   const onSelectCategory = (value: TActivityValue | null) => {
     updateWorkflowState(() => ({ activity: value === activity ? null : value, entityType: null }));
   };
+
+  // On the window itself, around its cards: back to the categories alone. A shortcut for the
+  // mouse, as the keyboard has the lit card.
+  const onBlankClick = activity
+    ? () => updateWorkflowState(() => ({ activity: null, entityType: null }))
+    : undefined;
 
   const onSelectType = async (value: TExtendedEntitiesTypeDict | null) => {
     if (!activity || !value) return;
@@ -95,8 +102,13 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
             duration: 0.2,
             ease: 'easeInOut',
           }}
+          onClick={onSelfClick(onBlankClick)}
         >
-          <CategoryMenu current={activity} onItemClick={onSelectCategory} />
+          <CategoryMenu
+            current={activity}
+            onItemClick={onSelectCategory}
+            onBlankClick={onBlankClick}
+          />
           <AnimatePresence>
             {activity && (
               <motion.div
@@ -112,7 +124,12 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
                 }}
                 className="overflow-hidden"
               >
-                <TypesMenu category={activity} current={entityType} onItemClick={onSelectType} />
+                <TypesMenu
+                  category={activity}
+                  current={entityType}
+                  onItemClick={onSelectType}
+                  onBlankClick={onBlankClick}
+                />
               </motion.div>
             )}
           </AnimatePresence>
