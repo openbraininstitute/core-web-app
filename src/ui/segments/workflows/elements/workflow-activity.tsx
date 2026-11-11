@@ -3,6 +3,7 @@
 import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
 import { createEntitycorePagedDataSource } from '@/features/data-grid/bindings/entitycore/data-source.paged';
 import {
@@ -20,7 +21,7 @@ import {
 import { AgGridRenderer } from '@/features/data-grid/renderers/aggrid';
 import { useFlags } from '@/features/feature-flags';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { getActivity, type TActivityValue } from '@/ui/segments/workflows/config';
+import { ActivityValues, getActivity, type TActivityValue } from '@/ui/segments/workflows/config';
 import { ActivityAndTypeSelectors } from '@/ui/segments/workflows/elements/browse-header';
 import {
   ALL_WORKFLOWS,
@@ -67,22 +68,16 @@ export function WorkflowActivity() {
   const { virtualLabId, projectId } = useWorkspace();
   const flags = useFlags();
 
-  const [{ activityType, entityType }, updateActivityState] = useQueryStates(
+  const [asked, updateActivityState] = useQueryStates(
     {
-      activityType: parseAsString
-        .withOptions({
-          clearOnDefault: false,
-          shallow: true,
-        })
-        .withDefault(ALL_WORKFLOWS) as SingleParserBuilder<TActivityValue | TAllWorkflows>,
-      entityType: parseAsString
-        .withOptions({
-          clearOnDefault: false,
-          shallow: true,
-        })
-        .withDefault(ALL_WORKFLOWS) as SingleParserBuilder<
-        TExtendedEntitiesTypeDict | TAllWorkflows
-      >,
+      activityType: parseAsString.withOptions({
+        clearOnDefault: false,
+        shallow: true,
+      }) as SingleParserBuilder<TActivityValue | TAllWorkflows>,
+      entityType: parseAsString.withOptions({
+        clearOnDefault: false,
+        shallow: true,
+      }) as SingleParserBuilder<TExtendedEntitiesTypeDict | TAllWorkflows>,
     },
     {
       urlKeys: {
@@ -91,6 +86,13 @@ export function WorkflowActivity() {
       },
     }
   );
+
+  // A link that names nothing opens on one listing, not on All and its request per workflow; one
+  // that names only a category lists all of it
+  const activityType = asked.activityType ?? ActivityValues.Build;
+  const entityType =
+    asked.entityType ??
+    (asked.activityType ? ALL_WORKFLOWS : ExtendedEntitiesTypeDict.MEModelBuildCampaign);
 
   // All as the Category lists every workflow, as a type cannot narrow it; All as the Type lists
   // every workflow of the category
