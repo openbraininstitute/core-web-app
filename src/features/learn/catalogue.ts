@@ -1,5 +1,6 @@
 import { BASIC_ELECTRICAL_PHYSICS_SLIDES } from '@/features/learn/slides/basic-electrical-physics';
 import { BRAIN_MODELING_SLIDES } from '@/features/learn/slides/brain-modeling';
+import { COMPARTMENTAL_MODELING_SLIDES } from '@/features/learn/slides/compartmental-modeling';
 import { COMPARTMENTAL_NEURON_SLIDES } from '@/features/learn/slides/compartmental-neuron';
 import { CORTICAL_CELLS_SLIDES } from '@/features/learn/slides/cortical-cells';
 import { ELECTRICAL_PHYSICS_SLIDES } from '@/features/learn/slides/electrical-physics';
@@ -8,10 +9,13 @@ import { ELECTRICAL_TERMS } from '@/features/learn/slides/electrical-terms';
 import { ENTITYSDK_SLIDES } from '@/features/learn/slides/entitysdk';
 import { MEMBRANE_BASICS_SLIDES } from '@/features/learn/slides/membrane-basics';
 import { MISC_SLIDES } from '@/features/learn/slides/misc';
+import { MTYPE_GAME_SLIDES } from '@/features/learn/slides/mtype-game';
 import { NEURON_VS_JAXLEY_SLIDES } from '@/features/learn/slides/neuron-vs-jaxley';
 import { NEUROTRANSMITTERS_SLIDES } from '@/features/learn/slides/neurotransmitters';
 import { PLATFORM_SLIDES } from '@/features/learn/slides/platform';
 import { PYTHON_SLIDES } from '@/features/learn/slides/python';
+import { SYNAPSES_SLIDES } from '@/features/learn/slides/synapses';
+import { TSODYKS_MARKRAM_SLIDES } from '@/features/learn/slides/tsodyks-markram';
 import { SYNAPSE_PLASTICITY_SLIDES } from '@/features/learn/slides/synapse-plasticity';
 import { VALIDATION_SLIDES } from '@/features/learn/slides/validation';
 import { WHY_MODEL_SLIDES } from '@/features/learn/slides/why-model';
@@ -50,6 +54,7 @@ export const LEARN_COURSES: LearnCourse[] = [
   },
   {
     id: 'python',
+    rough: true,
     title: 'How to code in Python',
     level: 'Beginner',
     description:
@@ -68,6 +73,38 @@ export const LEARN_COURSES: LearnCourse[] = [
     // slide 5's: ions bouncing off the membrane
     preview: 'physics2:barrier',
     terms: ELECTRICAL_TERMS,
+  },
+  {
+    id: 'synapses',
+    title: 'Synapses',
+    level: 'Beginner',
+    description:
+      'How a signal crosses from one neuron to the next at a chemical synapse: a spike arriving at the terminal, neurotransmitter released and bound to receptors, their channels opening; AMPA receptors and their reversal potential; and how fast it all happens — glutamate cleared, the receptors deactivating and desensitizing, and the voltage the current makes, slower.',
+    slides: SYNAPSES_SLIDES,
+    // slide 3's: the synapse at work, a vesicle emptying into the cleft
+    preview: 'physics2:release',
+    terms: ELECTRICAL_TERMS,
+  },
+  {
+    id: 'compartmental-modeling',
+    title: 'A basic introduction to compartmental modeling',
+    level: 'Intermediate',
+    description:
+      'How the electrical physics of a single neuron becomes a model a computer can run: a patch of membrane as a circuit, and its one equation; the neuron cut into compartments, joined by the resistance of its cytoplasm; voltage-gated channels and synapses as conductances; and how the equations are stepped through time.',
+    slides: COMPARTMENTAL_MODELING_SLIDES,
+    // slide 10's: the dendrite as a cable of compartments
+    preview: 'physics:cable',
+    terms: ELECTRICAL_TERMS,
+  },
+  {
+    id: 'tsodyks-markram',
+    title: 'The Tsodyks–Markram synapse',
+    level: 'Intermediate',
+    description:
+      'Short-term plasticity, and the model of it most used in detailed brain models: depression and facilitation; the resources a spike uses and their recovery, and the three numbers that describe a synapse; release made stochastic, failures and all; and the Blue Brain Project’s version — its synapse types, its receptors, and multivesicular release, from 2019 on.',
+    slides: TSODYKS_MARKRAM_SLIDES,
+    // slide 2's: a depressing synapse and a facilitating one, under the same spikes
+    preview: 'tm:kinds',
   },
   {
     id: 'validation',
@@ -159,6 +196,17 @@ export const LEARN_COURSES: LearnCourse[] = [
       'Slides that used to end the brain-modeling path, kept together as a course of their own: synapses, the neuron and its inputs, the axon initial segment, and the membrane’s voltage — from separated charge up to the spike.',
     slides: MISC_SLIDES,
     preview: 'morphology',
+  },
+  {
+    id: 'mtype-game',
+    rough: true,
+    title: 'Guess the morphological type',
+    level: 'All levels',
+    description:
+      'A game of shapes: one real neuron at a time from the rat’s somatosensory cortex, turning, to be named from its shape alone — first excitatory or inhibitory, then the eleven excitatory kinds by their dendrites, the fifteen kinds of interneuron by their axons, and all 26 together, four choices to a cell.',
+    slides: MTYPE_GAME_SLIDES,
+    // slide 5's: the whole game, playable on the card
+    preview: 'mtypes:all',
   },
   {
     id: 'why-model',

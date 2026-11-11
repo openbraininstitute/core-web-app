@@ -83,7 +83,7 @@ const ZOOM_DEPTH = 1450;
  * kept clear of the pia; and its colour, hue, saturation and lightness — the
  * interneurons' cool, the excitatory cells' warm, kinds alike in hues alike.
  */
-const KINDS: Record<
+export const KINDS: Record<
   string,
   { name: string; layer: number; depth: number; across: number; hsl: [number, number, number] }
 > = {
