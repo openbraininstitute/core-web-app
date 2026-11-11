@@ -43,8 +43,9 @@ const FEATURES = [
   },
 ];
 
-/** How long after the chosen one starts growing into its place beside the field the way in comes, ms. */
-const CTA_AFTER_CHOSEN = 0;
+/** How long after the words start coming in "Try it now" does, ms (with the logo and words, user; and in the
+ * page's first HTML: landing-first-paint.module.css). */
+const CTA_AFTER_WORDS = 300;
 
 /** The supplied landing composition, with accessible controls and a stacked phone layout. */
 export function LandingTileStage({
@@ -75,7 +76,8 @@ export function LandingTileStage({
   const onScreen = useRef(true);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
-  const [ctaState, setCtaState] = useState('waiting');
+  // already in when the page's first HTML brought it in with the words (landing-first-paint.tsx)
+  const [ctaState, setCtaState] = useState(() => (firstPaintShown() ? 'enter' : 'waiting'));
   // The chosen one beside the field comes last in the opening, after the words and the tiles.
   const [chosenShown, setChosenShown] = useState(false);
   // (drawn in the browser alone, inside the walkthrough's portal, so the page can be asked)
@@ -83,30 +85,30 @@ export function LandingTileStage({
   const headline = useRef<HTMLHeadingElement>(null);
   useEffect(() => firstPaintReady('words'), []);
 
-  // The way in comes last of all: once the chosen one has grown into its place beside the field.
+  // "Try it now" comes in with the logo and words (user), then pulses.
   useEffect(() => {
-    if (!chosenShown && !failed) return;
     if (reduced) {
       setCtaState('alive');
-      wayIn();
       return;
     }
+    const began = wordsBegan(headline.current?.querySelector('span'));
+    const after = (ms: number) => Math.max(0, began + ms - performance.now());
     const entrance = window.setTimeout(
-      () => {
-        setCtaState('enter');
-        wayIn();
-      },
-      failed ? 0 : CTA_AFTER_CHOSEN
+      () => setCtaState((state) => (state === 'waiting' ? 'enter' : state)),
+      after(CTA_AFTER_WORDS)
     );
-    const pulse = window.setTimeout(
-      () => setCtaState('alive'),
-      (failed ? 0 : CTA_AFTER_CHOSEN) + 1750
-    );
+    const pulse = window.setTimeout(() => setCtaState('alive'), after(CTA_AFTER_WORDS + 1750));
     return () => {
       window.clearTimeout(entrance);
       window.clearTimeout(pulse);
     };
-  }, [chosenShown, failed, reduced]);
+  }, [reduced]);
+
+  // What comes in with the way in elsewhere (the chapters, the arrow down) still comes last of all: once the
+  // chosen one has grown into its place beside the field.
+  useEffect(() => {
+    if (chosenShown || failed) wayIn();
+  }, [chosenShown, failed]);
 
   useEffect(() => {
     const container = host.current;
@@ -206,7 +208,12 @@ export function LandingTileStage({
           </p>
           <span className={styles.line} aria-hidden="true" />
           <div className={styles.ctaGroup}>
-            <Link className={styles.cta} data-cta-state={ctaState} href="/app/virtual-lab">
+            <Link
+              className={styles.cta}
+              data-cta-state={ctaState}
+              data-landing-cta
+              href="/app/virtual-lab"
+            >
               Try it now
             </Link>
           </div>

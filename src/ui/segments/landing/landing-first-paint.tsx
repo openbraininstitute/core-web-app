@@ -21,6 +21,8 @@ export function LandingFirstPaint() {
         <span>Neuroscience at the</span>
         <span>Speed of Thought</span>
       </p>
+      {/* (a picture of the live one, which is the link: it takes over as this goes) */}
+      <span className={styles.cta}>Try it now</span>
     </div>
   );
 }

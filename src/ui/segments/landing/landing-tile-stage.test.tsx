@@ -36,33 +36,41 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-it('brings the CTA in once the chosen example shows, then pulses it', async () => {
+const stage = () => (
+  <LandingTileStage scene={0} reduced={false} visible onSelect={vi.fn()} onInteraction={vi.fn()} />
+);
+
+it('brings the CTA in with the words, then pulses it; the way in waits for the chosen example', async () => {
   const wayIn = vi.fn();
   window.addEventListener(LANDING_WAY_IN, wayIn);
   await act(async () => {
-    render(
-      <LandingTileStage
-        scene={0}
-        reduced={false}
-        visible
-        onSelect={vi.fn()}
-        onInteraction={vi.fn()}
-      />
-    );
+    render(stage());
   });
   const cta = screen.getByText('Try it now');
-  act(() => vi.advanceTimersByTime(5000));
   expect(cta).toHaveAttribute('data-cta-state', 'waiting');
+  act(() => vi.advanceTimersByTime(250));
+  expect(cta).toHaveAttribute('data-cta-state', 'waiting');
+  act(() => vi.advanceTimersByTime(100));
+  expect(cta).toHaveAttribute('data-cta-state', 'enter');
+  act(() => vi.advanceTimersByTime(1650));
+  expect(cta).toHaveAttribute('data-cta-state', 'enter');
+  act(() => vi.advanceTimersByTime(100));
+  expect(cta).toHaveAttribute('data-cta-state', 'alive');
   expect(wayIn).not.toHaveBeenCalled();
   act(() => renderer.showChosen?.());
-  act(() => vi.advanceTimersByTime(0));
-  expect(cta).toHaveAttribute('data-cta-state', 'enter');
   expect(wayIn).toHaveBeenCalledTimes(1);
-  act(() => vi.advanceTimersByTime(1749));
-  expect(cta).toHaveAttribute('data-cta-state', 'enter');
-  act(() => vi.advanceTimersByTime(1));
-  expect(cta).toHaveAttribute('data-cta-state', 'alive');
   window.removeEventListener(LANDING_WAY_IN, wayIn);
+});
+
+it("starts the CTA in place when the page's first HTML brought it in", async () => {
+  const copy = document.createElement('div');
+  copy.dataset.landingFirstPaint = '';
+  document.body.append(copy);
+  await act(async () => {
+    render(stage());
+  });
+  expect(screen.getByText('Try it now')).toHaveAttribute('data-cta-state', 'enter');
+  copy.remove();
 });
 
 it('shows the CTA immediately for reduced motion', async () => {
