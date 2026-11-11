@@ -3,6 +3,11 @@ version: 1
 # in the app's environment variables (console setting, not in this file).
 applications:
   - appRoot: apps/web
+    env:
+      variables:
+        # AWS requires a hoisted node_modules for pnpm monorepos on Amplify; pnpm 11 ignores
+        # node-linker in .npmrc, so it is set here (Amplify only, other installs stay isolated)
+        pnpm_config_node_linker: hoisted
     frontend:
       phases:
         preBuild:
