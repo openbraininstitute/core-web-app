@@ -231,3 +231,6 @@ CLAUDE.md
 .env.test.secrets
 .cursor/
 .agent-scratch/
+
+# Turborepo local cache
+.turbo

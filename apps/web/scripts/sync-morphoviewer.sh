@@ -13,17 +13,17 @@ set -euo pipefail
 #
 # Override paths:
 #   MORPHOVIEWER_LIB=/path/to/morphoviewer/lib
-#   CORE_WEB_APP=/path/to/core-web-app
+#   CORE_WEB_APP=/path/to/core-web-app/apps/web
 
 MODE="${1:-dev}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CORE_WEB_APP="${CORE_WEB_APP:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
-MORPHOVIEWER_LIB="${MORPHOVIEWER_LIB:-$(cd "${CORE_WEB_APP}/../morphoviewer/lib" 2>/dev/null && pwd || true)}"
+MORPHOVIEWER_LIB="${MORPHOVIEWER_LIB:-$(cd "${CORE_WEB_APP}/../../../morphoviewer/lib" 2>/dev/null && pwd || true)}"
 
 if [[ ! -d "${MORPHOVIEWER_LIB}" ]]; then
   echo "morphoviewer lib not found: ${MORPHOVIEWER_LIB:-<empty>}" >&2
-  echo "Expected a sibling checkout at ../morphoviewer/lib (or set MORPHOVIEWER_LIB)." >&2
+  echo "Expected a checkout beside the repository at ../morphoviewer/lib (or set MORPHOVIEWER_LIB)." >&2
   exit 1
 fi
 

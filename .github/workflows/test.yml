@@ -38,8 +38,6 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
-        with:
-          version: 11.10.0
 
       - name: Set-up Node
         uses: actions/setup-node@v6
@@ -51,7 +49,7 @@ jobs:
         run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Run unit tests with coverage
-        run: pnpm exec vitest run --coverage --shard=${{ matrix.shard }}/${{ strategy.job-total }} --reporter=default --reporter=blob
+        run: pnpm --filter @obi/web exec vitest run --coverage --shard=${{ matrix.shard }}/${{ strategy.job-total }} --reporter=default --reporter=blob
 
       # `.vitest/blob` is a hidden folder, which upload-artifact skips by default
       - name: Upload blob report
@@ -59,7 +57,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: blob-report-${{ matrix.shard }}
-          path: .vitest/blob
+          path: apps/web/.vitest/blob
           include-hidden-files: true
           retention-days: 1
           if-no-files-found: error
@@ -79,8 +77,6 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
-        with:
-          version: 11.10.0
 
       - name: Set-up Node
         uses: actions/setup-node@v6
@@ -96,16 +92,16 @@ jobs:
         with:
           pattern: blob-report-*
           merge-multiple: true
-          path: .vitest/blob
+          path: apps/web/.vitest/blob
 
       - name: Merge test results and coverage
-        run: pnpm exec vitest --merge-reports --coverage
+        run: pnpm --filter @obi/web exec vitest --merge-reports --coverage
 
       - name: Prepare unit coverage artifact
         if: always()
         run: |
           mkdir -p test-artifacts
-          cp coverage/coverage-summary.json test-artifacts/unit-coverage-summary.json || true
+          cp apps/web/coverage/coverage-summary.json test-artifacts/unit-coverage-summary.json || true
 
       - name: Upload unit coverage artifact
         if: always()

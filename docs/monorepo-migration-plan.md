@@ -4,7 +4,8 @@ Goal of this step: turn `core-web-app` into a Turborepo monorepo with **one app 
 with Docker, CI, Amplify and local tooling already working the monorepo way. Packages
 (`@obi/entitycore`, `@obi/ui`) come in later phases and must plug in without touching the setup again.
 
-Status: plan only. Nothing below is implemented or tested yet.
+Status: Phase 1 implemented on branch `bmedd/core-web-monorepo-migration-03973d` (see 3.11).
+Amplify preview and GitHub Actions are not run yet.
 
 ---
 
@@ -171,46 +172,11 @@ Why this shape:
 | AI agents | optional `"agentGuidance": true` in `turbo.json` → turbo keeps a block in `AGENTS.md` pointing to version-matched docs. |
 
 ### 3.6 Docker (`apps/web/Dockerfile`, build context = repo root)
-Pattern from the Turborepo Docker guide: **prune → install → build → run**.
-```dockerfile
-FROM node:24-alpine AS base
-RUN apk add --no-cache libc6-compat && corepack enable
-WORKDIR /app
-
-# 1. prune: keep only @obi/web and the workspace packages it depends on
-FROM base AS prune
-COPY . .
-RUN pnpm dlx turbo@<same pinned version> prune @obi/web --docker
-
-# 2. install: only package.json files + pruned lockfile → this layer is cached
-#    until dependencies change, not on every source edit
-FROM base AS deps
-COPY --from=prune /app/out/json/ .
-RUN pnpm install --frozen-lockfile
-
-# 3. build
-FROM deps AS builder
-COPY --from=prune /app/out/full/ .
-ARG APP_VERSION
-RUN --mount=type=cache,id=next,target=/app/apps/web/.next/cache \
-    pnpm turbo run build --filter=@obi/web
-
-# 4. run: standalone output only, non-root user (same as today)
-FROM node:24-alpine AS runner
-ENV NODE_ENV=production PORT=8000
-RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
-WORKDIR /app
-COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
-COPY --from=builder /app/apps/web/public ./apps/web/public
-USER nextjs
-EXPOSE 8000
-CMD ["node", "apps/web/server.js"]
-```
+Pattern from the Turborepo Docker guide: **prune → install → build → run**. See `apps/web/Dockerfile`.
 - The same file builds any future app: change only the prune target. A new app gets its own Dockerfile.
 - `.dockerignore` at root: add `**/node_modules`, `**/.next`, `**/.turbo`, `out`.
-- `docker-compose.yml`: `build: { context: ., dockerfile: apps/web/Dockerfile }`, watch paths
-  `apps/web/src`, `packages/`, env files under `apps/web/`.
+- `docker-compose.yml`: `build: { context: ., dockerfile: apps/web/Dockerfile }`, watch path
+  `apps/web/src`, env files under `apps/web/` (add a `packages/` watch with the first package).
 - `Makefile` stays at root; targets unchanged (`make build`, `make publish`, `make version`).
 - **Risk – verify first:** `turbo prune` must read the pnpm 11 lockfile and keep the
   `pnpm-workspace.yaml` settings (`overrides`, `allowBuilds`, `minimumReleaseAge`). If it does not,
@@ -285,6 +251,37 @@ Rollout:
 4. **Guard in CI** (`run-checks.yml`): fail if `src/` or `public/` exists at the repo root. This catches a
    branch that used a plain merge (trap 1).
 5. The script stays in the repo for a few weeks, then is deleted.
+
+### 3.11 Phase 1 – what was built and how it was checked (2026-11-11)
+Versions: turbo 2.11.10, pnpm 11.25.0 (`packageManager`), Node 24 in Docker.
+
+| Check | Result |
+|---|---|
+| Move commit | 3,863 renames, all 100% similar, no edits |
+| Lockfile | every resolved version identical to main; only turbo added. Done by renaming the lockfile importer `.` → `apps/web` before `pnpm install` (a plain install re-resolved some direct deps to newer versions, e.g. motion 12.38 → 12.40) |
+| Unit tests (`turbo run test`) | 442 files / 4,398 tests pass, 3 skipped; 2nd run is a cache hit (68 s → 0 s) |
+| CI test commands (shard + merge with new paths) | pass, coverage summary written to `apps/web/coverage/` |
+| Lint | 206 errors / 730 warnings / 232 infos, identical to main (CI step is `continue-on-error`) |
+| Typecheck | TS 7 (repo script): 234 errors; TS 5.9: 362 errors; identical files and messages on main |
+| knip | crashes the same way on main (knip bug, unrelated) |
+| `turbo run build` | passes; 2nd run with the same `APP_VERSION` is `FULL TURBO` (66 ms) |
+| Dev server via `pnpm dev` | landing page renders, `/app/version` shows the git version, no console errors |
+| Docker image | builds; source-only rebuild reuses the install layer (134 s vs 219 s cold); 885.0 MB vs main 883.8 MB; same HTTP status codes and sizes as main's image on `/`, `/app/version`, `/api/auth/providers`, static JS and a public image |
+| Package path (temporary `packages/example`) | app build waits for the package build; typecheck hash changes when package source changes; `turbo prune` includes it; removed afterwards |
+
+Found while doing it:
+- Both main's image and the new one return 500 with only the committed `.env` + `.env.development`:
+  `LAUNCH_SYSTEM_URL` is missing there (it is only in `.env.test`). Not caused by the move.
+- pnpm `verifyDepsBeforeRun` is mtime-based: in Docker a cached install layer plus newer
+  `package.json` timestamps fails the build. The builder stage turns the re-check off after its frozen install.
+- Sharing one BuildKit cache mount (`id=next`) between the old and new layouts hung `next build`. The
+  new Dockerfile uses a per-app id (`next-web`).
+- Amplify builds with `pnpm run build` (plain `next build`) instead of turbo, so turbo's strict env
+  mode cannot drop an Amplify variable. Same command as today.
+- CI build runs `turbo run build` without `--affected`: with one app every change affects it, and
+  `--affected` needs a deeper git fetch. Add it with the first package.
+
+Not checked: GitHub Actions run, Amplify preview, `make publish`, an authenticated download in Docker.
 
 ---
 

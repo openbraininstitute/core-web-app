@@ -27,14 +27,20 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
-        with:
-          version: 11.10.0
 
       - name: Set-up Node
         uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: "pnpm"
+
+      # app code lives under apps/; a branch merged across the monorepo move without
+      # scripts/monorepo/move.sh port can leave files in the old root folders
+      - name: No app files at the repository root
+        run: |
+          for d in src public types; do
+            if [ -e "$d" ]; then echo "::error::$d/ must live under apps/web/ (see scripts/monorepo/move.sh)"; exit 1; fi
+          done
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --prefer-offline
@@ -53,8 +59,6 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
-        with:
-          version: 11.10.0
 
       - name: Set-up Node
         uses: actions/setup-node@v6
@@ -66,7 +70,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: |
-            .next/cache
+            apps/web/.next/cache
           key: ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-nextjs-
@@ -75,4 +79,4 @@ jobs:
         run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Build app
-        run: pnpm run build
+        run: pnpm turbo run build

@@ -1,0 +1,22 @@
+{
+  "name": "core-web-app",
+  "author": "Blue Brain Project/EPFL",
+  "private": true,
+  "packageManager": "pnpm@11.25.0",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "start": "turbo run start",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "knip": "turbo run knip",
+    "ci": "biome ci",
+    "format": "biome format --write"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.4.15",
+    "lefthook": "^2.1.6",
+    "turbo": "2.11.10"
+  }
+}

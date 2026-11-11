@@ -1,0 +1,92 @@
+{
+  "$schema": "https://v2-11-10.turborepo.dev/schema.json",
+  "tasks": {
+    "transit": {
+      "description": "Graph-only node: typecheck and test depend on it so they run in parallel across packages yet re-run when a dependency's source changes",
+      "dependsOn": ["^transit"]
+    },
+    "build": {
+      "description": "Production build; workspace dependencies build first",
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env", ".env.production", ".env.production.local"],
+      "outputs": [".next/**", "!.next/cache/**", "!.next/dev/**", "dist/**"],
+      "env": [
+        "APP_VERSION",
+        "DEPLOYMENT_ENV",
+        "AWS_APP_ID",
+        "AWS_AMPLIFY_BUILD",
+        "CI",
+        "SENTRY_ORG",
+        "SENTRY_PRJ",
+        "SENTRY_DSN",
+        "API_ORIGIN",
+        "AUTH_PROXY_URL",
+        "AI_AGENT_URL",
+        "AUTH_MANAGER_URL",
+        "CELL_API_URL",
+        "ENTITY_CORE_URL",
+        "ENTITY_CORE_PUBLIC_PROJECT_ID",
+        "ENTITY_CORE_PUBLIC_VIRTUAL_LAB_ID",
+        "LAUNCH_SYSTEM_URL",
+        "NOTEBOOK_API_URL",
+        "NOTEBOOK_REPO_URL",
+        "OBI_ONE_URL",
+        "SMALL_SCALE_SIMULATOR_URL",
+        "THUMBNAIL_API_URL",
+        "VIRTUAL_LAB_API_URL",
+        "ROOT_ROUTE",
+        "KEYCLOAK_CLIENT_ID",
+        "KEYCLOAK_ISSUER",
+        "NEXTAUTH_URL",
+        "GITHUB_FEEDBACK_PROJECT_ID",
+        "MAILCHIMP_API_SERVER",
+        "MAILCHIMP_AUDIENCE_ID",
+        "MATOMO_*",
+        "SANITY_*",
+        "STRIPE_PUBLISHABLE_KEY",
+        "*_ATLAS__ID",
+        "*_DEFAULT__*",
+        "EXCLUDED_HIERARCHY_IDS",
+        "LEGACY_DEFAULT_CIRCUIT_ID"
+      ],
+      "passThroughEnv": [
+        "SENTRY_AUTH_TOKEN",
+        "KEYCLOAK_CLIENT_SECRET",
+        "NEXTAUTH_SECRET",
+        "GRADING_WEB_LAUNCH_HMAC_SECRET",
+        "MAILCHIMP_API_KEY",
+        "GITHUB_FEEDBACK_TOKEN"
+      ]
+    },
+    "dev": {
+      "description": "Local dev server; uncached, sees the whole shell env so ad-hoc overrides keep working",
+      "cache": false,
+      "persistent": true,
+      "passThroughEnv": ["*"]
+    },
+    "start": {
+      "description": "Serve a production build locally",
+      "dependsOn": ["build"],
+      "cache": false,
+      "persistent": true,
+      "passThroughEnv": ["*"]
+    },
+    "lint": {
+      "description": "Biome check of the package's own files"
+    },
+    "typecheck": {
+      "description": "tsc --noEmit",
+      "dependsOn": ["transit"]
+    },
+    "test": {
+      "description": "Vitest run",
+      "dependsOn": ["transit"],
+      "inputs": ["$TURBO_DEFAULT$", ".env", ".env.development", ".env.test"],
+      "outputs": ["coverage/**"]
+    },
+    "knip": {
+      "description": "Unused files and exports",
+      "dependsOn": ["transit"]
+    }
+  }
+}
