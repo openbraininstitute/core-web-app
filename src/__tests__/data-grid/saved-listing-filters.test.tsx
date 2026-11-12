@@ -28,9 +28,6 @@ import { scopeListing } from '@/features/views/listing/variants/scope-listing';
  * switching entity type showed "47 of 47" for a circuit listing filtered to "21 of 47".
  */
 
-/** The scope every Data listing shows with no scope filter set. */
-const OTHER_PROJECTS_PUBLIC = { authorized_public: 'true', authorized_project_id__neq: 'proj' };
-
 const CIRCUIT = ExtendedEntitiesTypeDict.Circuit;
 const KEY = 'vlab/proj/data/circuit/public/small';
 
@@ -75,7 +72,6 @@ describe('saved listing filters', () => {
     expect(result.current?.filters[columnId]).toBeDefined();
 
     await expect(savedListingParams(CIRCUIT, result.current, undefined, 'proj')).resolves.toEqual({
-      ...OTHER_PROJECTS_PUBLIC,
       number_neurons__gte: 100,
     });
 
@@ -92,12 +88,11 @@ describe('saved listing filters', () => {
 
     // circuit searches with ilike, as its grid does
     await expect(savedListingParams(CIRCUIT, result.current, undefined, 'proj')).resolves.toEqual({
-      ...OTHER_PROJECTS_PUBLIC,
       ilike_search: '*hippo*',
     });
   });
 
-  it('counts the default scope alone when nothing that narrows the rows is saved', async () => {
+  it('counts unfiltered when nothing that narrows the rows is saved', async () => {
     // page, sort and empty filters do not change the count, so they must not split the cache
     expect(
       parseSavedListingFilters(
@@ -112,9 +107,7 @@ describe('saved listing filters', () => {
       )
     ).toBeNull();
     expect(parseSavedListingFilters('not json')).toBeNull();
-    await expect(savedListingParams(CIRCUIT, undefined, undefined, 'proj')).resolves.toEqual(
-      OTHER_PROJECTS_PUBLIC
-    );
+    await expect(savedListingParams(CIRCUIT, undefined, undefined, 'proj')).resolves.toEqual({});
   });
 });
 
@@ -126,12 +119,11 @@ it('sends a saved scope filter as the authorized params', async () => {
       scope: {
         columnId: 'scope',
         operator: OperatorId.Eq,
-        value: { kind: FilterValueKind.Text, text: 'published' },
+        value: { kind: FilterValueKind.Text, text: 'project,published' },
       },
     },
   };
   await expect(savedListingParams(CIRCUIT, saved, undefined, 'proj')).resolves.toEqual({
-    authorized_public: 'true',
     authorized_project_id: 'proj',
   });
 });

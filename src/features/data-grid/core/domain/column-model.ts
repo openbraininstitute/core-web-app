@@ -107,11 +107,6 @@ export interface IColumnFilter {
    * expresses; `projectId` is the workspace's.
    */
   toParams?: (value: string, workspace: IGridWorkspace) => Record<string, unknown>;
-  /**
-   * The Eq value `toParams` is given while the filter holds none, for a filter that always
-   * narrows the listing; clearing the filter goes back to it.
-   */
-  defaultValue?: string;
 }
 
 /**

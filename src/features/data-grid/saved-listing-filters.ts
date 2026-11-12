@@ -3,7 +3,6 @@
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 
 import { serializeEntitycoreQuery } from '@/features/data-grid/bindings/entitycore/data-source.paged';
-import { scopeFilterParams } from '@/features/data-grid/bindings/entitycore/scope-filter';
 import { isEmptyFilterValue, repairPersistedFilters } from '@/features/data-grid/core';
 import {
   SESSION_NAMESPACE,
@@ -73,8 +72,7 @@ export function useSavedListingFilters(dataKey: string): TSavedListingFilters | 
 /**
  * Entitycore params for {@link TSavedListingFilters}, built as the listing's grid builds its
  * request: same definition (`scopeListing` for a variant), same filter repair, same
- * serializer, and the default scope with nothing saved. Callers spread their pinned params
- * (region, scope, variant) after these.
+ * serializer. Callers spread their pinned params (region, scope, variant) after these.
  */
 export async function savedListingParams(
   dataType: TExtendedEntitiesTypeDict,
@@ -82,8 +80,7 @@ export async function savedListingParams(
   variant?: IListingVariant,
   projectId?: string
 ): Promise<TEntitycoreParams> {
-  // the Data and Notebooks listings show the scope column, whose filter always narrows them
-  if (!saved) return scopeFilterParams(undefined, projectId);
+  if (!saved) return {};
   // Lazy: the registry pulls in every grid schema and AG Grid, which the sidebar on the
   // Data atlas page (no listing) must not load. Reached only when filters are saved.
   const { getEntityGridDefinition } = await import(

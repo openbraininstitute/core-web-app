@@ -36,9 +36,10 @@ import {
 } from '@/features/data-grid/bindings/entitycore/columns/scope';
 import { createEntitycorePagedDataSource } from '@/features/data-grid/bindings/entitycore/data-source.paged';
 import {
+  isScopeShown,
   SCOPE_COLUMN_ID,
-  scopeKindFor,
   scopeKindOf,
+  scopeSelectionFor,
 } from '@/features/data-grid/bindings/entitycore/scope-filter';
 import {
   createDefaultOperatorRegistry,
@@ -105,10 +106,10 @@ import type { IListingVariant } from '@/features/views/listing/variants/types';
 
 /** Module-level so the slice subscription's reader identity stays stable. */
 const selectFreeTextSearch = (state: IGridState): string => state.freeTextSearch;
-/** The kind of row the scope filter shows, module-level for the same reason. */
-const selectScopeKind = (state: IGridState) => {
+/** The kinds of row the scope filter shows, module-level for the same reason. */
+const selectScopeSelection = (state: IGridState) => {
   const value = state.filters[SCOPE_COLUMN_ID]?.value;
-  return scopeKindFor(value?.kind === FilterValueKind.Text ? value.text : undefined);
+  return scopeSelectionFor(value?.kind === FilterValueKind.Text ? value.text : undefined);
 };
 
 export interface IBrowseEntityGridProps extends BrowseEntityScopeProps {
@@ -354,7 +355,7 @@ export function EntityDataGrid({
   );
 
   const freeTextSearch = useGridStateSlice(controller, selectFreeTextSearch);
-  const shownScope = useGridStateSlice(controller, selectScopeKind);
+  const shownScope = useGridStateSlice(controller, selectScopeSelection);
 
   const extraOrderBy = extraQueryParams?.order_by;
   const defaultDataSource = useMemo(
@@ -570,7 +571,10 @@ export function EntityDataGrid({
                   // the basket outlives a scope switch, so the confirm names what is out of view
                   isRowShown={
                     requireScopeSelector
-                      ? (row) => scopeKindOf(row as IScopeRow, projectId) === shownScope
+                      ? (row) => {
+                          const kind = scopeKindOf(row as IScopeRow, projectId);
+                          return !kind || isScopeShown(shownScope, kind);
+                        }
                       : undefined
                   }
                 />

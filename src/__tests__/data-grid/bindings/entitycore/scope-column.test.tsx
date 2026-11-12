@@ -95,19 +95,27 @@ describe('scope column', () => {
     ['public', { authorized_public: 'true', authorized_project_id__neq: PROJECT }],
     ['project', { authorized_public: 'false' }],
     ['published', { authorized_public: 'true', authorized_project_id: PROJECT }],
+    ['public,published', { authorized_public: 'true' }],
+    ['project,published', { authorized_project_id: PROJECT }],
   ])('filters %s with one request on the bare authorized params', (text, expected) => {
     expect(scopeParams(scopeEntry(text))).toEqual(expected);
   });
 
-  it('shows public data from other projects with no filter set, or one of an older format', () => {
-    const otherProjects = { authorized_public: 'true', authorized_project_id__neq: PROJECT };
-    expect(scopeParams({})).toEqual(otherProjects);
-    expect(scopeParams(scopeEntry('not-published'))).toEqual(otherProjects);
-    // without a project nothing is the project's, so public data is all of it
-    expect(scopeParams({}, '')).toEqual({ authorized_public: 'true' });
+  it('shows every kind with no filter set, or one no request can list', () => {
+    expect(scopeParams({})).toEqual({});
+    expect(scopeParams(scopeEntry('not-published'))).toEqual({});
+    // public with project alone means NOT (public AND project), which AND-only params cannot say
+    expect(scopeParams(scopeEntry('public,project'))).toEqual({});
   });
 
-  it("lists public data from other projects in one request that keeps the user's sort", async () => {
+  it('narrows to public or private alone without a project, nothing being its own', () => {
+    expect(scopeParams(scopeEntry('public'), '')).toEqual({ authorized_public: 'true' });
+    expect(scopeParams(scopeEntry('project,published'), '')).toEqual({
+      authorized_public: 'false',
+    });
+  });
+
+  it("lists one kind in one request that keeps the user's sort", async () => {
     const list = vi.fn(async () => ({
       data: [{ id: 'r0' }],
       pagination: { page: 2, page_size: 30, total_items: 31 },
@@ -121,7 +129,7 @@ describe('scope column', () => {
     const result = await source.fetch({
       page: 2,
       pageSize: 30,
-      filters: {},
+      filters: scopeEntry('public'),
       sort: [{ columnId: 'name', direction: SortDirection.Desc }],
     });
 
@@ -170,40 +178,60 @@ describe('scope header', () => {
       const value = controller.store.getSnapshot().filters.scope?.value;
       return value?.kind === FilterValueKind.Text ? value.text : undefined;
     };
-    const pressed = (testId: string) => screen.getByTestId(testId).getAttribute('aria-pressed');
+    const pressed = (kind: string) =>
+      screen.getByTestId(`scope-header-${kind}`).getAttribute('aria-pressed');
     return { controller, filter, pressed };
   }
 
-  it('shows three kinds, exactly one on: public data from other projects by default', () => {
+  const KINDS = ['public', 'project', 'published'];
+  const click = (kind: string) => fireEvent.click(screen.getByTestId(`scope-header-${kind}`));
+
+  it('shows three kinds, every one on by default', () => {
     const { filter, pressed } = renderHeader();
     expect(screen.getByRole('group', { name: 'Scope' })).toBeInTheDocument();
     expect(screen.getAllByRole('button')).toHaveLength(3);
-    const kinds = ['public', 'project', 'published'];
-    expect(kinds.map((kind) => pressed(`scope-header-${kind}`))).toEqual([
-      'true',
-      'false',
-      'false',
-    ]);
+    expect(KINDS.map(pressed)).toEqual(['true', 'true', 'true']);
     expect(filter()).toBeUndefined();
   });
 
-  it.each(['project', 'published'])('a click on %s shows only that kind', (kind) => {
+  it('toggles any mix that one request can list', () => {
     const { filter, pressed } = renderHeader();
-    fireEvent.click(screen.getByTestId(`scope-header-${kind}`));
-    expect(filter()).toBe(kind);
-    for (const other of ['public', 'project', 'published']) {
-      expect(pressed(`scope-header-${other}`)).toBe(String(other === kind));
-    }
+    click('public');
+    expect(filter()).toBe('project,published');
+    click('project');
+    expect(filter()).toBe('published');
+    click('public');
+    expect(filter()).toBe('public,published');
+    click('published');
+    expect(filter()).toBe('public');
+    expect(KINDS.map(pressed)).toEqual(['true', 'false', 'false']);
   });
 
-  it('goes back to the default by clearing the filter; a click on the kind on does nothing', () => {
-    const { filter, pressed } = renderHeader();
-    fireEvent.click(screen.getByTestId('scope-header-project'));
-    fireEvent.click(screen.getByTestId('scope-header-project'));
-    expect(filter()).toBe('project');
-    fireEvent.click(screen.getByTestId('scope-header-public'));
+  it('goes back to every kind by clearing the filter', () => {
+    const { filter } = renderHeader();
+    click('project');
+    expect(filter()).toBe('public,published');
+    click('project');
     expect(filter()).toBeUndefined();
-    expect(pressed('scope-header-public')).toBe('true');
+  });
+
+  it('blocks the last kind on, and Public with Project alone', () => {
+    const { filter, pressed } = renderHeader();
+    // all on: turning off made public would leave Public with Project alone
+    expect(screen.getByTestId('scope-header-published')).toHaveAttribute('aria-disabled', 'true');
+    click('published');
+    expect(filter()).toBeUndefined();
+
+    click('project');
+    click('published');
+    expect(filter()).toBe('public');
+    // public alone: it stays on, and Project cannot join it without made public
+    expect(screen.getByTestId('scope-header-public')).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByTestId('scope-header-project')).toHaveAttribute('aria-disabled', 'true');
+    click('public');
+    click('project');
+    expect(filter()).toBe('public');
+    expect(pressed('public')).toBe('true');
   });
 
   it('keeps the selection while switching, so a picker keeps its picks', () => {

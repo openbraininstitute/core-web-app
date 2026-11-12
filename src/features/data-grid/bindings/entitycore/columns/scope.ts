@@ -3,8 +3,9 @@ import {
   SCOPE_RENDERER,
 } from '@/features/data-grid/bindings/entitycore/renderers/scope-cells';
 import {
-  DEFAULT_SCOPE_KIND,
   SCOPE_COLUMN_ID,
+  SCOPE_LABELS,
+  ScopeKind,
   scopeFilterParams,
 } from '@/features/data-grid/bindings/entitycore/scope-filter';
 import { Align, FilterOptionsKind, OperatorId } from '@/features/data-grid/core';
@@ -20,9 +21,9 @@ interface IHasAuthorizedPublic {
 const FIRST_COLUMN_ORDER = -10_000;
 
 /**
- * Public or project, for a listing that holds both. Its filter always holds one kind of
- * row (public data from other projects by default), each of which is one request; scope
- * is not an ordering field, so the column is not sortable.
+ * Public or project, for a listing that holds both. Its filter holds the kinds of row shown
+ * (every kind by default), each selection being one request; scope is not an ordering
+ * field, so the column is not sortable.
  */
 export function scopeColumn<Row>(): IColumnModel<Row> {
   return {
@@ -33,7 +34,7 @@ export function scopeColumn<Row>(): IColumnModel<Row> {
     getValue: (r) => {
       const isPublic = (r as IHasAuthorizedPublic).authorized_public;
       if (typeof isPublic !== 'boolean') return '';
-      return isPublic ? 'Public' : 'Project';
+      return isPublic ? SCOPE_LABELS[ScopeKind.Public] : SCOPE_LABELS[ScopeKind.Project];
     },
     cellRenderer: SCOPE_RENDERER,
     headerRenderer: SCOPE_HEADER_RENDERER,
@@ -53,9 +54,9 @@ export function scopeColumn<Row>(): IColumnModel<Row> {
           options: {
             kind: FilterOptionsKind.Static,
             items: [
-              { id: 'public', label: 'Public, other projects' },
-              { id: 'project', label: 'This project, private' },
-              { id: 'published', label: 'This project, made public' },
+              { id: ScopeKind.Public, label: 'Public, other projects' },
+              { id: ScopeKind.Project, label: 'This project, private' },
+              { id: ScopeKind.Published, label: 'This project, made public' },
             ],
           },
           description:
@@ -63,7 +64,6 @@ export function scopeColumn<Row>(): IColumnModel<Row> {
         },
       ],
       toParams: (value, { projectId }) => scopeFilterParams(value, projectId),
-      defaultValue: DEFAULT_SCOPE_KIND,
     },
   };
 }

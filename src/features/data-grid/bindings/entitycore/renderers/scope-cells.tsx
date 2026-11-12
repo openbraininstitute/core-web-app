@@ -5,11 +5,14 @@ import { useQuery } from '@tanstack/react-query';
 
 import { getProject } from '@/api/virtual-lab-svc/queries/project';
 import {
+  isScopeShown,
   SCOPE_KINDS,
   SCOPE_LABELS,
-  scopeKindFor,
+  ScopeKind,
   scopeKindOf,
+  scopeSelectionFor,
   showScope,
+  toggledScope,
 } from '@/features/data-grid/bindings/entitycore/scope-filter';
 import { FilterValueKind } from '@/features/data-grid/core';
 import { useGridState } from '@/features/data-grid/react/use-grid-state';
@@ -22,7 +25,11 @@ import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 
 import type { ReactElement, ReactNode } from 'react';
-import type { IScopeRow, TScopeKind } from '@/features/data-grid/bindings/entitycore/scope-filter';
+import type {
+  IScopeRow,
+  TScopeKind,
+  TScopeSelection,
+} from '@/features/data-grid/bindings/entitycore/scope-filter';
 import type { ICellRendererProps, IHeaderRendererProps } from '@/features/data-grid/react';
 
 /** Cell-renderer registry key for the public/project scope icon. */
@@ -32,7 +39,10 @@ export const SCOPE_RENDERER = 'scope';
 export const SCOPE_HEADER_RENDERER = 'scopeHeader';
 
 /** One colour per scope, shared by the cells and the header toggles. */
-const SCOPE_COLORS = { public: 'text-green-600', project: 'text-primary-4' } as const;
+const SCOPE_COLORS = {
+  [ScopeKind.Public]: 'text-green-600',
+  [ScopeKind.Project]: 'text-primary-4',
+} as const;
 
 /** Delay before a scope card opens, so sweeping down the column does not flash one per row. */
 const TOOLTIP_DELAY_MS = 200;
@@ -48,7 +58,7 @@ function GlobeWithProjectBadge({ muted }: { muted?: boolean }) {
   return (
     <svg
       role="img"
-      aria-label={SCOPE_LABELS.published}
+      aria-label={SCOPE_LABELS[ScopeKind.Published]}
       viewBox="0 0 24 24"
       width="1.2em"
       height="1.2em"
@@ -82,22 +92,22 @@ function GlobeWithProjectBadge({ muted }: { muted?: boolean }) {
 export function ScopeMark({ kind, muted }: { kind: TScopeKind; muted?: boolean }) {
   const tint = (scope: keyof typeof SCOPE_COLORS) =>
     cn('scope-mark inline-flex', !muted && SCOPE_COLORS[scope]);
-  if (kind === 'published') {
+  if (kind === ScopeKind.Published) {
     return (
-      <span className={tint('public')}>
+      <span className={tint(ScopeKind.Public)}>
         <GlobeWithProjectBadge muted={muted} />
       </span>
     );
   }
-  if (kind === 'public') {
+  if (kind === ScopeKind.Public) {
     return (
-      <span className={tint('public')}>
-        <GlobalOutlined aria-label={SCOPE_LABELS.public} />
+      <span className={tint(ScopeKind.Public)}>
+        <GlobalOutlined aria-label={SCOPE_LABELS[ScopeKind.Public]} />
       </span>
     );
   }
   return (
-    <span className={tint('project')}>
+    <span className={tint(ScopeKind.Project)}>
       <ProjectIcon aria-label={SCOPE_LABELS[kind]} />
     </span>
   );
@@ -144,10 +154,13 @@ function ProjectScopeHint({
 function ScopeTooltip({
   kind,
   canChangeProject = false,
+  note,
   children,
 }: {
   kind: TScopeKind;
   canChangeProject?: boolean;
+  /** why the toggle cannot be clicked now */
+  note?: string;
   children: ReactElement;
 }) {
   return (
@@ -165,11 +178,15 @@ function ScopeTooltip({
         showArrow={false}
         className="text-primary-9 relative w-max max-w-[250px] border border-gray-200 bg-white shadow-md"
       >
-        {kind === 'public' ? (
-          <span>{SCOPE_LABELS.public}</span>
+        {kind === ScopeKind.Public ? (
+          <span>{SCOPE_LABELS[ScopeKind.Public]}</span>
         ) : (
-          <ProjectScopeHint published={kind === 'published'} canChangeProject={canChangeProject} />
+          <ProjectScopeHint
+            published={kind === ScopeKind.Published}
+            canChangeProject={canChangeProject}
+          />
         )}
+        {note && <span className="mt-1.5 block text-gray-500">{note}</span>}
         <span
           aria-hidden
           className="absolute -top-[6px] size-2.5 rotate-45 border-t border-l border-gray-200 bg-white"
@@ -197,36 +214,53 @@ export function ScopeCell({ row }: ICellRendererProps<IScopeRow>): ReactNode | n
   );
 }
 
+/** Why the toggle for `kind` cannot be clicked while `selection` is shown. */
+function blockedNote(selection: TScopeSelection, kind: TScopeKind): string {
+  if (selection.key === kind) return 'One scope always stays shown.';
+  return isScopeShown(selection, kind)
+    ? 'Public and Project can only be shown with Project, made public.'
+    : 'Public and Project can only be shown with Project, made public: turn it on first.';
+}
+
 /**
- * One button per kind of row in place of the scope column's label and filter, of which
- * exactly one is on: the globe for public data from other projects (the default), the
- * people for the project's private data, and the globe with a badge for the project's data
- * made public. Each kind is one request, so the listing keeps its sort and counts.
+ * One toggle per kind of row in place of the scope column's label and filter: the globe for
+ * public data from other projects, the people for the project's private data, and the globe
+ * with a badge for the project's data made public. Every kind is shown by default and any
+ * mix can be, each as one request, so the listing keeps its sort and counts; a toggle is
+ * blocked when it would show nothing, or Public with Project alone, which no request lists.
  */
 export function ScopeHeader({ columnId, ctx }: IHeaderRendererProps) {
   const state = useGridState(ctx.controller);
   const entry = state.filters[columnId];
-  const shown = scopeKindFor(entry?.value.kind === FilterValueKind.Text ? entry.value.text : '');
+  const selection = scopeSelectionFor(
+    entry?.value.kind === FilterValueKind.Text ? entry.value.text : undefined
+  );
   return (
     <fieldset
       aria-label="Scope"
       className="flex h-full w-full min-w-0 items-center justify-center gap-0.5"
     >
       {SCOPE_KINDS.map((kind) => {
-        const isOn = kind === shown;
+        const isOn = isScopeShown(selection, kind);
+        const next = toggledScope(selection, kind);
+        const note = next ? undefined : blockedNote(selection, kind);
         return (
-          <ScopeTooltip key={kind} kind={kind} canChangeProject>
+          <ScopeTooltip key={kind} kind={kind} note={note} canChangeProject>
             <button
               type="button"
               aria-pressed={isOn}
+              // aria-disabled, not disabled: a disabled button gets no hover, so no card says why
+              aria-disabled={!next}
               aria-label={SCOPE_LABELS[kind]}
               data-testid={`scope-header-${kind}`}
-              onClick={() => !isOn && showScope(ctx.controller, columnId, kind)}
+              onClick={() => next && showScope(ctx.controller, columnId, next)}
               className={cn(
                 'flex size-6 items-center justify-center rounded-full text-lg transition-colors',
                 'focus-visible:ring-primary-6 outline-none focus-visible:ring-2',
+                !next && 'cursor-not-allowed',
                 // an on mark carries its own colour; an off one takes this grey
-                isOn ? 'cursor-default' : 'text-gray-300 hover:bg-gray-100 hover:text-gray-500'
+                !isOn && 'text-gray-300',
+                !isOn && next && 'hover:bg-gray-100 hover:text-gray-500'
               )}
             >
               <ScopeMark kind={kind} muted={!isOn} />
