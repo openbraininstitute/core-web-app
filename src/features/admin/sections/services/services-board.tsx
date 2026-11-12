@@ -1,7 +1,8 @@
 'use client';
 
 import { ReloadOutlined } from '@ant-design/icons';
-import { useIsFetching, useQuery, useQueryClient } from '@tanstack/react-query';
+import { skipToken, useIsFetching, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
 
 import { config } from '@/config';
 import { Align } from '@/features/data-grid/core';
@@ -15,6 +16,7 @@ import { fetchServiceVersion, probeServiceHealth } from './health';
 import { SERVICE_CATALOG, serviceBaseUrl } from './service-catalog';
 
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
+import type { ServiceHealth } from './health';
 import type { ServiceDescriptor } from './service-catalog';
 
 const STATUS_REFRESH_MS = 60_000;
@@ -22,9 +24,15 @@ const VERSION_STALE_MS = 5 * 60_000;
 
 type ServiceRow = ServiceDescriptor & { baseUrl: string };
 
+const STATUS_LABEL: Record<ServiceHealth['status'], string> = {
+  up: 'Operational',
+  down: 'Down',
+  unreachable: 'Unreachable',
+};
+
 function useServiceHealth(service: ServiceRow) {
   return useQuery({
-    queryKey: adminQueryKeys.serviceHealth({ key: service.key }),
+    queryKey: adminQueryKeys.serviceHealth(service.key),
     queryFn: () => probeServiceHealth(service),
     refetchInterval: STATUS_REFRESH_MS,
   });
@@ -35,21 +43,19 @@ function StatusCell({ service }: { service: ServiceRow }) {
 
   if (!health) return <span className="text-neutral-4">Checking</span>;
 
-  const operational = health.status === 'operational';
   return (
     <Badge
       rounded
       variant="outline"
       className={cn(
         STATUS_PILL_CLASS,
-        operational
+        health.status === 'up'
           ? 'border-green-500 bg-green-50 text-green-700'
           : 'border-red-500 bg-red-50 text-red-700'
       )}
     >
-      {operational
-        ? 'Operational'
-        : `Unreachable${health.httpStatus ? ` (${health.httpStatus})` : ''}`}
+      {STATUS_LABEL[health.status]}
+      {health.status === 'down' && ` (${health.httpStatus})`}
     </Badge>
   );
 }
@@ -60,10 +66,10 @@ function LatencyCell({ service }: { service: ServiceRow }) {
 }
 
 function VersionCell({ service }: { service: ServiceRow }) {
+  const { baseUrl, versionPath } = service;
   const { data: version } = useQuery({
-    queryKey: adminQueryKeys.serviceVersion({ key: service.key }),
-    queryFn: () => fetchServiceVersion(service.baseUrl),
-    enabled: service.supportsVersion,
+    queryKey: adminQueryKeys.serviceVersion(service.key),
+    queryFn: versionPath ? () => fetchServiceVersion(baseUrl, versionPath) : skipToken,
     staleTime: VERSION_STALE_MS,
   });
   return version ? <span className="font-mono text-sm">{version}</span> : null;
@@ -108,7 +114,7 @@ const COLUMNS: Array<ISimpleColumn<ServiceRow>> = [
       const url = `${service.baseUrl}${service.healthPath}`;
       return (
         <code title={url} className="text-neutral-4 truncate text-sm">
-          {url.replace(/^https?:\/\/[^/]+/, '')}
+          {new URL(url, 'http://localhost').pathname}
         </code>
       );
     },
@@ -134,10 +140,15 @@ function RefreshButton() {
 }
 
 export function ServicesBoard() {
-  const services = SERVICE_CATALOG.map((descriptor) => ({
-    ...descriptor,
-    baseUrl: serviceBaseUrl(descriptor, config[descriptor.configKey] as string),
-  }));
+  // Not at module scope: the config is read lazily, and is empty while Next builds.
+  const services = useMemo(
+    () =>
+      SERVICE_CATALOG.map((descriptor) => ({
+        ...descriptor,
+        baseUrl: serviceBaseUrl(descriptor, config[descriptor.configKey] as string),
+      })),
+    []
+  );
 
   return (
     <div className="flex flex-col gap-4">

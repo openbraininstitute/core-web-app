@@ -10,7 +10,7 @@ export type ServiceDescriptor = {
   description: string;
   configKey: PlatformApiUrlField;
   healthPath: string;
-  supportsVersion: boolean;
+  versionPath?: string;
   // The config URL carries a version path, but health and version are mounted at the root.
   stripFromUrl?: string;
 };
@@ -22,7 +22,7 @@ export const SERVICE_CATALOG: ServiceDescriptor[] = [
     description: 'Entity data, assets and admin',
     configKey: 'ENTITY_CORE_URL',
     healthPath: '/health',
-    supportsVersion: true,
+    versionPath: '/version',
   },
   {
     key: 'virtual-lab',
@@ -30,7 +30,6 @@ export const SERVICE_CATALOG: ServiceDescriptor[] = [
     description: 'Labs, projects and promotions',
     configKey: 'VIRTUAL_LAB_API_URL',
     healthPath: '/health',
-    supportsVersion: false,
   },
   {
     key: 'ai-agent',
@@ -38,7 +37,7 @@ export const SERVICE_CATALOG: ServiceDescriptor[] = [
     description: 'Assistant and tools',
     configKey: 'AI_AGENT_URL',
     healthPath: '/healthz',
-    supportsVersion: true,
+    versionPath: '/version',
   },
   {
     key: 'obi-one',
@@ -46,7 +45,7 @@ export const SERVICE_CATALOG: ServiceDescriptor[] = [
     description: 'Modeling workflows',
     configKey: 'OBI_ONE_URL',
     healthPath: '/health',
-    supportsVersion: true,
+    versionPath: '/version',
   },
   {
     key: 'small-scale-simulator',
@@ -54,7 +53,6 @@ export const SERVICE_CATALOG: ServiceDescriptor[] = [
     description: 'Bluenaas simulations. Its health route is a stub',
     configKey: 'SMALL_SCALE_SIMULATOR_URL',
     healthPath: '/health',
-    supportsVersion: false,
   },
   {
     key: 'thumbnail',
@@ -62,7 +60,6 @@ export const SERVICE_CATALOG: ServiceDescriptor[] = [
     description: 'Preview generation',
     configKey: 'THUMBNAIL_API_URL',
     healthPath: '/health',
-    supportsVersion: false,
   },
   {
     key: 'notebook',
@@ -70,7 +67,6 @@ export const SERVICE_CATALOG: ServiceDescriptor[] = [
     description: 'Notebook service',
     configKey: 'NOTEBOOK_API_URL',
     healthPath: '/health',
-    supportsVersion: false,
   },
   {
     key: 'auth-manager',
@@ -78,7 +74,7 @@ export const SERVICE_CATALOG: ServiceDescriptor[] = [
     description: 'Authorization service',
     configKey: 'AUTH_MANAGER_URL',
     healthPath: '/health',
-    supportsVersion: true,
+    versionPath: '/version',
     stripFromUrl: '/v1',
   },
 ];

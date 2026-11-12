@@ -1,16 +1,19 @@
 // Health and version routes need no auth, so the operator's token stays out of these calls.
 
-type ServiceHealth = {
-  status: 'operational' | 'unreachable';
+export type ServiceHealth = {
+  status: 'up' | 'down' | 'unreachable';
   httpStatus?: number;
   latencyMs: number;
 };
 
 const PROBE_TIMEOUT_MS = 8000;
 
-export async function fetchServiceVersion(baseUrl: string): Promise<string | null> {
+export async function fetchServiceVersion(
+  baseUrl: string,
+  versionPath: string
+): Promise<string | null> {
   try {
-    const res = await fetch(`${baseUrl}/version`, {
+    const res = await fetch(`${baseUrl}${versionPath}`, {
       cache: 'no-store',
       signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
     });
@@ -39,7 +42,7 @@ export async function probeServiceHealth({
       signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
     });
     const latencyMs = Math.round(performance.now() - started);
-    return { status: res.ok ? 'operational' : 'unreachable', httpStatus: res.status, latencyMs };
+    return { status: res.ok ? 'up' : 'down', httpStatus: res.status, latencyMs };
   } catch {
     return { status: 'unreachable', latencyMs: Math.round(performance.now() - started) };
   }

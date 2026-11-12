@@ -20,11 +20,11 @@ afterEach(() => {
 });
 
 describe('probeServiceHealth', () => {
-  it('reports a 2xx as operational, and sends no token', async () => {
+  it('reports a 2xx as up, and sends no token', async () => {
     fetchMock.mockResolvedValueOnce(json('OK'));
 
     await expect(probeServiceHealth(SERVICE)).resolves.toMatchObject({
-      status: 'operational',
+      status: 'up',
       httpStatus: 200,
     });
     const [url, init] = fetchMock.mock.calls[0];
@@ -32,12 +32,12 @@ describe('probeServiceHealth', () => {
     expect(init.headers).toBeUndefined();
   });
 
-  it('reports a non-2xx as unreachable, with the status', async () => {
-    fetchMock.mockResolvedValueOnce(json({}, 404));
+  it('reports a non-2xx reply as down, with the status', async () => {
+    fetchMock.mockResolvedValueOnce(json({}, 503));
 
     await expect(probeServiceHealth(SERVICE)).resolves.toMatchObject({
-      status: 'unreachable',
-      httpStatus: 404,
+      status: 'down',
+      httpStatus: 503,
     });
   });
 
@@ -56,13 +56,20 @@ describe('fetchServiceVersion', () => {
   ])('reads %s', async (_name, body) => {
     fetchMock.mockResolvedValueOnce(json(body));
 
-    await expect(fetchServiceVersion(SERVICE.baseUrl)).resolves.toBe('1.2.3');
+    await expect(fetchServiceVersion(SERVICE.baseUrl, '/version')).resolves.toBe('1.2.3');
     expect(fetchMock.mock.calls[0][0]).toBe('https://host/api/svc/version');
+  });
+
+  it('calls the version path the catalog gives', async () => {
+    fetchMock.mockResolvedValueOnce(json({ version: '2.0.0' }));
+
+    await expect(fetchServiceVersion(SERVICE.baseUrl, '/api/version')).resolves.toBe('2.0.0');
+    expect(fetchMock.mock.calls[0][0]).toBe('https://host/api/svc/api/version');
   });
 
   it('gives null when the call fails', async () => {
     fetchMock.mockRejectedValueOnce(new Error('down'));
 
-    await expect(fetchServiceVersion(SERVICE.baseUrl)).resolves.toBeNull();
+    await expect(fetchServiceVersion(SERVICE.baseUrl, '/version')).resolves.toBeNull();
   });
 });
