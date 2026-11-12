@@ -12,7 +12,11 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 
-import { defaultVisibleColumnSet, NodesGrid } from '@/features/circuit-nodes/components/nodes-grid';
+import {
+  defaultVisibleColumnSet,
+  NodesGrid,
+  withNewColumnsOn,
+} from '@/features/circuit-nodes/components/nodes-grid';
 
 import type { ComponentProps, ReactNode } from 'react';
 
@@ -99,7 +103,7 @@ export function KeptNodesGridPlaceholder({
   return <KeptGridSlot node={keeper.node} />;
 }
 
-/** The grid with the columns chosen on it: every one at first, and again when they change. */
+/** The grid with the columns chosen on it: every one at first, and any that come after. */
 function GridWithColumns(props: GridProps) {
   const { columns } = props;
   const names = columns.map((c) => c.name).join('\n');
@@ -107,7 +111,7 @@ function GridWithColumns(props: GridProps) {
   const [shownNames, setShownNames] = useState(names);
   if (shownNames !== names) {
     setShownNames(names);
-    setVisible(defaultVisibleColumnSet(columns));
+    setVisible(withNewColumnsOn(columns, new Set(shownNames.split('\n')), visible));
   }
   return <NodesGrid {...props} visibleColumns={visible} onVisibleColumnsChange={setVisible} />;
 }
@@ -117,8 +121,8 @@ const scrolls = new WeakMap<HTMLElement, { top: number; left: number }>();
 const VERTICAL = '.ag-body-viewport';
 const HORIZONTAL = ['.ag-center-cols-viewport', '.ag-body-horizontal-scroll-viewport'];
 
-/** Room for the kept grid: it is moved in here, not mounted anew. */
-function KeptGridSlot({ node }: { node: HTMLDivElement }) {
+/** Room for the kept grid, or the kept matrix: it is moved in here, not mounted anew. */
+export function KeptGridSlot({ node }: { node: HTMLDivElement }) {
   const ref = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const slot = ref.current;

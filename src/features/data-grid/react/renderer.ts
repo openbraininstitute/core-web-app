@@ -90,6 +90,11 @@ export interface IGridRendererProps<Row> {
   expandColumn?: IExpandColumnConfig;
   /** noun shown in the loading overlay as `loading {label}` (default: `entities`) */
   loadingLabel?: string;
+  /**
+   * A card shown under the row the pointer rests on. Not over pinned columns, whose controls
+   * carry tooltips of their own, nor over a column with `ownHoverCard`.
+   */
+  rowHoverCard?: (row: Row) => ReactNode;
 }
 
 /** The rendering port (Strategy). Implemented by `renderers/aggrid`. */

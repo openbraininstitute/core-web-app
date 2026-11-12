@@ -10,4 +10,9 @@ import type { IFilterEditorContext } from '@/features/data-grid/react/filters/co
 export interface IAgGridContext<Row = unknown> extends IFilterEditorContext<Row> {
   cellRenderers: CellRendererRegistry;
   detail?: IDetailRuntime<Row>;
+  /**
+   * Watches the content of a cell in a column sized to its content, refitting the column
+   * when that content changes width (a badge its own request brings). Returns the unwatch.
+   */
+  watchFittedCell?: (content: Element) => () => void;
 }

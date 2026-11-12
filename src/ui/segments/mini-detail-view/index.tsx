@@ -131,6 +131,7 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
   isPrivate = true,
   virtualLabData,
   interactive,
+  bare,
 }: {
   section: TWorkspaceSection;
   record: T | null;
@@ -145,6 +146,8 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
   virtualLabData?: TVirtualLab;
   /** The host has room for a live viewer, for entity types that have one. */
   interactive?: boolean;
+  /** In a box of the host's own: no border or shadow of a card around it. */
+  bare?: boolean;
 }) {
   if (!record) return null;
   const interactiveViewer = interactive ? resolveInteractiveViewer(dataType ?? record.type) : null;
@@ -408,6 +411,8 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
           <Card
             id="mini-viewer"
             data-testid="mini-viewer"
+            borderless={bare}
+            shadowless={bare}
             className={cn(
               'bg-primary-9 relative h-full gap-0.5 rounded-2xl py-0 pr-1 pl-2 text-white',
               {
