@@ -32,11 +32,14 @@ export function DataActions<T extends EntityCoreObjectTypes>({
   dataType,
   theme,
   openDetailsInNewTab,
+  detailsHref,
 }: {
   record: T;
   dataType?: TExtendedEntitiesTypeDict;
   theme?: TViewVariant;
   openDetailsInNewTab?: boolean;
+  /** Where "View details" goes, in place of the entity's Data page. */
+  detailsHref?: string;
 }) {
   const { virtualLabId, projectId } = useWorkspace();
   const notify = useAppNotification();
@@ -172,7 +175,7 @@ export function DataActions<T extends EntityCoreObjectTypes>({
         </TooltipContent>
       </Tooltip>
 
-      {hasDetailView && (
+      {(hasDetailView || detailsHref) && (
         <Button
           rounded
           asChild
@@ -185,9 +188,11 @@ export function DataActions<T extends EntityCoreObjectTypes>({
           )}
         >
           <Link
-            href={{
-              pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${resolveConcreteEntityPathParam(effectiveDataType)}/${record.id}`,
-            }}
+            href={
+              detailsHref ?? {
+                pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${resolveConcreteEntityPathParam(effectiveDataType)}/${record.id}`,
+              }
+            }
             target={openDetailsInNewTab ? '_blank' : undefined}
           >
             View details

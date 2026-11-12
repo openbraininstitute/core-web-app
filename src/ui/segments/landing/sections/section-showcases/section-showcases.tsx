@@ -2,7 +2,7 @@ import ShowcaseCard from '@/app/showcases/ShowcaseCard';
 import PageSection from '@/ui/segments/landing/components/page-section';
 import { styleBlockFullWidth } from '@/ui/segments/landing/styles';
 
-import type { OBIShowcaseProjectType } from '@/ui/segments/reports/obi-showcases/types';
+import type { OBIShowcaseProjectType } from '@/ui/segments/showcases/types';
 
 interface SectionShowcasesProps {
   projects: OBIShowcaseProjectType[] | null;
