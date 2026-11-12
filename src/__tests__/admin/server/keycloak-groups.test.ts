@@ -1,9 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  __resetGroupsCacheForTests,
-  getKeycloakGroups,
-} from '@/features/admin/server/keycloak-groups';
+import { BoundedCache } from '@/features/admin/server/keycloak-groups';
 
 import type { Session } from 'next-auth';
 
@@ -29,8 +26,11 @@ function userinfoError() {
 const T0 = new Date('2026-07-24T00:00:00.000Z').getTime();
 const MINUTE = 60_000;
 
-beforeEach(() => {
-  __resetGroupsCacheForTests();
+let getKeycloakGroups: typeof import('@/features/admin/server/keycloak-groups').getKeycloakGroups;
+
+beforeEach(async () => {
+  vi.resetModules();
+  ({ getKeycloakGroups } = await import('@/features/admin/server/keycloak-groups'));
   fetchMock.mockReset();
   vi.stubGlobal('fetch', fetchMock);
   vi.useFakeTimers();
@@ -125,25 +125,40 @@ describe('getKeycloakGroups', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('evicts the entry fetched longest ago when the cache is full', async () => {
-    const sessionFor = (id: string) => ({ user: { id }, accessToken: id }) as unknown as Session;
-    fetchMock.mockResolvedValue(userinfoOk([]));
+  it('shares one /userinfo call between parallel requests with the same token', async () => {
+    fetchMock.mockResolvedValueOnce(userinfoOk(['/service/entitycore/admin']));
 
-    await getKeycloakGroups(sessionFor('first'));
-    await getKeycloakGroups(sessionFor('second'));
-    for (let i = 0; i < 9_998; i += 1) {
-      await getKeycloakGroups(sessionFor(`user-${i}`));
-    }
+    const [first, second] = await Promise.all([
+      getKeycloakGroups(SESSION),
+      getKeycloakGroups(SESSION),
+    ]);
 
-    vi.setSystemTime(T0 + 6 * MINUTE); // past the TTL, so 'first' refetches and is newest again
-    await getKeycloakGroups(sessionFor('first'));
-    expect(fetchMock).toHaveBeenCalledTimes(10_001);
+    expect(first).toEqual(['/service/entitycore/admin']);
+    expect(second).toEqual(['/service/entitycore/admin']);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
 
-    await getKeycloakGroups(sessionFor('overflow'));
+  it('starts a new call once a failed one has settled', async () => {
+    fetchMock.mockRejectedValueOnce(new Error('timeout'));
+    await expect(getKeycloakGroups(SESSION)).rejects.toThrow('timeout');
 
-    vi.setSystemTime(T0 + 7 * MINUTE); // 'overflow' and 'first' now sit inside their TTL
-    fetchMock.mockRejectedValue(new Error('outage'));
-    await expect(getKeycloakGroups(sessionFor('first'))).resolves.toEqual([]);
-    await expect(getKeycloakGroups(sessionFor('second'))).rejects.toThrow('outage');
+    fetchMock.mockResolvedValueOnce(userinfoOk([]));
+    await expect(getKeycloakGroups(SESSION)).resolves.toEqual([]);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('BoundedCache', () => {
+  it('evicts the entry written longest ago when full', () => {
+    const cache = new BoundedCache<number>(3);
+    cache.set('a', 1);
+    cache.set('b', 2);
+    cache.set('c', 3);
+    cache.set('a', 4);
+
+    cache.set('d', 5);
+
+    expect(cache.get('b')).toBeUndefined();
+    expect([cache.get('a'), cache.get('c'), cache.get('d')]).toEqual([4, 3, 5]);
   });
 });

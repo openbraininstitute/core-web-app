@@ -1,3 +1,5 @@
+import 'server-only';
+
 import { serverConfig as config } from '@/config/server';
 import { log } from '@/utils/logger';
 
@@ -13,19 +15,34 @@ const CACHE_MAX_ENTRIES = 10_000;
 
 type CacheEntry = { groups: string[]; fetchedAt: number };
 
-const groupsCache = new Map<string, CacheEntry>();
+export class BoundedCache<V> {
+  private readonly entries = new Map<string, V>();
 
-// Deleting first keeps the Map in fetch order, so its first key is always the oldest entry.
-function cacheGroups(key: string, entry: CacheEntry) {
-  groupsCache.delete(key);
-  if (groupsCache.size >= CACHE_MAX_ENTRIES) {
-    const oldest = groupsCache.keys().next().value;
-    if (oldest) groupsCache.delete(oldest);
+  constructor(private readonly maxEntries: number) {}
+
+  get(key: string) {
+    return this.entries.get(key);
   }
-  groupsCache.set(key, entry);
+
+  delete(key: string) {
+    this.entries.delete(key);
+  }
+
+  // Deleting first keeps the Map in write order, so its first key is always the oldest entry.
+  set(key: string, value: V) {
+    this.entries.delete(key);
+    if (this.entries.size >= this.maxEntries) {
+      const oldest = this.entries.keys().next().value;
+      if (oldest !== undefined) this.entries.delete(oldest);
+    }
+    this.entries.set(key, value);
+  }
 }
 
-async function fetchUserGroups(accessToken: string): Promise<string[] | null> {
+const groupsCache = new BoundedCache<CacheEntry>(CACHE_MAX_ENTRIES);
+const inFlight = new Map<string, Promise<string[] | null>>();
+
+async function fetchKeycloakGroups(accessToken: string): Promise<string[] | null> {
   const response = await fetch(`${config.KEYCLOAK_ISSUER}/protocol/openid-connect/userinfo`, {
     headers: { authorization: `Bearer ${accessToken}` },
     signal: AbortSignal.timeout(USERINFO_TIMEOUT_MS),
@@ -40,26 +57,19 @@ async function fetchUserGroups(accessToken: string): Promise<string[] | null> {
     : [];
 }
 
-// `null` means the session has no token Keycloak accepts, so the user is logged out. A
-// /userinfo outage serves the cached value up to the stale cap, then throws, so it never reads
-// as "this user has no groups".
-export async function getKeycloakGroups(session: Session): Promise<string[] | null> {
-  const { accessToken } = session;
-  if (!accessToken) return null;
-
-  const key = session.user.id || accessToken;
+async function refreshGroups(
+  key: string,
+  accessToken: string,
+  cached: CacheEntry | undefined
+): Promise<string[] | null> {
   const now = Date.now();
-
-  const cached = groupsCache.get(key);
-  if (cached && now - cached.fetchedAt < GROUPS_CACHE_TTL_MS) return cached.groups;
-
   try {
-    const groups = await fetchUserGroups(accessToken);
+    const groups = await fetchKeycloakGroups(accessToken);
     if (!groups) {
       groupsCache.delete(key);
       return null;
     }
-    cacheGroups(key, { groups, fetchedAt: now });
+    groupsCache.set(key, { groups, fetchedAt: now });
     return groups;
   } catch (error) {
     log('error', 'failed to resolve keycloak groups from userinfo', error);
@@ -68,6 +78,23 @@ export async function getKeycloakGroups(session: Session): Promise<string[] | nu
   }
 }
 
-export function __resetGroupsCacheForTests() {
-  groupsCache.clear();
+// `null` means the session has no token Keycloak accepts, so the user is logged out. A
+// /userinfo outage serves the cached value up to the stale cap, then throws, so it never reads
+// as "this user has no groups". Parallel requests with the same token share one call.
+export async function getKeycloakGroups(session: Session): Promise<string[] | null> {
+  const { accessToken } = session;
+  if (!accessToken) return null;
+
+  const key = session.user.id || accessToken;
+  const cached = groupsCache.get(key);
+  if (cached && Date.now() - cached.fetchedAt < GROUPS_CACHE_TTL_MS) return cached.groups;
+
+  const pending = inFlight.get(accessToken);
+  if (pending) return pending;
+
+  const request = refreshGroups(key, accessToken, cached).finally(() =>
+    inFlight.delete(accessToken)
+  );
+  inFlight.set(accessToken, request);
+  return request;
 }
