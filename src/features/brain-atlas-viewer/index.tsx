@@ -145,4 +145,5 @@ export function AtlasViewer({ children }: { children?: ReactNode }) {
   );
 }
 
+export { BrainAtlasViewerGltf };
 export default AtlasViewer;

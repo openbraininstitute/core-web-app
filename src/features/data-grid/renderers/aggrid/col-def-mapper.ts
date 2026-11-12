@@ -8,6 +8,7 @@ import {
 import { AgExpandCell } from '@/features/data-grid/renderers/aggrid/expand-cell';
 import { AgExpandHostCell } from '@/features/data-grid/renderers/aggrid/expand-host-cell';
 import { AgHeader } from '@/features/data-grid/renderers/aggrid/header';
+import { cn } from '@/utils/css-class';
 
 import type { ColDef } from 'ag-grid-community';
 import type { IResolvedColumn } from '@/features/data-grid/core';
@@ -15,10 +16,15 @@ import type { IExpandColumnConfig } from '@/features/data-grid/react';
 
 export const EXPAND_COL_ID = '__expand';
 
+/** An inset line, so it never fights AG Grid's own cell borders (focus, range). */
+const DIVIDER_CLASS = 'shadow-[inset_-1px_0_0_var(--ag-border-color)]';
+
 export interface IBuildColDefsOptions {
   hidden: Set<string>;
   /** user-resized widths (take precedence over the schema's width spec) */
   columnWidths: Record<string, number>;
+  /** where fitted columns start, before their first fit: their last fit's widths */
+  fittedStartWidths?: ReadonlyMap<string, number>;
   /** prepend the expand-chevron column (grids with a detail runtime) */
   withExpandColumn?: boolean;
   /** when `columnId` matches a data column the chevron hosts inside that cell instead */
@@ -50,7 +56,7 @@ export function buildColDefs<Row>(
   columns: Array<IResolvedColumn<Row>>,
   options: IBuildColDefsOptions
 ): Array<ColDef<Row>> {
-  const { hidden, columnWidths, withExpandColumn, expandColumn } = options;
+  const { hidden, columnWidths, fittedStartWidths, withExpandColumn, expandColumn } = options;
 
   const hostColumnId =
     withExpandColumn && expandColumn?.columnId
@@ -75,16 +81,24 @@ export function buildColDefs<Row>(
       hide: hidden.has(c.id),
       sortable: false,
       headerComponent: AgHeader,
+      // a keyed header lays itself out, edge to edge
+      headerClass: cn(c.headerRenderer && 'px-0!', c.divider && DIVIDER_CLASS) || undefined,
       headerComponentParams: {
         columnId: c.id,
         unit: c.unit,
         sortable: !!c.sortable,
         filter: filterParams,
+        headerRenderer: c.headerRenderer,
+        fitted: !!c.width?.fitContent,
       },
-      width: userWidth ?? c.width?.width,
+      width:
+        userWidth ??
+        (c.width?.fitContent ? fittedStartWidths?.get(c.id) : undefined) ??
+        c.width?.width,
       minWidth: c.width?.minWidth,
-      // a user-resized width must win over any flex sizing
-      flex: userWidth != null ? undefined : c.width?.flex,
+      // a user-resized width must win over any flex sizing, and a fitted column takes none:
+      // the renderer sizes it to its content
+      flex: userWidth != null || c.width?.fitContent ? undefined : c.width?.flex,
       resizable: c.width?.resizable ?? true,
       // position-pinned columns (`movable: false`) keep their declared slot — no drag handle
       suppressMovable: c.movable === false,
@@ -92,11 +106,11 @@ export function buildColDefs<Row>(
       pinned: c.pinned,
       lockPosition: c.pinned,
       cellClass:
-        c.align === Align.Right
-          ? 'ag-right-aligned-cell'
-          : c.align === Align.Center
-            ? 'ag-center-aligned-cell'
-            : undefined,
+        cn(
+          c.align === Align.Right && 'ag-right-aligned-cell',
+          c.align === Align.Center && 'ag-center-aligned-cell',
+          c.divider && DIVIDER_CLASS
+        ) || undefined,
     };
 
     if (getValue) {
@@ -117,8 +131,14 @@ export function buildColDefs<Row>(
       };
     } else if (c.cellRenderer) {
       colDef.cellRenderer = AgCellHost;
-      colDef.cellRendererParams = { rendererKey: c.cellRenderer, ...c.cellRendererParams };
+      colDef.cellRendererParams = {
+        rendererKey: c.cellRenderer,
+        ...c.cellRendererParams,
+        fitted: !!c.width?.fitContent,
+      };
     }
+
+    if (c.ownHoverCard) colDef.context = { ownHoverCard: true };
 
     if (filterParams) {
       colDef.suppressHeaderMenuButton = true;

@@ -14,6 +14,8 @@ import {
   morphologyPackNote,
   useMorphologyPackStatus,
 } from '@/features/circuit-viewer/morphologies/use-morphology-pack-status';
+import { pathwayNodeColors } from '@/features/circuit-viewer/pathway-colors';
+import { PathwayKey } from '@/features/circuit-viewer/pathway-key';
 import { circuitMorphologiesFlag, debugFlag, useFlag } from '@/features/feature-flags';
 import {
   CircuitVisualization,
@@ -56,16 +58,20 @@ import { PaneResizeHandle } from './pane-resize-handle';
 import { useSceneTablePane } from './scene-table-pane';
 import { useCellFocus } from './use-cell-focus';
 
+import type { ReactNode } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
-import type { NodePopulation } from '@/features/circuit-nodes/types';
+import type { TablePathway } from '@/features/circuit-nodes/circuit-nodes-table';
+import type { SceneMatrix } from '@/features/circuit-nodes/connectivity/table-matrix';
+import type { NodePopulation, ViewMode } from '@/features/circuit-nodes/types';
 import type {
   CircuitCellsHostProps,
   CircuitViewerHostProps,
 } from '@/features/circuit-viewer/host-props';
 import type { ElectrodeTransform } from '@/features/circuit-viewer/morphologies/types';
 import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
+import type { SceneLocationMarker } from '@/features/scan-config/components/circuit-viz/circuit-viz';
 import type { ICircuitViewerChromeProps } from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
 import type { IViewerModeOption } from '@/features/scan-config/components/color-by/mode-toggle';
 import type { NodeColors } from '@/features/scan-config/components/color-by/types';
@@ -73,6 +79,8 @@ import type { PopulationsControls } from '@/features/scan-config/components/colo
 import type { TElectrodeArrayEntity } from '@/features/scan-config/components/model-preview/use-electrode-overlays';
 
 const NOTHING_HIDDEN: readonly string[] = [];
+/** The form's root element its neuron sets are in. */
+const NEURON_SETS = 'neuron_sets';
 const MIN_TABLE_HEIGHT = 280;
 const DEFAULT_TABLE_HEIGHT_RATIO = 0.4;
 
@@ -181,6 +189,22 @@ interface ICircuitSceneOptions {
   onNodeColorsChange?: (colors: { population: string; nodeColors: NodeColors } | null) => void;
   /** Spikes to replay over the circuit, and the transport driving them. */
   spikes?: ISpikeReplayBinding;
+  /**
+   * Balls on cells of the population on show, at sections and offsets along them, each in a
+   * colour of its own: such as a compartment report's locations, coloured as it plays.
+   */
+  locationMarkers?: readonly SceneLocationMarker[];
+  /** Told the key of a ball clicked, which then counts as no click on its cell. */
+  onLocationClick?: (key: number) => void;
+  /** Told the key of the ball under the pointer, and null once it leaves them. */
+  onLocationHover?: (key: number | null) => void;
+  /**
+   * A connectivity matrix the host shows in a table of its own beside the scene, while it is up:
+   * the pathway under the pointer is coloured over the rest, with the key to that.
+   */
+  matrix?: SceneMatrix;
+  /** The host's own keys, first in the top-right corner: what else colours the scene. */
+  keys?: ReactNode;
   /** Morph the cell into a dendrogram of the same segments. MEModels only. */
   dendrogram?: boolean;
   /**
@@ -250,6 +274,11 @@ export function CircuitScene({
   selection,
   onNodeColorsChange,
   spikes,
+  locationMarkers,
+  onLocationClick,
+  onLocationHover,
+  matrix,
+  keys: hostKeys,
   dendrogram = false,
   populationName: hostPopulationName,
   onPopulationChange,
@@ -263,6 +292,7 @@ export function CircuitScene({
     onCreateEntry,
     explicitLocationsBlockTypes,
     singleMorphology,
+    neuronSetProperties,
   } = form ?? {};
   const { arrayEntity, visibleIds: visibleOverlayIds } = electrodes ?? {};
   const enableElectrodes = features?.electrodes ?? false;
@@ -358,6 +388,15 @@ export function CircuitScene({
     rowCount: number;
   }>();
   const [tableResetRequest, setTableResetRequest] = useState(0);
+  // The connectivity matrix's pathway under the pointer, of the cells on show.
+  const [tablePathway, setTablePathway] = useState<TablePathway | null>(null);
+  // Whether the table shows the matrix, whose hovered pathway the key explains.
+  const [tableView, setTableView] = useState<ViewMode>('nodes');
+  const setPaneView = paneTable?.setView;
+  useEffect(() => {
+    setPaneView?.(tableView);
+    return () => setPaneView?.('nodes');
+  }, [setPaneView, tableView]);
   const narrowed =
     tableDriven &&
     tableCells?.circuitId === circuit?.id &&
@@ -389,6 +428,11 @@ export function CircuitScene({
   const sceneCellClick = onCellClick ?? (tableDriven ? focus.handleCellClick : undefined);
   const sceneEmptyClick = onEmptyClick ?? (tableDriven ? focus.releaseCell : undefined);
   const sceneSelection = selection ?? tableSelection;
+  // The table's neurons as a block of the form's neuron sets, opened there.
+  const createNeuronSet =
+    onCreateEntry && scanConfig && NEURON_SETS in scanConfig
+      ? (block: Record<string, unknown>) => onCreateEntry(NEURON_SETS, block)
+      : undefined;
 
   // What the viewers draw, in declared order: every population, or only the
   // one on show.
@@ -482,12 +526,24 @@ export function CircuitScene({
 
   // The override's faint column painted for the background on show, and drawn
   // flat, so every cell in it is the one shade.
-  const overrideColors = useMemo(() => {
+  const faintenedOverride = useMemo(() => {
     if (!nodeColorsOverride || fadedColumn === undefined) return nodeColorsOverride;
     const palette = [...nodeColorsOverride.palette];
     palette[fadedColumn] = fadedNeuronColor(config.backgroundColor);
     return { ...nodeColorsOverride, palette, flatColumns: [fadedColumn] };
   }, [nodeColorsOverride, fadedColumn, config.backgroundColor]);
+  // A pathway pointed at in the matrix beside the scene, over any other colours while it is.
+  const pointedPathway = matrix ? matrix.pathway : tableDriven ? tablePathway : null;
+  const pathwayColors = useMemo(
+    () =>
+      pointedPathway &&
+      pointedPathway.circuitId === circuit?.id &&
+      pointedPathway.population === population?.name
+        ? pathwayNodeColors({ ...pointedPathway, background: config.backgroundColor })
+        : undefined,
+    [pointedPathway, circuit?.id, population?.name, config.backgroundColor]
+  );
+  const overrideColors = pathwayColors ?? faintenedOverride;
 
   // A mapping with no column per node is colour-by off.
   const populationOnShow = population?.name;
@@ -806,6 +862,9 @@ export function CircuitScene({
               {...viewerProps}
               {...cellsProps}
               {...perCellProps}
+              locationMarkers={locationMarkers}
+              onLocationClick={onLocationClick}
+              onLocationHover={onLocationHover}
             />
           )
         )}
@@ -826,6 +885,16 @@ export function CircuitScene({
         legendSlotRef={setLegendSlot}
         debugSlotRef={debug ? setDebugTarget : undefined}
         selection={sceneSelection}
+        keys={
+          hostKeys || matrix || (tableDriven && tableView === 'connectivity') ? (
+            <>
+              {hostKeys}
+              {(matrix || (tableDriven && tableView === 'connectivity')) && (
+                <PathwayKey background={config.backgroundColor} theme={theme} />
+              )}
+            </>
+          ) : undefined
+        }
         viz={{
           // A replay's afterglow and glow are set with the rest of how the scene is drawn; the menu leaves out a
           // control the host offers no setter for, and the glow where the viewer cannot draw it.
@@ -861,6 +930,10 @@ export function CircuitScene({
               focusedCell: focus.focusedCell ?? undefined,
               heldCell: focus.focusedCell?.nodeId ?? null,
               resetRequest: tableResetRequest,
+              onCreateNeuronSet: createNeuronSet,
+              neuronSetProperties,
+              onPathwayChange: setTablePathway,
+              onViewChange: setTableView,
             }}
           />,
           paneTable.target

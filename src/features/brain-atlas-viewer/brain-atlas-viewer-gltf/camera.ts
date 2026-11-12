@@ -75,7 +75,8 @@ export interface CameraController {
 export function setCamera(
   context: TgdContext,
   eventChange: GenericEvent<TgdCamera>,
-  atlasId: string
+  atlasId: string,
+  zoom = 1
 ): CameraController {
   const preset = getPresetForAtlas(atlasId);
   let restTransformation: Partial<TgdCameraState> = {
@@ -87,11 +88,14 @@ export function setCamera(
     near: preset.near,
     far: preset.far,
     fovy: tgdCalcDegToRad(55),
+    zoom,
     transfo: { ...restTransformation },
   });
+  // the controller applies its own `zoom` (default 1) to the camera, so it must get ours too
   const controller = new TgdControllerCameraOrbit(context, {
     inertiaOrbit: 500,
     speedZoom: 0.9,
+    zoom,
     minZoom: 0.7,
     maxZoom: 3,
   });
@@ -100,11 +104,11 @@ export function setCamera(
   const resetCamera = () => {
     context.animSchedule({
       // `restTransformation` carries no zoom, and the interpolation keeps the
-      // current one when the destination omits it, so ask for 1 explicitly to
-      // undo whatever the user wheeled to.
+      // current one when the destination omits it, so ask for the initial zoom
+      // explicitly to undo whatever the user wheeled to.
       action: tgdActionCreateCameraInterpolation(context.camera, {
         ...restTransformation,
-        zoom: 1,
+        zoom,
       }),
       duration: 0.5,
     });
@@ -121,6 +125,7 @@ export function setCamera(
       near: computed.near,
       far: computed.far,
       fovy: tgdCalcDegToRad(55),
+      zoom,
       transfo: { ...restTransformation },
     });
     context.paint();

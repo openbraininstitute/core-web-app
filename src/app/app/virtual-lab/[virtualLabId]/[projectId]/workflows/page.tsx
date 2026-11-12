@@ -6,7 +6,6 @@ import { AnimatePresence, motion } from 'motion/react';
 import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
 import { use } from 'react';
 
-import { SCOPE_QUERY_PARAMS, WorkspaceScope } from '@/constants';
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
 import { useNextStepOnboarding, workflowTour } from '@/ui/segments/app-setup/discover-app';
 import {
@@ -62,10 +61,6 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
       targetType: value,
     });
 
-    const query: Record<string, string | undefined> = {
-      [SCOPE_QUERY_PARAMS]: WorkspaceScope.Public,
-    };
-
     navigate(
       buildWorkflowStartingPageUrl({
         activity,
@@ -74,7 +69,6 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
         stage,
         workflow,
         schemaSelection,
-        query,
       })
     );
   };
@@ -94,6 +88,12 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
           transition={{
             duration: 0.2,
             ease: 'easeInOut',
+          }}
+          onClick={(event) => {
+            // On the window itself, between its cards and buttons: back to the categories alone.
+            if (activity && !(event.target as Element).closest('button, [role="button"]')) {
+              onSelectCategory(null);
+            }
           }}
         >
           <CategoryMenu current={activity} onItemClick={onSelectCategory} />

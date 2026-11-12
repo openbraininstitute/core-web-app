@@ -176,6 +176,12 @@ class NodesWorkerRegistry {
     return session.proxy.getRowIndex(nodeId, sort, filter);
   }
 
+  getRowOrder(key: string, sort: SortItem[], filter: FilterModel): Promise<Uint32Array | null> {
+    const session = this.sessions.get(key);
+    if (!session?.proxy) return Promise.reject(new Error('Nodes worker not ready'));
+    return session.proxy.getRowOrder(sort, filter);
+  }
+
   getGeometry(key: string, options?: NodeGeometryOptions): Promise<NodeGeometry> {
     const session = this.sessions.get(key);
     if (!session?.proxy) return Promise.reject(new Error('Nodes worker not ready'));

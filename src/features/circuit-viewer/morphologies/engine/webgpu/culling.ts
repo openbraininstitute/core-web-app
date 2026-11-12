@@ -6,6 +6,7 @@ import { ARGS, BLOCKS, SEGMENTS } from './culling-wgsl';
 import { bindGroup, computePipeline, DepthPyramid, type Levels, LIBRARY } from './depth-pyramid';
 import { scoped } from './error-scope';
 import { IndirectDraws } from './indirect-draws';
+import { gpuTexture } from './three-hooks';
 import { COPY_DST, COPY_SRC, INDIRECT, MAP_READ, READ, STORAGE } from './usage';
 
 import type * as THREE from 'three/webgpu';
@@ -30,11 +31,26 @@ const INSTANCES = 1;
 /** Draws that draw no quads: six indices and no instances each. */
 const NO_DRAWS = new Uint32Array(DRAWS_BYTES / 4).map((_, k) => (k % 5 === 0 ? 6 : 0));
 
+/**
+ * What a test is of: every cell, filling both lists; or, while the cell table hides cells, those on show, filling the
+ * seen lists alone, and every cell again, filling the kept lists alone. The word the segments' pass reads it by.
+ */
+export const CULL_TESTS = { everyCell: 0, onShow: 1, keptOnly: 2 } as const;
+export type CullTest = keyof typeof CULL_TESTS;
+
+/** Which of the draws' words a test starts again, the rest being left to the other test. */
+const RESET_WORDS: Record<CullTest, [start: number, count: number]> = {
+  everyCell: [0, DRAWS_BYTES / 4],
+  onShow: [DRAWS.seenFlat / 4, (DRAWS_BYTES - DRAWS.seenFlat) / 4],
+  keptOnly: [0, DRAWS.seenFlat / 4],
+};
+
 type Pipelines = Record<'blocks' | 'args' | 'segments', GPUComputePipeline>;
 
 /** What the passes bind; made again when the pyramid's targets or the arena change. */
 interface Bound {
   levels: Levels;
+  table: GPUTexture;
   blocks: GPUBindGroup;
   args: GPUBindGroup;
   segments: GPUBindGroup;
@@ -46,9 +62,10 @@ interface Bound {
  * frame: they build that depth's pyramid (`DepthPyramid`), test the blocks, test the segments into the lists of those
  * kept and those seen (flat and tubes), and fill the draws' arguments, which three's quads are drawn by (`quads`).
  * What the tests count, and the blocks they mark, are read back each frame and handed to `counted`. Once the culling
- * fails, `counted` gets null.
+ * fails, `counted` gets null. While the cell table hides cells, two tests take the place of the one (`CullTest`).
  */
 export class Culling {
+  private renderer: THREE.WebGPURenderer;
   private device: GPUDevice;
   private storage: ArenaStorage;
   private counted: (read: CullRead | null) => void;
@@ -79,6 +96,7 @@ export class Culling {
     storage: ArenaStorage,
     counted: (read: CullRead | null) => void
   ) {
+    this.renderer = renderer;
     this.device = device;
     this.storage = storage;
     this.counted = counted;
@@ -103,7 +121,7 @@ export class Culling {
 
   /**
    * Sets the arena whose segments are tested. With none, the pyramid's targets are let go of. A new arena's lists hold
-   * nothing kept yet.
+   * nothing kept yet, so nothing is counted as kept, even by tests that leave the kept list alone.
    */
   setArena(arena: ArenaBuffers | null): void {
     this.arena = arena;
@@ -112,6 +130,7 @@ export class Culling {
     this.generation++;
     // The read buffers are sized for the last arena's marks.
     this.dropReads();
+    this.device.queue.writeBuffer(this.drawsBuffer, 0, NO_DRAWS);
     this.drawNone();
   }
 
@@ -135,8 +154,9 @@ export class Culling {
    * Runs and submits the tests once the kept segments are drawn into the target. The tests fill the lists and the
    * draws for three's draw that follows. `shift`: what the arena's positions are moved by; `tubeFrom`: the least radius
    * in pixels of a tube; `hidden`: the section type not drawn (`ImpostorUniforms.uHidden`); `end`: where the arena's
-   * segments end; `rest`: what is told of the frame (`DetailStream.frameRest`), handed on with the frame's read. Returns
-   * false where nothing was tested.
+   * segments end; `rest`: what is told of the frame (`DetailStream.frameRest`), handed on with the frame's read;
+   * `cells`: the cell table's texture; `test`: what it is of (`CullTest`). A test of the kept lists alone is read back
+   * by nobody, its marks and counts being the other test's. Returns false where nothing was tested.
    */
   run(
     camera: THREE.Camera & { near: number; far: number },
@@ -144,7 +164,9 @@ export class Culling {
     tubeFrom: number,
     hidden: number,
     end: number,
-    rest: number
+    rest: number,
+    cells: THREE.Texture,
+    test: CullTest
   ): boolean {
     const { device, arena } = this;
     if (!arena || this.broken) return false;
@@ -158,18 +180,23 @@ export class Culling {
       pass,
       camera,
       shift,
-      [tubeFrom, LEAST_PX, 0],
+      [tubeFrom, LEAST_PX, CULL_TESTS[test]],
       [blocks, this.storage.capacity.value, hidden]
     );
-    if (!levels) {
-      this.fail(new Error('three made no texture of the depth the culling reads'));
+    // three made it when it drew the kept segments.
+    const table = gpuTexture(this.renderer, cells);
+    if (!levels || !table) {
+      this.fail(
+        new Error('three made no texture of the depth or the cell table the culling reads')
+      );
       return false;
     }
     const { farthest } = this.pyramid;
     // The segments' materials read it too.
     if (farthest) this.storage.farthest.value = farthest;
-    const bound = this.bindings(pipelines, levels, arena);
-    device.queue.writeBuffer(this.drawsBuffer, 0, NO_DRAWS);
+    const bound = this.bindings(pipelines, levels, table, arena);
+    const [reset, words] = RESET_WORDS[test];
+    device.queue.writeBuffer(this.drawsBuffer, reset * 4, NO_DRAWS, reset, words);
     const run = (pipeline: GPUComputePipeline, group: GPUBindGroup, x: number) => {
       pass.setPipeline(pipeline);
       pass.setBindGroup(0, group);
@@ -182,6 +209,10 @@ export class Culling {
     pass.dispatchWorkgroupsIndirect(this.dispatch, 0);
     pass.end();
     this.indirect.copy(encoder, this.drawsBuffer);
+    if (test === 'keptOnly') {
+      device.queue.submit([encoder.finish()]);
+      return true;
+    }
     this.rest = rest;
     this.submit(encoder, arena.marked);
     return true;
@@ -238,14 +269,20 @@ export class Culling {
     this.counted(null);
   }
 
-  private bindings(pipelines: Pipelines, levels: Levels, arena: ArenaBuffers): Bound {
-    if (this.bound?.levels === levels) return this.bound;
+  private bindings(
+    pipelines: Pipelines,
+    levels: Levels,
+    table: GPUTexture,
+    arena: ArenaBuffers
+  ): Bound {
+    if (this.bound?.levels === levels && this.bound.table === table) return this.bound;
     const group = (pipeline: GPUComputePipeline, resources: GPUBindingResource[], label: string) =>
       bindGroup(this.device, pipeline, resources, label);
     const buffer = (b: GPUBuffer) => ({ buffer: b });
     const tested = [...levels, buffer(arena.blocks), buffer(arena.passed)];
     this.bound = {
       levels,
+      table,
       blocks: group(pipelines.blocks, [...tested, buffer(this.counters)], 'cull blocks'),
       args: group(pipelines.args, [buffer(this.counters), buffer(this.dispatch)], 'cull args'),
       segments: group(
@@ -258,6 +295,7 @@ export class Culling {
           buffer(arena.lists),
           buffer(this.drawsBuffer),
           buffer(arena.marked),
+          table.createView(),
         ],
         'cull segments'
       ),

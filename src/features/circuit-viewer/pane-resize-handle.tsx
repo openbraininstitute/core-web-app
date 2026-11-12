@@ -231,7 +231,7 @@ function followDrag(
 ) {
   e.currentTarget.setPointerCapture(e.pointerId);
   function onPointerUp(ev: PointerEvent) {
-    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointermove', onPointerMove);
     window.removeEventListener('pointerup', onPointerUp);
     window.removeEventListener('pointercancel', onPointerUp);
     try {
@@ -239,7 +239,13 @@ function followDrag(
     } catch {}
     onEnd?.();
   }
-  window.addEventListener('pointermove', onMove);
+  // A move with no button down is a release that never came: the drag ends there, rather than
+  // following the pointer from then on.
+  function onPointerMove(ev: PointerEvent) {
+    if (ev.buttons === 0) onPointerUp(ev);
+    else onMove(ev);
+  }
+  window.addEventListener('pointermove', onPointerMove);
   window.addEventListener('pointerup', onPointerUp);
   window.addEventListener('pointercancel', onPointerUp);
 }

@@ -30,6 +30,7 @@ import { checkHooks, FrameTimes, gpuTexture, threeLoop, trackTimestamps } from '
 
 import type { GlowRowsWriter } from '../cell-table';
 import type { Lost } from '../create-view';
+import type { CullTest } from './culling';
 
 /** WebGPU pads each row of a texture copied into a buffer to a multiple of this many bytes. */
 const ROW_ALIGNMENT = 256;
@@ -65,8 +66,14 @@ export class CircuitMorphologyGPU extends CircuitView {
   private glowWorks = true;
   /** Made for the first pack and kept, with its programs: a later pack's arena only binds its buffers to `storage`. */
   private arena: GpuArena | null = null;
-  /** The kept segments' quads, drawn to depth before the culling's tests. */
+  /**
+   * The kept segments' quads, drawn to depth before the culling's tests. While the cell table hides cells, the segments
+   * seen last frame are drawn to depth with them (`seenQuads`): they are what hides the cells on show from each other.
+   */
   private keptQuads = new THREE.Scene();
+  private seenQuads: THREE.Mesh<THREE.InstancedBufferGeometry>[] = [];
+  /** The same kept segments as if no cell were hidden, for the test that keeps their list while some are. */
+  private wholeQuads = new THREE.Scene();
   /** Made when the cloud's somas are placed, and let go of with them. */
   private somaCulling: SomaCulling | null = null;
   private drawingSize = new THREE.Vector2();
@@ -196,8 +203,17 @@ export class CircuitMorphologyGPU extends CircuitView {
   protected override disposeStage(): void {
     this.idTarget?.dispose();
     this.occlusion?.dispose();
-    const { segment = [], ids = [], kept = [], through = [] } = this.arena ?? {};
-    for (const material of [...segment, ...ids, ...kept, ...through]) material.dispose();
+    const {
+      segment = [],
+      ids = [],
+      kept = [],
+      seenDepth = [],
+      keptWhole = [],
+      through = [],
+    } = this.arena ?? {};
+    for (const material of [...segment, ...ids, ...kept, ...seenDepth, ...keptWhole, ...through]) {
+      material.dispose();
+    }
     this.arena?.culling.dispose();
     this.somaCulling?.dispose();
     this.frameTimes.dispose();
@@ -319,10 +335,19 @@ export class CircuitMorphologyGPU extends CircuitView {
         ),
       };
     }
-    const { storage, segment, ids, kept, through, culling } = this.arena;
-    this.keep([
+    const { storage, segment, ids, kept, seenDepth, keptWhole, through, culling } = this.arena;
+    this.seenQuads = [
+      new THREE.Mesh(culling.quads(DRAWS.seenFlat), seenDepth[0]),
+      new THREE.Mesh(culling.quads(DRAWS.seenTubes), seenDepth[1]),
+    ];
+    this.keep(this.keptQuads, [
       new THREE.Mesh(culling.quads(DRAWS.keptFlat), kept[0]),
       new THREE.Mesh(culling.quads(DRAWS.keptTubes), kept[1]),
+      ...this.seenQuads,
+    ]);
+    this.keep(this.wholeQuads, [
+      new THREE.Mesh(culling.quads(DRAWS.keptFlat), keptWhole[0]),
+      new THREE.Mesh(culling.quads(DRAWS.keptTubes), keptWhole[1]),
     ]);
     return {
       uploadsOf: (ends, words, blocks) =>
@@ -344,13 +369,13 @@ export class CircuitMorphologyGPU extends CircuitView {
     };
   }
 
-  /** Puts `meshes` in place of the kept segments' quads, and lets the old quads go. */
-  private keep(meshes: THREE.Mesh<THREE.InstancedBufferGeometry>[]): void {
-    const was = [...this.keptQuads.children] as THREE.Mesh<THREE.InstancedBufferGeometry>[];
+  /** Puts `meshes` in place of the quads in `scene`, and lets the old quads go. */
+  private keep(scene: THREE.Scene, meshes: THREE.Mesh<THREE.InstancedBufferGeometry>[]): void {
+    const was = [...scene.children] as THREE.Mesh<THREE.InstancedBufferGeometry>[];
     for (const mesh of was) mesh.geometry.dispose();
     this.letGo(...was);
     for (const mesh of meshes) mesh.frustumCulled = false;
-    this.keptQuads.add(...meshes);
+    scene.add(...meshes);
   }
 
   /**
@@ -369,16 +394,34 @@ export class CircuitMorphologyGPU extends CircuitView {
       culling.drawNone();
       return;
     }
-    if (this.culls && !culling.failed) {
-      const { renderer } = this;
+    const cells = this.uniforms.uCells.value;
+    if (this.culls && !culling.failed && cells) {
+      const { renderer, camera } = this;
       const size = renderer.getDrawingBufferSize(this.drawingSize);
-      renderer.setRenderTarget(culling.targetOf(size.x, size.y));
-      renderer.render(this.keptQuads, this.camera);
-      renderer.setRenderTarget(null);
+      const target = culling.targetOf(size.x, size.y);
       const { uShift, uHidden } = this.uniforms;
-      if (culling.run(this.camera, uShift.value, this.gpu.tubeFrom.value, uHidden.value, end, rest))
-        return;
-    } else if (this.culls) {
+      const test = (quads: THREE.Scene, what: CullTest) => {
+        renderer.setRenderTarget(target);
+        renderer.render(quads, camera);
+        renderer.setRenderTarget(null);
+        return culling.run(
+          camera,
+          uShift.value,
+          this.gpu.tubeFrom.value,
+          uHidden.value,
+          end,
+          rest,
+          cells,
+          what
+        );
+      };
+      const hiding = this.hidesCells;
+      for (const mesh of this.seenQuads) mesh.visible = hiding;
+      // While cells are hidden, the kept list is tested first, over every cell: it stays that of the whole circuit in
+      // this view, however the view moves, for the frame they come back in.
+      if (hiding) test(this.wholeQuads, 'keptOnly');
+      if (test(this.keptQuads, hiding ? 'onShow' : 'everyCell')) return;
+    } else if (this.culls && culling.failed) {
       // The culling reported its failure once, when it failed. A pack's stream made since then, or one that was there
       // while culling was off, did not hear it, so report it again.
       this.tellCulled(null);

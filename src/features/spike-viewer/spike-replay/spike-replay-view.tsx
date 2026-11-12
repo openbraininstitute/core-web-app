@@ -6,9 +6,11 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { createPortal } from 'react-dom';
 
 import { PopulationSelect } from '@/features/circuit-nodes/components/population-select';
+import { useReportTableView } from '@/features/circuit-nodes/connectivity/report-table-view';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 import { hasPositions } from '@/features/circuit-nodes/population-utils';
+import { tablePaneTitle } from '@/features/circuit-nodes/types';
 import { CircuitScene } from '@/features/circuit-viewer/circuit-scene';
 import {
   PaneResizeHandle,
@@ -49,6 +51,8 @@ import { SpikeStatisticsView } from '@/features/spike-viewer/spike-statistics/sp
 import {
   OpenPanelButton,
   PANEL_FLOORS,
+  PaneSpinner,
+  PlotsSlot,
   StackedPanes,
 } from '@/features/spike-viewer/spike-statistics/stacked-panes';
 import { SPIKE_STATISTICS } from '@/features/spike-viewer/spike-statistics/statistics';
@@ -59,6 +63,7 @@ import { classNames } from '@/util/utils';
 import { FullscreenPortalScope, useFullscreenElement } from '@/utils/fullscreen';
 
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
+import type { SceneMatrix } from '@/features/circuit-nodes/connectivity/table-matrix';
 import type { TSceneSubject } from '@/features/circuit-viewer/circuit-scene';
 import type { NodeColors } from '@/features/scan-config/components/color-by/types';
 import type { SpikeSession } from '@/features/spike-viewer/hooks/use-spike-session';
@@ -144,6 +149,7 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
 
   const circuit = subject?.circuit;
   const memodel = subject?.memodel;
+  const tableTitle = tablePaneTitle(useReportTableView(circuit));
   const drawsEachCell = useCircuitDrawsEachCell(circuit);
   const {
     config: circuitConfig,
@@ -349,6 +355,8 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
   // What the scene is narrowed to, said over it with the way back to every
   // cell: the cell clicked, else those the table and the raster's window keep.
   const [resetRequest, setResetRequest] = useState(0);
+  // A connectivity matrix in the table's place, whose pathway under the pointer the scene colours.
+  const [matrix, setMatrix] = useState<SceneMatrix>();
   const selectedCount = useMemo(() => {
     if (focusedCell) return 1;
     if (!sceneCells) return null;
@@ -501,6 +509,37 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
   // view beside the raster portals in, so the two share one tree.
   const [plotsSlot, setPlotsSlot] = useState<HTMLDivElement | null>(null);
 
+  const dot = recorded && (
+    <span
+      className="size-2 shrink-0 rounded-full"
+      style={{
+        background: POPULATION_COLORS[recordedIndex % POPULATION_COLORS.length],
+      }}
+    />
+  );
+  const populationPill =
+    populationName &&
+    (populations.length > 1 ? (
+      <>
+        {dot}
+        <PopulationSelect
+          variant="chrome"
+          populations={populations}
+          value={populationName}
+          onChange={setChosenPopulationName}
+        />
+      </>
+    ) : (
+      // In a pill, as a voltage report's population is, its dot inside.
+      <span className="text-primary-9 flex min-w-0 items-center gap-2 rounded-full bg-white px-3 py-1.5 text-sm font-semibold shadow-md ring-1 ring-black/5">
+        {dot}
+        <span className="min-w-0 truncate">
+          <span className="mr-1 font-normal text-neutral-400">Population</span>
+          {populationName}
+        </span>
+      </span>
+    ));
+
   // One element for wherever the statistics go: under the raster, or the viewer's own panel.
   const statistics =
     circuit && statisticsMounted ? (
@@ -523,6 +562,9 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
         plotsTarget={docked ? plotsSlot : undefined}
         events={timeline}
         timeCursor={playheadCursor}
+        // Docked, the table's header names the population, so the raster's box keeps one line.
+        headerStart={docked && !dockedOpen ? populationPill : undefined}
+        onMatrixChange={setMatrix}
       />
     ) : null;
 
@@ -554,27 +596,7 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
 
   const population = populationName && (
     <div className="flex min-w-0 items-center gap-2">
-      {recorded && (
-        <span
-          className="size-2 shrink-0 rounded-full"
-          style={{
-            background: POPULATION_COLORS[recordedIndex % POPULATION_COLORS.length],
-          }}
-        />
-      )}
-      {populations.length > 1 ? (
-        <PopulationSelect
-          variant="chrome"
-          populations={populations}
-          value={populationName}
-          onChange={setChosenPopulationName}
-        />
-      ) : (
-        <span className="text-primary-9 min-w-0 truncate text-sm font-semibold">
-          <span className="mr-1 font-normal text-neutral-400">Population</span>
-          {populationName}
-        </span>
-      )}
+      {populationPill}
       {/* Beside the raster's help while the raster is on show. */}
       {!showRaster && spikeCount}
     </div>
@@ -595,6 +617,13 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
       {note.text}
     </span>
   );
+
+  // At the end of the raster's own controls, while the panel is not up: what opens it.
+  const openPanel = docked && sidePanel && !dockedOpen && (
+    <OpenPanelButton titles={['3D Player', 'Statistics']} onOpen={() => sidePanel.setOpen(true)} />
+  );
+  // The raster's own controls, when it has spikes to control.
+  const rasterControls = !!recorded && recorded.timestamps.length > 0;
 
   const raster = (
     <div className="relative min-h-0 flex-1">
@@ -622,12 +651,13 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
       {/* Inside the pane it belongs to, the way the scene's chrome sits in
       its own: in the split these controls are the raster's alone, and
       the row above the panes is for what governs both. */}
-      {recorded && recorded.timestamps.length > 0 && (
+      {rasterControls && (
         <CollapsingControls
           trailing={
             <>
               {spikeCount}
               <RasterHelp />
+              {openPanel}
             </>
           }
         >
@@ -662,6 +692,10 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
           />
         </CollapsingControls>
       )}
+      {/* With no spikes there is nothing to control, but the panel still opens from the box. */}
+      {!rasterControls && openPanel && (
+        <CollapsingControls trailing={openPanel}>{null}</CollapsingControls>
+      )}
     </div>
   );
 
@@ -694,6 +728,7 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
         onCellClick={handleCellClick}
         onEmptyClick={releaseCell}
         onNodeColorsChange={setSceneColors}
+        matrix={matrix}
         spikes={{
           data: spikes ?? undefined,
           timeInMs: seekToMs,
@@ -714,19 +749,10 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
     return (
       <div ref={setRoot} className="flex h-full min-h-0 flex-col">
         <FullscreenPortalScope root={root}>
-          {/* The raster over the table, and while the panel is not up a button over them opening it. */}
+          {/* The raster over the table, its box topping the column: the panel's button ends the
+              raster's controls, and the table's header names the population. */}
           <StackedPanes
             split="file"
-            header={
-              !dockedOpen && (
-                <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2">
-                  {population}
-                  <div className="ml-auto">
-                    <OpenPanelButton titles={panelTitles} onOpen={() => sidePanel.setOpen(true)} />
-                  </div>
-                </div>
-              )
-            }
             top={{
               title: 'Raster',
               keepsSize: true,
@@ -741,7 +767,7 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
             }}
             bottom={
               statistics && {
-                title: 'Neuron Table',
+                title: tableTitle,
                 boxClassName: 'px-3 pt-1 pb-2',
                 content: statistics,
               }
@@ -760,7 +786,7 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
                   content: (
                     <div id="spike-replay-scene" className="relative flex min-h-0 flex-1 flex-col">
                       <div className="relative min-h-0 flex-1">
-                        {scene}
+                        {scene || <PaneSpinner />}
                         {replayable && (
                           <SceneTime
                             labelRef={sceneTime.ref}
@@ -781,7 +807,7 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
                 }}
                 bottom={{
                   title: 'Statistics',
-                  content: <div ref={setPlotsSlot} className="flex h-full min-h-0 flex-col" />,
+                  content: <PlotsSlot slotRef={setPlotsSlot} />,
                 }}
               />,
               sidePanel.target
@@ -789,11 +815,7 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
           {/* With the rule shut over either column, one bar naming its panes, in the strip it leaves */}
           {sidePanel.fileStrip &&
             createPortal(
-              <ShutPaneBar
-                upright
-                title={['Raster', 'Neuron Table']}
-                onOpen={sidePanel.openColumns}
-              />,
+              <ShutPaneBar upright title={['Raster', tableTitle]} onOpen={sidePanel.openColumns} />,
               sidePanel.fileStrip
             )}
           {sidePanel.panelStrip &&

@@ -14,6 +14,7 @@ import { TaskIOFileGroup } from '@/features/scan-config/components/shared/task-i
 import { TaskIOFileItem } from '@/features/scan-config/components/shared/task-io-file-item';
 import { useAutoSelectFileOnConfigChange } from '@/features/scan-config/components/shared/use-auto-select';
 import { prioritizeOutputFiles } from '@/features/scan-config/components/simulation-files/output-order';
+import { isPlainObject } from '@/features/scan-config/components/utils';
 import {
   ActivityCustomFileRenderer,
   isAssetBackedFile,
@@ -66,7 +67,8 @@ const SIMULATION_FILE_NAMES: Partial<Record<string, string>> = {
 };
 
 /** Which of the groups are open: kept as the simulation on show changes. */
-const openGroupsAtom = atom({ circuit: false, simulation: false, result: false });
+// The result opens listed, as what the panel is for; the inputs stay shut until asked for.
+const openGroupsAtom = atom({ circuit: false, simulation: false, result: true });
 
 const NO_FILES: TAssetBackedFile[] = [];
 
@@ -80,6 +82,8 @@ type SimulationFilesProps = {
   jobId?: string;
   /** The SONATA config's reports, by name: what each of the result's reports records. */
   reports?: Record<string, unknown> | null;
+  /** The SONATA config's inputs, by name: with its reports, what the compartment sets are called. */
+  inputs?: Record<string, unknown> | null;
 };
 
 export function SimulationFiles({
@@ -91,6 +95,7 @@ export function SimulationFiles({
   context,
   jobId,
   reports,
+  inputs,
 }: SimulationFilesProps) {
   const [inputLoading, inputFiles] = useInputFiles(simulation, context);
 
@@ -209,8 +214,22 @@ export function SimulationFiles({
         .map((n) => n.name) ?? [],
     [circuitConfig]
   );
+  const compartmentSets = compartmentSetNames(inputs, reports);
   const rowsOf = (files: TAssetBackedFile[]): FileRow[] =>
     files.flatMap((file): FileRow[] => {
+      // The compartment sets read as the morphology locations blocks they were
+      // made from, tagged as what they are.
+      if (file.asset.label === AssetLabel.compartment_sets) {
+        return [
+          {
+            file,
+            name: compartmentSets.length > 0 ? compartmentSets.join(', ') : file.name,
+            label: tagOf(['Compartment', 'sets']),
+            population: undefined,
+            selected: isSelected(file),
+          },
+        ];
+      }
       // An input's spikes, or an extracellular report, read as their file's
       // name, tagged as what they are.
       if (file.asset.label === AssetLabel.replay_spikes || isLfpReport(file, reports)) {
@@ -394,6 +413,22 @@ export function useSimulationResultFiles(
 
     return [loading, files];
   }, [simResult, simResultLoadable]);
+}
+
+/**
+ * The compartment sets' names: each is named for the morphology locations block
+ * it was made from, which a stimulus or a recording of the SONATA config targets.
+ */
+function compartmentSetNames(
+  ...sections: (Record<string, unknown> | null | undefined)[]
+): string[] {
+  const names = new Set<string>();
+  for (const entry of sections.flatMap((section) => Object.values(section ?? {}))) {
+    if (isPlainObject(entry) && typeof entry.compartment_set === 'string') {
+      names.add(entry.compartment_set);
+    }
+  }
+  return [...names].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 }
 
 /**

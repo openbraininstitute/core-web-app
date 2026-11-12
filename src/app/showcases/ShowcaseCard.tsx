@@ -1,12 +1,9 @@
 'use client';
 
-import { RiErrorWarningFill } from '@remixicon/react';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { buildPlatformLoginUrl } from '@/app/showcases/build-platform-login-url';
-
-import type { OBIShowcaseProjectType } from '@/ui/segments/reports/obi-showcases/types';
+import type { OBIShowcaseProjectType } from '@/ui/segments/showcases/types';
 
 function formatAuthors(authorsList: OBIShowcaseProjectType['authorsList']): string {
   if (!authorsList || authorsList.length === 0) return 'Unknown authors';
@@ -32,7 +29,7 @@ export default function ShowcaseCard({ project }: { project: OBIShowcaseProjectT
 
   return (
     <Link
-      href={buildPlatformLoginUrl(slug, 'description')}
+      href={`/showcases/${encodeURIComponent(slug)}`}
       className="group relative flex h-full w-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-300 ease-in-out hover:scale-[0.98] hover:shadow-lg"
     >
       {/* Hero Image */}
@@ -70,11 +67,6 @@ export default function ShowcaseCard({ project }: { project: OBIShowcaseProjectT
         <div className="text-primary-9 flex items-center text-base">
           <span className="font-medium">Author(s):</span>
           <span className="ml-1">{authors}</span>
-        </div>
-
-        <div className="flex flex-row gap-2">
-          <RiErrorWarningFill className="w-5 h-auto text-gray-400 text-sm! font-light!" />
-          <p className="text-gray-400 text-sm! font-light!">Log in to explore this showcase</p>
         </div>
       </div>
     </Link>

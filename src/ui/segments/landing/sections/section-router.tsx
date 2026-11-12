@@ -3,8 +3,8 @@ import { getCreditsPacks } from '@/services/sanity/api/get-credits-packs';
 import { getNewsCount, getNewsList } from '@/services/sanity/api/get-news-list';
 import { getPricingContent } from '@/services/sanity/api/get-pricing-content';
 import { getSinglePrices } from '@/services/sanity/api/get-single-prices';
-import queryForOBIShowcases from '@/ui/segments/reports/obi-showcases/query';
-import { isOBIShowcaseProjectProps } from '@/ui/segments/reports/obi-showcases/types';
+import queryForOBIShowcases from '@/ui/segments/showcases/query';
+import { isOBIShowcaseProjectProps } from '@/ui/segments/showcases/types';
 import { logError } from '@/utils/logger';
 
 import { getSection } from '../utils';

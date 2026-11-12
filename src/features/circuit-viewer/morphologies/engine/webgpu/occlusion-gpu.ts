@@ -294,12 +294,10 @@ export class Occlusion {
     readonly glows: boolean,
     throughs: THREE.Scene
   ) {
-    // Only the resolved pictures are read.
-    const scenePass = pass(scene, camera, {
-      samples: 4,
-      storeMultisampledColorBuffer: false,
-      storeMultisampledDepthBuffer: false,
-    });
+    // Only the resolved pictures are read, but the samples are stored all the same. Not stored, three makes them
+    // transient, memoryless on Apple's GPUs, which cannot then flush part way through a pass: a frame with too much
+    // geometry for its tiler, as when a jump of the view leaves little to hide the whole brain, loses the device.
+    const scenePass = pass(scene, camera, { samples: 4 });
     // Whatever writes no surface of its own (`surfaceOf`), such as the dots over the cells, sits at the far plane,
     // where the occlusion counts nothing.
     const outputs = mrt({ output, surface: vec4(0, 0, 1, 0), ...(glows && { lit: vec4(0) }) });
