@@ -161,7 +161,12 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
       const fixedWidth = api
         .getAllDisplayedColumns()
         .filter((column) => !column.isPinned() && !fittedIds.has(column.getColId()))
-        .reduce((sum, column) => sum + column.getActualWidth(), 0);
+        // a flexible column gives way down to its minimum before a fitted one has to shrink
+        .reduce(
+          (sum, column) =>
+            sum + (column.getFlex() ? column.getMinWidth() : column.getActualWidth()),
+          0
+        );
       const { left, right } = api.getHorizontalPixelRange();
       const planned = planColumnWidths({
         columns: fitted.flatMap(({ id, maxWidth, minWidth }) => {
@@ -175,8 +180,10 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
       for (const [id, width] of planned) lastFittedWidths.set(id, width);
       const changed = [...planned]
         .filter(([id, width]) => Math.abs(width - (api.getColumn(id)?.getActualWidth() ?? 0)) >= 1)
-        .map(([key, newWidth]) => ({ key, newWidth }));
-      if (changed.length > 0) api.setColumnWidths(changed);
+        .map(([colId, width]) => ({ colId, width }));
+      // not `setColumnWidths`, which re-flexes only the columns right of the last one it
+      // resized: a flexible column left of a fitted one would keep its width and leave a gap
+      if (changed.length > 0) api.applyColumnState({ state: changed });
     });
   }, [fitted, lastFittedWidths]);
   useEffect(() => fitColumns(), [fitColumns]);
