@@ -12,10 +12,17 @@ open `/app/admin` directly.
 
 The protected layout and every page re-check on the server with `requireCapability`
 (`server/require-capability.ts`). Layouts don't re-run on client-side navigation, so a new page
-must call it too.
+must call it too; `src/__tests__/admin/pages-guard.test.ts` fails if one doesn't. When the groups
+can't be read, the layout throws and `src/app/app/admin/error.tsx` shows the outage page.
 
-There is deliberately no Keycloak token mapper for groups. The list can be large, and it would
-grow the session cookie.
+Groups are read from `/userinfo`, which the `groups` scope the app requests fills. Don't add a
+Keycloak mapper that puts them in the access or ID token: the list can be large, and the access
+token lives in the session cookie.
+
+## Query keys
+
+`query-keys.ts` uses tuples (`['admin', 'services', …]`) rather than the `keyBuilder` strings in
+`src/ui/use-query-keys`, because Refresh invalidates a whole section by prefix.
 
 ## Keeping the registry honest
 
