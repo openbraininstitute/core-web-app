@@ -42,6 +42,7 @@ import {
 import { JsonView } from '@/ui/segments/detail-view/json-view';
 import { cn } from '@/utils/css-class';
 
+import type { ReactNode } from 'react';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { TViewVariant } from '@/constants';
 import type { ScanConfigTemplateProps } from '@/features/scan-config/template/types';
@@ -86,6 +87,8 @@ type Props = {
   virtualLabId: string;
   projectId: string;
   variant: TViewVariant;
+  /** the workflow's config and output links: shown only once the workflow form opens the config */
+  links: ReactNode;
 };
 
 /**
@@ -168,6 +171,7 @@ function LoadedView({ form, ...props }: Props & { form: Config }) {
   return (
     <ScanConfigMainOverlayProvider>
       <DefaultLookupProvider>
+        {props.links}
         <ViewBody {...ready} aiEnabled={false} hideTabs />
       </DefaultLookupProvider>
     </ScanConfigMainOverlayProvider>

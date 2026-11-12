@@ -158,14 +158,16 @@ export default async function Configuration({
         }).then((response) => response.json() as Promise<Record<string, Json>>)
       : null;
     const { scanConfig } = workflow.workflow;
+    const links = (
+      // pinned to the detail panel (DetailViewBody), level with the entity name above
+      <div className="absolute top-4 right-10 flex gap-2">
+        {configHref && <WorkflowLink href={configHref}>Workflow config</WorkflowLink>}
+        {outputHref && <WorkflowLink href={outputHref}>Workflow output</WorkflowLink>}
+      </div>
+    );
 
     return (
       <div className="w-full">
-        {/* pinned to the detail panel (DetailViewBody), level with the entity name above */}
-        <div className="absolute top-4 right-10 flex gap-2">
-          {configHref && <WorkflowLink href={configHref}>Workflow config</WorkflowLink>}
-          {outputHref && <WorkflowLink href={outputHref}>Workflow output</WorkflowLink>}
-        </div>
         {config && scanConfig ? (
           <WorkflowConfigView
             scanConfig={{
@@ -179,6 +181,7 @@ export default async function Configuration({
             virtualLabId={context.virtualLabId}
             projectId={context.projectId}
             variant={fieldVariant}
+            links={links}
           />
         ) : config ? (
           <JsonView value={config} variant={fieldVariant} />
