@@ -1,14 +1,14 @@
 # Admin
 
-Operator-only area of the platform. Routes are in `src/app/app/admin/`, server handlers in
-`src/app/api/admin/`, everything else here.
+Operator-only area of the platform. Routes are in `src/app/app/admin/`, everything else here.
 
 ## Authorization
 
 Neither raw Keycloak groups nor a coarse boolean reach the browser. Groups are resolved
 server-side from `/userinfo` (`server/groups.ts`, cached per user) and reduced to a closed,
-typed `OperatorCapabilities` record (`capabilities/`). The record reaches the client over
-`GET /api/admin/capabilities` (`no-store`) and is a display hint only.
+typed `OperatorCapabilities` record (`capabilities/`). The record reaches the client only as a
+prop of the admin shell, where it filters the sidebar. Admin has no link in the platform: operators
+open `/app/admin` directly.
 
 The protected layout and every page re-check on the server with `requireCapability`. Layouts
 don't re-run on client-side navigation, so a new page must call it too.
