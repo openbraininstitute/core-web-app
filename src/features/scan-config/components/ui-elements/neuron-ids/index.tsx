@@ -106,6 +106,15 @@ export default function NeuronIds({
 }) {
   const multiple = Array.isArray(value);
 
+  // Set whose add box takes the cursor once it mounts: the one a + just added.
+  const focusSetRef = useRef<number | null>(null);
+  const focusIfAdded = (i: number) => (input: HTMLInputElement | null) => {
+    if (input && focusSetRef.current === i) {
+      focusSetRef.current = null;
+      input.focus();
+    }
+  };
+
   const sets = useMemo(
     () => (Array.isArray(value) ? value.map(readIdSet) : [readIdSet(value)]),
     [value]
@@ -143,6 +152,7 @@ export default function NeuronIds({
                     // Open with an empty second set, so one press is enough
                     // to start a scan. A name given before is kept.
                     const first = { ...only, name: only.name ?? 'Set 1' };
+                    focusSetRef.current = 1;
                     writeSets([first, emptySet(nextSetName([first]))]);
                   }}
                 >
@@ -175,6 +185,7 @@ export default function NeuronIds({
             disabled={disabled}
             invalid={set.elements.length === 0}
             note={nameNote}
+            inputRef={focusIfAdded(i)}
             onIdsChange={(next) =>
               writeSets(sets.map((other, j) => (j === i ? { ...other, elements: next } : other)))
             }
@@ -213,7 +224,10 @@ export default function NeuronIds({
                       label="Add a set"
                       hint={ScanHint.addIdSet}
                       testId="scan-config-neuron-ids-add"
-                      onClick={() => writeSets([...sets, emptySet(nextSetName(sets))])}
+                      onClick={() => {
+                        focusSetRef.current = sets.length;
+                        writeSets([...sets, emptySet(nextSetName(sets))]);
+                      }}
                     >
                       <RiAddLine className="size-3.5" />
                     </SweepIconButton>
@@ -259,6 +273,7 @@ function IdSetCard({
   title,
   actions,
   onIdsChange,
+  inputRef,
 }: {
   ids: number[];
   disabled: boolean;
@@ -268,6 +283,8 @@ function IdSetCard({
   title: ReactNode;
   actions?: ReactNode;
   onIdsChange: (ids: number[]) => void;
+  /** ref for the add-IDs input, so a newly added set can take the cursor */
+  inputRef?: React.Ref<HTMLInputElement>;
 }) {
   const [edit, setEdit] = useState(false);
   // The editor's buffer only. Copy and the chips read `ids`, so neither goes
@@ -346,6 +363,7 @@ function IdSetCard({
 
       {!edit && !disabled && (
         <IdsInput
+          inputRef={inputRef}
           maxLength={1000}
           onAdd={(added) => onIdsChange([...new Set([...ids, ...added])].sort((a, b) => a - b))}
         />
@@ -488,7 +506,15 @@ const isValidSegment = (segment: string) => /^\s*\d*\s*$/.test(segment);
  * The input's own text is transparent; a backdrop behind it renders the same
  * text with the tints, kept aligned by mirroring the input's scroll.
  */
-function IdsInput({ onAdd, maxLength }: { onAdd: (ids: number[]) => void; maxLength: number }) {
+function IdsInput({
+  onAdd,
+  maxLength,
+  inputRef,
+}: {
+  onAdd: (ids: number[]) => void;
+  maxLength: number;
+  inputRef?: React.Ref<HTMLInputElement>;
+}) {
   const [value, setValue] = useState('');
   const backdropRef = useRef<HTMLDivElement>(null);
 
@@ -536,6 +562,7 @@ function IdsInput({ onAdd, maxLength }: { onAdd: (ids: number[]) => void; maxLen
           </div>
 
           <input
+            ref={inputRef}
             type="text"
             value={value}
             onChange={(e) => {
