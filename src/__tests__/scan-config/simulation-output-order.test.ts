@@ -17,7 +17,10 @@ function file(path: string, asset: Partial<IAsset> = {}): TAssetBackedFile {
 
 const logs = file('task-logs');
 const lfp = file('LFP.h5', { label: 'lfp_report' as AssetLabel });
-const soma = file('soma_report.h5', { label: AssetLabel.voltage_report });
+const soma = file('soma_report.h5', {
+  label: AssetLabel.voltage_report,
+  content_type: AssetContentType.h5,
+});
 const nwb = file('soma.nwb', {
   label: AssetLabel.voltage_report,
   content_type: AssetContentType.nwb,
@@ -45,5 +48,24 @@ describe('prioritizeOutputFiles', () => {
 
   it("falls back to a single cell's NWB voltages without spikes", () => {
     expect(paths(prioritizeOutputFiles([logs, soma, nwb], undefined))[0]).toBe('soma.nwb');
+  });
+
+  it("opens an ion channel model's simulation on its recordings, ahead of the spikes", () => {
+    expect(paths(prioritizeOutputFiles([logs, nwb, spikes, soma], undefined, true))).toEqual([
+      'soma_report.h5',
+      'spikes.h5',
+      'soma.nwb',
+      'task-logs',
+    ]);
+  });
+
+  it('falls back to the spikes for an ion channel model without h5 recordings', () => {
+    expect(paths(prioritizeOutputFiles([logs, nwb, spikes], undefined, true))[0]).toBe('spikes.h5');
+  });
+
+  it('keeps the file on show first for an ion channel model too', () => {
+    expect(paths(prioritizeOutputFiles([logs, soma, spikes], 'spikes.h5', true))[0]).toBe(
+      'spikes.h5'
+    );
   });
 });

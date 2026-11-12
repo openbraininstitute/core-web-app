@@ -1,6 +1,7 @@
 import { RiCloseLine } from '@remixicon/react';
 import { isNil } from 'es-toolkit/compat';
 
+import { DESCRIPTION_TOOLTIP_CLASS } from '@/features/scan-config/components/shared/box-class';
 import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
 import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import { UIElementRender } from '@/features/scan-config/components/ui-elements';
@@ -185,21 +186,17 @@ export default function Block({
                       hideWhenDetached
                       align="center"
                       side="right"
+                      showArrow={false}
                       className={cn(
+                        DESCRIPTION_TOOLTIP_CLASS,
                         // a scan + has its own hint; showing this one too stacks two tooltips
-                        '[body:has(.scan-hint-trigger:hover)_&]:hidden',
-                        'text-white shadow-bnb max-w-2xs min-w-2xs rounded-md ',
-                        'bg-primary-8 px-4 py-2 text-base text-wrap ',
-                        'overflow-y-auto max-h-50 primary-scrollbar'
+                        '[body:has(.scan-hint-trigger:hover)_&]:hidden'
                       )}
-                      arrowClassName="bg-primary-8"
                     >
                       {k === 'circuit' && entity ? (
                         entity.description
                       ) : (
-                        <MarkdownDescription dark>
-                          {blockElementSchema.description}
-                        </MarkdownDescription>
+                        <MarkdownDescription>{blockElementSchema.description}</MarkdownDescription>
                       )}
                     </TooltipContent>
                   </Tooltip>

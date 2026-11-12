@@ -110,7 +110,7 @@ export default function Left({
       data-testid="scan-config-controls-left"
       className="flex h-full min-h-0 flex-col"
     >
-      <div className="secondary-scrollbar flex min-h-0 flex-1 flex-col items-center gap-5 overflow-y-auto overflow-x-hidden px-2 pb-5">
+      <div className="no-scrollbar flex min-h-0 flex-1 flex-col items-center gap-5 overflow-y-auto overflow-x-hidden px-2 pb-5">
         {schema.group_order.map((group, groupIndex) => {
           return (
             <div key={group} className="w-full flex flex-col gap-1.5">
@@ -168,7 +168,9 @@ export default function Left({
       </div>
 
       {!readOnly && (
-        <div className="mt-auto w-full pl-2 pr-4 pt-2">
+        // Ruled off from the blocks, with room under it for its shadow, its foot level with the
+        // preview's boxes.
+        <div className="mt-auto w-full border-t border-gray-200 px-2 pt-3 pb-3">
           <GenerateConfigButton
             loading={loading}
             campaignId={campaignId}
@@ -186,7 +188,7 @@ export default function Left({
       )}
 
       {readOnly && !!campaignId && (
-        <div className="mt-auto w-full pr-4 pt-2">
+        <div className="mt-auto w-full border-t border-gray-200 px-2 pt-3 pb-3">
           <GenerateNewCampaignButton campaignId={campaignId} activity={activity} />
         </div>
       )}

@@ -306,13 +306,25 @@ function ModelPropertiesCheck({
 }) {
   const path = `${root}.${propertyKey}`;
   const { block, value } = readProperties(config, root, propertyKey);
-  const { loaded, failed, missing, differ, temperatureOptions, firstHasTemperature, regionRootId } =
-    useModelProperties(value, recordingIdsOf(block));
+  const {
+    loaded,
+    failed,
+    missing,
+    differ,
+    temperatureOptions,
+    firstHasTemperature,
+    regionRootId,
+    derivedName,
+  } = useModelProperties(value, recordingIdsOf(block));
   const [preselected, setPreselected] = usePreselectedTemperature();
   const notification = useAppNotification();
   const untouched = value.temperature == null || value.temperature === preselected;
   const target = differ.temperature ? (temperatureOptions[0]?.value ?? null) : null;
   const rootRegion = differ.brain_region && !value.brain_region ? regionRootId : undefined;
+  const derivedSuffix =
+    !differ.ion_channel_name && value.ion_channel_name == null && derivedName
+      ? neuronSafeName(derivedName)
+      : undefined;
 
   useEffect(() => {
     if (locked || !loaded || !untouched || value.temperature === target) return;
@@ -341,6 +353,13 @@ function ModelPropertiesCheck({
     setConfig,
     notification,
   ]);
+
+  useEffect(() => {
+    if (locked || !loaded || !derivedSuffix) return;
+    setConfig((previous) =>
+      withProperties(previous, root, propertyKey, { ion_channel_name: derivedSuffix })
+    );
+  }, [locked, loaded, derivedSuffix, root, propertyKey, setConfig]);
 
   useEffect(() => {
     if (locked || !rootRegion) return;

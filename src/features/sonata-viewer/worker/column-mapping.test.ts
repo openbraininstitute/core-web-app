@@ -122,6 +122,23 @@ describe('resolveTraces: element ids', () => {
     expect(traces?.map((t) => t.elementId)).toEqual([184, 197, 202]);
   });
 
+  it('names a cell’s compartments by section in their labels, a section’s several numbered', () => {
+    const traces = resolveTraces([0, 1], [0, 3, 4], [173, 249, 249, 0], 4);
+
+    expect(traces && labelsOf(traces)).toEqual([
+      '0 · Section 173',
+      '0 · Section 249 · 1',
+      '0 · Section 249 · 2',
+      '1',
+    ]);
+    expect(traces?.map((t) => t.compartment)).toEqual([
+      'Section 173',
+      'Section 249 · 1',
+      'Section 249 · 2',
+      undefined,
+    ]);
+  });
+
   it('ignores element_ids whose length does not match the columns', () => {
     const traces = resolveTraces([0], [0, 3], [184], 3);
 

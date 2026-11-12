@@ -15,6 +15,9 @@ import type { ReactNode } from 'react';
 export type SimulationReport = {
   variable_name: string;
   unit: string;
+  /** What it records: `compartment_set` for the locations of the set it names. */
+  type?: string;
+  compartment_set?: string;
 };
 
 type SimulationReportsContextValue = Record<string, SimulationReport> | null;
