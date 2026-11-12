@@ -4,9 +4,7 @@ import { notFound } from 'next/navigation';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
-import { getTaskActivities } from '@/api/entitycore/queries/task';
 import { getAsset } from '@/api/entitycore/selectors/assets';
-import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
@@ -26,16 +24,13 @@ import {
 } from '@/entity-configuration/domain/simulation';
 import SynaptomeConfig from '@/features/entities/single-neuron-synaptome/detail-view/configuration';
 import SynapseGroupList from '@/features/entities/single-neuron-synaptome/detail-view/elements/list-synapses-configuration';
-import { ScanConfiguration } from '@/features/scan-config';
-import {
-  ScanConfigCampaignOriginActionDict,
-  ScanConfigConfigSearchParam,
-} from '@/features/scan-config/helpers';
-import { ExtractScanConfigTabs, ScanConfigActivity } from '@/features/scan-config/types';
-import { extractEFeaturesWorkflow } from '@/features/scan-config/workflow/definitions/extract-efeatures';
+import { ScanConfigConfigSearchParam } from '@/features/scan-config/helpers';
+import { ScanConfigActivity } from '@/features/scan-config/types';
+import { WorkflowConfigView } from '@/features/scan-config/view/workflow-config-view';
 import { Button } from '@/ui/molecules/button';
 import { JsonView } from '@/ui/segments/detail-view/json-view';
 import { detailViewVariantFromGroup } from '@/ui/segments/detail-view/variant-styles';
+import { ActivityRegistry } from '@/ui/segments/workflows/config/activities';
 import { findScanConfigRegistryByTargetType } from '@/ui/segments/workflows/config/scan-config-registry';
 import {
   buildWorkflowActivityConfigurationHref,
@@ -130,7 +125,7 @@ export default async function Configuration({
 
   if (extendedType === ExtendedEntitiesTypeDict.EFeatureExtractionResult) {
     // the workflow tab is the scan config of the extraction campaign that produced this
-    // result; render the same read-only editor as the campaign's own detail page when traceable
+    // result, in the same read-only view as the models' when traceable
     const { data: extraction } = await tryCatch(
       resolveEFeatureExtractionResultCampaign(entity.id, context.virtualLabId, context.projectId)
     );
@@ -139,32 +134,43 @@ export default async function Configuration({
     );
 
     if (extraction && scanConfig) {
-      const { data: generations } = await getTaskActivities({
-        context,
-        filters: {
-          used__id: extraction.campaign.id,
-          task_activity_type: TaskActivityType.EFeatureExtractionConfigGeneration,
-          page_size: 1,
-        },
-      });
+      const workflowActivity = Object.values(ActivityRegistry).find((entry) =>
+        entry.workflows.some(
+          ({ targetType }) => targetType === ExtendedEntitiesTypeDict.EFeatureExtractionCampaign
+        )
+      )?.value;
+      const linkOptions = workflowActivity && {
+        activity: workflowActivity,
+        listEntityType: ExtendedEntitiesTypeDict.EFeatureExtractionCampaign,
+        workspace: context,
+        row: extraction.campaign,
+      };
+      const configHref = linkOptions && buildWorkflowActivityConfigurationHref(linkOptions);
+      const outputHref = linkOptions && buildWorkflowActivityResultsHref(linkOptions);
+      const form = extraction.config?.form as Record<string, Json> | undefined;
+
       return (
-        <ScanConfiguration
-          entityId={extraction.recordingIds.at(0)}
-          scanConfig={scanConfig}
-          virtualLabId={context.virtualLabId}
-          projectId={context.projectId}
-          origin={extraction.campaign.id}
-          initialConfig={extraction.config?.form}
-          readOnly
-          hideTabs={generations.length === 0}
-          defaultTab={{
-            __activity: ScanConfigActivity.Extract,
-            id: ExtractScanConfigTabs.configuration,
-          }}
-          activity={ScanConfigActivity.Extract}
-          campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
-          taskTypeBindings={extractEFeaturesWorkflow.taskTypeBindings}
-        />
+        <div className="w-full">
+          <div className="absolute top-4 right-10 flex gap-2">
+            {configHref && <WorkflowLink href={configHref}>Workflow config</WorkflowLink>}
+            {outputHref && <WorkflowLink href={outputHref}>Workflow output</WorkflowLink>}
+          </div>
+          {form ? (
+            <WorkflowConfigView
+              scanConfig={scanConfig}
+              activity={ScanConfigActivity.Extract}
+              config={form}
+              campaignId={extraction.campaign.id}
+              virtualLabId={context.virtualLabId}
+              projectId={context.projectId}
+              variant={fieldVariant}
+            />
+          ) : (
+            <div className="flex items-center justify-center py-20">
+              The configuration file of this result is missing.
+            </div>
+          )}
+        </div>
       );
     }
 
@@ -203,15 +209,16 @@ export default async function Configuration({
       label: AssetLabel.task_config,
     }).getOneOrNull();
     // the download redirects to S3, which serves it as binary/octet-stream, so parse it here
-    const config: Json | null = asset
+    const config: Record<string, Json> | null = asset
       ? await downloadAsset({
           ctx: context,
           entityType: EntityTypeDict.TaskConfig,
           entityId: workflow.coordinateConfig.id,
           id: asset.id,
           asRawResponse: true,
-        }).then((response) => response.json() as Promise<Json>)
+        }).then((response) => response.json() as Promise<Record<string, Json>>)
       : null;
+    const { scanConfig } = workflow.workflow;
 
     return (
       <div className="w-full">
@@ -220,7 +227,21 @@ export default async function Configuration({
           {configHref && <WorkflowLink href={configHref}>Workflow config</WorkflowLink>}
           {outputHref && <WorkflowLink href={outputHref}>Workflow output</WorkflowLink>}
         </div>
-        {config ? (
+        {config && scanConfig ? (
+          <WorkflowConfigView
+            scanConfig={{
+              configureBinding: scanConfig.configureBinding,
+              schemaName: scanConfig.schemaName,
+              targetType: workflow.workflow.targetType,
+            }}
+            activity={scanConfig.definition.activity}
+            config={config}
+            campaignId={workflow.campaign.id}
+            virtualLabId={context.virtualLabId}
+            projectId={context.projectId}
+            variant={fieldVariant}
+          />
+        ) : config ? (
           <JsonView value={config} variant={fieldVariant} />
         ) : (
           <div className="flex items-center justify-center py-20">

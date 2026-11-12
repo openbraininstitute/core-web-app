@@ -189,9 +189,6 @@ export async function DataViewLayout({
   return (
     <DataViewFrame topBar={topBar} className="overflow-hidden rounded-2xl bg-white">
       <DetailViewBody
-        // the e-feature result's Workflow tab is a campaign's scan-config editor, styled for a
-        // light page background rather than the blue detail panel
-        plainContentSection={type === ExtendedEntitiesTypeDict.EFeatureExtractionResult}
         nameDisplay={
           <EntityNameDisplay
             name={entity.name}
