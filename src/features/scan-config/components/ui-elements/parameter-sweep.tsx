@@ -10,6 +10,7 @@ import {
   selectScanValueAtom,
 } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
 /**
@@ -55,6 +56,7 @@ export function sweepSingleValue(value: null | number | (number | null)[]): numb
  */
 export function SweepIconButton({
   label,
+  hint,
   testId,
   onClick,
   pressed,
@@ -63,6 +65,8 @@ export function SweepIconButton({
   children,
 }: {
   label: string;
+  /** Shown under the label in a hover tooltip, in place of the browser's own. */
+  hint?: ReactNode;
   /** E2E handle. The label is product copy; this is what a test addresses. */
   testId?: string;
   onClick: () => void;
@@ -72,19 +76,21 @@ export function SweepIconButton({
   className?: string;
   children: ReactNode;
 }) {
-  return (
+  const button = (
     <button
       type="button"
       data-testid={testId}
       aria-label={label}
       aria-pressed={pressed}
       disabled={disabled}
-      title={label}
+      title={hint ? undefined : label}
       className={cn(
         'inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full',
         'text-primary-8 bg-white ring-1 ring-neutral-200 transition-colors',
         'hover:bg-primary-8 hover:text-white hover:ring-primary-8',
         'disabled:pointer-events-none disabled:opacity-50',
+        // lets Block hide the field's description while this hint shows
+        hint && 'scan-hint-trigger',
         className
       )}
       onClick={onClick}
@@ -92,7 +98,27 @@ export function SweepIconButton({
       {children}
     </button>
   );
+
+  if (!hint) return button;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{button}</TooltipTrigger>
+      <TooltipContent side="top" sideOffset={6} className="max-w-64 text-left text-wrap">
+        <span className="block font-semibold">{label}</span>
+        <span className="block">{hint}</span>
+      </TooltipContent>
+    </Tooltip>
+  );
 }
+
+/** Hover text for the + that turns a field into a scan, or adds to one. */
+export const ScanHint = {
+  expandValues:
+    'Each value runs as its own configuration. Scan more than one field and every combination runs.',
+  addValue: 'Add another value to the scan. Each value runs as its own configuration.',
+  addGroup: 'Add another group to the scan. Each group runs as its own configuration.',
+  addToList: 'Each one you add runs as its own configuration.',
+} as const;
 
 export default function ParameterSweep({
   value,
@@ -185,10 +211,14 @@ export default function ParameterSweep({
         {!disabled && allowMultiple && (
           <SweepIconButton
             label="Scan over several values"
+            hint={ScanHint.expandValues}
             testId="scan-config-sweep-expand"
             className="absolute top-1/2 right-2 -translate-y-1/2"
             onClick={() => {
-              onChange(multipleValues);
+              // Open with an empty second value, so one press is enough to
+              // start a scan. The preview stays on the value already there.
+              selectValue?.(0);
+              onChange([...multipleValues, null]);
             }}
           >
             <RiAddLine className="size-3.5" />
@@ -209,25 +239,71 @@ export default function ParameterSweep({
           <div className="flex flex-col gap-1">
             {multipleValues.map((v, i) => {
               const errorMessage = !isNil(v) ? error(v) : undefined;
-              const isLast = i === multipleValues.length - 1;
-              const canRemove = multipleValues.length >= 2;
+              const showAdd = !disabled && i === multipleValues.length - 1;
+              const showRemove = !disabled && multipleValues.length >= 2;
               const isActiveValue = valueSelector?.activeIndex === i;
               return (
                 // biome-ignore lint/suspicious/noArrayIndexKey: values are positional
                 <Fragment key={k + i}>
                   <div className="flex w-full items-center gap-1.5">
-                    <InputNumber
-                      data-testid="scan-config-sweep-value"
-                      className="min-w-0 flex-1"
-                      status={v === null || errorMessage ? 'error' : undefined}
-                      value={v}
-                      disabled={disabled}
-                      onChange={(newValue) => {
-                        const updated = [...multipleValues];
-                        updated[i] = newValue;
-                        onChange(updated);
-                      }}
-                    />
+                    <div className="relative min-w-0 flex-1">
+                      <InputNumber
+                        data-testid="scan-config-sweep-value"
+                        controls={false}
+                        // room for the buttons inside the field
+                        className={cn('w-full!', {
+                          '[&_input]:pr-9': showRemove !== showAdd,
+                          '[&_input]:pr-16': showRemove && showAdd,
+                        })}
+                        status={v === null || errorMessage ? 'error' : undefined}
+                        value={v}
+                        disabled={disabled}
+                        onChange={(newValue) => {
+                          const updated = [...multipleValues];
+                          updated[i] = newValue;
+                          onChange(updated);
+                        }}
+                      />
+
+                      {/* Bin always at the right edge so it lines up on every
+                          row; add sits before it, on the last row only. */}
+                      {(showRemove || showAdd) && (
+                        <div className="absolute top-1/2 right-2 flex -translate-y-1/2 items-center gap-1">
+                          {showAdd && (
+                            <SweepIconButton
+                              label="Add a value"
+                              hint={ScanHint.addValue}
+                              testId="scan-config-sweep-add"
+                              onClick={() => {
+                                // The value you just added is the one you want
+                                // to see, so it becomes the active coordinate.
+                                selectValue?.(multipleValues.length);
+                                onChange([...multipleValues, null]);
+                              }}
+                            >
+                              <RiAddLine className="size-3.5" />
+                            </SweepIconButton>
+                          )}
+                          {showRemove && (
+                            <SweepIconButton
+                              label="Remove this value"
+                              testId="scan-config-sweep-remove"
+                              onClick={() => {
+                                const updated = [...multipleValues];
+                                updated.splice(i, 1);
+                                // Keep the eye on the same value it was on.
+                                selectValue?.(activeIndexAfterRemoval(i));
+                                // One value left is no longer a scan: back to
+                                // the single field.
+                                onChange(updated.length === 1 ? updated[0] : updated);
+                              }}
+                            >
+                              <RiDeleteBinLine className="size-3.5" />
+                            </SweepIconButton>
+                          )}
+                        </div>
+                      )}
+                    </div>
 
                     {valueSelector && (
                       <SweepIconButton
@@ -248,47 +324,6 @@ export default function ParameterSweep({
                           <RiEyeLine className="size-3.5" />
                         )}
                       </SweepIconButton>
-                    )}
-
-                    {/* Fixed column order — eye, delete, add — with reserved
-                        slots so add stays pinned right on every row even though
-                        only the last row can use it. */}
-                    {!disabled && (
-                      <>
-                        <span className="flex size-6 shrink-0 items-center justify-center">
-                          {canRemove && (
-                            <SweepIconButton
-                              label="Remove this value"
-                              testId="scan-config-sweep-remove"
-                              onClick={() => {
-                                const updated = [...multipleValues];
-                                updated.splice(i, 1);
-                                // Keep the eye on the same value it was on.
-                                selectValue?.(activeIndexAfterRemoval(i));
-                                onChange(updated);
-                              }}
-                            >
-                              <RiDeleteBinLine className="size-3.5" />
-                            </SweepIconButton>
-                          )}
-                        </span>
-                        <span className="flex size-6 shrink-0 items-center justify-center">
-                          {isLast && (
-                            <SweepIconButton
-                              label="Add a value"
-                              testId="scan-config-sweep-add"
-                              onClick={() => {
-                                // The value you just added is the one you want
-                                // to see, so it becomes the active coordinate.
-                                selectValue?.(multipleValues.length);
-                                onChange([...multipleValues, null]);
-                              }}
-                            >
-                              <RiAddLine className="size-3.5" />
-                            </SweepIconButton>
-                          )}
-                        </span>
-                      </>
                     )}
                   </div>
                   {errorMessage && <span className="text-red-500">{errorMessage}</span>}

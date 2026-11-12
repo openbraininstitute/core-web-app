@@ -186,6 +186,8 @@ export default function Block({
                       align="center"
                       side="right"
                       className={cn(
+                        // a scan + has its own hint; showing this one too stacks two tooltips
+                        '[body:has(.scan-hint-trigger:hover)_&]:hidden',
                         'text-white shadow-bnb max-w-2xs min-w-2xs rounded-md ',
                         'bg-primary-8 px-4 py-2 text-base text-wrap ',
                         'overflow-y-auto max-h-50 primary-scrollbar'

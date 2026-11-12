@@ -12,7 +12,7 @@ import ParameterSweep, {
 } from '@/features/scan-config/components/ui-elements/parameter-sweep';
 
 function renderSweep(
-  value: (number | null)[],
+  value: number | null | (number | null)[],
   { withScope = false }: { withScope?: boolean } = {},
   onChange = vi.fn()
 ) {
@@ -109,13 +109,14 @@ describe('ParameterSweep layout', () => {
     expect(screen.queryByRole('button', { name: 'Use a single value' })).toBeNull();
   });
 
-  it('gives every row the same add/remove slots so the buttons line up', () => {
+  it('puts remove in every row and add in the last row only', () => {
     renderSweep([4100.223, 1100]);
     const rows = [...document.querySelectorAll('.flex.w-full.items-center')];
     expect(rows).toHaveLength(2);
-    // Only the last row shows "add", but both rows reserve the slot.
     for (const row of rows) {
-      expect(row.querySelectorAll(':scope > span.size-6')).toHaveLength(2);
+      expect(
+        within(row as HTMLElement).getByRole('button', { name: 'Remove this value' })
+      ).toBeTruthy();
     }
     expect(
       within(rows[0] as HTMLElement).queryByRole('button', { name: 'Add a value' })
@@ -125,13 +126,38 @@ describe('ParameterSweep layout', () => {
     ).toBeTruthy();
   });
 
-  it('orders the row controls eye, delete, then add', () => {
+  it('keeps add and remove inside the field, with the eye after it', () => {
     renderSweep([4100.223, 1100], { withScope: true });
     const lastRow = [...document.querySelectorAll('.flex.w-full.items-center')].at(
       -1
     ) as HTMLElement;
     const labels = [...lastRow.querySelectorAll('button')].map((b) => b.getAttribute('aria-label'));
-    expect(labels).toEqual(['Show value 2 in the preview', 'Remove this value', 'Add a value']);
+    // remove stays at the field's right edge so it lines up on every row
+    expect(labels).toEqual(['Add a value', 'Remove this value', 'Show value 2 in the preview']);
+    const field = lastRow.querySelector('.relative') as HTMLElement;
+    expect(within(field).getByRole('button', { name: 'Add a value' })).toBeTruthy();
+    expect(within(field).getByRole('button', { name: 'Remove this value' })).toBeTruthy();
+    expect(within(field).queryByRole('button', { name: /show value/i })).toBeNull();
+  });
+});
+
+describe('ParameterSweep single value and back', () => {
+  it('opens a scan with an empty second value', () => {
+    const { onChange } = renderSweep(5);
+    fireEvent.click(screen.getByRole('button', { name: 'Scan over several values' }));
+    expect(onChange).toHaveBeenCalledWith([5, null]);
+  });
+
+  it('returns to a single value when only one is left', () => {
+    const { onChange } = renderSweep([10, 20]);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Remove this value' })[0]);
+    expect(onChange).toHaveBeenCalledWith(20);
+  });
+
+  it('stays a scan while two or more values are left', () => {
+    const { onChange } = renderSweep([10, 20, 30]);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Remove this value' })[0]);
+    expect(onChange).toHaveBeenCalledWith([20, 30]);
   });
 });
 
