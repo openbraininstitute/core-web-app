@@ -256,6 +256,7 @@ export enum AssetLabel {
   emodel_optimisation_checkpoint = 'emodel_optimisation_checkpoint',
   emodel_optimization_output = 'emodel_optimization_output',
   morphology = 'morphology',
+  morphology_with_spines = 'morphology_with_spines',
   neuron_hoc = 'neuron_hoc',
   neuron_mechanisms = 'neuron_mechanisms',
   notebook_required_files = 'notebook_required_files',

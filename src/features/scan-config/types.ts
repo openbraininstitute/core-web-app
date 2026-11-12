@@ -854,6 +854,7 @@ export const ActivityCustomFileRenderer = {
   Default: 'default',
   TaskConfigurationViewer: 'task-configuration-viewer',
   TaskLogsViewer: 'task-logs-viewer',
+  SpinyComparison: 'spiny-comparison',
 } as const;
 
 export type TActivityCustomFileRenderer =
@@ -890,7 +891,17 @@ export type TEntityMiniDetailFile = TActivityCustomFileBase & {
   dataType: TExtendedEntitiesTypeDict;
 };
 
-export type TActivityCustomFile = TAssetBackedFile | TEntityMiniDetailFile;
+/**
+ * A skeletonization's output on the EM mesh it was made from, in 3D: the mesh, and the morphology's skeleton and
+ * spines from its spiny H5. It stands for the morphology (`entity`), and carries what the view loads.
+ */
+export type TSpinyComparisonFile = TActivityCustomFileBase & {
+  renderer: typeof ActivityCustomFileRenderer.SpinyComparison;
+  mesh: { id: string; name: string; asset: Pick<IAsset, 'id' | 'size'> };
+  morphology: { id: string; asset: Pick<IAsset, 'id'> };
+};
+
+export type TActivityCustomFile = TAssetBackedFile | TEntityMiniDetailFile | TSpinyComparisonFile;
 
 /** True for a row backed by a file asset; false for an entity mini-detail row. */
 export function isAssetBackedFile(file: TActivityCustomFile): file is TAssetBackedFile {
