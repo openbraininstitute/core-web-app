@@ -2,6 +2,7 @@ import { sortBy } from 'es-toolkit/compat';
 import { atom, useAtom, useAtomValue } from 'jotai';
 import { useEffect, useMemo } from 'react';
 
+import { EntityTypeDict } from '@/api/entitycore/types';
 import { NodePopulationType } from '@/api/entitycore/types/entities/circuit';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
@@ -159,9 +160,11 @@ export function SimulationFiles({
     });
   }, [inputFilesWithLogs, selectedAssetPath]);
 
+  const { entity: model, entityType } = useModelQuery({ id: simulation.entity_id, context });
+  const recordingsFirst = entityType === EntityTypeDict.IonChannelModel;
   const prioritizedOutputFiles = useMemo(
-    () => prioritizeOutputFiles(outputFilesWithLogs, selectedAssetPath),
-    [outputFilesWithLogs, selectedAssetPath]
+    () => prioritizeOutputFiles(outputFilesWithLogs, selectedAssetPath, recordingsFirst),
+    [outputFilesWithLogs, selectedAssetPath, recordingsFirst]
   );
 
   // Notify parent component about the loading state
@@ -170,8 +173,9 @@ export function SimulationFiles({
   }, [loading, onLoadingChange]);
 
   // Nothing is picked while the result's files load: the logs row comes in ahead
-  // of them, and the pick is made once. Arriving, the tab opens on the spikes; a
-  // pick of another simulation keeps the file on show until its like is in.
+  // of them, and the pick is made once. Arriving, the tab opens on the spikes (an ion
+  // channel model's on its recordings); a pick of another simulation keeps the file
+  // on show until its like is in.
   const awaitingResult = outputAvailable && outputLoading;
   useAutoSelectFileOnConfigChange({
     configId: simulation.id,
@@ -197,7 +201,6 @@ export function SimulationFiles({
   // circuit's own that are not virtual, which are what a simulation records.
   const published = useAtomValue(reportPopulationsAtom);
   const [chosenPopulations, setChosenPopulations] = useAtom(chosenReportPopulationAtom);
-  const { entity: model } = useModelQuery({ id: simulation.entity_id, context });
   const { config: circuitConfig } = useCircuitConfig(replaySubject(model ?? null)?.circuit);
   const recordable = useMemo(
     () =>
