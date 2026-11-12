@@ -56,6 +56,9 @@ export class InteractionManager {
     element.addEventListener('dblclick', this.handleDblClick);
     element.style.cursor = 'crosshair';
     element.style.touchAction = 'none';
+    // In place of cancelling the press: a cancelled one sends no mousedown, which is what
+    // a menu open elsewhere on the page - the nodes table's filter, say - shuts on.
+    element.style.userSelect = 'none';
 
     // Wrapping mask clips the selection's huge box-shadow to the plot area,
     // so the dim overlay covers only the chart and not the axis labels.
@@ -223,7 +226,6 @@ export class InteractionManager {
       return;
     }
 
-    e.preventDefault();
     this.drag = {
       mode,
       startClient: { x: e.clientX, y: e.clientY },

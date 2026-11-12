@@ -22,9 +22,16 @@ import { AgGridRenderer } from '@/features/data-grid/renderers/aggrid';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { ActivityValues, getActivity, type TActivityValue } from '@/ui/segments/workflows/config';
 import { ActivityAndTypeSelectors } from '@/ui/segments/workflows/elements/browse-header';
-import { buildWorkflowActivityCellRenderers } from '@/ui/segments/workflows/elements/workflow-activity-cells';
+import {
+  buildWorkflowActivityCellRenderers,
+  WorkflowHoverCard,
+} from '@/ui/segments/workflows/elements/workflow-activity-cells';
 import { buildWorkflowActivitySchema } from '@/ui/segments/workflows/elements/workflow-activity-schema';
 import { withWorkflowIdSearch } from '@/ui/segments/workflows/elements/workflow-activity-search';
+import {
+  WORKFLOW_ACTIVITY_QUERY_KEY,
+  WorkflowDetailsEditor,
+} from '@/ui/segments/workflows/elements/workflow-details-editor';
 import { cn } from '@/utils/css-class';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
@@ -33,8 +40,15 @@ import type { IGridState } from '@/features/data-grid/core';
 
 /** Grid section id — namespaces the persisted column layout away from the browse pages. */
 const WORKFLOW_ACTIVITY_SECTION = 'workflow-activity';
+/**
+ * Where the column layout is saved. Versioned because a saved order or width outranks the
+ * declared one: v3 has Category and Type first and fits every column to its content.
+ */
+const WORKFLOW_ACTIVITY_LAYOUT = `${WORKFLOW_ACTIVITY_SECTION}-v3`;
 
 const selectFreeTextSearch = (state: IGridState): string => state.freeTextSearch;
+
+const renderHoverCard = (row: EntityCoreObjectTypes) => <WorkflowHoverCard row={row} />;
 
 /** One registry for every workflow-activity grid, so remounts resolve the same objects. */
 const CELL_RENDERERS = buildWorkflowActivityCellRenderers();
@@ -42,7 +56,7 @@ const CELL_RENDERERS = buildWorkflowActivityCellRenderers();
 export function WorkflowActivity() {
   const { virtualLabId, projectId } = useWorkspace();
 
-  const [{ activityType, entityType }, updateActivityState] = useQueryStates(
+  const [asked, updateActivityState] = useQueryStates(
     {
       activityType: parseAsString
         .withOptions({
@@ -66,27 +80,25 @@ export function WorkflowActivity() {
       },
     }
   );
-
-  const resolvedActivityType: TActivityValue =
-    activityType ?? (ActivityValues.Build as TActivityValue);
-  const resolvedEntityType: TExtendedEntitiesTypeDict =
-    entityType ?? ExtendedEntitiesTypeDict.MEModelBuildCampaign;
+  const activityType: TActivityValue = asked.activityType ?? ActivityValues.Build;
+  const entityType: TExtendedEntitiesTypeDict =
+    asked.entityType ?? ExtendedEntitiesTypeDict.MEModelBuildCampaign;
 
   const workspace = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
 
-  const gridKey = `${resolvedActivityType}-${resolvedEntityType}`;
+  const gridKey = `${activityType}-${entityType}`;
 
-  const activityName = getActivity(resolvedActivityType)?.name ?? '';
+  const activityName = getActivity(activityType)?.name ?? '';
 
   const schema = useMemo(
     () =>
       buildWorkflowActivitySchema({
-        activity: resolvedActivityType,
+        activity: activityType,
         activityName,
-        entityType: resolvedEntityType,
+        entityType,
         workspace,
       }),
-    [resolvedActivityType, activityName, resolvedEntityType, workspace]
+    [activityType, activityName, entityType, workspace]
   );
 
   const operators = useMemo(() => createDefaultOperatorRegistry(), []);
@@ -96,19 +108,17 @@ export function WorkflowActivity() {
       new GridController<EntityCoreObjectTypes>({
         schema,
         context: {
-          dataType: resolvedEntityType,
+          dataType: entityType,
           section: WORKFLOW_ACTIVITY_SECTION,
-          factors: { activity: resolvedActivityType },
+          factors: { activity: activityType },
         },
         instanceKey: `${WORKFLOW_ACTIVITY_SECTION}:${virtualLabId}:${projectId}:${gridKey}`,
         // The layout slice is keyed by section + entity type only, so a chosen column
         // set follows the type across projects the way the browse listings do.
-        persistence: createDefaultPersistence(
-          layoutKeyFor(WORKFLOW_ACTIVITY_SECTION, resolvedEntityType)
-        ),
+        persistence: createDefaultPersistence(layoutKeyFor(WORKFLOW_ACTIVITY_LAYOUT, entityType)),
         defaultPageSize: DEFAULT_PAGE_MEDIUM_SIZE,
       }),
-    [schema, resolvedEntityType, resolvedActivityType, virtualLabId, projectId, gridKey]
+    [schema, entityType, activityType, virtualLabId, projectId, gridKey]
   );
   useEffect(() => controller.connect(), [controller]);
 
@@ -123,13 +133,13 @@ export function WorkflowActivity() {
   const dataSource = useMemo(
     () =>
       createEntitycorePagedDataSource<EntityCoreObjectTypes>({
-        dataType: resolvedEntityType,
+        dataType: entityType,
         schema,
         context: { virtualLabId, projectId },
         // workflow-only: a pasted UUID in the search box looks up that record by id
         transformParams: withWorkflowIdSearch,
       }),
-    [resolvedEntityType, schema, virtualLabId, projectId]
+    [entityType, schema, virtualLabId, projectId]
   );
 
   const params = useMemo(
@@ -138,51 +148,54 @@ export function WorkflowActivity() {
   );
 
   return (
-    <section
-      id="activity-table-with-filters"
-      data-testid="activity-table-with-filters"
-      className={cn('flex h-full w-full min-w-0 flex-col before:shadow-lg after:shadow-md')}
-    >
-      <div
-        className="flex h-full w-full min-h-0 flex-col"
-        id="workflow-activities-table"
-        data-testid="workflow-activities-table"
+    <WorkflowDetailsEditor>
+      <section
+        id="activity-table-with-filters"
+        data-testid="activity-table-with-filters"
+        className={cn('flex h-full w-full min-w-0 flex-col before:shadow-lg after:shadow-md')}
       >
-        <DataGrid<EntityCoreObjectTypes>
-          key={gridKey}
-          controller={controller}
-          dataSource={dataSource}
-          renderer={AgGridRenderer}
-          operators={operators}
-          cellRenderers={CELL_RENDERERS}
-          queryKey={['workflow-activity', virtualLabId, projectId, gridKey]}
-          params={params}
-          enabled={Boolean(resolvedActivityType && resolvedEntityType)}
-          loadingLabel="activities"
-          className="min-h-0 flex-1"
-          gridClassName="[&_.ag-header]:bg-background [&_.ag-header-cell]:text-neutral-4"
-          toolbarSlots={{
-            entityType: (
-              <ActivityAndTypeSelectors
-                activity={activityType}
-                entityType={entityType}
-                onActivityChange={(activityType) => updateActivityState({ activityType })}
-                onEntityTypeChange={(entityType) => updateActivityState({ entityType })}
-              />
-            ),
-            search: (
-              <GridSearch
-                openOnMount
-                onSearch={handleSearch}
-                value={freeTextSearch}
-                // wider than the default so the whole hint is readable
-                inputWidthClass="w-96"
-                placeholder="Search entities by name, ID"
-              />
-            ),
-          }}
-        />
-      </div>
-    </section>
+        <div
+          className="flex h-full w-full min-h-0 flex-col"
+          id="workflow-activities-table"
+          data-testid="workflow-activities-table"
+        >
+          <DataGrid<EntityCoreObjectTypes>
+            key={gridKey}
+            controller={controller}
+            dataSource={dataSource}
+            renderer={AgGridRenderer}
+            operators={operators}
+            cellRenderers={CELL_RENDERERS}
+            queryKey={[WORKFLOW_ACTIVITY_QUERY_KEY, virtualLabId, projectId, gridKey]}
+            params={params}
+            enabled={Boolean(activityType && entityType)}
+            loadingLabel="activities"
+            rowHoverCard={renderHoverCard}
+            className="min-h-0 flex-1"
+            gridClassName="[&_.ag-header]:bg-background [&_.ag-header-cell]:text-neutral-4"
+            toolbarSlots={{
+              entityType: (
+                <ActivityAndTypeSelectors
+                  activity={activityType}
+                  entityType={entityType}
+                  onActivityChange={(activityType) => updateActivityState({ activityType })}
+                  onEntityTypeChange={(entityType) => updateActivityState({ entityType })}
+                />
+              ),
+              search: (
+                <GridSearch
+                  openOnMount
+                  onSearch={handleSearch}
+                  value={freeTextSearch}
+                  // wider than the default so the whole hint is readable
+                  inputWidthClass="w-96"
+                  placeholder="Search entities by name, ID"
+                />
+              ),
+            }}
+          />
+        </div>
+      </section>
+    </WorkflowDetailsEditor>
   );
 }

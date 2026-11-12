@@ -2,17 +2,19 @@ import { sortBy } from 'es-toolkit/compat';
 import { atom, useAtom, useAtomValue } from 'jotai';
 import { useEffect, useMemo } from 'react';
 
+import { EntityTypeDict } from '@/api/entitycore/types';
 import { NodePopulationType } from '@/api/entitycore/types/entities/circuit';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { simResultBySimIdAtomFamily, useModelQuery } from '@/features/scan-config/components/atoms';
-import { hasStatistics, isVoltageReportFile } from '@/features/scan-config/components/file-viewer';
+import { isVoltageReportFile } from '@/features/scan-config/components/file-viewer';
 import { IoLayout } from '@/features/scan-config/components/shared/io-layout';
 import { TaskIOFileGroup } from '@/features/scan-config/components/shared/task-io-file-group';
 import { TaskIOFileItem } from '@/features/scan-config/components/shared/task-io-file-item';
 import { useAutoSelectFileOnConfigChange } from '@/features/scan-config/components/shared/use-auto-select';
 import { prioritizeOutputFiles } from '@/features/scan-config/components/simulation-files/output-order';
+import { isPlainObject } from '@/features/scan-config/components/utils';
 import {
   ActivityCustomFileRenderer,
   isAssetBackedFile,
@@ -65,7 +67,8 @@ const SIMULATION_FILE_NAMES: Partial<Record<string, string>> = {
 };
 
 /** Which of the groups are open: kept as the simulation on show changes. */
-const openGroupsAtom = atom({ circuit: false, simulation: false, result: false });
+// The result opens listed, as what the panel is for; the inputs stay shut until asked for.
+const openGroupsAtom = atom({ circuit: false, simulation: false, result: true });
 
 const NO_FILES: TAssetBackedFile[] = [];
 
@@ -79,6 +82,8 @@ type SimulationFilesProps = {
   jobId?: string;
   /** The SONATA config's reports, by name: what each of the result's reports records. */
   reports?: Record<string, unknown> | null;
+  /** The SONATA config's inputs, by name: with its reports, what the compartment sets are called. */
+  inputs?: Record<string, unknown> | null;
 };
 
 export function SimulationFiles({
@@ -90,6 +95,7 @@ export function SimulationFiles({
   context,
   jobId,
   reports,
+  inputs,
 }: SimulationFilesProps) {
   const [inputLoading, inputFiles] = useInputFiles(simulation, context);
 
@@ -159,9 +165,11 @@ export function SimulationFiles({
     });
   }, [inputFilesWithLogs, selectedAssetPath]);
 
+  const { entity: model, entityType } = useModelQuery({ id: simulation.entity_id, context });
+  const recordingsFirst = entityType === EntityTypeDict.IonChannelModel;
   const prioritizedOutputFiles = useMemo(
-    () => prioritizeOutputFiles(outputFilesWithLogs, selectedAssetPath),
-    [outputFilesWithLogs, selectedAssetPath]
+    () => prioritizeOutputFiles(outputFilesWithLogs, selectedAssetPath, recordingsFirst),
+    [outputFilesWithLogs, selectedAssetPath, recordingsFirst]
   );
 
   // Notify parent component about the loading state
@@ -170,8 +178,9 @@ export function SimulationFiles({
   }, [loading, onLoadingChange]);
 
   // Nothing is picked while the result's files load: the logs row comes in ahead
-  // of them, and the pick is made once. Arriving, the tab opens on the spikes; a
-  // pick of another simulation keeps the file on show until its like is in.
+  // of them, and the pick is made once. Arriving, the tab opens on the spikes (an ion
+  // channel model's on its recordings); a pick of another simulation keeps the file
+  // on show until its like is in.
   const awaitingResult = outputAvailable && outputLoading;
   useAutoSelectFileOnConfigChange({
     configId: simulation.id,
@@ -197,7 +206,6 @@ export function SimulationFiles({
   // circuit's own that are not virtual, which are what a simulation records.
   const published = useAtomValue(reportPopulationsAtom);
   const [chosenPopulations, setChosenPopulations] = useAtom(chosenReportPopulationAtom);
-  const { entity: model } = useModelQuery({ id: simulation.entity_id, context });
   const { config: circuitConfig } = useCircuitConfig(replaySubject(model ?? null)?.circuit);
   const recordable = useMemo(
     () =>
@@ -206,8 +214,22 @@ export function SimulationFiles({
         .map((n) => n.name) ?? [],
     [circuitConfig]
   );
+  const compartmentSets = compartmentSetNames(inputs, reports);
   const rowsOf = (files: TAssetBackedFile[]): FileRow[] =>
     files.flatMap((file): FileRow[] => {
+      // The compartment sets read as the morphology locations blocks they were
+      // made from, tagged as what they are.
+      if (file.asset.label === AssetLabel.compartment_sets) {
+        return [
+          {
+            file,
+            name: compartmentSets.length > 0 ? compartmentSets.join(', ') : file.name,
+            label: tagOf(['Compartment', 'sets']),
+            population: undefined,
+            selected: isSelected(file),
+          },
+        ];
+      }
       // An input's spikes, or an extracellular report, read as their file's
       // name, tagged as what they are.
       if (file.asset.label === AssetLabel.replay_spikes || isLfpReport(file, reports)) {
@@ -278,7 +300,6 @@ export function SimulationFiles({
                 file={file}
                 name={name}
                 label={label}
-                interactive={hasStatistics(file)}
                 onSelect={() => {
                   if (population) {
                     setChosenPopulations((previous) => ({
@@ -391,6 +412,22 @@ export function useSimulationResultFiles(
 
     return [loading, files];
   }, [simResult, simResultLoadable]);
+}
+
+/**
+ * The compartment sets' names: each is named for the morphology locations block
+ * it was made from, which a stimulus or a recording of the SONATA config targets.
+ */
+function compartmentSetNames(
+  ...sections: (Record<string, unknown> | null | undefined)[]
+): string[] {
+  const names = new Set<string>();
+  for (const entry of sections.flatMap((section) => Object.values(section ?? {}))) {
+    if (isPlainObject(entry) && typeof entry.compartment_set === 'string') {
+      names.add(entry.compartment_set);
+    }
+  }
+  return [...names].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 }
 
 /**
