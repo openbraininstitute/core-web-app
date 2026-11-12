@@ -59,6 +59,10 @@ describe('prioritizeOutputFiles', () => {
     ]);
   });
 
+  it('falls back to the spikes for an ion channel model without h5 recordings', () => {
+    expect(paths(prioritizeOutputFiles([logs, nwb, spikes], undefined, true))[0]).toBe('spikes.h5');
+  });
+
   it('keeps the file on show first for an ion channel model too', () => {
     expect(paths(prioritizeOutputFiles([logs, soma, spikes], 'spikes.h5', true))[0]).toBe(
       'spikes.h5'

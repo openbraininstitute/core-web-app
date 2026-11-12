@@ -491,7 +491,6 @@ export function SimulationsTab({
                     onLoadingChange={setFilesLoading}
                     jobId={activeJobId}
                     reports={simConfig?.reports}
-                    recordingsFirst={entityType === EntityTypeDict.IonChannelModel}
                   />
                 )
               )}

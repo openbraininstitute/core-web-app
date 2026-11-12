@@ -2,6 +2,7 @@ import { sortBy } from 'es-toolkit/compat';
 import { atom, useAtom, useAtomValue } from 'jotai';
 import { useEffect, useMemo } from 'react';
 
+import { EntityTypeDict } from '@/api/entitycore/types';
 import { NodePopulationType } from '@/api/entitycore/types/entities/circuit';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
@@ -79,8 +80,6 @@ type SimulationFilesProps = {
   jobId?: string;
   /** The SONATA config's reports, by name: what each of the result's reports records. */
   reports?: Record<string, unknown> | null;
-  /** Open on the variable recordings rather than the spikes (ion channel models). */
-  recordingsFirst?: boolean;
 };
 
 export function SimulationFiles({
@@ -92,7 +91,6 @@ export function SimulationFiles({
   context,
   jobId,
   reports,
-  recordingsFirst,
 }: SimulationFilesProps) {
   const [inputLoading, inputFiles] = useInputFiles(simulation, context);
 
@@ -162,6 +160,8 @@ export function SimulationFiles({
     });
   }, [inputFilesWithLogs, selectedAssetPath]);
 
+  const { entity: model, entityType } = useModelQuery({ id: simulation.entity_id, context });
+  const recordingsFirst = entityType === EntityTypeDict.IonChannelModel;
   const prioritizedOutputFiles = useMemo(
     () => prioritizeOutputFiles(outputFilesWithLogs, selectedAssetPath, recordingsFirst),
     [outputFilesWithLogs, selectedAssetPath, recordingsFirst]
@@ -201,7 +201,6 @@ export function SimulationFiles({
   // circuit's own that are not virtual, which are what a simulation records.
   const published = useAtomValue(reportPopulationsAtom);
   const [chosenPopulations, setChosenPopulations] = useAtom(chosenReportPopulationAtom);
-  const { entity: model } = useModelQuery({ id: simulation.entity_id, context });
   const { config: circuitConfig } = useCircuitConfig(replaySubject(model ?? null)?.circuit);
   const recordable = useMemo(
     () =>
