@@ -79,6 +79,8 @@ type SimulationFilesProps = {
   jobId?: string;
   /** The SONATA config's reports, by name: what each of the result's reports records. */
   reports?: Record<string, unknown> | null;
+  /** Open on the variable recordings rather than the spikes (ion channel models). */
+  recordingsFirst?: boolean;
 };
 
 export function SimulationFiles({
@@ -90,6 +92,7 @@ export function SimulationFiles({
   context,
   jobId,
   reports,
+  recordingsFirst,
 }: SimulationFilesProps) {
   const [inputLoading, inputFiles] = useInputFiles(simulation, context);
 
@@ -160,8 +163,8 @@ export function SimulationFiles({
   }, [inputFilesWithLogs, selectedAssetPath]);
 
   const prioritizedOutputFiles = useMemo(
-    () => prioritizeOutputFiles(outputFilesWithLogs, selectedAssetPath),
-    [outputFilesWithLogs, selectedAssetPath]
+    () => prioritizeOutputFiles(outputFilesWithLogs, selectedAssetPath, recordingsFirst),
+    [outputFilesWithLogs, selectedAssetPath, recordingsFirst]
   );
 
   // Notify parent component about the loading state
@@ -170,7 +173,8 @@ export function SimulationFiles({
   }, [loading, onLoadingChange]);
 
   // Nothing is picked while the result's files load: the logs row comes in ahead
-  // of them, and the pick is made once. Arriving, the tab opens on the spikes; a
+  // of them, and the pick is made once. Arriving, the tab opens on the spikes (an ion
+  // channel model's on its recordings); a
   // pick of another simulation keeps the file on show until its like is in.
   const awaitingResult = outputAvailable && outputLoading;
   useAutoSelectFileOnConfigChange({

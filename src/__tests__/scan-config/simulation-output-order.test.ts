@@ -46,4 +46,18 @@ describe('prioritizeOutputFiles', () => {
   it("falls back to a single cell's NWB voltages without spikes", () => {
     expect(paths(prioritizeOutputFiles([logs, soma, nwb], undefined))[0]).toBe('soma.nwb');
   });
+
+  it("opens an ion channel model's simulation on its recordings, ahead of the spikes", () => {
+    expect(paths(prioritizeOutputFiles([logs, spikes, soma], undefined, true))).toEqual([
+      'soma_report.h5',
+      'spikes.h5',
+      'task-logs',
+    ]);
+  });
+
+  it('keeps the file on show first for an ion channel model too', () => {
+    expect(paths(prioritizeOutputFiles([logs, soma, spikes], 'spikes.h5', true))[0]).toBe(
+      'spikes.h5'
+    );
+  });
 });
