@@ -21,13 +21,11 @@ export async function getTaskConfigs<T extends Record<string, unknown>>({
   filters,
   context,
   expand,
-  signal,
 }: {
   withFacets?: boolean;
   filters?: Partial<ITaskConfigFilter>;
   context?: WorkspaceContext | null;
   expand?: ReadonlyArray<TAnyEntityExpandParam>;
-  signal?: AbortSignal;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<ITaskConfig<T>>>(baseUri, {
@@ -41,7 +39,6 @@ export async function getTaskConfigs<T extends Record<string, unknown>>({
       'content-type': 'application/json',
       ...getEntityCoreContext(context).headers,
     },
-    signal,
   });
 }
 

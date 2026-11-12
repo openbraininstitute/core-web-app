@@ -128,13 +128,10 @@ export function WorkflowStatusCell({
       const isExpandableTask =
         taskConfigType === TaskConfigType.CircuitExtractionCampaign ||
         taskConfigType === TaskConfigType.SkeletonizationCampaign;
-      // the executions a type's own listing joins in; the All listing leaves them to a query
-      const hasRows = Array.isArray((record as Partial<WorkflowTaskCampaignRow>).rows);
 
-      if (isExpandableTask || !hasRows) {
-        const expandRow = !isExpandableTask
-          ? undefined
-          : taskConfigType === TaskConfigType.SkeletonizationCampaign
+      if (isExpandableTask) {
+        const expandRow =
+          taskConfigType === TaskConfigType.SkeletonizationCampaign
             ? SkeletonizationCampaign.api.expandRow
             : CircuitExtractionCampaign.api.expandRow;
         return (

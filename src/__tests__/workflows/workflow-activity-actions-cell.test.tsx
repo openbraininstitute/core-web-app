@@ -15,9 +15,7 @@ import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { EntityLifecycleStatus, LifecycleStatusBadge } from '@/ui/molecules/lifecycle-status-badge';
 import { ActivityValues } from '@/ui/segments/workflows/config';
-import { createAllWorkflowsDataSource } from '@/ui/segments/workflows/elements/workflow-activity-all';
 import { WorkflowActivityActionsCell } from '@/ui/segments/workflows/elements/workflow-activity-cells';
-import { buildWorkflowActivitySchema } from '@/ui/segments/workflows/elements/workflow-activity-schema';
 import { WorkflowDetailsEditor } from '@/ui/segments/workflows/elements/workflow-details-editor';
 
 import type { ReactElement, ReactNode } from 'react';
@@ -293,37 +291,6 @@ describe('WorkflowActivityActionsCell', () => {
     );
 
     expect(isDisabled('Duplicate')).toBe(true);
-  });
-
-  it('takes the workflow an All row brings, rather than the listing params', async () => {
-    const workspace = { virtualLabId: 'vlab', projectId: 'proj' };
-    const all = createAllWorkflowsDataSource({
-      sources: [
-        {
-          activity: ActivityValues.Build,
-          targetType: ExtendedEntitiesTypeDict.Memodel,
-          label: 'ME-model',
-          list: async () => ({
-            data: [row()],
-            pagination: { page: 1, page_size: 1, total_items: 1 },
-          }),
-        },
-      ],
-      schema: buildWorkflowActivitySchema({
-        activity: undefined,
-        activityName: '',
-        entityType: undefined,
-        workspace,
-      }),
-      context: workspace,
-    });
-    const {
-      rows: [allRow],
-    } = await all.fetch({ page: 1, pageSize: 1, sort: [], filters: {} });
-
-    render(<WorkflowActivityActionsCell row={allRow} value="" rowIndex={0} params={{}} />);
-
-    expect(action('View configuration')?.tagName).toBe('A');
   });
 });
 

@@ -172,17 +172,27 @@ export namespace Task {
       (await usedTaskConfigId(configId, configGenerationType, context))
     );
   }
-  /** The campaigns with the configs they generated and those configs' executions joined in. */
-  export async function withExecutions<
-    TMeta extends Record<string, unknown> = Record<string, unknown>,
-  >({
-    campaigns,
+  export async function many<TMeta extends Record<string, unknown> = Record<string, unknown>>({
+    withFacets,
     context,
+    filters,
+    campaignConfigType,
   }: {
-    campaigns: readonly ITaskConfig<TMeta>[];
+    withFacets?: boolean;
     context: WorkspaceContext | undefined;
-  }): Promise<TTaskCampaignRows<TMeta>> {
-    const campaignIDs = campaigns.map((o) => o.id);
+    filters?: Partial<ITaskConfigFilter>;
+    campaignConfigType: TTaskConfigType;
+  }) {
+    filters = discardBrainRegionQueryParams(filters);
+    const source = await getTaskConfigs<TMeta>({
+      context,
+      withFacets,
+      filters: {
+        task_config_type: campaignConfigType,
+        ...filters,
+      },
+    });
+    const campaignIDs = source.data.map((o) => o.id);
     const configsResponse = await listTaskConfigsByGeneratorIdsAnyType<TMeta>({
       context,
       generatorIds: campaignIDs,
@@ -212,30 +222,11 @@ export namespace Task {
       return acc;
     }, {});
 
-    return buildTaskCampaignRows<TMeta>({ campaigns, configsByCampaignId, executionsByConfigId });
-  }
-
-  export async function many<TMeta extends Record<string, unknown> = Record<string, unknown>>({
-    withFacets,
-    context,
-    filters,
-    campaignConfigType,
-  }: {
-    withFacets?: boolean;
-    context: WorkspaceContext | undefined;
-    filters?: Partial<ITaskConfigFilter>;
-    campaignConfigType: TTaskConfigType;
-  }) {
-    filters = discardBrainRegionQueryParams(filters);
-    const source = await getTaskConfigs<TMeta>({
-      context,
-      withFacets,
-      filters: {
-        task_config_type: campaignConfigType,
-        ...filters,
-      },
+    const enrichedData: TTaskCampaignRows<TMeta> = buildTaskCampaignRows<TMeta>({
+      campaigns: source.data,
+      configsByCampaignId,
+      executionsByConfigId,
     });
-    const enrichedData = await withExecutions<TMeta>({ campaigns: source.data, context });
 
     return {
       data: enrichedData,

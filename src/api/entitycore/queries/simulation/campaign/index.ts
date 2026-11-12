@@ -54,13 +54,11 @@ export async function getSimulationCampaigns({
   filters,
   context,
   expand,
-  signal,
 }: {
   withFacets?: boolean;
   filters?: Partial<ISimulationCampaignFilter>;
   context?: WorkspaceContext | null;
   expand?: ReadonlyArray<TAnyEntityExpandParam>;
-  signal?: AbortSignal;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<ICircuitSimulationCampaign>>(baseUri, {
@@ -74,7 +72,6 @@ export async function getSimulationCampaigns({
       'content-type': 'application/json',
       ...getEntityCoreContext(context).headers,
     },
-    signal,
   });
 }
 

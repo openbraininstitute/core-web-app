@@ -11,8 +11,6 @@ import {
   OperatorId,
   SortDirection,
 } from '@/features/data-grid/core';
-import { getActivity } from '@/ui/segments/workflows/config';
-import { rowWorkflow } from '@/ui/segments/workflows/elements/workflow-activity-all';
 import {
   WORKFLOW_ACTIVITY_ACTIONS_COLUMN_WIDTH,
   WORKFLOW_ACTIVITY_ACTIONS_RENDERER,
@@ -52,11 +50,8 @@ const workflowActivityAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
 ];
 
 export interface IWorkflowActivitySchemaArgs {
-  /**
-   * the selected activity, forwarded to the actions cell to build its hrefs; `undefined` under
-   * All, whose rows each carry their own (`rowWorkflow`)
-   */
-  activity: TActivityValue | undefined;
+  /** the selected activity, forwarded to the actions cell to build its hrefs */
+  activity: TActivityValue;
   /** activity label shown verbatim in every Category cell (Build, Simulation, …) */
   activityName: string;
   /** the listing's selected entity type, used as the Type cell's fallback title */
@@ -93,18 +88,14 @@ export function buildWorkflowActivitySchema({
     advancedFilters: workflowActivityAdvancedFilters,
     columns: [
       {
-        // display-only: the activity is chosen in the toolbar, or comes with the row under All
+        // display-only: the activity is chosen in the toolbar
         id: 'category',
         header: 'Category',
-        getValue: (row) => {
-          const own = rowWorkflow(row)?.activity;
-          return own ? (getActivity(own)?.name ?? '') : activityName;
-        },
+        getValue: () => activityName,
         width: { fitContent: true },
       },
       {
-        // display-only: the entity type is pinned by the toolbar's Type selector, or comes
-        // with the row under All
+        // display-only: the entity type is pinned by the toolbar's Type selector
         id: 'type',
         header: 'Type',
         getValue: () => '',
@@ -115,8 +106,7 @@ export function buildWorkflowActivitySchema({
       {
         id: 'name',
         header: 'Name',
-        // not under All: its merge cannot repeat the database's order of names
-        sortable: Boolean(entityType),
+        sortable: true,
         sortField: 'name',
         getValue: (row) => row.name ?? '',
         width: { minWidth: 160, flex: 2 },

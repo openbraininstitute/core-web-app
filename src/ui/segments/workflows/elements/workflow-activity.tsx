@@ -1,9 +1,9 @@
 'use client';
 
-import { InfoCircleOutlined, WarningOutlined } from '@ant-design/icons';
 import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
 import { createEntitycorePagedDataSource } from '@/features/data-grid/bindings/entitycore/data-source.paged';
 import {
@@ -19,18 +19,9 @@ import {
   useGridStateSlice,
 } from '@/features/data-grid/react';
 import { AgGridRenderer } from '@/features/data-grid/renderers/aggrid';
-import { useFlags } from '@/features/feature-flags';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { getActivity, type TActivityValue } from '@/ui/segments/workflows/config';
+import { ActivityValues, getActivity, type TActivityValue } from '@/ui/segments/workflows/config';
 import { ActivityAndTypeSelectors } from '@/ui/segments/workflows/elements/browse-header';
-import {
-  ALL_WORKFLOWS,
-  allWorkflowsSources,
-  createAllWorkflowsDataSource,
-  type IAllWorkflowsGaps,
-  MAX_LISTED_ROWS,
-  type TAllWorkflows,
-} from '@/ui/segments/workflows/elements/workflow-activity-all';
 import {
   buildWorkflowActivityCellRenderers,
   WorkflowHoverCard,
@@ -57,8 +48,6 @@ const WORKFLOW_ACTIVITY_LAYOUT = `${WORKFLOW_ACTIVITY_SECTION}-v3`;
 
 const selectFreeTextSearch = (state: IGridState): string => state.freeTextSearch;
 
-const NO_GAPS = { failed: '', unlisted: 0 };
-
 const renderHoverCard = (row: EntityCoreObjectTypes) => <WorkflowHoverCard row={row} />;
 
 /** One registry for every workflow-activity grid, so remounts resolve the same objects. */
@@ -66,24 +55,23 @@ const CELL_RENDERERS = buildWorkflowActivityCellRenderers();
 
 export function WorkflowActivity() {
   const { virtualLabId, projectId } = useWorkspace();
-  const flags = useFlags();
 
-  const [{ activityType, entityType }, updateActivityState] = useQueryStates(
+  const [asked, updateActivityState] = useQueryStates(
     {
       activityType: parseAsString
         .withOptions({
           clearOnDefault: false,
           shallow: true,
         })
-        .withDefault(ALL_WORKFLOWS) as SingleParserBuilder<TActivityValue | TAllWorkflows>,
+        .withDefault(ActivityValues.Build) as SingleParserBuilder<TActivityValue>,
       entityType: parseAsString
         .withOptions({
           clearOnDefault: false,
           shallow: true,
         })
-        .withDefault(ALL_WORKFLOWS) as SingleParserBuilder<
-        TExtendedEntitiesTypeDict | TAllWorkflows
-      >,
+        .withDefault(
+          ExtendedEntitiesTypeDict.MEModelBuildCampaign
+        ) as SingleParserBuilder<TExtendedEntitiesTypeDict>,
     },
     {
       urlKeys: {
@@ -92,32 +80,25 @@ export function WorkflowActivity() {
       },
     }
   );
-
-  // All as the Category lists every workflow, as a type cannot narrow it; All as the Type lists
-  // every workflow of the category
-  const allCategories = activityType === ALL_WORKFLOWS;
-  const listedActivity = allCategories ? undefined : (activityType as TActivityValue);
-  const listedType =
-    allCategories || entityType === ALL_WORKFLOWS
-      ? undefined
-      : (entityType as TExtendedEntitiesTypeDict);
+  const activityType: TActivityValue = asked.activityType ?? ActivityValues.Build;
+  const entityType: TExtendedEntitiesTypeDict =
+    asked.entityType ?? ExtendedEntitiesTypeDict.MEModelBuildCampaign;
 
   const workspace = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
 
-  const layoutType = listedType ?? ALL_WORKFLOWS;
-  const gridKey = `${listedActivity ?? ALL_WORKFLOWS}-${layoutType}`;
+  const gridKey = `${activityType}-${entityType}`;
 
-  const activityName = listedActivity ? (getActivity(listedActivity)?.name ?? '') : '';
+  const activityName = getActivity(activityType)?.name ?? '';
 
   const schema = useMemo(
     () =>
       buildWorkflowActivitySchema({
-        activity: listedActivity,
+        activity: activityType,
         activityName,
-        entityType: listedType,
+        entityType,
         workspace,
       }),
-    [listedActivity, activityName, listedType, workspace]
+    [activityType, activityName, entityType, workspace]
   );
 
   const operators = useMemo(() => createDefaultOperatorRegistry(), []);
@@ -127,17 +108,17 @@ export function WorkflowActivity() {
       new GridController<EntityCoreObjectTypes>({
         schema,
         context: {
-          dataType: layoutType,
+          dataType: entityType,
           section: WORKFLOW_ACTIVITY_SECTION,
-          factors: { activity: listedActivity ?? ALL_WORKFLOWS },
+          factors: { activity: activityType },
         },
         instanceKey: `${WORKFLOW_ACTIVITY_SECTION}:${virtualLabId}:${projectId}:${gridKey}`,
         // The layout slice is keyed by section + entity type only, so a chosen column
         // set follows the type across projects the way the browse listings do.
-        persistence: createDefaultPersistence(layoutKeyFor(WORKFLOW_ACTIVITY_LAYOUT, layoutType)),
+        persistence: createDefaultPersistence(layoutKeyFor(WORKFLOW_ACTIVITY_LAYOUT, entityType)),
         defaultPageSize: DEFAULT_PAGE_MEDIUM_SIZE,
       }),
-    [schema, layoutType, listedActivity, virtualLabId, projectId, gridKey]
+    [schema, entityType, activityType, virtualLabId, projectId, gridKey]
   );
   useEffect(() => controller.connect(), [controller]);
 
@@ -147,39 +128,19 @@ export function WorkflowActivity() {
   );
   const freeTextSearch = useGridStateSlice(controller, selectFreeTextSearch);
 
-  const [gaps, setGaps] = useState(NO_GAPS);
-  const tellGaps = useCallback(
-    ({ failed, unlisted }: IAllWorkflowsGaps) =>
-      setGaps((held) => {
-        const next = { failed: failed.join(', '), unlisted };
-        return held.failed === next.failed && held.unlisted === next.unlisted ? held : next;
-      }),
-    []
-  );
-
   // The grid contributes page/sort/filter/search; the entity's domain config owns the
-  // endpoint (All asks each workflow's), and `params` below pins the workspace scope.
+  // endpoint, and `params` below pins the workspace scope.
   const dataSource = useMemo(
     () =>
-      listedType
-        ? createEntitycorePagedDataSource<EntityCoreObjectTypes>({
-            dataType: listedType,
-            schema,
-            context: { virtualLabId, projectId },
-            // workflow-only: a pasted UUID in the search box looks up that record by id
-            transformParams: withWorkflowIdSearch,
-          })
-        : createAllWorkflowsDataSource({
-            sources: allWorkflowsSources(flags, listedActivity),
-            schema,
-            context: { virtualLabId, projectId },
-            transformParams: withWorkflowIdSearch,
-            onGaps: tellGaps,
-          }),
-    [listedType, listedActivity, schema, virtualLabId, projectId, flags, tellGaps]
+      createEntitycorePagedDataSource<EntityCoreObjectTypes>({
+        dataType: entityType,
+        schema,
+        context: { virtualLabId, projectId },
+        // workflow-only: a pasted UUID in the search box looks up that record by id
+        transformParams: withWorkflowIdSearch,
+      }),
+    [entityType, schema, virtualLabId, projectId]
   );
-  // biome-ignore lint/correctness/useExhaustiveDependencies: another listing starts without gaps
-  useEffect(() => setGaps(NO_GAPS), [gridKey]);
 
   const params = useMemo(
     () => ({ authorized_project_id: projectId, authorized_public: false }),
@@ -207,7 +168,7 @@ export function WorkflowActivity() {
             cellRenderers={CELL_RENDERERS}
             queryKey={[WORKFLOW_ACTIVITY_QUERY_KEY, virtualLabId, projectId, gridKey]}
             params={params}
-            enabled={allCategories || Boolean(listedActivity)}
+            enabled={Boolean(activityType && entityType)}
             loadingLabel="activities"
             rowHoverCard={renderHoverCard}
             className="min-h-0 flex-1"
@@ -215,32 +176,11 @@ export function WorkflowActivity() {
             toolbarSlots={{
               entityType: (
                 <ActivityAndTypeSelectors
-                  activity={listedActivity ?? ALL_WORKFLOWS}
-                  entityType={layoutType}
+                  activity={activityType}
+                  entityType={entityType}
                   onActivityChange={(activityType) => updateActivityState({ activityType })}
                   onEntityTypeChange={(entityType) => updateActivityState({ entityType })}
-                  onAllSelect={(activityType) =>
-                    updateActivityState({ activityType, entityType: ALL_WORKFLOWS })
-                  }
                 />
-              ),
-              left: (gaps.failed || gaps.unlisted > 0) && (
-                <div role="status" className="flex min-w-0 flex-col gap-0.5 pl-2 text-xs">
-                  {gaps.failed && (
-                    <p className="flex items-center gap-1.5 text-amber-700">
-                      <WarningOutlined />
-                      Some workflows could not be listed, their activities are missing:{' '}
-                      {gaps.failed}.
-                    </p>
-                  )}
-                  {gaps.unlisted > 0 && (
-                    <p className="flex items-center gap-1.5 text-neutral-4">
-                      <InfoCircleOutlined />
-                      Only the first {MAX_LISTED_ROWS.toLocaleString('en-US')} activities are
-                      listed. Choose a category and a type, or filter, to reach the rest.
-                    </p>
-                  )}
-                </div>
               ),
               search: (
                 <GridSearch

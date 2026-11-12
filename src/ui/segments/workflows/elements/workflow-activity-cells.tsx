@@ -37,7 +37,6 @@ import {
   canDuplicateWorkflowActivityRow,
   type TWorkflowActivityTableRow,
 } from '@/ui/segments/workflows/elements/workflow-activity-actions';
-import { rowWorkflow } from '@/ui/segments/workflows/elements/workflow-activity-all';
 import { descriptionOf } from '@/ui/segments/workflows/elements/workflow-details-dialog';
 import { useEditWorkflowDetails } from '@/ui/segments/workflows/elements/workflow-details-editor';
 import { WorkflowStatusCell } from '@/ui/segments/workflows/elements/workflow-status-cell';
@@ -135,25 +134,21 @@ interface ITypeCellParams {
 /** `cellRendererParams` the Status cell reads; supplied by the schema factory. */
 interface IStatusCellParams {
   workspace?: WorkspaceContext;
-  /** the listing's workflow, for the runs' links (an All row brings its own) */
+  /** the listing's workflow, for the runs' links */
   activity?: TActivityValue;
   entityType?: TExtendedEntitiesTypeDict;
 }
 
 /**
- * The row's entity title. Under All, the row's own workflow as the Type menu names it.
- * A circuit-extraction campaign is a `TaskConfig` row whose own `type` says nothing about
- * which campaign it is, so its `task_config_type` resolves the title instead; everything
- * else falls back to the listed entity type.
+ * The row's entity title. A circuit-extraction campaign is a `TaskConfig` row whose
+ * own `type` says nothing about which campaign it is, so its `task_config_type`
+ * resolves the title instead; everything else falls back to the listed entity type.
  */
 export function WorkflowActivityTypeCell({
   row,
   params,
 }: ICellRendererProps<EntityCoreObjectTypes>): ReactNode {
   const { entityType } = (params ?? {}) as ITypeCellParams;
-  const own = rowWorkflow(row);
-  if (own) return <span className="text-primary-9 flex items-center">{own.label}</span>;
-
   const extractionTitle =
     row.type === EntityTypeDict.TaskConfig &&
     (row as unknown as ITaskConfig<Record<string, unknown>>).task_config_type ===
@@ -189,13 +184,12 @@ export function WorkflowActivityStatusCell({
 }: ICellRendererProps<EntityCoreObjectTypes>): ReactNode {
   const { workspace, activity, entityType } = (params ?? {}) as IStatusCellParams;
   if (!workspace) return null;
-  const own = rowWorkflow(row);
   return (
     <WorkflowStatusCell
       record={row}
       workspace={workspace}
-      activity={own?.activity ?? activity}
-      entityType={own?.targetType ?? entityType}
+      activity={activity}
+      entityType={entityType}
     />
   );
 }
@@ -218,11 +212,7 @@ export function WorkflowActivityActionsCell({
   row,
   params,
 }: ICellRendererProps<EntityCoreObjectTypes>): ReactNode {
-  // under All the row brings its own workflow; otherwise the toolbar's applies
-  const own = rowWorkflow(row);
-  const { activity, entityType } = own
-    ? { activity: own.activity, entityType: own.targetType }
-    : ((params ?? {}) as IActionsCellParams);
+  const { activity, entityType } = (params ?? {}) as IActionsCellParams;
   const { push: navigate } = useRouter();
   const { virtualLabId, projectId } = useWorkspace();
   const searchParams = useSearchParams();

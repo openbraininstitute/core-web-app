@@ -6,11 +6,9 @@ import {
   CategorySelectScrollable,
   EntityTypeSelectScrollable,
 } from '@/ui/segments/workflows/elements/selectors';
-import { ALL_WORKFLOWS } from '@/ui/segments/workflows/elements/workflow-activity-all';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TActivityValue } from '@/ui/segments/workflows/config';
-import type { TAllWorkflows } from '@/ui/segments/workflows/elements/workflow-activity-all';
 
 const WorkflowScope = {
   Public: 'public',
@@ -20,18 +18,11 @@ const WorkflowScope = {
 export type WorkflowScopeKeys = (typeof WorkflowScope)[keyof typeof WorkflowScope];
 
 interface WorkflowMenuProps {
-  activity: TActivityValue | TAllWorkflows | null;
-  entityType: TExtendedEntitiesTypeDict | TAllWorkflows | null;
+  activity: TActivityValue | null;
+  entityType: TExtendedEntitiesTypeDict | null;
   onActivityChange: (activity: TActivityValue | null) => void;
   onEntityTypeChange: (entityType: TExtendedEntitiesTypeDict | null) => void;
   onNavigate?: (entityType: TExtendedEntitiesTypeDict | null) => void;
-  /**
-   * Offers All first in both menus and is called, in place of the two above, whenever the listing
-   * becomes one of all its types: every workflow's runs under the Category's All, legacy ones
-   * aside, or a category's, which is where picking a category lands. Without it the menus hold no
-   * All, and picking a category lands on its first type.
-   */
-  onAllSelect?: (activity: TActivityValue | TAllWorkflows) => void;
 }
 
 export function ActivityAndTypeSelectors({
@@ -40,16 +31,10 @@ export function ActivityAndTypeSelectors({
   onActivityChange,
   onEntityTypeChange,
   onNavigate,
-  onAllSelect,
 }: WorkflowMenuProps) {
   const featureFlags = useFlags();
 
-  const handleActivitySelect = (v: TActivityValue | TAllWorkflows | null) => {
-    if (v && onAllSelect) {
-      onAllSelect(v);
-      return;
-    }
-    if (v === ALL_WORKFLOWS) return;
+  const handleActivitySelect = (v: TActivityValue | null) => {
     onActivityChange(v);
     if (v) {
       const type =
@@ -64,11 +49,7 @@ export function ActivityAndTypeSelectors({
     }
   };
 
-  const handleEntityTypeSelect = (v: TExtendedEntitiesTypeDict | TAllWorkflows | null) => {
-    if (v === ALL_WORKFLOWS) {
-      if (activity) onAllSelect?.(activity);
-      return;
-    }
+  const handleEntityTypeSelect = (v: TExtendedEntitiesTypeDict | null) => {
     onEntityTypeChange(v);
     onNavigate?.(v);
   };
@@ -82,13 +63,8 @@ export function ActivityAndTypeSelectors({
     >
       <div className="border-gray-90 shadow-sm flex items-center justify-center gap-2 rounded-full bg-white py-1 pr-1 pl-5">
         Category
-        <CategorySelectScrollable
-          value={activity}
-          onSelect={handleActivitySelect}
-          includeAll={Boolean(onAllSelect)}
-        />
-        {/* All has no types to narrow it by. */}
-        {activity && activity !== ALL_WORKFLOWS && (
+        <CategorySelectScrollable value={activity} onSelect={handleActivitySelect} />
+        {activity && (
           <>
             <span aria-hidden className="bg-neutral-2 mr-2 h-5 w-px" />
             Type
@@ -96,7 +72,6 @@ export function ActivityAndTypeSelectors({
               category={activity}
               value={entityType}
               onSelect={handleEntityTypeSelect}
-              includeAll={Boolean(onAllSelect)}
             />
           </>
         )}
