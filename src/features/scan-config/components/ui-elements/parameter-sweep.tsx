@@ -2,7 +2,7 @@ import { RiAddLine, RiDeleteBinLine, RiEyeFill, RiEyeLine } from '@remixicon/rea
 import { InputNumber } from 'antd';
 import { isNil } from 'es-toolkit/compat';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { createContext, Fragment, type ReactNode, useContext, useMemo } from 'react';
+import { createContext, Fragment, type ReactNode, useContext, useMemo, useRef } from 'react';
 
 import {
   resolveScanIndex,
@@ -155,6 +155,15 @@ export default function ParameterSweep({
 
   // Only sweeps inside a ScanValueSelectorProvider (today: electrode locations)
   // offer per-value eyes; everywhere else this stays null and nothing renders.
+  // Row whose input takes the cursor once it mounts: the one a + just added.
+  const focusRowRef = useRef<number | null>(null);
+  const focusIfAdded = (i: number) => (input: { focus: () => void } | null) => {
+    if (input && focusRowRef.current === i) {
+      focusRowRef.current = null;
+      input.focus();
+    }
+  };
+
   const scope = useContext(ScanValueSelectorContext);
   const selection = useAtomValue(scanValueSelectionAtom);
   const setSelected = useSetAtom(selectScanValueAtom);
@@ -222,6 +231,7 @@ export default function ParameterSweep({
               // Open with an empty second value, so one press is enough to
               // start a scan. The preview stays on the value already there.
               selectValue?.(0);
+              focusRowRef.current = multipleValues.length;
               onChange([...multipleValues, null]);
             }}
           >
@@ -252,6 +262,7 @@ export default function ParameterSweep({
                   <div className="flex w-full items-center gap-1.5">
                     <div className="relative min-w-0 flex-1">
                       <InputNumber
+                        ref={focusIfAdded(i)}
                         data-testid="scan-config-sweep-value"
                         controls={false}
                         // room for the buttons inside the field
@@ -282,6 +293,7 @@ export default function ParameterSweep({
                                 // The value you just added is the one you want
                                 // to see, so it becomes the active coordinate.
                                 selectValue?.(multipleValues.length);
+                                focusRowRef.current = multipleValues.length;
                                 onChange([...multipleValues, null]);
                               }}
                             >
