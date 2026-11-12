@@ -10,7 +10,6 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { tryCatch } from '@/api/utils';
 import SimulationConfigurationTab from '@/components/simulate/SimulationDetails/configuration-tab';
-import { resolveEFeatureExtractionResultCampaign } from '@/entity-configuration/domain/experimental/efeature-extraction-result';
 import {
   applyEntityExpansions,
   circuitTypes,
@@ -25,13 +24,10 @@ import {
 import SynaptomeConfig from '@/features/entities/single-neuron-synaptome/detail-view/configuration';
 import SynapseGroupList from '@/features/entities/single-neuron-synaptome/detail-view/elements/list-synapses-configuration';
 import { ScanConfigConfigSearchParam } from '@/features/scan-config/helpers';
-import { ScanConfigActivity } from '@/features/scan-config/types';
 import { WorkflowConfigView } from '@/features/scan-config/view/workflow-config-view';
 import { Button } from '@/ui/molecules/button';
 import { JsonView } from '@/ui/segments/detail-view/json-view';
 import { detailViewVariantFromGroup } from '@/ui/segments/detail-view/variant-styles';
-import { ActivityRegistry } from '@/ui/segments/workflows/config/activities';
-import { findScanConfigRegistryByTargetType } from '@/ui/segments/workflows/config/scan-config-registry';
 import {
   buildWorkflowActivityConfigurationHref,
   buildWorkflowActivityResultsHref,
@@ -60,6 +56,7 @@ const workflowConfigTypes: TExtendedEntitiesTypeDict[] = [
   ExtendedEntitiesTypeDict.Memodel,
   ExtendedEntitiesTypeDict.IonChannelModel,
   ExtendedEntitiesTypeDict.SingleNeuronCircuit,
+  ExtendedEntitiesTypeDict.EFeatureExtractionResult,
   ...circuitTypes,
 ];
 
@@ -122,64 +119,6 @@ export default async function Configuration({
   if (!entityType) notFound();
 
   const fieldVariant = detailViewVariantFromGroup(entityType.group);
-
-  if (extendedType === ExtendedEntitiesTypeDict.EFeatureExtractionResult) {
-    // the workflow tab is the scan config of the extraction campaign that produced this
-    // result, in the same read-only view as the models' when traceable
-    const { data: extraction } = await tryCatch(
-      resolveEFeatureExtractionResultCampaign(entity.id, context.virtualLabId, context.projectId)
-    );
-    const scanConfig = findScanConfigRegistryByTargetType(
-      ExtendedEntitiesTypeDict.EFeatureExtractionCampaign
-    );
-
-    if (extraction && scanConfig) {
-      const workflowActivity = Object.values(ActivityRegistry).find((entry) =>
-        entry.workflows.some(
-          ({ targetType }) => targetType === ExtendedEntitiesTypeDict.EFeatureExtractionCampaign
-        )
-      )?.value;
-      const linkOptions = workflowActivity && {
-        activity: workflowActivity,
-        listEntityType: ExtendedEntitiesTypeDict.EFeatureExtractionCampaign,
-        workspace: context,
-        row: extraction.campaign,
-      };
-      const configHref = linkOptions && buildWorkflowActivityConfigurationHref(linkOptions);
-      const outputHref = linkOptions && buildWorkflowActivityResultsHref(linkOptions);
-      const form = extraction.config?.form as Record<string, Json> | undefined;
-
-      return (
-        <div className="w-full">
-          <div className="absolute top-4 right-10 flex gap-2">
-            {configHref && <WorkflowLink href={configHref}>Workflow config</WorkflowLink>}
-            {outputHref && <WorkflowLink href={outputHref}>Workflow output</WorkflowLink>}
-          </div>
-          {form ? (
-            <WorkflowConfigView
-              scanConfig={scanConfig}
-              activity={ScanConfigActivity.Extract}
-              config={form}
-              campaignId={extraction.campaign.id}
-              virtualLabId={context.virtualLabId}
-              projectId={context.projectId}
-              variant={fieldVariant}
-            />
-          ) : (
-            <div className="flex items-center justify-center py-20">
-              The configuration file of this result is missing.
-            </div>
-          )}
-        </div>
-      );
-    }
-
-    return (
-      <div className="flex h-full w-full items-center justify-center">
-        No configuration found for this result.
-      </div>
-    );
-  }
 
   if (workflowConfigTypes.includes(extendedType)) {
     const { data: workflow } = await tryCatch(

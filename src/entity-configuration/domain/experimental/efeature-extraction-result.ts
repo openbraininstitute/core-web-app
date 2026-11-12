@@ -1,14 +1,9 @@
-import { cache } from 'react';
-
 import { getTaskResult, getTaskResults } from '@/api/entitycore/queries/task';
-import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
 import { TaskResultType } from '@/api/entitycore/types/entities/task-result';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
-import { EFeatureExtractionCampaign } from '@/entity-configuration/domain/extraction/efeature-extraction-campaign';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
-import { resolveTaskResultCampaignId } from '@/entity-configuration/domain/simulation/task-result-campaign';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 import type { ITaskResult, ITaskResultFilter } from '@/api/entitycore/types/entities/task-result';
@@ -35,34 +30,6 @@ async function list(params: {
 async function one(params: { id: string; context?: WorkspaceContext | null }) {
   return await getTaskResult(params);
 }
-
-/**
- * A task result has no FK to its campaign, so walk provenance: result → `__execution` activity →
- * config → campaign (`task_config_generator_id`, else the `__config_generation` activity).
- */
-export async function resolveEFeatureExtractionCampaignId(id: string, context: WorkspaceContext) {
-  return await resolveTaskResultCampaignId(id, context, {
-    execution: TaskActivityType.EFeatureExtractionExecution,
-    configGeneration: TaskActivityType.EFeatureExtractionConfigGeneration,
-  });
-}
-
-/**
- * The campaign a result came from, resolved for its scan-config view; `null` when it cannot be
- * traced. Cached per request (primitive args) so the data view layout and overview share it.
- */
-export const resolveEFeatureExtractionResultCampaign = cache(
-  async (id: string, virtualLabId: string, projectId: string) => {
-    const context = { virtualLabId, projectId };
-    const campaignId = await resolveEFeatureExtractionCampaignId(id, context);
-    if (!campaignId) return null;
-    // biome-ignore lint/style/noNonNullAssertion: resolve is defined on the campaign config
-    return await EFeatureExtractionCampaign.api.query.resolve!({
-      id: campaignId,
-      context,
-    });
-  }
-);
 
 export const EFeatureExtractionResult: EntityCoreTypeConfig<TEFeatureExtractionResult> = {
   group: EntityTypeGroup.Experimental,
