@@ -38,6 +38,7 @@ import { usePinnedEntityPreview } from './use-pinned-entity-preview';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
+import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type {
   Config,
   ConfigSchema,
@@ -79,6 +80,8 @@ type RightProps = {
   setConfig: (newConfig: Config | ((prev: Config) => Config)) => void;
   /** Root scan-config schema; previews that describe the whole configuration read it. */
   schema: ConfigSchema;
+  /** What the circuit offers the form, of which the table's neuron sets may say only that. */
+  schemaMappingConfig: TSchemaMappingConfiguration | undefined;
   /**
    * The config can no longer be edited (campaign generated, generation in
    * flight, read-only host, …). Electrode overlays then render static: without
@@ -136,11 +139,13 @@ export function EntityPreviewPane({
       id="scan-config-controls-right-mini-detail"
       className={cn(
         'h-full min-h-0 overflow-auto rounded-lg secondary-scrollbar',
-        inset ? 'p-3' : 'px-0.5 py-1'
+        // Boxed, the view is the box's content: no card of its own inside it.
+        !inset && 'px-0.5 py-1'
       )}
     >
       {record ? (
         <MiniDetailViewRenderer
+          bare={inset}
           section={WorkspaceSection.Data}
           record={record}
           dataType={dataType}
@@ -192,6 +197,7 @@ function CircuitModelPreviewPane({
   selectedEntry,
   onCreateEntry,
   schema,
+  schemaMappingConfig,
   defaultNeuronOpacity,
   viewerFeatures,
   locked,
@@ -204,6 +210,7 @@ function CircuitModelPreviewPane({
   selectedRootElement: string;
   selectedEntry: string;
   onCreateEntry: (rootElement: string, block: Record<string, unknown>) => void;
+  schemaMappingConfig: TSchemaMappingConfiguration | undefined;
   defaultNeuronOpacity: number | undefined;
   viewerFeatures: IEntityViewerFeatures;
   locked?: boolean;
@@ -221,6 +228,7 @@ function CircuitModelPreviewPane({
       ),
     [blockTypeToConfigKey]
   );
+  const neuronSetProperties = schemaMappingConfig?.properties?.NodePropertyUniqueValuesByPopulation;
   const form = useMemo(
     () => ({
       config,
@@ -229,6 +237,7 @@ function CircuitModelPreviewPane({
       selectedEntry,
       onCreateEntry: locked ? undefined : onCreateEntry,
       locationBlockTypes,
+      neuronSetProperties,
     }),
     [
       config,
@@ -238,6 +247,7 @@ function CircuitModelPreviewPane({
       onCreateEntry,
       locked,
       locationBlockTypes,
+      neuronSetProperties,
     ]
   );
 
@@ -321,6 +331,7 @@ export function Right({
   config,
   setConfig,
   schema,
+  schemaMappingConfig,
   locked,
   inset,
 }: RightProps) {
@@ -403,6 +414,7 @@ export function Right({
           selectedEntry={selectedEntry}
           onCreateEntry={onCreateEntry}
           schema={schema}
+          schemaMappingConfig={schemaMappingConfig}
           defaultNeuronOpacity={defaultNeuronOpacity}
           viewerFeatures={viewerFeatures}
           locked={locked}

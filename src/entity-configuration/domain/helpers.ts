@@ -105,7 +105,7 @@ export const applyEntityExpansions = async <
  */
 export function getEntityConfigByDiscriminator(
   filter: TEntityConfigDiscriminatorFilter
-): EntityCoreTypeConfig<any, any, any> | undefined {
+): EntityCoreTypeConfig<any, any, any, any> | undefined {
   const entries = Object.values(EntityCoreConfiguration);
 
   return entries.find((entity) => {

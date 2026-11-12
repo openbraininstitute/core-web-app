@@ -65,8 +65,14 @@ export class CircuitMorphologyGPU extends CircuitView {
   private glowWorks = true;
   /** Made for the first pack and kept, with its programs: a later pack's arena only binds its buffers to `storage`. */
   private arena: GpuArena | null = null;
-  /** The kept segments' quads, drawn to depth before the culling's tests. */
+  /**
+   * The kept segments' quads, drawn to depth before the culling's tests. While the cell table hides cells, the kept
+   * list stays as it was (`Culling.run`), so the segments seen last frame are drawn to depth with them (`seenQuads`):
+   * they are what hides the cells on show from each other.
+   */
   private keptQuads = new THREE.Scene();
+  private seenQuads: THREE.Mesh<THREE.InstancedBufferGeometry>[] = [];
+  private wasHiding = false;
   /** Made when the cloud's somas are placed, and let go of with them. */
   private somaCulling: SomaCulling | null = null;
   private drawingSize = new THREE.Vector2();
@@ -196,8 +202,10 @@ export class CircuitMorphologyGPU extends CircuitView {
   protected override disposeStage(): void {
     this.idTarget?.dispose();
     this.occlusion?.dispose();
-    const { segment = [], ids = [], kept = [], through = [] } = this.arena ?? {};
-    for (const material of [...segment, ...ids, ...kept, ...through]) material.dispose();
+    const { segment = [], ids = [], kept = [], seenDepth = [], through = [] } = this.arena ?? {};
+    for (const material of [...segment, ...ids, ...kept, ...seenDepth, ...through]) {
+      material.dispose();
+    }
     this.arena?.culling.dispose();
     this.somaCulling?.dispose();
     this.frameTimes.dispose();
@@ -319,10 +327,15 @@ export class CircuitMorphologyGPU extends CircuitView {
         ),
       };
     }
-    const { storage, segment, ids, kept, through, culling } = this.arena;
+    const { storage, segment, ids, kept, seenDepth, through, culling } = this.arena;
+    this.seenQuads = [
+      new THREE.Mesh(culling.quads(DRAWS.seenFlat), seenDepth[0]),
+      new THREE.Mesh(culling.quads(DRAWS.seenTubes), seenDepth[1]),
+    ];
     this.keep([
       new THREE.Mesh(culling.quads(DRAWS.keptFlat), kept[0]),
       new THREE.Mesh(culling.quads(DRAWS.keptTubes), kept[1]),
+      ...this.seenQuads,
     ]);
     return {
       uploadsOf: (ends, words, blocks) =>
@@ -354,7 +367,7 @@ export class CircuitMorphologyGPU extends CircuitView {
   }
 
   /**
-   * Sets up the pack's segments, if there is a pack, for the frame drawn in `rest` (`restOf`). With culling, the kept
+   * Sets up the pack's segments, if there is a pack, for the frame `rest` tells of (`restOf`). With culling, the kept
    * segments are drawn to depth and the culling's tests run before the frame is drawn. Where culling is off or failed,
    * every segment is drawn.
    */
@@ -369,16 +382,32 @@ export class CircuitMorphologyGPU extends CircuitView {
       culling.drawNone();
       return;
     }
-    if (this.culls && !culling.failed) {
+    const cells = this.uniforms.uCells.value;
+    if (this.culls && !culling.failed && cells) {
       const { renderer } = this;
       const size = renderer.getDrawingBufferSize(this.drawingSize);
+      const hiding = this.hidesCells;
+      // Once more as the hidden cells come back: the view may have moved since the kept list was left alone.
+      for (const mesh of this.seenQuads) mesh.visible = hiding || this.wasHiding;
+      this.wasHiding = hiding;
       renderer.setRenderTarget(culling.targetOf(size.x, size.y));
       renderer.render(this.keptQuads, this.camera);
       renderer.setRenderTarget(null);
       const { uShift, uHidden } = this.uniforms;
-      if (culling.run(this.camera, uShift.value, this.gpu.tubeFrom.value, uHidden.value, end, rest))
+      if (
+        culling.run(
+          this.camera,
+          uShift.value,
+          this.gpu.tubeFrom.value,
+          uHidden.value,
+          end,
+          rest,
+          cells,
+          hiding
+        )
+      )
         return;
-    } else if (this.culls) {
+    } else if (this.culls && culling.failed) {
       // The culling reported its failure once, when it failed. A pack's stream made since then, or one that was there
       // while culling was off, did not hear it, so report it again.
       this.tellCulled(null);

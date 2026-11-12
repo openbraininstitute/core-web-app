@@ -4,7 +4,7 @@ import { Spin } from 'antd';
 import { useMemo } from 'react';
 import { createPortal } from 'react-dom';
 
-import { KeptNodesGridPlaceholder } from '@/features/circuit-nodes/components/kept-nodes-grid';
+import { KeptTablePlaceholder } from '@/features/circuit-nodes/connectivity/table-matrix';
 import { ReportNodesTable } from '@/features/sonata-viewer/components/report-nodes-table';
 import {
   PlotsOverTable,
@@ -49,6 +49,19 @@ type Props = {
   plotsTarget?: HTMLElement | null;
   /** The plot over time shown at first: the cells' mean. */
   timeCourse?: TimeCourse;
+  /**
+   * What the plots are over in place of the cells, such as a compartment report's
+   * compartments: their statistics, values and rows on show, and the columns they are
+   * grouped and placed by. The table stays the cells'.
+   */
+  plots?: {
+    statistics: readonly CellStatistic[];
+    values: StatisticValues | null;
+    cells: Uint32Array | null;
+    columns: ColumnMeta[] | undefined;
+    sessionKey: string;
+    getColumn: (name: string) => Promise<ColumnValues>;
+  } | null;
 };
 
 /**
@@ -71,24 +84,25 @@ export function ReportStatisticsPanel({
   tableOnly = false,
   plotsTarget,
   timeCourse,
+  plots: over,
 }: Props) {
   const pinnedColumns = useMemo(() => pinnedStatisticColumns(statistics), [statistics]);
 
   const plots = (
     <StatisticsPlots
-      statistics={statistics}
-      values={values}
-      cells={cells}
-      columns={columns}
+      statistics={over?.statistics ?? statistics}
+      values={over ? over.values : values}
+      cells={over ? over.cells : cells}
+      columns={over ? over.columns : columns}
       ready={ready}
-      sessionKey={sessionKey}
-      getColumn={getColumn}
+      sessionKey={over?.sessionKey ?? sessionKey}
+      getColumn={over?.getColumn ?? getColumn}
       color={color}
       spanMs={spanMs}
       initialStatistic="mean"
       // The cells' voltages by property first; their mean over time is a pick away.
       initialPlot="violins"
-      summary={values && summary}
+      summary={(over ? over.values : values) && summary}
       hidden={tableOnly}
       timeCourse={timeCourse}
     />
@@ -99,7 +113,7 @@ export function ReportStatisticsPanel({
         <ReportNodesTable {...table} pinnedColumns={pinnedColumns} pinnedVersion={values} />
       ) : (
         // The table kept from the view before, over the same cells, until the statistics are in.
-        <KeptNodesGridPlaceholder
+        <KeptTablePlaceholder
           session={sessionKey}
           fallback={
             <div className="flex h-full min-h-0 items-center justify-center">

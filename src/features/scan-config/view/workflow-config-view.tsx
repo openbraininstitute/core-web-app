@@ -268,6 +268,7 @@ function DefaultBody({ props, state }: BodyProps) {
           config={state.config}
           setConfig={state.setConfig}
           schema={props.schema}
+          schemaMappingConfig={props.schemaMappingConfig}
           locked
         />
       </div>

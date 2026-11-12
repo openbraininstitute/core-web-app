@@ -16,6 +16,7 @@ import {
 } from '@/features/scan-config/components/color-by/use-viewer-config';
 import { usePublishAnchor } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
 import { usePlacedScene } from '@/features/scan-config/components/model-preview/use-placed-scene';
+import { UnplacedPopulationsNotice } from '@/features/scan-config/components/shared/unplaced-populations-notice';
 import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
 import { cn } from '@/utils/css-class';
 
@@ -98,14 +99,15 @@ export function LargeCircuitPreview({
   // Somas only: positions are all that is read, for every population at once,
   // and they are kept across selection changes, so selecting a population
   // recolours the somas in place and the camera stays where the user left it.
-  const { placed, download, anchor, hidden, hasContext, error, somas, receded } = usePlacedScene({
-    circuit,
-    population,
-    populations,
-    hiddenPopulations,
-    recededColor,
-    onPositionlessPopulationsChange,
-  });
+  const { placed, download, anchor, hidden, hasContext, error, unplaced, retry, somas, receded } =
+    usePlacedScene({
+      circuit,
+      population,
+      populations,
+      hiddenPopulations,
+      recededColor,
+      onPositionlessPopulationsChange,
+    });
   const subjectName = population?.name;
 
   usePublishAnchor(anchor);
@@ -181,8 +183,18 @@ export function LargeCircuitPreview({
             Unable to load circuit <strong>{circuit.name}</strong>!
           </h2>
           <p>{error.message}</p>
+          {unplaced.length > 0 && (
+            <button
+              type="button"
+              onClick={retry}
+              className="mt-2 cursor-pointer rounded-full bg-white px-3 py-1 text-sm text-primary-9 shadow-md ring-1 ring-black/5"
+            >
+              Try again
+            </button>
+          )}
         </div>
       )}
+      {!error && <UnplacedPopulationsNotice names={unplaced} onRetry={retry} />}
       {drawable && (
         <LazyCircuitCells
           somas={somas}

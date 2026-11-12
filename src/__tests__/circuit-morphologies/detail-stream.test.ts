@@ -2,7 +2,11 @@
 import * as THREE from 'three';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { DetailStream, LINGER } from '@/features/circuit-viewer/morphologies/engine/detail-stream';
+import {
+  DetailStream,
+  LINGER,
+  SEES_THROUGH,
+} from '@/features/circuit-viewer/morphologies/engine/detail-stream';
 import {
   BLOCK,
   SegmentArena,
@@ -554,6 +558,87 @@ describe('DetailStream', () => {
       expect(levelsDrawn(stream)).toEqual([0, 0, 4]);
       expect(arena.segments).toBe(40);
       expect(stream.stats(RULES)).toMatchObject({ drawn: 40, wanted: 40 });
+    });
+
+    describe('of the frame tested after a box is placed', () => {
+      it('tells that it sees through, once, where a box went finer', async () => {
+        const made = make(1000, true);
+        const { stream } = made;
+        const rest = () => stream.frameRest(false);
+        seeing(stream, behindOf(20), [3]);
+        await readAll(made);
+        expect(levelsDrawn(stream)).toEqual([1, 0, 3]);
+        expect(rest()).toBe(SEES_THROUGH);
+        expect(rest()).toBe(stream.rest);
+        expect(stream.frameRest(true)).toBe(-1);
+      });
+
+      it('makes a frame tested before a box was placed no longer of this rest', async () => {
+        const made = make(1000, true);
+        const { stream } = made;
+        seeing(stream, behindOf(20), [3]);
+        made.reads[0].resolve();
+        await settled();
+        stream.apply();
+        stream.frameRest(false);
+        const before = stream.frameRest(false);
+
+        await readAll(made);
+        expect(levelsDrawn(stream)).toEqual([1, 0, 3]);
+        expect(stream.rest).not.toBe(before);
+      });
+
+      it('tells that it sees through where a base in view came in, not one out of view', async () => {
+        const made = make(1000, true);
+        const { stream, reads } = made;
+        stream.update(behindOf(20), RULES, true);
+        reads[0].resolve();
+        await settled();
+        stream.apply();
+        expect(stream.frameRest(false)).toBe(SEES_THROUGH);
+        expect(stream.frameRest(false)).toBe(stream.rest);
+
+        // Boxes 0 and 1, behind the eye.
+        expect(askedOf(reads)[1]).toEqual(['0 at 2', '1 at 2']);
+        reads[1].resolve();
+        await settled();
+        stream.apply();
+        expect(levelsDrawn(stream)).toEqual([0, 0, 4]);
+        expect(stream.frameRest(false)).toBe(stream.rest);
+      });
+
+      it('tells nothing of a box that goes to a level it has nothing at, with nothing placed', () => {
+        const { chunks } = chunksOf();
+        const base = chunks.levels[2].segments;
+        const levels = chunks.levels.map((level, k) =>
+          k === 1 ? { ...level, segments: new Uint32Array(4) } : level
+        );
+        const arena = new SegmentArena(new THREE.InstancedBufferGeometry(), 1000, undefined, base);
+        const stream = new DetailStream({ ...chunks, levels }, arena, vi.fn());
+        stream.update(viewOf(100), { ...RULES, culling: false }, true);
+        expect(stream.apply().changed).toBe(true);
+        expect(stream.frameRest(false)).toBe(stream.rest);
+      });
+
+      it('tells that it sees through where a box went back to its base', async () => {
+        const made = make(1000, true);
+        const { stream } = made;
+        seeing(stream, behindOf(20), [3]);
+        await readAll(made);
+        stream.frameRest(false);
+        stream.update(behindOf(500), RULES, false, true);
+        stream.apply();
+        expect(levelsDrawn(stream)).toEqual([0, 0, 4]);
+        expect(stream.frameRest(true)).toBe(SEES_THROUGH);
+        expect(stream.frameRest(true)).toBe(-1);
+      });
+
+      it('tells that it sees through once made again, the new arena held by no kept segments', () => {
+        const { stream } = make(1000, true);
+        stream.frameRest(false);
+        const remade = stream.remade(2000, Infinity, new THREE.InstancedBufferGeometry());
+        expect(remade.frameRest(false)).toBe(SEES_THROUGH);
+      });
     });
 
     it('takes a box as seen for longer while the view moves, and at rest by the frames drawn since', async () => {

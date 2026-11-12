@@ -6,7 +6,7 @@
 import { RiArrowRightSLine } from '@remixicon/react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Checkbox } from 'antd';
-import { useEffect } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { statusById as getSimulationStatusById } from '@/entity-configuration/domain/simulation/simulation-campaign';
@@ -26,6 +26,11 @@ import {
   SelectAllSkeleton,
 } from '@/features/scan-config/components/skeletons/columns';
 import { getLatestSimExecStatus } from '@/features/scan-config/components/utils';
+import {
+  progressFollowed,
+  type TSimulationProgress,
+  useSimulationProgress,
+} from '@/features/scan-config/use-cases/simulations/use-simulation-progress';
 import { executionStatusColorMap } from '@/features/task-runner/activity-execution/color-map';
 import {
   LEGACY_SIMULATION_STATUS_QUERY_KEY_HEAD,
@@ -49,12 +54,14 @@ type Props = {
   simRequestInProgress: boolean;
   context: WorkspaceContext;
   statusMap: Map<string, ActivityStatus>;
+  /** The launch-system jobs of the simulations launched from this page. */
+  jobIdBySimulationId?: Map<string, string>;
   launchSimBtnLabelPrefix: string;
   onToggleSelectAll: (checked: boolean) => void;
   onActiveSimulationChange: (simulation: ISimulation) => void;
   onSelectedForSimChange: (simulationId: string, selected: boolean) => void;
   onSimulationStatusLoad: (simulationId: string, status: ActivityStatus) => void;
-  onRun: (simulationIds: string[]) => void;
+  onRun: () => void;
   middle: ReactNode;
   right: ReactNode;
   /** Picks the simulation by its scan parameters, where the list is out of view. */
@@ -73,6 +80,7 @@ export function SimulationsResultsUiAdapter({
   simRequestInProgress,
   context,
   statusMap,
+  jobIdBySimulationId,
   launchSimBtnLabelPrefix,
   onToggleSelectAll,
   onActiveSimulationChange,
@@ -84,6 +92,16 @@ export function SimulationsResultsUiAdapter({
   simulationPicker,
   reportPicker,
 }: Props) {
+  const followed = useMemo(
+    () =>
+      progressFollowed(
+        simulations.map(({ id }) => id),
+        statusMap,
+        activeSimulationId
+      ),
+    [simulations, statusMap, activeSimulationId]
+  );
+
   return (
     <ResultsLayout
       campaignId={campaignId}
@@ -91,7 +109,8 @@ export function SimulationsResultsUiAdapter({
       sidePanelBar={simulationPicker}
       sidePanelReport={reportPicker}
       left={
-        <div className="flex h-full w-full flex-col gap-4 overflow-y-hidden">
+        // The launch button's foot level with the boxes beside it, as the configuration's is.
+        <div className="flex h-full w-full flex-col gap-4 overflow-y-hidden pb-3">
           {loading ? (
             <SelectAllSkeleton />
           ) : (
@@ -113,7 +132,9 @@ export function SimulationsResultsUiAdapter({
                   context={context}
                   selected={activeSimulationId === simulation.id}
                   simulation={simulation}
+                  jobId={jobIdBySimulationId?.get(simulation.id)}
                   fallbackStatus={statusMap.get(simulation.id)}
+                  followProgress={followed.has(simulation.id)}
                   pauseStatusPolling={simRequestInProgress}
                   onSelect={() => onActiveSimulationChange(simulation)}
                   onSelectedForSimChange={onSelectedForSimChange}
@@ -133,7 +154,7 @@ export function SimulationsResultsUiAdapter({
               countLabel={launchSimBtnLabelPrefix}
               pending={simRequestInProgress}
               disabled={simRequestInProgress || selectedSimulationIds.length === 0}
-              onClick={() => onRun(selectedSimulationIds)}
+              onClick={onRun}
               className="rounded-full"
             />
           )}
@@ -145,11 +166,23 @@ export function SimulationsResultsUiAdapter({
   );
 }
 
+/** A running simulation's status, as its task log has it. */
+function progressLabel(progress: TSimulationProgress | null) {
+  if (progress === null) return undefined;
+  // before it steps, it is still setting up, not yet running
+  if (progress === 'initialization') return 'Initializing';
+  if (progress === 'finalizing') return 'Running: Finalizing';
+  return `Running: ${progress}%`;
+}
+
 type SimulationBlockProps = {
   campaignId: string;
   context: WorkspaceContext;
   simulation: ISimulation;
+  jobId?: string;
   fallbackStatus?: ActivityStatus;
+  /** Whether its log is streamed for its progress while it runs: only a few are at once. */
+  followProgress: boolean;
   pauseStatusPolling?: boolean;
   onSelect: (simulationId: string) => void;
   selected?: boolean;
@@ -164,7 +197,9 @@ function SimulationListItem({
   campaignId,
   context,
   simulation,
+  jobId,
   fallbackStatus,
+  followProgress,
   pauseStatusPolling,
   onSelect,
   selected,
@@ -200,6 +235,12 @@ function SimulationListItem({
       : (remoteStatus ?? fallbackStatus);
   const statusLoading = isLoading && !execStatus;
   const color = executionStatusColorMap[execStatus ?? ActivityStatus.CREATED];
+  const progress = useSimulationProgress({
+    simulationId: simulation.id,
+    jobId,
+    context,
+    running: followProgress && execStatus === ActivityStatus.RUNNING,
+  });
 
   useBalanceRefreshOnTaskCompletion({ status: execStatus, context });
 
@@ -216,9 +257,16 @@ function SimulationListItem({
     ? undefined
     : 'There was a problem generating this simulation';
 
+  // a simulation opened from a link can sit far down a long campaign's list
+  const cardRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (selected) cardRef.current?.scrollIntoView({ block: 'nearest' });
+  }, [selected]);
+
   return (
     /* biome-ignore lint/a11y/useSemanticElements: The card contains nested controls, so a button wrapper would be invalid. */
     <div
+      ref={cardRef}
       data-testid={`scan-config-coordinate-${simulation.id}`}
       className={cn(
         'group flex-none cursor-pointer rounded-2xl border border-gray-200',
@@ -299,7 +347,11 @@ function SimulationListItem({
             {statusLoading ? (
               <StatusBadgeSkeleton />
             ) : (
-              <StatusBadge status={execStatus} details={statusDetails} />
+              <StatusBadge
+                status={execStatus}
+                details={statusDetails}
+                label={progressLabel(progress)}
+              />
             )}
             <div className="flex items-center justify-center">
               <RiArrowRightSLine className="size-5 shrink-0 text-gray-500" />

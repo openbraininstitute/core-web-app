@@ -64,14 +64,17 @@ export function ActivityAndTypeSelectors({
       <div className="border-gray-90 shadow-sm flex items-center justify-center gap-2 rounded-full bg-white py-1 pr-1 pl-5">
         Category
         <CategorySelectScrollable value={activity} onSelect={handleActivitySelect} />
-      </div>
-      <div className="border-gray-90 shadow-sm flex items-center justify-center gap-2 rounded-full bg-white py-1 pr-1 pl-5">
-        Type
-        <EntityTypeSelectScrollable
-          category={activity}
-          value={entityType}
-          onSelect={handleEntityTypeSelect}
-        />
+        {activity && (
+          <>
+            <span aria-hidden className="bg-neutral-2 mr-2 h-5 w-px" />
+            Type
+            <EntityTypeSelectScrollable
+              category={activity}
+              value={entityType}
+              onSelect={handleEntityTypeSelect}
+            />
+          </>
+        )}
       </div>
     </div>
   );

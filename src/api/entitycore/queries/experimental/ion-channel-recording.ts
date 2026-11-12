@@ -5,6 +5,7 @@ import type {
   IIonChannelRecording,
   IonChannelRecordingFilter,
 } from '@/api/entitycore/types/entities/ion-channel-recording';
+import type { TAnyEntityExpandParam } from '@/api/entitycore/types/shared/expand';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -20,14 +21,17 @@ export async function getIonChannelRecordings({
   withFacets,
   filters,
   context,
+  expand,
 }: {
   withFacets?: boolean;
   filters?: IonChannelRecordingFilter;
   context?: WorkspaceContext | null;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IIonChannelRecording>>(baseUri, {
     queryParams: compactRecord({
+      expand,
       ...filters,
       with_facets: withFacets,
     }),
@@ -49,16 +53,15 @@ export async function getIonChannelRecordings({
 export async function getIonChannelRecording({
   id,
   context,
+  expand,
 }: {
   id: string;
   context?: WorkspaceContext | null;
+  expand?: ReadonlyArray<TAnyEntityExpandParam>;
 }) {
   const api = await entityCoreApi();
   return await api.get<IIonChannelRecording>(`${baseUri}/${id}`, {
-    // TODO: add expand parameter if/when supported by the API
-    // queryParams: {
-    //   expand,
-    // },
+    queryParams: { expand },
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',

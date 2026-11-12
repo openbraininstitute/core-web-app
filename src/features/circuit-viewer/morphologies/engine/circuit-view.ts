@@ -26,7 +26,7 @@ import {
 } from '../sections';
 import { CellTable, type GlowRowsWriter, somaTexture } from './cell-table';
 import { DETAIL_PIXELS, pixelSpan } from './detail';
-import { DetailStream } from './detail-stream';
+import { DetailStream, SEES_THROUGH } from './detail-stream';
 import { countDots, type DotGroup, drawnRadius, minRadius, writeDots } from './electrodes';
 import {
   AXON,
@@ -823,12 +823,13 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   /**
    * Tells the listeners what the tier's culling counted, with the rest as they were told last; `read` is null where the
    * tier no longer culls. The boxes the culling marked become the boxes seen, and the levels are chosen again where
-   * that changes what the view may want. A read counts as still only where its frame was drawn in the current rest.
+   * that changes what the view may want. A read counts as still only where its frame was drawn in the current rest, and
+   * not at all where its frame saw through (`SEES_THROUGH`).
    */
   protected tellCulled(read: CullRead | null): void {
     const detailed = this.layer?.detailed;
     // Ignore a read that comes back after the culling was switched off or the pack was let go of.
-    if (!this.culls || !detailed) return;
+    if (!this.culls || !detailed || read?.rest === SEES_THROUGH) return;
     const { stream } = detailed;
     let counts: CullCounts | null = null;
     let boxes: number[] | null = null;
@@ -847,9 +848,16 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     if (this.toldDetail) this.tell({ ...this.toldDetail, culled: counts });
   }
 
-  /** The rest (`DetailStream.rest`) a still frame is drawn in; -1 for a frame drawn `moving`. */
+  /**
+   * What to tell of the frame about to be tested (`DetailStream.frameRest`). A frame that sees through is followed by
+   * another at rest, whose read counts. Where nothing culls, no frame is tested, and the first one tested once culling
+   * is back sees through.
+   */
   protected restOf(moving: boolean): number {
-    return moving ? -1 : (this.layer?.detailed?.stream.rest ?? -1);
+    if (!this.culls) return moving ? -1 : (this.layer?.detailed?.stream.rest ?? -1);
+    const rest = this.layer?.detailed?.stream.frameRest(moving) ?? -1;
+    if (rest === SEES_THROUGH) this.invalidateAtRest(!moving);
+    return rest;
   }
 
   /**
@@ -1209,6 +1217,11 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       new THREE.Vector3(...bounds.min).add(shift),
       new THREE.Vector3(...bounds.max).add(shift)
     );
+  }
+
+  /** Whether the last paint of the cell table may have hidden cells. */
+  protected get hidesCells(): boolean {
+    return this.table?.hides ?? false;
   }
 
   setCellColors(colors: CellColors | null): void {
