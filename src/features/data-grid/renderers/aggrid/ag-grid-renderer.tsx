@@ -185,9 +185,10 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
       // resized: a flexible column left of a fitted one would keep its width and leave a gap
       if (changed.length === 0) return;
       // a column state is applied with the animation of a moved column, which a fit is not
+      const suppressed = api.getGridOption('suppressColumnMoveAnimation');
       api.setGridOption('suppressColumnMoveAnimation', true);
       api.applyColumnState({ state: changed });
-      api.setGridOption('suppressColumnMoveAnimation', false);
+      api.setGridOption('suppressColumnMoveAnimation', suppressed ?? false);
     });
   }, [fitted, lastFittedWidths]);
   useEffect(() => fitColumns(), [fitColumns]);
