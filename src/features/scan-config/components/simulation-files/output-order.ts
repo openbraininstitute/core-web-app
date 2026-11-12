@@ -12,18 +12,14 @@ import type { TAssetBackedFile } from '@/features/scan-config/types';
 export function prioritizeOutputFiles(
   files: readonly TAssetBackedFile[],
   selectedPath: string | undefined,
-  recordingsFirst = false
+  recordingsFirst?: boolean
 ): TAssetBackedFile[] {
-  const rank = (file: TAssetBackedFile) => {
-    if (file.asset.path === selectedPath) return 0;
-    if (recordingsFirst && file.asset.label === AssetLabel.voltage_report) return 1;
-    if (file.asset.label === AssetLabel.spike_report) return 2;
-    if (
-      file.asset.label === AssetLabel.voltage_report &&
-      file.asset.content_type === AssetContentType.nwb
-    ) {
-      return 3;
-    }
+  const rank = ({ asset }: TAssetBackedFile) => {
+    const voltages = asset.label === AssetLabel.voltage_report;
+    if (asset.path === selectedPath) return 0;
+    if (recordingsFirst && voltages && asset.content_type === AssetContentType.h5) return 1;
+    if (asset.label === AssetLabel.spike_report) return 2;
+    if (voltages && asset.content_type === AssetContentType.nwb) return 3;
     return 4;
   };
   return [...files].sort((a, b) => rank(a) - rank(b));

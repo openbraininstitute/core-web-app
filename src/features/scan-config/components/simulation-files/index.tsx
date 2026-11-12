@@ -174,8 +174,8 @@ export function SimulationFiles({
 
   // Nothing is picked while the result's files load: the logs row comes in ahead
   // of them, and the pick is made once. Arriving, the tab opens on the spikes (an ion
-  // channel model's on its recordings); a
-  // pick of another simulation keeps the file on show until its like is in.
+  // channel model's on its recordings); a pick of another simulation keeps the file
+  // on show until its like is in.
   const awaitingResult = outputAvailable && outputLoading;
   useAutoSelectFileOnConfigChange({
     configId: simulation.id,

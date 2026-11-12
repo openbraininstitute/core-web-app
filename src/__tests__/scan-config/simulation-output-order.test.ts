@@ -17,7 +17,10 @@ function file(path: string, asset: Partial<IAsset> = {}): TAssetBackedFile {
 
 const logs = file('task-logs');
 const lfp = file('LFP.h5', { label: 'lfp_report' as AssetLabel });
-const soma = file('soma_report.h5', { label: AssetLabel.voltage_report });
+const soma = file('soma_report.h5', {
+  label: AssetLabel.voltage_report,
+  content_type: AssetContentType.h5,
+});
 const nwb = file('soma.nwb', {
   label: AssetLabel.voltage_report,
   content_type: AssetContentType.nwb,
@@ -48,9 +51,10 @@ describe('prioritizeOutputFiles', () => {
   });
 
   it("opens an ion channel model's simulation on its recordings, ahead of the spikes", () => {
-    expect(paths(prioritizeOutputFiles([logs, spikes, soma], undefined, true))).toEqual([
+    expect(paths(prioritizeOutputFiles([logs, nwb, spikes, soma], undefined, true))).toEqual([
       'soma_report.h5',
       'spikes.h5',
+      'soma.nwb',
       'task-logs',
     ]);
   });
