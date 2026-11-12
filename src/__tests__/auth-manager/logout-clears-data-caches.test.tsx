@@ -39,4 +39,20 @@ describe('logging out', () => {
 
     await waitFor(() => expect(signOut).toHaveBeenCalled());
   });
+
+  it('does not wait more than two seconds for the caches to go', async () => {
+    vi.useFakeTimers();
+    try {
+      vi.stubGlobal('caches', { delete: () => new Promise(() => {}) });
+
+      render(<Logout />);
+
+      await vi.advanceTimersByTimeAsync(1999);
+      expect(signOut).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(1);
+      expect(signOut).toHaveBeenCalledWith({ callbackUrl: '/' });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

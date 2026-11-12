@@ -15,9 +15,13 @@ async function clearDataCaches() {
   await Promise.allSettled(DATA_CACHES.map((name) => caches.delete(name)));
 }
 
+/** How long signing out waits for the caches to go: gigabytes of them can take a while. */
+const CLEAR_TIMEOUT_MS = 2000;
+
 export default function Logout() {
   useEffect(() => {
-    clearDataCaches().finally(() => signOut({ callbackUrl: '/' }));
+    const timeout = new Promise<void>((resolve) => setTimeout(resolve, CLEAR_TIMEOUT_MS));
+    Promise.race([clearDataCaches(), timeout]).finally(() => signOut({ callbackUrl: '/' }));
   }, []);
 
   return (
