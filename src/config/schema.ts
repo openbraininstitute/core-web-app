@@ -166,12 +166,12 @@ const applyApiUrlTransforms = <T extends z.ZodObject<any>>(schema: T) =>
     })
     .transform((data) => ({
       ...data,
-      ...Object.fromEntries(
+      ...(Object.fromEntries(
         Object.entries(platformApiUrlFields).map(([field, path]) => [
           field,
           data[field] ?? `${data.API_ORIGIN}${DEFAULT_API_BASE_PATH}${path}`,
         ])
-      ),
+      ) as Record<PlatformApiUrlField, string>),
     }));
 
 export const serverSchema = applyApiUrlTransforms(baseServerSchema);
