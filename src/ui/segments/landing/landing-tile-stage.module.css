@@ -128,8 +128,11 @@
   flex-shrink: 0;
 }
 .cta {
-  position: relative;
   composes: pill from "./cta-pill.module.css";
+}
+/* Keep the landing dimensions above the shared pill regardless of route CSS load order. */
+.host .cta {
+  position: relative;
   width: auto;
   padding: 0 46px;
   height: 88px;
@@ -330,7 +333,7 @@
   .line {
     display: none;
   }
-  .cta {
+  .host .cta {
     width: 150px;
     height: 48px;
     font-size: 15px;
