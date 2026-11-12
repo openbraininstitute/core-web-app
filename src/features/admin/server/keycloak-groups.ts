@@ -43,7 +43,7 @@ async function fetchUserGroups(accessToken: string): Promise<string[] | null> {
 // `null` means the session has no token Keycloak accepts, so the user is logged out. A
 // /userinfo outage serves the cached value up to the stale cap, then throws, so it never reads
 // as "this user has no groups".
-export async function getUserGroups(session: Session): Promise<string[] | null> {
+export async function getKeycloakGroups(session: Session): Promise<string[] | null> {
   const { accessToken } = session;
   if (!accessToken) return null;
 

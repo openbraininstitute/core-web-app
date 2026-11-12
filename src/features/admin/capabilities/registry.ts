@@ -25,9 +25,9 @@ export const SIMULATOR_ADMIN_GROUP = '/service/small-scale-simulator/admin';
 // launch-system services/api/app/routers/job.py and schemas/auth.py: exact match
 export const LAUNCH_SYSTEM_ADMIN_GROUP = '/service/launch-system/admin';
 
-// `ops.view` has no groups of its own: `derive.ts` grants it when anything else is held.
+// `admin.access` has no groups of its own: `derive.ts` grants it when anything else is held.
 export const CAPABILITY_REGISTRY: {
-  [Group in Exclude<keyof OperatorCapabilities, 'ops'>]: {
+  [Group in Exclude<keyof OperatorCapabilities, 'admin'>]: {
     [Leaf in keyof OperatorCapabilities[Group]]: readonly string[];
   };
 } = {

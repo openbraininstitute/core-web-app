@@ -17,7 +17,7 @@ export function deriveCapabilities(groups: string[]): OperatorCapabilities {
     launchSystem: { admin: grants(launchSystem.admin) },
   };
 
-  const view = Object.values(granted).some((section) => Object.values(section).some(Boolean));
+  const access = Object.values(granted).some((section) => Object.values(section).some(Boolean));
 
-  return { ...granted, ops: { view } };
+  return { ...granted, admin: { access } };
 }

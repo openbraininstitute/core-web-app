@@ -5,8 +5,8 @@ import { auth } from '@/auth';
 
 import { deriveCapabilities } from '../capabilities/derive';
 import { hasCapability } from '../capabilities/has-capability';
-import { ADMIN_ROOT } from '../shell/sections';
-import { getUserGroups } from './groups';
+import { ADMIN_ROOT } from '../routes';
+import { getKeycloakGroups } from './keycloak-groups';
 
 import type { Session } from 'next-auth';
 import type { CapabilityPath, OperatorCapabilities } from '../capabilities/types';
@@ -16,7 +16,7 @@ export async function resolveCapabilities(
   session: Session | null
 ): Promise<OperatorCapabilities | null> {
   if (!session || session.error === 'RefreshAccessTokenError') return null;
-  const groups = await getUserGroups(session);
+  const groups = await getKeycloakGroups(session);
   return groups && deriveCapabilities(groups);
 }
 

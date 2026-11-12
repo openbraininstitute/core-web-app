@@ -5,13 +5,14 @@ Operator-only area of the platform. Routes are in `src/app/app/admin/`, everythi
 ## Authorization
 
 Neither raw Keycloak groups nor a coarse boolean reach the browser. Groups are resolved
-server-side from `/userinfo` (`server/groups.ts`, cached per user) and reduced to a closed,
+server-side from `/userinfo` (`server/keycloak-groups.ts`, cached per user) and reduced to a closed,
 typed `OperatorCapabilities` record (`capabilities/`). The record reaches the client only as a
 prop of the admin shell, where it filters the sidebar. Admin has no link in the platform: operators
 open `/app/admin` directly.
 
-The protected layout and every page re-check on the server with `requireCapability`. Layouts
-don't re-run on client-side navigation, so a new page must call it too.
+The protected layout and every page re-check on the server with `requireCapability`
+(`server/require-capability.ts`). Layouts don't re-run on client-side navigation, so a new page
+must call it too.
 
 There is deliberately no Keycloak token mapper for groups. The list can be large, and it would
 grow the session cookie.

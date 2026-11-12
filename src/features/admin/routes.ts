@@ -1,6 +1,7 @@
-import type { CapabilityPath } from '../capabilities/types';
+import type { CapabilityPath } from './capabilities/types';
 
 export const ADMIN_ROOT = '/app/admin';
+export const PLATFORM_HOME = '/app/virtual-lab/sync';
 
 type AdminNavItem = {
   label: string;
@@ -11,6 +12,6 @@ type AdminNavItem = {
 export const ADMIN_NAV: { label: string; items: AdminNavItem[] }[] = [
   {
     label: 'Ops',
-    items: [{ label: 'Services', href: `${ADMIN_ROOT}/services`, need: 'ops.view' }],
+    items: [{ label: 'Services', href: `${ADMIN_ROOT}/services`, need: 'admin.access' }],
   },
 ];

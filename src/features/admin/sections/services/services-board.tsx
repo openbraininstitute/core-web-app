@@ -10,7 +10,7 @@ import { Badge, STATUS_PILL_CLASS } from '@/ui/molecules/badge';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
-import { adminQueryKeys } from '../../shared/query-keys';
+import { adminQueryKeys } from '../../query-keys';
 import { fetchServiceVersion, probeServiceHealth } from './health';
 import { SERVICE_CATALOG, serviceBaseUrl } from './service-catalog';
 
@@ -24,7 +24,7 @@ type ServiceRow = ServiceDescriptor & { baseUrl: string };
 
 function useServiceHealth(service: ServiceRow) {
   return useQuery({
-    queryKey: adminQueryKeys.opsServiceHealth({ key: service.key }),
+    queryKey: adminQueryKeys.serviceHealth({ key: service.key }),
     queryFn: () => probeServiceHealth(service),
     refetchInterval: STATUS_REFRESH_MS,
   });
@@ -61,7 +61,7 @@ function LatencyCell({ service }: { service: ServiceRow }) {
 
 function VersionCell({ service }: { service: ServiceRow }) {
   const { data: version } = useQuery({
-    queryKey: adminQueryKeys.opsServiceVersion({ key: service.key }),
+    queryKey: adminQueryKeys.serviceVersion({ key: service.key }),
     queryFn: () => fetchServiceVersion(service.baseUrl),
     enabled: service.supportsVersion,
     staleTime: VERSION_STALE_MS,
@@ -117,7 +117,7 @@ const COLUMNS: Array<ISimpleColumn<ServiceRow>> = [
 
 function RefreshButton() {
   const queryClient = useQueryClient();
-  const queryKey = adminQueryKeys.ops();
+  const queryKey = adminQueryKeys.services();
   const isFetching = useIsFetching({ queryKey }) > 0;
 
   return (
@@ -133,7 +133,7 @@ function RefreshButton() {
   );
 }
 
-export function OpsDashboard() {
+export function ServicesBoard() {
   const services = SERVICE_CATALOG.map((descriptor) => ({
     ...descriptor,
     baseUrl: serviceBaseUrl(descriptor, config[descriptor.configKey] as string),

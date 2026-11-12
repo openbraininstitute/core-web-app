@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { deriveCapabilities } from '@/admin/capabilities/derive';
-import { hasCapability } from '@/admin/capabilities/has-capability';
+import { deriveCapabilities } from '@/features/admin/capabilities/derive';
+import { hasCapability } from '@/features/admin/capabilities/has-capability';
 import {
   ACCOUNTING_ADMIN_GROUP,
   ENTITYCORE_ADMIN_GROUP,
@@ -10,9 +10,9 @@ import {
   VLAB_ADMIN_GROUP,
   VLAB_MAINTAINER_GROUP,
   WILDCARD_ADMIN_GROUP,
-} from '@/admin/capabilities/registry';
+} from '@/features/admin/capabilities/registry';
 
-import type { OperatorCapabilities } from '@/admin/capabilities/types';
+import type { OperatorCapabilities } from '@/features/admin/capabilities/types';
 
 const ALL_FALSE: OperatorCapabilities = {
   entitycore: { admin: false, assetWrite: false },
@@ -21,7 +21,7 @@ const ALL_FALSE: OperatorCapabilities = {
   accounting: { admin: false },
   simulator: { admin: false },
   launchSystem: { admin: false },
-  ops: { view: false },
+  admin: { access: false },
 };
 
 describe('deriveCapabilities', () => {
@@ -48,11 +48,11 @@ describe('deriveCapabilities', () => {
     ['accounting admin', ACCOUNTING_ADMIN_GROUP, { accounting: { admin: true } }],
     ['simulator admin', SIMULATOR_ADMIN_GROUP, { simulator: { admin: true } }],
     ['launch-system admin', LAUNCH_SYSTEM_ADMIN_GROUP, { launchSystem: { admin: true } }],
-  ])('%s grants only its own leaves, plus ops.view', (_name, group, expected) => {
+  ])('%s grants only its own leaves, plus admin.access', (_name, group, expected) => {
     expect(deriveCapabilities([group])).toEqual({
       ...ALL_FALSE,
       ...expected,
-      ops: { view: true },
+      admin: { access: true },
     });
   });
 
@@ -62,7 +62,7 @@ describe('deriveCapabilities', () => {
       entitycore: { admin: true, assetWrite: false },
       accounting: { admin: true },
       simulator: { admin: true },
-      ops: { view: true },
+      admin: { access: true },
     });
   });
 });
@@ -72,6 +72,6 @@ describe('hasCapability', () => {
     const caps = deriveCapabilities([VLAB_ADMIN_GROUP]);
     expect(hasCapability(caps, 'virtualLab.admin')).toBe(true);
     expect(hasCapability(caps, 'accounting.admin')).toBe(false);
-    expect(hasCapability(caps, 'ops.view')).toBe(true);
+    expect(hasCapability(caps, 'admin.access')).toBe(true);
   });
 });

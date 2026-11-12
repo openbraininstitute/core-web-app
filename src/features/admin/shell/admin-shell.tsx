@@ -3,13 +3,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import ObiLogo from '@/features/learn/components/ui/ObiLogo';
+import ObiLogo from '@/components/logo/obi-logo';
 import { Badge, STATUS_PILL_CLASS } from '@/ui/molecules/badge';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
 import { hasCapability } from '../capabilities/has-capability';
-import { ADMIN_NAV, ADMIN_ROOT } from './sections';
+import { ADMIN_NAV, ADMIN_ROOT, PLATFORM_HOME } from '../routes';
 
 import type { ReactNode } from 'react';
 import type { OperatorCapabilities } from '../capabilities/types';
@@ -43,10 +43,7 @@ export function AdminShell({
         >
           Operator
         </Badge>
-        <Link
-          href="/app/virtual-lab/sync"
-          className="text-neutral-4 hover:text-primary-9 ml-auto text-sm"
-        >
+        <Link href={PLATFORM_HOME} className="text-neutral-4 hover:text-primary-9 ml-auto text-sm">
           Back to platform
         </Link>
       </header>

@@ -1,7 +1,7 @@
 'use client';
 
+import ObiLogo from '@/components/logo/obi-logo';
 import { aiButtonFlag, courseToolbarFlag, useFlag } from '@/features/feature-flags';
-import ObiLogo from '@/features/learn/components/ui/ObiLogo';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { usePanelState } from '@/ui/segments/ai/hooks';
 import { PanelState } from '@/ui/segments/ai/types';

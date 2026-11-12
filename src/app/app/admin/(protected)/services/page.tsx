@@ -1,8 +1,8 @@
-import { requireCapability } from '@/admin/server/resolve';
-import { OpsDashboard } from '@/admin/services/ops/ops-dashboard';
+import { ServicesBoard } from '@/features/admin/sections/services/services-board';
+import { requireCapability } from '@/features/admin/server/require-capability';
 
 export default async function AdminServicesPage() {
-  await requireCapability('ops.view');
+  await requireCapability('admin.access');
 
-  return <OpsDashboard />;
+  return <ServicesBoard />;
 }

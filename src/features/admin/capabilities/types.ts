@@ -7,7 +7,7 @@ export type OperatorCapabilities = {
   accounting: { admin: boolean };
   simulator: { admin: boolean };
   launchSystem: { admin: boolean };
-  ops: { view: boolean };
+  admin: { access: boolean };
 };
 
 export type CapabilityPath = {
