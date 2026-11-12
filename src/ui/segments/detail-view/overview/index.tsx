@@ -75,7 +75,6 @@ import EModelOverview from '@/ui/segments/detail-view/overview/e-model';
 import { Field } from '@/ui/segments/detail-view/overview/field';
 import IonChannelModelOverview from '@/ui/segments/detail-view/overview/ion-channel-model';
 import SubjectDetails from '@/ui/segments/detail-view/overview/subject-details';
-import { Visualization as CircuitImage } from '@/ui/segments/explore/circuit/elements/visualization';
 import { EFeatureExtractionResultPreview } from '@/ui/segments/mini-detail-view/previews/efeature-extraction-result-preview';
 import { findScanConfigRegistryByTargetType } from '@/ui/segments/workflows/config/scan-config-registry';
 import { cn } from '@/utils/css-class';
@@ -680,14 +679,11 @@ export default async function Overview({
     </div>
   ) : null;
 
-  const isCircuit =
+  const circuitViewerSection =
     extendedType === ExtendedEntitiesTypeDict.SingleNeuronCircuit ||
-    circuitTypes.includes(extendedType);
-  // renders nothing when the circuit has no circuit_visualization asset
-  const circuitImageSection = isCircuit ? <CircuitImage circuit={entity as ICircuit} /> : null;
-  const circuitViewerSection = isCircuit ? (
-    <CircuitDetailViewer circuit={entity as ICircuit} extendedType={extendedType} />
-  ) : null;
+    circuitTypes.includes(extendedType) ? (
+      <CircuitDetailViewer circuit={entity as ICircuit} extendedType={extendedType} />
+    ) : null;
 
   const subjectSection =
     'subject' in entity ? (
@@ -774,7 +770,7 @@ export default async function Overview({
 
   return (
     <>
-      {circuitImageSection}
+      {circuitViewerSection}
       {visualizations}
       {metadataGrid}
       {electrodeArraySection}
@@ -786,7 +782,6 @@ export default async function Overview({
       {emodelFilePreviewSection}
       {ionChannelModelFilePreviewSection}
       {efeaturePreviewSection}
-      {circuitViewerSection}
     </>
   );
 }
