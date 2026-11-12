@@ -21,6 +21,10 @@ import {
   NotebookCellsPreview,
   NotebookGalleryPreview,
 } from '@/features/notebooks/renderer/notebook-viewer';
+import {
+  DISMISSABLE_ATTRIBUTE,
+  useDismissOnOutsideInteraction,
+} from '@/hooks/use-dismiss-on-outside-interaction';
 import { Card, CardTitle } from '@/ui/molecules/card';
 import { ExpandableText } from '@/ui/molecules/more-less-text';
 import {
@@ -56,6 +60,15 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import type { TVirtualLab } from '@/api/virtual-lab-svc/queries/types';
 import type { TWorkspaceSection } from '@/constants';
+
+// The listing beside the panel: picking another row swaps the record, the toolbar and pager
+// keep the panel open while paging or filtering.
+const LISTING_CHROME_SELECTOR = [
+  '.ag-row',
+  '[data-testid="data-grid-toolbar"]',
+  '[data-testid="data-grid-search"]',
+  '[data-testid="data-grid-pagination"]',
+].join(',');
 
 type Props = {
   section?: TWorkspaceSection;
@@ -109,6 +122,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
       record={record}
       dataType={dataType}
       onClose={onClose}
+      dismissOnOutsideInteraction
       hideUseModelAction={hideUseModelAction}
       openDetailsInNewTab={openDetailsInNewTab}
       workflowTargetType={workflowTargetType}
@@ -131,6 +145,7 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
   isPrivate = true,
   virtualLabData,
   interactive,
+  dismissOnOutsideInteraction = false,
 }: {
   section: TWorkspaceSection;
   record: T | null;
@@ -145,7 +160,15 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
   virtualLabData?: TVirtualLab;
   /** The host has room for a live viewer, for entity types that have one. */
   interactive?: boolean;
+  /** Close the panel on click outside it or Esc. */
+  dismissOnOutsideInteraction?: boolean;
 }) {
+  const panelRef = useDismissOnOutsideInteraction<HTMLDivElement>({
+    enabled: dismissOnOutsideInteraction && Boolean(record),
+    onDismiss: onClose,
+    ignoreSelector: LISTING_CHROME_SELECTOR,
+  });
+
   if (!record) return null;
   const interactiveViewer = interactive ? resolveInteractiveViewer(dataType ?? record.type) : null;
   const viewConfig = getViewDefinitionByExtendedType(dataType ?? record.type);
@@ -388,6 +411,8 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
       {record && (
         <motion.div
           key="mini-detail-view"
+          ref={panelRef}
+          {...{ [DISMISSABLE_ATTRIBUTE]: '' }}
           initial={enableAnimation ? { x: 300, opacity: 0 } : undefined}
           animate={enableAnimation ? { x: 0, opacity: 1 } : undefined}
           exit={enableAnimation ? { x: 300, opacity: 0 } : undefined}

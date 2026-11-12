@@ -2,6 +2,7 @@
 
 import { aiButtonFlag, courseToolbarFlag, useFlag } from '@/features/feature-flags';
 import ObiLogo from '@/features/learn/components/ui/ObiLogo';
+import { DISMISSABLE_ATTRIBUTE } from '@/hooks/use-dismiss-on-outside-interaction';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { usePanelState } from '@/ui/segments/ai/hooks';
 import { PanelState } from '@/ui/segments/ai/types';
@@ -26,6 +27,7 @@ function AiButton() {
       type="button"
       // where the onboarding tour points for the assistant, as the panel is gone while closed
       id="workspace-ai-button"
+      {...{ [DISMISSABLE_ATTRIBUTE]: '' }}
       onClick={() => setState(isCollapsed ? PanelState.Expanded : PanelState.Collapsed)}
       aria-label={isCollapsed ? 'Open the AI assistant' : 'Close the AI assistant'}
       aria-expanded={!isCollapsed}
