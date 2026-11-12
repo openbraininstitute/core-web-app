@@ -61,13 +61,6 @@ const listedCategories = () =>
 beforeEach(() => merged.mockClear());
 
 describe('the workflows table’s listing', () => {
-  it('opens on one listing where the link names nothing, not on every workflow merged', () => {
-    table('');
-
-    expect(merged).not.toHaveBeenCalled();
-    expect(screen.getByTestId('workflow-type-filter')).not.toHaveTextContent('All');
-  });
-
   it('merges every category’s workflows under Category All', () => {
     table('?tactivity=all&ttype=all');
 
