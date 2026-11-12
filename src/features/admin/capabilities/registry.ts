@@ -1,5 +1,5 @@
 // Group names are contracts with the backend services, not deployment settings, so there
-// is no env override. A gate change upstream must update its constant and `derive.test.ts`.
+// is no env override.
 
 // A real Keycloak group, matched by exact membership. Honored by entitycore
 // (app/schemas/auth.py) and Bluenaas (app/infrastructure/kc/auth.py). Not honored by

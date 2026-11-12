@@ -8,12 +8,7 @@ import { Button } from '@/ui/molecules/button';
 
 // Sits above `(protected)`: an error boundary doesn't wrap the layout of its own segment, and
 // that layout is where a Keycloak outage throws.
-export default function AdminError({
-  retry,
-}: {
-  error: Error & { digest?: string };
-  retry: () => void;
-}) {
+export default function AdminError({ retry }: { retry: () => void }) {
   return (
     <SharedLayout>
       <div className="flex max-w-md flex-col items-center gap-6">

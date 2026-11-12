@@ -19,8 +19,8 @@ const fetchMock = vi.fn();
 function userinfoOk(groups: string[]) {
   return { ok: true, json: async () => ({ groups }) };
 }
-function userinfoError() {
-  return { ok: false, status: 503, json: async () => ({}) };
+function userinfoError(status = 503) {
+  return { ok: false, status, json: async () => ({}) };
 }
 
 const T0 = new Date('2026-07-24T00:00:00.000Z').getTime();
@@ -89,6 +89,23 @@ describe('getKeycloakGroups', () => {
     expect(groups).toEqual(['/service/entitycore/admin']);
   });
 
+  it('waits 30 s after a failed call before asking /userinfo again', async () => {
+    fetchMock.mockResolvedValueOnce(userinfoOk(['/service/entitycore/admin']));
+    await getKeycloakGroups(SESSION);
+
+    vi.setSystemTime(T0 + 6 * MINUTE);
+    fetchMock.mockResolvedValueOnce(userinfoError());
+    await getKeycloakGroups(SESSION);
+
+    vi.setSystemTime(T0 + 6 * MINUTE + 20_000);
+    await expect(getKeycloakGroups(SESSION)).resolves.toEqual(['/service/entitycore/admin']);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+
+    vi.setSystemTime(T0 + 6 * MINUTE + 40_000);
+    fetchMock.mockResolvedValueOnce(userinfoOk(['/service/accounting/admin']));
+    await expect(getKeycloakGroups(SESSION)).resolves.toEqual(['/service/accounting/admin']);
+  });
+
   it('throws instead of reporting no groups beyond the 15-min stale cap', async () => {
     fetchMock.mockResolvedValueOnce(userinfoOk(['/service/entitycore/admin']));
     await getKeycloakGroups(SESSION);
@@ -110,7 +127,7 @@ describe('getKeycloakGroups', () => {
     await getKeycloakGroups(SESSION);
 
     vi.setSystemTime(T0 + 6 * MINUTE); // past TTL, inside the stale cap
-    fetchMock.mockResolvedValueOnce({ ok: false, status, json: async () => ({}) });
+    fetchMock.mockResolvedValueOnce(userinfoError(status));
 
     await expect(getKeycloakGroups(SESSION)).resolves.toBeNull();
 

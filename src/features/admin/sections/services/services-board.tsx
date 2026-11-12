@@ -22,7 +22,7 @@ import type { ServiceDescriptor } from './service-catalog';
 const STATUS_REFRESH_MS = 60_000;
 const VERSION_STALE_MS = 5 * 60_000;
 
-type ServiceRow = ServiceDescriptor & { baseUrl: string };
+type ServiceRow = ServiceDescriptor & { healthUrl: string; versionUrl?: string };
 
 const STATUS_LABEL: Record<ServiceHealth['status'], string> = {
   up: 'Operational',
@@ -33,7 +33,7 @@ const STATUS_LABEL: Record<ServiceHealth['status'], string> = {
 function useServiceHealth(service: ServiceRow) {
   return useQuery({
     queryKey: adminQueryKeys.serviceHealth(service.key),
-    queryFn: () => probeServiceHealth(service),
+    queryFn: () => probeServiceHealth(service.healthUrl),
     refetchInterval: STATUS_REFRESH_MS,
   });
 }
@@ -66,10 +66,10 @@ function LatencyCell({ service }: { service: ServiceRow }) {
 }
 
 function VersionCell({ service }: { service: ServiceRow }) {
-  const { baseUrl, versionPath } = service;
+  const { versionUrl, versionInData } = service;
   const { data: version } = useQuery({
     queryKey: adminQueryKeys.serviceVersion(service.key),
-    queryFn: versionPath ? () => fetchServiceVersion(baseUrl, versionPath) : skipToken,
+    queryFn: versionUrl ? () => fetchServiceVersion(versionUrl, versionInData) : skipToken,
     staleTime: VERSION_STALE_MS,
   });
   return version ? <span className="font-mono text-sm">{version}</span> : null;
@@ -110,14 +110,11 @@ const COLUMNS: Array<ISimpleColumn<ServiceRow>> = [
     id: 'url',
     header: 'Health check',
     width: { flex: 2, minWidth: 260 },
-    renderCell: (service) => {
-      const url = `${service.baseUrl}${service.healthPath}`;
-      return (
-        <code title={url} className="text-neutral-4 truncate text-sm">
-          {new URL(url, 'http://localhost').pathname}
-        </code>
-      );
-    },
+    renderCell: ({ healthUrl }) => (
+      <code title={healthUrl} className="text-neutral-4 truncate text-sm">
+        {new URL(healthUrl, 'http://localhost').pathname}
+      </code>
+    ),
   },
 ];
 
@@ -143,10 +140,14 @@ export function ServicesBoard() {
   // Not at module scope: the config is read lazily, and is empty while Next builds.
   const services = useMemo(
     () =>
-      SERVICE_CATALOG.map((descriptor) => ({
-        ...descriptor,
-        baseUrl: serviceBaseUrl(descriptor, config[descriptor.configKey] as string),
-      })),
+      SERVICE_CATALOG.map((descriptor) => {
+        const baseUrl = serviceBaseUrl(descriptor, config[descriptor.configKey]);
+        return {
+          ...descriptor,
+          healthUrl: `${baseUrl}${descriptor.healthPath}`,
+          versionUrl: descriptor.versionPath && `${baseUrl}${descriptor.versionPath}`,
+        };
+      }),
     []
   );
 

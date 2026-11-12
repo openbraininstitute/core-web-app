@@ -5,15 +5,13 @@ import { log } from '@/utils/logger';
 
 import type { Session } from 'next-auth';
 
-// The group list is never put in the token or the session cookie: it can be large, so it
-// comes from Keycloak's /userinfo and is cached here per user.
-
 const GROUPS_CACHE_TTL_MS = 5 * 60 * 1000;
 const STALE_MAX_AGE_MS = 15 * 60 * 1000;
 const USERINFO_TIMEOUT_MS = 5_000;
+const FAILURE_BACKOFF_MS = 30_000;
 const CACHE_MAX_ENTRIES = 10_000;
 
-type CacheEntry = { groups: string[]; fetchedAt: number };
+type CacheEntry = { groups: string[]; fetchedAt: number; failedAt?: number };
 
 export class BoundedCache<V> {
   private readonly entries = new Map<string, V>();
@@ -73,21 +71,33 @@ async function refreshGroups(
     return groups;
   } catch (error) {
     log('error', 'failed to resolve keycloak groups from userinfo', error);
-    if (cached && now - cached.fetchedAt < STALE_MAX_AGE_MS) return cached.groups;
+    if (cached && now - cached.fetchedAt < STALE_MAX_AGE_MS) {
+      groupsCache.set(key, { ...cached, failedAt: now });
+      return cached.groups;
+    }
     throw error;
   }
 }
 
 // `null` means the session has no token Keycloak accepts, so the user is logged out. A
-// /userinfo outage serves the cached value up to the stale cap, then throws, so it never reads
-// as "this user has no groups". Parallel requests with the same token share one call.
+// /userinfo outage serves the cached value up to the stale cap, retrying at most every 30 s,
+// then throws, so it never reads as "this user has no groups". Parallel requests with the same
+// token share one call.
 export async function getKeycloakGroups(session: Session): Promise<string[] | null> {
   const { accessToken } = session;
   if (!accessToken) return null;
 
   const key = session.user.id || accessToken;
   const cached = groupsCache.get(key);
-  if (cached && Date.now() - cached.fetchedAt < GROUPS_CACHE_TTL_MS) return cached.groups;
+  const now = Date.now();
+  if (cached && now - cached.fetchedAt < GROUPS_CACHE_TTL_MS) return cached.groups;
+  if (
+    cached?.failedAt &&
+    now - cached.failedAt < FAILURE_BACKOFF_MS &&
+    now - cached.fetchedAt < STALE_MAX_AGE_MS
+  ) {
+    return cached.groups;
+  }
 
   const pending = inFlight.get(accessToken);
   if (pending) return pending;

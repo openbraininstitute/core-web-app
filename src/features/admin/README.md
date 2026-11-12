@@ -21,8 +21,9 @@ token lives in the session cookie.
 
 ## Query keys
 
-`query-keys.ts` uses tuples (`['admin', 'services', …]`) rather than the `keyBuilder` strings in
-`src/ui/use-query-keys`, because Refresh invalidates a whole section by prefix.
+`query-keys.ts` uses one segment per level (`['admin', 'services', 'health', key]`), like
+`src/ui/use-query-keys/ai-assistant.ts` and unlike the `'prefix/name'` strings in `user.tsx`,
+because Refresh invalidates a whole section by prefix.
 
 ## Keeping the registry honest
 

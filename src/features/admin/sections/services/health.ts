@@ -8,42 +8,27 @@ export type ServiceHealth = {
 
 const PROBE_TIMEOUT_MS = 8000;
 
-export async function fetchServiceVersion(
-  baseUrl: string,
-  versionPath: string
-): Promise<string | null> {
+function probe(url: string) {
+  return fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(PROBE_TIMEOUT_MS) });
+}
+
+export async function fetchServiceVersion(url: string, inData = false): Promise<string | null> {
   try {
-    const res = await fetch(`${baseUrl}${versionPath}`, {
-      cache: 'no-store',
-      signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
-    });
+    const res = await probe(url);
     if (!res.ok) return null;
-    const data = (await res.json()) as Record<string, unknown>;
-    // Top-level on most services; auth-manager nests it under `data`.
-    const nested = (data.data ?? {}) as Record<string, unknown>;
-    const version = data.app_version ?? data.version ?? nested.app_version ?? nested.version;
+    const body = (await res.json()) as Record<string, unknown>;
+    const source = (inData ? body.data : body) as Record<string, unknown> | undefined;
+    const version = source?.app_version ?? source?.version;
     return typeof version === 'string' ? version : null;
   } catch {
     return null;
   }
 }
 
-export async function probeServiceHealth({
-  baseUrl,
-  healthPath,
-}: {
-  baseUrl: string;
-  healthPath: string;
-}): Promise<ServiceHealth> {
+export async function probeServiceHealth(url: string): Promise<ServiceHealth> {
   const started = performance.now();
-  try {
-    const res = await fetch(`${baseUrl}${healthPath}`, {
-      cache: 'no-store',
-      signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
-    });
-    const latencyMs = Math.round(performance.now() - started);
-    return { status: res.ok ? 'up' : 'down', httpStatus: res.status, latencyMs };
-  } catch {
-    return { status: 'unreachable', latencyMs: Math.round(performance.now() - started) };
-  }
+  const res = await probe(url).catch(() => null);
+  const latencyMs = Math.round(performance.now() - started);
+  if (!res) return { status: 'unreachable', latencyMs };
+  return { status: res.ok ? 'up' : 'down', httpStatus: res.status, latencyMs };
 }

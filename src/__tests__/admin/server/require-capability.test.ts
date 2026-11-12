@@ -18,6 +18,7 @@ vi.mock('next/navigation', () => ({ redirect: redirectMock }));
 
 beforeEach(() => {
   authMock.mockReset();
+  authMock.mockResolvedValue({ accessToken: 'tok' });
   getKeycloakGroupsMock.mockReset();
 });
 
@@ -39,14 +40,12 @@ describe('requireCapability', () => {
   });
 
   it('sends a token Keycloak rejects to log in, not to forbidden', async () => {
-    authMock.mockResolvedValueOnce({ accessToken: 'tok' });
     getKeycloakGroupsMock.mockResolvedValueOnce(null);
 
     await expect(requireCapability('admin.access')).rejects.toThrow('redirect:/app/log-in');
   });
 
   it('sends a user without the capability to the forbidden page', async () => {
-    authMock.mockResolvedValueOnce({ accessToken: 'tok' });
     getKeycloakGroupsMock.mockResolvedValueOnce(['/service/entitycore/admin']);
 
     await expect(requireCapability('virtualLab.read')).rejects.toThrow(
@@ -55,7 +54,6 @@ describe('requireCapability', () => {
   });
 
   it('forbids a user with no groups, even on admin.access', async () => {
-    authMock.mockResolvedValueOnce({ accessToken: 'tok' });
     getKeycloakGroupsMock.mockResolvedValueOnce([]);
 
     await expect(requireCapability('admin.access')).rejects.toThrow(
@@ -64,7 +62,6 @@ describe('requireCapability', () => {
   });
 
   it('returns the capabilities when held', async () => {
-    authMock.mockResolvedValueOnce({ accessToken: 'tok' });
     getKeycloakGroupsMock.mockResolvedValueOnce(['/service/entitycore/admin']);
 
     await expect(requireCapability('admin.access')).resolves.toMatchObject({

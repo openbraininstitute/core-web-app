@@ -11,6 +11,8 @@ export type ServiceDescriptor = {
   configKey: PlatformApiUrlField;
   healthPath: string;
   versionPath?: string;
+  // auth-manager wraps its reply in `data`.
+  versionInData?: boolean;
   // The config URL carries a version path, but health and version are mounted at the root.
   stripFromUrl?: string;
 };
@@ -75,6 +77,7 @@ export const SERVICE_CATALOG: ServiceDescriptor[] = [
     configKey: 'AUTH_MANAGER_URL',
     healthPath: '/health',
     versionPath: '/version',
+    versionInData: true,
     stripFromUrl: '/v1',
   },
 ];
