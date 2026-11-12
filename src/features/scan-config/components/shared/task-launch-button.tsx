@@ -2,6 +2,9 @@ import { LoadingOutlined } from '@ant-design/icons';
 
 import { classNames } from '@/util/utils';
 
+/** The launch button's green, which the configuration's generate buttons share. */
+export const LAUNCH_GREEN = 'bg-[linear-gradient(94.93deg,#389E0D_18.84%,#143805_116.7%)]';
+
 type Props = {
   label: string;
   countLabel?: string;
@@ -24,7 +27,7 @@ export function TaskLaunchButton({
       data-testid="scan-config-launch"
       className={classNames(
         'min-h-12.5 w-full cursor-pointer rounded-full p-2 text-white',
-        'bg-[linear-gradient(94.93deg,#389E0D_18.84%,#143805_116.7%)]',
+        LAUNCH_GREEN,
         'disabled:cursor-not-allowed disabled:bg-gray-400 disabled:bg-none',
         className
       )}

@@ -75,6 +75,8 @@ export interface IDataGridProps<Row> {
   expandColumn?: IExpandColumnConfig;
   /** noun shown in the loading overlay as `loading {label}` (default: `entities`) */
   loadingLabel?: string;
+  /** a card shown under the row the pointer rests on (see `IGridRendererProps.rowHoverCard`) */
+  rowHoverCard?: (row: Row) => ReactNode;
   toolbarSlots?: IDataGridToolbarSlots;
   /** bulk actions rendered in the toolbar while rows are selected */
   renderBulkActions?: (args: IBulkActionsRenderArgs<Row>) => ReactNode;
@@ -113,6 +115,7 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
     getRowTestId,
     expandColumn,
     loadingLabel,
+    rowHoverCard,
     toolbarSlots,
     renderBulkActions,
     renderCount,
@@ -227,6 +230,7 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
     headerCheckbox: selection?.headerCheckbox,
     expandColumn,
     loadingLabel,
+    rowHoverCard,
   };
 
   if (error && renderError) {

@@ -736,6 +736,7 @@ export function arenaMaterials(u: GpuUniforms, look: Look, arena: ArenaStorage) 
     ),
     ids: segments((kind) => idMaterial(kind, u, false, fromArena(u, arena, kind, 'seen'))),
     kept: segments((kind) => depthMaterial(kind, u, fromArena(u, arena, kind, 'kept'))),
+    seenDepth: segments((kind) => depthMaterial(kind, u, fromArena(u, arena, kind, 'seen'))),
     through: segments((kind) => throughMaterial(kind, u, fromArena(u, arena, kind, 'kept'))),
   };
 }

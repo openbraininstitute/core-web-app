@@ -177,7 +177,7 @@ function timestampsOf(reference: unknown, single: Json): number[] {
  * titles and units; references by the name of the block they point at, and a
  * timestamps reference with its times.
  */
-function describeBlock(
+export function describeBlock(
   section: string,
   block: unknown,
   fallbackTitle: string,

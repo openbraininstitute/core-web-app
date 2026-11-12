@@ -175,6 +175,28 @@ describe('CircuitVisualization on an empty scene', () => {
     expect(screen.queryByRole('button', { name: 'Try again' })).toBeNull();
   });
 
+  it('reads again the node files it could not read, where none could be', () => {
+    const retry = vi.fn();
+    draw({ error: new Error('The download stopped'), unplaced: ['cortex'], retry });
+    expect(screen.getByRole('alert')).toHaveTextContent('The download stopped');
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    expect(retry).toHaveBeenCalledTimes(1);
+    expect(fixtures.morphologies.retry).not.toHaveBeenCalled();
+  });
+
+  it('says which population a scene is drawn without, and reads it again', () => {
+    const retry = vi.fn();
+    draw({ tree: TREE, unplaced: ['inputs'], retry });
+    expect(screen.getByRole('alert')).toHaveTextContent('Couldn’t load inputs');
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    expect(retry).toHaveBeenCalledTimes(1);
+  });
+
+  it('counts the populations a scene is drawn without, past one', () => {
+    draw({ tree: TREE, unplaced: ['inputs', 'cortex'], retry: vi.fn() });
+    expect(screen.getByRole('alert')).toHaveTextContent('Couldn’t load 2 populations');
+  });
+
   it('says nothing where some could be read', () => {
     draw({ tree: TREE }, { morphologies: { loaded: 2, total: 2, failed: 1 } });
     expect(screen.queryByRole('alert')).toBeNull();

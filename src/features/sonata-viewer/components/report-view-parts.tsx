@@ -30,9 +30,12 @@ export function PopulationHeader({
           onChange={onChange}
         />
       ) : (
-        <span className="text-primary-9 rounded-full bg-white px-3 py-1.5 text-sm font-semibold shadow-md ring-1 ring-black/5">
-          <span className="mr-1 font-normal text-neutral-400">Population</span>
-          {population.name}
+        <span className="text-primary-9 flex min-w-0 items-center gap-1 rounded-full bg-white px-3 py-1.5 text-sm font-semibold shadow-md ring-1 ring-black/5">
+          {/* Narrow, the word gives way first, then the name. */}
+          <span className="shrink-[1000] truncate font-normal text-neutral-400">Population</span>
+          <span className="truncate" title={population.name}>
+            {population.name}
+          </span>
         </span>
       )}
     </div>

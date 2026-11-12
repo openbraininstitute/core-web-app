@@ -17,10 +17,7 @@ import {
 } from '@/features/scan-config/components/memodel-compatibility';
 import { ScanConfigTabsPanel } from '@/features/scan-config/components/tabs';
 import { IonChannelModelPropertiesChecks } from '@/features/scan-config/components/ui-elements/ion-channel-model-properties';
-import {
-  DEFAULT_COLUMNS_GRID,
-  DefaultConfigColumns,
-} from '@/features/scan-config/template/default-columns';
+import { DefaultConfigColumns } from '@/features/scan-config/template/default-columns';
 import {
   EMODEL_OPTIMISATION_COLUMNS_GRID,
   EModelOptimisationColumns,
@@ -85,7 +82,15 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
   useEffect(() => () => setBreadcrumbRefs(null), [setBreadcrumbRefs]);
 
   const configurationContent = (
-    <div id="template-content" className="flex min-h-0 flex-1 flex-col px-2 pt-4 pb-2">
+    <div
+      id="template-content"
+      // Edge to edge, so the windows' rings meet the toolbar's ends (the project selector, the
+      // assistant); the e-model layout, unboxed, keeps its inset.
+      className={cn(
+        'flex min-h-0 flex-1 flex-col pt-2 pb-2',
+        isEModelOptimisationParameters ? 'px-2' : 'px-0'
+      )}
+    >
       {!props.readOnly && (
         <IonChannelModelPropertiesChecks
           schema={props.schema}
@@ -116,8 +121,11 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
       <div
         id="scan-config-content-columns"
         className={cn(
-          'grid gap-1.25 min-h-0 flex-1 overflow-hidden *:min-w-0',
-          isEModelOptimisationParameters ? EMODEL_OPTIMISATION_COLUMNS_GRID : DEFAULT_COLUMNS_GRID,
+          'min-h-0 flex-1 overflow-hidden',
+          // The default layout lays out its own grid, whose columns can be dragged shut.
+          isEModelOptimisationParameters
+            ? cn('grid gap-1.25 *:min-w-0', EMODEL_OPTIMISATION_COLUMNS_GRID)
+            : 'flex',
           { hidden: Boolean(browseOverlay) }
         )}
       >
@@ -135,7 +143,8 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
       <div
         id="scan-config-results"
         data-testid="scan-config-results"
-        className="w-full grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-1.25 min-h-0 flex-1 overflow-hidden px-2 pt-4 pb-2"
+        // Edge to edge, as the configuration's, so its windows meet the toolbar's ends.
+        className="w-full grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-1.25 min-h-0 flex-1 overflow-hidden pt-2 pb-2"
       >
         <ScanConfigResults props={props} state={state} />
       </div>

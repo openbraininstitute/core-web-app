@@ -5,7 +5,16 @@ import { executionStatusColorMap } from '@/features/task-runner/activity-executi
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
-export function StatusBadge({ status, details }: { status?: TActivityStatus; details?: string }) {
+export function StatusBadge({
+  status,
+  details,
+  label,
+}: {
+  status?: TActivityStatus;
+  details?: string;
+  /** Shown in place of the status, as a running task's progress. */
+  label?: string;
+}) {
   const color = status ? executionStatusColorMap[status ?? ActivityStatus.CREATED] : '#004793';
   const showSpinner =
     status && [ActivityStatus.PENDING, ActivityStatus.RUNNING].includes(status as ActivityStatus);
@@ -19,12 +28,12 @@ export function StatusBadge({ status, details }: { status?: TActivityStatus; det
         data-testid="scan-config-status"
         style={{ borderColor: color, color: `${color} !important` }}
         className={cn(
-          'flex items-center rounded-full border px-4 py-1 text-sm capitalize transition-colors duration-300',
+          'flex items-center rounded-full border px-4 py-1 text-sm capitalize tabular-nums transition-colors duration-300',
           'bg-(--card-color) border-(--card-color)! text-white',
           'group-hover:border-(--card-color)/70! group-hover:text-white'
         )}
       >
-        {status ?? 'created'}
+        {label ?? status ?? 'created'}
         {details && (
           <Tooltip>
             <TooltipTrigger asChild>

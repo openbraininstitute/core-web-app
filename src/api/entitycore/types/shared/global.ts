@@ -248,6 +248,7 @@ export enum AssetLabel {
   cell_composition_summary = 'cell_composition_summary',
   cell_composition_volumes = 'cell_composition_volumes',
   cell_surface_mesh = 'cell_surface_mesh',
+  compartment_sets = 'compartment_sets',
   custom_node_sets = 'custom_node_sets',
   efeature_extraction_features = 'efeature_extraction_features',
   efeature_extraction_figures = 'efeature_extraction_figures',

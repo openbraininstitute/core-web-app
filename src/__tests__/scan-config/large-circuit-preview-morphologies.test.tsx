@@ -32,7 +32,7 @@ const h = vi.hoisted(() => ({
     positionless: new Set(),
     settled: true,
     download: null,
-  } as ReturnType<typeof usePopulationsPlacement>,
+  } as Omit<ReturnType<typeof usePopulationsPlacement>, 'retry'>,
   /** What the viewer was last rendered with, and how many times it was mounted. */
   cells: null as CircuitCellsProps | null,
   mounts: 0,

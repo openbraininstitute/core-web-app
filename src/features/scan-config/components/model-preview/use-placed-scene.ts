@@ -42,7 +42,7 @@ export function usePlacedScene({
 }: Options) {
   const { config, error: configError } = useCircuitConfig(circuit);
   // Nothing is reported placed until everything is, so anything placed at all means the whole scene can be built.
-  const { placed, failures, positionless, settled, download } = usePopulationsPlacement({
+  const { placed, failures, positionless, settled, download, retry } = usePopulationsPlacement({
     circuit,
     populations,
     withMorphologies,
@@ -79,6 +79,11 @@ export function usePlacedScene({
   const noPlacement =
     !settled || placed.length > 0 ? null : (failures.values().next().value ?? null);
   const error = configError ?? noPopulation ?? noPlacement;
+  // What could not be read, as a file that stopped arriving: unlike a want of positions, worth asking again.
+  const unplaced = useMemo(
+    () => [...failures.keys()].filter((name) => !positionless.has(name)),
+    [failures, positionless]
+  );
 
   // Built from the placement alone: other somas are another scene to the viewer, which frames it again, so this must
   // not change when the selection does.
@@ -135,6 +140,8 @@ export function usePlacedScene({
     hidden,
     hasContext,
     error,
+    unplaced,
+    retry,
     somas,
     orientations,
     receded,

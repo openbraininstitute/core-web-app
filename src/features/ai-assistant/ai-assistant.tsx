@@ -1,11 +1,12 @@
 'use client';
 
 import {
-  FullscreenExitOutlined,
-  FullscreenOutlined,
-  MinusOutlined,
+  CloseOutlined,
+  ExpandAltOutlined,
   SettingOutlined,
+  ShrinkOutlined,
 } from '@ant-design/icons';
+import { Button } from 'antd';
 import { AnimatePresence, motion } from 'motion/react';
 import React from 'react';
 
@@ -30,7 +31,7 @@ interface AiAssistantProps {
   section: TAppUInterfaceSection;
   containerRef?: (el: HTMLDivElement | null) => void;
   onFullscreenToggle?: () => void;
-  onCollapse?: () => void;
+  onClose?: () => void;
   disabled?: boolean;
 }
 
@@ -42,12 +43,22 @@ export default function AiAssistant({
   section,
   containerRef,
   onFullscreenToggle,
-  onCollapse,
+  onClose,
   disabled,
 }: AiAssistantProps) {
   const { panelWidth } = usePanelWidth();
   const isDragging = useIsDragging();
   const [tab, setTab] = React.useState<AssistantTab>('chat');
+  const [confirmCloseOpen, setConfirmCloseOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!confirmCloseOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setConfirmCloseOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [confirmCloseOpen]);
   const assistant = useAiAssistant();
   const threadId = assistant.threadId.useValue();
   const isEmptyThread = assistant.isEmptyThread.useValue();
@@ -151,19 +162,23 @@ export default function AiAssistant({
                   disabled={disabled}
                   title={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
                 >
-                  {fullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
+                  {fullscreen ? (
+                    <ShrinkOutlined className={styles.mirrorY} />
+                  ) : (
+                    <ExpandAltOutlined className={styles.mirrorY} />
+                  )}
                 </button>
               )}
-              {onCollapse && (
+              {onClose && (
                 <button
                   type="button"
-                  onClick={onCollapse}
+                  onClick={() => setConfirmCloseOpen(true)}
                   className={classNames(styles.headerBtn, styles.collapseBtn)}
-                  aria-label="Collapse"
-                  title="Collapse"
-                  data-testid="ai-assistant-collapse-button"
+                  aria-label="Close"
+                  title="Close"
+                  data-testid="ai-assistant-close-button"
                 >
-                  <MinusOutlined />
+                  <CloseOutlined />
                 </button>
               )}
             </div>
@@ -209,6 +224,33 @@ export default function AiAssistant({
               )}
             </AnimatePresence>
           </div>
+
+          {confirmCloseOpen && (
+            <div className={styles.confirmBackdrop}>
+              <div className={styles.confirmCard} role="alertdialog" aria-label="Close assistant">
+                <span>Do you want to close the assistant?</span>
+                {status !== 'ready' && (
+                  <p className={styles.confirmText}>
+                    A response is still being generated. Closing now may cause data loss.
+                  </p>
+                )}
+                <div className={styles.confirmActions}>
+                  <Button onClick={() => setConfirmCloseOpen(false)}>Cancel</Button>
+                  <Button
+                    danger
+                    type="primary"
+                    data-testid="ai-assistant-close-confirm"
+                    onClick={() => {
+                      setConfirmCloseOpen(false);
+                      onClose?.();
+                    }}
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {!fullscreen && <PanelSplitter />}
         </motion.div>

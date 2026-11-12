@@ -1,6 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { fetchToFS, writeToFS } from '@/utils/h5/fs';
+import { fetchToFS, STALL_MS, writeToFS } from '@/utils/h5/fs';
 
 import type { DownloadProgress } from '@/utils/h5/fs';
 
@@ -287,6 +287,117 @@ describe('fetchToFS', () => {
     await fetchAsset();
 
     expect(fetchMock).toHaveBeenCalledOnce();
+  });
+});
+
+describe('fetchToFS, where a download stops arriving', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  /** Sends `bytes` of a longer file, then nothing, its body erroring on abort as a real one does. */
+  const stopsAfter = (bytes: Uint8Array, declared: number) =>
+    vi.fn(
+      async (_url: string, { signal }: RequestInit) =>
+        new Response(
+          new ReadableStream({
+            start(controller) {
+              controller.enqueue(bytes);
+              signal?.addEventListener('abort', () => controller.error(signal.reason));
+            },
+          }),
+          { status: 200, headers: { 'content-length': String(declared) } }
+        )
+    );
+
+  it('gives up mid-file, saying why and leaving nothing to be read back', async () => {
+    vi.stubGlobal('fetch', stopsAfter(hdf5Bytes(1024), 4096));
+
+    const failed = expect(fetchAsset()).rejects.toThrow('nothing arrived for 30 seconds');
+    await vi.advanceTimersByTimeAsync(STALL_MS);
+    await failed;
+
+    expect(files.size).toBe(0);
+    expect(entries.size).toBe(0);
+  });
+
+  it('gives up on a server that never answers', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        (_url: string, { signal }: RequestInit) =>
+          new Promise((_, reject) => {
+            signal?.addEventListener('abort', () => reject(signal.reason));
+          })
+      )
+    );
+
+    const failed = expect(fetchAsset()).rejects.toThrow('nothing arrived for 30 seconds');
+    await vi.advanceTimersByTimeAsync(STALL_MS);
+    await failed;
+  });
+
+  it('waits the whole time before it does', async () => {
+    vi.stubGlobal('fetch', stopsAfter(hdf5Bytes(1024), 4096));
+    const settled = vi.fn();
+    const failed = fetchAsset().catch(settled);
+
+    await vi.advanceTimersByTimeAsync(STALL_MS - 1);
+    expect(settled).not.toHaveBeenCalled();
+
+    await vi.advanceTimersByTimeAsync(1);
+    await failed;
+    expect(settled).toHaveBeenCalledOnce();
+  });
+
+  it('leaves alone a slow download that keeps arriving, far longer than the limit in all', async () => {
+    const bytes = hdf5Bytes(4096);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(
+            new ReadableStream({
+              start(controller) {
+                // A chunk just inside the limit each time, for four times the limit in all.
+                const gap = STALL_MS - 1000;
+                [0, 1, 2, 3].forEach((part) => {
+                  setTimeout(
+                    () => {
+                      controller.enqueue(bytes.subarray(part * 1024, (part + 1) * 1024));
+                      if (part === 3) controller.close();
+                    },
+                    (part + 1) * gap
+                  );
+                });
+              },
+            }),
+            { status: 200, headers: { 'content-length': '4096' } }
+          )
+      )
+    );
+
+    const download = fetchAsset();
+    await vi.advanceTimersByTimeAsync(5 * STALL_MS);
+
+    await expect(download).resolves.toEqual({ filename: 'cell.nwb' });
+    expect(files.get('cell.nwb')?.bytes).toEqual(bytes);
+  });
+
+  it('stops watching once the file is in, so a slow cache write is not taken for a stall', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => responseOf(hdf5Bytes(1024)))
+    );
+
+    const download = fetchAsset();
+    await vi.advanceTimersByTimeAsync(1);
+
+    await expect(download).resolves.toEqual({ filename: 'cell.nwb' });
+    expect(vi.getTimerCount()).toBe(0);
   });
 });
 

@@ -28,12 +28,10 @@ type Props = {
   file: TActivityCustomFile;
   selected?: boolean;
   label?: ReactNode;
-  /** Opens an interactive view, such as a report's statistics: its tag is white on purple, as the button opening them is. */
-  interactive?: boolean;
   onSelect: (file: TActivityCustomFile) => void;
 };
 
-export function TaskIOFileItem({ id, name, file, selected, label, interactive, onSelect }: Props) {
+export function TaskIOFileItem({ id, name, file, selected, label, onSelect }: Props) {
   const asset = isAssetBackedFile(file) ? file.asset : undefined;
   const assetPath = isAssetBackedFile(file) ? file.assetPath : undefined;
   const fileName = assetPath?.split('/').at(-1) ?? asset?.path.split('/').at(-1);
@@ -84,8 +82,7 @@ export function TaskIOFileItem({ id, name, file, selected, label, interactive, o
           'transition-[max-width] duration-200 ease-[cubic-bezier(0.2,0,0,1)] hover:max-w-[88%]',
           selected
             ? 'border-white text-primary-9 bg-white'
-            : 'border-[oklch(0.968_0.007_247.896)] bg-[oklch(0.929_0.013_255.508)] text-neutral-5',
-          interactive && 'border-purple-600! bg-purple-600! text-white!'
+            : 'border-[oklch(0.968_0.007_247.896)] bg-[oklch(0.929_0.013_255.508)] text-neutral-5'
         )}
       >
         {badgeContent}

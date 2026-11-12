@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ComponentProps } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { TableCells } from '@/features/circuit-nodes/circuit-nodes-table';
 import type { NodesGrid } from '@/features/circuit-nodes/components/nodes-grid';
 import type { FilterModel, NodePopulation } from '@/features/circuit-nodes/types';
 
@@ -24,7 +25,7 @@ vi.mock('@/features/circuit-nodes/components/nodes-grid', () => ({
     fixtures.grid(props);
     return null;
   },
-  defaultVisibleColumnSet: (columns: { name: string }[]) => new Set(columns.map((c) => c.name)),
+  withNewColumnsOn: (columns: { name: string }[]) => new Set(columns.map((c) => c.name)),
 }));
 vi.mock('@/features/circuit-nodes/components/nodes-toolbar', () => ({ NodesToolbar: () => null }));
 vi.mock('@/utils/logger', async (importOriginal) => ({
@@ -37,6 +38,10 @@ vi.mock('@/features/circuit-nodes/hooks/use-circuit-config', () => ({
     isLoading: false,
     error: null,
   }),
+}));
+vi.mock('@/features/circuit-nodes/connectivity/use-connectivity', () => ({
+  connectivityAsset: () => undefined,
+  useConnectivityEntries: () => ({ asset: undefined, isLoading: false, error: null }),
 }));
 vi.mock('@/features/circuit-nodes/hooks/use-nodes-worker', () => ({
   useNodesWorker: () => ({
@@ -79,11 +84,19 @@ beforeEach(() => {
   fixtures.logError.mockClear();
 });
 
+/** What the grid's header says beside the count. */
+function headerText() {
+  const { container, unmount } = render(<div>{grid().headerExtra}</div>);
+  const text = container.textContent ?? '';
+  unmount();
+  return text;
+}
+
 /** The table with a view beside it, telling that view the cells to show. */
 function table(
   circuit: ICircuit,
   populationName: string,
-  onShownCellsChange: ReturnType<typeof vi.fn>
+  onShownCellsChange: TableCells['onShownCellsChange']
 ) {
   return (
     <CircuitNodesTable
@@ -219,11 +232,11 @@ describe('CircuitNodesTable with cells', () => {
     render(table(CIRCUIT, 'cortex', onShownCellsChange));
     act(() => grid().onFilterModelChange?.(FILTER));
     await waitFor(() => expect(shown(onShownCellsChange)?.cells).toEqual([1, 3, 4]));
-    expect(grid().headerExtra).toBeFalsy();
+    expect(headerText()).not.toMatch(/could not follow/);
 
     act(() => grid().onFilterModelChange?.(BROKEN));
     await waitFor(() => expect(shown(onShownCellsChange)?.cells).toBeNull());
-    expect(grid().headerExtra).toBeTruthy();
+    expect(headerText()).toMatch(/could not follow this filter/);
     expect(fixtures.logError).toHaveBeenCalledOnce();
   });
 

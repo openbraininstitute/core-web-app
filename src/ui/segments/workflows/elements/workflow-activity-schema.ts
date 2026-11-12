@@ -2,7 +2,6 @@ import {
   EntityLifecycleStatus,
   EntityLifecycleStatusLabel,
 } from '@/api/entitycore/types/shared/global';
-import { CAMPAIGN_STATUS_COLUMN_MIN_WIDTH } from '@/features/data-grid/bindings/entitycore/renderers/campaign-status-badge';
 import { LIFECYCLE_STATUS_RENDERER } from '@/features/data-grid/bindings/entitycore/renderers/lifecycle-status-cell';
 import {
   Align,
@@ -61,6 +60,16 @@ export interface IWorkflowActivitySchemaArgs {
   workspace: WorkspaceContext;
 }
 
+const joinedStatuses = (row: EntityCoreObjectTypes): string => {
+  const rows = (row as { rows?: unknown }).rows;
+  if (!Array.isArray(rows)) return '';
+  return rows
+    .map((each: { id?: string; execution?: { status?: string } | null }) =>
+      [each.id, each.execution?.status].join(':')
+    )
+    .join(',');
+};
+
 /**
  * The workflow-activity listing schema. Built per (activity, type, workspace) rather than
  * declared statically: `cellRendererParams` is the only channel into a keyed renderer,
@@ -78,6 +87,22 @@ export function buildWorkflowActivitySchema({
     defaultSort: [{ columnId: 'creationDate', direction: SortDirection.Desc }],
     advancedFilters: workflowActivityAdvancedFilters,
     columns: [
+      {
+        // display-only: the activity is chosen in the toolbar
+        id: 'category',
+        header: 'Category',
+        getValue: () => activityName,
+        width: { fitContent: true },
+      },
+      {
+        // display-only: the entity type is pinned by the toolbar's Type selector
+        id: 'type',
+        header: 'Type',
+        getValue: () => '',
+        cellRenderer: WORKFLOW_ACTIVITY_TYPE_RENDERER,
+        cellRendererParams: { entityType },
+        width: { fitContent: true },
+      },
       {
         id: 'name',
         header: 'Name',
@@ -102,36 +127,20 @@ export function buildWorkflowActivitySchema({
         },
       },
       {
-        // display-only: the activity is chosen in the toolbar
-        id: 'category',
-        header: 'Category',
-        getValue: () => activityName,
-        width: { minWidth: 120, flex: 1 },
-      },
-      {
-        // display-only: the entity type is pinned by the toolbar's Type selector
-        id: 'type',
-        header: 'Type',
-        getValue: () => '',
-        cellRenderer: WORKFLOW_ACTIVITY_TYPE_RENDERER,
-        cellRendererParams: { entityType },
-        width: { minWidth: 140, flex: 1 },
-      },
-      {
         id: 'creationDate',
         header: 'Date',
         sortable: true,
         sortField: 'creation_date',
         getValue: (row) => row.creation_date ?? '',
         cellRenderer: WORKFLOW_ACTIVITY_DATE_RENDERER,
-        width: { minWidth: 150, flex: 1 },
+        width: { fitContent: true },
       },
       {
         id: 'createdBy',
         header: 'Created by',
         // not sortable: `/task-config` omits `created_by__pref_label` — see SORT SAFETY
         getValue: (row) => ('created_by' in row ? (row.created_by?.pref_label ?? '') : ''),
-        width: { minWidth: 140, flex: 1 },
+        width: { fitContent: true },
         filter: {
           // `created_by__pref_label__in` / `…__ilike`; options from the `created_by` facet
           operators: [OperatorId.In, OperatorId.Ilike],
@@ -145,10 +154,15 @@ export function buildWorkflowActivitySchema({
         id: 'status',
         header: 'Status',
         align: Align.Center,
-        getValue: () => '',
+        // never shown: a refetched row re-renders only the cells whose value changed, so the
+        // executions joined into a row must count as one for its badge to follow them
+        getValue: joinedStatuses,
         cellRenderer: WORKFLOW_ACTIVITY_STATUS_RENDERER,
-        cellRendererParams: { workspace },
-        width: { minWidth: CAMPAIGN_STATUS_COLUMN_MIN_WIDTH, flex: 1 },
+        cellRendererParams: { workspace, activity, entityType },
+        // the badge opens its own card of executions on hover
+        ownHoverCard: true,
+        // refitted as the badges arrive, each from a request of its own after its row
+        width: { fitContent: true },
       },
       {
         /**
@@ -166,7 +180,7 @@ export function buildWorkflowActivitySchema({
         getValue: (row) =>
           'lifecycle_status' in row ? ((row.lifecycle_status as string) ?? '') : '',
         cellRenderer: LIFECYCLE_STATUS_RENDERER,
-        width: { minWidth: 140, flex: 1 },
+        width: { fitContent: true },
         filter: {
           operators: [OperatorId.In, OperatorId.Eq],
           field: 'lifecycle_status',
@@ -185,7 +199,10 @@ export function buildWorkflowActivitySchema({
         id: 'actions',
         header: 'Actions',
         align: Align.Center,
-        getValue: () => '',
+        // never shown: a refetched row re-renders only the cells whose value changed, and the
+        // actions work on the row as it now is, so an edit (a new `update_date`) must count
+        // as a change here
+        getValue: (row) => ('update_date' in row ? (row.update_date ?? '') : ''),
         cellRenderer: WORKFLOW_ACTIVITY_ACTIONS_RENDERER,
         cellRendererParams: { activity, entityType },
         pinned: ColumnPin.Right,

@@ -43,7 +43,7 @@ function isHDF5Signature(head: Uint8Array): boolean {
  * A ceiling here turns that into a sentence. It is deliberately not the
  * theoretical maximum: leaving room for h5wasm's own working set is the point.
  */
-const MAX_ASSET_BYTES = 2 * 1024 * 1024 * 1024;
+export const MAX_ASSET_BYTES = 2 * 1024 * 1024 * 1024;
 
 function formatSize(bytes: number): string {
   return `${(bytes / 1024 / 1024 / 1024).toFixed(1)} GiB`;
@@ -60,6 +60,34 @@ function tooLargeError(bytes: number, exact: boolean): AssetFetchError {
     0,
     `Asset is too large to open in the browser (${size}; limit ${formatSize(MAX_ASSET_BYTES)})`
   );
+}
+
+/**
+ * How long a download may go with nothing arriving before it is given up on. A connection that
+ * dies mid-transfer, as a phone's hotspot can, often never says so: the read just never returns,
+ * and whatever waits on it waits for good. A slow download that keeps arriving is left alone.
+ */
+export const STALL_MS = 30_000;
+
+/** Aborts a download with an error saying why once `STALL_MS` pass without `alive` being called. */
+function watchForStall() {
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const alive = () => {
+    clearTimeout(timer);
+    timer = setTimeout(
+      () =>
+        controller.abort(
+          new AssetFetchError(
+            0,
+            `The download stopped: nothing arrived for ${STALL_MS / 1000} seconds`
+          )
+        ),
+      STALL_MS
+    );
+  };
+  alive();
+  return { signal: controller.signal, alive, stop: () => clearTimeout(timer) };
 }
 
 type EmscriptenFS = Awaited<typeof ready>['FS'];
@@ -127,12 +155,15 @@ function streamToFS({
   body,
   total,
   onProgress,
+  onChunk,
 }: {
   FS: EmscriptenFS;
   filename: string;
   body: ReadableStream<Uint8Array>;
   total: number | null;
   onProgress?: (progress: DownloadProgress) => void;
+  /** Told each time bytes arrive. */
+  onChunk?: () => void;
 }): Promise<void> {
   return publishToFS(FS, filename, async (partial) => {
     const reader = body.getReader();
@@ -150,6 +181,7 @@ function streamToFS({
       for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
+        onChunk?.();
         // A response that declared no length gets checked as it arrives; one
         // that did was already rejected before the first read. Checked before
         // the write, so the chunk that would cross the limit is never stored.
@@ -272,46 +304,57 @@ export async function fetchToFS({
 
   if (await restoreFromCache({ FS, cache, url, filename })) return { filename };
 
-  const fresh = await fetch(url, { headers });
-  if (!fresh.ok) {
-    throw new AssetFetchError(fresh.status, `Asset fetch failed (${fresh.status})`);
-  }
-  if (!fresh.body) {
-    throw new AssetFetchError(0, 'Asset response has no body stream');
-  }
-  const total = contentLength(fresh);
-  // Cheapest place to stop: the server has told us the size and we have not
-  // written a byte yet.
-  if (total && total > MAX_ASSET_BYTES) throw tooLargeError(total, true);
-
-  // Stream the *live network response* into the FS while tee-ing a second branch into CacheStorage,
-  // so progress reflects the actual download (not a fast local cache read). The network is the
-  // bottleneck, so the tee's buffers stay near-empty and memory stays at ~chunk + final file size.
-  //
-  // Only a response that declares its length is cached at all: the entry is checked against that
-  // length on the way back out, and one carrying no length could not be told apart from a
-  // truncated copy of itself.
-  let body = fresh.body;
+  const stall = watchForStall();
   let cachePut: Promise<void> | null = null;
-  if (total) {
-    const [toFs, toCache] = fresh.body.tee();
-    // Best-effort cross-session cache. The .catch keeps this from becoming an unhandled rejection if
-    // the FS-write loop below throws and we bail before awaiting it; a failed write just re-downloads.
-    cachePut = cache
-      .put(url, new Response(toCache, { headers: fresh.headers, status: 200 }))
-      .catch(() => {});
-    body = toFs;
-  }
-
   try {
-    await streamToFS({ FS, filename, body, total, onProgress });
+    const fresh = await fetch(url, { headers, signal: stall.signal });
+    stall.alive();
+    if (!fresh.ok) {
+      throw new AssetFetchError(fresh.status, `Asset fetch failed (${fresh.status})`);
+    }
+    if (!fresh.body) {
+      throw new AssetFetchError(0, 'Asset response has no body stream');
+    }
+    const total = contentLength(fresh);
+    // Cheapest place to stop: the server has told us the size and we have not
+    // written a byte yet.
+    if (total && total > MAX_ASSET_BYTES) throw tooLargeError(total, true);
+
+    // Stream the *live network response* into the FS while tee-ing a second branch into
+    // CacheStorage, so progress reflects the actual download (not a fast local cache read). The
+    // network is the bottleneck, so the tee's buffers stay near-empty and memory stays at ~chunk +
+    // final file size.
+    //
+    // Only a response that declares its length is cached at all: the entry is checked against that
+    // length on the way back out, and one carrying no length could not be told apart from a
+    // truncated copy of itself.
+    let body = fresh.body;
+    if (total) {
+      const [toFs, toCache] = fresh.body.tee();
+      // Best-effort cross-session cache. The .catch keeps this from becoming an unhandled rejection
+      // if the FS-write loop below throws and we bail before awaiting it; a failed write just
+      // re-downloads.
+      cachePut = cache
+        .put(url, new Response(toCache, { headers: fresh.headers, status: 200 }))
+        .catch(() => {});
+      body = toFs;
+    }
+
+    try {
+      await streamToFS({ FS, filename, body, total, onProgress, onChunk: stall.alive });
+    } catch (err) {
+      // Anything the put committed is a partial of the same download. Awaited before the delete
+      // because it would otherwise be free to land after it; the tee's source has ended by here, so
+      // it settles at once.
+      await cachePut;
+      await cache.delete(url);
+      throw err;
+    }
   } catch (err) {
-    // Anything the put committed is a partial of the same download. Awaited before the delete
-    // because it would otherwise be free to land after it; the tee's source has ended by here, so
-    // it settles at once.
-    await cachePut;
-    await cache.delete(url);
-    throw err;
+    // However the abort surfaced, as the read's rejection or the fetch's, it says why.
+    throw stall.signal.aborted ? stall.signal.reason : err;
+  } finally {
+    stall.stop();
   }
 
   // Awaited: a second population stored in the same file opens its own worker as soon as this one

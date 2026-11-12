@@ -62,7 +62,7 @@ export function PopulationSelect({
         className={
           chrome
             ? cn(
-                'inline-flex h-auto items-center gap-1 rounded-full border-0 px-3 py-1.5 text-sm font-semibold backdrop-blur-sm transition-colors focus-visible:outline-none',
+                'inline-flex h-auto min-w-0 items-center gap-1 rounded-full border-0 px-3 py-1.5 text-sm font-semibold backdrop-blur-sm transition-colors focus-visible:outline-none',
                 theme
                   ? 'shadow-none ring-0 hover:brightness-110'
                   : 'bg-white text-primary-9 shadow-md ring-1 ring-black/5 hover:bg-neutral-50',
@@ -80,10 +80,16 @@ export function PopulationSelect({
       >
         {chrome ? (
           <>
-            <span className={cn(!theme && 'text-neutral-400')} style={mutedStyle}>
+            {/* Narrow, the word gives way first, then the name. */}
+            <span
+              className={cn('shrink-[1000] truncate', !theme && 'text-neutral-400')}
+              style={mutedStyle}
+            >
               Population
             </span>
-            <span>{value ?? '—'}</span>
+            <span className="truncate" title={value}>
+              {value ?? '—'}
+            </span>
           </>
         ) : (
           <SelectValue />

@@ -49,6 +49,7 @@ const registry = vi.hoisted(() => {
     IDLE,
     acquired: [] as string[],
     released: [] as string[],
+    retried: [] as string[],
     geometryAsked: [] as string[],
     /** What each session's read was asked for, by key. */
     geometryOptions: new Map<string, NodeGeometryOptions | undefined>(),
@@ -58,6 +59,9 @@ const registry = vi.hoisted(() => {
     },
     release(key: string) {
       this.released.push(key);
+    },
+    retry(key: string) {
+      this.retried.push(key);
     },
     subscribe(key: string, listener: () => void) {
       const existing = sessions.get(key);
@@ -99,6 +103,7 @@ const registry = vi.hoisted(() => {
       sessions.clear();
       this.acquired = [];
       this.released = [];
+      this.retried = [];
       this.geometryAsked = [];
       this.geometryOptions.clear();
     },
@@ -270,6 +275,19 @@ describe('usePopulationsPlacement', () => {
     expect(registry.released).toEqual([key(CORTEX), key(INPUTS)]);
   });
 
+  it('has the registry read again what could not be read', async () => {
+    const { result } = render([CORTEX, INPUTS]);
+    act(() => {
+      registry.settle(key(CORTEX), 'ready', geometry(1));
+      registry.settle(key(INPUTS), 'error');
+    });
+    await waitFor(() => expect(result.current.settled).toBe(true));
+
+    act(() => result.current.retry());
+
+    expect(registry.retried).toContain(key(INPUTS));
+  });
+
   it('asks again for a population that failed once the list changes', async () => {
     const { result, rerender } = render([CORTEX, INPUTS]);
     act(() => {
@@ -373,6 +391,7 @@ describe('usePopulationsPlacement', () => {
       failures: new Map(),
       positionless: new Set(),
       settled: true,
+      retry: expect.any(Function),
       download: null,
     });
     expect(registry.acquired).toEqual([]);

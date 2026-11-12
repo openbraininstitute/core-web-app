@@ -10,7 +10,7 @@ import {
 } from '@/ui/molecules/select';
 import { cn } from '@/utils/css-class';
 
-import type { NodePopulation, ViewMode } from '@/features/circuit-nodes/types';
+import type { ViewMode } from '@/features/circuit-nodes/types';
 
 import styles from '@/features/circuit-nodes/circuit-nodes-table.module.css';
 
@@ -25,41 +25,60 @@ const contentCls = 'bg-white border-gray-200';
 
 const itemCls = 'text-primary-9 text-sm data-[state=checked]:font-bold';
 
-type Props = {
+type ViewProps = {
   view: ViewMode;
   onViewChange: (view: ViewMode) => void;
-  populations: NodePopulation[];
+  /** Whether the circuit has a connectivity matrix to show. */
+  connectivity?: boolean;
+};
+
+/** What a nodes table shows: its rows, or the circuit's connectivity matrix. */
+export function NodesViewSelect({ view, onViewChange, connectivity = false }: ViewProps) {
+  return (
+    <Select value={view} onValueChange={(v) => onViewChange(v as ViewMode)}>
+      <SelectTrigger
+        className={cn(triggerCls, styles.viewSelect, 'px-3')}
+        icon={<RiArrowDownSLine className="text-primary-9 size-4 opacity-100" />}
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent className={contentCls}>
+        <SelectItem value="nodes" className={itemCls}>
+          Nodes
+        </SelectItem>
+        <SelectItem value="connectivity" disabled={!connectivity} className={itemCls}>
+          {connectivity ? 'Connectivity' : 'Connectivity (no matrix)'}
+        </SelectItem>
+        <SelectItem value="edges" disabled className={itemCls}>
+          Edges (coming soon)
+        </SelectItem>
+      </SelectContent>
+    </Select>
+  );
+}
+
+type Props = ViewProps & {
+  /** The node populations, or the matrices' edge populations while connectivity is on show. */
+  populations: readonly { name: string; type?: string }[];
   populationName: string | undefined;
   onPopulationChange: (name: string) => void;
+  /** Its right end, for what a table beside it puts there: its count and its buttons. */
+  slotRef?: (element: HTMLDivElement | null) => void;
 };
 
 export function NodesToolbar({
   view,
   onViewChange,
+  connectivity,
   populations,
   populationName,
   onPopulationChange,
+  slotRef,
 }: Props) {
   return (
     <div className={styles.toolbar}>
       <div className={styles.toolbarGroup}>
-        <span className={styles.toolbarLabel}>View</span>
-        <Select value={view} onValueChange={(v) => onViewChange(v as ViewMode)}>
-          <SelectTrigger
-            className={cn(triggerCls, styles.viewSelect)}
-            icon={<RiArrowDownSLine className="text-primary-9 size-4 opacity-100" />}
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className={contentCls}>
-            <SelectItem value="nodes" className={itemCls}>
-              Nodes
-            </SelectItem>
-            <SelectItem value="edges" disabled className={itemCls}>
-              Edges (coming soon)
-            </SelectItem>
-          </SelectContent>
-        </Select>
+        <NodesViewSelect view={view} onViewChange={onViewChange} connectivity={connectivity} />
       </div>
 
       <div className={cn(styles.toolbarGroup, styles.toolbarGroupGrow)}>
@@ -70,6 +89,7 @@ export function NodesToolbar({
           onChange={onPopulationChange}
         />
       </div>
+      {slotRef && <div ref={slotRef} className={styles.toolbarSlot} />}
     </div>
   );
 }

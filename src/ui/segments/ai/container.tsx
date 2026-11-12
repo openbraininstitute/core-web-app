@@ -82,7 +82,7 @@ export function Container() {
                   updateState(isFullscreen ? PanelState.Expanded : PanelState.Fullscreen)
                 }
                 aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-                onCollapse={() => updateState(PanelState.Collapsed)}
+                onClose={() => updateState(PanelState.Collapsed)}
               />
             </HydrateWrapper>
           </div>
