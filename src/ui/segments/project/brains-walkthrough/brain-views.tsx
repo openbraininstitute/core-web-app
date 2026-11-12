@@ -289,7 +289,9 @@ export function VirtualLabsPreview() {
         ref={videoRef}
         src={VIRTUAL_LABS_VIDEO.src}
         poster={VIRTUAL_LABS_VIDEO.poster}
-        autoPlay
+        // Not autoPlay: the tour's playback starts it from the beginning once the intro is over, rather than it
+        // playing on behind the intro and being sent back to its start as the screen comes in.
+        preload="auto"
         muted
         loop
         playsInline
