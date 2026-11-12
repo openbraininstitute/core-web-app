@@ -19,6 +19,8 @@ export interface IBuildColDefsOptions {
   hidden: Set<string>;
   /** user-resized widths (take precedence over the schema's width spec) */
   columnWidths: Record<string, number>;
+  /** where fitted columns start, before their first fit: their last fit's widths */
+  fittedStartWidths?: ReadonlyMap<string, number>;
   /** prepend the expand-chevron column (grids with a detail runtime) */
   withExpandColumn?: boolean;
   /** when `columnId` matches a data column the chevron hosts inside that cell instead */
@@ -50,7 +52,7 @@ export function buildColDefs<Row>(
   columns: Array<IResolvedColumn<Row>>,
   options: IBuildColDefsOptions
 ): Array<ColDef<Row>> {
-  const { hidden, columnWidths, withExpandColumn, expandColumn } = options;
+  const { hidden, columnWidths, fittedStartWidths, withExpandColumn, expandColumn } = options;
 
   const hostColumnId =
     withExpandColumn && expandColumn?.columnId
@@ -80,11 +82,16 @@ export function buildColDefs<Row>(
         unit: c.unit,
         sortable: !!c.sortable,
         filter: filterParams,
+        fitted: !!c.width?.fitContent,
       },
-      width: userWidth ?? c.width?.width,
+      width:
+        userWidth ??
+        (c.width?.fitContent ? fittedStartWidths?.get(c.id) : undefined) ??
+        c.width?.width,
       minWidth: c.width?.minWidth,
-      // a user-resized width must win over any flex sizing
-      flex: userWidth != null ? undefined : c.width?.flex,
+      // a user-resized width must win over any flex sizing, and a fitted column takes none:
+      // the renderer sizes it to its content
+      flex: userWidth != null || c.width?.fitContent ? undefined : c.width?.flex,
       resizable: c.width?.resizable ?? true,
       // position-pinned columns (`movable: false`) keep their declared slot — no drag handle
       suppressMovable: c.movable === false,
@@ -117,8 +124,14 @@ export function buildColDefs<Row>(
       };
     } else if (c.cellRenderer) {
       colDef.cellRenderer = AgCellHost;
-      colDef.cellRendererParams = { rendererKey: c.cellRenderer, ...c.cellRendererParams };
+      colDef.cellRendererParams = {
+        rendererKey: c.cellRenderer,
+        ...c.cellRendererParams,
+        fitted: !!c.width?.fitContent,
+      };
     }
+
+    if (c.ownHoverCard) colDef.context = { ownHoverCard: true };
 
     if (filterParams) {
       colDef.suppressHeaderMenuButton = true;

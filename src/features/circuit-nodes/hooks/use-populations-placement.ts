@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { nodesWorkerRegistry } from '@/features/circuit-nodes/hooks/nodes-worker-manager';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
@@ -54,6 +54,8 @@ type Result = {
    * `settled`.
    */
   download: DownloadProgress | null;
+  /** Reads again the populations whose node files could not be read. */
+  retry: () => void;
 };
 
 /**
@@ -281,11 +283,20 @@ export function usePopulationsPlacement({
     return { placed, failures, positionless: positionless ?? NO_NAMES, settled: true };
   }, [populations, outcomes, circuitId, circuitAssetId]);
 
+  // The sessions of what failed stay held, so the effect above hears them come back. The registry
+  // leaves one that did not fail alone.
+  const retry = useCallback(() => {
+    if (!circuitAssetId) return;
+    for (const { name } of populations) {
+      nodesWorkerRegistry.retry(nodesSessionKey(circuitId, circuitAssetId, name));
+    }
+  }, [circuitId, circuitAssetId, populations]);
+
   return useMemo(
     // Nothing is left to wait for once everything is placed, whatever the last
     // reading said.
-    () => ({ ...placement, download: placement.settled ? null : download }),
-    [placement, download]
+    () => ({ ...placement, download: placement.settled ? null : download, retry }),
+    [placement, download, retry]
   );
 }
 

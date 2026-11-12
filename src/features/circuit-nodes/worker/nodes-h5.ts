@@ -1,12 +1,14 @@
 import { Dataset, File, Group } from 'h5wasm';
 import { match } from 'ts-pattern';
 
+import { csvLines } from '@/features/circuit-nodes/nodes-csv';
 import {
   type ColumnFilter,
   type ColumnKind,
   ColumnKindDict,
   type ColumnMeta,
   type ColumnValues,
+  type CsvRequest,
   type DerivedColumn,
   type FilterModel,
   type GetRowsRequest,
@@ -31,6 +33,8 @@ const MORPHOLOGY_COLUMN = 'morphology';
 
 const LOADED_COLUMN_CACHE_SIZE = 12;
 const VIEW_CACHE_SIZE = 8;
+/** Rows to a part of a CSV: a few megabytes of text. */
+const CSV_BLOCK_ROWS = 50_000;
 
 type CategoricalHandle = {
   kind: 'categorical';
@@ -314,6 +318,16 @@ export class NodesSession {
     return this.resolveView(viewKey, [], entries).slice();
   }
 
+  /** The rows a sort and filter show, by node id in their order; null when that is every row in node order. */
+  getRowOrder(sort: SortItem[], filter: FilterModel): Uint32Array | null {
+    const sortItems = sort.filter((s) => this.columnIndex.has(s.column));
+    const filterEntries = Object.entries(filter).filter(([col]) => this.columnIndex.has(col));
+    const viewKey = this.buildViewKey(sortItems, filterEntries);
+    if (viewKey === null) return null;
+    // A copy, so the caller can transfer it without detaching the cached view.
+    return this.resolveView(viewKey, sortItems, filterEntries).slice();
+  }
+
   /** Where a node falls among the rows a sort and filter show; -1 where the filter leaves it out. */
   getRowIndex(nodeId: number, sort: SortItem[], filter: FilterModel): number {
     const sortItems = sort.filter((s) => this.columnIndex.has(s.column));
@@ -364,6 +378,56 @@ export class NodesSession {
     }
 
     return { rows, total };
+  }
+
+  /**
+   * The rows a sort and filter list, as CSV in parts of `blockRows` rows, the first under the
+   * columns' names: the cells `getRows` gives, in its order. Each part comes with the rows
+   * written so far and their total.
+   */
+  *csvParts(
+    { sort, filter, columns }: CsvRequest,
+    blockRows = CSV_BLOCK_ROWS
+  ): Generator<{ part: Uint8Array<ArrayBuffer>; done: number; total: number }> {
+    const sortItems = (sort ?? []).filter((s) => this.columnIndex.has(s.column));
+    const filterEntries = Object.entries(filter ?? {}).filter(([col]) => this.columnIndex.has(col));
+    const viewKey = this.buildViewKey(sortItems, filterEntries);
+    const view = viewKey === null ? null : this.resolveView(viewKey, sortItems, filterEntries);
+    const total = view ? view.length : this.rowCount;
+
+    // A view gathers from whole columns, more of them than the column cache holds: held
+    // here for the length of the export, so that no block reads one from the file again.
+    const held = new Map<string, LoadedColumn>();
+    if (view) {
+      for (const name of columns) {
+        const kind = this.columnIndex.get(name)?.kind;
+        if (kind === 'categorical' || kind === 'numeric' || kind === 'string') {
+          held.set(name, this.loadColumn(name));
+        }
+      }
+    }
+
+    const encoder = new TextEncoder();
+    let text = csvLines(
+      columns.map((name) => [name]),
+      1
+    );
+    if (total === 0) {
+      yield { part: encoder.encode(text), done: 0, total };
+      return;
+    }
+    let start = 0;
+    do {
+      const end = Math.min(total, start + blockRows);
+      const indices = view ? view.subarray(start, end) : range(start, end);
+      const cells = columns.map((name) =>
+        this.readColumnPage(name, indices, view !== null, start, end, held.get(name))
+      );
+      text += csvLines(cells, end - start);
+      yield { part: encoder.encode(text), done: end, total };
+      text = '';
+      start = end;
+    } while (start < total);
   }
 
   private buildViewKey(
@@ -569,7 +633,8 @@ export class NodesSession {
     indices: number[] | Uint32Array,
     useGather: boolean,
     sliceStart: number,
-    sliceEnd: number
+    sliceEnd: number,
+    held?: LoadedColumn
   ): (string | number)[] {
     const handle = this.columnIndex.get(name);
     if (!handle) return new Array(indices.length).fill('');
@@ -602,7 +667,7 @@ export class NodesSession {
       return decodeSliceForPage(handle, sliced);
     }
 
-    const data = this.loadColumn(name);
+    const data = held ?? this.loadColumn(name);
     const out = new Array<string | number>(indices.length);
     if (handle.kind === 'categorical') {
       const arr = data as Uint32Array;
@@ -717,11 +782,23 @@ function identityIndices(n: number): Uint32Array {
   return arr;
 }
 
+/** What h5wasm reads an integer column of up to 32 bits into: every value fits a JS number. */
+function isSmallIntegerArray(
+  raw: unknown
+): raw is Int8Array | Uint8Array | Int16Array | Uint16Array | Int32Array | Uint32Array {
+  return (
+    raw instanceof Int8Array ||
+    raw instanceof Uint8Array ||
+    raw instanceof Int16Array ||
+    raw instanceof Uint16Array ||
+    raw instanceof Int32Array ||
+    raw instanceof Uint32Array
+  );
+}
+
 function ensureUint32(raw: unknown): Uint32Array {
   if (raw instanceof Uint32Array) return raw;
-  if (raw instanceof Int32Array || raw instanceof Uint16Array || raw instanceof Int16Array) {
-    return Uint32Array.from(raw as ArrayLike<number>);
-  }
+  if (isSmallIntegerArray(raw)) return Uint32Array.from(raw);
   if (raw instanceof BigUint64Array || raw instanceof BigInt64Array) {
     const out = new Uint32Array(raw.length);
     for (let i = 0; i < raw.length; i++) out[i] = Number(raw[i]);
@@ -735,14 +812,7 @@ function ensureUint32(raw: unknown): Uint32Array {
 function ensureNumericArray(raw: unknown): NumericColumn {
   if (raw instanceof Float64Array) return raw;
   if (raw instanceof Float32Array) return raw;
-  if (
-    raw instanceof Int32Array ||
-    raw instanceof Uint32Array ||
-    raw instanceof Int16Array ||
-    raw instanceof Uint16Array
-  ) {
-    return Float64Array.from(raw as ArrayLike<number>);
-  }
+  if (isSmallIntegerArray(raw)) return Float64Array.from(raw);
   if (raw instanceof BigInt64Array || raw instanceof BigUint64Array) {
     const out = new Float64Array(raw.length);
     for (let i = 0; i < raw.length; i++) {
@@ -993,14 +1063,7 @@ function decodeSliceForPage(handle: ColumnHandle, sliced: unknown): (string | nu
       // Exact text, which a number past 2^53 would round.
       return Array.from(sliced, (v) => v.toString());
     }
-    if (
-      sliced instanceof Int32Array ||
-      sliced instanceof Uint32Array ||
-      sliced instanceof Int16Array ||
-      sliced instanceof Uint16Array
-    ) {
-      return Array.from(sliced);
-    }
+    if (isSmallIntegerArray(sliced)) return Array.from(sliced);
     if (Array.isArray(sliced)) return sliced.map((v) => Number(v));
     return [];
   }

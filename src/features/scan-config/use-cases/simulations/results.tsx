@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { get } from 'es-toolkit/compat';
+import { useSearchParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { match } from 'ts-pattern';
 
@@ -12,13 +13,10 @@ import { runTask } from '@/api/one/runner';
 import { ObiOneTaskTypeDict } from '@/api/one/types/task';
 import { Loader } from '@/components/loader';
 import { useAppNotification } from '@/components/notification';
-import {
-  listAllChildren as listAllSimulationChildren,
-  listExecutionsBySimulationId,
-} from '@/entity-configuration/domain/simulation/simulation-campaign';
-import { getLatestSimulationExecution } from '@/entity-configuration/domain/simulation/status-utils';
+import { listAllChildren as listAllSimulationChildren } from '@/entity-configuration/domain/simulation/simulation-campaign';
 import { resolveSimulationLaunchTarget } from '@/entity-configuration/domain/simulation/utils';
 import { NodesTableKeeper } from '@/features/circuit-nodes/components/kept-nodes-grid';
+import { TableMatrixKeeper } from '@/features/circuit-nodes/connectivity/table-matrix';
 import { NodesSessionKeeper } from '@/features/circuit-nodes/hooks/nodes-session-keeper';
 import { isLowCreditsError, useLowCredits } from '@/features/low-credits';
 import {
@@ -34,6 +32,7 @@ import {
 } from '@/features/scan-config/components/simulation-files';
 import { InOutFilesColumnSkeleton } from '@/features/scan-config/components/skeletons/columns';
 import { errorRegistry } from '@/features/scan-config/error-registry';
+import { ScanConfigItemSearchParam } from '@/features/scan-config/helpers';
 import {
   ActivityCustomFileRenderer,
   isAssetBackedFile,
@@ -45,7 +44,9 @@ import {
 } from '@/features/scan-config/use-cases/simulations/report-picker';
 import { ScanParameterPicker } from '@/features/scan-config/use-cases/simulations/scan-parameter-picker';
 import { SimulationsResultsUiAdapter } from '@/features/scan-config/use-cases/simulations/ui-adapter';
+import { simulationJobIdQueryOptions } from '@/features/scan-config/use-cases/simulations/use-simulation-progress';
 import { useSimulationsTabState } from '@/features/scan-config/use-cases/simulations/use-simulations-tab-state';
+import { simulationCompartmentSets } from '@/features/sonata-viewer/compartment-sets';
 import { SimulationReportsProvider } from '@/features/sonata-viewer/simulation-reports-context';
 import { configTimeline } from '@/features/spike-viewer/config-timeline';
 import { SimulationProvider } from '@/features/spike-viewer/simulation-context';
@@ -121,7 +122,10 @@ export function SimulationsTab({
     jobIdBySimulationId: jobIdMap,
   } = state;
 
-  const activeSimulation = pickedSimulation ?? simulations[0] ?? null;
+  // a link can name the simulation to open on (the workflows table's status cards); a pick wins
+  const linkedId = useSearchParams().get(ScanConfigItemSearchParam);
+  const linkedSimulation = linkedId ? simulations.find(({ id }) => id === linkedId) : undefined;
+  const activeSimulation = pickedSimulation ?? linkedSimulation ?? simulations[0] ?? null;
   const {
     modal: offlineTokenConsentModal,
     ensure: ensureOfflineTokenConsent,
@@ -207,6 +211,35 @@ export function SimulationsTab({
     },
     enabled: !!activeSimulation && !!nodeSetsAsset,
   });
+  // The simulation's compartment sets file: the locations its morphology locations blocks
+  // resolved to, which its compartment reports record, each set beside its block.
+  const compartmentSetsAsset = activeSimulation?.assets?.find(
+    (a) => a.label === AssetLabel.compartment_sets
+  );
+  const { data: compartmentSetsFile } = useQuery({
+    queryKey: [
+      'simulation-compartment-sets',
+      { simulationId: activeSimulation?.id, assetId: compartmentSetsAsset?.id },
+    ],
+    queryFn: async () => {
+      const req = await downloadAsset({
+        ctx: context,
+        entityType: EntityTypeDict.Simulation,
+        // biome-ignore lint/style/noNonNullAssertion: query is only enabled when both are available
+        entityId: activeSimulation!.id,
+        // biome-ignore lint/style/noNonNullAssertion: query is only enabled when both are available
+        id: compartmentSetsAsset!.id,
+        asRawResponse: true,
+      });
+      return (await req.json()) as unknown;
+    },
+    enabled: !!activeSimulation && !!compartmentSetsAsset,
+  });
+  const compartmentSets = useMemo(
+    () => simulationCompartmentSets(compartmentSetsFile, coordinateConfig, configSchema),
+    [compartmentSetsFile, coordinateConfig, configSchema]
+  );
+
   // The simulation on show, picked by its scan parameters: in the bar over a
   // results side panel, and in the header of the viewers that place it.
   const simulationPicker =
@@ -266,18 +299,13 @@ export function SimulationsTab({
     ? jobIdMap.get(activeSimulation.id)
     : undefined;
 
-  const { data: recoveredJobId } = useQuery({
-    queryKey: ['scan-config-simulation-execution-id', context, activeSimulation?.id],
-    queryFn: async () => {
-      const executions = await listExecutionsBySimulationId({
-        // biome-ignore lint/style/noNonNullAssertion: query is only enabled when activeSimulation exists
-        simulationId: activeSimulation!.id,
-        context,
-      });
-      return getLatestSimulationExecution({ executions })?.execution_id ?? null;
-    },
-    enabled: Boolean(activeSimulation?.id) && !activeSimulationJobIdFromLaunch,
-  });
+  const { data: recoveredJobId } = useQuery(
+    simulationJobIdQueryOptions({
+      simulationId: activeSimulation?.id,
+      context,
+      enabled: !activeSimulationJobIdFromLaunch,
+    })
+  );
 
   const activeJobId = activeSimulationJobIdFromLaunch ?? recoveredJobId ?? undefined;
   const taskLogsViewerEnabled = !!activeSimulation && !!activeJobId;
@@ -447,120 +475,125 @@ export function SimulationsTab({
   return (
     // The viewers are remounted for each report and simulation: the cells they
     // read stay open between them, so a population is read once, and the table
-    // over them stays up while the next view loads.
+    // or matrix over them stays up while the next view loads.
     <NodesSessionKeeper>
       <NodesTableKeeper>
-        <SimulationsResultsUiAdapter
-          simulationPicker={simulationPicker}
-          reportPicker={
-            <ReportPicker
-              files={reportFiles}
-              selectedAssetId={shownReport?.asset.id}
-              onSelect={act.onSelectedFileChange}
-              reports={simConfig?.reports}
-            />
-          }
-          campaignId={campaignId}
-          loading={loading}
-          simulations={simulations}
-          activeSimulationId={activeSimulation?.id}
-          selectedSimulationIds={resolvedSelectedSimulationIds}
-          selectableSimulationIds={selectableSimulationIds}
-          simRequestInProgress={simRequestInProgress}
-          context={context}
-          statusMap={localStatusMap}
-          launchSimBtnLabelPrefix={launchSimBtnLabelPrefix}
-          onToggleSelectAll={onToggleSelectAll}
-          onActiveSimulationChange={onActiveSimulationChange}
-          onSelectedForSimChange={onSelectedForSimChange}
-          onSimulationStatusLoad={onSimulationStatusLoad}
-          onRun={onLaunch}
-          middle={
-            <div className="h-full bg-white! w-full">
-              {loading ? (
-                <InOutFilesColumnSkeleton />
-              ) : (
-                !!activeSimulation &&
-                activeSimulationExecStatus && (
-                  <SimulationFiles
-                    simulation={activeSimulation}
-                    execStatus={activeSimulationExecStatus}
-                    selectedFile={selectedFile}
-                    context={context}
-                    onSelect={act.onSelectedFileChange}
-                    onLoadingChange={setFilesLoading}
+        <TableMatrixKeeper>
+          <SimulationsResultsUiAdapter
+            simulationPicker={simulationPicker}
+            reportPicker={
+              <ReportPicker
+                files={reportFiles}
+                selectedAssetId={shownReport?.asset.id}
+                onSelect={act.onSelectedFileChange}
+                reports={simConfig?.reports}
+              />
+            }
+            campaignId={campaignId}
+            loading={loading}
+            simulations={simulations}
+            activeSimulationId={activeSimulation?.id}
+            selectedSimulationIds={resolvedSelectedSimulationIds}
+            selectableSimulationIds={selectableSimulationIds}
+            simRequestInProgress={simRequestInProgress}
+            context={context}
+            statusMap={localStatusMap}
+            jobIdBySimulationId={jobIdMap}
+            launchSimBtnLabelPrefix={launchSimBtnLabelPrefix}
+            onToggleSelectAll={onToggleSelectAll}
+            onActiveSimulationChange={onActiveSimulationChange}
+            onSelectedForSimChange={onSelectedForSimChange}
+            onSimulationStatusLoad={onSimulationStatusLoad}
+            onRun={onLaunch}
+            middle={
+              <div className="h-full w-full">
+                {loading ? (
+                  <InOutFilesColumnSkeleton />
+                ) : (
+                  !!activeSimulation &&
+                  activeSimulationExecStatus && (
+                    <SimulationFiles
+                      simulation={activeSimulation}
+                      execStatus={activeSimulationExecStatus}
+                      selectedFile={selectedFile}
+                      context={context}
+                      onSelect={act.onSelectedFileChange}
+                      onLoadingChange={setFilesLoading}
+                      jobId={activeJobId}
+                      reports={simConfig?.reports}
+                      inputs={simConfig?.inputs}
+                    />
+                  )
+                )}
+              </div>
+            }
+            right={
+              <>
+                {/* Arriving, nothing is on show until the result's files are in to pick from. */}
+                {!selectedFile && filesLoading && (
+                  <div className="flex h-full w-full items-center justify-center">
+                    <Loader className="text-neutral-3" />
+                  </div>
+                )}
+                {selectedFile?.renderer === ActivityCustomFileRenderer.TaskConfigurationViewer && (
+                  <TaskConfigurationViewer
                     jobId={activeJobId}
-                    reports={simConfig?.reports}
+                    workspace={context}
+                    configId={activeSimulation?.id}
+                    enabled={taskLogsViewerEnabled}
+                    skipStream
+                    campaignOriginAction={campaignOriginAction}
+                    isCampaignIdChanged={isCampaignIdChanged}
                   />
-                )
-              )}
-            </div>
-          }
-          right={
-            <>
-              {/* Arriving, nothing is on show until the result's files are in to pick from. */}
-              {!selectedFile && filesLoading && (
-                <div className="flex h-full w-full items-center justify-center">
-                  <Loader className="text-neutral-3" />
-                </div>
-              )}
-              {selectedFile?.renderer === ActivityCustomFileRenderer.TaskConfigurationViewer && (
-                <TaskConfigurationViewer
-                  jobId={activeJobId}
-                  workspace={context}
-                  configId={activeSimulation?.id}
-                  enabled={taskLogsViewerEnabled}
-                  skipStream
-                  campaignOriginAction={campaignOriginAction}
-                  isCampaignIdChanged={isCampaignIdChanged}
-                />
-              )}
-              {selectedFile?.renderer === ActivityCustomFileRenderer.TaskLogsViewer && (
-                <TaskLogsViewer
-                  jobId={activeJobId}
-                  workspace={context}
-                  configId={activeSimulation?.id}
-                  enabled={taskLogsViewerEnabled}
-                  skipStream={taskLogsShouldReadSnapshot}
-                  campaignOriginAction={campaignOriginAction}
-                  isCampaignIdChanged={isCampaignIdChanged}
-                />
-              )}
-              {selectedFile?.renderer === ActivityCustomFileRenderer.Default && (
-                <SimulationReportsProvider reports={simConfig?.reports ?? null}>
-                  {/* The spike viewer replays over the circuit that was scanned and
+                )}
+                {selectedFile?.renderer === ActivityCustomFileRenderer.TaskLogsViewer && (
+                  <TaskLogsViewer
+                    jobId={activeJobId}
+                    workspace={context}
+                    configId={activeSimulation?.id}
+                    enabled={taskLogsViewerEnabled}
+                    skipStream={taskLogsShouldReadSnapshot}
+                    campaignOriginAction={campaignOriginAction}
+                    isCampaignIdChanged={isCampaignIdChanged}
+                  />
+                )}
+                {selectedFile?.renderer === ActivityCustomFileRenderer.Default && (
+                  <SimulationReportsProvider reports={simConfig?.reports ?? null}>
+                    {/* The spike viewer replays over the circuit that was scanned and
                         spans its axis over the run window, neither of which is in the
                         file it is handed. Both already resolved above. */}
-                  <SimulationProvider
-                    model={model}
-                    run={simConfig?.run}
-                    neuronSets={neuronSets}
-                    simulationPicker={simulationPicker}
-                    timeline={timeline}
-                  >
-                    <FileViewer
-                      file={selectedFile}
-                      className="h-full w-full"
-                      context={context}
-                      loading={filesLoading}
-                    />
-                  </SimulationProvider>
-                </SimulationReportsProvider>
-              )}
-            </>
-          }
-        />
+                    <SimulationProvider
+                      model={model}
+                      run={simConfig?.run}
+                      neuronSets={neuronSets}
+                      compartmentSets={compartmentSets}
+                      simulationPicker={simulationPicker}
+                      timeline={timeline}
+                    >
+                      <FileViewer
+                        file={selectedFile}
+                        className="h-full w-full"
+                        context={context}
+                        loading={filesLoading}
+                      />
+                    </SimulationProvider>
+                  </SimulationReportsProvider>
+                )}
+              </>
+            }
+          />
 
-        <OfflineTokenConsentModal
-          open={offlineTokenConsentModal.open}
-          consentUrl={offlineTokenConsentModal.consentUrl}
-          onCancel={cancelOfflineTokenConsent}
-          onOpenConsent={() => openConsentLink(offlineTokenConsentModal.consentUrl)}
-        />
+          <OfflineTokenConsentModal
+            open={offlineTokenConsentModal.open}
+            consentUrl={offlineTokenConsentModal.consentUrl}
+            onCancel={cancelOfflineTokenConsent}
+            onOpenConsent={() => openConsentLink(offlineTokenConsentModal.consentUrl)}
+          />
 
-        {costConfirmationModal}
+          {costConfirmationModal}
 
-        {creditsModal}
+          {creditsModal}
+        </TableMatrixKeeper>
       </NodesTableKeeper>
     </NodesSessionKeeper>
   );

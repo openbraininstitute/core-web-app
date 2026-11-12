@@ -13,6 +13,8 @@ import type {
   PopulationMetadata,
   SonataReportMetadata,
   TimeConfig,
+  TraceFrames,
+  TraceValueStatistics,
 } from '../types';
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
@@ -262,22 +264,40 @@ class SonataWorkerImpl {
    * more cells there are, so the frames stay within {@link MAX_FRAME_VALUES}.
    */
   async getCellFrames(populationName: string, maxFrames: number): Promise<CellFrames> {
-    if (!this.metadata || !this.file) {
-      throw new Error('No file loaded. Call loadFile first.');
-    }
-    const pop = this.metadata.populations.find((p) => p.name === populationName);
-    const shape = this.shapes.get(populationName);
-    if (!pop || !shape) throw new Error(`Population "${populationName}" not found.`);
-    const { numTimesteps, numColumns } = shape;
-
+    const pop = this.getLoadedPopulation(populationName);
     // A cell's first column: the soma, in a compartment report.
     const columnOf = new Map<number, number>();
     pop.traces.forEach((trace, column) => {
       if (!columnOf.has(trace.nodeId)) columnOf.set(trace.nodeId, column);
     });
     const nodeIds = Uint32Array.from(columnOf.keys());
-    const columns = Array.from(columnOf.values());
+    const { times, values } = this.columnFrames(pop, Array.from(columnOf.values()), maxFrames);
+    return transfer({ nodeIds, times, values }, [nodeIds.buffer, times.buffer, values.buffer]);
+  }
 
+  /**
+   * The values of the traces asked for over the run, as frames, as {@link getCellFrames}
+   * gives each cell's first: a compartment report's compartments each, for a scene to play.
+   */
+  async getTraceFrames(
+    populationName: string,
+    maxFrames: number,
+    traceIndices: number[]
+  ): Promise<TraceFrames> {
+    const pop = this.getLoadedPopulation(populationName);
+    const { times, values } = this.columnFrames(pop, traceIndices, maxFrames);
+    return transfer({ times, values }, [times.buffer, values.buffer]);
+  }
+
+  /** The `columns` of the data matrix, every so many rows, frame by frame, within the frames' budget. */
+  private columnFrames(
+    pop: PopulationMetadata,
+    columns: number[],
+    maxFrames: number
+  ): { times: Float64Array; values: Float32Array } {
+    const populationName = pop.name;
+    // biome-ignore lint/style/noNonNullAssertion: the population was found loaded
+    const { numTimesteps, numColumns } = this.shapes.get(populationName)!;
     const budget = Math.max(2, Math.floor(MAX_FRAME_VALUES / Math.max(1, columns.length)));
     const stride = Math.max(1, Math.ceil(numTimesteps / Math.max(1, Math.min(maxFrames, budget))));
     const frames = Math.ceil(numTimesteps / stride);
@@ -294,7 +314,7 @@ class SonataWorkerImpl {
         }
       }
     });
-    return transfer({ nodeIds, times, values }, [nodeIds.buffer, times.buffer, values.buffer]);
+    return { times, values };
   }
 
   /**
@@ -307,22 +327,64 @@ class SonataWorkerImpl {
     spikeThreshold: number | null,
     window: [number, number] | null = null
   ): Promise<CellValueStatistics> {
-    if (!this.metadata || !this.file) {
-      throw new Error('No file loaded. Call loadFile first.');
-    }
-    const pop = this.metadata.populations.find((p) => p.name === populationName);
-    const shape = this.shapes.get(populationName);
-    if (!pop || !shape) throw new Error(`Population "${populationName}" not found.`);
-    const { numTimesteps, numColumns } = shape;
-
+    const pop = this.getLoadedPopulation(populationName);
     // A cell's first column: the soma, in a compartment report.
     const columnOf = new Map<number, number>();
     pop.traces.forEach((trace, column) => {
       if (!columnOf.has(trace.nodeId)) columnOf.set(trace.nodeId, column);
     });
     const nodeIds = Uint32Array.from(columnOf.keys());
-    const columns = Array.from(columnOf.values());
-    const cells = columns.length;
+    const found = this.columnStatistics(pop, Array.from(columnOf.values()), spikeThreshold, window);
+    const { mean, sd, min, max, spikes } = found;
+    const buffers = [nodeIds.buffer, mean.buffer, sd.buffer, min.buffer, max.buffer];
+    if (spikes) buffers.push(spikes.buffer);
+    return transfer({ nodeIds, ...found }, buffers);
+  }
+
+  /**
+   * Every column's statistics, as {@link getCellStatistics} works out a cell's
+   * from its first: each compartment's, in a compartment report.
+   */
+  async getTraceStatistics(
+    populationName: string,
+    spikeThreshold: number | null,
+    window: [number, number] | null = null
+  ): Promise<TraceValueStatistics> {
+    const pop = this.getLoadedPopulation(populationName);
+    const found = this.columnStatistics(
+      pop,
+      pop.traces.map((_, column) => column),
+      spikeThreshold,
+      window
+    );
+    const { mean, sd, min, max, spikes } = found;
+    const buffers = [mean.buffer, sd.buffer, min.buffer, max.buffer];
+    if (spikes) buffers.push(spikes.buffer);
+    return transfer(found, buffers);
+  }
+
+  private getLoadedPopulation(populationName: string): PopulationMetadata {
+    if (!this.metadata || !this.file) {
+      throw new Error('No file loaded. Call loadFile first.');
+    }
+    const pop = this.metadata.populations.find((p) => p.name === populationName);
+    if (!pop || !this.shapes.has(populationName)) {
+      throw new Error(`Population "${populationName}" not found.`);
+    }
+    return pop;
+  }
+
+  /** The statistics of the data matrix's `columns`, in their order, over the window. */
+  private columnStatistics(
+    pop: PopulationMetadata,
+    columns: number[],
+    spikeThreshold: number | null,
+    window: [number, number] | null
+  ): TraceValueStatistics {
+    const populationName = pop.name;
+    // biome-ignore lint/style/noNonNullAssertion: the population was found loaded
+    const { numTimesteps, numColumns } = this.shapes.get(populationName)!;
+    const count = columns.length;
 
     // The rows whose times fall in the window: every one without.
     const { startTime, timeStep } = pop.timeConfig;
@@ -331,16 +393,16 @@ class SonataWorkerImpl {
       ? Math.min(numTimesteps - 1, Math.floor((window[1] - startTime) / timeStep + 1e-9))
       : numTimesteps - 1;
     const steps = Math.max(0, last - first + 1);
-    const sum = new Float64Array(cells);
-    const squares = new Float64Array(cells);
-    const min = new Float64Array(cells).fill(Number.POSITIVE_INFINITY);
-    const max = new Float64Array(cells).fill(Number.NEGATIVE_INFINITY);
-    const spikes = spikeThreshold === null ? null : new Float64Array(cells);
-    const above = new Uint8Array(cells);
+    const sum = new Float64Array(count);
+    const squares = new Float64Array(count);
+    const min = new Float64Array(count).fill(Number.POSITIVE_INFINITY);
+    const max = new Float64Array(count).fill(Number.NEGATIVE_INFINITY);
+    const spikes = spikeThreshold === null ? null : new Float64Array(count);
+    const above = new Uint8Array(count);
     // A crossing on the window's first row counts against the row before it.
     if (spikeThreshold !== null && first > 0) {
       this.forEachRowBlock(populationName, first - 1, first - 1, 1, (block) => {
-        for (let c = 0; c < cells; c += 1) above[c] = block[columns[c]] >= spikeThreshold ? 1 : 0;
+        for (let c = 0; c < count; c += 1) above[c] = block[columns[c]] >= spikeThreshold ? 1 : 0;
       });
     }
     // Row by row, the order the matrix is stored in, a block of rows at a time.
@@ -349,7 +411,7 @@ class SonataWorkerImpl {
       for (let r = 0; r < rows; r += 1) {
         const t = firstRow + r;
         const row = r * numColumns;
-        for (let c = 0; c < cells; c += 1) {
+        for (let c = 0; c < count; c += 1) {
           const v = block[row + columns[c]];
           sum[c] += v;
           squares[c] += v * v;
@@ -363,9 +425,9 @@ class SonataWorkerImpl {
         }
       }
     });
-    const mean = new Float64Array(cells);
-    const sd = new Float64Array(cells);
-    for (let c = 0; c < cells; c += 1) {
+    const mean = new Float64Array(count);
+    const sd = new Float64Array(count);
+    for (let c = 0; c < count; c += 1) {
       if (steps === 0) {
         mean[c] = sd[c] = min[c] = max[c] = Number.NaN;
         continue;
@@ -373,9 +435,7 @@ class SonataWorkerImpl {
       mean[c] = sum[c] / steps;
       sd[c] = Math.sqrt(Math.max(0, squares[c] / steps - mean[c] * mean[c]));
     }
-    const buffers = [nodeIds.buffer, mean.buffer, sd.buffer, min.buffer, max.buffer];
-    if (spikes) buffers.push(spikes.buffer);
-    return transfer({ nodeIds, mean, sd, min, max, spikes }, buffers);
+    return { mean, sd, min, max, spikes };
   }
 
   /** Shared by every column of a population. */

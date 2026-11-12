@@ -32,6 +32,9 @@ export type TSmallCircuitSource = {
   download?: DownloadProgress | null;
   /** What the source failed at: the circuit's config or the placement of every population. */
   error: Error | null;
+  /** The populations whose node files could not be read, which `retry` reads again. */
+  unplaced?: readonly string[];
+  retry?: () => void;
   /** Afferent synapses, one group per edge population; only a single-cell circuit has them. */
   synapses?: TSmallCircuitSynapseGroup[];
   /**
