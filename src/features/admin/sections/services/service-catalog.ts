@@ -86,7 +86,6 @@ export function serviceBaseUrl(
   { stripFromUrl }: Pick<ServiceDescriptor, 'stripFromUrl'>,
   configuredUrl: string
 ) {
-  return stripFromUrl && configuredUrl.endsWith(stripFromUrl)
-    ? configuredUrl.slice(0, -stripFromUrl.length)
-    : configuredUrl;
+  const url = configuredUrl.replace(/\/+$/, '');
+  return stripFromUrl && url.endsWith(stripFromUrl) ? url.slice(0, -stripFromUrl.length) : url;
 }

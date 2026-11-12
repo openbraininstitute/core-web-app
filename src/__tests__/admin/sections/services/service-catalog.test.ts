@@ -13,6 +13,14 @@ describe('serviceBaseUrl', () => {
     );
   });
 
+  it('ignores a trailing slash', () => {
+    const authManager = SERVICE_CATALOG.find((service) => service.key === 'auth-manager');
+    expect(serviceBaseUrl(authManager ?? {}, 'https://host/api/auth-manager/v1/')).toBe(
+      'https://host/api/auth-manager'
+    );
+    expect(serviceBaseUrl({}, 'https://host/api/entitycore/')).toBe('https://host/api/entitycore');
+  });
+
   it('leaves other services alone', () => {
     expect(serviceBaseUrl({}, 'https://host/api/entitycore')).toBe('https://host/api/entitycore');
   });

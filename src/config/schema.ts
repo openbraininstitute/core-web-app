@@ -169,7 +169,7 @@ const applyApiUrlTransforms = <T extends z.ZodObject<any>>(schema: T) =>
       ...(Object.fromEntries(
         Object.entries(platformApiUrlFields).map(([field, path]) => [
           field,
-          data[field] ?? `${data.API_ORIGIN}${DEFAULT_API_BASE_PATH}${path}`,
+          data[field] || `${data.API_ORIGIN}${DEFAULT_API_BASE_PATH}${path}`,
         ])
       ) as Record<PlatformApiUrlField, string>),
     }));

@@ -11,7 +11,7 @@ const USERINFO_TIMEOUT_MS = 5_000;
 const FAILURE_BACKOFF_MS = 30_000;
 const CACHE_MAX_ENTRIES = 10_000;
 
-type CacheEntry = { groups: string[]; fetchedAt: number; failedAt?: number };
+type CacheEntry = { groups: string[]; fetchedAt: number };
 
 export class BoundedCache<V> {
   private readonly entries = new Map<string, V>();
@@ -38,6 +38,7 @@ export class BoundedCache<V> {
 }
 
 const groupsCache = new BoundedCache<CacheEntry>(CACHE_MAX_ENTRIES);
+const lastFailure = new BoundedCache<{ at: number; error: unknown }>(CACHE_MAX_ENTRIES);
 const inFlight = new Map<string, Promise<string[] | null>>();
 
 async function fetchKeycloakGroups(accessToken: string): Promise<string[] | null> {
@@ -55,6 +56,10 @@ async function fetchKeycloakGroups(accessToken: string): Promise<string[] | null
     : [];
 }
 
+function staleGroups(cached: CacheEntry | undefined, now: number) {
+  return cached && now - cached.fetchedAt < STALE_MAX_AGE_MS ? cached.groups : undefined;
+}
+
 async function refreshGroups(
   key: string,
   accessToken: string,
@@ -63,6 +68,7 @@ async function refreshGroups(
   const now = Date.now();
   try {
     const groups = await fetchKeycloakGroups(accessToken);
+    lastFailure.delete(key);
     if (!groups) {
       groupsCache.delete(key);
       return null;
@@ -71,10 +77,9 @@ async function refreshGroups(
     return groups;
   } catch (error) {
     log('error', 'failed to resolve keycloak groups from userinfo', error);
-    if (cached && now - cached.fetchedAt < STALE_MAX_AGE_MS) {
-      groupsCache.set(key, { ...cached, failedAt: now });
-      return cached.groups;
-    }
+    lastFailure.set(key, { at: Date.now(), error });
+    const stale = staleGroups(cached, now);
+    if (stale) return stale;
     throw error;
   }
 }
@@ -91,12 +96,12 @@ export async function getKeycloakGroups(session: Session): Promise<string[] | nu
   const cached = groupsCache.get(key);
   const now = Date.now();
   if (cached && now - cached.fetchedAt < GROUPS_CACHE_TTL_MS) return cached.groups;
-  if (
-    cached?.failedAt &&
-    now - cached.failedAt < FAILURE_BACKOFF_MS &&
-    now - cached.fetchedAt < STALE_MAX_AGE_MS
-  ) {
-    return cached.groups;
+
+  const failure = lastFailure.get(key);
+  if (failure && now - failure.at < FAILURE_BACKOFF_MS) {
+    const stale = staleGroups(cached, now);
+    if (stale) return stale;
+    throw failure.error;
   }
 
   const pending = inFlight.get(accessToken);

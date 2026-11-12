@@ -17,6 +17,7 @@ vi.mock('@/features/admin/server/keycloak-groups', () => ({
 vi.mock('next/navigation', () => ({ redirect: redirectMock }));
 
 beforeEach(() => {
+  redirectMock.mockClear();
   authMock.mockReset();
   authMock.mockResolvedValue({ accessToken: 'tok' });
   getKeycloakGroupsMock.mockReset();
@@ -39,10 +40,13 @@ describe('requireCapability', () => {
     expect(getKeycloakGroupsMock).not.toHaveBeenCalled();
   });
 
-  it('sends a token Keycloak rejects to log in, not to forbidden', async () => {
+  it('throws on a token Keycloak rejects, since log-in would send it straight back', async () => {
     getKeycloakGroupsMock.mockResolvedValueOnce(null);
 
-    await expect(requireCapability('admin.access')).rejects.toThrow('redirect:/app/log-in');
+    await expect(requireCapability('admin.access')).rejects.toThrow(
+      'keycloak rejected the access token'
+    );
+    expect(redirectMock).not.toHaveBeenCalled();
   });
 
   it('sends a user without the capability to the forbidden page', async () => {

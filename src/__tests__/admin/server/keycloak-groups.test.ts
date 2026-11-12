@@ -155,10 +155,15 @@ describe('getKeycloakGroups', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it('starts a new call once a failed one has settled', async () => {
+  it('rethrows a recent failure without calling again, even with nothing cached', async () => {
     fetchMock.mockRejectedValueOnce(new Error('timeout'));
     await expect(getKeycloakGroups(SESSION)).rejects.toThrow('timeout');
 
+    vi.setSystemTime(T0 + 20_000);
+    await expect(getKeycloakGroups(SESSION)).rejects.toThrow('timeout');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    vi.setSystemTime(T0 + 40_000);
     fetchMock.mockResolvedValueOnce(userinfoOk([]));
     await expect(getKeycloakGroups(SESSION)).resolves.toEqual([]);
     expect(fetchMock).toHaveBeenCalledTimes(2);

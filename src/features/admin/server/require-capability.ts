@@ -13,12 +13,15 @@ import { getKeycloakGroups } from './keycloak-groups';
 import type { CapabilityPath, OperatorCapabilities } from '../capabilities/types';
 
 // Per request, because a page and its layout both ask during one render. `null` means logged
-// out: a session whose refresh token died still decrypts, so it counts too.
+// out: a session whose refresh token died still decrypts, so it counts too. A token Keycloak
+// rejects while the session still looks valid throws instead: log-in would send that session
+// straight back here, so the error page offers a fresh sign-in.
 const currentCapabilities = cache(async (): Promise<OperatorCapabilities | null> => {
   const session = await auth();
   if (!session || session.error === 'RefreshAccessTokenError') return null;
   const groups = await getKeycloakGroups(session);
-  return groups && deriveCapabilities(groups);
+  if (!groups) throw new Error('keycloak rejected the access token');
+  return deriveCapabilities(groups);
 });
 
 export async function requireCapability(need: CapabilityPath): Promise<OperatorCapabilities> {
