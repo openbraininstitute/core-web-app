@@ -389,37 +389,17 @@ export function UIElementRender({
         />
       );
     })
-    .with({ paramSchema: { ui_element: ScanConfigUIElementDict.NeuronIds } }, () => {
-      return (
-        <NeuronIds
-          value={value}
-          disabled={disabled}
-          onAddIds={(newElement: number[] | null) => {
-            if (newElement === null || newElement.length === 0) {
-              setState({
-                ...state,
-                [k]: null,
-              });
-              return;
-            }
-
-            if (!state[k]) {
-              const newState = {
-                ...state,
-                [k]: { elements: newElement },
-              };
-              setState(newState);
-              return;
-            }
-
-            setState({
-              ...state,
-              [k]: { elements: newElement },
-            });
-          }}
-        />
-      );
-    })
+    .with({ paramSchema: { ui_element: ScanConfigUIElementDict.NeuronIds } }, ({ paramSchema }) => (
+      <NeuronIds
+        value={value}
+        disabled={disabled}
+        // a set can only be scanned when the schema offers a list of them
+        allowMultiple={numericSchemaBounds(paramSchema).allowMultiple}
+        onChange={(next) => {
+          setState({ ...state, [k]: next });
+        }}
+      />
+    ))
     .with(
       {
         paramSchema: { ui_element: ScanConfigUIElementDict.EntityPropertyDropdown },

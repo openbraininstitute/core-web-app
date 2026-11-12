@@ -35,6 +35,18 @@ function isPropertyFilterParam(value: unknown): value is TPropertyFilterParam {
   );
 }
 
+/** a `neuron_ids` scan param: one named set of neuron IDs per grid point */
+type TIdSetParam = { name: string; elements: readonly number[] };
+
+function isIdSetParam(value: unknown): value is TIdSetParam {
+  return (
+    isPlainObject(value) &&
+    typeof value.name === 'string' &&
+    Array.isArray(value.elements) &&
+    value.elements.every((id) => typeof id === 'number')
+  );
+}
+
 /**
  * collects the FromID refs from a scan param value, covering every `model_identifier`
  * shape a grid point can carry:
@@ -70,6 +82,10 @@ export function scanParamValueText(value: unknown, nameById: ReadonlyMap<string,
     return Object.entries(value.filter_dict)
       .map(([property, values]) => `${property}: ${values.join(', ')}`)
       .join('; ');
+  }
+  if (isIdSetParam(value)) {
+    const count = value.elements.length;
+    return `${value.name} (${count === 1 ? '1 ID' : `${count.toLocaleString()} IDs`})`;
   }
   return String(value);
 }
@@ -176,11 +192,13 @@ export function ScanParams({
                 <Badge
                   id={`${paramKey}-value`}
                   variant="outline"
-                  title={String(paramValue)}
+                  title={scanParamValueText(paramValue, nameById)}
                   className="max-w-full px-3 font-bold bg-white"
                   style={{ color }}
                 >
-                  <span className="truncate select-none">{String(paramValue)}</span>
+                  <span className="truncate select-none">
+                    {scanParamValueText(paramValue, nameById)}
+                  </span>
                 </Badge>
               </div>
             )}

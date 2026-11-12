@@ -4,6 +4,7 @@ import { isNil } from 'es-toolkit/compat';
 import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
 import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import { UIElementRender } from '@/features/scan-config/components/ui-elements';
+import { neuronIdsSingleValue } from '@/features/scan-config/components/ui-elements/neuron-ids';
 import {
   SweepIconButton,
   sweepSingleValue,
@@ -107,11 +108,14 @@ export default function Block({
               // value. It renders on this title row rather than inside the
               // element so it sits level with the label instead of floating
               // above the values card.
+              const isNeuronIdsScan =
+                blockElementSchema.ui_element === ScanConfigUIElementDict.NeuronIds;
               const canCollapseSweep =
                 !disabled &&
                 Array.isArray(value) &&
                 (blockElementSchema.ui_element === ScanConfigUIElementDict.FloatParameterSweep ||
-                  blockElementSchema.ui_element === ScanConfigUIElementDict.IntParameterSweep);
+                  blockElementSchema.ui_element === ScanConfigUIElementDict.IntParameterSweep ||
+                  isNeuronIdsScan);
 
               return (
                 <div
@@ -139,11 +143,16 @@ export default function Block({
                     )}
                     {canCollapseSweep && (
                       <SweepIconButton
-                        label="Use a single value"
+                        label={isNeuronIdsScan ? 'Use a single set' : 'Use a single value'}
                         testId="scan-config-sweep-collapse"
                         className="ml-auto"
                         onClick={() => {
-                          setState({ ...state, [k]: sweepSingleValue(value as (number | null)[]) });
+                          setState({
+                            ...state,
+                            [k]: isNeuronIdsScan
+                              ? neuronIdsSingleValue(value)
+                              : sweepSingleValue(value as (number | null)[]),
+                          });
                         }}
                       >
                         <RiCloseLine className="size-3.5" />

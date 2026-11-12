@@ -116,6 +116,10 @@ export const ScanHint = {
   expandValues:
     'Each value runs as its own configuration. Scan more than one field and every combination runs.',
   addValue: 'Add another value to the scan. Each value runs as its own configuration.',
+  expandIdSets:
+    'Each set of neuron IDs runs as its own configuration. Scan more than one field and every combination runs.',
+  addIdSet:
+    'Add another set to the scan. Each set runs as its own configuration, and its results are labelled with its name.',
   addGroup: 'Add another group to the scan. Each group runs as its own configuration.',
   addToList: 'Each one you add runs as its own configuration.',
 } as const;
