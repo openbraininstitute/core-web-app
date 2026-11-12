@@ -24,8 +24,12 @@ vi.mock('@/features/data-grid/renderers/aggrid', () => ({ AgGridRenderer: () => 
 // Only the toolbar's menus: what is listed shows in the data source the table builds.
 vi.mock('@/features/data-grid/react', async (importOriginal) => ({
   ...(await importOriginal<object>()),
-  DataGrid: ({ toolbarSlots }: { toolbarSlots: { entityType: ReactNode } }) =>
-    toolbarSlots.entityType,
+  DataGrid: ({ toolbarSlots }: { toolbarSlots: { entityType: ReactNode; left: ReactNode } }) => (
+    <>
+      {toolbarSlots.entityType}
+      {toolbarSlots.left}
+    </>
+  ),
 }));
 vi.mock('@/ui/segments/workflows/elements/workflow-activity-all', async (importOriginal) => {
   const actual =

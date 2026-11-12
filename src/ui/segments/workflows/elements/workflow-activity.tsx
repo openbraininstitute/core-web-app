@@ -1,5 +1,6 @@
 'use client';
 
+import { InfoCircleOutlined, WarningOutlined } from '@ant-design/icons';
 import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -199,24 +200,6 @@ export function WorkflowActivity() {
           id="workflow-activities-table"
           data-testid="workflow-activities-table"
         >
-          {(gaps.failed || gaps.unlisted > 0) && (
-            <div
-              role="status"
-              className="mb-2 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900"
-            >
-              {gaps.failed && (
-                <p>
-                  Some workflows could not be listed, their activities are missing: {gaps.failed}.
-                </p>
-              )}
-              {gaps.unlisted > 0 && (
-                <p>
-                  Only the first {MAX_LISTED_ROWS.toLocaleString('en-US')} activities are listed.
-                  Choose a category and a type, or filter, to reach the rest.
-                </p>
-              )}
-            </div>
-          )}
           <DataGrid<EntityCoreObjectTypes>
             key={gridKey}
             controller={controller}
@@ -242,6 +225,24 @@ export function WorkflowActivity() {
                     updateActivityState({ activityType, entityType: ALL_WORKFLOWS })
                   }
                 />
+              ),
+              left: (gaps.failed || gaps.unlisted > 0) && (
+                <div role="status" className="flex min-w-0 flex-col gap-0.5 pl-2 text-xs">
+                  {gaps.failed && (
+                    <p className="flex items-center gap-1.5 text-amber-700">
+                      <WarningOutlined />
+                      Some workflows could not be listed, their activities are missing:{' '}
+                      {gaps.failed}.
+                    </p>
+                  )}
+                  {gaps.unlisted > 0 && (
+                    <p className="flex items-center gap-1.5 text-neutral-4">
+                      <InfoCircleOutlined />
+                      Only the first {MAX_LISTED_ROWS.toLocaleString('en-US')} activities are
+                      listed. Choose a category and a type, or filter, to reach the rest.
+                    </p>
+                  )}
+                </div>
               ),
               search: (
                 <GridSearch
