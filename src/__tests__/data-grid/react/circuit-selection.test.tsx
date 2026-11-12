@@ -18,8 +18,9 @@ import type { IGridContext, IGridDataSource, IGridPage } from '@/features/data-g
 import type { IGridRendererProps, TGridRenderer } from '@/features/data-grid/react/renderer';
 
 /**
- * Regression: the Data → Circuit listing must have no checkboxes — the schema was opting
- * selection in on its own — while the workflow pickers' `selection` prop still forces it on.
+ * The Data → Circuit listing selects one circuit at a time, for its download panel, and
+ * nowhere else; the workflow pickers' `selection` prop still forces selection on, in its
+ * own mode.
  */
 // biome-ignore lint/suspicious/noExplicitAny: the schema's Row is the augmented circuit row; the harness only needs an id
 type Row = any;
@@ -62,38 +63,36 @@ function setup(selection?: IDataGridSelection<Row>) {
   return { getReceived: () => received };
 }
 
-describe('circuit — no schema-level selection', () => {
-  it('declares no selection spec at all (selection is opt-in)', () => {
-    expect(circuitSchema.selection).toBeUndefined();
+describe('circuit — one row at a time on the Data page', () => {
+  it('declares single selection', () => {
+    expect(circuitSchema.selection?.mode).toBe('single');
   });
 
-  it('resolves selection OFF in every context the listing can mount in', () => {
-    for (const ctx of [
-      context(),
-      context({ section: WorkspaceSection.ExtractWorkflow }),
-      context({ scope: 'private' }),
-    ]) {
-      expect(isSelectionEnabled(circuitSchema, ctx)).toBe(false);
-    }
+  it('resolves selection ON in the Data section, in either scope, and OFF elsewhere', () => {
+    expect(isSelectionEnabled(circuitSchema, context())).toBe(true);
+    expect(isSelectionEnabled(circuitSchema, context({ scope: 'private' }))).toBe(true);
+    expect(
+      isSelectionEnabled(circuitSchema, context({ section: WorkspaceSection.ExtractWorkflow }))
+    ).toBe(false);
   });
 
-  it('renders the browse listing with no selection column and no bulk-action selection', async () => {
+  it("renders the browse listing with selection on, in the schema's own mode", async () => {
     const { getReceived } = setup();
     await waitFor(() => expect(getReceived()).toBeDefined());
-    expect(getReceived()?.selectionEnabled).toBe(false);
+    expect(getReceived()?.selectionEnabled).toBe(true);
     expect(getReceived()?.selectionModeOverride).toBeUndefined();
   });
 });
 
 describe('circuit — the workflow PICKER path still selects', () => {
-  it('a single (radio) picker forces selection on despite the schema opt-out', async () => {
+  it('a single (radio) picker forces selection on', async () => {
     const { getReceived } = setup({ mode: SelectionMode.Single, onChange: vi.fn() });
     await waitFor(() => expect(getReceived()).toBeDefined());
     expect(getReceived()?.selectionEnabled).toBe(true);
     expect(getReceived()?.selectionModeOverride).toBe('single');
   });
 
-  it('a multi (checkbox) picker forces selection on despite the schema opt-out', async () => {
+  it("a multi (checkbox) picker overrides the schema's single mode", async () => {
     const { getReceived } = setup({ mode: SelectionMode.Multi, onChange: vi.fn() });
     await waitFor(() => expect(getReceived()).toBeDefined());
     expect(getReceived()?.selectionEnabled).toBe(true);

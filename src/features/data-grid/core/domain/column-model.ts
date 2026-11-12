@@ -90,6 +90,11 @@ export interface IFilterTarget {
   available?: TContextualValue<boolean>;
 }
 
+/** The workspace a column's params depend on: the scope filter and orders name its project. */
+export interface IGridWorkspace {
+  projectId?: string;
+}
+
 export interface IColumnFilter {
   /** ordered operator ids; index 0 is the default. Each must exist in the operator registry. */
   operators: string[];
@@ -105,6 +110,11 @@ export interface IColumnFilter {
   available?: TContextualValue<boolean>;
   /** fields this column can be filtered by; omit and the flat props above become one target */
   targets?: ReadonlyArray<IFilterTarget>;
+  /**
+   * Turns an Eq value into request params itself, for a filter no single field
+   * expresses; `projectId` is the workspace's.
+   */
+  toParams?: (value: string, workspace: IGridWorkspace) => Record<string, unknown>;
 }
 
 /**
@@ -129,6 +139,13 @@ export interface IColumnModel<Row = unknown> {
   /** cell renderer key resolved by the rendering adapter's cell-renderer registry */
   cellRenderer?: string;
   cellRendererParams?: Record<string, unknown>;
+  /**
+   * header renderer key, resolved by the same registry, that replaces the default label,
+   * sort and filter controls with the column's own header
+   */
+  headerRenderer?: string;
+  /** full-height rule along the column's right edge, setting it apart from the next */
+  divider?: boolean;
   /** the cells show a hover card of their own, so the grid's row hover card leaves them alone */
   ownHoverCard?: boolean;
   /** whether the column exists at all here (default: true); `false` drops it, chooser included */

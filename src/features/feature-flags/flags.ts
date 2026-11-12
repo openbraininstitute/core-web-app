@@ -62,6 +62,16 @@ export const debugFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
+/** The Data table's mark for a project's own records: two people, or one. */
+export const projectScopeIconFlag = defineFlag<'two' | 'one'>({
+  key: 'project-scope-icon',
+  defaultValue: 'two',
+  values: ['two', 'one'],
+  labels: ['Two people', 'One person'],
+  description: 'Project icon in the Data table',
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
 /** A circuit past the small scales as morphologies and not only somas, where Bluenaas can build its pack. */
 export const circuitMorphologiesFlag = defineFlag<boolean>({
   key: 'circuit-morphologies',
@@ -134,6 +144,7 @@ export const flags = [
   memodelBuildViaLaunchSystemFlag,
   electrodeOverlaysFlag,
   debugFlag,
+  projectScopeIconFlag,
   circuitMorphologiesFlag,
   learnFlag,
   aiButtonFlag,

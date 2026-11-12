@@ -4,7 +4,7 @@ import { useAtomValue } from 'jotai';
 
 import { WorkspaceSection } from '@/constants';
 import { gridFilteredTotalAtom } from '@/features/data-grid/host/grid-total';
-import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
+import { makeDataKey, makeListingStateKey } from '@/ui/segments/data-table/elements/helpers';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TWorkspaceScope } from '@/constants';
@@ -31,16 +31,22 @@ export function useTableQueryCount({
 }) {
   const { virtualLabId, projectId } = workspace;
 
-  const { dataKey } = makeDataKey({
+  const parts = {
     virtualLabId,
     projectId,
     section: WorkspaceSection.Data,
     dataType: extendedType,
     scope,
     id: instanceId,
-  });
+  };
+  const { dataKey } = makeDataKey(parts);
 
   const gridTotal = useAtomValue(gridFilteredTotalAtom(dataKey));
 
-  return { dataKey, count: isActiveEntity ? gridTotal : undefined };
+  return {
+    dataKey,
+    /** where the listing's grid saves its filters, shared by every workspace */
+    stateKey: makeListingStateKey(parts),
+    count: isActiveEntity ? gridTotal : undefined,
+  };
 }

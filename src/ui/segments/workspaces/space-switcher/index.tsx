@@ -25,6 +25,7 @@ import {
   type WorkspaceActionType,
 } from '@/ui/segments/workspaces/space-manager/event';
 import { GhostRoundedIconButton } from '@/ui/segments/workspaces/space-manager/sections/elements';
+import { useOpenSpaceSwitcherEvent } from '@/ui/segments/workspaces/space-switcher/event';
 import { Item } from '@/ui/segments/workspaces/space-switcher/item';
 import { isInsideContentModal } from '@/ui/segments/workspaces/space-switcher/outside-click';
 import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
@@ -288,6 +289,8 @@ export function SpaceSwitcher({ className }: Props) {
     setCurrentVirtualLabId(null);
     setIsExpanded(false);
   }, []);
+
+  useOpenSpaceSwitcherEvent(() => setIsExpanded(true));
 
   const onTogglePanel = (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation();

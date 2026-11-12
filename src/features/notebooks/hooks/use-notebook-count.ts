@@ -52,7 +52,7 @@ export function useNotebookCount({
   const countQuery = (saved?: TSavedListingFilters | null) => ({
     queryKey: ['notebook-total-count', extendedType, scope, virtualLabId, projectId, saved ?? null],
     queryFn: async () => {
-      const savedParams = await savedListingParams(extendedType, saved);
+      const savedParams = await savedListingParams(extendedType, saved, undefined, projectId);
       const response = await entity?.api?.query?.list?.({
         filters: { ...savedParams, page: 1, page_size: 1, ...getWorkspaceScopeFilters(scope, ctx) },
         withFacets: false,
