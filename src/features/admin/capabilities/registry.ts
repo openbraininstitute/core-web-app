@@ -1,5 +1,3 @@
-import type { OperatorCapabilities } from './types';
-
 // Group names are contracts with the backend services, not deployment settings, so there
 // is no env override. A gate change upstream must update its constant and `derive.test.ts`.
 
@@ -26,11 +24,7 @@ export const SIMULATOR_ADMIN_GROUP = '/service/small-scale-simulator/admin';
 export const LAUNCH_SYSTEM_ADMIN_GROUP = '/service/launch-system/admin';
 
 // `admin.access` has no groups of its own: `derive.ts` grants it when anything else is held.
-export const CAPABILITY_REGISTRY: {
-  [Group in Exclude<keyof OperatorCapabilities, 'admin'>]: {
-    [Leaf in keyof OperatorCapabilities[Group]]: readonly string[];
-  };
-} = {
+export const CAPABILITY_REGISTRY = {
   entitycore: {
     admin: [ENTITYCORE_ADMIN_GROUP, WILDCARD_ADMIN_GROUP],
     // Uploads go through virtual-lab-api with the operator's token, which needs the literal
@@ -54,4 +48,4 @@ export const CAPABILITY_REGISTRY: {
   launchSystem: {
     admin: [LAUNCH_SYSTEM_ADMIN_GROUP],
   },
-};
+} as const satisfies Record<string, Record<string, readonly string[]>>;
