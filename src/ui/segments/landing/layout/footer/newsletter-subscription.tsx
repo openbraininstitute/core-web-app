@@ -38,11 +38,11 @@ function getValidationError(formValues: FooterNewsletterForm): string | null {
 }
 
 const formClassName = classNames(
-  'relative m-0 flex flex-col items-start justify-between border border-neutral-3 !p-5 text-primary-8 mb-10! lg:mb-0!'
+  'relative m-0 flex flex-col items-start gap-3 border border-neutral-3 !p-4 text-primary-8'
 );
 
 const titleClassName = classNames(
-  'm-0 font-serif text-2xl leading-[1.3] font-normal text-primary-8 text-balance'
+  'm-0 font-serif text-lg leading-[1.3] font-normal text-primary-8 text-balance'
 );
 
 const emailInputClassName = classNames(
@@ -58,7 +58,7 @@ const checkboxClassName = classNames(
 );
 
 const submitButtonClassName = classNames(
-  'mt-12 inline-block cursor-pointer rounded-full border border-neutral-3 bg-white px-8 py-2 text-base text-primary-8',
+  'mt-0 inline-block cursor-pointer rounded-full border border-neutral-3 bg-white px-8 py-2 text-sm text-primary-8',
   'transition-colors duration-200 ease-out hover:bg-primary-8 hover:text-light',
   'disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 disabled:grayscale'
 );
@@ -174,6 +174,7 @@ export default function NewsLetterSubscription({ className }: NewsLetterSubscrip
         <Form.Item name="email" noStyle>
           <Input
             type="email"
+            aria-label="Email address"
             placeholder="Enter your email here..."
             autoComplete="email"
             data-testid="footer-newsletter-email"
@@ -181,7 +182,7 @@ export default function NewsLetterSubscription({ className }: NewsLetterSubscrip
           />
         </Form.Item>
 
-        <div className="flex flex-row items-center gap-1 text-base text-primary-8">
+        <div className="flex flex-row items-center gap-1 text-sm text-primary-8">
           <Form.Item
             name="accept_terms"
             valuePropName="checked"
@@ -195,7 +196,7 @@ export default function NewsLetterSubscription({ className }: NewsLetterSubscrip
             I have read and accept the{' '}
             <Link
               href="/privacy"
-              className="text-base! text-primary-8 underline decoration-current/40 decoration-1 underline-offset-[0.15em] hover:decoration-current"
+              className="text-sm! text-primary-8 underline decoration-current/40 decoration-1 underline-offset-[0.15em] hover:decoration-current"
             >
               privacy policy
             </Link>

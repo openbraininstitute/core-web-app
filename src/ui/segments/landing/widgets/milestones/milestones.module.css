@@ -1,6 +1,6 @@
 .milestones {
-  background-color: var(--color-primary);
-  color: #fffe;
+  background-color: var(--color-neutral-light);
+  color: var(--color-primary);
   display: grid;
   grid-template-columns: var(--padM) min(80vw, 480px) 1fr;
   grid-template-rows: 10vh auto auto 1fr auto 10vh;
@@ -123,5 +123,5 @@
 }
 
 .dash.selected {
-  background-color: #fffe;
+  background-color: var(--color-primary);
 }

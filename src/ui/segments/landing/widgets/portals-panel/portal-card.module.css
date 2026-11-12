@@ -98,12 +98,12 @@ a.card:hover .picture {
   }
 
   a.card .content {
-    color: #fffe;
-    background: color-mix(in srgb, var(--color-primary), transparent);
+    color: var(--color-primary);
+    background: color-mix(in srgb, #fff 86%, transparent);
   }
 
   a.card .content {
-    color: #fffe;
-    background: color-mix(in srgb, var(--color-primary), transparent);
+    color: var(--color-primary);
+    background: color-mix(in srgb, #fff 86%, transparent);
   }
 }

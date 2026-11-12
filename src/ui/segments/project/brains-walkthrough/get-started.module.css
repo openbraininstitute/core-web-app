@@ -1,0 +1,210 @@
+.words,
+.customers {
+  --join-top: clamp(120px, 36vh, 340px);
+}
+
+.customers {
+  position: absolute;
+  top: auto;
+  bottom: calc(var(--public-footer-height, 94px));
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+@media (min-width: 64rem), (orientation: landscape) {
+  .words {
+    align-self: flex-start;
+    padding-top: var(--join-top);
+  }
+}
+
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .customers {
+    inset-inline: 0;
+    top: auto;
+    bottom: calc(var(--public-footer-height, 196px));
+    gap: 6px;
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .words,
+  .customers {
+    --join-top: 100px;
+  }
+}
+
+.logoBand {
+  width: 100%;
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+}
+.logoTrack {
+  display: flex;
+  width: max-content;
+  animation: customer-band 36s linear infinite;
+}
+.logoGroup {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: clamp(28px, 3vw, 48px);
+  margin: 0;
+  padding: 0 clamp(28px, 3vw, 48px) 0 0;
+  list-style: none;
+}
+.logoItem {
+  width: clamp(100px, 11vw, 150px);
+  flex: 0 0 auto;
+}
+.logoLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100px;
+  padding: 10px 10px 0;
+  border: 0;
+  background: transparent;
+}
+.logoLink:focus-visible {
+  outline: 2px solid #183f8b;
+  outline-offset: -2px;
+}
+.logoMark {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #3b4f6e;
+  transition: background-color 200ms ease;
+}
+.logoLink:hover .logoMark {
+  background: #183f8b;
+}
+.logoBand:hover .logoTrack,
+.logoBand:focus-within .logoTrack,
+:global([data-stage-current="false"]) .logoTrack {
+  animation-play-state: paused;
+}
+@keyframes customer-band {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .logoBand {
+    mask-image: none;
+  }
+  .logoTrack {
+    width: 100%;
+    animation: none;
+  }
+  .logoGroup {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    padding: 0;
+  }
+  .logoGroup[aria-hidden] {
+    display: none;
+  }
+  .logoLink {
+    height: 64px;
+  }
+}
+
+.customerHeading {
+  width: 100%;
+  padding-inline: var(--chapter-text-inset, clamp(32px, 5vw, 88px));
+  text-align: left;
+  align-self: stretch;
+}
+.customerHeading h2 {
+  margin: 0;
+  text-align: left;
+  font-size: 14px;
+  line-height: 1.25;
+  font-weight: 600;
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .customers {
+    top: auto;
+    bottom: calc(var(--public-footer-height, 94px));
+    gap: 8px;
+  }
+  .logoLink {
+    height: 64px;
+  }
+}
+
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .customerHeading {
+    padding-inline: var(--chapter-text-inset, 20px);
+  }
+}
+
+.brainArtwork {
+  position: absolute;
+  top: 112px;
+  right: 4%;
+  width: 52%;
+  height: clamp(240px, 47vh, 520px);
+  pointer-events: none;
+}
+.freeOffer {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #526178;
+}
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .brainArtwork {
+    top: 108px;
+    right: 0;
+    width: 40%;
+    height: 250px;
+  }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .brainArtwork {
+    top: 90px;
+    height: 145px;
+  }
+}
+
+.brainArtwork {
+  overflow: hidden;
+}
+.mosaicVideo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center top;
+  border: 0;
+  background: transparent;
+  /* Its outer tiles soften into the page rather than stopping at a hard edge. */
+  mask-image:
+    linear-gradient(to right, transparent, black 4%, black 96%, transparent),
+    linear-gradient(to bottom, transparent, black 4%, black 96%, transparent);
+  mask-composite: intersect;
+}
+
+/* Leave the full-width chapter copy clear above the compact phone footer. */
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .customers {
+    bottom: calc(var(--public-footer-height, 196px));
+    gap: 6px;
+  }
+  .logoGroup {
+    padding-block: 0;
+  }
+  .logoLink {
+    height: 40px;
+    padding-block: 0;
+  }
+}

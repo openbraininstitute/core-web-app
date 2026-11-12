@@ -21,6 +21,30 @@
 */
 @custom-variant quiet-notes (&:where([data-notes="quiet"] *));
 
+/*
+  The walkthroughs' words beside their stage: where the window is wide, or landscape, as it stays however far it is
+  zoomed in, which narrows it for the page. A phone held upright stacks them.
+*/
+@custom-variant beside {
+  @media (min-width: 64rem), (orientation: landscape) {
+    @slot;
+  }
+}
+
+/* What `beside` is not: a phone, or a small tablet, held upright, with the words under the stage. */
+@custom-variant stacked {
+  @media (max-width: 63.999rem) and (orientation: portrait) {
+    @slot;
+  }
+}
+
+/* A phone on its side: beside, with little height. */
+@custom-variant squat {
+  @media (orientation: landscape) and (max-height: 31.25rem) {
+    @slot;
+  }
+}
+
 /* @import './tailwind-preflight.css' layer(base); */
 
 /* @import 'tailwindcss'; */
@@ -449,12 +473,6 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-  }
-
-  @media (min-width: 768px) {
-    html:has(.landing-features-snap) {
-      scroll-snap-type: y mandatory;
-    }
   }
 
   .ant-tabs-top > .ant-tabs-nav::before {

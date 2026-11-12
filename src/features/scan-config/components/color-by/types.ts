@@ -126,6 +126,10 @@ export interface ViewerConfig {
   /** Show the scalebar down the side of the canvas. */
   showScalebar: boolean;
   spin: boolean;
+  /** Moving frames keep the ambient occlusion whatever they cost, rather than drawn flat to keep up. */
+  aoMoving?: boolean;
   /** per-property, per-value color overrides chosen by the user */
   colorOverrides: ColorOverrides;
+  /** The one colour every neuron is drawn in while no property colours them; the viewer's own blue unset. */
+  neuronColor?: string;
 }

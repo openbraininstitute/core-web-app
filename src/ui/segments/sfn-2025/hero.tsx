@@ -6,10 +6,8 @@ import React from 'react';
 
 import ProgressiveImage from '@/ui/segments/landing/components/progressive-image/progressive-image';
 import { classNames } from '@/util/utils';
-import { cn } from '@/utils/css-class';
-import useFullHeight from '@/utils/use-full-height';
 
-import styles from './hero.module.css';
+import styles from '@/ui/segments/landing/layout/hero/hero.module.css';
 
 type HeroProps = {
   videoURL: string;
@@ -29,10 +27,9 @@ export default function HeroSFN({
   className,
 }: HeroProps) {
   const [videoReady, setVideoReady] = React.useState(false);
-  const height = useFullHeight();
   return (
-    <div className={classNames(className, styles.hero)} style={{ height }}>
-      <div className={cn(styles.background)}>
+    <div className={classNames(className, styles.hero, styles.withMedia)}>
+      <div className={styles.media}>
         {posterURL && posterWidth && posterHeight && (
           <ProgressiveImage
             src={posterURL}
@@ -53,23 +50,20 @@ export default function HeroSFN({
         />
       </div>
       <div className={styles.text}>
-        <div>
-          <h1 className={styles.largeTitle}>{title}</h1>
-        </div>
-        <div className="font-title flex flex-col gap-4 rounded-lg text-2xl! text-white md:flex-row md:items-center md:gap-12 md:text-3xl!">
-          <div>November 15 – 19</div>
-          <div>San Diego Convention Center</div>
-          <div>Booth #3631</div>
+        <div className="flex flex-col items-center">
+          <h1 style={{ fontSize: 'clamp(32px, 3.2vw, 48px)' }}>{title}</h1>
+          <div className={classNames(styles.content, 'flex flex-col gap-[6px]')}>
+            <div>November 15 – 19</div>
+            <div>San Diego Convention Center</div>
+            <div>Booth #3631</div>
+          </div>
           <Link
             href="/app/virtual-lab"
             aria-label="Create virtual lab"
-            className={cn(
-              'font-gabarito relative rounded-full px-16 py-6 text-2xl! font-medium! whitespace-nowrap text-white shadow-2xl md:py-6 md:text-3xl!',
-              styles.rainbowButton
-            )}
+            className="bg-primary-9 mt-[24px] rounded-full px-[23px] py-[13px] text-[15px]! font-semibold whitespace-nowrap text-white transition-colors hover:bg-[#00428b]"
             id="create-virtual-lab"
           >
-            <span>Create your Virtual Lab</span>
+            Create your Virtual Lab
           </Link>
         </div>
       </div>

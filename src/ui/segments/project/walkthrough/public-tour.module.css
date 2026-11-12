@@ -1,0 +1,455 @@
+.publicTour {
+  font-weight: 300;
+  --chapter-text-inset: clamp(32px, 5vw, 88px);
+  --chapter-title-size: clamp(30px, 3.2vw, 50px);
+  --chapter-copy-size: clamp(15px, 1.15vw, 17px);
+  --chapter-copy-leading: 1.55;
+  --chapter-content-top: clamp(140px, 18vh, 180px);
+  --chapter-media-top: var(--chapter-content-top);
+  --chapter-media-foot: max(100px, 12vh);
+}
+/* All public chapter media uses Explore's frame, including differently shaped source films. */
+@media (min-width: 64rem), (orientation: landscape) {
+  .publicTour {
+    --chapter-frame-unit: min(calc(100vw / 1920), calc(var(--chapter-h) / 1080));
+    --chapter-frame-x: calc((100vw - var(--chapter-frame-unit) * 1920) / 2);
+    --chapter-frame-y: calc((var(--chapter-h) - var(--chapter-frame-unit) * 1080) / 2);
+    --chapter-media-width: calc(var(--chapter-frame-unit) * 1040);
+    --chapter-media-height: calc(var(--chapter-frame-unit) * 585);
+  }
+  .publicTour [data-chapter-media] {
+    top: calc(var(--chapter-frame-y) + var(--chapter-frame-unit) * 209);
+    right: calc(
+      100vw -
+      var(--chapter-frame-x) -
+      var(--chapter-frame-unit) *
+      1832 -
+      var(--chapter-scrollbar-width, 0px)
+    );
+    bottom: auto;
+    left: auto;
+    width: var(--chapter-media-width);
+    height: var(--chapter-media-height);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    transform: none;
+  }
+  .publicTour [data-chapter-media] > figure {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+  }
+  .publicTour [data-chapter-media] video {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    margin: 0;
+    object-fit: contain;
+    translate: none;
+  }
+}
+.publicText {
+  align-items: flex-start;
+  text-align: left;
+  font-family: var(--font-info-titillium, var(--font-gabarito)), sans-serif;
+  color: #082d63;
+}
+.publicTour .publicText {
+  background: transparent;
+  align-self: flex-start;
+  width: 38%;
+  max-width: none;
+  margin: 0;
+  padding: var(--chapter-content-top) 0 96px var(--chapter-text-inset);
+  gap: 22px;
+}
+.publicTour .publicText [data-chapter-kicker] {
+  position: static;
+  margin: -8px 0 0;
+  font-size: var(--chapter-copy-size);
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #365479;
+}
+.publicTour .publicText h1,
+.publicTour .publicText h2 {
+  font-family: var(--font-info-titillium, var(--font-gabarito)), sans-serif;
+  font-weight: 300;
+  font-size: var(--chapter-title-size);
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+  color: #082d63;
+  text-align: left;
+  width: 100%;
+  max-width: none;
+  min-height: 0;
+}
+.publicText > div {
+  align-items: flex-start;
+  justify-content: flex-start;
+  width: 100%;
+}
+.publicText ul {
+  list-style: none;
+  padding-inline: 0;
+}
+.publicText [data-agent-prompts] {
+  text-align: left;
+  width: 100%;
+}
+.publicText [data-agent-prompt] {
+  align-items: stretch;
+}
+.publicText [data-chapter-action] {
+  justify-content: flex-start;
+  margin-top: 12px;
+  padding-top: 0;
+}
+.publicText [data-chapter-body] {
+  color: #365479;
+  font-size: var(--chapter-copy-size);
+  line-height: var(--chapter-copy-leading);
+}
+.publicText [data-chapter-body] > p,
+.publicText [data-chapter-introduction] {
+  font-size: var(--chapter-copy-size);
+  line-height: var(--chapter-copy-leading);
+}
+.publicText [data-chapter-body] p {
+  color: #365479;
+}
+.publicText [data-chapter-body] li p:first-child {
+  font-size: var(--chapter-copy-size);
+}
+.publicText [data-chapter-body] li p + p {
+  font-size: var(--chapter-copy-size);
+}
+.publicText [data-chapter-body] > div {
+  align-items: flex-start;
+}
+@media (max-width: 760px) {
+  .publicTour {
+    --chapter-title-size: clamp(28px, 7.6vw, 38px);
+  }
+}
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .publicTour {
+    --chapter-copy-size: 15px;
+    --chapter-copy-leading: 1.45;
+  }
+  .publicTour .publicText,
+  .publicTour .publicText[data-chapter-text="agents"] {
+    width: 100%;
+    padding: calc(var(--stage-video-top) + var(--stage-video-h) + 28px) 20px 104px;
+  }
+  .publicTour .publicText h1,
+  .publicTour .publicText h2 {
+    min-height: 0;
+  }
+}
+.publicTour [data-fly] {
+  font-family: var(--font-info-titillium, var(--font-gabarito)), sans-serif;
+  font-style: normal;
+}
+.chapterTimeline {
+  display: flex;
+  align-items: flex-start;
+  width: max-content;
+  margin-inline: auto;
+  padding-inline: 20px;
+  font-family: var(--font-info-titillium, var(--font-gabarito)), sans-serif;
+  font-size: clamp(13px, 1.05vw, 16px);
+  line-height: 1.4;
+  color: #737373;
+}
+.timelineChapters {
+  position: relative;
+  display: flex;
+}
+.timelinePlayback {
+  position: absolute;
+  bottom: 8px;
+  height: 2px;
+  z-index: 1;
+  pointer-events: none;
+}
+.timelinePlayback > span {
+  display: block;
+  height: 100%;
+  background: #082d63;
+  transform-origin: left;
+  transition: transform 100ms linear;
+}
+.timelineChapter {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  min-height: 44px;
+  cursor: pointer;
+}
+.timelineChapter > :first-child {
+  padding-inline: 16px;
+  white-space: nowrap;
+}
+.timelineTrack {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 16px;
+  margin-top: auto;
+}
+.timelineTrack::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  height: 1px;
+  background: #183f8b26;
+}
+.timelineChapter:first-child .timelineTrack::before {
+  left: 50%;
+}
+.timelineChapter:last-of-type .timelineTrack::before {
+  right: 50%;
+}
+.timelineDot {
+  position: relative;
+  z-index: 2;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #c6cdd8;
+  transition:
+    background-color 200ms,
+    transform 200ms;
+}
+.timelineChapter[aria-current="location"],
+.timelineChapter:hover {
+  color: #082d63;
+}
+.timelineChapter[aria-current="location"] .timelineDot {
+  background: #082d63;
+  transform: scale(1.5);
+}
+.timelineChapter:hover .timelineDot {
+  background: #526782;
+}
+.timelineChapter:focus-visible {
+  outline: 2px solid #183f8b;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+.navWord {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 9px;
+}
+.navProgress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  overflow: hidden;
+  background: #183f8b26;
+}
+.navProgress > span {
+  display: block;
+  height: 100%;
+  background: #183f8b;
+  transform-origin: left;
+  transition: transform 0.15s linear;
+}
+.navPause,
+.navPauseSpace {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  margin-left: 6px;
+  margin-bottom: 9px;
+}
+.navPause {
+  pointer-events: auto;
+  border-radius: 50%;
+  background: #183f8b0d;
+  font-family: var(--font-info-titillium, var(--font-gabarito)), sans-serif;
+  font-size: 18px;
+  line-height: 1;
+  font-style: normal;
+  color: #365479;
+  cursor: pointer;
+}
+.navPause:hover {
+  background: #183f8b1a;
+}
+.navPause:focus-visible {
+  outline: 2px solid #183f8b;
+  outline-offset: 3px;
+}
+.chapterTimeline .navPause,
+.chapterTimeline .navPauseSpace {
+  margin-top: -8px;
+  margin-bottom: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .navProgress > span,
+  .timelinePlayback > span {
+    transition: none;
+  }
+}
+
+/* On phones, reserve a clear area for the header and up arrow before the media. */
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .publicTour :global(section[data-index]) {
+    --stage-video-top: 116px;
+    --stage-video-h: min(calc((100vw - 32px) * 0.5625), calc(var(--chapter-h) * 0.25));
+  }
+
+  .publicTour .publicText[data-chapter-text="agents"] {
+    padding-top: 124px;
+  }
+
+  .publicTour :global(#walkthrough-agents) > :global([data-chapter-stage]) {
+    display: none;
+  }
+
+  /* At least this tall, and taller where a prompt wraps onto more lines, so its end is never cut off. */
+  .publicTour .publicText[data-chapter-text="agents"] [data-agent-prompt] {
+    min-height: 92px;
+  }
+
+  .chapterTimeline .navPause {
+    position: sticky;
+    right: 20px;
+    z-index: 3;
+    background: #fff;
+    box-shadow: 0 0 10px 6px #fff;
+  }
+}
+
+@media (pointer: coarse) {
+  .navPause,
+  .navPauseSpace {
+    width: 44px;
+    height: 44px;
+  }
+
+  .publicText [data-chapter-action] > a,
+  .publicText [data-chapter-action] > button {
+    min-height: 44px;
+  }
+}
+
+.landingTransition {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  /* it fades where it is, over the tiles that stay behind the chapters (walkthrough.tsx LANDING_PEELS) */
+  opacity: 1;
+  transition: opacity calc(var(--landing-exit-ms, 900ms) * 0.8) ease;
+}
+.landingTransition[data-leaving] {
+  opacity: 0;
+  pointer-events: none;
+}
+/* The chapters' own timeline takes over in the same place, so the one line stays put as the page goes up. */
+.landingTransition[data-leaving] nav {
+  visibility: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+  .landingTransition {
+    transition: none;
+  }
+}
+
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .publicTour .publicText[data-chapter-text="join"] {
+    padding-top: calc(var(--stage-video-top) + var(--stage-video-h) + 28px);
+  }
+}
+
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .publicTour {
+    --chapter-text-inset: 20px;
+  }
+}
+
+.publicTour .publicText[data-chapter-text="join"] h1 {
+  min-height: 0;
+}
+.publicTour .publicText[data-chapter-text="join"] {
+  gap: 18px;
+}
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .publicTour .publicText[data-chapter-text="join"] {
+    width: 100%;
+    gap: 12px;
+  }
+}
+
+/* Upright screens share one media frame before the chapter copy. */
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .publicTour [data-chapter-media] {
+    top: var(--stage-video-top);
+    bottom: auto;
+    left: 16px;
+    right: 16px;
+    width: auto;
+    height: var(--stage-video-h);
+    max-width: 600px;
+    margin-inline: auto;
+    transform: none;
+  }
+  .publicTour [data-chapter-media] > figure,
+  .publicTour [data-chapter-media] video {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    margin: 0;
+    object-fit: contain;
+    translate: none;
+  }
+}
+
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .publicTour .publicText {
+    gap: 16px;
+  }
+  .publicText [data-chapter-action] {
+    margin-top: 8px;
+  }
+}
+
+/* The closing chapter rises together when its footer opens, preserving media/logo spacing. */
+.publicTour .publicText[data-chapter-text="join"],
+.publicTour :global([data-stage-scene="join"]) > [data-chapter-media] {
+  translate: 0 calc(-1 * var(--public-footer-extra, 0px));
+}
+
+/* Rounded films sit directly on the tile field without a rectangular backplate shadow. */
+.publicTour [data-chapter-media] video {
+  border-radius: clamp(12px, 1.4vw, 20px);
+  box-shadow: none;
+  background: transparent;
+  object-fit: cover;
+}
+
+/* Upright on a phone the footer comes at the end of the last chapter, which grows to read down to it. */
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .publicTour :global(section#walkthrough-join) {
+    padding-bottom: var(--public-footer-height, 0px);
+  }
+}

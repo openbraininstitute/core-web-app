@@ -2,12 +2,8 @@
   position: relative;
   margin: 0;
   width: 100%;
-  height: max(100vh, 600px);
-  color: #fffe;
-  background-color: var(--color-primary);
-
-  --color-bg: var(--color-primary);
-  --gradient-angle: 150deg;
+  color: var(--color-primary);
+  background-color: #fff;
 }
 
 @media (min-width: 768px) {
@@ -16,15 +12,38 @@
   }
 }
 
-.hero .background {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
+/* The words on the left and the picture framed on the right, as the walkthrough's screens have them. */
+.withMedia {
+  min-height: max(88vh, 600px);
+  display: grid;
+  grid-template-columns: minmax(0, 36fr) minmax(0, 64fr);
+  gap: clamp(32px, 4vw, 72px);
+  align-items: center;
+  padding: 110px clamp(32px, 5vw, 88px) 96px;
 }
 
-.hero .background > * {
+/* The words alone, in the middle of the page, over what comes under them. */
+.wordsOnly {
+  min-height: max(58vh, 440px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 110px 14vw 84px;
+  text-align: center;
+}
+
+.media {
+  order: 2;
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border: 1px solid #e5e5e5;
+  border-radius: 14px;
+  background-color: var(--color-neutral-light);
+  box-shadow: 0 24px 60px rgba(0, 39, 102, 0.14);
+}
+
+.media > * {
   position: absolute;
   left: 0;
   top: 0;
@@ -33,50 +52,69 @@
   object-fit: cover;
 }
 
-.hero .background > video {
+.media > video {
   transition: opacity 1.2s;
 }
 
-.hero .background > img {
+.media > img {
   transition: opacity 0.3s;
 }
 
-.hero .background > .show {
+.media > .show {
   opacity: 1;
 }
 
-.hero .background > .hide {
+.media > .hide {
   opacity: 0;
 }
 
-.hero .text {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  background: linear-gradient(
-    var(--gradient-angle),
-    var(--color-bg) 29.85%,
-    rgba(240, 240, 240, 0) 61.87%
-  );
-  z-index: 1;
-  font-size: 3vmin;
-  line-height: 1;
-  padding: 0 14vw;
+.text {
   text-wrap: balance;
-  max-width: auto;
+}
+
+/* Full-bleed information-page visuals, with a light scrim only behind the words. */
+.immersive {
+  display: flex;
+  overflow: hidden;
+}
+.immersive .media {
+  position: absolute;
+  inset: 0;
+  aspect-ratio: auto;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+.immersive .media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    rgb(255 255 255 / 75%) 0%,
+    rgb(255 255 255 / 5%) 55%,
+    rgb(255 255 255 / 0%) 60%
+  );
+  pointer-events: none;
+}
+.immersive .text {
+  position: relative;
+  z-index: 1;
+  width: 36%;
+  max-width: 560px;
+}
+
+.withMedia .text > div {
+  align-items: flex-start;
 }
 
 .hero .text h1 {
-  margin-bottom: 20px;
-  font-size: 8vmin;
-  line-height: 1.2;
+  margin: 0 0 20px;
+  font-size: clamp(40px, 4.4vw, 64px);
+  font-weight: 400;
+  line-height: 1.06;
   padding: 0;
-  text-align: center;
 }
 
 .hero .text h1::after {
@@ -84,9 +122,10 @@
 }
 
 .hero .text div.content {
-  text-align: center;
+  max-width: 44em;
+  color: var(--color-body);
+  font-size: clamp(16px, 1.3vw, 19px);
   line-height: 1.55;
-  max-width: auto;
 }
 
 .virtualLabsButton {
@@ -99,12 +138,10 @@
   gap: 4px;
   margin: 20px auto 0;
   padding: 20px 80px 24px 80px;
-  border: 1px solid white;
   border-radius: 60px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(6px);
+  background: var(--color-primary);
   text-decoration: none;
-  transition: all 0.3s ease;
+  transition: background-color 0.2s;
   line-height: 1;
 }
 
@@ -116,7 +153,7 @@
 }
 
 .virtualLabsButton:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: #00428b;
 }
 
 .hero > footer {
@@ -126,14 +163,214 @@
   width: 100%;
   z-index: 9;
 }
+.immersive > footer button {
+  color: #fff;
+  opacity: 1;
+  text-shadow: 0 1px 8px rgb(0 0 0 / 30%);
+}
 
 .comingSoon {
   z-index: 8;
-  position: absolute;
-  left: 0;
-  top: 0;
+  position: relative;
   width: 100%;
-  height: 100%;
   display: grid;
   place-items: center;
+}
+
+/* A whole screen, where the page is held a section at a time. */
+@media (min-width: 768px) {
+  :global(.landing-page-snap) .withMedia,
+  :global(.landing-page-snap) .wordsOnly {
+    min-height: 100dvh;
+  }
+}
+
+/* Upright on a phone, as the walkthrough's screens: the picture across the page, and the words under it. */
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .withMedia {
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    padding: 76px 20px 72px;
+  }
+
+  .media {
+    order: -1;
+    aspect-ratio: 16 / 9;
+  }
+
+  .immersive {
+    display: grid;
+    padding-top: 0;
+  }
+
+  .immersive .media {
+    position: relative;
+    inset: auto;
+    width: calc(100% + 40px);
+    height: clamp(320px, 54svh, 560px);
+    margin-inline: -20px;
+  }
+
+  .immersive .media::after {
+    display: none;
+  }
+
+  .immersive .text {
+    width: 100%;
+    max-width: none;
+  }
+
+  .immersive > footer button {
+    color: var(--color-primary);
+    text-shadow: none;
+  }
+
+  .wordsOnly {
+    min-height: 0;
+    padding: 96px 20px 72px;
+  }
+
+  .hero .text h1 {
+    font-size: clamp(30px, 8vw, 44px);
+    margin-bottom: 12px;
+  }
+
+  .hero .text div.content {
+    font-size: 15px;
+  }
+}
+
+/* The imported tile stage spans the hero; its own left side stays white for copy. */
+.immersive .media.hexagonMedia {
+  inset: 0;
+  transform: none;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  overflow: hidden;
+}
+
+.immersive .media.hexagonMedia::after {
+  display: none;
+}
+
+.hexagonHero > footer button {
+  color: var(--color-primary);
+  text-shadow: none;
+}
+
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .immersive .media.hexagonMedia {
+    position: relative;
+    inset: auto;
+    transform: none;
+    width: calc(100% + 40px);
+    height: clamp(280px, 48svh, 440px);
+    max-height: none;
+    margin-inline: -20px;
+  }
+}
+
+/* Keep the phone header on white, with the artwork and copy flowing beneath it. */
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .immersive.hexagonHero {
+    padding-top: 76px;
+  }
+
+  .hero .text div.content {
+    font-size: 16px;
+  }
+}
+
+.contactEmails {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  gap: 18px;
+  margin-top: 24px;
+  text-wrap: initial;
+}
+.contactEmail {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 100%;
+  gap: 3px;
+  text-decoration: none;
+}
+.contactEmailLabel {
+  font-size: 14px;
+  line-height: 1.4;
+  color: #526178;
+}
+.contactEmailAddress {
+  font-size: clamp(16px, 1.4vw, 20px);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-primary);
+  overflow-wrap: anywhere;
+  text-underline-offset: 4px;
+}
+.contactEmail:hover .contactEmailAddress {
+  text-decoration: underline;
+}
+.contactEmail:focus-visible {
+  outline: 2px solid #183f8b;
+  outline-offset: 5px;
+  border-radius: 3px;
+}
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .immersive.contactHero .media.hexagonMedia {
+    height: clamp(150px, 23svh, 210px);
+  }
+  .contactEmails {
+    gap: 14px;
+    margin-top: 18px;
+  }
+}
+
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .immersive.contactHero {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 12px;
+    padding-bottom: 20px;
+  }
+  .immersive.contactHero .media.hexagonMedia {
+    flex: 0 0 auto;
+    height: clamp(90px, calc(100svh - 550px), 180px);
+  }
+  .contactHero .contactEmails {
+    gap: 12px;
+    margin-top: 14px;
+  }
+}
+@media (max-height: 600px) and (orientation: landscape) {
+  .immersive.contactHero {
+    padding-top: 76px;
+    padding-bottom: 12px;
+  }
+  .immersive.contactHero .text {
+    width: 46%;
+  }
+  .hero.contactHero .text h1 {
+    font-size: 32px;
+    margin-bottom: 8px;
+  }
+  .hero.contactHero .text div.content {
+    font-size: 14px;
+  }
+  .contactHero .contactEmails {
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .contactHero .contactEmailLabel {
+    font-size: 12px;
+  }
+  .contactHero .contactEmailAddress {
+    font-size: 14px;
+  }
 }

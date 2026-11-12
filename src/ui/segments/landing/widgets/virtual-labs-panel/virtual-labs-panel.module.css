@@ -13,3 +13,20 @@
     padding: 0;
   }
 }
+
+/* Match the Mission paragraph's column and retain room for its download action. */
+.triBlocks.compact {
+  grid-column: 5 / 6;
+  width: calc(100% - 30px);
+  max-width: 770px;
+  margin-left: 30px;
+  padding: 0;
+  flex-wrap: nowrap;
+  align-items: stretch;
+}
+
+@media (max-width: 640px) {
+  .triBlocks.compact {
+    flex-direction: column;
+  }
+}

@@ -9,6 +9,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { createPortal } from 'react-dom';
 
 import { PopulationsMenu } from '@/features/circuit-nodes/components/populations-menu';
+import { useBareViewer } from '@/features/viewer-3d/bare';
 import { PILL_CLASS, ROUND_PILL_CLASS } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 
@@ -20,6 +21,7 @@ import { ColorByDropdown } from './color-by-dropdown';
 import { ColorLegend } from './color-legend';
 import { panelStyle } from './contrast';
 import { type IViewerModeOption, ModeToggle } from './mode-toggle';
+import { ColorModeDict } from './types';
 import { ViewerControlsMenu } from './viewer-controls-menu';
 
 import type { CSSProperties } from 'react';
@@ -123,6 +125,7 @@ export function CircuitViewerChrome({
   debugSlotRef,
   selection,
 }: ICircuitViewerChromeProps) {
+  const bare = useBareViewer();
   const colorBy = viz?.colorBy;
   const populations = viz?.populations;
   const selectedProperty = colorBy?.selectedProperty ?? null;
@@ -198,6 +201,15 @@ export function CircuitViewerChrome({
   const belowLeft = leftBottom + GAP;
 
   const panel = theme ? panelStyle(theme) : undefined;
+
+  // Bare, colour-by is all there is, and only in the host's place: nothing over the canvas.
+  if (bare) {
+    return colorBy && showVizChrome ? (
+      <Placed target={colorByTarget ?? null}>
+        <BareColorBy colorBy={colorBy} noneLabel={colorByNoneLabel} />
+      </Placed>
+    ) : null;
+  }
 
   return (
     <div className="pointer-events-none absolute inset-0 z-20">
@@ -496,6 +508,51 @@ function ChromeNotice({
         >
           {action}
         </button>
+      )}
+    </div>
+  );
+}
+
+/** At most this many swatches in a bare key, then how many more there are. */
+const BARE_KEY_ENTRIES = 18;
+
+/** The dropdown, and under it the key as a line of swatches rather than a panel, for a page's own column. */
+function BareColorBy({ colorBy, noneLabel }: { colorBy: ColorByControls; noneLabel?: string }) {
+  const mapping = colorBy.selectedProperty && !colorBy.legendLoading ? colorBy.mapping : null;
+  const categories = mapping?.mode === ColorModeDict.Categorical ? mapping.categorical : undefined;
+  const scale = mapping?.mode === ColorModeDict.Continuous ? mapping.continuous : undefined;
+  const more = (categories?.length ?? 0) - BARE_KEY_ENTRIES;
+  return (
+    <div className="flex flex-col items-start gap-3" data-testid="color-by-toolbar">
+      <ColorByDropdown
+        value={colorBy.selectedProperty}
+        onChange={colorBy.onSelectProperty}
+        properties={colorBy.properties}
+        loading={colorBy.propertiesLoading}
+        error={colorBy.propertiesError}
+        onRetry={colorBy.onRetryProperties}
+        noneLabel={noneLabel}
+      />
+      {categories && (
+        <ul className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] leading-4 text-neutral-500">
+          {categories.slice(0, BARE_KEY_ENTRIES).map(({ value, color }) => (
+            <li key={value} className="flex items-center gap-1.5">
+              <span className="size-2 shrink-0 rounded-full" style={{ background: color }} />
+              {value}
+            </li>
+          ))}
+          {more > 0 && <li>and {more} more</li>}
+        </ul>
+      )}
+      {scale && (
+        <div className="flex items-center gap-2 text-[11px] leading-4 text-neutral-500 tabular-nums">
+          {Number.parseFloat(scale.min.toFixed(2))}
+          <span
+            className="h-1.5 w-40 rounded-full"
+            style={{ background: `linear-gradient(to right, ${scale.gradient.join(', ')})` }}
+          />
+          {Number.parseFloat(scale.max.toFixed(2))}
+        </div>
       )}
     </div>
   );

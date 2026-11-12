@@ -4,14 +4,15 @@
   --color-background: #fff;
   --color-on-bakground: #000;
   --color-neutral: var(--Colors-Gray-4, #bfbfbf);
-  --color-neutral-light: var(--Colors-Gray-4, #f0f0f0);
+  --color-neutral-light: #edf2f8;
+  --color-body: #465873;
   --color-on-neutral: var(--color-on-bakground);
-  --color-primary: var(--Colors-Blue-8, #003a8c);
+  --color-primary: #002766;
   --color-primary-light: var(--Colors-Blue-8, #1897e6);
   --color-on-primary: var(--color-background);
   --font-serif: "DM Serif Text", serif;
-  --font-sans-serif: "Gabarito", sans-serif;
-  --font-size-M: 19px;
+  --font-sans-serif: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-size-M: 17px;
   --font-size-S: calc(0.8 * var(--font-size-M));
   --font-size-M-plus: calc(1.2 * var(--font-size-M));
   --font-size-L: calc(1.5 * var(--font-size-M));
@@ -28,11 +29,12 @@
 
   width: 100%;
   max-width: 100vw;
+  overflow-x: clip;
   margin: 0;
   padding: 0;
   color: var(--color-primary);
   background-color: var(--color-background);
-  font-family: "Gabarito", serif;
+  font-family: var(--font-sans-serif);
   font-optical-sizing: auto;
   font-weight: normal;
   font-style: normal;
@@ -46,6 +48,13 @@
   font-size: 18px;
   color: var(--color-primary-9);
   margin-bottom: 80px;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .content {
+    padding: 0 20px;
+  }
 }
 
 .content > p {

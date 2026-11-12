@@ -1,0 +1,89 @@
+.hero {
+  --ink: #082d63;
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  overflow-x: hidden;
+  background: white;
+  color: var(--ink);
+  padding: 0;
+}
+.nextChapter {
+  position: fixed;
+  bottom: clamp(64px, 9.5vh, 88px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 67;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  color: var(--ink);
+  cursor: pointer;
+  transition: opacity 200ms;
+}
+.nextChapter:hover {
+  opacity: 0.6;
+}
+.nextChapter:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+}
+@media (max-width: 799px) {
+  .hero {
+    padding: 72px 0 100px;
+  }
+}
+@media (pointer: coarse) {
+  .nextChapter {
+    width: 44px;
+    height: 44px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nextChapter {
+    transition: none;
+  }
+}
+
+/* The landing's words in the top bar's row, beside its logo and level with its buttons: the logo is as tall as
+   clamp(44px, 5vh, 56px) and 3.11 times as wide, after the bar's own padding. */
+.topPhrase {
+  position: absolute;
+  z-index: 71;
+  top: 22px;
+  left: calc(clamp(20px, 3vw, 40px) + clamp(44px, 5vh, 56px) * 3.11 + 36px);
+  height: clamp(44px, 5vh, 56px);
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  font-family: var(--font-info-titillium), Arial, sans-serif;
+  /* two lines as tall as the logo's two */
+  font-size: calc(clamp(44px, 5vh, 56px) * 0.47);
+  line-height: 1.06;
+  font-weight: 300;
+  white-space: nowrap;
+  color: #002766;
+  pointer-events: none;
+  animation: top-phrase-in 900ms 150ms both;
+}
+@keyframes top-phrase-in {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .topPhrase {
+    animation: none;
+  }
+}

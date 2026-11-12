@@ -59,3 +59,25 @@ div.epfl {
 .epflNews hr.separator {
   color: var(--color-neutral);
 }
+
+/* Held a section at a time: no gap over the first, and two articles to fit a screen, in the middle of it. */
+@media (min-width: 768px) {
+  .news {
+    margin-top: 0;
+  }
+
+  .news .screen {
+    min-height: 100dvh;
+    padding: 88px 0 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 36px;
+    scroll-snap-align: start;
+  }
+
+  .news .screen > * {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+}

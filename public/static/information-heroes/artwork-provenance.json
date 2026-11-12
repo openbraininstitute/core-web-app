@@ -1,0 +1,34 @@
+{
+  "mode": "Built-in image_gen, reference-based compositing. Technical extraction and WebP encoding with sharp.",
+  "prompt": "Use case: compositing. Create ONE production animation texture atlas, exactly TWO equally sized 16:9 frames STACKED VERTICALLY (overall canvas 8:9 portrait). No panel border, no spacing or text. Image 1 is the approved layered hexagon mosaic style and outline reference. Image 2 is its approved SOLID end state with soft long organic feathering and remaining peripheral grey hexagons. Image 3 supplies the replacement scientific subject for THIS atlas.\nTOP HALF: recreate the approved design using Image 3's scientific content printed continuously across raised hexagonal puzzle tiles, varied shallow heights, soft ambient shadows and visible side faces, mostly overhead perspective. No outlined honeycomb grid. The colored image fills center-right; surrounding white/grey hexagons extend left and fade softly into pure white. Keep the same large organic silhouette, approximately left 18% whitespace, dense subject at x40–90%, outer tiles fade at all sides.\nBOTTOM HALF: EXACT SAME image, subject placement, scale, color, outline, and peripheral grey/white tiles as the top half, but flatten ONLY the central colored hexagons into one continuous solid scientific image. No central seams. Keep the OUTER grey/white hexagons layered and visible. Long soft natural feathering to white; no rectangular picture boundary. The two frames must align perfectly for a transition with no subject movement or color shift.\nPreserve Image 3's recognizable biological structures and palette. Increase legibility of the subject rather than reproducing its flat dark blue overlay. No new scientific elements, no text, no logos. Use the same pure white background and tactile shading as the approved references. This single atlas will be split horizontally in code into the animation's initial and final states.",
+  "subjects": {
+    "mission": "Dense blue/cyan/pink neuronal fibres and interconnected neural tissue.",
+    "news": "Multi-colored brain regions, detailed point-cloud neurons and connecting fibres.",
+    "notebooks": "Turquoise branching neuronal arbors in front of cyan and pink brain regions.",
+    "team": "Dense blue/cyan neural network with subtle pink and orange highlights.",
+    "contact": "Yellow and turquoise neuron cell bodies with branching dendrites.",
+    "privacy": "Translucent teal and purple brain with neural fibres and point-like neurons.",
+    "financing": "Translucent pale blue brain regions.",
+    "showcases": "Cyan ion-channel protein in a pink/purple lipid membrane.",
+    "releasing-soon": "Layered neuronal tissue in pink, yellow, blue and green.",
+    "the-real-digital-brain-story": "Cutaway brain of fine multicolored neuronal fibres and anatomical regions."
+  },
+  "atlases": {
+    "mission": "/Users/khazen/.codex/generated_images/01a18203-4f6c-7553-83d4-b1da727ec749/exec-a8141475-b480-450d-9920-e16c0b894092.png",
+    "news": "/Users/khazen/.codex/generated_images/01a18203-4f6c-7553-83d4-b1da727ec749/exec-3477474a-1367-41c5-9933-f5d67162b036.png",
+    "notebooks": "/Users/khazen/.codex/generated_images/01a18203-4f6c-7553-83d4-b1da727ec749/exec-b5eb6b8a-b9f3-4381-99c7-107fa59d0e6e.png",
+    "team": "/Users/khazen/.codex/generated_images/01a18203-4f6c-7553-83d4-b1da727ec749/exec-f98f2182-ba3d-419d-8e1a-02f28d236ac4.png",
+    "contact": "/Users/khazen/.codex/generated_images/01a18203-4f6c-7553-83d4-b1da727ec749/exec-9a527675-e759-4958-89c4-6272115224dd.png",
+    "privacy": "/Users/khazen/.codex/generated_images/01a18203-4f6c-7553-83d4-b1da727ec749/exec-3bbb4dc2-ddc8-40bc-8ebd-17bc88ffbd3a.png",
+    "financing": "/Users/khazen/.codex/generated_images/01a18203-4f6c-7553-83d4-b1da727ec749/exec-8d087e72-a771-435b-94c0-a7f4750c4020.png",
+    "showcases": "/Users/khazen/.codex/generated_images/01a18203-4f6c-7553-83d4-b1da727ec749/exec-1734c47e-9532-4221-ae2b-54010ff08448.png",
+    "releasing-soon": "/Users/khazen/.codex/generated_images/01a18203-4f6c-7553-83d4-b1da727ec749/exec-dc784aa5-58f3-4dab-bec3-b07525c44874.png",
+    "the-real-digital-brain-story": "/Users/khazen/.codex/generated_images/01a18203-4f6c-7553-83d4-b1da727ec749/exec-e39dd76b-9802-4d98-ad04-2a82ef876c43.png"
+  },
+  "about": "Approved existing about-hexagons-v7.png and wave-solid-image.png; retained unchanged and encoded to WebP.",
+  "timing": {
+    "waveSeconds": 5.7,
+    "solidSeconds": 5
+  },
+  "assets": "Each atlas is split into equally sized mosaic and solid frames; filenames are <subject>-mosaic.webp and <subject>-solid.webp."
+}

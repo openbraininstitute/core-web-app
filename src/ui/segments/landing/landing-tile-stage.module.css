@@ -1,0 +1,495 @@
+.host {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  /* white on white, the tiles told apart by their shadows alone */
+  background: #fff;
+  font-family: var(--font-info-titillium), Arial, sans-serif;
+  color: #13306f;
+}
+.stage {
+  /* In thirds: the words, the examples (the field is in the stage's own px), the chosen one. */
+  --field-shift: 0px;
+  /* the logo over the words in the left third, the way in under them, all together (382 px tall) centred down the page */
+  --words-left: 150px;
+  --words-top: 349px;
+  --logo-h: 120px;
+  --line-h: 50px;
+  position: absolute;
+  width: 1920px;
+  height: 1080px;
+  /* zoom, not a transform: a transform would cut the tiles and pictures off the background they multiply onto */
+  zoom: var(--stage-scale, 1);
+}
+.tiles {
+  position: absolute;
+  inset: 0;
+  width: 1920px;
+  height: 1080px;
+  translate: var(--field-shift) 0;
+  /* white tiles take the background's colour, keeping their shading */
+  mix-blend-mode: multiply;
+}
+.picks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  translate: var(--field-shift) 0;
+}
+.picks button {
+  position: absolute;
+  padding: 0;
+  border: 0;
+  background: none;
+  border-radius: 50%;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.picks button:focus-visible {
+  outline: 3px solid #13306f;
+  outline-offset: 4px;
+}
+.logoAt {
+  position: absolute;
+  /* (at this height the logo is 373 px wide) */
+  left: var(--words-left);
+  top: var(--words-top);
+  width: 1px;
+  height: var(--logo-h);
+  pointer-events: none;
+}
+.headline {
+  position: absolute;
+  left: 0;
+  top: 0;
+  margin: 0;
+  font-size: 44px;
+  line-height: var(--line-h);
+  font-weight: 300;
+  z-index: 3;
+}
+.headline span {
+  position: absolute;
+  white-space: nowrap;
+  animation: enter 800ms both;
+}
+/* in at once, as the logo is (and as the page's first HTML has them: landing-first-paint.module.css) */
+.headline span:nth-child(1) {
+  left: var(--words-left);
+  top: calc(var(--words-top) + var(--logo-h) + 36px);
+  animation-delay: 0ms;
+}
+.headline span:nth-child(2) {
+  left: var(--words-left);
+  top: calc(var(--words-top) + var(--logo-h) + 36px + var(--line-h));
+  animation-delay: 150ms;
+}
+/* the first HTML's copy already brought them in: these take its place as they are */
+.headline[data-first-painted] span {
+  animation: none;
+}
+.headline span:nth-child(3) {
+  left: var(--words-left);
+  top: calc(var(--words-top) + var(--logo-h) + 36px + 2 * var(--line-h));
+  animation-delay: 400ms;
+}
+/* Under the headline: what the tiles show (hidden for now), then the way in. */
+.actionRow {
+  display: flex;
+  position: absolute;
+  left: var(--words-left);
+  top: calc(var(--words-top) + var(--logo-h) + 36px + 2 * var(--line-h) + 38px);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 30px;
+  z-index: 3;
+}
+.line {
+  display: none;
+  height: 2px;
+  flex: 1;
+  min-width: 30px;
+  background: #13306f;
+  animation: enter 800ms 600ms both;
+}
+.line:first-child {
+  flex: 0 0 76px;
+}
+.label {
+  margin: 0;
+  white-space: nowrap;
+  font-size: 46px;
+  font-weight: 300;
+  animation: enter 500ms both;
+}
+.ctaGroup {
+  position: relative;
+  flex-shrink: 0;
+}
+.cta {
+  position: relative;
+  composes: pill from "./cta-pill.module.css";
+  width: auto;
+  padding: 0 46px;
+  height: 88px;
+  white-space: nowrap;
+  font-family: inherit;
+  font-size: 42px;
+  line-height: 1;
+  font-weight: 300;
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0.6);
+  transition:
+    opacity 400ms ease,
+    transform 600ms cubic-bezier(0.3, 1.6, 0.5, 1),
+    background-color 200ms ease,
+    color 200ms ease;
+}
+.cta[data-cta-state="enter"],
+.cta[data-cta-state="alive"] {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+}
+.cta[data-cta-state="alive"] {
+  animation: nudge 4.2s ease-in-out infinite;
+}
+.reassurance {
+  position: absolute;
+  width: max-content;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 12px 0 0;
+  font-size: 21px;
+  font-weight: 300;
+}
+/* Beside the field the chosen one's name is under it, not under the headline; phones keep it under the headline. */
+.actionRow .label {
+  display: none;
+}
+/* what the one beside the field is, in a bubble floating by it, low on its left (the renderer's HERO_TILE, 1590 / 540) */
+.heroLabels {
+  position: absolute;
+  left: 1250px;
+  top: 770px;
+  width: 400px;
+  height: 140px;
+  pointer-events: none;
+  z-index: 3;
+}
+.heroLabel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: 400px;
+  margin: 0;
+  padding: 16px 22px 18px;
+  border-radius: 18px;
+  border: 1px solid rgb(19 48 111 / 0.08);
+  background: rgb(255 255 255 / 0.86);
+  backdrop-filter: blur(8px);
+  box-shadow:
+    0 14px 34px rgb(20 40 90 / 0.14),
+    0 2px 6px rgb(20 40 90 / 0.08);
+  text-align: left;
+  font-size: 25px;
+  line-height: 1.22;
+  font-weight: 300;
+  color: #13306f;
+  animation: bubble-float 5.5s ease-in-out infinite;
+  opacity: 0;
+  transition: opacity 450ms ease;
+}
+.heroLabel[data-active="true"] {
+  opacity: 1;
+  transition: opacity 700ms ease 250ms;
+}
+.heroImage {
+  position: absolute;
+  left: 1355px;
+  top: 140px;
+  width: 490px;
+  height: 820px;
+  margin: 0;
+  pointer-events: none;
+}
+.heroImage > img,
+.heroImage > video {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  height: auto;
+  max-width: none;
+  transform: translate(-50%, -50%) scale(0.96);
+  clip-path: inset(3px);
+  mix-blend-mode: multiply;
+  opacity: 0;
+  transition:
+    opacity 800ms ease,
+    transform 1200ms ease;
+}
+.heroImage > [data-active="true"] {
+  opacity: 1;
+  transform: translate(-50%, -50%);
+}
+/* In the opening the chosen one comes last, after the words and the tiles. */
+.heroImage:not([data-shown="true"]) > [data-active],
+.heroLabels:not([data-shown="true"]) > [data-active] {
+  opacity: 0;
+}
+/* While an example flies over, the one beside the field is the flying one; it then shows at once where that landed. */
+.heroImage[data-flying="true"] > [data-active] {
+  opacity: 0;
+  transition: none;
+}
+.heroImage[data-instant="true"] > [data-active] {
+  transition: none;
+}
+/* An example on its way between a tile and its place beside the field, moved there by the page. */
+.flying {
+  position: absolute;
+  z-index: 2;
+  max-width: none;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  transform-origin: 50% 50%;
+  will-change: transform, clip-path;
+}
+@keyframes enter {
+  from {
+    opacity: 0;
+    translate: 0 18px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@media (max-width: 799px) {
+  /* down to the arrow to the next page (living-hero.module.css: fixed, clamp(64px, 9.5vh, 88px) up, 44 px tall), under
+   * the top bar's 72 */
+  .host {
+    position: relative;
+    min-height: 480px;
+    height: calc(100svh - 72px - clamp(64px, 9.5vh, 88px) - 44px);
+    overflow: visible;
+  }
+  /* From the top: the chosen one, its name, the field under it (the canvas down to the renderer's 1040), then the
+   * words and the way in (PHONE_UNDER_FIELD in landing-tile-stage.tsx sums these). */
+  .stage {
+    --canvas-top: 8px;
+    --mobile-title-size: 28px;
+    --words-at: calc(
+      var(--canvas-top) +
+      (var(--phone-stage-h) - 40) *
+      var(--stage-scale) *
+      1px +
+      6px
+    );
+    position: relative;
+    width: 100%;
+    height: 100%;
+    zoom: 1;
+  }
+  .tiles,
+  .picks {
+    translate: none;
+    transform: scale(var(--stage-scale));
+    transform-origin: 0 0;
+    top: var(--canvas-top);
+    left: calc(50% - 930px * var(--stage-scale));
+    width: 1920px;
+    height: calc(var(--phone-stage-h) * 1px);
+  }
+  .headline {
+    left: 20px;
+    top: var(--words-at);
+    width: calc(100% - 40px);
+    font-size: var(--mobile-title-size);
+    line-height: 1.04;
+  }
+  .headline span,
+  .headline span:nth-child(n) {
+    position: static;
+    display: block;
+    white-space: normal;
+  }
+  .actionRow {
+    left: 20px;
+    top: calc(var(--words-at) + var(--mobile-title-size) * 2.08 + 12px);
+    width: calc(100% - 40px);
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .line {
+    display: none;
+  }
+  .cta {
+    width: 150px;
+    height: 48px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .reassurance {
+    left: 0;
+    transform: none;
+    font-size: 12px;
+  }
+  .heroImage {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .headline span,
+  .line,
+  .label,
+  .cta {
+    animation: none;
+  }
+  .heroImage > img,
+  .heroImage > video,
+  .heroLabel,
+  .heroLabel[data-active="true"] {
+    transition: none;
+  }
+}
+
+/* The export's invitation animation is specific to this landing CTA. */
+.cta[data-cta-state="alive"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  border: 2px solid var(--color-green-main, #008c05);
+  opacity: 0;
+  animation: ring 4.2s ease-out infinite;
+}
+.cta[data-cta-state="alive"]:hover {
+  animation-play-state: paused;
+}
+@keyframes nudge {
+  0%,
+  70%,
+  100% {
+    transform: scale(1);
+  }
+  76% {
+    transform: scale(1.1);
+  }
+  82% {
+    transform: scale(0.96);
+  }
+  88% {
+    transform: scale(1.04);
+  }
+  94% {
+    transform: scale(1);
+  }
+}
+@keyframes ring {
+  0%,
+  74% {
+    opacity: 0;
+    transform: scale(1);
+  }
+  76% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.35, 1.7);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cta,
+  .cta[data-cta-state="alive"],
+  .cta[data-cta-state="alive"]::after {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* the bubble's kicker, on a line of its own, and its tail, pointing up at the one beside the field */
+.heroLabel strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #008c05;
+}
+.heroLabel::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  right: 46px;
+  width: 16px;
+  height: 16px;
+  rotate: 45deg;
+  background: inherit;
+  border-top: 1px solid rgb(19 48 111 / 0.08);
+  border-left: 1px solid rgb(19 48 111 / 0.08);
+}
+@keyframes bubble-float {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -7px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .heroLabel {
+    animation: none;
+  }
+}
+/* A phone: the chosen one's name centred under it (the renderer's PHONE_HERO_H: its box down to the stage's foot less
+ * 590), plain. */
+@media (max-width: 799px) {
+  .heroLabels {
+    left: 20px;
+    top: calc(var(--canvas-top) + (var(--phone-stage-h) - 582) * var(--stage-scale) * 1px);
+    width: calc(100% - 40px);
+    height: auto;
+  }
+  .heroLabel {
+    width: 100%;
+    max-width: none;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    backdrop-filter: none;
+    box-shadow: none;
+    text-align: center;
+    text-wrap: balance;
+    font-size: 13px;
+    line-height: 1.25;
+    animation: none;
+  }
+  .heroLabel::before {
+    display: none;
+  }
+  /* the words and the way in centred under it, as it is */
+  .headline {
+    text-align: center;
+  }
+  .actionRow {
+    justify-content: center;
+  }
+  .heroLabel strong {
+    display: inline;
+    margin: 0 6px 0 0;
+    font-size: 11px;
+  }
+}

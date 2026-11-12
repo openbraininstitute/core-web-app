@@ -1,0 +1,46 @@
+.pill {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 150px;
+  height: 48px;
+  flex-shrink: 0;
+  padding: 0 20px;
+  border: 1px solid var(--color-green-main, #008c05);
+  border-radius: 999px;
+  background: var(--color-green-main, #008c05);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 20px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 200ms ease-out,
+    color 200ms ease-out;
+}
+.pill:hover {
+  background: #fff;
+  color: var(--color-green-main, #008c05);
+}
+.pill:focus-visible {
+  outline: 3px solid var(--color-green-main, #008c05);
+  outline-offset: 4px;
+}
+.header {
+  width: auto;
+  height: 44px;
+  font-size: 14px;
+}
+@media (max-width: 639px) {
+  .header {
+    padding-inline: 14px;
+    font-size: 13px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pill {
+    transition: none;
+  }
+}

@@ -19,6 +19,8 @@ import type { CircuitMorphologyData, Population } from './types';
 export interface PackFile {
   size: number;
   sha256: string;
+  /** Read from here rather than from Bluenaas: a pack the app serves itself, made for one view. */
+  url?: string;
 }
 
 /** A circuit's cells as the page placed them. Memoise it: another one is another load. */
@@ -53,8 +55,9 @@ async function packRequest(
   { pack, circuitId }: MorphologiesSource,
   ctx: WorkspaceContext | null
 ): Promise<PackRequest> {
+  if (pack.url) return { url: pack.url, headers: {}, pack: { size: pack.size, sha256: pack.sha256 } };
   const request = await buildMorphologyPackDownloadRequest({ ctx, circuitId });
-  return { ...request, pack };
+  return { ...request, pack: { size: pack.size, sha256: pack.sha256 } };
 }
 
 /**

@@ -147,6 +147,7 @@ function CircuitVizView({
   backgroundColor,
   showScalebar = true,
   spin,
+  aoMoving,
   signals,
   overlays,
   overlaysInteractive = false,
@@ -300,6 +301,7 @@ function CircuitVizView({
           backgroundColor={backgroundColor}
           showScalebar={showScalebar}
           spin={spin}
+          aoMoving={aoMoving}
           signals={signals}
           onZoomChange={onZoomChange}
           debugTarget={debugTarget}
@@ -389,7 +391,8 @@ function usePublishHiddenLocationNodes(
   useEffect(() => () => setHiddenNodes(new Set()), [setHiddenNodes]);
 }
 
-type TMemodelVizProps = Omit<TCircuitVizViewProps, 'source' | 'onCellClick' | 'entityId'> & {
+/** A click on the cell comes as cell 0. */
+type TMemodelVizProps = Omit<TCircuitVizViewProps, 'source' | 'entityId'> & {
   memodelId: string;
 };
 
