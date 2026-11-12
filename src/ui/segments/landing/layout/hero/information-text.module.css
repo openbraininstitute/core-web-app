@@ -11,7 +11,7 @@
 }
 .description {
   display: block;
-  animation: description-in 900ms ease both;
+  animation: description-in 450ms ease both;
 }
 @keyframes letter-in {
   from {

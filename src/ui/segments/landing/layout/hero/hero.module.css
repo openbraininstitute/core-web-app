@@ -374,3 +374,21 @@
     font-size: 14px;
   }
 }
+
+/* One shared information-page text grid, independent of title length. */
+@media (min-width: 800px) {
+  .immersive.hexagonHero {
+    align-items: flex-start;
+    padding-top: clamp(150px, 22vh, 230px);
+  }
+  .immersive.hexagonHero .text {
+    width: 36%;
+    max-width: 560px;
+    margin: 0;
+  }
+  .immersive.hexagonHero .text h1 {
+    min-height: 2.12em;
+    position: relative;
+    margin-bottom: 28px;
+  }
+}

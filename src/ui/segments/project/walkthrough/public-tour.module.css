@@ -453,3 +453,105 @@
     padding-bottom: var(--public-footer-height, 0px);
   }
 }
+
+/* The source export paints the video on its tiles; real media still owns playback and accessibility. */
+@media (max-width: 799px) {
+  .publicTour [data-feature-tiles] {
+    display: none;
+  }
+}
+
+.publicTour [data-feature-copy-placeholder] {
+  visibility: hidden;
+}
+@media (max-width: 799px) {
+  .publicTour [data-feature-copy] {
+    display: none;
+  }
+}
+
+/* The first chapter arrives as the home fades away, rather than appearing abruptly underneath it. */
+.chapterEntrance {
+  opacity: 0;
+  translate: 0 24px;
+  transition:
+    opacity 800ms ease 120ms,
+    translate 900ms cubic-bezier(0.2, 0.7, 0.3, 1) 120ms;
+}
+.chapterEntrance[data-entered] {
+  opacity: 1;
+  translate: 0 0;
+}
+@keyframes chapter-first-enter {
+  from {
+    opacity: 0;
+    translate: 0 24px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chapterEntrance {
+    transition: none;
+    translate: none;
+  }
+  .publicTour [data-feature-copy] {
+    animation: none;
+  }
+}
+
+.chapterTextEntrance {
+  animation: chapter-first-enter 900ms cubic-bezier(0.2, 0.7, 0.3, 1) 120ms both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .chapterTextEntrance {
+    animation: none;
+  }
+}
+
+/* Shared fixed scene frame: every scene has the same fade, placement and rounded corners. */
+@media (min-width: 800px) {
+  .publicTour [data-feature-media] [data-stage-scene] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .publicTour [data-feature-media] [data-chapter-media] {
+    position: absolute;
+    top: calc(var(--chapter-frame-y) + var(--chapter-frame-unit) * 209);
+    right: calc(100vw - var(--chapter-frame-x) - var(--chapter-frame-unit) * 1832);
+    left: auto;
+    bottom: auto;
+    width: var(--chapter-media-width);
+    height: var(--chapter-media-height);
+    border-radius: 18px;
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+    mask-image: none;
+    -webkit-mask-image: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .publicTour [data-feature-media] [data-chapter-media] video {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    object-fit: contain;
+    border-radius: 18px;
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+  .publicTour [data-feature-media] [data-chapter-media] > figure,
+  .publicTour [data-feature-media] [data-chapter-media] > div:only-child {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+  }
+  .publicTour .publicText {
+    padding-top: calc(var(--chapter-frame-y) + var(--chapter-frame-unit) * 209);
+  }
+}

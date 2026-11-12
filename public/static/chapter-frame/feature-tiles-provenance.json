@@ -1,0 +1,6 @@
+{
+  "source": "HexaTile_Pages_V1/featuresPage.html",
+  "sha256": "2960e1d8093ed1db1ca84efcefa962852bc1f438acfbc0b7b455b3cfb48cf26c",
+  "imported": "tile shaders, geometry, hover, fall transition; text timings",
+  "excluded": "placeholder media/copy, standalone navigation, network loaders"
+}

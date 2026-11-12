@@ -29,17 +29,36 @@ export default function HexaTileHero() {
     let disposed = false;
     let visible = false;
     let renderer:
-      | { setVisible: (value: boolean, reduced: boolean) => void; dispose: () => void }
+      | {
+          setVisible: (value: boolean, reduced: boolean) => void;
+          resize: (w: number, h: number, x: number, y: number) => void;
+          dispose: () => void;
+        }
       | undefined;
     const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
     const update = () => renderer?.setVisible(visible && !document.hidden, preference.matches);
-    const resize = new ResizeObserver(() => {
+    const measure = () => {
       const width = container.clientWidth;
       const height = container.clientHeight;
       const phone = width < 800;
-      const scale = Math.max(width / (phone ? 1160 : 1920), height / (phone ? 850 : 1080));
-      layout.style.transform = `translate(${(width - (phone ? 1160 : 1920) * scale) / 2 - (phone ? 760 * scale : 0)}px, ${(height - 1080 * scale) / 2}px) scale(${scale})`;
-    });
+      const scale = phone
+        ? Math.max(width / 1160, height / 850)
+        : Math.min(width / 1920, height / 1080);
+      if (phone) {
+        layout.style.width = '1920px';
+        layout.style.height = '1080px';
+        layout.style.transform = `translate(${(width - 1160 * scale) / 2 - 760 * scale}px, ${(height - 1080 * scale) / 2}px) scale(${scale})`;
+        renderer?.resize(1920, 1080, 0, 0);
+      } else {
+        const w = Math.round(width / scale),
+          h = Math.round(height / scale);
+        layout.style.width = `${w}px`;
+        layout.style.height = `${h}px`;
+        layout.style.transform = `scale(${scale})`;
+        renderer?.resize(w, h, (w - 1920) / 2, (h - 1080) / 2);
+      }
+    };
+    const resize = new ResizeObserver(measure);
     resize.observe(container);
     const observer = new IntersectionObserver(([entry]) => {
       visible = entry.isIntersecting;
@@ -61,6 +80,7 @@ export default function HexaTileHero() {
               if (!disposed) setReady(false);
             },
           });
+          measure();
           update();
         } catch {
           setReady(false);
@@ -98,7 +118,6 @@ export default function HexaTileHero() {
           className={styles.canvas}
           style={{ opacity: ready ? 1 : 0 }}
         />
-        <div className={styles.tint} />
       </div>
     </div>
   );

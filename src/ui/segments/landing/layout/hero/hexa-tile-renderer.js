@@ -13,6 +13,7 @@ export function createHexaTileRenderer(
   // ---------- Config (same values as the Canvas 2D page) ----------
   const W = 1920,
     H = 1080;
+  let view = { width: W, height: H, x: 0, y: 0 };
   const R = 35; // hex circumradius (pointy-top)
   const GAP = 1.0;
   const HEIGHT_MEAN = 0.1;
@@ -25,6 +26,23 @@ export function createHexaTileRenderer(
     ZONE_SX = 260,
     ZONE_SY = 220,
     ZONE_MIN = 0.12;
+  // The supplied infoPage's low tile band extending left beneath the copy.
+  const EXT = {
+    cx: 760,
+    cy: 790,
+    sx: 330,
+    sy: 150,
+    strength: 0.75,
+    left: 313,
+    leftFade: 180,
+    top: 610,
+    bottom: 990,
+    edgeFade: 70,
+  };
+  const smooth = (value) => {
+    const f = Math.min(1, Math.max(0, value));
+    return f * f * (3 - 2 * f);
+  };
   const SCALE_PER_H = 0.7;
   const PARALLAX = 0.6;
   const HOVER_RADIUS = 260,
@@ -76,7 +94,7 @@ export function createHexaTileRenderer(
     .map((l) => {
       const img = new Image();
       img.src = l.src;
-      return { ...l, img, h: 0, x: 0, y: 0, tex: null };
+      return { ...l, initialWidth: l.w, img, h: 0, x: 0, y: 0, tex: null };
     });
 
   // test switches (buttons at the bottom left; keys in brackets)
@@ -119,6 +137,7 @@ export function createHexaTileRenderer(
   const VERT = `#version 300 es
 precision highp float;
 uniform vec2 uRes;
+uniform vec2 uOffset;
 uniform float uK;
 uniform float uYaw;
 uniform float uE0;
@@ -197,7 +216,7 @@ void main() {
     vFlags = vec3(rotv(aNormal, uE0).z > 0.000001 ? 1.0 : 0.0, rotv(aNormal, uE1).z > 0.000001 ? 1.0 : 0.0, 0.0);
     scr = iCenter + cur * iScale;
   }
-  gl_Position = vec4(scr.x / uRes.x * 2.0 - 1.0, 1.0 - scr.y / uRes.y * 2.0, 0.0, 1.0);
+  gl_Position = vec4((scr.x + uOffset.x) / uRes.x * 2.0 - 1.0, 1.0 - (scr.y + uOffset.y) / uRes.y * 2.0, 0.0, 1.0);
 }`;
 
   const FRAG = `#version 300 es
@@ -373,6 +392,7 @@ void main() {
   const U = {};
   for (const name of [
     'uRes',
+    'uOffset',
     'uK',
     'uYaw',
     'uE0',
@@ -520,23 +540,23 @@ void main() {
   // which tiles sit over non-white picture pixels (read with a hidden 2D canvas)
   function buildImageMap(l, need0 = IMG_HITS) {
     const off = document.createElement('canvas');
-    off.width = W;
-    off.height = H;
+    off.width = view.width;
+    off.height = view.height;
     const octx = off.getContext('2d', { willReadFrequently: true });
     octx.fillStyle = '#fff';
-    octx.fillRect(0, 0, W, H);
-    octx.drawImage(l.img, l.x, l.y, l.w, l.h);
-    const data = octx.getImageData(0, 0, W, H).data;
+    octx.fillRect(0, 0, view.width, view.height);
+    octx.drawImage(l.img, l.x + view.x, l.y + view.y, l.w, l.h);
+    const data = octx.getImageData(0, 0, view.width, view.height).data;
     return (cx, cy, need = need0) => {
       let hits = 0;
       for (let oy = -R; oy <= R; oy += 3) {
         for (let ox = -R; ox <= R; ox += 3) {
           if (Math.abs(ox) > R * 0.866 || Math.abs(oy) * 0.866 + Math.abs(ox) * 0.5 > R * 0.866)
             continue;
-          const px = Math.round(cx + ox),
-            py = Math.round(cy + oy);
-          if (px < 0 || py < 0 || px >= W || py >= H) continue;
-          const i = (py * W + px) * 4;
+          const px = Math.round(cx + ox + view.x),
+            py = Math.round(cy + oy + view.y);
+          if (px < 0 || py < 0 || px >= view.width || py >= view.height) continue;
+          const i = (py * view.width + px) * 4;
           if (Math.min(data[i], data[i + 1], data[i + 2]) < IMG_WHITE) hits++;
         }
       }
@@ -545,16 +565,19 @@ void main() {
   }
 
   function build() {
+    tiles.length = 0;
     for (const l of layers) {
+      l.w = Math.min(l.initialWidth, Math.max(320, 2 * (view.width - view.x - IMG_CX - R * 3)));
       l.h = (l.w * l.img.naturalHeight) / l.img.naturalWidth;
       l.x = IMG_CX - l.w / 2;
       l.y = IMG_CY - l.h / 2;
+      if (l.tex) gl.deleteTexture(l.tex);
       l.tex = makeTexture(l.img);
     }
     const hasColor = layers.map((l) => buildImageMap(l));
 
-    for (let r = -1; r * rowH < H + R * 2; r++) {
-      for (let c = -1; c * colW < W + colW * 2; c++) {
+    for (let r = Math.floor(-view.y / rowH) - 1; r * rowH < view.height - view.y + R * 2; r++) {
+      for (let c = Math.floor(-view.x / colW) - 1; c * colW < view.width - view.x + colW * 2; c++) {
         const x = c * colW + (Math.abs(r) % 2 ? colW / 2 : 0);
         const y = r * rowH;
         const dx = (x - ZONE_CX) / ZONE_SX,
@@ -562,7 +585,21 @@ void main() {
         let mask = Math.exp(-(dx * dx + dy * dy) / 2);
         const k = Math.min(1, Math.max(0, (x - FLAT_LEFT) / FLAT_FADE));
         mask *= k * k * (3 - 2 * k);
+        const ex = (x - EXT.cx) / EXT.sx,
+          ey = (y - EXT.cy) / EXT.sy;
+        let ext = Math.exp(-(ex * ex + ey * ey) / 2);
+        ext *=
+          smooth((x - EXT.left) / EXT.leftFade) *
+          smooth((y - EXT.top) / EXT.edgeFade) *
+          smooth((EXT.bottom - y) / EXT.edgeFade);
+        mask = Math.max(mask, ext * EXT.strength);
+        const edgeFactor =
+          smooth((view.width - view.x - x - R * 2) / 160) *
+          smooth((view.height - view.y - y - R * 2) / 120) *
+          smooth((x + view.x - R * 2) / 120) *
+          smooth((y + view.y - R * 2) / 100);
         let base = mask > ZONE_MIN ? Math.max(0, HEIGHT_MEAN + gauss() * HEIGHT_SD) * mask : 0;
+        base *= edgeFactor;
         const onImage = hasColor.some((f) => f(x, y));
         if (!onImage && base < NOISE_FLOOR_CUT) base = 0;
         if (onImage && base < IMG_MIN_LO)
@@ -573,6 +610,7 @@ void main() {
           x,
           y,
           base,
+          edgeFactor,
           h: base,
           prevH: base,
           motion: 0,
@@ -600,6 +638,7 @@ void main() {
         SEQ_GAP +
         (maxX > minX ? (t.x - minX) / (maxX - minX) : 0) * SEQ_WAVE;
     }
+    if (seqTex) gl.deleteTexture(seqTex);
     makeSeqTexture();
     tiles.sort((a, b) => a.base - b.base); // fixed stacking order, never changes
     instData = new Float32Array(tiles.length * FLOATS);
@@ -676,7 +715,7 @@ void main() {
           const k = 1 - d / HOVER_RADIUS;
           f = k * k * (3 - 2 * k);
         }
-        t.h += (t.base + f * HOVER_BOOST - t.h) * EASE;
+        t.h += (t.base + f * HOVER_BOOST * t.edgeFactor - t.h) * EASE;
       } // while turning the mouse is ignored and the tile keeps its height
 
       // height shine strength: jumps up with the speed, fades out once the tile stops
@@ -751,7 +790,8 @@ void main() {
     gl.bindBuffer(gl.ARRAY_BUFFER, instBuf);
     gl.bufferData(gl.ARRAY_BUFFER, instData.subarray(0, count * FLOATS), gl.DYNAMIC_DRAW);
 
-    gl.uniform2f(U.uRes, W, H);
+    gl.uniform2f(U.uRes, view.width, view.height);
+    gl.uniform2f(U.uOffset, view.x, view.y);
     gl.uniform1f(U.uK, K);
     gl.uniform1f(U.uYaw, YAW);
     gl.uniform1f(U.uE0, E0);
@@ -832,6 +872,18 @@ void main() {
       if (!disposed) onError(error);
     });
   return {
+    resize(width, height, x = 0, y = 0) {
+      const next = { width: Math.round(width), height: Math.round(height), x, y };
+      if (JSON.stringify(next) === JSON.stringify(view)) return;
+      view = next;
+      canvas.width = view.width;
+      canvas.height = view.height;
+      gl.viewport(0, 0, view.width, view.height);
+      if (ready) {
+        build();
+        schedule();
+      }
+    },
     setVisible(value, motionReduced = false) {
       visible = value;
       reduced = motionReduced;

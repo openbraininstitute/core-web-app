@@ -28,6 +28,9 @@ import { cn } from '@/utils/css-class';
 
 import { AccountFlow, Initials, readDummyAccount } from './account-flow';
 import { ChapterFrameBackground } from './chapter-frame-background';
+import { FeatureMediaTransition } from './feature-media-transition';
+import { FeatureTextTransition } from './feature-text-transition';
+import { FeatureTileBackground } from './feature-tile-background';
 import { CHAPTER_SWITCH, LandingCubeBackdrop } from './landing-cube-backdrop';
 import { reverseOf, stopFrom, type TReverse } from './stops';
 import { type ChapterPlayback, useChapterPlayback } from './use-chapter-playback';
@@ -250,6 +253,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   // The scroller's height, a chapter's: until it is measured, the screen less the top menu.
   const [height, setHeight] = useState<number | null>(null);
   const [active, setActive] = useState(0);
+  const [visualChapter, setVisualChapter] = useState(0);
   const navigationUntil = useRef(0);
   const pendingIntroChapter = useRef<string | null>(null);
   const wheelHeldUntil = useRef(0);
@@ -370,6 +374,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
     const intro = root?.querySelector<HTMLElement>('[data-walkthrough-intro]');
     const first = sections.current[0];
     if (root && intro && first) flyShared(root, intro, first);
+    setVisualChapter(0);
     setIntroLeft(true);
   }, [root]);
   // A trackpad gesture has many momentum events after its first tick. Keep those
@@ -413,6 +418,17 @@ export function Walkthrough<C extends IWalkthroughChapter>({
         return 0;
       }
       glideTarget.current = to;
+      const target = sections.current.findIndex(
+        (section) =>
+          section &&
+          Math.abs(
+            section.getBoundingClientRect().top -
+              root.getBoundingClientRect().top +
+              root.scrollTop -
+              to
+          ) < 4
+      );
+      if (target >= 0) setVisualChapter(Math.min(target, chapters.length - 1));
       // what moves with a change of chapter starts with it (the tiles behind them)
       window.dispatchEvent(new Event(CHAPTER_SWITCH));
       const extraScreens = Math.max(Math.round(distance / root.clientHeight) - 1, 0);
@@ -430,7 +446,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
       });
       return ms;
     },
-    [root]
+    [root, chapters.length]
   );
   useEffect(() => () => glide.current?.stop(), []);
 
@@ -740,6 +756,10 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   // The runway past the end is no chapter: the last one stays on while it is crossed.
   const on = Math.min(active, chapters.length - 1);
   const chapter = chapters[on];
+  useEffect(() => {
+    if (!glide.current) setVisualChapter(on);
+  }, [on]);
+  const visual = chapters[Math.min(visualChapter, chapters.length - 1)];
   const advanceChapter = useCallback(() => {
     if (Date.now() < navigationUntil.current) return;
     if (stageScrolls && root) {
@@ -754,8 +774,8 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   }, [on, chapters.length, go, stageScrolls, root]);
   const playback = useChapterPlayback({
     stage: stageRef,
-    chapterId: chapter.id,
-    enabled: !!introContent && introDone,
+    chapterId: introContent && wideScreen ? visual.id : chapter.id,
+    enabled: !!introContent && (introDone || introLeft),
     onComplete: advanceChapter,
   });
   // While the intro is up, the first screen waits a page below it, and scrolls up as it leaves.
@@ -811,6 +831,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
               introContent && publicTour.publicTour
             )}
             data-public-tour={introContent ? true : undefined}
+            data-feature-tour={introContent && wideScreen ? true : undefined}
             style={
               {
                 '--chapter-h': height ? `${height}px` : 'calc(100vh - 6rem)',
@@ -830,9 +851,33 @@ export function Walkthrough<C extends IWalkthroughChapter>({
             {introContent &&
               (LANDING_CUBES_BEHIND_CHAPTERS ? (
                 <LandingCubeBackdrop active={introDone || introLeft} />
-              ) : (
+              ) : !wideScreen ? (
                 <ChapterFrameBackground active={introDone || introLeft} />
+              ) : (
+                <FeatureTileBackground active={introDone || introLeft} chapterId={visual.id} />
               ))}
+            {introContent && wideScreen && (introDone || introLeft) && (
+              <div ref={stageRef} className="pointer-events-none fixed inset-0 z-10">
+                <FeatureMediaTransition
+                  chapterId={visual.id}
+                  draw={(present) => stage(visual, colorSlot, goTo, present, true)}
+                />
+              </div>
+            )}
+            {introContent && wideScreen && (introDone || introLeft) && (
+              <FeatureTextTransition chapter={visualChapter}>
+                <ChapterText
+                  chapter={visual}
+                  on
+                  bold={bold}
+                  first={visualChapter === 0}
+                  firstClass={firstTitleClass}
+                  onColorSlot={setColorSlot}
+                  publicOpening
+                  scrollsWithStage
+                />
+              </FeatureTextTransition>
+            )}
             {floating?.({
               entered: introDone || introLeft,
               revealed: introDone,
@@ -872,10 +917,17 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                   continue: () => {
                     wheelHeldUntil.current = performance.now() + INTRO.scroll + 450;
                     root?.scrollTo({ top: 0, behavior: 'instant' });
+                    setVisualChapter(0);
                     setIntroLeft(true);
                   },
                   goTo: (id) => {
                     pendingIntroChapter.current = id;
+                    setVisualChapter(
+                      Math.max(
+                        0,
+                        chapters.findIndex((chapter) => chapter.id === id)
+                      )
+                    );
                     setIntroLeft(true);
                   },
                 })}
@@ -1002,7 +1054,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
               </div>
             )}
             <div
-              ref={stageScrolls ? stageRef : undefined}
+              ref={stageScrolls && !(introContent && wideScreen) ? stageRef : undefined}
               className="pointer-events-none relative z-10"
               style={{ marginTop: 'calc(var(--chapter-h) * -1)', ...underIntro }}
             >
@@ -1023,7 +1075,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                         : 'items-end beside:items-center'
                   )}
                 >
-                  {stageScrolls && (
+                  {stageScrolls && !(introContent && wideScreen) && (
                     <div
                       data-chapter-stage
                       className="pointer-events-none absolute inset-0 overflow-hidden"
@@ -1038,6 +1090,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                     </div>
                   )}
                   <ChapterText
+                    placeholder={!!introContent && wideScreen}
                     chapter={chapter}
                     on={index === on}
                     bold={bold}
@@ -1126,7 +1179,9 @@ function ChapterText({
   onColorSlot,
   publicOpening = false,
   scrollsWithStage = false,
+  placeholder = false,
 }: {
+  placeholder?: boolean;
   chapter: IWalkthroughChapter;
   on: boolean;
   bold: boolean;
@@ -1141,7 +1196,9 @@ function ChapterText({
   const { kicker, title, hero, body, colorBy, after, wide, titleClass, column } = chapter;
   return (
     <div
-      inert={!on || undefined}
+      inert={placeholder || !on || undefined}
+      aria-hidden={placeholder || undefined}
+      data-feature-copy-placeholder={placeholder || undefined}
       data-chapter-text={chapter.id}
       className={cn(
         'relative flex w-full flex-col gap-[18px]',

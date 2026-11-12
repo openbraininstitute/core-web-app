@@ -14,8 +14,8 @@
 }
 .canvas {
   display: block;
-  width: 1920px;
-  height: 1080px;
+  width: 100%;
+  height: 100%;
 }
 .fallback {
   pointer-events: none;
@@ -25,14 +25,4 @@
   width: 1000px;
   height: 666px;
   object-fit: contain;
-}
-.tint {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(
-    circle 1300px at 100% 100%,
-    rgb(204 224 248 / 45%),
-    rgb(204 224 248 / 0%)
-  );
 }
