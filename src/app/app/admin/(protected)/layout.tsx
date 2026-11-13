@@ -1,5 +1,5 @@
-import { requireCapability } from '@/features/admin/server/require-capability';
-import { AdminShell } from '@/features/admin/shell/admin-shell';
+import { requireCapability } from '@/admin/server/require-capability';
+import { AdminShell } from '@/admin/shell/admin-shell';
 
 import type { ReactNode } from 'react';
 

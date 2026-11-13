@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { deriveCapabilities } from '@/features/admin/capabilities/derive';
-import { hasCapability } from '@/features/admin/capabilities/has-capability';
+import { deriveCapabilities } from '@/admin/capabilities/derive';
+import { hasCapability } from '@/admin/capabilities/has-capability';
 import {
   ACCOUNTING_ADMIN_GROUP,
   ENTITYCORE_ADMIN_GROUP,
@@ -10,9 +10,9 @@ import {
   VLAB_ADMIN_GROUP,
   VLAB_MAINTAINER_GROUP,
   WILDCARD_ADMIN_GROUP,
-} from '@/features/admin/capabilities/registry';
+} from '@/admin/capabilities/registry';
 
-import type { OperatorCapabilities } from '@/features/admin/capabilities/types';
+import type { OperatorCapabilities } from '@/admin/capabilities/types';
 
 const ALL_FALSE: OperatorCapabilities = {
   entitycore: { admin: false, assetWrite: false },

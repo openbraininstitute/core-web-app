@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { fetchServiceVersion, probeServiceHealth } from '@/features/admin/sections/services/health';
+import { fetchServiceVersion, probeServiceHealth } from '@/admin/sections/services/health';
 
 const fetchMock = vi.fn();
 

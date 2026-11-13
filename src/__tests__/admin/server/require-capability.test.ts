@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { requireCapability } from '@/features/admin/server/require-capability';
+import { requireCapability } from '@/admin/server/require-capability';
 
 const { authMock, getKeycloakGroupsMock, redirectMock } = vi.hoisted(() => ({
   authMock: vi.fn(),
@@ -11,7 +11,7 @@ const { authMock, getKeycloakGroupsMock, redirectMock } = vi.hoisted(() => ({
 }));
 
 vi.mock('@/auth', () => ({ auth: authMock }));
-vi.mock('@/features/admin/server/keycloak-groups', () => ({
+vi.mock('@/admin/server/keycloak-groups', () => ({
   getKeycloakGroups: getKeycloakGroupsMock,
 }));
 vi.mock('next/navigation', () => ({ redirect: redirectMock }));

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { BoundedCache } from '@/features/admin/server/keycloak-groups';
+import { BoundedCache } from '@/admin/server/keycloak-groups';
 
 import type { Session } from 'next-auth';
 
@@ -26,11 +26,11 @@ function userinfoError(status = 503) {
 const T0 = new Date('2026-07-24T00:00:00.000Z').getTime();
 const MINUTE = 60_000;
 
-let getKeycloakGroups: typeof import('@/features/admin/server/keycloak-groups').getKeycloakGroups;
+let getKeycloakGroups: typeof import('@/admin/server/keycloak-groups').getKeycloakGroups;
 
 beforeEach(async () => {
   vi.resetModules();
-  ({ getKeycloakGroups } = await import('@/features/admin/server/keycloak-groups'));
+  ({ getKeycloakGroups } = await import('@/admin/server/keycloak-groups'));
   fetchMock.mockReset();
   vi.stubGlobal('fetch', fetchMock);
   vi.useFakeTimers();
