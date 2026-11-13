@@ -12,7 +12,8 @@ const R = 55;
 const SCALE_PER_H = 0.7;
 const FLOOR_R0 = 0.72 * R;
 const FLOOR_H: [number, number] = [0.3, 0.6];
-const FLOOR_FILL = 0.62;
+// a little sparser than the landing's 0.62 (the user asked)
+const FLOOR_FILL = 0.46;
 /** How far in from the field's edges the floor thins out over (home px). */
 const EDGE_THIN = 180;
 const BIG_R = 174;
@@ -44,7 +45,7 @@ export interface IFieldTile extends IHexBox {
   drift: boolean;
 }
 
-interface IRect {
+export interface IRect {
   x0: number;
   x1: number;
   y0: number;
@@ -97,12 +98,15 @@ export function fieldFeatures({
   count,
   bounds,
   random,
+  below = false,
 }: {
   center: IPoint;
   k: number;
   count: number;
   bounds: IRect;
   random: () => number;
+  /** Those past the big one's sides go on downwards, under the cluster (the platform home's more examples). */
+  below?: boolean;
 }): IHexBox[] {
   const big = { ...center, r: BIG_R * k };
   const r = MEDIUM_R * k;
@@ -113,13 +117,23 @@ export function fieldFeatures({
     for (let m = 1; m < count && placed.length === m; m++) {
       for (let t = 0; t < 60; t++) {
         // a side of the big one each while there are sides; then beside a medium one, outwards from the big one
-        const by = m - 1 < dirs.length ? big : placed[1 + Math.floor(random() * (placed.length - 1))];
+        const lower = placed.slice(1).filter((p) => p.y >= big.y - 1);
+        const by =
+          m - 1 < dirs.length
+            ? big
+            : below && lower.length
+              ? lower[Math.floor(random() * lower.length)]
+              : placed[1 + Math.floor(random() * (placed.length - 1))];
+        // downwards (60° or 120°, y down), now and then across
+        const down = [1, 2, 1, 2, 0, 3];
         const dir =
           m - 1 < dirs.length
             ? dirs[m - 1]
-            : SIDES.filter((d) => DIRS[d][0] * (by.x - big.x) + DIRS[d][1] * (by.y - big.y) > 0)[
-                Math.floor(random() * 3)
-              ];
+            : below
+              ? down[Math.floor(random() * down.length)]
+              : SIDES.filter((d) => DIRS[d][0] * (by.x - big.x) + DIRS[d][1] * (by.y - big.y) > 0)[
+                  Math.floor(random() * 3)
+                ];
         if (dir === undefined) continue;
         const p = beside(by, r, dir, (random() * 2 - 1) * maxLat(r, by), gap);
         if (inside(p, bounds) && fits(p, placed, gap)) {
@@ -204,9 +218,11 @@ export function fieldWhites({
       const x = col * colW + (row % 2 ? colW / 2 : 0);
       const y = row * rowH;
       const far = Math.min(1, Math.hypot(x - big.x, y - big.y) / reach);
-      // thinning out towards the field's edges rather than stopping at them
-      const edge = Math.min(1, (bounds.x1 - x) / EDGE_THIN, (x - bounds.x0) / EDGE_THIN, (bounds.y1 - y) / EDGE_THIN);
-      if (random() > FLOOR_FILL * (1 - 0.5 * far) * Math.max(0, edge)) continue;
+      // thinning out towards the field's edges rather than stopping at them; to the right, steadily from the big one
+      // all the way to the field's edge (the user asked for it to trail off to the right)
+      const edge = Math.min(1, (x - bounds.x0) / EDGE_THIN, (bounds.y1 - y) / EDGE_THIN);
+      const trail = x <= big.x ? 1 : Math.max(0, 1 - (x - big.x) / (bounds.x1 - big.x)) ** 1.3;
+      if (random() > FLOOR_FILL * (1 - 0.5 * far) * Math.max(0, edge) * trail) continue;
       const fade = 0.2 + 0.6 * far;
       const h = rand(...FLOOR_H) * (1 - 0.4 * fade);
       const p = { x, y, r: FLOOR_R0 * (1 - 0.45 * fade) * (1 + SCALE_PER_H * h) * k };
@@ -215,4 +231,58 @@ export function fieldWhites({
     }
   }
   return [...floor, ...out.map((p, i) => ({ ...p, key: `white${i}`, drift: true }))];
+}
+
+/**
+ * A category's own field (the user asked for its content to be set into the white tiles): the landing's honeycomb
+ * floor round what the category shows, none under it, the cells next to it the most often up and the highest, so
+ * that the content sits in the field, fewer and lower further off, thinning out to the field's right edge.
+ * `around` are rectangles (cards, the videos) and hexagons (tiles); `bounds` is where the field may lie.
+ */
+export function floorAround({
+  around,
+  k,
+  bounds,
+  random,
+  near = 160,
+}: {
+  around: Array<IRect | IHexBox>;
+  k: number;
+  bounds: IRect;
+  random: () => number;
+  /** How far from the content its pull on the field reaches (layout px). */
+  near?: number;
+}): IFieldTile[] {
+  const rand = (lo: number, hi: number) => lo + random() * (hi - lo);
+  const colW = Math.sqrt(3) * R * k;
+  const rowH = 1.5 * R * k;
+  // how far a point is from the nearest of the content's edges (0 or less inside it)
+  const awayFrom = (x: number, y: number) =>
+    Math.min(
+      ...around.map((b) => {
+        if ('r' in b) return Math.hypot(x - b.x, y - b.y) - b.r * 0.94;
+        const dx = Math.max(b.x0 - x, 0, x - b.x1);
+        const dy = Math.max(b.y0 - y, 0, y - b.y1);
+        return dx || dy ? Math.hypot(dx, dy) : -Math.min(x - b.x0, b.x1 - x, y - b.y0, b.y1 - y);
+      })
+    );
+  const right = Math.max(...around.map((b) => ('r' in b ? b.x + b.r : b.x1)));
+  const tiles: IFieldTile[] = [];
+  for (let row = 0; row * rowH < bounds.y1 + rowH; row++) {
+    for (let col = 0; col * colW < bounds.x1 + colW; col++) {
+      const x = col * colW + (row % 2 ? colW / 2 : 0);
+      const y = row * rowH;
+      const pull = Math.exp(-Math.max(0, awayFrom(x, y)) / near);
+      const edge = Math.min(1, (x - bounds.x0) / EDGE_THIN, (bounds.y1 - y) / EDGE_THIN, (y - bounds.y0) / EDGE_THIN);
+      const trail = x <= right ? 1 : Math.max(0, 1 - (x - right) / Math.max(1, bounds.x1 - right)) ** 1.3;
+      if (random() > FLOOR_FILL * (0.3 + 0.95 * pull) * Math.max(0, edge) * trail) continue;
+      const h = rand(...FLOOR_H) * (0.55 + 0.6 * pull);
+      const r = FLOOR_R0 * (0.7 + 0.45 * pull) * (1 + SCALE_PER_H * h) * k;
+      // clear of the content by a hair, as the landing's tiles stop short of its pictures
+      if (awayFrom(x, y) < r * 0.92 + EDGE_GAP * k) continue;
+      if (!inside({ x, y, r }, bounds)) continue;
+      tiles.push({ x, y, r, h, key: `around${row}-${col}`, drift: false });
+    }
+  }
+  return tiles;
 }

@@ -116,17 +116,20 @@
 }
 
 .freeIn {
-  animation: fadeIn 260ms ease both;
+  /* backwards only: an opacity animation left filling would isolate the multiply, the picture's white then hiding the
+     tiles under it */
+  animation: fadeIn 260ms ease backwards;
 }
 
 /* the example's words and actions, in a floating window as the landing's bubble is: frosted white, bobbing */
 .floatWindow {
   z-index: 7;
-  padding: 22px 26px 24px;
-  border-radius: 18px;
+  padding: 16px 19px 17px;
+  border-radius: 16px;
   border: 1px solid rgb(19 48 111 / 0.08);
-  background: rgb(255 255 255 / 0.86);
-  backdrop-filter: blur(8px);
+  /* more see-through than it was (0.86, the user asked) */
+  background: rgb(255 255 255 / 0.5);
+  backdrop-filter: blur(10px) saturate(1.1);
   box-shadow:
     0 14px 34px rgb(20 40 90 / 0.14),
     0 2px 6px rgb(20 40 90 / 0.08);
@@ -408,5 +411,63 @@
   .bubble,
   .floatWindow {
     animation: fadeIn 700ms ease 250ms both;
+  }
+}
+
+/* Just fading (the user asked to try it, as the folding may be too much; `?motion=dynamic` keeps the folding and
+   flying out of the categories): what a category shows fades in and out where it stands, all at once. */
+.fadeMotion {
+  /* slow enough to read as a fade rather than a cut (the user asked for slower) */
+  --fade-ms: 700ms;
+}
+
+.fadeMotion .fold {
+  transition: opacity var(--fade-ms) ease !important;
+  transition-delay: 0ms !important;
+}
+
+.fadeMotion .fold[data-folded='true'] {
+  transform: none;
+}
+
+.fadeMotion .burst {
+  animation-name: fadeIn;
+  animation-duration: var(--fade-ms);
+  animation-delay: 0ms !important;
+}
+
+.fadeMotion .column {
+  transition: opacity var(--fade-ms) ease;
+}
+
+.fadeMotion .column[data-open='false'] {
+  transform: none;
+}
+
+.fadeMotion .cardIn {
+  animation: fadeIn var(--fade-ms) ease both;
+  animation-delay: 0ms !important;
+}
+
+.fadeMotion .openLayer {
+  transition-duration: var(--fade-ms) !important;
+}
+
+/* the words of the one on show, in their hexagon, expanding out of it (from `--from-x`, its middle) */
+.wordsIn {
+  animation: wordsIn 720ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes wordsIn {
+  from {
+    opacity: 0;
+    transform: translateX(var(--from-x, 0px)) scale(0.25);
+  }
+  45% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }

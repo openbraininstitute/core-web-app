@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
 import { config } from '@/config';
@@ -14,10 +15,10 @@ import { PanelState } from '@/ui/segments/ai/types';
 import { AiSparkles } from '@/ui/segments/project/brains-walkthrough/agent-ready';
 import { type TTutorial, TutorialQuery } from '@/ui/segments/project/get-started/query';
 import { EXAMPLES, journeyGroups, journeyHref, LOCAL_VIDEOS } from '@/ui/segments/project/hex-home/content';
-import { APO, driftOf } from '@/ui/segments/project/hex-home/hex-geometry';
+import { APO, driftOf, SQRT3 } from '@/ui/segments/project/hex-home/hex-geometry';
 import { FillFrame, HexTile } from '@/ui/segments/project/hex-home/hex-tile';
 import { FreeMedia, MeltFlier, TileMedia } from '@/ui/segments/project/hex-home/landing-example';
-import { fieldFeatures, fieldWhites, seededRandom } from '@/ui/segments/project/hex-home/landing-field';
+import { fieldFeatures, fieldWhites, floorAround, seededRandom } from '@/ui/segments/project/hex-home/landing-field';
 import { columnSpecs, layTongues } from '@/ui/segments/project/hex-home/tongue-geometry';
 import { VideoPlayer } from '@/ui/segments/project/get-started/elements/video-player';
 import { VideoColumn } from '@/ui/segments/project/hex-home/video-card';
@@ -112,6 +113,8 @@ function ExampleTile({
       box={tile}
       lift={tile.lift}
       drift={tile.drift}
+      // nothing left in its place while its example is away (the flights draw it), as on the landing
+      style={empty ? { visibility: 'hidden' } : undefined}
       onClick={onPick}
       onHover={(on) => {
         setHover(on);
@@ -300,6 +303,78 @@ function PlaceCard({
   );
 }
 
+/**
+ * A part of the platform on Do science's tongue as a hexagon: its colours, its picture toned to them (clearer while
+ * hovered), its name and use over its foot in its ink; it folds into its category as the other tiles do.
+ */
+function PlaceHex({
+  box,
+  index,
+  card,
+  base,
+  fold,
+  onTongue,
+}: {
+  box: IHexBox;
+  index: number;
+  card: IJourneyCard;
+  base: string;
+  fold: IFold;
+  onTongue: (on: boolean) => void;
+}) {
+  const { bg, ink } = placeColours(index);
+  const { setState: setAi } = usePanelState();
+  const href = card.href ? journeyHref(card.href, base) : undefined;
+  const onClick = card.action === 'ai' ? () => setAi(PanelState.Expanded) : undefined;
+  return (
+    <HexTile
+      box={box}
+      lift={0.75}
+      href={href}
+      onClick={href ? undefined : onClick}
+      onHover={onTongue}
+      title={`${card.label}: ${card.blurb}`}
+      className="group"
+      folded={fold.folded}
+      foldTo={fold.foldTo}
+      foldDelayMs={fold.foldDelayMs}
+    >
+      <div className="absolute inset-0" style={{ background: bg }}>
+        {card.img ? (
+          <img
+            src={card.img}
+            alt=""
+            draggable={false}
+            className="absolute inset-0 h-full w-full object-cover opacity-45 mix-blend-luminosity grayscale transition-opacity duration-300 group-hover:opacity-80"
+            style={{ objectPosition: card.imgAt ?? 'center' }}
+          />
+        ) : (
+          <span
+            className="absolute inset-0 opacity-55 transition-opacity duration-300 group-hover:opacity-85"
+            style={{ color: ink }}
+          >
+            <AiSparkles className="absolute top-[14%] right-[24%] h-[14%] w-auto" />
+            <span className="absolute inset-x-0 top-[30%] flex h-[13%] justify-center">
+              <AgentMarks className="h-full gap-[7%]" markClassName="h-[70%] w-auto" />
+            </span>
+          </span>
+        )}
+        <div
+          className="absolute inset-x-0 bottom-0 flex h-[58%] flex-col items-center justify-center gap-[4px] px-[16%] pt-[14%] text-center"
+          style={{ backgroundImage: `linear-gradient(to top, ${bg} 55%, ${bg}00)` }}
+        >
+          <span className="text-[27px] leading-[31px] font-semibold" style={{ color: ink }}>
+            {card.label}
+          </span>
+          <span className="text-[15px] leading-[19px] opacity-80" style={{ color: ink }}>
+            {card.blurb}
+          </span>
+        </div>
+      </div>
+    </HexTile>
+  );
+}
+
 function CategoryTile({
   category,
   box,
@@ -351,31 +426,21 @@ function CategoryTile({
 }
 
 /** The example in the middle: what the model is, and what to do with it. */
-function ModelPanel({
-  example,
-  at,
-  width,
-  base,
-}: {
-  example: IExample;
-  at: IPoint;
-  width: number;
-  base: string;
-}) {
+function ModelPanel({ example, base }: { example: IExample; base: string }) {
   const words = wordsFor(example);
   const button =
-    'flex h-[46px] items-center justify-center rounded-full px-[22px] text-[15px] font-semibold transition-colors';
+    'flex h-[30px] items-center justify-center rounded-full px-[14px] text-[12px] font-semibold whitespace-nowrap transition-colors';
+  // in its hexagon: what it is over what to do with it, centred, within the hexagon's narrowing top and foot
   return (
-    <div
-      className={cn(styles.floatWindow, 'absolute flex flex-col gap-[12px]')}
-      style={{ left: at.x, top: at.y, width }}
-    >
-      <span className="text-[13px] font-semibold tracking-[0.12em] uppercase" style={{ color: GREEN }}>
-        {words.kicker}
-      </span>
-      <h2 className="text-[30px] leading-[36px] font-light text-[#13306f]">{words.name}</h2>
-      <p className="text-[15px] leading-[23px] text-neutral-600">{words.about}</p>
-      <div className="mt-[6px] flex flex-wrap gap-[10px]">
+    <div className="flex h-full w-full flex-col items-center justify-center gap-[10px] px-[15%] text-center">
+      <div className="flex min-w-0 flex-col items-center gap-[3px]">
+        <span className="text-[10.5px] font-semibold tracking-[0.12em] uppercase" style={{ color: GREEN }}>
+          {words.kicker}
+        </span>
+        <h2 className="text-[20px] leading-[24px] font-light text-[#13306f]">{words.name}</h2>
+        <p className="line-clamp-4 text-[12.5px] leading-[17px] text-neutral-600">{words.about}</p>
+      </div>
+      <div className="flex w-full flex-col gap-[5px]">
         <Link
           href={`${base}/workflows`}
           className={cn(button, 'text-white hover:brightness-110')}
@@ -440,10 +505,12 @@ export function HexHomePage() {
 
   // a phone has no room for the field, nor a pointer to hover with: the home laid out down the page instead
   const phone = useMediaQuery('(max-width: 767px)', false);
+  // what a category shows fades in and out (the user asked to try it); `?motion=dynamic` folds it out of its category
+  const dynamic = useSearchParams().get('motion') === 'dynamic';
   if (phone) return <HexHomeMobile groups={groups} videos={videos} base={base} />;
 
   return (
-    <div className="h-full w-full bg-white">
+    <div className={cn('h-full w-full bg-white', !dynamic && styles.fadeMotion)}>
       <FillFrame width={STAGE_W} minHeight={MIN_H}>
         {(height) => <Home height={height} groups={groups} videos={videos} base={base} />}
       </FillFrame>
@@ -493,22 +560,18 @@ function Home({
   // As on the landing (laid out 1920 px across), the one on show stands out of its tile, large, on the right: its
   // tile grown as if to this size and melted away; as wide as the example says, within the landing's box.
   const k = STAGE_W / 1920;
-  const heroR = Math.min(330 * k, height * 0.34);
-  const widthOf = (example: IExample) =>
-    // larger than the landing's box, as the user asked: as tall as most of the page
-    Math.min(example.hero * k * 1.25, 900 * k, height * 0.92 * example.aspect);
-  const heroAtFor = (example: IExample) => ({ x: STAGE_W - 32 - widthOf(example) / 2, y: height / 2 });
   const examplesRoot = specs[EXAMPLES_TONGUE].root;
   const [fieldSeed] = useState(() => Math.floor(Math.random() * 2 ** 31));
-  // the field stops short of the one on show at its widest, whose picture's white would hide the tiles under it
-  const heroRoomLeft = Math.min(...EXAMPLES.map((e) => STAGE_W - 32 - widthOf(e)));
   const field = useMemo(() => {
     const random = seededRandom(fieldSeed);
-    const bounds = { x0: column.right + 16, x1: heroRoomLeft - 8, y0: 12, y1: height - 12 };
+    // the cluster's room, the one on show's frame taking the rest
+    const bounds = { x0: column.right + 16, x1: column.right + 16 + 700 * (STAGE_W / 1600), y0: 12, y1: height - 12 };
     const features = fieldFeatures({
-      center: { x: bounds.x0 + 296, y: Math.min(height / 2, 300) },
+      center: { x: bounds.x0 + 296, y: Math.min(height * 0.32, 250) },
       k,
-      count: EXAMPLES.length,
+      // a tile for each example but the one on show, as on the landing; those past the landing's six under it
+      count: EXAMPLES.length - 1,
+      below: true,
       bounds,
       random,
     });
@@ -517,7 +580,7 @@ function Home({
     const panelBox = { x0: right + 20, x1: STAGE_W, y0: height * 0.48 - 16, y1: height * 0.48 + 330 };
     const whites = fieldWhites({ features, k, bounds, keepOut: [panelBox], random });
     return { features, whites };
-  }, [fieldSeed, height, column.right, heroRoomLeft]);
+  }, [fieldSeed, height, column.right]);
   const minis: ITongueTile[] = field.features.map((f, i) => ({
     key: `mini${i}`,
     ...f,
@@ -527,6 +590,12 @@ function Home({
     drift: true,
   }));
   const minisRight = Math.max(...minis.map((t) => t.x + t.r * APO));
+  // As on the landing, the one on show stands out of its tile, large, on the right: its tile grown as if to this size
+  // and melted away; as large as most of the page (the user asked for it larger than the landing's)
+  const heroR = Math.min(330 * k, height * 0.34);
+  const widthOf = (example: IExample) =>
+    Math.min(example.hero * k * 1.25, 900 * k, height * 0.92 * example.aspect);
+  const heroAtFor = (example: IExample) => ({ x: STAGE_W - 32 - widthOf(example) / 2, y: height / 2 });
   // Do science's places, the whole platform, as rounded cards all of one shape (the user asked): three across the
   // top and the rest under the first of them, the two rows centred on their category, within the page. Each is two
   // categories tall (the user asked for twice the size), and as wide as that allows up to 1.75 times its height.
@@ -545,18 +614,45 @@ function Home({
     return { key: `sci${i}`, x, y, w: sciW, h: sciH, s: Math.hypot(x - scienceRoot.x, y - scienceRoot.y), item: i };
   });
   const scienceReach = Math.max(0, ...science.map((r) => r.s));
+  // Tried as hexagons (the user asked): the same cards, three over three interlocked, as large as the room right of
+  // the column allows, the block centred on Do science's category as the cards are.
+  const SCI_HEX_GAP = 14;
+  const sciRoom = STAGE_W - 40 - (column.right + 40);
+  const sciHexR = Math.min(
+    200,
+    (sciRoom - 2.5 * SCI_HEX_GAP) / (3.5 * SQRT3),
+    (height - 48 - (SCI_HEX_GAP * SQRT3) / 2) / 3.5
+  );
+  const sciHexW = SQRT3 * sciHexR;
+  const sciHexRise = 1.5 * sciHexR + (SCI_HEX_GAP * SQRT3) / 2;
+  const sciHexTop = Math.min(
+    Math.max(24, scienceRoot.y - (2 * sciHexR + sciHexRise) / 2),
+    height - 24 - (2 * sciHexR + sciHexRise)
+  );
+  const scienceHexes: IHexBox[] = groups[0].cards.map((_, i) => {
+    const row = Math.floor(i / 3);
+    return {
+      x: column.right + 40 + sciHexW / 2 + (i % 3) * (sciHexW + SCI_HEX_GAP) + (row % 2) * ((sciHexW + SCI_HEX_GAP) / 2),
+      y: sciHexTop + sciHexR + row * sciHexRise,
+      r: sciHexR,
+    };
+  });
+  const sciHexReach = Math.max(
+    0,
+    ...scienceHexes.map((b) => Math.hypot(b.x - scienceRoot.x, b.y - scienceRoot.y))
+  );
   const tongues = laid.map((tiles, t) => (t === EXAMPLES_TONGUE ? minis : t === SCIENCE_TONGUE ? [] : tiles));
   const reach = tongues.map((tiles) => Math.max(0, ...tiles.map((t) => t.s)));
 
   const [view, setView] = useState<TView>({ kind: 'examples' });
-  // As on the landing: one example on show beside the field, the others in their tiles.
-  // Each example has a tile of its own (the big one the second's, the first one on show from the start), left empty
-  // while its example is on show: a pick flies out of its tile to be on show as the one there flies back to its own
-  // (the user asked: as on the landing, no swapping of tiles).
+  // As on the landing: one example on show beside the field, the others in its tiles, one each. A pick flies out of
+  // its tile to be on show as the one there flies back into the tile it left, so no tile stays behind empty (the
+  // user asked, as on the website; an earlier version kept an empty tile per example).
   const [hero, setHero] = useState(0);
-  const exampleAt = (slot: number) => (slot + 1) % EXAMPLES.length;
-  const slotOf = (example: number) => (example + EXAMPLES.length - 1) % EXAMPLES.length;
-  const [flight, setFlight] = useState<{ inbound: number; outbound: number; id: number } | null>(null);
+  const [slots, setSlots] = useState(() => EXAMPLES.map((_, i) => i).filter((i) => i !== 0));
+  const [flight, setFlight] = useState<{ inbound: number; outbound: number; slot: number; id: number } | null>(
+    null
+  );
   const [landed, setLanded] = useState({ inbound: true, outbound: true });
   const busy = !!flight;
 
@@ -600,23 +696,39 @@ function Home({
   // The videos as the Figma's cards, in a column two wide beside the categories that scrolls: out of their category
   // while it is hovered, and kept out, with the one playing to their right, while they are open.
   const videosRoot = specs[VIDEOS_TONGUE].root;
-  const videoColumn = { x: column.right + 28, y: 20, w: 246 + 16, h: height - 40 };
-  const lineRight = videoColumn.x + videoColumn.w;
+  // the one playing as large as the room right of the column allows, its frame in the page's middle; the column as
+  // tall as that frame and level with it (the user asked), not the page's height
+  const videoColumnX = column.right + 28;
+  const videoColumnW = 246 + 16;
+  const lineRight = videoColumnX + videoColumnW;
+  const player = { left: lineRight + 40, right: STAGE_W - 32 };
+  const playerW = Math.min(player.right - player.left, ((height - 130) * 16) / 9);
+  const videoH = (playerW * 9) / 16;
+  const videoColumn = { x: videoColumnX, y: height / 2 - videoH / 2, w: videoColumnW, h: videoH };
 
   // what it is and what to do with it, under the tongue of the others
   // what it is and what to do with it, in a floating window as the landing's bubble: over the lower left of the one
   // on show, clear of the minis
-  const PANEL_W = 440;
   // the words, and the window round them, fade out where they were and in by the new one on show (the user asked)
   const words = useFadeSwap(hero);
   const panelAway = words.fading || (!!flight && !landed.inbound);
-  const heroLeft = heroAtFor(EXAMPLES[words.said]).x - widthOf(EXAMPLES[words.said]) / 2;
-  const panel = { x: Math.max(minisRight + 30, heroLeft - PANEL_W + 110), y: height * 0.48, w: PANEL_W };
+  const said = EXAMPLES[words.said];
+  // Its words and what to do with it in a hexagon of their own on its left, expanding out of it as it comes on show
+  // (the user asked; it was a window beside it, a frame round both, before): in the white between it and the
+  // examples, over its picture's white margin if that is narrow.
+  const wordsR = 182;
+  const wordsW = SQRT3 * wordsR;
+  const saidLeft = heroAtFor(said).x - widthOf(said) / 2;
+  const wordsHex = {
+    x: Math.max(minisRight + 16 + wordsW / 2, Math.min((minisRight + saidLeft) / 2, saidLeft + widthOf(said) * 0.14 - wordsW / 2)),
+    y: height / 2,
+    r: wordsR,
+  };
 
   const pick = (slot: number) => {
-    const incoming = exampleAt(slot);
-    if (busy || incoming === hero) return;
-    setFlight({ inbound: incoming, outbound: hero, id: Date.now() });
+    const incoming = slots[slot];
+    if (busy || incoming === undefined || incoming === hero) return;
+    setFlight({ inbound: incoming, outbound: hero, slot, id: Date.now() });
     setLanded({ inbound: false, outbound: false });
     setHero(incoming);
     setView({ kind: 'examples' });
@@ -636,6 +748,7 @@ function Home({
   };
   const backToExamples = () => {
     setView({ kind: 'examples' });
+    setHovered(null);
     setPinned(null);
   };
   useEffect(() => {
@@ -658,16 +771,47 @@ function Home({
   const categoryClick = (i: number) => () => {
     if (i === VIDEOS_TONGUE) return lined ? backToExamples() : openVideos();
     if (i === EXAMPLES_TONGUE) return backToExamples();
-    setPinned((p) => (p === i ? null : i));
+    // a category opens on a click (the user asked), and stays out until another is clicked
+    setHovered(i);
+    setPinned(null);
   };
 
   // the one picked, or the first while the videos' category is hovered (the user asked), muted as nothing was clicked
   const previewing = !lined && out === VIDEOS_TONGUE;
   const playing = lined ? videos[view.k] : previewing ? videos[0] : null;
   const playerHidden = lined && hide;
-  // the one playing as large as the room right of the column allows, its title above it
-  const player = { left: lineRight + 40, right: STAGE_W - 32 };
-  const playerW = Math.min(player.right - player.left, ((height - 130) * 16) / 9);
+
+  // Each category's field round what it shows, so that its content sits in the white tiles (the user asked): the
+  // examples' the landing's, grown round their picture tiles; the others' the floor laid round their cards, tiles,
+  // or the videos and the one playing.
+  const categoryFields = useMemo(() => {
+    const rect = (x: number, y: number, w: number, h: number) => ({ x0: x, x1: x + w, y0: y, y1: y + h });
+    const playerH = videoH + 64;
+    return CATEGORIES.map((_, t) => {
+      // the examples on their own, no white tiles round them (the user asked)
+      if (t === EXAMPLES_TONGUE) return [];
+      const random = seededRandom(fieldSeed + 101 * (t + 1));
+      const around =
+        t === SCIENCE_TONGUE
+          ? science.map((c) => rect(c.x - c.w / 2, c.y - c.h / 2, c.w, c.h))
+          : t === VIDEOS_TONGUE
+            ? [
+                rect(videoColumn.x, videoColumn.y, videoColumn.w, videoColumn.h),
+                rect(player.left + (player.right - player.left - playerW) / 2, height / 2 - videoH / 2 - 64, playerW, playerH),
+              ]
+            : (laid[t] ?? []);
+      if (!around.length) return field.whites;
+      // round the content and a little past it, none trailing off to the page's right (the user asked them gone)
+      const right = Math.max(...around.map((b) => ('r' in b ? b.x + b.r : b.x1)));
+      const bounds = { x0: column.right + 16, x1: Math.min(STAGE_W - 8, right + 150), y0: 12, y1: height - 12 };
+      // hexagons: white tiles grown against their sides, as the examples' are; cards and the videos: the floor round
+      return 'r' in around[0]
+        ? fieldWhites({ features: around as IHexBox[], k, bounds, keepOut: [], random })
+        : floorAround({ around, k, bounds, random });
+    });
+    // the layout's numbers, not the arrays rebuilt on every render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [field, fieldSeed, height, column.right, playerW, laid, science.length, sciW, sciH, sciTop]);
 
   return (
     <>
@@ -675,12 +819,12 @@ function Home({
           asked); with white ones in the examples' places when it is not the examples', so the field stays whole */}
       {fieldSets.map((set) => {
         const root = specs[set.owner]?.root ?? examplesRoot;
-        const tiles = [
-          ...field.whites.map((w) => ({ box: w, key: w.key, lift: Math.min(0.6, 0.12 + 0.5 * w.h), drift: w.drift })),
-          ...(set.owner === EXAMPLES_TONGUE
-            ? []
-            : minis.map((m) => ({ box: m as IHexBox, key: `place-${m.key}`, lift: 0.45, drift: false }))),
-        ];
+        const tiles = (categoryFields[set.owner] ?? field.whites).map((w) => ({
+          box: w as IHexBox,
+          key: w.key,
+          lift: Math.min(0.6, 0.12 + 0.5 * w.h),
+          drift: w.drift,
+        }));
         const away = (b: IHexBox) => Math.hypot(b.x - root.x, b.y - root.y);
         const reachOf = Math.max(0, ...tiles.map((t) => away(t.box)));
         return tiles.map((t) => {
@@ -711,8 +855,9 @@ function Home({
 
       {/* what is open, under any tongue that comes out over it */}
       <div
-        className="pointer-events-none absolute inset-0 transition-opacity duration-300"
-        style={{ opacity: hide ? 0 : 1, zIndex: 0 }}
+        className={cn(styles.openLayer, 'pointer-events-none absolute inset-0 transition-opacity duration-300')}
+        // no z-index of its own: one would isolate the one on show's multiply, its white hiding the tiles under it
+        style={{ opacity: hide ? 0 : 1 }}
       >
         {shown && landed.inbound && (
           <div
@@ -732,37 +877,46 @@ function Home({
             className={cn(!hide && !panelAway && 'pointer-events-auto', 'transition-opacity ease-in-out')}
             style={{ opacity: panelAway ? 0 : 1, transitionDuration: `${WORDS_FADE_MS}ms` }}
           >
-            <ModelPanel
-              example={EXAMPLES[words.said]}
-              at={{ x: panel.x, y: panel.y }}
-              width={panel.w}
-              base={base}
-            />
+            {/* new for each one on show, so it expands out of it again (its own animation: the fade mode keeps it) */}
+            <div
+              key={`words-${words.said}`}
+              className={cn(styles.wordsIn, 'pointer-events-none absolute inset-0')}
+              style={
+                {
+                  transformOrigin: `${wordsHex.x}px ${wordsHex.y}px`,
+                  '--from-x': `${heroAtFor(said).x - wordsHex.x}px`,
+                } as CSSProperties
+              }
+            >
+              <HexTile box={wordsHex} lift={0.95} drift={false}>
+                <ModelPanel example={said} base={base} />
+              </HexTile>
+            </div>
           </div>
         )}
       </div>
 
       {/* the video playing, beside the videos' column: kept out while the pointer is on it, and kept open once clicked */}
       <div
-        className="pointer-events-none absolute inset-0 transition-opacity duration-300"
+        className={cn(styles.openLayer, 'pointer-events-none absolute inset-0 transition-opacity duration-300')}
         style={{ opacity: playerHidden ? 0 : 1, zIndex: 0 }}
       >
         {playing && (playing.video || playing.url) && (
           <div
             key={playing.key}
-            className={cn(styles.fadeIn, !playerHidden && 'pointer-events-auto', 'absolute flex flex-col gap-[10px]')}
+            className={cn(styles.fadeIn, !playerHidden && 'pointer-events-auto', 'absolute')}
             style={{
               left: player.left + (player.right - player.left - playerW) / 2,
-              top: height / 2,
+              // its frame level with the column beside it, the title over it
+              top: height / 2 - videoH / 2,
               width: playerW,
-              transform: 'translateY(-50%)',
               animationDelay: previewing ? '200ms' : '450ms',
             }}
             onPointerEnter={previewing ? () => onTongue(VIDEOS_TONGUE)(true) : undefined}
             onPointerLeave={previewing ? () => onTongue(VIDEOS_TONGUE)(false) : undefined}
             onPointerDown={previewing ? () => openVideos(0) : undefined}
           >
-            <div className="flex flex-col">
+            <div className="absolute bottom-[calc(100%+10px)] left-0 flex flex-col">
               <span className="text-[12px] font-semibold tracking-[0.12em] uppercase" style={{ color: GREEN }}>
                 {playing.kind}
               </span>
@@ -787,9 +941,10 @@ function Home({
               <ExampleTile
                 key={tile.key}
                 tile={tile}
-                example={EXAMPLES[exampleAt(i)]}
+                example={EXAMPLES[slots[i] ?? 0]}
                 // its example on show, or on its way back to it
-                empty={exampleAt(i) === hero || (flight?.outbound === exampleAt(i) && !landed.outbound)}
+                // gone while its example flies out and the other flies in
+                empty={!!flight && flight.slot === i && !landed.outbound}
                 onPick={() => pick(i)}
                 fold={fold(tile)}
                 onTongue={keep}
@@ -811,6 +966,7 @@ function Home({
         });
       })}
 
+      {/* the cards as rounded rectangles (the user tried hexagons, `PlaceHex` and `scienceHexes`, and went back) */}
       {science.map((rect) => (
         <PlaceCard
           key={rect.key}
@@ -842,7 +998,8 @@ function Home({
           glideDelayMs={0}
           on={out === i || (out === null && kept === i)}
           onClick={categoryClick(i)}
-          onHover={onTongue(i)}
+          // a click opens it, not the pointer passing over (the user asked)
+          onHover={() => {}}
         />
       ))}
 
@@ -850,7 +1007,7 @@ function Home({
         <>
           <MeltFlier
             key={`in-${flight.id}`}
-            tile={minis[slotOf(flight.inbound)]}
+            tile={minis[flight.slot]}
             to={heroAtFor(EXAMPLES[flight.inbound])}
             example={EXAMPLES[flight.inbound]}
             width={widthOf(EXAMPLES[flight.inbound])}
@@ -859,13 +1016,17 @@ function Home({
           />
           <MeltFlier
             key={`out-${flight.id}`}
-            tile={minis[slotOf(flight.outbound)]}
+            tile={minis[flight.slot]}
             to={heroAtFor(EXAMPLES[flight.outbound])}
             example={EXAMPLES[flight.outbound]}
             width={widthOf(EXAMPLES[flight.outbound])}
             heroR={heroR}
             back
-            onDone={() => setLanded((l) => ({ ...l, outbound: true }))}
+            onDone={() => {
+              // in its tile now: the tile is its
+              setSlots((was) => was.map((e, i) => (i === flight.slot ? flight.outbound : e)));
+              setLanded((l) => ({ ...l, outbound: true }));
+            }}
           />
         </>
       )}

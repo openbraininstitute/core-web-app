@@ -59,6 +59,7 @@ import { TutorialCard, TutorialsIndex } from '@/features/learn/ui/tutorials';
 import { WorkflowCard, WorkflowsIndex } from '@/features/learn/ui/workflows';
 import { useStreamed } from '@/features/learn/use-streamed';
 import { BOX_CLASS } from '@/features/scan-config/components/shared/box-class';
+import { useMediaQuery } from '@/hooks/use-media-query';
 import { cn } from '@/utils/css-class';
 
 import type { FeedItem } from '@/features/learn/feed-item';
@@ -390,6 +391,10 @@ export function LearnPage({
   // the card, out of sight while the courses are over the whole page
   const panel = cn(PANEL, overviewOn && 'lg:hidden');
   const coursePanel = cn(COURSE_PANEL, overviewOn && 'lg:hidden');
+  // On a narrow screen a course has no card of its own under the list: a tap opens its card in the list just enough
+  // for all its words (the user asked), another shuts it. Wide, the card beside the list, as ever.
+  const wide = useMediaQuery('(min-width: 1024px)', true);
+  const [openCourse, setOpenCourse] = useState<string | null>(null);
   const own = `min(${LEFT.most}px, ${LEFT.share * 100}%)`;
   const listTrack =
     onCourses && wider !== null
@@ -681,7 +686,9 @@ export function LearnPage({
                 }}
               >
                 {courses.map((course, i) => {
-                  const isSelected = course.id === selected?.id;
+                  // open (a narrow screen's tap): all its words; picked (a wide screen's): the card beside the list
+                  const isOpen = !wide && openCourse === course.id;
+                  const isSelected = wide ? course.id === selected?.id : isOpen;
                   const done = progress[course.id]?.done;
                   // each group under its heading, across every column, its courses shown while it
                   // is open
@@ -722,11 +729,13 @@ export function LearnPage({
                           <button
                             type="button"
                             aria-pressed={isSelected}
+                            aria-expanded={isOpen}
                             data-learn="row"
                             // picked from the overview, the course's card slides in beside the list,
                             // which narrows to two columns, or as many as leave the card its floor
                             onClick={() => {
                               setChosen(course.id);
+                              setOpenCourse((open) => (open === course.id ? null : course.id));
                               if (!overviewOn) return;
                               const total = gridRef.current?.offsetWidth ?? 0;
                               const least = Math.min(LEFT.most, LEFT.share * total);
@@ -748,6 +757,7 @@ export function LearnPage({
                             className={cn(
                               'group relative flex w-full items-center rounded-[12px] text-left transition-shadow',
                               bigCards ? 'gap-[16px] p-[14px]' : 'gap-[12px] p-[10px]',
+                              isOpen && 'items-start',
                               isSelected
                                 ? 'bg-[#bae7ff] shadow-[inset_0_0_0_1.5px_#003a8c]'
                                 : 'bg-white shadow-[inset_0_0_0_1px_#f0f0f0] hover:shadow-[inset_0_0_0_1px_#d9d9d9]'
@@ -782,15 +792,21 @@ export function LearnPage({
                               <span
                                 className={cn(
                                   'font-semibold text-[#002766]',
-                                  bigCards
-                                    ? 'line-clamp-2 text-[17px] leading-[23px]'
-                                    : 'truncate text-[14px] leading-[19px]'
+                                  bigCards ? 'text-[17px] leading-[23px]' : 'text-[14px] leading-[19px]',
+                                  // all of it while open
+                                  isOpen ? 'pr-[60px]' : bigCards ? 'line-clamp-2' : 'truncate'
                                 )}
                               >
                                 {course.title}
                               </span>
-                              {bigCards && (
-                                <span className="line-clamp-2 text-[12.5px] leading-[18px] text-[#595959]">
+                              {(bigCards || isOpen) && (
+                                <span
+                                  className={cn(
+                                    'text-[#595959]',
+                                    'text-[12.5px] leading-[18px]',
+                                    !isOpen && 'line-clamp-2'
+                                  )}
+                                >
                                   {course.description}
                                 </span>
                               )}
@@ -848,7 +864,7 @@ export function LearnPage({
           {overviewOn && <div className="max-lg:hidden">{devSettings}</div>}
         </aside>
 
-        <div className={PANEL_FRAME}>
+        <div className={cn(PANEL_FRAME, onCourses && 'max-lg:hidden')}>
           {onCourses && (
             // the grab bar between the courses and the card, in the gutter's middle: dragged
             // right, the list widens and the card narrows to its floor, then shuts into a bar,
@@ -927,7 +943,8 @@ export function LearnPage({
               className={panel}
               callout={callout}
             />
-          ) : selected ? (
+          ) : selected && (wide || !onCourses) ? (
+            // (not on a narrow screen, whose course cards open in the list: hidden, its figure would draw at no size)
             <CourseDetail
               className={coursePanel}
               key={selected.id}
@@ -1077,11 +1094,14 @@ function CourseDetail({
   progress,
   learnPath,
   className,
+  inline = false,
 }: {
   course: LearnCourse;
   progress?: CourseProgress;
   learnPath: string;
   className?: string;
+  /** Opened out in the list on a narrow screen: tighter, its figure shorter. */
+  inline?: boolean;
 }) {
   const total = course.slides.length;
   const done = Boolean(progress?.done);
@@ -1103,22 +1123,40 @@ function CourseDetail({
 
   return (
     <section
-      className={cn(className, 'flex flex-col pt-[12px] pr-[44px] pb-[40px] pl-[40px]')}
+      className={cn(
+        className,
+        'flex flex-col',
+        inline ? 'p-[16px] max-lg:overflow-visible' : 'pt-[12px] pr-[44px] pb-[40px] pl-[40px]'
+      )}
       // the figure as tall as the card leaves it, with the header and the words: no less than its
       // height in a course, no more than fits beside its words without scrolling on a tall screen
-      style={{ '--learn-figure-h': 'clamp(340px, calc(100dvh - 420px), 640px)' } as CSSProperties}
+      style={
+        {
+          '--learn-figure-h': inline ? '260px' : 'clamp(340px, calc(100dvh - 420px), 640px)',
+        } as CSSProperties
+      }
     >
-      <div className="flex flex-1 flex-col gap-[28px]">
+      <div className={cn('flex flex-1 flex-col', inline ? 'gap-[16px]' : 'gap-[28px]')}>
         {/* As tall as the category tiles (86px), with its content centred, and as far down the
             card (12px) as they are down their box, whose top is level with the card's: the title
             sits across from the middle of the tiles' first row. Taller only if the title wraps. */}
         <header
           data-learn="head"
-          className="flex min-h-[86px] items-center justify-between gap-[20px]"
+          className={cn(
+            'flex items-center justify-between gap-[20px]',
+            inline ? 'flex-wrap gap-[12px]' : 'min-h-[86px]'
+          )}
         >
           <div className="flex flex-col gap-[7px]">
             {/* on the navy, as the mini detail view sets its name and its fields' labels */}
-            <h1 className="text-[31px] leading-[38px] font-bold text-white">{course.title}</h1>
+            <h1
+              className={cn(
+                'font-bold text-white',
+                inline ? 'text-[21px] leading-[26px]' : 'text-[31px] leading-[38px]'
+              )}
+            >
+              {course.title}
+            </h1>
             <p className="text-primary-3 text-[12.5px] leading-[17px]">{meta}</p>
           </div>
           <div className="flex shrink-0 items-center gap-[8px]">
@@ -1144,7 +1182,12 @@ function CourseDetail({
 
         <CoursePreview widget={course.preview} />
 
-        <p className="text-primary-3 max-w-[880px] text-[16px] leading-[27px]">
+        <p
+          className={cn(
+            'text-primary-3 max-w-[880px]',
+            inline ? 'text-[14px] leading-[22px]' : 'text-[16px] leading-[27px]'
+          )}
+        >
           {course.description}
         </p>
       </div>

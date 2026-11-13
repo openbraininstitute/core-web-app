@@ -74,7 +74,8 @@ const COLUMNS = [
 function ProjectCard({ name, about }: { name: string; about: string }) {
   return (
     <section
-      className="relative h-[332px] shrink-0 overflow-hidden rounded-[14px]"
+      // on a phone as tall as its words need, the picture behind them fainter
+      className="relative h-[332px] shrink-0 overflow-hidden rounded-[14px] max-md:h-auto max-md:min-h-[260px]"
       // the design's fill: #0050b3 to a fifth of the way, then to #69c0ff, turned a little off the horizontal
       style={{ background: 'linear-gradient(95deg, #0050b3 0%, #0050b3 19%, #69c0ff 100%)' }}
     >
@@ -82,7 +83,7 @@ function ProjectCard({ name, about }: { name: string; about: string }) {
       <img
         src="/images/thalamus-project-card.png"
         alt=""
-        className="absolute top-0 right-0 h-full w-[59.2%] object-cover"
+        className="absolute top-0 right-0 h-full w-[59.2%] object-cover max-md:w-full max-md:opacity-45"
         draggable={false}
       />
       <div
@@ -92,17 +93,19 @@ function ProjectCard({ name, about }: { name: string; about: string }) {
             'linear-gradient(90deg, rgb(0 80 179 / 0.98) 0%, rgb(0 80 179 / 0.62) 55%, rgb(0 80 179 / 0.06) 100%)',
         }}
       />
-      <div className="relative flex h-full flex-col justify-between p-[24px]">
+      <div className="relative flex h-full flex-col justify-between gap-[20px] p-[24px] max-md:min-h-[260px] max-md:p-[18px]">
         <div className="flex max-w-[430px] flex-col gap-[10px]">
-          <h2 className="text-[28px] leading-[34px] font-bold text-white">{name}</h2>
-          <p className="text-[14px] leading-[22px] text-[#dbe4f0]">{about}</p>
+          <h2 className="text-[28px] leading-[34px] font-bold text-white max-md:text-[22px] max-md:leading-[27px]">
+            {name}
+          </h2>
+          <p className="text-[14px] leading-[22px] text-[#dbe4f0] max-md:text-[13px] max-md:leading-[19px]">{about}</p>
         </div>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-[10px]">
+        <div className="flex items-center justify-between gap-[10px] max-md:flex-wrap">
+          <div className="flex items-center gap-[10px] max-md:gap-[6px]">
             {MEMBERS.map((m) => (
               <span
                 key={m.initials}
-                className="flex size-[40px] items-center justify-center rounded-full text-[14px] font-bold"
+                className="flex size-[40px] items-center justify-center rounded-full text-[14px] font-bold max-md:size-[34px] max-md:text-[12px]"
                 style={{ background: m.fill, color: m.ink }}
               >
                 {m.initials}
@@ -111,7 +114,7 @@ function ProjectCard({ name, about }: { name: string; about: string }) {
             <button
               type="button"
               aria-label="Invite a member"
-              className="relative flex size-[40px] items-center justify-center rounded-full text-[18px] leading-none text-white transition-colors hover:bg-white/10"
+              className="relative flex size-[40px] items-center justify-center rounded-full text-[18px] leading-none text-white transition-colors hover:bg-white/10 max-md:size-[34px]"
             >
               {/* the design's ring: 1.4 px inside, dashed 4 on 4 */}
               <svg className="absolute inset-0 size-full" viewBox="0 0 40 40" aria-hidden>
@@ -129,7 +132,8 @@ function ProjectCard({ name, about }: { name: string; about: string }) {
 
 function Discussion() {
   return (
-    <section className="flex min-h-0 flex-1 flex-col rounded-[12px] border border-[#f0f0f0] bg-white p-[16px]">
+    // on a phone a box of its own height in the page's scroll
+    <section className="flex min-h-0 flex-1 flex-col rounded-[12px] border border-[#f0f0f0] bg-white p-[16px] max-md:flex-none">
       <div className="flex items-center justify-between">
         <h3 className="text-[14px] leading-[20px] font-bold" style={{ color: NAVY }}>
           Discussion
@@ -185,8 +189,8 @@ function Balance({ base }: { base: string }) {
   const pill =
     'flex h-[38px] items-center gap-[8px] rounded-full px-[16px] text-[13px] font-semibold text-white transition-opacity hover:opacity-90';
   return (
-    <section className="flex h-[92px] shrink-0 items-center justify-between rounded-[12px] border border-[#f0f0f0] bg-[#f5f5f5] px-[24px]">
-      <div className="flex gap-[40px]" style={{ color: NAVY }}>
+    <section className="flex h-[92px] shrink-0 items-center justify-between rounded-[12px] border border-[#f0f0f0] bg-[#f5f5f5] px-[24px] max-md:h-auto max-md:flex-col max-md:items-stretch max-md:gap-[14px] max-md:px-[16px] max-md:py-[14px]">
+      <div className="flex gap-[40px] max-md:justify-between max-md:gap-[16px]" style={{ color: NAVY }}>
         <div className="flex flex-col">
           <span className="text-[13px] font-light">Virtual lab credits</span>
           <span className="text-[21px] leading-[29px] font-bold">12,480</span>
@@ -196,7 +200,7 @@ function Balance({ base }: { base: string }) {
           <span className="text-[21px] leading-[29px] font-bold">650</span>
         </div>
       </div>
-      <div className="flex gap-[8px]">
+      <div className="flex gap-[8px] max-md:[&>a]:flex-1 max-md:[&>a]:justify-center">
         <Link href={`${base}/credits`} className={pill} style={{ background: NAVY }}>
           Transfer credits <span aria-hidden>⇄</span>
         </Link>
@@ -210,15 +214,38 @@ function Balance({ base }: { base: string }) {
 
 function Activity() {
   return (
-    <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[12px] border border-[#f0f0f0]">
-      <div className="flex h-[41px] shrink-0 items-center bg-[#f5f5f5] px-[16px]">
+    <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[12px] border border-[#f0f0f0] max-md:flex-none">
+      {/* on a phone, each row a short card: what and where, who and when, its credits */}
+      <h3 className="px-[16px] pt-[14px] pb-[6px] text-[14px] font-bold md:hidden" style={{ color: NAVY }}>
+        Activity
+      </h3>
+      <div className="flex flex-col md:hidden">
+        {ACTIVITY.map(([activity, scale, user, date, credits]) => (
+          <div
+            key={`${activity}${scale}${date}${user}`}
+            className="flex items-center justify-between gap-[12px] border-b border-[#f0f0f0] px-[16px] py-[10px]"
+            style={{ color: NAVY }}
+          >
+            <span className="flex min-w-0 flex-col">
+              <span className="truncate text-[13px] font-semibold">
+                {activity} · {scale}
+              </span>
+              <span className="text-[11.5px] text-[#8c8c8c]">
+                {user} · {date}
+              </span>
+            </span>
+            <span className="shrink-0 text-[13px] font-semibold">{credits}</span>
+          </div>
+        ))}
+      </div>
+      <div className="flex h-[41px] shrink-0 items-center bg-[#f5f5f5] px-[16px] max-md:hidden">
         {COLUMNS.map((c) => (
           <span key={c.title} className="text-[12px] font-light" style={{ width: c.w, color: NAVY }}>
             {c.title}
           </span>
         ))}
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="min-h-0 flex-1 overflow-y-auto max-md:hidden">
         {ACTIVITY.map((row) => (
           <div
             key={row.join()}
@@ -264,18 +291,25 @@ export function ProjectOverviewPage() {
   const about = project?.description?.trim() || PLACEHOLDER_ABOUT;
 
   return (
-    <div className="flex h-full min-h-[760px] w-full flex-col gap-[14px] bg-white px-[18px] pt-[16px] pb-[18px]">
-      <h1 className="shrink-0 text-[20px] leading-[28px]" style={{ color: NAVY }}>
+    // on a phone one column down the page, which scrolls: the card, the credits, the discussion, the activity
+    <div className="flex h-full min-h-[760px] w-full flex-col gap-[14px] bg-white px-[18px] pt-[16px] pb-[18px] max-md:h-auto max-md:min-h-0 max-md:gap-[12px] max-md:px-[12px] max-md:pt-[12px]">
+      <h1 className="shrink-0 text-[20px] leading-[28px] max-md:text-[17px] max-md:leading-[23px]" style={{ color: NAVY }}>
         <span className="font-bold">Project Home:</span> {name}
       </h1>
-      <div className="grid min-h-0 flex-1 grid-cols-2 gap-[24px]">
-        <div className="flex min-h-0 flex-col gap-[16px]">
+      <div className="grid min-h-0 flex-1 grid-cols-2 gap-[24px] max-md:flex max-md:flex-col max-md:gap-[12px]">
+        <div className="flex min-h-0 flex-col gap-[16px] max-md:contents">
           <ProjectCard name={name} about={about} />
-          <Discussion />
+          <div className="max-md:order-3 md:contents">
+            <Discussion />
+          </div>
         </div>
-        <div className="flex min-h-0 flex-col gap-[16px]">
-          <Balance base={base} />
-          <Activity />
+        <div className="flex min-h-0 flex-col gap-[16px] max-md:contents">
+          <div className="max-md:order-2 md:contents">
+            <Balance base={base} />
+          </div>
+          <div className="max-md:order-4 md:contents">
+            <Activity />
+          </div>
         </div>
       </div>
     </div>

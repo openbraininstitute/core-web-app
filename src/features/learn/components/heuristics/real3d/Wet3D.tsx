@@ -1689,7 +1689,8 @@ function drawTrio(
       if (white)
         soften(ctx, 0.16 * a, 10, (g) => {
           g.beginPath();
-          g.ellipse(slot.x, slot.y + it.ext.hy * s + 10, it.ext.hr * s * 0.8, 7, 0, 0, Math.PI * 2);
+          // never below nothing: drawn hidden, at no size, the scale goes negative
+          g.ellipse(slot.x, slot.y + it.ext.hy * s + 10, Math.max(0, it.ext.hr * s * 0.8), 7, 0, 0, Math.PI * 2);
           g.fill();
         });
       drawLayers(
@@ -1926,7 +1927,7 @@ function cellShadow(ctx: CanvasRenderingContext2D, sc: Scene, v: View, x: number
       }
       g.stroke();
     });
-    const rs = sc.somaR * x * s * 1.1;
+    const rs = Math.max(0, sc.somaR * x * s * 1.1);
     g.beginPath();
     g.ellipse(
       X(sc.soma[0], sc.soma[2]),

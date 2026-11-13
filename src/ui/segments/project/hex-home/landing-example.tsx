@@ -105,6 +105,7 @@ export function MeltFlier({
   example,
   width,
   heroR,
+  hexAt,
   back = false,
   onDone,
 }: {
@@ -115,6 +116,8 @@ export function MeltFlier({
   width: number;
   /** The tile's size at the end, were it to stay: it is gone by then. */
   heroR: number;
+  /** Where the tile ends up, when not round the example on show (a frame it grows into). */
+  hexAt?: IPoint;
   back?: boolean;
   onDone?: () => void;
 }) {
@@ -135,7 +138,10 @@ export function MeltFlier({
       const shown = smooth(e, 0.15, 0.85);
       return {
         move: { transform: `translate(${tile.x + (to.x - tile.x) * e}px, ${tile.y + (to.y - tile.y) * e}px)` },
-        hex: { transform: `scale(${r / heroR})`, opacity: 1 - smooth(e, 0.5, 0.98) },
+        hex: {
+          transform: `translate(${((hexAt?.x ?? to.x) - to.x) * e}px, ${((hexAt?.y ?? to.y) - to.y) * e}px) scale(${r / heroR})`,
+          opacity: 1 - smooth(e, 0.5, 0.98),
+        },
         pic: { opacity: 1 - shown },
         free: { transform: `scale(${w / width})`, opacity: shown },
       };
