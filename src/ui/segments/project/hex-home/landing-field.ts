@@ -175,7 +175,10 @@ export function fieldWhites({
   const out: Array<IHexBox & { h: number }> = [];
 
   for (let tries = 0; tries < 600 && out.length < SMALL_COUNT; tries++) {
-    const t = random() < SMALL_ON_BIG ? big : features[1 + Math.floor(random() * (features.length - 1))];
+    const t =
+      random() < SMALL_ON_BIG || features.length < 2
+        ? big
+        : features[1 + Math.floor(random() * (features.length - 1))];
     const r = rand(...SMALL_R) * k;
     const p = beside(t, r, Math.floor(random() * 6), (random() * 2 - 1) * maxLat(r, t), gap);
     if (!ok(p) || !fits(p, features.filter((f) => f !== t), gap) || !fits(p, out, gap)) continue;
@@ -288,9 +291,10 @@ export function floorAround({
 }
 
 /**
- * The examples' tiles in one arrangement, always the same (the user asked: no new one on each visit), round a hole
- * where the words of the one on show go: the big tile against the hole's upper left, then each medium one in turn
- * at the place nearest the hole beside a tile already down (or the hole), straight beside it as the honeycomb lies.
+ * The examples' tiles in one arrangement, always the same (the user asked: no new one on each visit): round a hole
+ * (`holeR`) with the big tile against its upper left, or with no hole (`holeR` 0) the big tile at `center`; then
+ * each medium one in turn at the place nearest the middle beside a tile already down, straight beside it as the
+ * honeycomb lies.
  */
 export function clusterAround({
   center,
@@ -306,32 +310,38 @@ export function clusterAround({
   bounds: IRect;
 }): IHexBox[] {
   const gap = EDGE_GAP * k;
-  const hole = { ...center, r: holeR };
-  const big = beside(hole, BIG_R * k, 4, 0, gap);
-  const placed: IHexBox[] = [big];
-  const down: IHexBox[] = [hole, big];
-  const r = MEDIUM_R * k;
-  while (placed.length < count) {
-    let best: IHexBox | null = null;
-    let bestD = Infinity;
-    for (const t of down) {
-      // centred on the face, or slid to either end of a larger one's
-      const lats = t.r > r ? [0, (t.r - r) / 2, -(t.r - r) / 2] : [0];
-      for (let dir = 0; dir < 6; dir++) {
-        for (const lat of lats) {
-          const p = beside(t, r, dir, lat, gap);
-          if (!inside(p, bounds) || !fits(p, down, gap)) continue;
-          const d = Math.hypot(p.x - center.x, p.y - center.y);
-          if (d < bestD - 0.01) {
-            best = p;
-            bestD = d;
+  // smaller, a step at a time, until all of them fit the room
+  for (let scale = 1; scale >= 0.55; scale -= 0.05) {
+    const hole = { ...center, r: holeR };
+    const bigR = BIG_R * k * scale;
+    const big = holeR > 0 ? beside(hole, bigR, 4, 0, gap) : { ...center, r: bigR };
+    const placed: IHexBox[] = [big];
+    const down: IHexBox[] = holeR > 0 ? [hole, big] : [big];
+    const r = MEDIUM_R * k * scale;
+    while (placed.length < count) {
+      let best: IHexBox | null = null;
+      let bestD = Infinity;
+      for (const t of down) {
+        // slid along the face as well as centred on it, for a closer fit
+        const most = maxLat(r, t);
+        const lats = [0, 0.5, -0.5, 1, -1].map((f) => f * most);
+        for (let dir = 0; dir < 6; dir++) {
+          for (const lat of lats) {
+            const p = beside(t, r, dir, lat, gap);
+            if (!inside(p, bounds) || !fits(p, down, gap)) continue;
+            const d = Math.hypot(p.x - center.x, p.y - center.y);
+            if (d < bestD - 0.01) {
+              best = p;
+              bestD = d;
+            }
           }
         }
       }
+      if (!best) break;
+      placed.push(best);
+      down.push(best);
     }
-    if (!best) break;
-    placed.push(best);
-    down.push(best);
+    if (placed.length === count) return placed;
   }
-  return placed;
+  return [{ ...center, r: BIG_R * k * 0.55 }];
 }

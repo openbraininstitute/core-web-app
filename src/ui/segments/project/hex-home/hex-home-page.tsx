@@ -436,9 +436,7 @@ function ModelPanel({ example, base }: { example: IExample; base: string }) {
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-[10px] px-[15%] text-center">
       <div className="flex min-w-0 flex-col items-center gap-[3px]">
-        <span className="text-[10.5px] font-semibold tracking-[0.12em] uppercase" style={{ color: GREEN }}>
-          {words.kicker}
-        </span>
+        {/* no "Example" kicker over its name (the user asked) */}
         <h2 className="text-[20px] leading-[24px] font-light text-[#13306f]">{words.name}</h2>
         <p className="line-clamp-4 text-[12.5px] leading-[17px] text-neutral-600">{words.about}</p>
       </div>
@@ -573,15 +571,16 @@ function Home({
   const [fieldSeed] = useState(() => Math.floor(Math.random() * 2 ** 31));
   // the examples stop short of the one on show at its widest
   const heroRoomLeft = Math.min(...EXAMPLES.map((e) => STAGE_W - 32 - widthOf(e)));
-  // the hole the examples lie round, the one on show's words in it: in the middle of their room, a little left
-  const wordsAt = { x: column.right + 16 + (heroRoomLeft - 8 - column.right - 16) * 0.46, y: height / 2 };
+  // the examples' room, left of the words' hexagon (to their right, the user asked), always the same arrangement
+  // (the words may lie over the widest one's white margin, so the examples keep most of the room)
+  const clusterRight = heroRoomLeft - 8 - SQRT3 * WORDS_R * 0.55;
   const field = useMemo(() => {
     const random = seededRandom(fieldSeed);
-    const bounds = { x0: column.right + 16, x1: heroRoomLeft - 8, y0: 12, y1: height - 12 };
-    // a tile for each example but the one on show, as on the landing, round the words' hole on the centre left
+    const bounds = { x0: column.right + 16, x1: clusterRight, y0: 12, y1: height - 12 };
+    // a tile for each example but the one on show, as on the landing, round the big one in the middle of their room
     const features = clusterAround({
-      center: wordsAt,
-      holeR: WORDS_R,
+      center: { x: (bounds.x0 + bounds.x1) / 2, y: height / 2 },
+      holeR: 0,
       k,
       count: EXAMPLES.length - 1,
       bounds,
@@ -591,7 +590,7 @@ function Home({
     const panelBox = { x0: right + 20, x1: STAGE_W, y0: height * 0.48 - 16, y1: height * 0.48 + 330 };
     const whites = fieldWhites({ features, k, bounds, keepOut: [panelBox], random });
     return { features, whites };
-  }, [fieldSeed, height, column.right, heroRoomLeft, wordsAt.x, wordsAt.y]);
+  }, [fieldSeed, height, column.right, heroRoomLeft, clusterRight]);
   const minis: ITongueTile[] = field.features.map((f, i) => ({
     key: `mini${i}`,
     ...f,
@@ -722,8 +721,14 @@ function Home({
   // (the user asked; it was a window beside it, a frame round both, before): in the white between it and the
   // examples, over its picture's white margin if that is narrow.
   const wordsR = WORDS_R;
-  // in the hole the examples lie round, always the same place (the user asked)
-  const wordsHex = { ...wordsAt, r: wordsR };
+  // right of the examples, a little above the middle, a thin grey line from it to the one on show (the user asked)
+  const wordsW = SQRT3 * wordsR;
+  const wordsHex = { x: minisRight + 24 + wordsW / 2, y: height * 0.42, r: wordsR };
+  const leader = {
+    x0: wordsHex.x + wordsW / 2,
+    x1: Math.max(wordsHex.x + wordsW / 2 + 48, heroAtFor(said).x - widthOf(said) * 0.22),
+    y: wordsHex.y,
+  };
 
   const pick = (slot: number) => {
     const incoming = slots[slot];
@@ -877,6 +882,13 @@ function Home({
             className={cn(!hide && !panelAway && 'pointer-events-auto', 'transition-opacity ease-in-out')}
             style={{ opacity: panelAway ? 0 : 1, transitionDuration: `${WORDS_FADE_MS}ms` }}
           >
+            <div
+              aria-hidden
+              className="absolute h-px bg-neutral-300"
+              style={{ left: leader.x0, top: leader.y, width: leader.x1 - leader.x0 }}
+            >
+              <span className="absolute -top-[3px] -right-[3.5px] size-[7px] rounded-full bg-neutral-400" />
+            </div>
             {/* new for each one on show, so it expands out of it again (its own animation: the fade mode keeps it) */}
             <div
               key={`words-${words.said}`}
