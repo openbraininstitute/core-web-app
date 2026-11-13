@@ -80,6 +80,12 @@ export const DATA_GRID_LOCALE_TEXT = {
   noRowsToShow: 'No entities to show',
 } as const;
 
+export function dataGridLocaleText(noRowsText?: string) {
+  return noRowsText
+    ? { ...DATA_GRID_LOCALE_TEXT, noRowsToShow: noRowsText }
+    : DATA_GRID_LOCALE_TEXT;
+}
+
 /**
  * Restyles AG's selection control as a radio: AG renders the same checkbox widget for
  * `singleRow` and `multiRow`, with no native radio. Apply on the grid wrapper.
