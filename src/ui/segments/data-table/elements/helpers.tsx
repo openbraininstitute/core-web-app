@@ -2,7 +2,7 @@
 
 import { compact } from 'es-toolkit/compat';
 
-import { DEFAULT_PAGE_NUMBER } from '@/constants';
+import { DEFAULT_PAGE_NUMBER, WorkspaceSection } from '@/constants';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import {
@@ -100,6 +100,18 @@ export const makeDataKey = ({
   const dataKey = compact([virtualLabId, projectId, section, dataType, scope, id, extra]).join('/');
   return { dataKey };
 };
+
+/**
+ * Key a grid's browse state (filters, sort, search, page) is saved under. In Data it leaves
+ * out the vlab and project, so a listing keeps its filters when the workspace changes;
+ * elsewhere it is the full {@link makeDataKey}.
+ */
+export const makeListingStateKey = (parts: Parameters<typeof makeDataKey>[0]) =>
+  makeDataKey(
+    parts.section === WorkspaceSection.Data
+      ? { ...parts, virtualLabId: null, projectId: null }
+      : parts
+  ).dataKey;
 
 /**
  * safely extract parts from a dataKey created by makeDataKey().

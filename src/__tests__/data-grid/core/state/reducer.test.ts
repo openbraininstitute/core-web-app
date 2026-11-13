@@ -99,6 +99,15 @@ describe('reducer — filters', () => {
     expect(s.selection).toEqual([]);
   });
 
+  it('keeps the selection for a filter set with keepSelection, still resetting the page', () => {
+    let s = reducer(initial(), { type: GridActionType.SetPage, page: 2 });
+    s = reducer(s, { type: GridActionType.SetSelection, ids: ['r1'] });
+    s = reducer(s, { type: GridActionType.SetFilter, columnId: 'a', entry, keepSelection: true });
+    expect(s.filters.a).toEqual(entry);
+    expect(s.page).toBe(1);
+    expect(s.selection).toEqual(['r1']);
+  });
+
   it('returns the same reference for no-op transitions', () => {
     const s = initial();
     expect(

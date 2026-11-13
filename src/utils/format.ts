@@ -42,13 +42,22 @@ export function formatBytes(bytes: number, decimals = 2): string {
   return `${parseFloat((bytes / k ** i).toFixed(dm))} ${sizes[i]}`;
 }
 
-export function formatCompactNumber(value: number, locale: string = 'en-US'): string {
+export function formatCompactNumber(
+  value: number,
+  locale: string = 'en-US',
+  maximumFractionDigits = 2
+): string {
   const formatter = new Intl.NumberFormat(locale, {
     notation: 'compact',
     compactDisplay: 'short',
-    maximumFractionDigits: 2,
+    maximumFractionDigits,
   });
   return formatter.format(value);
+}
+
+/** A count, shortened from ten thousand up (33198 → 33.2k) so a narrow row keeps room. */
+export function formatCount(value: number): string {
+  return value < 10_000 ? String(value) : formatCompactNumber(value, 'en-US', 1).toLowerCase();
 }
 
 const SECONDS_PER_MINUTE = 60;

@@ -149,9 +149,7 @@ export function createCircuitDataSource(
     const serialized = serializeQuery(
       { ...query, params: withoutViewParam(query.params) },
       schema,
-      {
-        searchMode: 'ilike',
-      }
+      { searchMode: 'ilike', workspace }
     );
     const { page: _page, page_size: _pageSize, order_by: _orderBy, ...filterParams } = serialized;
 
@@ -190,13 +188,14 @@ export function createCircuitDataSource(
         }),
       { concurrency: HIERARCHY_CONCURRENCY }
     );
+    const matching = flatMap(filteredResponses, (r) => r.data);
     const filteredResult: EntityCoreResponse<ICircuit> = {
-      data: flatMap(filteredResponses, (r) => r.data).map((c) => ({ ...c, isFiltered: true })),
+      data: matching.map((c) => ({ ...c, isFiltered: true })),
       facets: undefined,
       pagination: {
         page: 1,
         page_size: DEFAULT_PAGE_SIZE,
-        total_items: flatMap(filteredResponses, (r) => r.data).length,
+        total_items: matching.length,
       },
     };
 

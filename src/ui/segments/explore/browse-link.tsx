@@ -15,7 +15,6 @@ import {
 import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { config } from '@/config';
-import { WorkspaceScope } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
@@ -33,6 +32,7 @@ import { makeSelectContributionEntityClickEvent } from '@/ui/segments/contribute
 import { getEntityTypeFromUrlOnEntityScope } from '@/ui/segments/explore/helpers';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { cn } from '@/utils/css-class';
+import { formatCount } from '@/utils/format';
 import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 
@@ -84,20 +84,16 @@ export function BrowseLinkContent({
 }: BrowseLinkContentProps) {
   const breakpoint = useDefaultBreakpoint();
   const searchParams = useSearchParams();
-  const scope = (searchParams.get('scope') ?? WorkspaceScope.Public) as TWorkspaceScope;
-
   const onContribute = () =>
     makeSelectContributionEntityClickEvent({
       display: true,
       entityType: extendedType,
       sessionId: crypto.randomUUID(),
     });
-
   const onClick = (event: MouseEvent<HTMLElement>) => {
     onNavigate?.(event);
     userJourneyTracker.registerArtifactClick(title);
   };
-
   return (
     <div className="group flex w-full items-center justify-center gap-0">
       <div className="flex w-full items-center">
@@ -110,7 +106,7 @@ export function BrowseLinkContent({
             data-testid={`entity-link-counter-${testIdKey}`}
             variant="outline"
             size="lg"
-            className="group w-full shrink grow border-none text-base"
+            className="group w-full min-w-0 shrink grow border-none text-base"
             active={active}
             onClick={onClick}
           >
@@ -119,20 +115,24 @@ export function BrowseLinkContent({
                 pathname: href,
                 query: searchParams.toString(),
               }}
-              className="flex! w-full items-center justify-between!"
+              className="flex! w-full min-w-0 items-center justify-between! gap-2"
             >
               {/*
               Superseded types drop to normal weight, matching the workflow menus — the count
               keeps its own weight rules, since it is data rather than part of the label.
             */}
-              <div className={cn('text-current', legacy ? 'font-normal' : 'font-bold')}>
+              <div
+                className={cn(
+                  'min-w-0 truncate text-current',
+                  legacy ? 'font-normal' : 'font-bold'
+                )}
+              >
                 {title}
               </div>
               <div
-                className={cn(
-                  'text-neutral-4 group-hover:text-label text-sm font-light group-hover:font-bold',
-                  { 'font-bold text-white': active }
-                )}
+                className={cn('text-neutral-4 group-hover:text-label shrink-0 text-sm font-light', {
+                  'text-white': active,
+                })}
               >
                 {isLoading ? (
                   <div
@@ -150,24 +150,23 @@ export function BrowseLinkContent({
             </Link>
           </Button>
         </div>
-        {isUploadable && scope === WorkspaceScope.Project && (
+        {isUploadable && (
           <div
             className={cn(
-              'transition-all duration-500 ease-out',
-              'w-0 scale-0 opacity-0',
-              'group-hover:w-auto group-hover:scale-100 group-hover:opacity-100',
-              'flex origin-left items-center'
+              'pointer-events-none flex w-0 origin-left scale-95 items-center opacity-0',
+              'transition-[width,opacity,transform] duration-200 ease-out-expo',
+              'group-focus-within:pointer-events-auto group-focus-within:w-auto group-focus-within:scale-100 group-focus-within:opacity-100',
+              'group-hover:pointer-events-auto group-hover:w-auto group-hover:scale-100 group-hover:opacity-100'
             )}
           >
             <Button
               rounded
               variant="outline"
+              aria-label={`Upload ${title}`}
               className={cn(
-                'border-neutral-2 hover:bg-primary-9 hover:border-primary-9',
-                'h-12 w-12! bg-transparent p-0 hover:text-white',
-                'transition-all duration-900 ease-out',
-                'shadow-md group-hover:ml-2 group-hover:shadow-xl',
-                'group-hover:scale-100',
+                'border-neutral-2 hover:bg-primary-9 hover:border-primary-9 ml-2',
+                'h-12 w-12! bg-transparent p-0 shadow-sm hover:text-white',
+                'transition-[background-color,border-color,color,transform] duration-150 ease-out active:scale-[0.95]',
                 { 'h-10! w-10!': breakpoint === 'l' },
                 { 'h-12! w-12!': breakpoint === 'xl' }
               )}
@@ -265,7 +264,12 @@ async function resolveEntityCount({
   variant?: IListingVariant;
 }) {
   if (!entity) return undefined;
-  const saved = await savedListingParams(extendedType, savedFilters, variant);
+  const saved = await savedListingParams(
+    extendedType,
+    savedFilters,
+    variant,
+    baseQuery.context.projectId
+  );
   // the pinned params win over the user's, as in the grid's request
   const query = { ...baseQuery, filters: { ...saved, ...baseQuery.filters } };
   if (entity.api.query.count) return entity.api.query.count(query);
@@ -296,7 +300,7 @@ export function BrowseLink({
   const activeEntityType = snakeCase(type ?? getEntityTypeFromUrlOnEntityScope(pathname) ?? '');
   const isActiveEntity = activeEntityType === extendedType && variantSlug === variant?.slug;
 
-  const { dataKey, count: tableCount } = useTableQueryCount({
+  const { stateKey, count: tableCount } = useTableQueryCount({
     extendedType,
     scope,
     workspace: { virtualLabId, projectId },
@@ -307,7 +311,7 @@ export function BrowseLink({
   });
 
   // the listing's filters outlive its grid, so the count must not drop them on navigation
-  const savedFilters = useSavedListingFilters(dataKey);
+  const savedFilters = useSavedListingFilters(stateKey);
 
   const scopesListingByBrainRegion = dataBrowseListingUsesBrainRegionHierarchy(extendedType);
 
@@ -390,36 +394,46 @@ export function BrowseLink({
     loadingCurrent,
     loadingRoot,
   })
-    .with({ isLoading: false, enabled: true, rootCount: P.number, count: P.number }, () => (
-      <span className="flex items-center justify-center gap-1">
-        <span className="font-bold">{count}</span>
-        <span className="font-light">of</span>
-        <span className="font-bold">{root}</span>
-      </span>
-    ))
+    .with(
+      { isLoading: false, enabled: true, rootCount: P.number, count: P.number },
+      ({ count: current, rootCount: total }) => (
+        <span
+          className="flex items-center justify-center gap-1"
+          title={`${current.toLocaleString()} of ${total.toLocaleString()}`}
+        >
+          <span>{formatCount(current)}</span>
+          <span className="opacity-70">of</span>
+          <span>{formatCount(total)}</span>
+        </span>
+      )
+    )
     .with(P.union({ isCurrentError: true }, { isRootError: true }), () => {
       return <WarningOutlined className="text-warning" />;
     })
     .with({ enabled: false }, () => (
       <span className="flex items-center justify-center gap-1">
-        <span className="font-bold">0</span>
-        <span className="font-light">of</span>
-        <span className="font-bold">0</span>
+        <span>0</span>
+        <span className="opacity-70">of</span>
+        <span>0</span>
       </span>
     ))
     .with({ enabled: true }, () => (
       <span className="flex items-center justify-center gap-1">
-        <span className="font-bold">
-          {count ?? (
+        <span>
+          {count != null ? (
+            formatCount(count)
+          ) : (
             <Skeleton
               data-testid={`entity-link-counter-loading-current-${testIdKey}`}
               className="inline-block h-3 w-5 rounded-full align-middle"
             />
           )}
         </span>
-        <span className="font-light">of</span>
-        <span className="font-bold">
-          {root ?? (
+        <span className="opacity-70">of</span>
+        <span>
+          {root != null ? (
+            formatCount(root)
+          ) : (
             <Skeleton
               data-testid={`entity-link-counter-loading-root-${testIdKey}`}
               className="inline-block h-3 w-5 rounded-full align-middle"
@@ -438,7 +452,6 @@ export function BrowseLink({
         {...{
           extendedType,
           href,
-          scope,
           isLoading,
           active: isActiveEntity,
           onNavigate: onClick,

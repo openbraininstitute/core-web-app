@@ -71,7 +71,7 @@ describe('saved listing filters', () => {
     controller.dispose();
     expect(result.current?.filters[columnId]).toBeDefined();
 
-    await expect(savedListingParams(CIRCUIT, result.current)).resolves.toEqual({
+    await expect(savedListingParams(CIRCUIT, result.current, undefined, 'proj')).resolves.toEqual({
       number_neurons__gte: 100,
     });
 
@@ -87,7 +87,7 @@ describe('saved listing filters', () => {
     controller.dispose();
 
     // circuit searches with ilike, as its grid does
-    await expect(savedListingParams(CIRCUIT, result.current)).resolves.toEqual({
+    await expect(savedListingParams(CIRCUIT, result.current, undefined, 'proj')).resolves.toEqual({
       ilike_search: '*hippo*',
     });
   });
@@ -107,7 +107,24 @@ describe('saved listing filters', () => {
       )
     ).toBeNull();
     expect(parseSavedListingFilters('not json')).toBeNull();
-    await expect(savedListingParams(CIRCUIT, undefined)).resolves.toEqual({});
+    await expect(savedListingParams(CIRCUIT, undefined, undefined, 'proj')).resolves.toEqual({});
+  });
+});
+
+// regression: the registry had no scope column, so a saved toggle went out as `scope=…` (422)
+it('sends a saved scope filter as the authorized params', async () => {
+  const saved = {
+    freeTextSearch: '',
+    filters: {
+      scope: {
+        columnId: 'scope',
+        operator: OperatorId.Eq,
+        value: { kind: FilterValueKind.Text, text: 'project,published' },
+      },
+    },
+  };
+  await expect(savedListingParams(CIRCUIT, saved, undefined, 'proj')).resolves.toEqual({
+    authorized_project_id: 'proj',
   });
 });
 
@@ -164,7 +181,7 @@ describe('the sidebar count and the grid send the same filters', () => {
     const { page: _page, page_size: _pageSize, ...gridFilters } = sent;
 
     const sidebarFilters = {
-      ...(await savedListingParams(CIRCUIT, saved, variant)),
+      ...(await savedListingParams(CIRCUIT, saved, variant, 'proj')),
       ...variant.params,
     };
     expect(sidebarFilters).toEqual(gridFilters);

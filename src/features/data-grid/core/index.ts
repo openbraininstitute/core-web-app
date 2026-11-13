@@ -95,6 +95,7 @@ export type {
   IColumnFilter,
   IColumnModel,
   IFilterTarget,
+  IGridWorkspace,
   IWidthSpec,
   TAlign,
   TCellValue,

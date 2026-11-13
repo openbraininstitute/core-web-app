@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { tryCatch } from '@/api/utils';
 import { config } from '@/config';
-import { ViewVariant, WorkspaceScope } from '@/constants';
+import { ViewVariant } from '@/constants';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { retrieveEntity } from '@/entity-configuration/domain/requests';
@@ -86,11 +86,10 @@ export async function DataViewLayout({
   }
 
   const isPublicEntity = entity.authorized_public;
-  const scope = isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project;
   // a split type (circuit scales) closes back to the sub-item the entity belongs to
   // resolved on the base type: a whole-brain opened as `whole_brain` is still a circuit
   const variant = resolveEntityVariant(resolveBaseEntityType(type), entity);
-  const parentLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${resolveConcreteEntityPathParam(type)}${variant ? `/${variant.slug}` : ''}?group=${entityType.group}&scope=${scope}`;
+  const parentLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${resolveConcreteEntityPathParam(type)}${variant ? `/${variant.slug}` : ''}?group=${entityType.group}`;
 
   const rendersFullPageWorkflowUi =
     Boolean(findScanConfigRegistryByTargetType(type)) ||
@@ -112,7 +111,6 @@ export async function DataViewLayout({
         title={entityType.title}
         type={type}
         group={entityType.group}
-        scope={scope}
         name={entity.name}
         variant={variant}
       />

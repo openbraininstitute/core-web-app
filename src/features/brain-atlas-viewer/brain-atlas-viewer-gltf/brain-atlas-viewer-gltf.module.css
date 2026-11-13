@@ -76,4 +76,12 @@
       }
     }
   }
+
+  &.compact > header {
+    padding: 0.5em 0;
+
+    > button {
+      font-size: 0.85rem;
+    }
+  }
 }
