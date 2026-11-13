@@ -21,6 +21,8 @@ type Props = {
   variant?: TViewVariant;
   /** renders the action with the destructive (red) color used for delete actions */
   destructive?: boolean;
+  /** renders the action with the prominent (green) color used to invite starting a workflow */
+  prominent?: boolean;
   disabled?: boolean;
   /** shown in a tooltip when {@link disabled} is true */
   disabledReason?: string;
@@ -45,6 +47,7 @@ export function Action(props: Props) {
     icon,
     variant = ViewVariant.Light,
     destructive,
+    prominent,
     disabled,
     disabledReason,
     testId,
@@ -56,6 +59,7 @@ export function Action(props: Props) {
     disabled &&
       'cursor-not-allowed bg-gray-100! text-gray-400! border-gray-200! shadow-none disabled:opacity-100 hover:bg-gray-100! hover:text-gray-400! hover:shadow-none hover:border-gray-200!',
     !destructive &&
+      !prominent &&
       !disabled && {
         'border-gray-50 hover:text-primary-7! hover:shadow-xs hover:bg-gray-50  hover:border-gray-100 active:bg-primary-8 active:text-white!':
           variant === ViewVariant.Light,
@@ -64,24 +68,29 @@ export function Action(props: Props) {
       },
     destructive &&
       !disabled &&
-      'from-destructive via-destructive/80 to-destructive border-white/20 bg-linear-to-r bg-size-[200%_100%] text-white hover:text-white! hover:shadow-xs'
+      'from-destructive via-destructive/80 to-destructive border-white/20 bg-linear-to-r bg-size-[200%_100%] text-white hover:text-white! hover:shadow-xs',
+    prominent &&
+      !disabled &&
+      'border-green-700/20 bg-green-600 text-white hover:text-white! hover:bg-green-700 hover:shadow-xs active:bg-green-800'
   );
 
   const content = (
     <>
-      <div className="min-w-max">{children}</div>
+      <div className="min-w-0 flex-1 wrap-break-word">{children}</div>
       <div
         className={cn(
-          'ml-auto flex size-8! min-h-8! min-w-8! p-0.5 items-center justify-center rounded-full border',
+          'ml-auto flex size-8! min-h-8! min-w-8! shrink-0 p-0.5 items-center justify-center rounded-full border',
           !destructive &&
+            !prominent &&
             !disabled && {
               'border-white/40 group-hover:bg-white/10 group-hover:text-white':
                 variant === ViewVariant.Default,
               'group-hover:text-primary-7! group-hover:shadow-sm border-gray-100 group-active:text-white!':
                 variant === ViewVariant.Light,
             },
-          !destructive && disabled && 'border-gray-200! text-gray-400!',
-          destructive && 'border-white/40 group-hover:bg-white/10 group-hover:text-white'
+          !destructive && !prominent && disabled && 'border-gray-200! text-gray-400!',
+          destructive && 'border-white/40 group-hover:bg-white/10 group-hover:text-white',
+          prominent && !disabled && 'border-white/40 group-hover:bg-white/10 group-hover:text-white'
         )}
       >
         {icon}
@@ -89,7 +98,7 @@ export function Action(props: Props) {
     </>
   );
 
-  const buttonVariant = destructive ? 'default' : 'outline';
+  const buttonVariant = destructive || prominent ? 'default' : 'outline';
   const renderAsLink = props.kind === ActionKind.Link && !disabled;
 
   const control = renderAsLink ? (

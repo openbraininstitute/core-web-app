@@ -448,7 +448,12 @@ export function listLaunchActionsFromDataViewEntity({
       .map((workflow) => ({
         activity: activity.value,
         workflow,
-        label: workflow.verb ?? activity.label,
+        // a bare activity label ("Extract") means nothing on its own, so name the entity it acts on
+        label:
+          workflow.verb ??
+          [activity.label, getWorkflowEntityLabel(inputType)?.toLowerCase()]
+            .filter(Boolean)
+            .join(' '),
         href: buildConfigureUrlForEntity({
           activity: activity.value,
           targetType: workflow.targetType,

@@ -69,7 +69,10 @@ function labels(...args: Parameters<typeof launch>) {
 
 describe('listLaunchActionsFromDataViewEntity', () => {
   it('lists the workflows an ME-model is an input to, Simulate first', () => {
-    expect(labels(ExtendedEntitiesTypeDict.Memodel)).toEqual(['Simulate', 'Build synaptome']);
+    expect(labels(ExtendedEntitiesTypeDict.Memodel)).toEqual([
+      'Simulate single neuron',
+      'Build synaptome',
+    ]);
   });
 
   it('sends ME-model Simulate to the beta simulation configure route with the model pre-selected', () => {
@@ -89,7 +92,7 @@ describe('listLaunchActionsFromDataViewEntity', () => {
   it('lists Simulate for ion channel models and stores what the workflow seed derives', () => {
     const actions = launch(ExtendedEntitiesTypeDict.IonChannelModel, ionChannelModel);
 
-    expect(actions.map((action) => action.label)).toEqual(['Simulate']);
+    expect(actions.map((action) => action.label)).toEqual(['Simulate ion channel']);
 
     const match = actions[0].href.match(
       /\/workflows\/simulate\/configure\/ion-channel-model-simulation\/(wf_[a-z0-9]{10})\?/
@@ -113,14 +116,16 @@ describe('listLaunchActionsFromDataViewEntity', () => {
   });
 
   it('lists Simulate for single-neuron synaptomes', () => {
-    expect(labels(ExtendedEntitiesTypeDict.SingleNeuronSynaptome)).toEqual(['Simulate']);
+    expect(labels(ExtendedEntitiesTypeDict.SingleNeuronSynaptome)).toEqual([
+      'Simulate synaptome (legacy)',
+    ]);
   });
 
   it('lists Build ME-model for e-models, never optimization, and Validate only with its flag', () => {
     expect(labels(ExtendedEntitiesTypeDict.Emodel)).toEqual(['Build ME-model']);
     expect(
       labels(ExtendedEntitiesTypeDict.Emodel, {}, { [emodelValidationFlag.key]: true } as never)
-    ).toEqual(['Build ME-model', 'Validate']);
+    ).toEqual(['Build ME-model', 'Validate e-model']);
   });
 
   it('pre-selects the e-model in the build and validate workflows', () => {
@@ -145,7 +150,7 @@ describe('listLaunchActionsFromDataViewEntity', () => {
     [extractionActivityFlag.key]: true,
     [extracellularRecordingArrayBuildFlag.key]: true,
   } as never;
-  const all = ['Simulate', 'Recording array', 'Synapse physiology', 'Extract'];
+  const all = ['Simulate circuit', 'Recording array', 'Synapse physiology', 'Extract circuit'];
   it.each([
     [ExtendedEntitiesTypeDict.Circuit, CircuitScaleDictionary.Microcircuit, all.toSpliced(2, 1)],
     [
@@ -158,7 +163,7 @@ describe('listLaunchActionsFromDataViewEntity', () => {
     [
       ExtendedEntitiesTypeDict.WholeBrain,
       CircuitScaleDictionary.WholeBrain,
-      ['Simulate', 'Extract'],
+      ['Simulate circuit', 'Extract circuit'],
     ],
     [ExtendedEntitiesTypeDict.SingleNeuronCircuit, CircuitScaleDictionary.Single, all],
   ])('lists the circuit workflows for %s (%s) with their flags on', (type, scale, expected) => {
@@ -178,7 +183,7 @@ describe('listLaunchActionsFromDataViewEntity', () => {
         },
         {} as never
       )
-    ).toEqual(['Simulate', 'Synapse physiology']);
+    ).toEqual(['Simulate circuit', 'Synapse physiology']);
   });
 
   it('omits the recording array for circuits over its neuron limit', () => {
