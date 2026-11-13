@@ -102,9 +102,14 @@ type Focus = { messageId: string; threadId: string | null; at: number };
 export function ChatPanel({
   selectedId: picked,
   onSelect,
+  phone = false,
+  onBack,
 }: {
   selectedId: string | null;
   onSelect: (id: string) => void;
+  /** One pane at a time: the list until a conversation is picked, that conversation with a way back after. */
+  phone?: boolean;
+  onBack?: () => void;
 }) {
   const { projectId } = useWorkspace();
   const { data: conversations, isLoading, isError, error } = useConversations();
@@ -113,9 +118,15 @@ export function ChatPanel({
   const selectedId = picked ?? projectConversationId(projectId);
   const selected = conversations?.find((c) => c.id === selectedId);
 
+  // a phone shows the list until one is picked
+  const listOnly = phone && picked === null;
+  const conversationOnly = phone && picked !== null;
+
   return (
     <div className="flex h-full min-h-0">
+      {!conversationOnly && (
       <ConversationRail
+        wide={listOnly}
         conversations={conversations}
         loading={isLoading}
         error={isError ? String(error) : undefined}
@@ -131,15 +142,23 @@ export function ChatPanel({
         }}
         onNew={() => setNewOpen(true)}
       />
+      )}
+      {!listOnly && (
       <section className="flex min-h-0 min-w-0 flex-1 flex-col">
         {selected ? (
-          <ConversationView key={selected.id} conversation={selected} focus={focus} />
+          <ConversationView
+            key={selected.id}
+            conversation={selected}
+            focus={focus}
+            onBack={conversationOnly ? onBack : undefined}
+          />
         ) : isLoading ? (
           <Skeleton className="m-6 h-40 rounded-xl" />
         ) : (
           <p className="text-neutral-5 p-6">Pick a conversation, or start one with New.</p>
         )}
       </section>
+      )}
       <NewChatDialog
         open={newOpen}
         onClose={() => setNewOpen(false)}
@@ -164,6 +183,7 @@ function ConversationRail({
   onSelect,
   onOpenResult,
   onNew,
+  wide = false,
 }: {
   conversations: Conversation[] | undefined;
   loading: boolean;
@@ -173,6 +193,8 @@ function ConversationRail({
   onSelect: (id: string) => void;
   onOpenResult: (result: SearchResult) => void;
   onNew: () => void;
+  /** The whole window's width (a phone's list). */
+  wide?: boolean;
 }) {
   const [search, setSearch] = useState('');
   // the words searched for once typing pauses
@@ -210,7 +232,12 @@ function ConversationRail({
   }, [conversations, search, projectId]);
 
   return (
-    <aside className="border-neutral-2 bg-neutral-1/40 flex w-64 shrink-0 flex-col gap-3 overflow-hidden border-r p-3">
+    <aside
+      className={cn(
+        'border-neutral-2 bg-neutral-1/40 flex shrink-0 flex-col gap-3 overflow-hidden p-3',
+        wide ? 'w-full' : 'w-64 border-r'
+      )}
+    >
       <div className="flex shrink-0 items-center gap-2">
         <label className="text-primary-9 flex h-9 min-w-0 flex-1 items-center gap-2 rounded-full bg-white px-3 shadow-sm ring-1 ring-black/5">
           <SearchOutlined />
@@ -487,9 +514,12 @@ function useMessageScroll(count: number, onBottom: () => void) {
 function ConversationView({
   conversation: c,
   focus,
+  onBack,
 }: {
   conversation: Conversation;
   focus: Focus | null;
+  /** Back to the list (a phone's one pane at a time). */
+  onBack?: () => void;
 }) {
   const { me, typing } = useChatStream();
   const { data: page, isLoading } = useMessages(c.id);
@@ -586,7 +616,17 @@ function ConversationView({
 
   return (
     <>
-      <header className="border-neutral-2 flex shrink-0 items-center gap-3 border-b px-4 py-2.5">
+      <header className="border-neutral-2 flex shrink-0 items-center gap-3 border-b px-4 py-2.5 max-md:px-2">
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            aria-label="Back to the chats"
+            className="text-primary-9 hover:bg-neutral-1 flex size-9 shrink-0 items-center justify-center rounded-full text-lg"
+          >
+            ←
+          </button>
+        )}
         <span className="bg-neutral-1 text-primary-9 flex size-8 items-center justify-center rounded-full">
           {KIND_ICON[c.kind]}
         </span>

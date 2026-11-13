@@ -4,6 +4,7 @@ import { CloseOutlined, MessageOutlined } from '@ant-design/icons';
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 
+import { useMediaQuery } from '@/hooks/use-media-query';
 import { cn } from '@/utils/css-class';
 
 import { CHAT_URL } from './api';
@@ -106,6 +107,9 @@ export function ChatLauncher() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const press = useRef<{ x: number; y: number; moved: boolean } | null>(null);
   const { unread, mentions } = useUnreadTotals();
+  // On a phone the button stays just over the tabs along the foot, a finger's press opening the chat over the whole
+  // screen, its list first and a conversation in its place (the user asked for the chat made for a phone).
+  const phone = useMediaQuery('(max-width: 767px)', false);
 
   // the place it was left in, once in the browser
   useEffect(() => setDock(readDock()), []);
@@ -121,14 +125,15 @@ export function ChatLauncher() {
 
   if (!CHAT_URL || !w) return null;
 
-  const docked = place(dock, w, h);
+  // over the tabs (3.5rem, and the phone's own inset under them) on the right
+  const docked = phone ? { left: w - SIZE - MARGIN, top: h - SIZE - MARGIN - 56 - 8 } : place(dock, w, h);
   const button = dragAt
     ? {
         left: clamp(dragAt.x - SIZE / 2, MARGIN, w - SIZE - MARGIN),
         top: clamp(dragAt.y - SIZE / 2, MARGIN, h - SIZE - MARGIN),
       }
     : docked;
-  const box = windowBox(dock, docked, w, h);
+  const box = phone ? { left: 0, top: 0, width: w, height: h } : windowBox(dock, docked, w, h);
 
   return (
     <>
@@ -142,16 +147,26 @@ export function ChatLauncher() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.97 }}
             transition={{ duration: 0.14, ease: 'easeOut' }}
-            className="fixed z-[900] flex flex-col overflow-hidden rounded-3xl bg-white shadow-[0_24px_60px_-12px_rgb(0_39_102/0.35),0_0_0_1px_rgb(0_39_102/0.06)]"
+            className={cn(
+              'fixed z-[900] flex flex-col overflow-hidden bg-white',
+              phone
+                ? 'pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]'
+                : 'rounded-3xl shadow-[0_24px_60px_-12px_rgb(0_39_102/0.35),0_0_0_1px_rgb(0_39_102/0.06)]'
+            )}
             // kept, hidden, while the button is dragged, so nothing in it (a half-written message)
             // is lost; it moves beside the button where it lands
             style={{
               ...box,
-              transformOrigin: originOf(dock),
+              transformOrigin: phone ? 'right bottom' : originOf(dock),
               visibility: dragAt ? 'hidden' : undefined,
             }}
           >
-            <div className="border-neutral-2 flex h-11 shrink-0 items-center gap-2 border-b pr-2 pl-4">
+            <div
+              className={cn(
+                'border-neutral-2 flex shrink-0 items-center gap-2 border-b pr-2 pl-4',
+                phone ? 'h-13' : 'h-11'
+              )}
+            >
               <MessageOutlined className="text-primary-9" />
               <span className="text-primary-9 text-sm font-semibold">Chat</span>
               <button
@@ -159,13 +174,21 @@ export function ChatLauncher() {
                 aria-label="Close chat"
                 title="Close (Esc)"
                 onClick={() => setOpen(false)}
-                className="text-neutral-4 hover:bg-neutral-1 hover:text-primary-9 ml-auto flex size-8 items-center justify-center rounded-full"
+                className={cn(
+                  'text-neutral-4 hover:bg-neutral-1 hover:text-primary-9 ml-auto flex items-center justify-center rounded-full',
+                  phone ? 'size-10 text-base' : 'size-8'
+                )}
               >
                 <CloseOutlined />
               </button>
             </div>
             <div className="min-h-0 flex-1">
-              <ChatPanel selectedId={selectedId} onSelect={setSelectedId} />
+              <ChatPanel
+                selectedId={selectedId}
+                onSelect={setSelectedId}
+                phone={phone}
+                onBack={() => setSelectedId(null)}
+              />
             </div>
           </motion.div>
         )}
@@ -184,7 +207,8 @@ export function ChatLauncher() {
         onPointerMove={(e) => {
           const p = press.current;
           if (!p) return;
-          if (!p.moved && Math.hypot(e.clientX - p.x, e.clientY - p.y) < DRAG_PX) return;
+          // it stays put on a phone
+          if (phone || (!p.moved && Math.hypot(e.clientX - p.x, e.clientY - p.y) < DRAG_PX)) return;
           p.moved = true;
           setDragAt({ x: e.clientX, y: e.clientY });
         }}
@@ -213,7 +237,9 @@ export function ChatLauncher() {
         className={cn(
           'bg-primary-9 fixed z-[901] flex touch-none items-center justify-center rounded-full text-white shadow-[0_10px_24px_-6px_rgb(0_39_102/0.55)] select-none',
           dragAt ? 'cursor-grabbing' : 'cursor-pointer transition-[left,top] duration-300 ease-out',
-          open && 'ring-primary-3 ring-4'
+          open && 'ring-primary-3 ring-4',
+          // the window's own close does on a phone, where the button would sit over the list
+          open && phone && 'hidden'
         )}
         style={{ ...button, width: SIZE, height: SIZE }}
       >
