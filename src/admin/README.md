@@ -7,7 +7,8 @@ Operator-only area of the platform. Routes are in `src/app/app/admin/`, everythi
 Neither raw Keycloak groups nor a coarse boolean reach the browser. Groups are resolved
 server-side from `/userinfo` (`server/keycloak-groups.ts`, cached per user) and reduced to a closed,
 typed `OperatorCapabilities` record (`capabilities/`). The record reaches the client only as a
-prop of the admin shell, where it filters the sidebar. Admin has no link in the platform: operators
+prop of the admin shell, where it filters the sidebar and feeds `CapabilityGate`, which hides
+controls the service would refuse. Admin has no link in the platform: operators
 open `/app/admin` directly.
 
 The protected layout and every page re-check on the server with `requireCapability`

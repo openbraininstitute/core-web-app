@@ -10,7 +10,7 @@ import {
   withEmptyPlaceholder,
 } from '@/features/data-grid/renderers/aggrid/empty-cell';
 import { registerDataGridModules } from '@/features/data-grid/renderers/aggrid/register-modules';
-import { DATA_GRID_LOCALE_TEXT, dataGridTheme } from '@/features/data-grid/renderers/aggrid/theme';
+import { dataGridLocaleText, dataGridTheme } from '@/features/data-grid/renderers/aggrid/theme';
 import { cn } from '@/utils/css-class';
 
 import type { UseQueryOptions } from '@tanstack/react-query';
@@ -150,6 +150,8 @@ export interface ISimpleGridProps<Row> {
   showColumnChooser?: boolean;
   /** Default sort applied (enhanced engine only) when the user has set none. */
   defaultSort?: TSortModel;
+  /** Empty-state text, for rows that aren't entities. */
+  noRowsText?: string;
   /** Page-size choices for the enhanced engine's pagination size changer. */
   pageSizeOptions?: number[];
   /** Operator catalog for the filter editors (default: the standard registry). */
@@ -300,6 +302,7 @@ function SimpleGridBasic<Row>({
   pinnedColumnBorder = true,
   className,
   onRowClick,
+  noRowsText,
 }: ISimpleGridProps<Row>) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -374,7 +377,7 @@ function SimpleGridBasic<Row>({
     <div className={simpleGridWrapperClass(className, pinnedColumnBorder)}>
       <AgGridReact<Row>
         theme={dataGridTheme}
-        localeText={DATA_GRID_LOCALE_TEXT}
+        localeText={dataGridLocaleText(noRowsText)}
         defaultColDef={DEFAULT_COL_DEF}
         columnDefs={colDefs}
         rowData={rows}
@@ -435,6 +438,7 @@ export function SimpleGrid<Row>(props: ISimpleGridProps<Row>) {
       showColumnChooser={props.showColumnChooser}
       sortable={props.sortable}
       defaultSort={props.defaultSort}
+      noRowsText={props.noRowsText}
       pagination={props.pagination}
       pageSize={props.pageSize}
       pageSizeOptions={props.pageSizeOptions}
