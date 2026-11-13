@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { HOLE } from '@/features/circuit-viewer/morphologies/engine/impostors';
 import { arenaStorage } from '@/features/circuit-viewer/morphologies/engine/webgpu/arena-gpu';
 import { Culling, DRAWS } from '@/features/circuit-viewer/morphologies/engine/webgpu/culling';
+import { MOST_SEEN } from '@/features/circuit-viewer/morphologies/engine/webgpu/culling-wgsl';
 
 import { fakeGpu } from './fake-gpu';
 
@@ -14,10 +15,14 @@ import type { CullTally } from '@/features/circuit-viewer/morphologies/types';
 const h = vi.hoisted(() => ({ logError: vi.fn() }));
 vi.mock('@/utils/logger', () => ({ logError: h.logError }));
 
-/** The words a read of the counts finds: the counters, the draws' arguments, then the blocks marked. */
-function wordsOf({ tested, kept, drawn }: CullTally, marked = [0, 0]): Uint32Array {
+/**
+ * The words a read of the counts finds: the counters, the draws' arguments, then the blocks marked. `seen` is what
+ * the tests saw before the seen draws were capped.
+ */
+function wordsOf({ tested, kept, drawn }: CullTally, marked = [0, 0], seen = drawn): Uint32Array {
   const words = new Uint32Array(4 + 20 + marked.length);
   words[1] = tested;
+  words[2] = seen;
   words[4 + DRAWS.keptFlat / 4 + 1] = kept;
   words[4 + DRAWS.seenTubes / 4 + 1] = drawn;
   words.set(marked, 24);
@@ -29,6 +34,7 @@ const read = (counts: CullTally, marked = [0, 0], rest = 1) => ({
   ...counts,
   marked: Uint32Array.from(marked),
   rest,
+  clamped: false,
 });
 
 /** An arena of 64 blocks: two words of them marked. */
@@ -38,16 +44,16 @@ const shift = new THREE.Vector3();
 const cells = new THREE.DataTexture();
 
 function cullingOn(options?: Parameters<typeof fakeGpu>[0]) {
-  const { gpu, device, renderer } = fakeGpu(options);
+  const { gpu, device, renderer, pass } = fakeGpu(options);
   const counted = vi.fn();
   const culling = new Culling(renderer, device, arenaStorage(), counted);
   culling.setArena(ARENA);
   culling.targetOf(16, 8);
-  const run = (rest = 1, hiding = false) =>
-    culling.run(camera, shift, 12, HOLE, 100, rest, cells, hiding);
-  /** The next read mapped, finding `counts` and the blocks `marked`. */
-  const map = async (counts: CullTally, marked?: number[]) => {
-    gpu.found = wordsOf(counts, marked);
+  const run = (rest = 1, hiding = false, told = true) =>
+    culling.run(camera, shift, 12, HOLE, 100, rest, cells, hiding, told);
+  /** The next read mapped, finding `counts`, the blocks `marked` and `seen` segments seen. */
+  const map = async (counts: CullTally, marked?: number[], seen?: number) => {
+    gpu.found = wordsOf(counts, marked, seen);
     gpu.maps.shift()?.();
     await Promise.resolve();
   };
@@ -57,6 +63,8 @@ function cullingOn(options?: Parameters<typeof fakeGpu>[0]) {
     run,
     map,
     maps: gpu.maps,
+    pass,
+    submits: vi.mocked(device.queue.submit),
     writes: vi.mocked(device.queue.writeBuffer),
   };
 }
@@ -120,6 +128,35 @@ describe("the culling's counts and its failures", () => {
     draw(culling);
     await map(A);
     expect(maps).toHaveLength(7);
+  });
+
+  it('caps the seen draws once the segments are tested', () => {
+    const { run, pass } = cullingOn();
+    run();
+    const [capped] = pass.dispatchWorkgroups.mock.invocationCallOrder.slice(-1);
+    expect(pass.dispatchWorkgroups).toHaveBeenLastCalledWith(1);
+    expect(capped).toBeGreaterThan(pass.dispatchWorkgroupsIndirect.mock.invocationCallOrder[0]);
+    expect(capped).toBeLessThan(pass.end.mock.invocationCallOrder[0]);
+  });
+
+  it('tells of a frame that saw more segments than it may draw', async () => {
+    const { counted, run, map } = cullingOn();
+    const most = { ...A, drawn: MOST_SEEN };
+    run();
+    await map(most);
+    expect(counted).toHaveBeenLastCalledWith(read(most));
+    run();
+    await map(most, undefined, MOST_SEEN + 1);
+    expect(counted).toHaveBeenLastCalledWith({ ...read(most), clamped: true });
+  });
+
+  it('reads nothing back of tests not told of', () => {
+    const { run, maps, submits } = cullingOn();
+    expect(run(1, false, false)).toBe(true);
+    expect(submits).toHaveBeenCalledOnce();
+    expect(maps).toHaveLength(0);
+    run();
+    expect(maps).toHaveLength(1);
   });
 
   it('hands on the blocks a frame marked with its counts', async () => {

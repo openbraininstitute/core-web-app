@@ -1920,6 +1920,7 @@ describe('the morphologies read a box at a time', () => {
         drawn: 0,
         marked: new Uint32Array(1),
         rest,
+        clamped: false,
       });
       inner.tellCulled(read(SEES_THROUGH));
       expect(see).not.toHaveBeenCalled();
@@ -1966,6 +1967,7 @@ describe('the morphologies read a box at a time', () => {
         drawn: 0,
         marked: new Uint32Array(1),
         rest,
+        clamped: false,
       });
       const first = inner.restOf(false);
       expect(first).toBe(SEES_THROUGH);
@@ -1977,6 +1979,89 @@ describe('the morphologies read a box at a time', () => {
       inner.tellCulled(read(next));
       expect(see).toHaveBeenCalledOnce();
     });
+  });
+
+  it('draws again after a frame that drew part of what it saw, and gives up, saying so, after 30 on end', async () => {
+    vi.useFakeTimers({ toFake: ['performance'] });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const { viewer, inner } = make();
+    viewer.setData(chunked());
+    frames(inner);
+    await readAll(inner);
+    const { stream } = inner.layer.detailed;
+    const asked = (clamped: boolean) => {
+      inner.dirty = false;
+      inner.tellCulled({
+        tested: 0,
+        kept: 0,
+        drawn: 0,
+        marked: new Uint32Array(1),
+        rest: stream.rest,
+        clamped,
+      });
+      return inner.dirty;
+    };
+    expect(asked(false)).toBe(false);
+    for (let frame = 0; frame < 30; frame++) expect(asked(true)).toBe(true);
+    expect(warn).not.toHaveBeenCalled();
+    expect(asked(true)).toBe(false);
+    expect(asked(true)).toBe(false);
+    expect(warn).toHaveBeenCalledOnce();
+
+    expect(asked(false)).toBe(false);
+    expect(asked(true)).toBe(true);
+    warn.mockRestore();
+    vi.useRealTimers();
+  });
+
+  it('counts a frame drawn in part a second after the last as the first of its own', async () => {
+    vi.useFakeTimers({ toFake: ['performance'] });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const { viewer, inner } = make();
+    viewer.setData(chunked());
+    frames(inner);
+    await readAll(inner);
+    const { stream } = inner.layer.detailed;
+    const asked = () => {
+      inner.dirty = false;
+      inner.tellCulled({
+        tested: 0,
+        kept: 0,
+        drawn: 0,
+        marked: new Uint32Array(1),
+        rest: stream.rest,
+        clamped: true,
+      });
+      return inner.dirty;
+    };
+    for (let frame = 0; frame < 31; frame++) asked();
+    expect(asked()).toBe(false);
+    vi.advanceTimersByTime(1500);
+    expect(asked()).toBe(true);
+    expect(warn).toHaveBeenCalledOnce();
+    warn.mockRestore();
+    vi.useRealTimers();
+  });
+
+  it('takes no marks of a frame that drew part of what it saw', async () => {
+    const { viewer, inner } = make();
+    viewer.setData(chunked());
+    frames(inner);
+    await readAll(inner);
+    const { stream } = inner.layer.detailed;
+    const see = vi.spyOn(stream, 'see');
+    const read = (clamped: boolean) => ({
+      tested: 0,
+      kept: 0,
+      drawn: 0,
+      marked: new Uint32Array(1),
+      rest: stream.rest,
+      clamped,
+    });
+    inner.tellCulled(read(true));
+    expect(see).not.toHaveBeenCalled();
+    inner.tellCulled(read(false));
+    expect(see).toHaveBeenCalledOnce();
   });
 
   it('tells what it draws, the rules included, and null once the morphologies go', async () => {

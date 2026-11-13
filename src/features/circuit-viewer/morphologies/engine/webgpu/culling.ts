@@ -2,7 +2,7 @@ import { logError } from '@/utils/logger';
 
 import { MIN_RADIUS, quadGeometry } from '../impostors';
 import { BLOCK } from '../segment-arena';
-import { ARGS, BLOCKS, SEGMENTS } from './culling-wgsl';
+import { ARGS, BLOCKS, CLAMP, MOST_SEEN, SEGMENTS } from './culling-wgsl';
 import { bindGroup, computePipeline, DepthPyramid, type Levels, LIBRARY } from './depth-pyramid';
 import { scoped } from './error-scope';
 import { IndirectDraws } from './indirect-draws';
@@ -20,7 +20,7 @@ const LEAST_PX = 2 * MIN_RADIUS;
  * frame tested is read once a buffer is free, so the last frame before the view rests is always read.
  */
 const READS = 8;
-/** The passes' counters: the blocks handed on, the segments in them, and two words of padding. */
+/** The passes' counters: the blocks handed on, the segments in them, the segments seen, and a word of padding. */
 const COUNTS_BYTES = 16;
 
 /** The byte offset of each list's draw in the draws' arguments: five words each, the kept lists first. */
@@ -31,7 +31,7 @@ const INSTANCES = 1;
 /** Draws that draw no quads: six indices and no instances each. */
 const NO_DRAWS = new Uint32Array(DRAWS_BYTES / 4).map((_, k) => (k % 5 === 0 ? 6 : 0));
 
-type Pipelines = Record<'blocks' | 'args' | 'segments', GPUComputePipeline>;
+type Pipelines = Record<'blocks' | 'args' | 'segments' | 'clamp', GPUComputePipeline>;
 
 /** What the passes bind; made again when the pyramid's targets or the arena change. */
 interface Bound {
@@ -40,6 +40,7 @@ interface Bound {
   blocks: GPUBindGroup;
   args: GPUBindGroup;
   segments: GPUBindGroup;
+  clamp: GPUBindGroup;
 }
 
 /**
@@ -92,7 +93,7 @@ export class Culling {
     this.indirect = new IndirectDraws(renderer, device, Object.values(DRAWS), 'cull draw');
     this.counters = buffer(COUNTS_BYTES, STORAGE | COPY_DST | COPY_SRC, 'cull counters');
     this.dispatch = buffer(16, STORAGE | INDIRECT, 'cull dispatch');
-    this.pyramid = new DepthPyramid(renderer, device, 'cull', (error) => this.fail(error));
+    this.pyramid = new DepthPyramid(renderer, device, 'cull', (error) => this.fail(error), true);
   }
 
   /** Whether there is an arena to test. */
@@ -142,8 +143,9 @@ export class Culling {
    * in pixels of a tube; `hidden`: the section type not drawn (`ImpostorUniforms.uHidden`); `end`: where the arena's
    * segments end; `rest`: what is told of the frame (`DetailStream.frameRest`), handed on with the frame's read; `cells`:
    * the cell table's texture; `hiding`: whether it hides cells, whose segments then go on no list and mark no block,
-   * and the kept list is left as it was, to hide those cells' segments once they are back. Returns
-   * false where nothing was tested.
+   * and the kept list is left as it was, to hide those cells' segments once they are back; `told`: whether the
+   * tests' counts are read back, which those of the first of two tests on a frame are not. Returns false where
+   * nothing was tested.
    */
   run(
     camera: THREE.Camera & { near: number; far: number },
@@ -153,7 +155,8 @@ export class Culling {
     end: number,
     rest: number,
     cells: THREE.Texture,
-    hiding: boolean
+    hiding: boolean,
+    told = true
   ): boolean {
     const { device, arena } = this;
     if (!arena || this.broken) return false;
@@ -194,10 +197,12 @@ export class Culling {
     pass.setPipeline(pipelines.segments);
     pass.setBindGroup(0, bound.segments);
     pass.dispatchWorkgroupsIndirect(this.dispatch, 0);
+    run(pipelines.clamp, bound.clamp, 1);
     pass.end();
     this.indirect.copy(encoder, this.drawsBuffer);
     this.rest = rest;
-    this.submit(encoder, arena.marked);
+    if (told) this.submit(encoder, arena.marked);
+    else device.queue.submit([encoder.finish()]);
     return true;
   }
 
@@ -236,6 +241,7 @@ export class Culling {
           blocks: pipeline(`${LIBRARY}\n${BLOCKS}`, 'cull blocks'),
           args: pipeline(ARGS, 'cull args'),
           segments: pipeline(`${LIBRARY}\n${SEGMENTS}`, 'cull segments'),
+          clamp: pipeline(CLAMP, 'cull clamp'),
         }),
         (error) => this.fail(error)
       );
@@ -282,6 +288,11 @@ export class Culling {
         ],
         'cull segments'
       ),
+      clamp: group(
+        pipelines.clamp,
+        [buffer(this.drawsBuffer), buffer(this.counters)],
+        'cull clamp'
+      ),
     };
     return this.bound;
   }
@@ -325,6 +336,7 @@ export class Culling {
           tested: words[1],
           kept: at(DRAWS.keptFlat) + at(DRAWS.keptTubes),
           drawn: at(DRAWS.seenFlat) + at(DRAWS.seenTubes),
+          clamped: words[2] > MOST_SEEN,
           marked: words.slice(blocksAt / 4, blocksAt / 4 + markedWords),
           rest,
         };
