@@ -17,6 +17,12 @@ export const KEEP_UM = 10;
  * turned.
  */
 const BLOCK_TEXELS = 8;
+/**
+ * The most segments the seen draws draw in a frame. The frame is drawn into memoryless buffers, and a pass into those
+ * loses the device past about 9M segments in view (Apple GPUs). A frame of the largest circuit draws under 1M, and up
+ * to 4M as the view turns or under a filter that leaves a sparse part of it on show.
+ */
+export const MOST_SEEN = 6_000_000;
 const ROWS = 4;
 
 const VIEW = /* wgsl */ `
@@ -321,6 +327,23 @@ var<workgroup> keeps: atomic<u32>;
   }
   workgroupBarrier();
   if (lid == 0u && atomicLoad(&keeps) != 0u) { atomicOr(&marked[c >> 5u], 1u << (c & 31u)); }
+}
+`;
+
+/**
+ * Caps the seen draws at \`MOST_SEEN\` segments between them, the tubes first, as they are the nearest. A draw takes the
+ * start of its list, so it draws part of what was seen. What was seen in all goes in the counters' third word.
+ */
+export const CLAMP = /* wgsl */ `
+struct Args { indices: u32, instances: u32, firstIndex: u32, baseVertex: u32, firstInstance: u32 }
+struct Draws { keptFlat: Args, keptTubes: Args, seenFlat: Args, seenTubes: Args }
+@group(0) @binding(0) var<storage, read_write> draws: Draws;
+@group(0) @binding(1) var<storage, read_write> counters: array<u32>;
+@compute @workgroup_size(1) fn main() {
+  counters[2] = draws.seenFlat.instances + draws.seenTubes.instances;
+  let tubes = min(draws.seenTubes.instances, ${MOST_SEEN}u);
+  draws.seenTubes.instances = tubes;
+  draws.seenFlat.instances = min(draws.seenFlat.instances, ${MOST_SEEN}u - tubes);
 }
 `;
 

@@ -148,6 +148,8 @@ export interface CullCounts extends CullTally {
 export interface CullRead extends CullTally {
   marked: Uint32Array;
   rest: number;
+  /** Whether more segments were seen than a frame may draw, so that the frame drew part of them. */
+  clamped: boolean;
 }
 
 /** What a view draws of morphologies read a box at a time. */
