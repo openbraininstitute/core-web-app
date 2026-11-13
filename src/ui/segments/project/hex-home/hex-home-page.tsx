@@ -560,12 +560,20 @@ function Home({
   // As on the landing (laid out 1920 px across), the one on show stands out of its tile, large, on the right: its
   // tile grown as if to this size and melted away; as wide as the example says, within the landing's box.
   const k = STAGE_W / 1920;
+  // As on the landing, the one on show stands out of its tile, large, on the right: its tile grown as if to this size
+  // and melted away; as large as most of the page (the user asked for it larger than the landing's)
+  const heroR = Math.min(330 * k, height * 0.34);
+  const widthOf = (example: IExample) =>
+    Math.min(example.hero * k * 1.25, 900 * k, height * 0.92 * example.aspect);
+  const heroAtFor = (example: IExample) => ({ x: STAGE_W - 32 - widthOf(example) / 2, y: height / 2 });
   const examplesRoot = specs[EXAMPLES_TONGUE].root;
   const [fieldSeed] = useState(() => Math.floor(Math.random() * 2 ** 31));
+  // the examples stop short of the one on show at its widest, leaving the white between them (the user asked for it
+  // back: room for the words' hexagon)
+  const heroRoomLeft = Math.min(...EXAMPLES.map((e) => STAGE_W - 32 - widthOf(e)));
   const field = useMemo(() => {
     const random = seededRandom(fieldSeed);
-    // the cluster's room, the one on show's frame taking the rest
-    const bounds = { x0: column.right + 16, x1: column.right + 16 + 700 * (STAGE_W / 1600), y0: 12, y1: height - 12 };
+    const bounds = { x0: column.right + 16, x1: heroRoomLeft - 8, y0: 12, y1: height - 12 };
     const features = fieldFeatures({
       center: { x: bounds.x0 + 296, y: Math.min(height * 0.32, 250) },
       k,
@@ -580,7 +588,7 @@ function Home({
     const panelBox = { x0: right + 20, x1: STAGE_W, y0: height * 0.48 - 16, y1: height * 0.48 + 330 };
     const whites = fieldWhites({ features, k, bounds, keepOut: [panelBox], random });
     return { features, whites };
-  }, [fieldSeed, height, column.right]);
+  }, [fieldSeed, height, column.right, heroRoomLeft]);
   const minis: ITongueTile[] = field.features.map((f, i) => ({
     key: `mini${i}`,
     ...f,
@@ -590,12 +598,6 @@ function Home({
     drift: true,
   }));
   const minisRight = Math.max(...minis.map((t) => t.x + t.r * APO));
-  // As on the landing, the one on show stands out of its tile, large, on the right: its tile grown as if to this size
-  // and melted away; as large as most of the page (the user asked for it larger than the landing's)
-  const heroR = Math.min(330 * k, height * 0.34);
-  const widthOf = (example: IExample) =>
-    Math.min(example.hero * k * 1.25, 900 * k, height * 0.92 * example.aspect);
-  const heroAtFor = (example: IExample) => ({ x: STAGE_W - 32 - widthOf(example) / 2, y: height / 2 });
   // Do science's places, the whole platform, as rounded cards all of one shape (the user asked): three across the
   // top and the rest under the first of them, the two rows centred on their category, within the page. Each is two
   // categories tall (the user asked for twice the size), and as wide as that allows up to 1.75 times its height.
