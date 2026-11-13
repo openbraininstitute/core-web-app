@@ -6,7 +6,8 @@ import { BOX_CLASS } from '@/features/scan-config/components/shared/box-class';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { cn } from '@/utils/css-class';
 
-import { useResearchLogHref, useResearchLogs } from './hooks';
+import { ExampleReportCards } from './example-reports';
+import { useResearchLogHref, useResearchLogScope, useResearchLogs } from './hooks';
 import { LogActions } from './log-actions';
 
 const editedAt = (iso: string) =>
@@ -22,6 +23,8 @@ const editedAt = (iso: string) =>
 export function ResearchLogList() {
   const { data, isLoading, isError } = useResearchLogs('');
   const href = useResearchLogHref();
+  // the public side shows made-up reports too, for the prototype
+  const { scope } = useResearchLogScope();
 
   return (
     // the same card as the rail's; the content scrolls inside it, so its corners stay in view
@@ -31,10 +34,9 @@ export function ResearchLogList() {
           Reports allow you or your agent to log your work for your collaborators and the community
           to read
         </p>
+        {isError && <p className="text-neutral-5">Research logs could not be loaded.</p>}
         {isLoading ? (
           <Skeleton className="h-32 w-full rounded-xl" />
-        ) : isError ? (
-          <p className="text-neutral-5">Research logs could not be loaded.</p>
         ) : (
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
             {data?.data.map((log) => (
@@ -56,6 +58,7 @@ export function ResearchLogList() {
                 <LogActions log={log} className="absolute top-3 right-3" />
               </div>
             ))}
+            {scope.public && <ExampleReportCards />}
           </div>
         )}
       </div>

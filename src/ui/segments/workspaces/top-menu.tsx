@@ -17,8 +17,11 @@ type Props = {
   className?: ComponentProps<'div'>['className'];
 };
 
-/** The AI assistant's button, behind its flag: a navy circle that opens the panel, and closes it. */
-function AiButton() {
+/**
+ * The AI assistant's button, behind its flag: a circle that opens the panel, and closes it; navy only while the
+ * panel is open (the user asked), white with a navy ring while it is shut.
+ */
+export function AiButton() {
   const { isCollapsed, setState } = usePanelState();
   const breakpoint = useDefaultBreakpoint();
   return (
@@ -32,10 +35,11 @@ function AiButton() {
       title="OBI Assistant"
       data-testid="ai-assistant-open-button"
       className={cn(
-        'bg-primary-9 flex shrink-0 items-center justify-center rounded-full font-bold tracking-[0.5px] text-white shadow-md transition-all select-none',
-        'hover:bg-primary-8 hover:shadow-[0_4px_14px_rgba(0,39,102,0.35)] active:scale-95',
+        'flex shrink-0 items-center justify-center rounded-full font-bold tracking-[0.5px] transition-all select-none active:scale-95',
         breakpoint === 'xl' ? 'size-12 text-[15px]' : 'size-10 text-[13px]',
-        !isCollapsed && 'ring-primary-4 ring-2 ring-offset-2 ring-offset-white'
+        isCollapsed
+          ? 'text-primary-9 border-primary-9/30 hover:border-primary-9 border-[1.5px] bg-white hover:bg-[#f4f7fc]'
+          : 'bg-primary-9 hover:bg-primary-8 text-white shadow-md hover:shadow-[0_4px_14px_rgba(0,39,102,0.35)]'
       )}
     >
       AI

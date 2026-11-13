@@ -15,7 +15,8 @@ import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 import type { ProjectBalance } from '@/types/accounting';
 
-export function Wallet() {
+/** The project's credits; `plain`, as words and an icon in a toolbar rather than a pill. */
+export function Wallet({ plain = false }: { plain?: boolean } = {}) {
   const breakpoint = useDefaultBreakpoint();
   const { virtualLabId, projectId } = useWorkspace();
   const { data, isLoading, isError, isSuccess, error } = useQuery({
@@ -51,6 +52,21 @@ export function Wallet() {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
+        {plain ? (
+          <Link
+            prefetch
+            id="workspace-project-credits"
+            href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/credits`}
+            aria-disabled={isLoading || isError}
+            className="text-primary-9 flex h-10 shrink-0 items-center gap-2 rounded-xl px-3 font-bold select-none hover:bg-neutral-50 max-md:px-1.5"
+          >
+            {/* the number alone on a phone, whose bar has little room */}
+            <span className="contents max-md:hidden">
+              <CoinsIcon />
+            </span>
+            <span>{content}</span>
+          </Link>
+        ) : (
         <Badge
           asChild
           rounded
@@ -69,6 +85,7 @@ export function Wallet() {
             <div className="ml-2">{content}</div>
           </Link>
         </Badge>
+        )}
       </TooltipTrigger>
       <TooltipContent
         avoidCollisions

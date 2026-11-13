@@ -2,6 +2,8 @@
 
 import { motion } from 'motion/react';
 
+import { useMediaQuery } from '@/hooks/use-media-query';
+
 import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
 import { cn } from '@/utils/css-class';
 
@@ -16,13 +18,26 @@ export function DataInnerLayout({ children }: Props) {
   useSelectEntityClickEvent((ev) => {
     setMdv(ev.detail.display);
   });
+  const phone = useMediaQuery('(max-width: 767px)', false);
+
+  // on a phone, down the page: the mini atlas and what to look at over the table, scrolling as one
+  if (phone)
+    return (
+      <div
+        id="data-inner-layout"
+        className="no-scrollbar flex h-full min-h-0 w-full flex-col gap-3 overflow-x-hidden overflow-y-auto px-2 pt-2 pb-4 [grid-area:main]"
+      >
+        {children}
+      </div>
+    );
 
   return (
     <motion.div
       id="data-inner-layout"
       className={cn(
-        'bg-background border-neutral-2 mx-2 mb-2 ml-3 grid w-[calc(100%-10px)] grid-rows-[minmax(0,1fr)]',
-        'gap-4 overflow-hidden rounded-2xl border p-2 [grid-area:main]'
+        // no box of its own round the Data page: its panels sit straight on the page
+        'grid w-full grid-rows-[minmax(0,1fr)]',
+        'gap-4 overflow-hidden px-3 pt-3 pb-2 [grid-area:main]'
       )}
       initial={{
         gridTemplateColumns: '27rem 1fr',

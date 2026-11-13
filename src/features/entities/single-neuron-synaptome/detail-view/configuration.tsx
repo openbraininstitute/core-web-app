@@ -39,7 +39,7 @@ export default function Configuration({
   return (
     <div
       className={cn(
-        'relative mt-2 flex gap-10 overflow-hidden rounded-md border p-4',
+        'relative mt-2 flex gap-10 overflow-hidden rounded-md border p-4 max-md:flex-col max-md:gap-4',
         detailViewPanelBorderClass(variant)
       )}
     >

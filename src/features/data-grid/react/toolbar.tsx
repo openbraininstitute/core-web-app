@@ -7,6 +7,8 @@ import type { ReactNode } from 'react';
  * decides the order. All optional — a surface renders only the pickers it needs.
  */
 export interface IDataGridToolbarSlots {
+  /** what the page is, before everything else on the left (e.g. a breadcrumb) */
+  start?: ReactNode;
   /** the page's own call to action (e.g. upload) — left cluster, before the pickers */
   action?: ReactNode;
   /** entity-type count selector — left cluster, first picker */
@@ -45,6 +47,7 @@ export function DataGridToolbar({
   className,
 }: IDataGridToolbarProps) {
   const hasLeft =
+    slots?.start ||
     slots?.action ||
     selection ||
     slots?.entityType ||
@@ -56,11 +59,17 @@ export function DataGridToolbar({
 
   return (
     <div
-      className={cn('flex min-h-10 w-full flex-wrap items-center gap-2 px-1 py-2', className)}
+      className={cn(
+        'flex min-h-10 w-full flex-wrap items-center gap-2 px-1 py-2',
+        // a phone keeps it all on one row (the user asked), scrolling sideways should it ever not fit
+        'no-scrollbar max-md:flex-nowrap max-md:overflow-x-auto',
+        className
+      )}
       data-testid="data-grid-toolbar"
     >
       {hasLeft ? (
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-2 max-md:shrink-0 max-md:flex-nowrap">
+          {slots?.start}
           {slots?.action}
           {selection}
           {slots?.entityType}

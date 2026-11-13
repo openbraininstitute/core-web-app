@@ -27,6 +27,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip'
 import { cn } from '@/utils/css-class';
 
 import { joinBlocks, splitBlocks } from './blocks';
+import { ExampleReportView, exampleReport } from './example-reports';
 import { dirOf, newPagePath } from './files';
 import {
   useDeleteResearchLog,
@@ -53,6 +54,12 @@ import type { ReactNode } from 'react';
 import type { IResearchLog } from '@/api/entitycore/types/entities/research-log';
 
 export function ResearchLogView({ id }: { id: string }) {
+  // the prototype's made-up public reports open here too, read only
+  const example = exampleReport(id);
+  return example ? <ExampleReportView report={example} /> : <RealResearchLogView id={id} />;
+}
+
+function RealResearchLogView({ id }: { id: string }) {
   const { data: log, isLoading, isError } = useResearchLog(id);
   if (isLoading) return <Skeleton className="m-6 h-64 w-2/3 rounded-xl" />;
   if (isError || !log)

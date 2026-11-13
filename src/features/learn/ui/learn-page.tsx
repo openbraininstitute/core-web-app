@@ -13,7 +13,6 @@ import {
 import { type CSSProperties, Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import {
-  PaneResizeHandle,
   PaneSideResizeHandle,
   SHUT_BAR_SIZE,
   ShutPaneBar,
@@ -36,7 +35,6 @@ import { useTransmitter } from '@/features/learn/transmitter';
 import { CALLOUT_STYLES } from '@/features/learn/ui/callout';
 import {
   CATEGORIES,
-  CategoryTiles,
   DesignSwitcher,
   LEARN_SECTIONS,
   listBox,
@@ -48,6 +46,7 @@ import {
   TILE_DESIGNS,
 } from '@/features/learn/ui/category-tiles';
 import { CoursePreview } from '@/features/learn/ui/course-preview';
+import { LearnHexColumn, LearnHexDock } from '@/features/learn/ui/learn-hexagons';
 import { FeedCard, FeedIndex, type FeedSource } from '@/features/learn/ui/feeds';
 import { glide } from '@/features/learn/ui/glide';
 import { GlossaryCard, GlossaryIndex } from '@/features/learn/ui/glossary';
@@ -226,11 +225,11 @@ export function LearnPage({
   );
   // and the courses' cards on the left, small or big: a bigger picture, and what the course covers
   // and which sections' tiles are there at all (the Sections options): those left out, by key
-  // Features, with nothing in it yet, left out unless switched on: two rows of five. ("none" in the
-  // address when every tile is shown, as an empty list there would read as the default again)
+  // Features, with nothing in it yet, and Tutorials (the user had it taken out) left out unless switched on. ("none"
+  // in the address when every tile is shown, as an empty list there would read as the default again)
   const [hiddenParam, setHidden] = useQueryState(
     'hide',
-    parseAsArrayOf(parseAsString).withDefault(['features'])
+    parseAsArrayOf(parseAsString).withDefault(['features', 'tutorials'])
   );
   const hidden = hiddenParam.filter((k) => k !== 'none');
   const showSection = (key: string, on: boolean) => {
@@ -380,10 +379,8 @@ export function LearnPage({
   // wider (null: its own width), or over the whole page, its card shut into a bar; and the
   // section tiles over the list shut into one. Neither the card nor the tiles ever grow
   const gridRef = useRef<HTMLDivElement>(null);
-  const tilesRef = useRef<HTMLDivElement>(null);
   const [wider, setWider] = useState<number | null>(null);
   const [overview, setOverview] = useState(false);
-  const [tilesShut, setTilesShut] = useState(false);
   // as a drag begins: the list's width, to open the card at again if the drag shuts it, and the
   // tiles' height
   const dragFrom = useRef({ wider: null as number | null, tiles: TILES_HEIGHT });
@@ -413,8 +410,6 @@ export function LearnPage({
     setOverview(false);
     setWider(to <= least ? null : Math.round(Math.min(to, total - 2 * GUTTER - CARD_FLOOR)));
   };
-  // the bar `y` under the tiles' top: dragged up past half of their height, they shut
-  const dragTiles = (y: number) => setTilesShut(y < dragFrom.current.tiles / 2);
   // a course picked from the overview: the list's width slides from the page's (`from`, the
   // overview's own layout) to `to`, the card in at the width it will have. The start is laid out
   // without easing and its style taken, so that the change to the end is eased from there
@@ -520,9 +515,19 @@ export function LearnPage({
       className={cn(BOX, outerBox && OUTER_BOX, !listBoxOn && 'learn-no-list')}
       data-selected={SELECTED_SLUGS[sel]}
     >
+      {/* the sections as hexagons down the left on a wide screen, as the home's and the Workflows page's
+          categories are (the user asked); on a narrow one a row of them over the list */}
+      <div className="flex min-h-0 flex-1 gap-[16px] max-lg:flex-col">
+      <LearnHexColumn
+        className="max-lg:hidden"
+        hidden={hidden}
+        section={section}
+        onSelect={setSection}
+        off={[...(noCourses ? (['free'] as const) : [])]}
+      />
       <div
         ref={gridRef}
-        className={GRID}
+        className={cn(GRID, 'min-w-0')}
         data-slide={slide ? (slide.go ? 'go' : 'start') : undefined}
         style={
           (slide
@@ -535,39 +540,8 @@ export function LearnPage({
         }
       >
         <aside className="relative flex min-h-0 w-full min-w-0 flex-col">
-          <div ref={tilesRef} className="shrink-0">
-            {tilesShut ? (
-              // the whole column's width, a click opening the tiles again
-              <ShutPaneBar title="Learn" onOpen={() => setTilesShut(false)} className="w-full" />
-            ) : (
-              // the course list's faint navy, so the two read as one column
-              <div className={cn(BOX_CLASS, 'bg-primary-9/[0.04] p-[12px]')}>
-                <CategoryTiles
-                  design={design}
-                  hidden={hidden}
-                  section={section}
-                  onSelect={setSection}
-                  off={[...(noCourses ? (['free'] as const) : [])]}
-                />
-              </div>
-            )}
-          </div>
-          {/* between the tiles and the list, a grab bar that only shuts them: dragged up past
-              half of their height, into a bar; it never makes them any taller */}
-          <div className="relative h-[18px] shrink-0 lg:h-[24px]">
-            <div className="absolute inset-x-0 top-1/2 max-lg:hidden">
-              <PaneResizeHandle
-                edge="bottom"
-                containerRef={tilesRef}
-                minHeight={0}
-                onResize={dragTiles}
-                onDragChange={(dragging) => {
-                  if (dragging && !tilesShut && tilesRef.current)
-                    dragFrom.current.tiles = tilesRef.current.offsetHeight;
-                }}
-              />
-            </div>
-          </div>
+          {/* the section tiles once stood here; the hexagons replace them, down the left or along the foot
+              (CategoryTiles and its designs are left, unused for now) */}
 
           {feedSection ? (
             <FeedIndex
@@ -974,6 +948,14 @@ export function LearnPage({
           <div className={cn(overviewOn && 'lg:hidden')}>{devSettings}</div>
         </div>
       </div>
+      </div>
+      <LearnHexDock
+        className="lg:hidden"
+        hidden={hidden}
+        section={section}
+        onSelect={setSection}
+        off={[...(noCourses ? (['free'] as const) : [])]}
+      />
     </div>
   );
 }

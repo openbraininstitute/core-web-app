@@ -77,6 +77,11 @@ export interface MorphingTabsProps {
    * pills over it, the active one white as the boxes in the panel are.
    */
   surfaceless?: boolean;
+  /**
+   * Surfaceless, the whole rail in one long white pill, left to right: what the start and centre slots hold and the
+   * tabs alike (a workflow's top bar, the user asked).
+   */
+  railPill?: boolean;
   ariaLabel?: string;
   className?: string;
   classNames?: MorphingTabsClassNames;
@@ -289,6 +294,7 @@ export function MorphingTabs({
   railEnd,
   railCollapsed = false,
   surfaceless = false,
+  railPill = false,
   ariaLabel = 'Tabs',
   className,
   classNames,
@@ -485,11 +491,19 @@ export function MorphingTabs({
           aria-orientation="horizontal"
           className={cn('relative z-30 flex h-full gap-3 md:gap-4', classNames?.rail)}
         >
+          {surfaceless && railPill && (
+            // the rail's own pill, under the slots and the tabs, edged as the boxes in the panel are
+            <span
+              aria-hidden
+              className="ring-primary-9/5 absolute top-0 rounded-full bg-white shadow-[inset_0_1px_0_rgb(255_255_255/0.9),0_4px_12px_-6px_rgb(0_39_102/0.08),0_1px_2px_rgb(0_39_102/0.04)] ring-1"
+              style={{ left: SURFACE_INSET, right: SURFACE_INSET, height: SHARED_PILL_HEIGHT }}
+            />
+          )}
           {surfaceless && (
             // The one pill the tabs share, the active one raised white inside it.
             <span
               aria-hidden
-              className="absolute top-0 rounded-full bg-white/60"
+              className={cn('absolute top-0 rounded-full', railPill ? 'bg-[#f1f3f7]' : 'bg-white/60')}
               style={{ left: slotStart, width: tabsWidth, height: SHARED_PILL_HEIGHT }}
             />
           )}
@@ -607,7 +621,8 @@ export function MorphingTabs({
             <div
               data-slot="morphing-tabs-rail-slots"
               className="pointer-events-none absolute z-30 flex items-center gap-4 overflow-hidden"
-              style={{ left: SURFACE_INSET, right: railRight, top: 0, height: railRoom }}
+              // in the rail's pill, clear of its rounded end
+              style={{ left: SURFACE_INSET + (railPill ? 14 : 0), right: railRight, top: 0, height: railRoom }}
             >
               <div className={cn('flex min-w-0 [&>*]:pointer-events-auto', classNames?.railStart)}>
                 {railStart}

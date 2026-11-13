@@ -35,13 +35,20 @@ export function WorkflowNewLayout({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="mx-2 flex h-full min-h-0 w-[calc(100%-10px)] flex-col overflow-hidden">
+    <div
+      className={cn(
+        'mx-2 flex h-full min-h-0 w-[calc(100%-10px)] flex-col overflow-hidden',
+        // the table's toolbar carries the breadcrumb, beside its search bar, so the row above goes
+        'has-[[data-toolbar-breadcrumb]]:[&>[data-slot=top-bar]]:hidden'
+      )}
+    >
       <WorkflowBreadcrumbProvider key={type}>
         <TopBar start={<WorkflowBreadcrumb />} />
-        <div className="bg-background border-neutral-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border">
+        {/* no box of its own round it, as the Data page has none: the table's white card sits straight on the page */}
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <motion.div
             id="browse-workflow-new-inner-layout"
-            className={cn('grid min-h-0 flex-1 gap-2 [grid-area:main]', 'px-3 py-2')}
+            className={cn('grid min-h-0 flex-1 gap-4 [grid-area:main]', 'px-1 pt-1 pb-2')}
             initial={gridTemplate}
             animate={gridTemplate}
             transition={GRID_TRANSITION}

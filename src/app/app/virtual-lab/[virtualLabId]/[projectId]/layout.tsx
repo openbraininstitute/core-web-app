@@ -11,7 +11,7 @@ import { getQueryClient } from '@/query-provider/server';
 import { ProjectRootLayout } from '@/ui/layouts/project-root-layout';
 import { Container as AiContainer } from '@/ui/segments/ai/container';
 import { SpaceManagerContainer } from '@/ui/segments/workspaces/space-manager';
-import { WorkspaceTopMenu } from '@/ui/segments/workspaces/top-menu';
+import { ProjectToolbar } from '@/ui/segments/workspaces/project-toolbar';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 import type { ReactNode } from 'react';
@@ -67,12 +67,13 @@ export default async function Layout({ children, params: promisedParams }: Props
   return (
     <div className="h-screen w-full">
       <ProjectRootLayout>
-        <div className="w-full p-3 pb-0 [grid-area:header]">
-          <WorkspaceTopMenu />
+        <div className="w-full [grid-area:header]">
+          <ProjectToolbar />
         </div>
         <div
           id="workspace-body"
-          className="secondary-scrollbar w-full overflow-x-hidden overflow-y-auto pb-2 [grid-area:main]"
+          // on a phone, room under the page for the tabs along the screen's foot
+          className="secondary-scrollbar w-full overflow-x-hidden overflow-y-auto pb-2 [grid-area:main] max-md:pb-[calc(3.5rem+env(safe-area-inset-bottom))]"
         >
           {children}
         </div>

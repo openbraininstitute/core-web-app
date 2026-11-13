@@ -1,4 +1,4 @@
-import type { ComponentProps } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse, TFacets } from '@/api/entitycore/types/shared/response';
@@ -68,6 +68,8 @@ export type BrowseEntityScopeProps = {
   allowUpload?: boolean;
   /** draws the table and its pager as a card, with the selection and its actions above */
   framed?: boolean;
+  /** shown first in the toolbar, on the search bar's row (e.g. a workflow's breadcrumb) */
+  toolbarStart?: ReactNode;
   /** whether to display the filter controls */
   allowFilter?: boolean;
   /** whether to display the search input */

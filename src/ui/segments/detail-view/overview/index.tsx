@@ -634,7 +634,7 @@ export default async function Overview({
     <div
       id={`metadata-grid-${kebabCase(extendedType)}-${entity.id}`}
       data-testid="metadata-grid"
-      className={`mb-5 grid grid-cols-3 gap-4 rounded-lg border p-5 ${metadataBorderClass}`}
+      className={`mb-5 grid grid-cols-3 gap-4 rounded-lg border p-5 max-md:grid-cols-2 max-md:p-4 ${metadataBorderClass}`}
     >
       {summaryFields.map(({ className, field }) => {
         return (

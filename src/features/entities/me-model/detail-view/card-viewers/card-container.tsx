@@ -26,7 +26,7 @@ type ModelDetailsProps = {
 
 function ModelDetails({ details, variant }: ModelDetailsProps & { variant: TViewVariant }) {
   return (
-    <div className={cn('mt-4 grid grid-cols-3 gap-4', detailViewValueClass(variant))}>
+    <div className={cn('mt-4 grid grid-cols-3 gap-4 max-md:grid-cols-2', detailViewValueClass(variant))}>
       {details.map((detail) => (
         <div key={`${detail.label}-${detail.value?.toString()}`}>
           <div className={detailViewLabelClass(variant)}>{detail.label}</div>
@@ -79,7 +79,7 @@ export default function ModelCard({
 
   return (
     <div
-      className={cn('w-full rounded-[6px] border p-10', detailViewCardBorderClass(variant), {
+      className={cn('w-full rounded-[6px] border p-10 max-md:p-4', detailViewCardBorderClass(variant), {
         'bg-transparent': variant === ViewVariant.Default,
       })}
     >
@@ -90,14 +90,15 @@ export default function ModelCard({
         {cardLink}
       </div>
 
-      <div className="mt-2 flex gap-10">
+      {/* on a phone the picture goes over the details, which have no room beside it */}
+      <div className="mt-2 flex gap-10 max-md:flex-col max-md:gap-4">
         <div
-          className="border-neutral-2 m-0 flex flex-col items-center justify-center border bg-white"
+          className="border-neutral-2 m-0 flex shrink-0 flex-col items-center justify-center border bg-white max-md:mx-auto"
           style={{ height: 202, width: 202 }}
         >
           {thumbnail}
         </div>
-        <div className="grow">
+        <div className="min-w-0 grow">
           <div className={detailViewLabelClass(variant)}>NAME</div>
           <div className={cn('my-1 break-words', detailViewHeadingClass(variant))}>
             {model.name}

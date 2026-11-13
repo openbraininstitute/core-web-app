@@ -7,6 +7,7 @@ import { Loader } from '@/components/loader';
 import { useAtlasViewer } from '@/features/brain-atlas-viewer/use-atlas-viewer';
 import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
+import { useMediaQuery } from '@/hooks/use-media-query';
 import { ATLAS_ZOOM, morphAtlasOnCompositor } from '@/ui/segments/explore/atlas-morph';
 import { cn } from '@/utils/css-class';
 
@@ -39,8 +40,11 @@ type Props = {
 export function Atlas({ children }: Props) {
   const isAllSpeciesMode = useAtomValue(speciesSelectionModeAtom) === SpeciesSelectionMode.All;
   const { viewer, error } = useAtlasViewer();
+  // a phone has the mini atlas over the data types instead (the user asked)
+  const phone = useMediaQuery('(max-width: 767px)', false);
   // the Data page has nothing to show without its atlas: the route's error page offers a retry
   if (error) throw error;
+  if (phone) return null;
 
   return (
     <AtlasMorph view="full">

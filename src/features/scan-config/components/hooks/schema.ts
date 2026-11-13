@@ -210,10 +210,26 @@ export async function dereferenceObiOneOpenApi(json: object) {
   });
 }
 
+/**
+ * obi-one's OpenAPI document, dereferenced: fetched once for every schema rather than once each, since staging
+ * takes seconds to serve its megabyte (forgotten again on a failure, to be tried afresh).
+ */
+let openApi: Promise<object> | null = null;
+export function fetchObiOneOpenApi(): Promise<object> {
+  if (!openApi) {
+    const loading = fetch(`${config.OBI_ONE_URL}/openapi.json`)
+      .then((res) => res.json())
+      .then((json) => dereferenceObiOneOpenApi(json));
+    loading.catch(() => {
+      if (openApi === loading) openApi = null;
+    });
+    openApi = loading;
+  }
+  return openApi;
+}
+
 export async function fetchSchema({ schemaName }: { schemaName: SchemaName }) {
-  const res = await fetch(`${config.OBI_ONE_URL}/openapi.json`);
-  const json = await res.json();
-  const dereferenced = await dereferenceObiOneOpenApi(json);
+  const dereferenced = await fetchObiOneOpenApi();
 
   // @ts-expect-error: dereferenced is a JSONSchema6 object, but we know it has the components property
   const theSchema = dereferenced.components.schemas[schemaName] as ConfigSchema;

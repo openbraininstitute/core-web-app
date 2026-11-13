@@ -4,7 +4,8 @@ import { useAtomValue } from 'jotai';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import { Loader } from '@/components/loader';
@@ -43,7 +44,8 @@ function AtlasExpandLink({ href }: { href: string }) {
           href={href}
           data-testid="mini-atlas-open"
           aria-label="Open the 3D atlas"
-          className="focus-visible:ring-primary-6 absolute top-2 left-2 z-20 flex size-8 items-center justify-center rounded-full bg-white/10 outline-none transition-[background-color,transform] duration-150 ease-out hover:bg-white/20 focus-visible:ring-2 active:scale-[0.94]"
+          // none on a phone, which has no big atlas
+          className="focus-visible:ring-primary-6 absolute top-2 left-2 z-20 flex size-8 items-center justify-center rounded-full bg-white/10 outline-none transition-[background-color,transform] duration-150 ease-out hover:bg-white/20 focus-visible:ring-2 active:scale-[0.94] max-md:hidden"
         >
           <Image src="/images/svg/atlas-expand.svg" alt="" width={14} height={14} />
         </Link>
@@ -62,12 +64,16 @@ function AtlasExpandLink({ href }: { href: string }) {
  */
 function SpeciesBrain({
   hierarchy,
+  index,
   style,
   isActive,
+  zoom,
 }: {
   hierarchy: SpeciesRuntimeHierarchy;
+  index: number;
   style: CSSProperties;
   isActive: boolean;
+  zoom?: number;
 }) {
   const {
     result: { root },
@@ -77,6 +83,7 @@ function SpeciesBrain({
   return (
     <div
       style={style}
+      data-brain={index}
       title={isActive ? hierarchy.species.displayName : undefined}
       className={cn(
         'absolute inset-y-0 mix-blend-screen',
@@ -88,6 +95,7 @@ function SpeciesBrain({
         regionId={root.id}
         regionName={hierarchy.species.displayName}
         onLoading={setIsDrawing}
+        cameraZoom={zoom}
         backgroundColor="#000000"
         className={cn('transition-opacity duration-300', isDrawing ? 'opacity-0' : 'opacity-100')}
       />
@@ -107,22 +115,79 @@ function AllSpeciesBrains() {
   );
   const [active, setActive] = useState(0);
   const slot = 100 / Math.max(withAtlas.length, 1);
+  // Each brain as large as its slot allows, not the canvas: the explorer draws a whole brain about 230 units across
+  // from 470 / zoom away at 30°, so at zoom z it is about 0.9·z·h wide in a box h high (they overlapped on a phone).
+  const box = useRef<HTMLDivElement>(null);
+  const [size, setSize] = useState<{ w: number; h: number } | null>(null);
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const observer = new ResizeObserver(() => setSize({ w: el.clientWidth, h: el.clientHeight }));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  const zoom =
+    size && size.h > 0 && withAtlas.length
+      ? Math.round(Math.min(1.6, (0.95 * size.w) / withAtlas.length / (0.9 * size.h)) * 20) / 20
+      : undefined;
+
+  const slotAt = (el: HTMLElement, clientX: number) => {
+    const r = el.getBoundingClientRect();
+    const at = Math.floor(((clientX - r.left) / r.width) * withAtlas.length);
+    return Math.min(Math.max(at, 0), withAtlas.length - 1);
+  };
 
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
     // a drag keeps its brain until it ends
     if (event.buttons) return;
-    const box = event.currentTarget.getBoundingClientRect();
-    const at = Math.floor(((event.clientX - box.left) / box.width) * withAtlas.length);
-    setActive(Math.min(Math.max(at, 0), withAtlas.length - 1));
+    setActive(slotAt(event.currentTarget, event.clientX));
+  };
+
+  // A finger has no hover to pick its brain first (only the human turned on a phone): the brain under it takes the
+  // press, which is kept from whichever canvas it landed on and handed to that brain's, so its drag turns that brain.
+  const onPointerDownCapture = (event: PointerEvent<HTMLDivElement>) => {
+    const at = slotAt(event.currentTarget, event.clientX);
+    const canvas = event.currentTarget.querySelector<HTMLCanvasElement>(`[data-brain="${at}"] canvas`);
+    if (!canvas || event.target === canvas) return;
+    event.stopPropagation();
+    flushSync(() => setActive(at));
+    const n = event.nativeEvent;
+    canvas.dispatchEvent(
+      new window.PointerEvent('pointerdown', {
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+        pointerId: n.pointerId,
+        pointerType: n.pointerType,
+        isPrimary: n.isPrimary,
+        clientX: n.clientX,
+        clientY: n.clientY,
+        screenX: n.screenX,
+        screenY: n.screenY,
+        button: n.button,
+        buttons: n.buttons,
+        width: n.width,
+        height: n.height,
+        pressure: n.pressure,
+      })
+    );
   };
 
   return (
-    <div className="absolute inset-0" onPointerMove={onPointerMove}>
+    // no page scroll from a finger on the brains, which would cancel its drag
+    <div
+      ref={box}
+      className="absolute inset-0 touch-none"
+      onPointerMove={onPointerMove}
+      onPointerDownCapture={onPointerDownCapture}
+    >
       {withAtlas.map((hierarchy, i) => (
         <SpeciesBrain
           key={hierarchy.id}
+          index={i}
           hierarchy={hierarchy}
           isActive={i === active}
+          zoom={zoom}
           style={{ width: `${2 * slot}%`, left: `${(i - 0.5) * slot}%` }}
         />
       ))}
@@ -130,8 +195,17 @@ function AllSpeciesBrains() {
   );
 }
 
-/** The region's atlas beside the data table; `children` is its lower part, or stands alone. */
-export function MiniAtlas({ children }: { children?: (inCard: boolean) => ReactNode }) {
+/**
+ * The region's atlas beside the data table; `children` is its lower part, or stands alone. `morph` off where there
+ * is no big atlas to morph from (a phone), whose transition would otherwise share its name.
+ */
+export function MiniAtlas({
+  children,
+  morph = true,
+}: {
+  children?: (inCard: boolean) => ReactNode;
+  morph?: boolean;
+}) {
   const [isLoading, setIsLoading] = useState(true);
   const { viewer, error: viewerError } = useAtlasViewer();
   const { virtualLabId, projectId } = useWorkspace();
@@ -181,10 +255,8 @@ export function MiniAtlas({ children }: { children?: (inCard: boolean) => ReactN
     />
   );
 
-  return (
-    <div className={CARD_CLASS}>
-      <AtlasMorph view="mini">
-        <div id="mini-atlas" data-testid="mini-atlas" className={cn(ATLAS_BOX_CLASS, 'group')}>
+  const atlas = (
+    <div id="mini-atlas" data-testid="mini-atlas" className={cn(ATLAS_BOX_CLASS, 'group')}>
           {/* the picture stands in for a viewer that failed to load or to draw */}
           {hasAtlas && !viewerError ? (
             <ErrorBoundary
@@ -214,7 +286,11 @@ export function MiniAtlas({ children }: { children?: (inCard: boolean) => ReactN
           )}
           <AtlasExpandLink href={atlasHref} />
         </div>
-      </AtlasMorph>
+  );
+
+  return (
+    <div className={CARD_CLASS}>
+      {morph ? <AtlasMorph view="mini">{atlas}</AtlasMorph> : atlas}
       {children?.(true)}
     </div>
   );

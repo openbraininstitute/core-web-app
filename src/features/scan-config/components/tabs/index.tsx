@@ -21,6 +21,7 @@ import {
   type TScanConfigTabs,
   ValidateScanConfigTabs,
 } from '@/features/scan-config/types';
+import { useMediaQuery } from '@/hooks/use-media-query';
 import { MorphingTabs, type MorphingTabsItem } from '@/ui/molecules/morphing-tabs';
 import { cn } from '@/utils/css-class';
 
@@ -132,6 +133,33 @@ export function ScanConfigTabsPanel({
     };
   });
 
+  // On a phone the breadcrumb (and what the rail's middle holds) is a line of its own over the tabs (the user
+  // asked), which have the rail to themselves, in its middle.
+  const phone = useMediaQuery('(max-width: 767px)', false);
+  if (phone)
+    return (
+      <div className={cn('flex min-h-0 flex-col', className)}>
+        {(start || railCenter) && (
+          <div className="no-scrollbar flex shrink-0 items-center gap-3 overflow-x-auto px-2 pt-1 pb-1.5 [&>*]:shrink-0">
+            {start}
+            {railCenter}
+          </div>
+        )}
+        <MorphingTabs
+          tabsAlign="center"
+          railEnd={end}
+          railCollapsed={railCollapsed}
+          surfaceless
+          items={items}
+          value={tab.id}
+          onValueChange={(id) => id && setTab(toScanConfigTab(activity, id))}
+          ariaLabel={`${activity} workflow`}
+          className="scan-config-tabs min-h-0 flex-1"
+          classNames={{ label: 'capitalize' }}
+        />
+      </div>
+    );
+
   return (
     <MorphingTabs
       tabsAlign="end"
@@ -139,8 +167,9 @@ export function ScanConfigTabsPanel({
       railCenter={railCenter}
       railEnd={end}
       railCollapsed={railCollapsed}
-      // The panel's boxes sit on the page; the tabs are pills over them.
+      // The panel's boxes sit on the page; the top bar, breadcrumb, name and tabs, one long pill over them
       surfaceless
+      railPill
       items={items}
       value={tab.id}
       onValueChange={(id) => id && setTab(toScanConfigTab(activity, id))}

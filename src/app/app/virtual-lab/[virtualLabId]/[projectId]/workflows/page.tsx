@@ -2,26 +2,29 @@
 
 import { useRouter } from '@bprogress/next';
 import { useQueryClient } from '@tanstack/react-query';
-import { AnimatePresence, motion } from 'motion/react';
-import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
-import { use } from 'react';
+import { use, useEffect } from 'react';
 
+import { fetchObiOneOpenApi } from '@/features/scan-config/components/hooks/schema';
+import { useMediaQuery } from '@/hooks/use-media-query';
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
 import { useNextStepOnboarding, workflowTour } from '@/ui/segments/app-setup/discover-app';
 import {
   buildWorkflowStartingPageUrl,
   inferWorkflowStartingPageRemoteSchemaBased,
-  WORKFLOW_HOME_QUERY_KEYS,
 } from '@/ui/segments/workflows/config';
-import { CategoryMenu } from '@/ui/segments/workflows/elements/category-menu';
-import { onSelfClick } from '@/ui/segments/workflows/elements/on-self-click';
-import { TypesMenu } from '@/ui/segments/workflows/elements/types-menu';
 import { WorkflowActivity } from '@/ui/segments/workflows/elements/workflow-activity';
+import { WorkflowHexMenu } from '@/ui/segments/workflows/elements/workflow-hex-menu';
+import { WorkflowMenuMobile } from '@/ui/segments/workflows/elements/workflow-menu-mobile';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import type { TActivityValue } from '@/ui/segments/workflows/config';
 
+/**
+ * The workflows: their categories as hexagons down the left under "Start a new workflow", each type on its
+ * tongue starting its workflow, and the project's workflows beside them under "Project workflows", in a white
+ * card as the Data table is.
+ */
 export default function Page({ params }: ServerSideComponentProp<WorkspaceContext, null>) {
   useDisableElementOverflow({ id: 'workspace-body' });
   useNextStepOnboarding({ condition: true, tour: workflowTour });
@@ -30,38 +33,7 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
   const { push: navigate } = useRouter();
   const queryClient = useQueryClient();
 
-  const [{ activity, entityType }, updateWorkflowState] = useQueryStates(
-    {
-      activity: parseAsString.withOptions({
-        clearOnDefault: false,
-        shallow: true,
-      }) as SingleParserBuilder<TActivityValue>,
-      entityType: parseAsString.withOptions({
-        clearOnDefault: false,
-        shallow: true,
-      }) as SingleParserBuilder<TExtendedEntitiesTypeDict>,
-    },
-    {
-      urlKeys: {
-        activity: WORKFLOW_HOME_QUERY_KEYS.activity,
-        entityType: WORKFLOW_HOME_QUERY_KEYS.entityType,
-      },
-    }
-  );
-
-  const onSelectCategory = (value: TActivityValue | null) => {
-    updateWorkflowState(() => ({ activity: value === activity ? null : value, entityType: null }));
-  };
-
-  // On the window itself, around its cards: back to the categories alone. A shortcut for the
-  // mouse, as the keyboard has the lit card.
-  const onBlankClick = activity
-    ? () => updateWorkflowState(() => ({ activity: null, entityType: null }))
-    : undefined;
-
-  const onSelectType = async (value: TExtendedEntitiesTypeDict | null) => {
-    if (!activity || !value) return;
-
+  const onSelectType = async (activity: TActivityValue, value: TExtendedEntitiesTypeDict) => {
     const { stage, workflow, schemaSelection } = await inferWorkflowStartingPageRemoteSchemaBased({
       qc: queryClient,
       activity,
@@ -80,73 +52,35 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
     );
   };
 
+  // what starting any type needs (obi-one's schemas), fetched as the page opens, and the type's own while it is
+  // hovered, so a click goes at once
+  useEffect(() => {
+    fetchObiOneOpenApi().catch(() => {});
+  }, []);
+  const onPrepareType = (activity: TActivityValue, value: TExtendedEntitiesTypeDict) => {
+    inferWorkflowStartingPageRemoteSchemaBased({ qc: queryClient, activity, targetType: value }).catch(
+      () => {}
+    );
+  };
+
+  const table = (
+    <div id="workflow-activity-content" data-testid="workflow-activity-content" className="flex h-full min-h-0 flex-col">
+      <WorkflowActivity framed />
+    </div>
+  );
+  // a phone has no room for the hexagons' tongues, nor a pointer to hover with: the page down its length instead
+  const phone = useMediaQuery('(max-width: 767px)', false);
+
   return (
-    <div className="mr-0 ml-3 flex h-full max-h-[calc(100vh-6rem)] flex-col gap-2.5">
-      <AnimatePresence mode="wait">
-        <motion.div
-          key="workflow-scrollable-selector"
-          id="workflow-scrollable-selector"
-          data-testid="workflow-scrollable-selector"
-          className="border-neutral-2 mr-1 rounded-2xl border px-5"
-          style={{ willChange: 'opacity' }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{
-            duration: 0.2,
-            ease: 'easeInOut',
-          }}
-          onClick={onSelfClick(onBlankClick)}
-        >
-          <CategoryMenu
-            current={activity}
-            onItemClick={onSelectCategory}
-            onBlankClick={onBlankClick}
-          />
-          <AnimatePresence>
-            {activity && (
-              <motion.div
-                initial={{ opacity: 0, height: 0, y: -20 }}
-                animate={{ opacity: 1, height: 'auto', y: 0 }}
-                exit={{ opacity: 0, height: 0, y: -20 }}
-                transition={{
-                  duration: 0.4,
-                  ease: [0.25, 0.46, 0.45, 0.94],
-                  opacity: { duration: 0.2 },
-                  height: { duration: 0.3 },
-                  y: { duration: 0.3 },
-                }}
-                className="overflow-hidden"
-              >
-                <TypesMenu
-                  category={activity}
-                  current={entityType}
-                  onItemClick={onSelectType}
-                  onBlankClick={onBlankClick}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-      </AnimatePresence>
-      <AnimatePresence mode="wait">
-        <motion.div
-          key="workflow-activity-content"
-          id="workflow-activity-content"
-          data-testid="workflow-activity-content"
-          className="border-neutral-2 mr-1 h-full rounded-2xl border px-5"
-          style={{ willChange: 'opacity' }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{
-            duration: 0.2,
-            ease: 'easeInOut',
-          }}
-        >
-          <WorkflowActivity />
-        </motion.div>
-      </AnimatePresence>
+    // its foot where the page had it before the hexagons: 6rem short of the window's height
+    <div className="h-full max-h-[calc(100vh-6rem)] px-3 pt-3 max-md:max-h-none max-md:px-2 max-md:pt-2">
+      {phone ? (
+        <WorkflowMenuMobile onSelectType={onSelectType}>{table}</WorkflowMenuMobile>
+      ) : (
+        <WorkflowHexMenu onSelectType={onSelectType} onPrepareType={onPrepareType}>
+          {table}
+        </WorkflowHexMenu>
+      )}
     </div>
   );
 }

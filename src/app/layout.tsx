@@ -10,7 +10,7 @@ import { ConfigProvider, getClientEnvInjectionConfig } from '@/config';
 import '@/styles/globals.css';
 
 const titilliumWeb = Titillium_Web({
-  weight: ['300', '400', '600', '700'],
+  weight: ['300', '400', '600', '700', '900'],
   subsets: ['latin'],
   variable: '--font-titillium-web',
 });

@@ -3,13 +3,19 @@
 import { WarningOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { dataBrowseListingUsesBrainRegionHierarchy } from '@/api/entitycore/types/extended-entity-type';
+import {
+  dataBrowseListingUsesBrainRegionHierarchy,
+  ExtendedEntitiesTypeDict,
+} from '@/api/entitycore/types/extended-entity-type';
 import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
 import { isNotAuthorizedError } from '@/api/error';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
+import { config } from '@/config';
 import { DEFAULT_PAGE_SIZE, FACETS_ONLY_PAGE, WorkspaceSection } from '@/constants';
 import { mergeOrderByWithOverride } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
@@ -61,6 +67,7 @@ import {
   useGridStateSlice,
 } from '@/features/data-grid/react';
 import { AgGridRenderer } from '@/features/data-grid/renderers/aggrid';
+import { useMediaQuery } from '@/hooks/use-media-query';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { GenericError } from '@/ui/molecules/generic-error';
 import { EntityDeleteButton } from '@/ui/segments/data-table/elements/delete-button';
@@ -78,6 +85,7 @@ import {
 import { keyBuilder as workspaceKeyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
+import { resolveConcreteEntityPathParam } from '@/utils/url-builder';
 import {
   getWorkspaceScopeFilters,
   isProjectPrivateRecord,
@@ -176,6 +184,7 @@ export function EntityDataGrid({
   allowDelete,
   allowUpload,
   framed,
+  toolbarStart,
   requireSpeciesSelector,
   requireScopeSelector,
   requireEntityTypeSelector,
@@ -194,6 +203,11 @@ export function EntityDataGrid({
 }: TEntityDataGridProps) {
   const { virtualLabId, projectId } = useWorkspace();
   const pathname = usePathname();
+  const router = useRouter();
+  // On a phone the search is an icon to open, and Upload data folds to its + while it is open, so the toolbar keeps
+  // to one row (the user asked).
+  const phone = useMediaQuery('(max-width: 767px)');
+  const [searchOpen, setSearchOpen] = useState(false);
   const scope = listingScope({ scope: defaultScope, requireScopeSelector });
   const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
   const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
@@ -249,9 +263,24 @@ export function EntityDataGrid({
         onCellClick(pathname, row, dataType);
         return;
       }
+      // a phone has no room beside the table for the mini panel: straight to the entity's page (the user asked),
+      // as its "View details" goes, when it has one
+      if (phone && section === WorkspaceSection.Data) {
+        const type =
+          row.type === EntityTypeDict.Circuit &&
+          (row as { scale?: string }).scale === CircuitScaleDictionary.Single
+            ? ExtendedEntitiesTypeDict.SingleNeuronCircuit
+            : dataType;
+        if ((getEntityByExtendedType({ type })?.detailViewSections?.length ?? 0) > 0) {
+          router.push(
+            `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${resolveConcreteEntityPathParam(type)}/${row.id}`
+          );
+          return;
+        }
+      }
       makeSelectEntityClickEvent({ display: true, data: row });
     },
-    [onCellClick, pathname, dataType]
+    [onCellClick, pathname, dataType, phone, section, router, virtualLabId, projectId]
   );
 
   // Picker selection is opt-in: only when `mainTableProps` supplies both a type and
@@ -499,7 +528,7 @@ export function EntityDataGrid({
         id={`data-table-container-${dataType}`}
         data-testid="data-table-container"
         className={cn(
-          'h-full min-h-0 w-full min-w-0 rounded-2xl [grid-area:body]',
+          'h-full min-h-0 w-full min-w-0 rounded-2xl [grid-area:body] max-md:h-[78vh] max-md:shrink-0',
           // a framed table clips itself, and clipping here would cut off its card's edge
           framed ? 'overflow-visible' : 'overflow-hidden',
           classNames?.container
@@ -526,7 +555,10 @@ export function EntityDataGrid({
           selection={pickerSelection}
           framed={framed}
           toolbarSlots={{
-            action: allowUpload ? <UploadDataButton compact entityType={dataType} /> : undefined,
+            start: toolbarStart,
+            action: allowUpload ? (
+              <UploadDataButton compact collapsed={phone && searchOpen} entityType={dataType} />
+            ) : undefined,
             brainRegion: toolbarBrainRegion,
             entityType: requireEntityTypeSelector?.enabled ? (
               <EntityTypeSelector
@@ -537,7 +569,13 @@ export function EntityDataGrid({
               />
             ) : undefined,
             search: allowSearch ? (
-              <GridSearch onSearch={handleSearch} openOnMount value={freeTextSearch} />
+              <GridSearch
+                onSearch={handleSearch}
+                openOnMount={!phone}
+                value={freeTextSearch}
+                inputWidthClass={phone ? 'w-36' : undefined}
+                onOpenChange={setSearchOpen}
+              />
             ) : undefined,
             // Merged last so a plugin adds without disturbing the shared controls.
             ...extraToolbarSlots,

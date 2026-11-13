@@ -1,10 +1,15 @@
 'use client';
 
 import { useAtomValue } from 'jotai';
+import { RiArrowLeftLine } from '@remixicon/react';
+import { snakeCase } from 'es-toolkit/compat';
 import { motion } from 'motion/react';
-import { usePathname } from 'next/navigation';
+import Link from 'next/link';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 
+import { config } from '@/config';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { BrainRegionHierarchy } from '@/features/brain-region-hierarchy';
 import { TreeSkeleton } from '@/features/brain-region-hierarchy/components/brain-region-skeleton';
 import {
@@ -14,12 +19,15 @@ import {
 import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import { CARD_EDGE_CLASS } from '@/features/data-grid/react/molecules-theme';
+import { useMediaQuery } from '@/hooks/use-media-query';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { EntityLinkCount } from '@/ui/segments/explore/entity-link-count';
 import { getEntityTypeFromUrlOnEntityScope } from '@/ui/segments/explore/helpers';
 import { MiniAtlas } from '@/ui/segments/explore/mini-atlas';
 import { UploadDataButton } from '@/ui/segments/explore/upload-data-button';
 
 import type { TTreeNode } from '@/components/tree/types';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TExploreLeftMenuContext } from '@/features/brain-region-hierarchy/components/region-banner';
 
 type Props = { dataKey: string };
@@ -28,7 +36,10 @@ export function EntityLeftMenu({ dataKey }: Props) {
   const [view, updateView] = useState<TExploreLeftMenuContext>(ExploreLeftMenuContext.DataGroup);
   const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
   const isAllMode = speciesSelectionMode === SpeciesSelectionMode.All;
-  const isTableShowing = !!getEntityTypeFromUrlOnEntityScope(usePathname());
+  const tableSlug = getEntityTypeFromUrlOnEntityScope(usePathname());
+  const isTableShowing = !!tableSlug;
+  const { virtualLabId, projectId } = useWorkspace();
+  const query = useSearchParams().toString();
 
   // while in "all species" mode, force the data-group view so the hierarchy tree is never shown
   useEffect(() => {
@@ -56,6 +67,49 @@ export function EntityLeftMenu({ dataKey }: Props) {
       }}
     />
   );
+
+  const phone = useMediaQuery('(max-width: 767px)', false);
+  // On a phone, down the page and no big atlas (the user asked): the mini atlas with the species and region under
+  // it, then the data types, or the region tree while it is open. Over a type's table no atlas at all (the user
+  // asked), but the way back to the data types, the type shown, and the species and region.
+  if (phone)
+    return (
+      <div className="flex flex-col gap-2" data-testid="data-entity-left-menu" id="data-entity-left-menu">
+        {isTableShowing ? (
+          <>
+            <div className="flex items-center gap-2 px-1">
+              <Link
+                href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data${query ? `?${query}` : ''}`}
+                className="text-primary-9 border-neutral-2 flex h-9 shrink-0 items-center gap-1.5 rounded-full border bg-white px-3 text-[13px] font-semibold"
+              >
+                <RiArrowLeftLine className="size-4" />
+                Data types
+              </Link>
+              <span className="text-primary-9 min-w-0 truncate text-[17px] font-bold">
+                {getEntityByExtendedType({ type: snakeCase(tableSlug) as TExtendedEntitiesTypeDict })?.title ?? ''}
+              </span>
+            </div>
+            {regionBanner(false)}
+          </>
+        ) : (
+          <MiniAtlas morph={false}>{regionBanner}</MiniAtlas>
+        )}
+        {!isAllMode && view === ExploreLeftMenuContext.BrainRegionHierarchy ? (
+          <Suspense fallback={<TreeSkeleton />}>
+            <div className="h-[60vh] min-h-0 overflow-hidden">
+              <BrainRegionHierarchy dataKey={dataKey} onClickCallback={onClickBrainRegion} />
+            </div>
+          </Suspense>
+        ) : (
+          !isTableShowing && (
+            <div className="flex flex-col">
+              <EntityLinkCount />
+              <UploadDataButton className="shrink-0 px-1 pt-2" />
+            </div>
+          )
+        )}
+      </div>
+    );
 
   return (
     <div

@@ -3,7 +3,9 @@
 import { usePathname } from 'next/navigation';
 
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
+import { PHONE_DETAIL_SIDEBAR } from '@/ui/segments/explore/detail-phone';
 import { EntityNameDisplayWrapper } from '@/ui/segments/explore/entity-name-display';
+import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
 
@@ -27,14 +29,15 @@ export function DetailViewBody({
   const isPlainContent = plainContentSection && page === DetailViewSectionsDict.Workflow;
 
   return (
-    <div className="flex min-h-0 flex-1 gap-3 overflow-hidden pt-3">
-      <div className="flex w-1/5 shrink-0 flex-col bg-white pl-3.5">{sidebar}</div>
-      <div className="min-h-0 w-4/5 px-2 pb-2">
+    // on a phone the side menu goes over the content, as rows (the user asked for a details page made for a phone)
+    <div className="flex min-h-0 flex-1 gap-3 overflow-hidden pt-3 max-md:flex-col max-md:gap-2 max-md:pt-0">
+      <div className={cn('flex w-1/5 shrink-0 flex-col bg-white pl-3.5', PHONE_DETAIL_SIDEBAR)}>{sidebar}</div>
+      <div className="min-h-0 w-4/5 px-2 pb-2 max-md:w-full max-md:flex-1 max-md:px-0 max-md:pb-0">
         {isPlainContent ? (
           <div className="primary-scrollbar h-full overflow-x-auto overflow-y-auto">{children}</div>
         ) : (
           <div className="primary-scrollbar-dark h-full overflow-x-auto overflow-y-auto">
-            <div className="min-h-full rounded-2xl border border-neutral-2 bg-primary-9 p-10 pt-4 pb-10 text-white">
+            <div className="min-h-full rounded-2xl border border-neutral-2 bg-primary-9 p-10 pt-4 pb-10 text-white max-md:p-4 max-md:pb-8">
               {nameDisplay}
               <EntityNameDisplayWrapper>{children}</EntityNameDisplayWrapper>
             </div>
