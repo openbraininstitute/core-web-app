@@ -132,6 +132,8 @@ const platformApiUrlFields = {
   LAUNCH_SYSTEM_URL: '/launch-system',
 } as const satisfies Partial<Record<keyof typeof configFields, string>>;
 
+export type PlatformApiUrlField = keyof typeof platformApiUrlFields;
+
 const baseServerSchema = z
   .object(
     Object.fromEntries(Object.entries(configFields).map(([key, { schema }]) => [key, schema]))
@@ -164,12 +166,12 @@ const applyApiUrlTransforms = <T extends z.ZodObject<any>>(schema: T) =>
     })
     .transform((data) => ({
       ...data,
-      ...Object.fromEntries(
+      ...(Object.fromEntries(
         Object.entries(platformApiUrlFields).map(([field, path]) => [
           field,
-          data[field] ?? `${data.API_ORIGIN}${DEFAULT_API_BASE_PATH}${path}`,
+          data[field] || `${data.API_ORIGIN}${DEFAULT_API_BASE_PATH}${path}`,
         ])
-      ),
+      ) as Record<PlatformApiUrlField, string>),
     }));
 
 export const serverSchema = applyApiUrlTransforms(baseServerSchema);

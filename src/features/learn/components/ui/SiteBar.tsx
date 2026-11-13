@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import ObiLogo from '@/features/learn/components/ui/ObiLogo';
+import ObiLogo from '@/components/logo/obi-logo';
 
 /**
  * The OBI theme's header: the logo, top left, in OBI navy, leading back to the
