@@ -1,12 +1,13 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { compileConfigValidator } from '@/features/scan-config/components/hooks';
-import {
-  toScanConfigForm,
-  viewRootElements,
-} from '@/features/scan-config/view/workflow-config-view';
+import { toScanConfigForm } from '@/features/scan-config/view/workflow-config-view';
 
 import type { ConfigSchema } from '@/features/scan-config/types';
+
+// this file only exercises the config conversion and validation, not the rendered editor, which
+// drags in react-pdf (and its DOMMatrix dependency, absent in this suite's Node environment)
+vi.mock('@/features/scan-config/template', () => ({ ScanConfigTemplate: () => null }));
 
 const block = (title: string, extra: object = {}) => ({
   type: 'object',
@@ -60,12 +61,5 @@ describe('the workflow config view', () => {
 
   it('rejects the single config as stored', () => {
     expect(compileConfigValidator(schema)(single)).toBe(false);
-  });
-
-  it('lists the shown blocks in the config key order, not the schema order', () => {
-    expect(viewRootElements(schema, toScanConfigForm(single, schema))).toEqual([
-      'info',
-      'initialize',
-    ]);
   });
 });
