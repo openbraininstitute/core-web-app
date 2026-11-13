@@ -721,9 +721,13 @@ function Home({
   const wordsR = 182;
   const wordsW = SQRT3 * wordsR;
   const saidLeft = heroAtFor(said).x - widthOf(said) / 2;
+  // further left and a little higher than the middle of the gap (the user asked), just clear of the examples
   const wordsHex = {
-    x: Math.max(minisRight + 16 + wordsW / 2, Math.min((minisRight + saidLeft) / 2, saidLeft + widthOf(said) * 0.14 - wordsW / 2)),
-    y: height / 2,
+    x: Math.max(
+      minisRight + 6 + wordsW / 2,
+      Math.min((minisRight + saidLeft) / 2, saidLeft + widthOf(said) * 0.14 - wordsW / 2) - 90
+    ),
+    y: height * 0.42,
     r: wordsR,
   };
 
