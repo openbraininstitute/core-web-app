@@ -20,11 +20,13 @@ import {
 import { useFieldError } from '@/features/scan-config/components/hooks/field-errors';
 import { ModelIdentifierEntityCard } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/entity-card';
 import { mergeConfigurationInputs } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/helpers';
+import { ScanHint } from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { getFromIdRefTypeBadgeLabel, type TFromIdRef } from '@/features/scan-config/helpers';
 import { ModelIdentifierFieldStorageMode } from '@/features/scan-config/workflow/workflow-schema-selection';
 import { Badge } from '@/ui/molecules/badge';
 import { ScrollableList } from '@/ui/molecules/scrollable';
 import { Skeleton } from '@/ui/molecules/skeleton';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
 import type {
@@ -37,6 +39,8 @@ import type { IWorkflowConfigurationInput } from '@/ui/segments/workflows/config
 
 type TModelIdentifierAddActionButtonProps = {
   label: string;
+  /** Hover text explaining what the button adds, for the buttons that add to a scan. */
+  hint?: string;
   disabled?: boolean;
   onClick: () => void;
   className?: string;
@@ -44,11 +48,12 @@ type TModelIdentifierAddActionButtonProps = {
 
 export function ModelIdentifierAddActionButton({
   label,
+  hint,
   disabled,
   onClick,
   className,
 }: TModelIdentifierAddActionButtonProps) {
-  return (
+  const button = (
     <button
       type="button"
       data-testid="scan-config-select-model"
@@ -58,6 +63,8 @@ export function ModelIdentifierAddActionButton({
         'grid h-auto min-h-11 w-full max-w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] px-4 py-2.5 pr-2',
         'items-center gap-2 overflow-hidden rounded-full border border-gray-200 bg-white text-sm text-primary-9',
         'transition-colors hover:border-gray-300 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50',
+        // lets Block hide the field's description while this hint shows
+        hint && 'scan-hint-trigger',
         className
       )}
     >
@@ -66,6 +73,16 @@ export function ModelIdentifierAddActionButton({
         <PlusOutlined />
       </span>
     </button>
+  );
+
+  if (!hint) return button;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{button}</TooltipTrigger>
+      <TooltipContent side="top" sideOffset={6} className="max-w-64 text-left text-wrap">
+        {hint}
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -304,6 +321,7 @@ export function ModelIdentifierSummaryView({
         {onAddGroup ? (
           <ModelIdentifierAddActionButton
             label="Add group to scan"
+            hint={ScanHint.addGroup}
             disabled={disabled}
             onClick={onAddGroup}
           />
@@ -332,6 +350,12 @@ export function ModelIdentifierSummaryView({
       </ScrollableList>
       <ModelIdentifierAddActionButton
         label={addToScanLabel}
+        // a custom label means the list is not a scan (e.g. the mechanisms to optimise)
+        hint={
+          !addLabel && parsedValue.storageMode === ModelIdentifierFieldStorageMode.List
+            ? ScanHint.addToList
+            : undefined
+        }
         disabled={disabled}
         onClick={() => onAddEntities()}
       />

@@ -187,7 +187,11 @@ export default function Block({
                       align="center"
                       side="right"
                       showArrow={false}
-                      className={DESCRIPTION_TOOLTIP_CLASS}
+                      className={cn(
+                        DESCRIPTION_TOOLTIP_CLASS,
+                        // a scan + has its own hint; showing this one too stacks two tooltips
+                        '[body:has(.scan-hint-trigger:hover)_&]:hidden'
+                      )}
                     >
                       {k === 'circuit' && entity ? (
                         entity.description
