@@ -6,6 +6,8 @@ import { getProject } from '@/api/virtual-lab-svc/queries/project';
 import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { config } from '@/config';
+import { ChatLauncher } from '@/features/chat/chat-launcher';
+import { ChatStreamProvider } from '@/features/chat/chat-stream';
 import { makeRoles } from '@/hooks/use-user-membership';
 import { getQueryClient } from '@/query-provider/server';
 import { ProjectRootLayout } from '@/ui/layouts/project-root-layout';
@@ -66,20 +68,24 @@ export default async function Layout({ children, params: promisedParams }: Props
 
   return (
     <div className="h-screen w-full">
-      <ProjectRootLayout>
-        <div className="w-full [grid-area:header]">
-          <ProjectToolbar />
-        </div>
-        <div
-          id="workspace-body"
-          // on a phone, room under the page for the tabs along the screen's foot
-          className="secondary-scrollbar w-full overflow-x-hidden overflow-y-auto pb-2 [grid-area:main] max-md:pb-[calc(3.5rem+env(safe-area-inset-bottom))]"
-        >
-          {children}
-        </div>
-        <SpaceManagerContainer />
-        <AiContainer />
-      </ProjectRootLayout>
+      {/* one stream of chat events per tab, for the chat button and its window */}
+      <ChatStreamProvider>
+        <ProjectRootLayout>
+          <div className="w-full [grid-area:header]">
+            <ProjectToolbar />
+          </div>
+          <div
+            id="workspace-body"
+            // on a phone, room under the page for the tabs along the screen's foot
+            className="secondary-scrollbar w-full overflow-x-hidden overflow-y-auto pb-2 [grid-area:main] max-md:pb-[calc(3.5rem+env(safe-area-inset-bottom))]"
+          >
+            {children}
+          </div>
+          <SpaceManagerContainer />
+          <AiContainer />
+        </ProjectRootLayout>
+        <ChatLauncher />
+      </ChatStreamProvider>
     </div>
   );
 }
