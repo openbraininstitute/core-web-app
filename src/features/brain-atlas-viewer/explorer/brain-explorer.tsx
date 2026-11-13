@@ -7,7 +7,7 @@ import { cn } from '@/utils/css-class';
 import { BrainScene, DEFAULT_LOOK } from './brain-scene';
 
 import type { ReactNode } from 'react';
-import type { IBrainLook, IBrainModel, IBrainPart, TColourMode, TSliceAxis, TView } from './brain-scene';
+import type { IBrainLook, IBrainModel, IBrainPart, TColourMode, TSliceAxis } from './brain-scene';
 
 /** The selection's card: what it is, and its colour. */
 export interface IFocusInfo {
@@ -22,14 +22,6 @@ const GROUP_LABEL = 'text-[10.5px] font-semibold tracking-[0.8px] text-[#9aa0b4]
 const RANGE = 'h-[26px] w-[104px] cursor-pointer accent-[#7aa5f5] disabled:opacity-30';
 
 const COLOUR_LABELS: Record<TColourMode, string> = { natural: 'Natural', lobes: 'Lobes', regions: 'Regions' };
-const VIEW_LABELS: Array<[TView, string]> = [
-  ['left', 'Left'],
-  ['right', 'Right'],
-  ['front', 'Front'],
-  ['back', 'Back'],
-  ['top', 'Top'],
-  ['bottom', 'Bottom'],
-];
 const SLICES: Array<[TSliceAxis, string, string]> = [
   ['off', 'Off', ''],
   ['sag', 'Side', 'Sagittal: left–right'],
@@ -296,15 +288,7 @@ export function BrainExplorer({
                 'absolute inset-x-3 bottom-3 z-10 mx-auto flex w-fit max-w-[calc(100%-24px)] flex-wrap justify-center gap-x-3.5 gap-y-2.5 px-4 pt-2.5 pb-3'
               )}
             >
-              <Group label="View">
-                <Seg>
-                  {VIEW_LABELS.map(([v, label]) => (
-                    <SegButton key={v} onClick={() => scene?.view(v)}>
-                      {label}
-                    </SegButton>
-                  ))}
-                </Seg>
-              </Group>
+              {/* no View presets nor Reset (the user had them taken out): a drag turns it, Spin keeps turning it */}
               <Group label="Hemispheres">
                 <Seg>
                   {(['L', 'R'] as const).map((h) => (
@@ -391,16 +375,6 @@ export function BrainExplorer({
                 <Seg>
                   <SegButton on={look.spin} onClick={() => set({ spin: !look.spin })}>
                     Spin
-                  </SegButton>
-                  <SegButton
-                    onClick={() => {
-                      autoSurface.current = null;
-                      setLook({ ...DEFAULT_LOOK, colourMode: model.colourMode });
-                      onPick?.(null);
-                      scene?.home();
-                    }}
-                  >
-                    Reset
                   </SegButton>
                 </Seg>
               </Group>
