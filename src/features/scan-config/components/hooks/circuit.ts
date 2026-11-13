@@ -9,7 +9,10 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
-export function useCircuitImageURL(circuitId: string) {
+export function useCircuitImageURL(
+  circuitId: string,
+  label: AssetLabel = AssetLabel.simulation_designer_image
+) {
   const context = useWorkspace();
   const { error: notifyError } = useAppNotification();
   const {
@@ -18,16 +21,14 @@ export function useCircuitImageURL(circuitId: string) {
     isLoading: circuitLoading,
   } = useModelQuery({ id: circuitId, context });
 
-  const asset = (circuit as ICircuit)?.assets?.find(
-    (item) => item.label === AssetLabel.simulation_designer_image
-  );
+  const asset = (circuit as ICircuit)?.assets?.find((item) => item.label === label);
 
   const {
     data,
     error: assetError,
     isLoading: assetLoading,
   } = useQuery({
-    queryKey: ['circuit/simulation-designer-image', { context, circuitId, assetId: asset?.id }],
+    queryKey: ['circuit/image', label, { context, circuitId, assetId: asset?.id }],
     queryFn: async () => {
       const resp = await downloadAsset({
         ctx: context,
@@ -59,7 +60,7 @@ export function useCircuitImageURL(circuitId: string) {
     notifyError({
       message: `No image found for circuit "${circuit?.name}" (${circuitId})!`,
       placement: 'topRight',
-      key: `circuit-image-error-${circuitId}`,
+      key: `circuit-image-error-${circuitId}-${label}`,
     });
     return { data: undefined, isLoading: false, error };
   }
