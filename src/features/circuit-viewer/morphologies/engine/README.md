@@ -99,14 +99,14 @@ flowchart TD
   resolve --> pyramid["Pyramid: the farthest of each 2 × 2,<br/>level by level"]
   pyramid --> blocks["Blocks: each block's box<br/>against the frustum and the pyramid"]
   blocks --> segs["Segments of the blocks left:<br/>2 × 2 texels, then along their rows"]
-  segs --> lists["Seen list, and kept list:<br/>seen, or hidden by under 10 µm"]
+  segs --> lists["Seen list, and kept list:<br/>seen, or hidden by under 3 µm"]
   lists --> draw["The seen list drawn,<br/>flat and tubes, by indirect draws"]
   lists -. "next frame" .-> kept
   lists -. "marks, read back" .-> seen(["Seen boxes"])
 ```
 
 - One compute pass does it all ([webgpu/culling.ts](webgpu/culling.ts), [webgpu/culling-wgsl.ts](webgpu/culling-wgsl.ts)): one workgroup a block, one thread a segment.
-- The occluders are last frame's kept segments, not this frame's drawn twice. A segment hidden by up to 10 µm (`KEEP_UM`) is kept too: as the view moves, what was seen parts in thin cracks, and with nothing behind them every block would show through one.
+- The occluders are last frame's kept segments, not this frame's drawn twice. A segment hidden by up to 3 µm (`KEEP_UM`) is kept too: as the view moves, what was seen parts in thin cracks, and with nothing behind them every block would show through one. The next frame draws every kept segment to depth, so a deeper shell costs frame time: on the whole Male CNS, 10 µm kept 2.4M segments to show 0.7M, and took 5 ms a frame more.
 - **Hidden cells.** While the cell table hides cells (a table row under the pointer, a filter), their segments go on neither list and mark no block, and the kept list is left as it was, with last frame's seen segments drawn to depth beside it. Tested against only the cells on show, every hidden segment would count as seen and be kept, and the frame they came back in would draw them all to depth: on the whole Male CNS that loses the device on Apple GPUs ("Too much geometry to support memoryless render pass attachments").
 - **A stale kept list.** A kept list made for another view hides little, and a frame tested behind it sees nearly the whole arena: after a jump of the view (`resetView`, a turn to an axis, a big step of a drag), or as hidden cells come back after a turn. A pass that draws that many segments into the frame's memoryless buffers loses the device on Apple GPUs. Two things stop it. Where the view is far from the kept list's ([webgpu/kept-view.ts](webgpu/kept-view.ts)) and no cell is hidden, the frame is tested twice: the first test makes the kept list again, the second is run behind it, and its lists are the ones drawn. And a last pass caps the seen draws at 6M segments (`MOST_SEEN`), whatever the tests saw: such a frame draws part of what it saw, and another follows it. The depth before the tests is drawn into buffers that are stored, so the kept list may be of any length.
 - The lists are as long as the arena, so no frame overfills them. The counts, the draws' arguments and the marks are read back from a pool of 8 buffers. Where none is free, the last test is read once one is, so that the last before the view rests always is. A read of an arena since replaced is dropped.
@@ -150,7 +150,7 @@ With morphologies, each soma is a quad ray-cast as a sphere ([impostors.ts](impo
 | `LINGER` | `detail-stream.ts` | 30 reads moving, 4 at rest | How long a box counts as seen |
 | `BLOCK` | `segment-arena.ts` | 64 | Segments a block, as culled and as the budget counts |
 | `LEAST_BUFFER`, `MOST_BUFFER` | `probe.ts` | 512 MiB, 2 GiB | The least binding WebGPU must give, the most asked for |
-| `KEEP_UM` | `webgpu/culling-wgsl.ts` | 10 µm | How far behind what hides it a segment is kept, to hide others |
+| `KEEP_UM` | `webgpu/culling-wgsl.ts` | 3 µm | How far behind what hides it a segment is kept, to hide others |
 | `BLOCK_TEXELS`, `ROWS` | `webgpu/culling-wgsl.ts` | 8, 4 | Where a test moves to a coarser level of the pyramid |
 | `MOST_SEEN` | `webgpu/culling-wgsl.ts` | 6M | The most segments the seen draws draw in a frame |
 | `STALE_TURN`, `STALE_ZOOM_OUT`, `STALE_PAN` | `webgpu/kept-view.ts` | 15°, 1.5×, 0.25 view heights | How far the view may be from the kept list's before a frame is tested twice |

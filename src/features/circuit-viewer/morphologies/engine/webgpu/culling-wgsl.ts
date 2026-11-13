@@ -10,7 +10,7 @@ import { CELL_MASK, QUAD_REACH } from '../impostors';
 export const NEAR_UM = 0.02;
 export const NEAR_SHARE = 1e-6;
 /** How far behind what hides it a segment may be and still be kept, µm, so that it hides others the next frame. */
-export const KEEP_UM = 10;
+export const KEEP_UM = 3;
 /**
  * A block's box is tested on at most this many texels a side, and a segment is walked pixel by pixel over at most this
  * many rows; past that, the test uses a coarser level of the pyramid. 4 rows was the fastest while the whole brain
