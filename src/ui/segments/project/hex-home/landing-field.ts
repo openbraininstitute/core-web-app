@@ -286,3 +286,52 @@ export function floorAround({
   }
   return tiles;
 }
+
+/**
+ * The examples' tiles in one arrangement, always the same (the user asked: no new one on each visit), round a hole
+ * where the words of the one on show go: the big tile against the hole's upper left, then each medium one in turn
+ * at the place nearest the hole beside a tile already down (or the hole), straight beside it as the honeycomb lies.
+ */
+export function clusterAround({
+  center,
+  holeR,
+  k,
+  count,
+  bounds,
+}: {
+  center: IPoint;
+  holeR: number;
+  k: number;
+  count: number;
+  bounds: IRect;
+}): IHexBox[] {
+  const gap = EDGE_GAP * k;
+  const hole = { ...center, r: holeR };
+  const big = beside(hole, BIG_R * k, 4, 0, gap);
+  const placed: IHexBox[] = [big];
+  const down: IHexBox[] = [hole, big];
+  const r = MEDIUM_R * k;
+  while (placed.length < count) {
+    let best: IHexBox | null = null;
+    let bestD = Infinity;
+    for (const t of down) {
+      // centred on the face, or slid to either end of a larger one's
+      const lats = t.r > r ? [0, (t.r - r) / 2, -(t.r - r) / 2] : [0];
+      for (let dir = 0; dir < 6; dir++) {
+        for (const lat of lats) {
+          const p = beside(t, r, dir, lat, gap);
+          if (!inside(p, bounds) || !fits(p, down, gap)) continue;
+          const d = Math.hypot(p.x - center.x, p.y - center.y);
+          if (d < bestD - 0.01) {
+            best = p;
+            bestD = d;
+          }
+        }
+      }
+    }
+    if (!best) break;
+    placed.push(best);
+    down.push(best);
+  }
+  return placed;
+}

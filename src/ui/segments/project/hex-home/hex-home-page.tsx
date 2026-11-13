@@ -18,7 +18,7 @@ import { EXAMPLES, journeyGroups, journeyHref, LOCAL_VIDEOS } from '@/ui/segment
 import { APO, driftOf, SQRT3 } from '@/ui/segments/project/hex-home/hex-geometry';
 import { FillFrame, HexTile } from '@/ui/segments/project/hex-home/hex-tile';
 import { FreeMedia, MeltFlier, TileMedia } from '@/ui/segments/project/hex-home/landing-example';
-import { fieldFeatures, fieldWhites, floorAround, seededRandom } from '@/ui/segments/project/hex-home/landing-field';
+import { clusterAround, fieldWhites, floorAround, seededRandom } from '@/ui/segments/project/hex-home/landing-field';
 import { columnSpecs, layTongues } from '@/ui/segments/project/hex-home/tongue-geometry';
 import { VideoPlayer } from '@/ui/segments/project/get-started/elements/video-player';
 import { VideoColumn } from '@/ui/segments/project/hex-home/video-card';
@@ -48,6 +48,8 @@ const MIN_H = 760;
 const MAX_VIDEOS = 40;
 
 const EXAMPLES_TONGUE = 0;
+/** The hexagon the words of the example on show sit in, in the hole the examples lie round (stage px). */
+const WORDS_R = 182;
 const SCIENCE_TONGUE = 1;
 const VIDEOS_TONGUE = 3;
 
@@ -440,7 +442,8 @@ function ModelPanel({ example, base }: { example: IExample; base: string }) {
         <h2 className="text-[20px] leading-[24px] font-light text-[#13306f]">{words.name}</h2>
         <p className="line-clamp-4 text-[12.5px] leading-[17px] text-neutral-600">{words.about}</p>
       </div>
-      <div className="flex w-full flex-col gap-[5px]">
+      {/* not the hexagon's whole width (the user asked) */}
+      <div className="flex w-[74%] flex-col gap-[5px]">
         <Link
           href={`${base}/workflows`}
           className={cn(button, 'text-white hover:brightness-110')}
@@ -568,27 +571,27 @@ function Home({
   const heroAtFor = (example: IExample) => ({ x: STAGE_W - 32 - widthOf(example) / 2, y: height / 2 });
   const examplesRoot = specs[EXAMPLES_TONGUE].root;
   const [fieldSeed] = useState(() => Math.floor(Math.random() * 2 ** 31));
-  // the examples stop short of the one on show at its widest, leaving the white between them (the user asked for it
-  // back: room for the words' hexagon)
+  // the examples stop short of the one on show at its widest
   const heroRoomLeft = Math.min(...EXAMPLES.map((e) => STAGE_W - 32 - widthOf(e)));
+  // the hole the examples lie round, the one on show's words in it: in the middle of their room, a little left
+  const wordsAt = { x: column.right + 16 + (heroRoomLeft - 8 - column.right - 16) * 0.46, y: height / 2 };
   const field = useMemo(() => {
     const random = seededRandom(fieldSeed);
     const bounds = { x0: column.right + 16, x1: heroRoomLeft - 8, y0: 12, y1: height - 12 };
-    const features = fieldFeatures({
-      center: { x: bounds.x0 + 296, y: Math.min(height * 0.32, 250) },
+    // a tile for each example but the one on show, as on the landing, round the words' hole on the centre left
+    const features = clusterAround({
+      center: wordsAt,
+      holeR: WORDS_R,
       k,
-      // a tile for each example but the one on show, as on the landing; those past the landing's six under it
       count: EXAMPLES.length - 1,
-      below: true,
       bounds,
-      random,
     });
     const right = Math.max(...features.map((f) => f.x + f.r * APO));
     // none of the white tiles under what the one on show is and does (its panel, below the middle on the right)
     const panelBox = { x0: right + 20, x1: STAGE_W, y0: height * 0.48 - 16, y1: height * 0.48 + 330 };
     const whites = fieldWhites({ features, k, bounds, keepOut: [panelBox], random });
     return { features, whites };
-  }, [fieldSeed, height, column.right, heroRoomLeft]);
+  }, [fieldSeed, height, column.right, heroRoomLeft, wordsAt.x, wordsAt.y]);
   const minis: ITongueTile[] = field.features.map((f, i) => ({
     key: `mini${i}`,
     ...f,
@@ -718,18 +721,9 @@ function Home({
   // Its words and what to do with it in a hexagon of their own on its left, expanding out of it as it comes on show
   // (the user asked; it was a window beside it, a frame round both, before): in the white between it and the
   // examples, over its picture's white margin if that is narrow.
-  const wordsR = 182;
-  const wordsW = SQRT3 * wordsR;
-  const saidLeft = heroAtFor(said).x - widthOf(said) / 2;
-  // further left and a little higher than the middle of the gap (the user asked), just clear of the examples
-  const wordsHex = {
-    x: Math.max(
-      minisRight + 6 + wordsW / 2,
-      Math.min((minisRight + saidLeft) / 2, saidLeft + widthOf(said) * 0.14 - wordsW / 2) - 90
-    ),
-    y: height * 0.42,
-    r: wordsR,
-  };
+  const wordsR = WORDS_R;
+  // in the hole the examples lie round, always the same place (the user asked)
+  const wordsHex = { ...wordsAt, r: wordsR };
 
   const pick = (slot: number) => {
     const incoming = slots[slot];
