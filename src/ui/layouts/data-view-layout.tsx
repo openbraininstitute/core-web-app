@@ -120,6 +120,7 @@ export async function DataViewLayout({
   // the close lives at the far end of the details page's top bar, never inside the breadcrumb
   const closePage =
     origin === 'data' ? <ClosePage url={parentLink} variant={chromeVariant} /> : undefined;
+
   // the same top bar row the workflows pages use, above the container: breadcrumb start, close end
   const topBar = <TopBar start={breadcrumbs} end={closePage} />;
 
@@ -188,12 +189,6 @@ export async function DataViewLayout({
   return (
     <DataViewFrame topBar={topBar} className="overflow-hidden rounded-2xl bg-white">
       <DetailViewBody
-        // an e-model's/e-feature extraction result's Workflow tab is the campaign's scan-config
-        // editor, styled for a light page background rather than the blue detail panel
-        plainContentSection={
-          type === ExtendedEntitiesTypeDict.Emodel ||
-          type === ExtendedEntitiesTypeDict.EFeatureExtractionResult
-        }
         nameDisplay={
           <EntityNameDisplay
             name={entity.name}

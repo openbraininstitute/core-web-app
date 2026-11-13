@@ -13,6 +13,7 @@ import type {
   IonChannelModel,
   TEntityTypeDict,
 } from '@/api/entitycore/types';
+import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
 import type { IEntity } from '@/api/entitycore/types/entities/entity';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -932,6 +933,7 @@ export type Cell = {
 export type TSupportedEntitiesForScanConfiguration =
   | ICircuit
   | IMEModel
+  | IEModel
   | IonChannelModel
   | ICellMorphology
   | IEMCellMesh

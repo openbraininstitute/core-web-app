@@ -33,7 +33,23 @@ vi.mock('@/hooks/useCopyClipboard', () => ({
 }));
 
 vi.mock('@/ui/segments/workflows/config', () => ({
-  buildSimulateConfigureUrlFromDataViewEntity: () => '/workflows/simulate/configure/test',
+  listLaunchActionsFromDataViewEntity: ({ extendedType }: { extendedType: string }) =>
+    extendedType === 'memodel'
+      ? [
+          {
+            activity: 'simulate',
+            workflow: { targetType: 'me_model_circuit_simulation' },
+            label: 'Simulate',
+            href: '/workflows/simulate/configure/test',
+          },
+          {
+            activity: 'build',
+            workflow: { targetType: 'build_synaptome_campaign' },
+            label: 'Build synaptome',
+            href: '/workflows/build/configure/test',
+          },
+        ]
+      : [],
 }));
 
 const workspace = { virtualLabId: 'vl-1', projectId: 'proj-1' };

@@ -6,6 +6,7 @@ import { useEntries } from '@/features/scan-config/components/hooks';
 import { nextEntryName } from '@/features/scan-config/components/hooks/entry-name';
 import { useConfig } from '@/features/scan-config/components/hooks/schema';
 import { ScanConfigFromIdType } from '@/features/scan-config/workflow/scan-config-from-id-type';
+import { BlockSingleFieldSeed } from '@/features/scan-config/workflow/seeding/block-single-field-seed';
 import { WorkflowSeed } from '@/features/scan-config/workflow/seeding/workflow-seed';
 import { WorkflowSessionSelectionMode } from '@/features/scan-config/workflow/workflow-session-selection';
 
@@ -421,5 +422,47 @@ describe('editor state built from a seeded session', () => {
 
     expect(config.ion_channel_models).toEqual({});
     expect(config.recordings).toEqual(initialConfig.recordings);
+  });
+});
+
+describe('BlockSingleFieldSeed', () => {
+  const emodelValidationConfig = {
+    type: 'EModelValidationScanConfig',
+    emodel: { type: 'EModelInput', emodel: null },
+    settings: { type: 'ValidationSettings' },
+  } as unknown as Config;
+
+  const seedArgs = (config: Config) => ({
+    config,
+    schema: {} as ConfigSchema,
+    resolveFromIdType: (type: string) =>
+      type === ExtendedEntitiesTypeDict.Emodel ? ScanConfigFromIdType.EModelFromID : undefined,
+    sessionSelection: {
+      mode: WorkflowSessionSelectionMode.Single,
+      item: { type: ExtendedEntitiesTypeDict.Emodel, id: 'emodel-id' },
+    } as const,
+  });
+
+  it('writes the selected entity into the field of the block', () => {
+    const seeded = new BlockSingleFieldSeed('emodel', 'emodel').applyTo(
+      seedArgs(emodelValidationConfig)
+    );
+
+    expect(seeded.emodel).toEqual({
+      type: 'EModelInput',
+      emodel: { type: ScanConfigFromIdType.EModelFromID, id_str: 'emodel-id' },
+    });
+    expect(seeded.settings).toEqual(emodelValidationConfig.settings);
+  });
+
+  it('leaves the config alone when the selection has no FromID mapping', () => {
+    const args = seedArgs(emodelValidationConfig);
+
+    expect(
+      new BlockSingleFieldSeed('emodel', 'emodel').applyTo({
+        ...args,
+        resolveFromIdType: () => undefined,
+      })
+    ).toBe(emodelValidationConfig);
   });
 });

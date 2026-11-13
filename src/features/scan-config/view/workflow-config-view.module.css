@@ -1,0 +1,51 @@
+/* The form is locked in the view: its disabled inputs read as plain values, not greyed-out fields. */
+
+.view :global(.ant-input-disabled),
+.view :global(.ant-input-affix-wrapper-disabled),
+.view :global(.ant-input-number-disabled),
+.view :global(.ant-picker-disabled),
+.view :global(.ant-select-disabled .ant-select-selector),
+.view input:disabled,
+.view textarea:disabled,
+.view select:disabled {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor;
+  cursor: default !important;
+  opacity: 1;
+}
+
+.view :global(.ant-input-number-disabled .ant-input-number-input),
+.view :global(.ant-select-disabled .ant-select-selection-item),
+.view :global(.ant-select-disabled .ant-select-selection-overflow-item .ant-select-selection-item) {
+  color: inherit !important;
+  cursor: default !important;
+}
+
+.view :global(.ant-select-disabled .ant-select-arrow),
+.view :global(.ant-input-number-disabled .ant-input-number-handler-wrap) {
+  display: none;
+}
+
+/* a checked box or radio keeps its colour, so what was picked still shows */
+.view :global(.ant-checkbox-disabled.ant-checkbox-checked .ant-checkbox-inner),
+.view :global(.ant-radio-disabled.ant-radio-checked .ant-radio-inner) {
+  background-color: var(--color-primary-8) !important;
+  border-color: var(--color-primary-8) !important;
+}
+
+.view :global(.ant-checkbox-disabled.ant-checkbox-checked .ant-checkbox-inner::after) {
+  border-color: #fff !important;
+}
+
+.view :global(.ant-radio-disabled.ant-radio-checked .ant-radio-inner::after) {
+  background-color: #fff !important;
+}
+
+.view :global(.ant-checkbox-disabled + span),
+.view :global(.ant-radio-disabled + span) {
+  color: inherit !important;
+  cursor: default !important;
+}

@@ -1,38 +1,39 @@
 import { isNil } from 'es-toolkit/compat';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
-import { getTaskActivities } from '@/api/entitycore/queries/task';
-import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
+import { getAsset } from '@/api/entitycore/selectors/assets';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { tryCatch } from '@/api/utils';
 import SimulationConfigurationTab from '@/components/simulate/SimulationDetails/configuration-tab';
-import { resolveEFeatureExtractionResultCampaign } from '@/entity-configuration/domain/experimental/efeature-extraction-result';
 import {
   applyEntityExpansions,
+  circuitTypes,
   getEntityByExtendedType,
 } from '@/entity-configuration/domain/helpers';
 import { SingleNeuronSynaptome as singleNeuronSynaptomeEntity } from '@/entity-configuration/domain/model/single-neuron-synaptome';
-import { resolveEModelOptimizationCampaign } from '@/entity-configuration/domain/optimization/resolve-emodel-campaign';
+import { resolveGeneratingWorkflow } from '@/entity-configuration/domain/resolve-generating-workflow';
 import {
   singleNeuronSimulationApiQueryExpand,
   singleNeuronSynaptomeSimulationApiQueryExpand,
 } from '@/entity-configuration/domain/simulation';
-import MEModelConfig from '@/features/entities/me-model/detail-view/configuration';
 import SynaptomeConfig from '@/features/entities/single-neuron-synaptome/detail-view/configuration';
 import SynapseGroupList from '@/features/entities/single-neuron-synaptome/detail-view/elements/list-synapses-configuration';
-import { ScanConfiguration } from '@/features/scan-config';
-import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
-import {
-  ExtractScanConfigTabs,
-  OptimizeScanConfigTabs,
-  ScanConfigActivity,
-} from '@/features/scan-config/types';
-import { extractEFeaturesWorkflow } from '@/features/scan-config/workflow/definitions/extract-efeatures';
-import { optimizeEModelWorkflow } from '@/features/scan-config/workflow/definitions/optimize-emodel';
+import { ScanConfigConfigSearchParam } from '@/features/scan-config/helpers';
+import { WorkflowConfigView } from '@/features/scan-config/view/workflow-config-view';
+import { Button } from '@/ui/molecules/button';
+import { JsonView } from '@/ui/segments/detail-view/json-view';
 import { detailViewVariantFromGroup } from '@/ui/segments/detail-view/variant-styles';
-import { findScanConfigRegistryByTargetType } from '@/ui/segments/workflows/config/scan-config-registry';
+import {
+  buildWorkflowActivityConfigurationHref,
+  buildWorkflowActivityResultsHref,
+} from '@/ui/segments/workflows/elements/workflow-activity-actions';
 
+import type { ReactNode } from 'react';
 import type {
   IMEModel,
   ISingleNeuronSimulation,
@@ -46,7 +47,18 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 import type { TRetrieveEntityOutput } from '@/entity-configuration/domain/requests';
 import type { AwaitedType, WorkspaceContext } from '@/types/common';
 import type { SimulationPayload } from '@/types/small-scale-simulator/single-neuron';
+import type { Json } from '@/ui/segments/detail-view/json-view';
 import type { Prettify } from '@/utils/type';
+
+/** Models whose Configuration tab shows the task config of the workflow that generated them. */
+const workflowConfigTypes: TExtendedEntitiesTypeDict[] = [
+  ExtendedEntitiesTypeDict.Emodel,
+  ExtendedEntitiesTypeDict.Memodel,
+  ExtendedEntitiesTypeDict.IonChannelModel,
+  ExtendedEntitiesTypeDict.SingleNeuronCircuit,
+  ExtendedEntitiesTypeDict.EFeatureExtractionResult,
+  ...circuitTypes,
+];
 
 type ExpandType = Prettify<{
   memodel: IMEModel;
@@ -108,106 +120,78 @@ export default async function Configuration({
 
   const fieldVariant = detailViewVariantFromGroup(entityType.group);
 
-  if (extendedType === 'emodel') {
-    // the configuration is the scan config of the optimisation campaign that produced
-    // the e-model; render the same read-only editor as the campaign's own detail page when traceable
-    const { data: optimization } = await tryCatch(
-      resolveEModelOptimizationCampaign(entity.id, context.virtualLabId, context.projectId)
+  if (workflowConfigTypes.includes(extendedType)) {
+    const { data: workflow } = await tryCatch(
+      resolveGeneratingWorkflow(entity.id, context.virtualLabId, context.projectId)
     );
-    const scanConfig = findScanConfigRegistryByTargetType(
-      ExtendedEntitiesTypeDict.EModelOptimizationCampaign
-    );
-
-    if (optimization && scanConfig) {
-      // a campaign without generated runs (e.g. a migrated e-model) has nothing to show but its
-      // configuration, so the tab strip is dropped
-      const { data: generations } = await getTaskActivities({
-        context,
-        filters: {
-          used__id: optimization.campaign.id,
-          task_activity_type: TaskActivityType.EModelOptimizationConfigGeneration,
-          page_size: 1,
-        },
-      });
+    if (!workflow) {
       return (
-        <ScanConfiguration
-          // the e-model optimisation scan config has no `model_identifier` (session mode),
-          // so there is no input entity to pass
-          entityId={undefined}
-          scanConfig={scanConfig}
-          virtualLabId={context.virtualLabId}
-          projectId={context.projectId}
-          origin={optimization.campaign.id}
-          initialConfig={optimization.config?.form}
-          readOnly
-          hideTabs={generations.length === 0}
-          defaultTab={{
-            __activity: ScanConfigActivity.Optimize,
-            id: OptimizeScanConfigTabs.configuration,
-          }}
-          activity={ScanConfigActivity.Optimize}
-          campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
-          taskTypeBindings={optimizeEModelWorkflow.taskTypeBindings}
-        />
+        <div className="flex h-full w-full items-center justify-center">
+          No configuration found for this {entityType.title.toLowerCase()}.
+        </div>
       );
     }
 
-    return (
-      <div className="flex h-full w-full items-center justify-center">
-        No configuration found for this e-model.
+    const linkOptions = {
+      activity: workflow.workflowActivity,
+      listEntityType: workflow.workflow.targetType,
+      workspace: context,
+      row: workflow.campaign,
+    };
+    const configHref = buildWorkflowActivityConfigurationHref(linkOptions);
+    const outputHref = buildWorkflowActivityResultsHref({
+      ...linkOptions,
+      query: { [ScanConfigConfigSearchParam]: workflow.coordinateConfig.id },
+    });
+    const asset = getAsset({
+      assets: workflow.coordinateConfig.assets,
+      label: AssetLabel.task_config,
+    }).getOneOrNull();
+    // the download redirects to S3, which serves it as binary/octet-stream, so parse it here
+    const config: Record<string, Json> | null = asset
+      ? await downloadAsset({
+          ctx: context,
+          entityType: EntityTypeDict.TaskConfig,
+          entityId: workflow.coordinateConfig.id,
+          id: asset.id,
+          asRawResponse: true,
+        }).then((response) => response.json() as Promise<Record<string, Json>>)
+      : null;
+    const { scanConfig } = workflow.workflow;
+    const links = (
+      // pinned to the detail panel (DetailViewBody), level with the entity name above
+      <div className="absolute top-4 right-10 flex gap-2">
+        {configHref && <WorkflowLink href={configHref}>Workflow config</WorkflowLink>}
+        {outputHref && <WorkflowLink href={outputHref}>Workflow output</WorkflowLink>}
       </div>
     );
-  }
-
-  if (extendedType === ExtendedEntitiesTypeDict.EFeatureExtractionResult) {
-    // the workflow tab is the scan config of the extraction campaign that produced this
-    // result; render the same read-only editor as the campaign's own detail page when traceable
-    const { data: extraction } = await tryCatch(
-      resolveEFeatureExtractionResultCampaign(entity.id, context.virtualLabId, context.projectId)
-    );
-    const scanConfig = findScanConfigRegistryByTargetType(
-      ExtendedEntitiesTypeDict.EFeatureExtractionCampaign
-    );
-
-    if (extraction && scanConfig) {
-      const { data: generations } = await getTaskActivities({
-        context,
-        filters: {
-          used__id: extraction.campaign.id,
-          task_activity_type: TaskActivityType.EFeatureExtractionConfigGeneration,
-          page_size: 1,
-        },
-      });
-      return (
-        <ScanConfiguration
-          entityId={extraction.recordingIds.at(0)}
-          scanConfig={scanConfig}
-          virtualLabId={context.virtualLabId}
-          projectId={context.projectId}
-          origin={extraction.campaign.id}
-          initialConfig={extraction.config?.form}
-          readOnly
-          hideTabs={generations.length === 0}
-          defaultTab={{
-            __activity: ScanConfigActivity.Extract,
-            id: ExtractScanConfigTabs.configuration,
-          }}
-          activity={ScanConfigActivity.Extract}
-          campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
-          taskTypeBindings={extractEFeaturesWorkflow.taskTypeBindings}
-        />
-      );
-    }
 
     return (
-      <div className="flex h-full w-full items-center justify-center">
-        No configuration found for this result.
+      <div className="w-full">
+        {config && scanConfig ? (
+          <WorkflowConfigView
+            scanConfig={{
+              configureBinding: scanConfig.configureBinding,
+              schemaName: scanConfig.schemaName,
+              targetType: workflow.workflow.targetType,
+            }}
+            activity={scanConfig.definition.activity}
+            config={config}
+            campaignId={workflow.campaign.id}
+            virtualLabId={context.virtualLabId}
+            projectId={context.projectId}
+            variant={fieldVariant}
+            links={links}
+          />
+        ) : config ? (
+          <JsonView value={config} variant={fieldVariant} />
+        ) : (
+          <div className="flex items-center justify-center py-20">
+            The configuration file of this {entityType.title.toLowerCase()} is missing.
+          </div>
+        )}
       </div>
     );
-  }
-
-  if (extendedType === 'memodel') {
-    return <MEModelConfig model={entity as IMEModel} variant={fieldVariant} />;
   }
 
   if (extendedType === 'single_neuron_synaptome') {
@@ -279,4 +263,12 @@ export default async function Configuration({
   }
 
   notFound();
+}
+
+function WorkflowLink({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <Button asChild variant="outline" size="sm" rounded>
+      <Link href={href}>{children}</Link>
+    </Button>
+  );
 }

@@ -28,6 +28,14 @@ import { cn } from '@/utils/css-class';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type { Nullish } from '@/utils/type';
 
+/** Inputs that draw an unset value as an empty box: locked, they say so instead. */
+const NULLABLE_INPUTS = new Set<string>([
+  ScanConfigUIElementDict.StringInput,
+  ScanConfigUIElementDict.FloatInput,
+  ScanConfigUIElementDict.FloatParameterSweep,
+  ScanConfigUIElementDict.IntParameterSweep,
+]);
+
 export default function Block({
   schema,
   disabled,
@@ -163,21 +171,27 @@ export default function Block({
                             !fieldBorderClass && 'border-transparent'
                           )}
                         >
-                          <UIElementRender
-                            k={k}
-                            disabled={disabled}
-                            paramSchema={blockElementSchema}
-                            config={config}
-                            schema={schema}
-                            entity={entity}
-                            schemaMappingConfig={schemaMappingConfig}
-                            state={state}
-                            setState={setState}
-                            selectedEntry={selectedEntry}
-                            errorPathPrefix={
-                              errorPathPrefix ? `${errorPathPrefix}/${k}` : undefined
-                            }
-                          />
+                          {disabled &&
+                          isNil(value) &&
+                          NULLABLE_INPUTS.has(blockElementSchema.ui_element) ? (
+                            <span className="block px-3 py-1 text-neutral-4 italic">Not set</span>
+                          ) : (
+                            <UIElementRender
+                              k={k}
+                              disabled={disabled}
+                              paramSchema={blockElementSchema}
+                              config={config}
+                              schema={schema}
+                              entity={entity}
+                              schemaMappingConfig={schemaMappingConfig}
+                              state={state}
+                              setState={setState}
+                              selectedEntry={selectedEntry}
+                              errorPathPrefix={
+                                errorPathPrefix ? `${errorPathPrefix}/${k}` : undefined
+                              }
+                            />
+                          )}
                         </div>
                       </span>
                     </TooltipTrigger>

@@ -1,12 +1,17 @@
 'use client';
 
 import {
+  CheckCircleOutlined,
   CheckOutlined,
   CopyOutlined,
   DeleteOutlined,
   DownloadOutlined,
   ExperimentOutlined,
+  ExportOutlined,
   LoadingOutlined,
+  SyncOutlined,
+  ThunderboltOutlined,
+  ToolOutlined,
 } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Popconfirm } from 'antd';
@@ -21,7 +26,7 @@ import {
   type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
 import { useAppNotification } from '@/components/notification';
-import { type TViewVariant, ViewVariant } from '@/constants';
+import { type TViewVariant, ViewVariant, WorkflowActivityDictValue } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { getWorkflowLifecycleBlockReason } from '@/entity-configuration/domain/workflow-lifecycle-eligibility';
 import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
@@ -30,12 +35,24 @@ import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive, downloadFailedNotification } from '@/services/entity-download';
 import { Action, ActionKind } from '@/ui/molecules/side-menu-action';
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
-import { buildSimulateConfigureUrlFromDataViewEntity } from '@/ui/segments/workflows/config';
+import { listLaunchActionsFromDataViewEntity } from '@/ui/segments/workflows/config';
 import { cn } from '@/utils/css-class';
 
+import type { ReactNode } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityTypeValue } from '@/entity-configuration/domain';
 import type { WorkspaceContext } from '@/types/common';
+import type { TActivityValue } from '@/ui/segments/workflows/config/types';
+
+/** One icon per workflow activity, so every launch button of the same category reads alike. */
+const ACTIVITY_LAUNCH_ICON: Record<TActivityValue, ReactNode> = {
+  [WorkflowActivityDictValue.build]: <ToolOutlined />,
+  [WorkflowActivityDictValue.simulate]: <ExperimentOutlined />,
+  [WorkflowActivityDictValue.extract]: <ExportOutlined />,
+  [WorkflowActivityDictValue.optimize]: <ThunderboltOutlined />,
+  [WorkflowActivityDictValue.validate]: <CheckCircleOutlined />,
+  [WorkflowActivityDictValue.process]: <SyncOutlined />,
+};
 
 export default function ActionMenu({
   entity,
@@ -117,133 +134,150 @@ export default function ActionMenu({
     },
     onError: (error: Error) => notifyError(downloadFailedNotification(error)),
   });
-  const isSimulatable =
-    typeof entityType.isSimulatable === 'boolean'
-      ? entityType.isSimulatable
-      : (entityType.isSimulatable as (e: typeof entity) => boolean)(entity);
+  const launchActions = useMemo(
+    () =>
+      listLaunchActionsFromDataViewEntity({
+        workspace: ctx,
+        extendedType: type,
+        entityId: entity.id,
+        entity,
+        flags,
+      }),
+    [ctx, type, entity, flags]
+  );
 
-  const simulateHref = useMemo(() => {
-    if (!isSimulatable) {
-      return null;
-    }
+  const launchBlockReason = getWorkflowLifecycleBlockReason(entity);
 
-    return buildSimulateConfigureUrlFromDataViewEntity({
-      workspace: ctx,
-      extendedType: type,
-      entityId: entity.id,
-      entity,
-      flags,
-    });
-  }, [isSimulatable, ctx, type, entity, flags]);
-
-  const simulateBlockReason = getWorkflowLifecycleBlockReason(entity);
-  const simulateDisabled = Boolean(simulateBlockReason);
+  const textColor = variant === ViewVariant.Default ? 'text-white' : 'text-primary-9';
 
   return (
-    <div
-      data-testid="data-view-actions"
-      className={cn(
-        'mt-5 flex flex-col gap-2 px-5 text-base font-bold',
-        variant === ViewVariant.Default ? 'text-white' : 'text-primary-9'
+    <>
+      {launchActions.length > 0 && (
+        <div className={cn('mt-5 px-5 text-base font-bold', textColor)}>
+          <div
+            className={cn(
+              // -mx-5 cancels the panel's own px-5, so the box reaches the same edges as the tabs above
+              '-mx-5 flex flex-col gap-2 rounded-xl border px-4 pt-3 pb-5',
+              variant === ViewVariant.Default ? 'border-white/20' : 'border-gray-200'
+            )}
+          >
+            <div className="px-1 text-base font-bold xl:text-lg">Start workflow</div>
+            {launchActions.map(({ activity, workflow, label, href }) => {
+              const isSimulate = activity === WorkflowActivityDictValue.simulate;
+              // the e2e suite addresses Simulate by this id, so it stays unsuffixed
+              const testId = isSimulate
+                ? 'data-view-action-simulate'
+                : `data-view-action-${activity}-${workflow.targetType}`;
+              const icon = ACTIVITY_LAUNCH_ICON[activity];
+
+              return launchBlockReason ? (
+                <Action
+                  key={testId}
+                  variant={variant}
+                  kind={ActionKind.Button}
+                  testId={testId}
+                  disabled
+                  disabledReason={launchBlockReason}
+                  icon={icon}
+                >
+                  {label}
+                </Action>
+              ) : (
+                <Action
+                  key={testId}
+                  variant={variant}
+                  kind={ActionKind.Link}
+                  testId={testId}
+                  href={href}
+                  icon={icon}
+                  prominent
+                >
+                  {label}
+                </Action>
+              );
+            })}
+          </div>
+        </div>
       )}
-    >
-      <Action
-        variant={variant}
-        kind={ActionKind.Button}
-        testId="data-view-action-copy-id"
-        onClick={() => !copying && copy(entity.id)}
-        icon={
-          !copying ? (
-            <CopyOutlined />
-          ) : (
-            <CheckOutlined
-              className={cn({
-                'text-teal-600': variant === ViewVariant.Light,
-                'text-white!': variant === ViewVariant.Default,
-              })}
-            />
-          )
-        }
+
+      <div
+        data-testid="data-view-actions"
+        className={cn('mt-6 flex flex-col gap-2 px-5 text-base font-bold', textColor)}
       >
-        {copying ? 'Copied' : 'Copy ID'}
-      </Action>
-
-      {simulateHref &&
-        (simulateDisabled ? (
-          <Action
-            variant={variant}
-            kind={ActionKind.Button}
-            testId="data-view-action-simulate"
-            disabled
-            disabledReason={simulateBlockReason}
-            icon={<ExperimentOutlined />}
-          >
-            Simulate
-          </Action>
-        ) : (
-          <Action
-            variant={variant}
-            kind={ActionKind.Link}
-            testId="data-view-action-simulate"
-            href={simulateHref}
-            icon={<ExperimentOutlined />}
-          >
-            Simulate
-          </Action>
-        ))}
-
-      {entityType.isDownloadable && (
         <Action
           variant={variant}
           kind={ActionKind.Button}
-          testId="data-view-action-download"
-          onClick={downloadArchiveMutation.mutateAsync}
-          icon={downloadArchiveMutation.isPending ? <LoadingOutlined /> : <DownloadOutlined />}
-        >
-          Download
-        </Action>
-      )}
-
-      {entityType.isDeletable && !isPublicEntity && (
-        <Popconfirm
-          autoAdjustOverflow
-          destroyOnHidden
-          placement="bottomRight"
-          title={<div className="font-bold text-lg text-primary-8">Delete the entity</div>}
-          description={
-            <div>
-              <div className="font-bold text-sm text-primary-8">
-                Are you sure you want to delete this item?
-              </div>
-              <small className="font-light text-primary-6">This action cannot be undone.</small>
-            </div>
+          testId="data-view-action-copy-id"
+          onClick={() => !copying && copy(entity.id)}
+          icon={
+            !copying ? (
+              <CopyOutlined />
+            ) : (
+              <CheckOutlined
+                className={cn({
+                  'text-teal-600': variant === ViewVariant.Light,
+                  'text-white!': variant === ViewVariant.Default,
+                })}
+              />
+            )
           }
-          okText="Yes"
-          cancelText="No"
-          arrow={{ pointAtCenter: false }}
-          onConfirm={() => deleteMutation.mutateAsync()}
-          classNames={{
-            body: cn(
-              'max-w-70',
-              '[&_.ant-popconfirm-buttons_button]:px-4',
-              '[&_.ant-popconfirm-buttons_button]:rounded-full [&_.ant-popconfirm-buttons_button]:px-5',
-              '[&_.ant-popconfirm-buttons_button:first-child]',
-              '[&_.ant-popconfirm-buttons_button:last-child]:bg-primary-8'
-            ),
-          }}
         >
-          <span className="cursor-pointer">
-            <Action
-              variant={variant}
-              kind={ActionKind.Button}
-              testId="data-view-action-delete"
-              icon={deleteMutation.isPending ? <LoadingOutlined /> : <DeleteOutlined />}
-            >
-              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
-            </Action>
-          </span>
-        </Popconfirm>
-      )}
-    </div>
+          {copying ? 'Copied' : 'Copy ID'}
+        </Action>
+
+        {entityType.isDownloadable && (
+          <Action
+            variant={variant}
+            kind={ActionKind.Button}
+            testId="data-view-action-download"
+            onClick={downloadArchiveMutation.mutateAsync}
+            icon={downloadArchiveMutation.isPending ? <LoadingOutlined /> : <DownloadOutlined />}
+          >
+            Download
+          </Action>
+        )}
+
+        {entityType.isDeletable && !isPublicEntity && (
+          <Popconfirm
+            autoAdjustOverflow
+            destroyOnHidden
+            placement="bottomRight"
+            title={<div className="font-bold text-lg text-primary-8">Delete the entity</div>}
+            description={
+              <div>
+                <div className="font-bold text-sm text-primary-8">
+                  Are you sure you want to delete this item?
+                </div>
+                <small className="font-light text-primary-6">This action cannot be undone.</small>
+              </div>
+            }
+            okText="Yes"
+            cancelText="No"
+            arrow={{ pointAtCenter: false }}
+            onConfirm={() => deleteMutation.mutateAsync()}
+            classNames={{
+              body: cn(
+                'max-w-70',
+                '[&_.ant-popconfirm-buttons_button]:px-4',
+                '[&_.ant-popconfirm-buttons_button]:rounded-full [&_.ant-popconfirm-buttons_button]:px-5',
+                '[&_.ant-popconfirm-buttons_button:first-child]',
+                '[&_.ant-popconfirm-buttons_button:last-child]:bg-primary-8'
+              ),
+            }}
+          >
+            <span className="cursor-pointer">
+              <Action
+                variant={variant}
+                kind={ActionKind.Button}
+                testId="data-view-action-delete"
+                icon={deleteMutation.isPending ? <LoadingOutlined /> : <DeleteOutlined />}
+              >
+                {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+              </Action>
+            </span>
+          </Popconfirm>
+        )}
+      </div>
+    </>
   );
 }
