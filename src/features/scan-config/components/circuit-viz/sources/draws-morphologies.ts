@@ -19,8 +19,9 @@ import { useMorphologyPackStatus } from '@/features/circuit-viewer/morphologies/
  *
  * The cutoff is cost: the per-cell path reads every point of one morphology
  * per cell, which a microcircuit and everything above it has far too many of.
- * A single cell stays on it: picking a location on its
- * morphology needs the section ids, which the pack does not carry.
+ * A single cell stays on it, and so does a pair or small circuit whose host
+ * picks or shows locations on its morphologies: those need the section ids,
+ * which the pack does not carry (see {@link useCircuitDrawsEachCell}).
  *
  * One predicate rather than a scale list per caller: several places have to
  * agree on which renderer a circuit gets, and they must not drift apart.
@@ -41,14 +42,21 @@ export function circuitDrawsEachCell(
 /**
  * {@link circuitDrawsEachCell} with the pack as it is, kept once answered for as long as the circuit is
  * on show: the renderer is not swapped under the user when the pack turns ready.
+ *
+ * With `needsSectionIds` (locations to pick or show on the morphologies), a pair or small circuit
+ * is drawn per cell without asking Bluenaas, over a kept answer too, as such locations can load
+ * after it.
  */
 export function useCircuitDrawsEachCell(
-  circuit: Pick<ICircuit, 'id' | 'scale'> | undefined
+  circuit: Pick<ICircuit, 'id' | 'scale'> | undefined,
+  needsSectionIds = false
 ): boolean | undefined {
-  const small = circuit !== undefined && circuitSmallForThePack(circuit.scale);
-  const pack = useMorphologyPackStatus(small ? circuit : undefined);
-  const answer = circuit && circuitDrawsEachCell(circuit, small ? pack : null);
+  const fromPack =
+    circuit !== undefined && circuitSmallForThePack(circuit.scale) && !needsSectionIds;
+  const pack = useMorphologyPackStatus(fromPack ? circuit : undefined);
+  const answer = circuit && circuitDrawsEachCell(circuit, fromPack ? pack : null);
   const [kept, setKept] = useState<{ id: string; drawsEachCell: boolean } | null>(null);
+  if (needsSectionIds) return answer;
   if (circuit && kept?.id === circuit.id) return kept.drawsEachCell;
   if (circuit && answer !== undefined) setKept({ id: circuit.id, drawsEachCell: answer });
   return answer;

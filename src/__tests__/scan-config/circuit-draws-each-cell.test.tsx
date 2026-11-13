@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, renderHook, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
@@ -6,8 +6,10 @@ import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit'
 import {
   circuitDrawsEachCell,
   circuitSmallForThePack,
+  useCircuitDrawsEachCell,
 } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
 import { ModelPreview } from '@/features/scan-config/components/model-preview';
+import { PER_NEURON_EXPLICIT_BLOCK_TYPE } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { MorphologyPackStatus } from '@/api/small-scale-simulator/circuit/morphology-pack';
@@ -119,6 +121,26 @@ describe('ModelPreview', () => {
     expect(screen.getByTestId('large')).toBeInTheDocument();
   });
 
+  it('draws a small circuit a morphology per cell where Bluenaas has no pack for it', () => {
+    h.pack = { state: 'failed' };
+    preview(SmallMicrocircuit);
+    expect(screen.getByTestId('each-cell')).toBeInTheDocument();
+  });
+
+  it.each([
+    PairNeuron,
+    SmallMicrocircuit,
+  ])('draws a %s circuit a morphology per cell, its pack ready, where the workflow takes per-neuron locations', (scale) => {
+    const form = { locationBlockTypes: [PER_NEURON_EXPLICIT_BLOCK_TYPE] };
+    render(<ModelPreview model={circuitOf(scale)} form={form} />);
+    expect(screen.getByTestId('each-cell')).toBeInTheDocument();
+  });
+
+  it('draws a small circuit from its pack where the workflow takes no locations', () => {
+    render(<ModelPreview model={circuitOf(SmallMicrocircuit)} form={{ locationBlockTypes: [] }} />);
+    expect(screen.getByTestId('large')).toBeInTheDocument();
+  });
+
   it('keeps a single cell on its own path with the pack', () => {
     preview(Single);
     expect(screen.getByTestId('each-cell')).toBeInTheDocument();
@@ -128,5 +150,28 @@ describe('ModelPreview', () => {
     h.pack = undefined;
     preview(Microcircuit);
     expect(screen.getByTestId('large')).toBeInTheDocument();
+  });
+});
+
+describe('useCircuitDrawsEachCell', () => {
+  beforeEach(() => {
+    h.pack = READY;
+  });
+
+  it('draws a small circuit per cell once locations need section ids, over the answer kept', () => {
+    const circuit = circuitOf(SmallMicrocircuit);
+    const { result, rerender } = renderHook(
+      ({ needsSectionIds }) => useCircuitDrawsEachCell(circuit, needsSectionIds),
+      { initialProps: { needsSectionIds: false } }
+    );
+    expect(result.current).toBe(false);
+
+    rerender({ needsSectionIds: true });
+    expect(result.current).toBe(true);
+  });
+
+  it('keeps a microcircuit large whatever locations it has', () => {
+    const { result } = renderHook(() => useCircuitDrawsEachCell(circuitOf(Microcircuit), true));
+    expect(result.current).toBe(false);
   });
 });

@@ -53,8 +53,23 @@ export function ModelPreview({
   viewerFeatures?: Partial<IEntityViewerFeatures>;
 }) {
   const flagEnabled = useFlag(electrodeOverlaysFlag.key);
+  const viewerForm = useMemo(
+    () =>
+      form
+        ? {
+            ...form,
+            explicitLocationsBlockTypes: resolveExplicitLocationsBlockTypes(
+              model,
+              form.locationBlockTypes ?? []
+            ),
+            singleMorphology: resolveSingleMorphology(model),
+          }
+        : undefined,
+    [form, model]
+  );
   const drawsEachCell = useCircuitDrawsEachCell(
-    model.type === EntityTypeDict.Circuit ? (model as ICircuit) : undefined
+    model.type === EntityTypeDict.Circuit ? (model as ICircuit) : undefined,
+    (viewerForm?.explicitLocationsBlockTypes.length ?? 0) > 0
   );
   const featureEnabled = electrodeOverlaysEnabled ?? !!flagEnabled;
   const domainElectrodes = viewerFeatures?.electrodes ?? false;
@@ -84,21 +99,6 @@ export function ModelPreview({
         largeCircuit: true,
       }),
   };
-
-  const viewerForm = useMemo(
-    () =>
-      form
-        ? {
-            ...form,
-            explicitLocationsBlockTypes: resolveExplicitLocationsBlockTypes(
-              model,
-              form.locationBlockTypes ?? []
-            ),
-            singleMorphology: resolveSingleMorphology(model),
-          }
-        : undefined,
-    [form, model]
-  );
 
   return (
     match(model)

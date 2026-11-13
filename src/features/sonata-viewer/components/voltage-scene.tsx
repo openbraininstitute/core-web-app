@@ -193,7 +193,9 @@ export function VoltageScene({
   const [frame, setFrame] = useState(0);
   const recoloredAt = useRef(0);
   const sceneTime = useSceneTime(timeRef);
-  const drawsEachCell = useCircuitDrawsEachCell(circuit);
+  const ballsPlay = (locations?.length ?? 0) > 0;
+  // The balls sit on the cells' sections, which only the per-cell renderer has.
+  const drawsEachCell = useCircuitDrawsEachCell(circuit, ballsPlay);
   const showSceneTime = sceneTime.show;
 
   const frameAt = useCallback(
@@ -250,7 +252,6 @@ export function VoltageScene({
     setPlaying(!playing);
   };
 
-  const ballsPlay = (locations?.length ?? 0) > 0;
   const [rampName, setRampName] = useAtom(rampAtom);
   const ramp = RAMPS.find((r) => r.value === rampName) ?? RAMPS[0];
   // Balls carry the values while they play, so the bar's middle is theirs.
