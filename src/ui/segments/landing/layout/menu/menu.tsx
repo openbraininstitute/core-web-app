@@ -1,174 +1,119 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
-import React, { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-import { ID_MENU, MENU_ITEMS } from '@/ui/segments/landing/constants';
-import { IconChevronRight } from '@/ui/segments/landing/icons/icon-chevron-right';
-import { IconMenu } from '@/ui/segments/landing/icons/icon-menu';
-import { classNames } from '@/util/utils';
+import { ID_MENU } from '@/ui/segments/landing/constants';
+import { EnumSection } from '@/ui/segments/landing/sections/sections';
 
-import PopupMenu from './popup-menu/popup-menu';
-
-import type { MenuItem } from '@/ui/segments/landing/constants';
-import type { EnumSection } from '@/ui/segments/landing/sections/sections';
+import type { KeyboardEvent, RefObject } from 'react';
 
 import styles from './menu.module.css';
+
+const LINKS = [
+  { label: 'Features', href: '/features', section: EnumSection.Features },
+  { label: 'Pricing', href: '/pricing', section: EnumSection.Pricing },
+  { label: 'News', href: '/news', section: EnumSection.News },
+  { label: 'About', href: '/about', section: EnumSection.About },
+  { label: 'Contact', href: '/contact', section: EnumSection.Contact },
+];
 
 interface MenuProps {
   className?: string;
   scrollHasStarted?: boolean;
   section?: EnumSection;
+  isAuthenticated?: boolean;
+  heroRef?: RefObject<HTMLDivElement | null>;
 }
 
 export default function Menu({
   className,
-  scrollHasStarted: scrollHasStartedProp,
+  scrollHasStarted,
   section,
+  isAuthenticated = false,
+  heroRef,
 }: MenuProps) {
-  const [showMenu, setShowMenu] = React.useState(false);
-  const [showMenuComponent, setShowMenuComponent] = React.useState(true);
-  const lastScrollYRef = useRef(0);
-  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
-  const [internalScrollStarted, setInternalScrollStarted] = React.useState(false);
-  const scrollHasStarted = scrollHasStartedProp ?? internalScrollStarted;
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [headerDocked, setHeaderDocked] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const docked = scrollHasStarted ?? headerDocked;
 
-  // Check if current section is in a submenu, and return the parent item if so
-  const getParentItemForSection = (currentSection?: EnumSection): MenuItem | null => {
-    if (!currentSection) return null;
-    return (
-      MENU_ITEMS.find((item) => {
-        if (item.submenu) {
-          return item.submenu.some((subItem) => subItem.index === currentSection);
-        }
-        return false;
-      }) || null
-    );
-  };
+  useEffect(() => {
+    if (scrollHasStarted !== undefined) return;
+    const hero = heroRef?.current;
+    const updateHeader = () =>
+      setHeaderDocked(hero ? hero.getBoundingClientRect().bottom <= 0 : window.scrollY > 0);
+    updateHeader();
 
-  const parentItem = getParentItemForSection(section);
+    if (hero && typeof IntersectionObserver !== 'undefined') {
+      const observer = new IntersectionObserver(updateHeader, { threshold: 0 });
+      observer.observe(hero);
+      return () => observer.disconnect();
+    }
 
-  React.useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      const lastScrollY = lastScrollYRef.current;
-
-      setInternalScrollStarted((prev) => {
-        const next = currentScrollY > 0;
-        return prev === next ? prev : next;
-      });
-
-      if (currentScrollY > lastScrollY && currentScrollY > 50) {
-        setShowMenuComponent((prev) => (prev ? false : prev));
-      } else if (currentScrollY < lastScrollY) {
-        setShowMenuComponent((prev) => (prev ? prev : true));
-      }
-
-      lastScrollYRef.current = currentScrollY;
+    window.addEventListener('scroll', updateHeader, { passive: true });
+    window.addEventListener('resize', updateHeader);
+    return () => {
+      window.removeEventListener('scroll', updateHeader);
+      window.removeEventListener('resize', updateHeader);
     };
+  }, [heroRef, scrollHasStarted]);
 
-    lastScrollYRef.current = window.scrollY;
-    setInternalScrollStarted(window.scrollY > 0);
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  function closeMenuOnEscape(event: KeyboardEvent<HTMLElement>) {
+    if (event.key === 'Escape') {
+      setMenuOpen(false);
+      menuButtonRef.current?.focus();
+    }
+  }
 
   return (
-    <>
-      <div
-        id={ID_MENU}
-        data-testid="site-header"
-        className={classNames(
-          className,
-          styles.menuContainer,
-          scrollHasStarted && styles.stuck,
-          !showMenuComponent && styles.hidden
-        )}
-        style={{
-          transform: showMenuComponent ? 'translateY(0)' : 'translateY(-100%)',
-          transition: 'transform 0.3s ease-in-out',
-        }}
+    <header
+      id={ID_MENU}
+      className={`${styles.menuContainer} ${docked ? styles.docked : ''} ${className ?? ''}`}
+      data-testid="site-header"
+      data-docked={docked}
+    >
+      <Link href="/" className={styles.logo} aria-label="Open Brain Institute home">
+        <Image src="/images/obi_logo.svg" alt="Open Brain Institute" width={177} height={57} />
+      </Link>
+      <nav
+        aria-label="Main navigation"
+        id="public-navigation"
+        className={menuOpen ? styles.open : undefined}
+        onClick={() => setMenuOpen(false)}
+        onKeyDown={closeMenuOnEscape}
       >
-        <Link href="/" className={styles.logo}>
-          <h2>Open Brain Institute</h2>
-        </Link>
-
-        <div className={styles.items}>
-          {MENU_ITEMS.map((item) => (
-            <div key={item.slug} className={styles.menuItemContainer}>
-              {item.submenu ? (
-                <div
-                  role="menuitem"
-                  data-testid={`header-desktop-menu-${item.slug.slice(1)}`}
-                  aria-haspopup="menu"
-                  tabIndex={0}
-                  className={styles.menuItemWithSubmenu}
-                  onMouseEnter={() => setHoveredItem(item.slug)}
-                  onMouseLeave={() => setHoveredItem(null)}
-                >
-                  <button
-                    type="button"
-                    data-testid={`header-desktop-menu-${item.slug.slice(1)}-toggle`}
-                    className={classNames(
-                      styles.menuButton,
-                      (item.index === section || parentItem?.slug === item.slug) && styles.selected
-                    )}
-                  >
-                    <span className={styles.menuButtonContent}>
-                      {item.caption}
-                      <span className={styles.chevron}>
-                        <IconChevronRight />
-                      </span>
-                    </span>
-                  </button>
-                  <div
-                    className={classNames(
-                      styles.submenu,
-                      hoveredItem === item.slug && styles.submenuVisible,
-                      'bg-primary-8'
-                    )}
-                  >
-                    {item.submenu.map((subItem) => (
-                      <Link
-                        key={subItem.slug}
-                        href={subItem.slug}
-                        className={styles.submenuItem}
-                        data-testid={`header-desktop-link-${subItem.slug.slice(1)}`}
-                      >
-                        {subItem.caption}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <Link
-                  href={item.slug}
-                  className={classNames(styles.menuLink, item.index === section && styles.selected)}
-                  data-testid={`header-desktop-link-${item.slug.slice(1)}`}
-                >
-                  {item.caption}
-                </Link>
-              )}
-            </div>
-          ))}
-
+        {LINKS.map((item) => (
           <Link
-            href="/app/virtual-lab"
-            className={classNames(styles.menuLink)}
-            data-testid="header-desktop-link-app-virtual-lab"
+            key={item.href}
+            href={item.href}
+            aria-current={section === item.section ? 'page' : undefined}
+            data-testid={`header-desktop-link-${item.href.slice(1)}`}
           >
-            Login
+            {item.label}
           </Link>
-        </div>
-        <div className={styles.hamburger}>
-          <button type="button" onClick={() => setShowMenu(!showMenu)} aria-label="Popup menu">
-            <IconMenu />
-          </button>
-        </div>
-      </div>
-      <PopupMenu visible={showMenu} onChange={setShowMenu} />
-    </>
+        ))}
+        <Link
+          className={styles.account}
+          href="/app/virtual-lab/sync"
+          prefetch={false}
+          data-testid="header-desktop-link-app-virtual-lab"
+        >
+          {isAuthenticated ? 'Open Virtual Labs' : 'Sign up'}
+        </Link>
+      </nav>
+      <button
+        className={styles.menuToggle}
+        aria-label={menuOpen ? 'Close navigation' : 'Open navigation'}
+        aria-expanded={menuOpen}
+        type="button"
+        aria-controls="public-navigation"
+        onClick={() => setMenuOpen(!menuOpen)}
+        ref={menuButtonRef}
+      >
+        Menu <span aria-hidden="true">＋</span>
+      </button>
+    </header>
   );
 }
