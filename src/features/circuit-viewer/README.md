@@ -9,9 +9,7 @@ In short:
 
 - A circuit shows first as its somas, one per cell, coloured by the property chosen. Its morphologies come from its morphology pack: one file Bluenaas builds for each circuit the first time it is asked, with the morphologies simplified at three levels (two for the largest circuits), placed and cut into boxes of space. The viewer reads the coarsest level first, then finer levels box by box where the view needs them.
 - WebGPU culls on the GPU what is hidden and draws up to 4M segments finer than the coarsest level, which it keeps drawn where it fits. WebGL 2 draws up to 2M segments, chosen by what is in the frame and how large it is on screen. Where the morphologies in view come to more than that, their somas are drawn instead, and the status says to zoom in.
-- A single cell, and a pair or small circuit without a pack, are drawn a morphology per cell, read from OBI-One one cell at a time, with section ids for picking a location.
-- The morphologies are behind the `circuit-morphologies` flag (`circuitMorphologiesFlag`), off by default, offered in local, preview and staging. Without it, circuits above small scale are drawn as somas only.
-
+- A single cell, and a pair or small circuit without a pack or with locations to pick or show, are drawn a morphology per cell, read from OBI-One one cell at a time, with section ids for picking a location.
 Measured on an M4 Pro in Chrome, with WebGPU:
 
 | Circuit | Drawn | Browser at most | GPU process at most | Date |
@@ -30,16 +28,18 @@ flowchart TD
   memodel -- no --> single{"Single scale?"}
   single -- yes --> each["CircuitVisualization<br/>a morphology per cell, read from OBI-One"]
   single -- no --> small{"Pair or small circuit?"}
-  small -- yes --> packSmall{"Flag on and Bluenaas has the pack ready?"}
+  small -- yes --> needsIds{"Locations to pick or show?"}
+  needsIds -- yes --> each
+  needsIds -- no --> packSmall{"Bluenaas has the pack ready?"}
   packSmall -- no --> each
   packSmall -- yes --> openMorph["LargeCircuitPreview<br/>opens on the pack's morphologies"]
   openMorph -- "the pack cannot be had" --> each
   small -- no --> somas["LargeCircuitPreview<br/>opens on the somas"]
-  somas -- "flag on and the pack ready:<br/>the Morphologies switch" --> morph["The pack's morphologies"]
+  somas -- "the pack ready:<br/>the Morphologies switch" --> morph["The pack's morphologies"]
   morph -- "the pack cannot be had" --> somas
 ```
 
-- `circuitDrawsEachCell` ([draws-morphologies.ts](../scan-config/components/circuit-viz/sources/draws-morphologies.ts)) answers for every caller, so that they cannot disagree. The cutoff is cost: a morphology per cell reads every point of every one, far too many from a microcircuit up. A single cell stays on it whatever the flag, because picking a location on it needs section ids, which the pack does not carry.
+- `circuitDrawsEachCell` ([draws-morphologies.ts](../scan-config/components/circuit-viz/sources/draws-morphologies.ts)) answers for every caller, so that they cannot disagree. The cutoff is cost: a morphology per cell reads every point of every one, far too many from a microcircuit up. A single cell stays on it, because picking a location on it needs section ids, which the pack does not carry. So does a pair or small circuit whose host picks or shows locations on its morphologies: a setup whose workflow takes a locations block, or a compartment report's balls in the voltage view (`needsSectionIds` of `useCircuitDrawsEachCell`).
 - `useMorphologyPackStatus` ([use-morphology-pack-status.ts](morphologies/use-morphology-pack-status.ts)) asks Bluenaas for the pack, `POST /circuit/{id}/morphology-pack`, which queues its build where there is neither a pack nor a build. The answer is `ready` (with the pack's size and SHA-256), `building`, `failed` or `refused` (with why). It is forgotten once nothing reads it, so the next visit asks again.
 - A pair or small circuit waits for that answer before a renderer is mounted, and keeps the one it got for as long as it is on show: a pack that turns ready during the visit is drawn on the next one.
 - A larger circuit opens on its somas at once, and asks again every 10 s while its pack builds. Until it is ready, the Morphologies switch in the settings is off and disabled, with why: preparing, couldn't prepare, or not available.

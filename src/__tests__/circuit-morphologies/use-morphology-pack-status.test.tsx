@@ -4,21 +4,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { useMorphologyPackStatus } from '@/features/circuit-viewer/morphologies/use-morphology-pack-status';
-import { circuitMorphologiesFlag } from '@/features/feature-flags/flags';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { MorphologyPackStatus } from '@/api/small-scale-simulator/circuit/morphology-pack';
 
 const h = vi.hoisted(() => ({
-  flag: true,
   params: { virtualLabId: 'lab', projectId: 'project' } as Record<string, string | undefined>,
   answers: [] as (MorphologyPackStatus | Error)[],
   request: vi.fn(),
-}));
-
-vi.mock('@/features/feature-flags', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/features/feature-flags')>()),
-  useFlag: (key: string) => key === circuitMorphologiesFlag.key && h.flag,
 }));
 
 vi.mock('next/navigation', () => ({ useParams: () => h.params }));
@@ -45,7 +38,6 @@ function render(circuit: ICircuit | undefined, poll = false) {
 
 beforeEach(() => {
   client = new QueryClient();
-  h.flag = true;
   h.params = { virtualLabId: 'lab', projectId: 'project' };
   h.answers = [];
   h.request.mockImplementation(async () => {
@@ -77,7 +69,6 @@ describe('useMorphologyPackStatus', () => {
   it.each([
     ['no circuit', undefined, () => {}],
     ['a single cell', { id: 'one', scale: CircuitScaleDictionary.Single } as ICircuit, () => {}],
-    ['the flag off', MICRO, () => (h.flag = false)],
     ['no project', MICRO, () => (h.params = { virtualLabId: 'lab' })],
   ])('asks nothing, and answers null, for %s', async (_, circuit, given) => {
     given();

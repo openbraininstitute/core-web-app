@@ -1,26 +1,26 @@
-import { render, screen } from '@testing-library/react';
+import { render, renderHook, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
-import { circuitMorphologiesFlag } from '@/features/feature-flags/flags';
 import {
   circuitDrawsEachCell,
   circuitSmallForThePack,
+  useCircuitDrawsEachCell,
 } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
 import { ModelPreview } from '@/features/scan-config/components/model-preview';
+import { PER_NEURON_EXPLICIT_BLOCK_TYPE } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { MorphologyPackStatus } from '@/api/small-scale-simulator/circuit/morphology-pack';
 
 const h = vi.hoisted(() => ({
-  flags: {} as Record<string, boolean>,
   pack: undefined as MorphologyPackStatus | null | undefined,
 }));
 
 vi.mock('@/features/feature-flags', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/features/feature-flags')>()),
-  useFlag: (key: string) => h.flags[key],
+  useFlag: () => false,
 }));
 
 vi.mock('@/features/circuit-viewer/morphologies/use-morphology-pack-status', () => ({
@@ -44,28 +44,27 @@ const circuitOf = (scale: ICircuit['scale'], id = 'circuit-id') =>
 
 describe('circuitDrawsEachCell', () => {
   it.each([
-    [Single, true, true, true],
-    [PairNeuron, true, false, true],
-    [SmallMicrocircuit, true, false, true],
-    [Microcircuit, false, false, false],
-    [Region, false, false, false],
-    [WholeBrain, false, false, false],
-  ])('draws a %s circuit a morphology per cell: %s off the pack, %s with its pack ready, %s while it builds', (scale, off, ready, building) => {
-    expect(circuitDrawsEachCell(circuitOf(scale), false, READY)).toBe(off);
-    expect(circuitDrawsEachCell(circuitOf(scale), true, READY)).toBe(ready);
-    expect(circuitDrawsEachCell(circuitOf(scale), true, BUILDING)).toBe(building);
+    [Single, true, true],
+    [PairNeuron, false, true],
+    [SmallMicrocircuit, false, true],
+    [Microcircuit, false, false],
+    [Region, false, false],
+    [WholeBrain, false, false],
+  ])('draws a %s circuit a morphology per cell: %s with its pack ready, %s while it builds', (scale, ready, building) => {
+    expect(circuitDrawsEachCell(circuitOf(scale), READY)).toBe(ready);
+    expect(circuitDrawsEachCell(circuitOf(scale), BUILDING)).toBe(building);
   });
 
   it('draws a pair or small circuit a morphology per cell where Bluenaas has no pack for it', () => {
     for (const pack of [{ state: 'failed' } as const, null]) {
-      expect(circuitDrawsEachCell(circuitOf(SmallMicrocircuit), true, pack)).toBe(true);
+      expect(circuitDrawsEachCell(circuitOf(SmallMicrocircuit), pack)).toBe(true);
     }
   });
 
   it('cannot say for a pair or small circuit until Bluenaas answers', () => {
-    expect(circuitDrawsEachCell(circuitOf(PairNeuron), true, undefined)).toBeUndefined();
-    expect(circuitDrawsEachCell(circuitOf(Microcircuit), true, undefined)).toBe(false);
-    expect(circuitDrawsEachCell(circuitOf(Single), true, undefined)).toBe(true);
+    expect(circuitDrawsEachCell(circuitOf(PairNeuron), undefined)).toBeUndefined();
+    expect(circuitDrawsEachCell(circuitOf(Microcircuit), undefined)).toBe(false);
+    expect(circuitDrawsEachCell(circuitOf(Single), undefined)).toBe(true);
   });
 
   it('takes pair and small circuits, and only those, for the pack in place of a morphology per cell', () => {
@@ -76,7 +75,6 @@ describe('circuitDrawsEachCell', () => {
 
 describe('ModelPreview', () => {
   beforeEach(() => {
-    h.flags = {};
     h.pack = READY;
   });
 
@@ -85,13 +83,7 @@ describe('ModelPreview', () => {
   it.each([
     PairNeuron,
     SmallMicrocircuit,
-  ])('draws a %s circuit a morphology per cell without the pack', (scale) => {
-    preview(scale);
-    expect(screen.getByTestId('each-cell')).toBeInTheDocument();
-  });
-
-  it.each([PairNeuron, SmallMicrocircuit])('draws a %s circuit from the pack with it', (scale) => {
-    h.flags[circuitMorphologiesFlag.key] = true;
+  ])('draws a %s circuit from its pack where it is ready', (scale) => {
     preview(scale);
     expect(screen.getByTestId('large')).toBeInTheDocument();
   });
@@ -100,14 +92,12 @@ describe('ModelPreview', () => {
     PairNeuron,
     SmallMicrocircuit,
   ])('draws a %s circuit whose pack is building a morphology per cell', (scale) => {
-    h.flags[circuitMorphologiesFlag.key] = true;
     h.pack = BUILDING;
     preview(scale);
     expect(screen.getByTestId('each-cell')).toBeInTheDocument();
   });
 
   it('mounts no renderer for a small circuit until Bluenaas answers', () => {
-    h.flags[circuitMorphologiesFlag.key] = true;
     h.pack = undefined;
     const { rerender } = preview(SmallMicrocircuit);
     expect(screen.queryByTestId('each-cell')).not.toBeInTheDocument();
@@ -119,7 +109,6 @@ describe('ModelPreview', () => {
   });
 
   it('keeps the renderer of the first answer while the circuit is on show, and answers again for another', () => {
-    h.flags[circuitMorphologiesFlag.key] = true;
     h.pack = BUILDING;
     const { rerender } = preview(SmallMicrocircuit);
     expect(screen.getByTestId('each-cell')).toBeInTheDocument();
@@ -132,16 +121,57 @@ describe('ModelPreview', () => {
     expect(screen.getByTestId('large')).toBeInTheDocument();
   });
 
+  it('draws a small circuit a morphology per cell where Bluenaas has no pack for it', () => {
+    h.pack = { state: 'failed' };
+    preview(SmallMicrocircuit);
+    expect(screen.getByTestId('each-cell')).toBeInTheDocument();
+  });
+
+  it.each([
+    PairNeuron,
+    SmallMicrocircuit,
+  ])('draws a %s circuit a morphology per cell, its pack ready, where the workflow takes per-neuron locations', (scale) => {
+    const form = { locationBlockTypes: [PER_NEURON_EXPLICIT_BLOCK_TYPE] };
+    render(<ModelPreview model={circuitOf(scale)} form={form} />);
+    expect(screen.getByTestId('each-cell')).toBeInTheDocument();
+  });
+
+  it('draws a small circuit from its pack where the workflow takes no locations', () => {
+    render(<ModelPreview model={circuitOf(SmallMicrocircuit)} form={{ locationBlockTypes: [] }} />);
+    expect(screen.getByTestId('large')).toBeInTheDocument();
+  });
+
   it('keeps a single cell on its own path with the pack', () => {
-    h.flags[circuitMorphologiesFlag.key] = true;
     preview(Single);
     expect(screen.getByTestId('each-cell')).toBeInTheDocument();
   });
 
   it('draws a microcircuit large without waiting for Bluenaas', () => {
-    h.flags[circuitMorphologiesFlag.key] = true;
     h.pack = undefined;
     preview(Microcircuit);
     expect(screen.getByTestId('large')).toBeInTheDocument();
+  });
+});
+
+describe('useCircuitDrawsEachCell', () => {
+  beforeEach(() => {
+    h.pack = READY;
+  });
+
+  it('draws a small circuit per cell once locations need section ids, over the answer kept', () => {
+    const circuit = circuitOf(SmallMicrocircuit);
+    const { result, rerender } = renderHook(
+      ({ needsSectionIds }) => useCircuitDrawsEachCell(circuit, needsSectionIds),
+      { initialProps: { needsSectionIds: false } }
+    );
+    expect(result.current).toBe(false);
+
+    rerender({ needsSectionIds: true });
+    expect(result.current).toBe(true);
+  });
+
+  it('keeps a microcircuit large whatever locations it has', () => {
+    const { result } = renderHook(() => useCircuitDrawsEachCell(circuitOf(Microcircuit), true));
+    expect(result.current).toBe(false);
   });
 });

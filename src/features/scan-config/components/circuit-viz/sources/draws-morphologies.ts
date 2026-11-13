@@ -10,19 +10,18 @@ import {
   type MorphologyPackStatus,
 } from '@/api/small-scale-simulator/circuit/morphology-pack';
 import { useMorphologyPackStatus } from '@/features/circuit-viewer/morphologies/use-morphology-pack-status';
-import { circuitMorphologiesFlag, useFlag } from '@/features/feature-flags';
 
 /**
  * Whether a circuit is drawn a morphology per cell, or by
  * `LargeCircuitPreview`: as somas, or as the morphologies of the circuit's
- * pack where `packMorphologies` (the `circuit-morphologies` flag) is on.
- * A pair or small circuit is drawn from its pack where Bluenaas has it ready,
+ * pack. A pair or small circuit is drawn from its pack where Bluenaas has it ready,
  * else per cell; `undefined` while Bluenaas has not answered (`pack`).
  *
  * The cutoff is cost: the per-cell path reads every point of one morphology
  * per cell, which a microcircuit and everything above it has far too many of.
- * A single cell stays on it whatever the flag: picking a location on its
- * morphology needs the section ids, which the pack does not carry.
+ * A single cell stays on it, and so does a pair or small circuit whose host
+ * picks or shows locations on its morphologies: those need the section ids,
+ * which the pack does not carry (see {@link useCircuitDrawsEachCell}).
  *
  * One predicate rather than a scale list per caller: several places have to
  * agree on which renderer a circuit gets, and they must not drift apart.
@@ -33,27 +32,31 @@ import { circuitMorphologiesFlag, useFlag } from '@/features/feature-flags';
  */
 export function circuitDrawsEachCell(
   circuit: Pick<ICircuit, 'scale'>,
-  packMorphologies: boolean,
   pack: MorphologyPackStatus | null | undefined
 ): boolean | undefined {
   if (circuit.scale === CircuitScaleDictionary.Single) return true;
   if (!circuitSmallForThePack(circuit.scale)) return false;
-  if (!packMorphologies) return true;
   return pack === undefined ? undefined : pack?.state !== MorphologyPackState.Ready;
 }
 
 /**
- * {@link circuitDrawsEachCell} with the flag and the pack as they are, kept once answered for as long as the circuit is
+ * {@link circuitDrawsEachCell} with the pack as it is, kept once answered for as long as the circuit is
  * on show: the renderer is not swapped under the user when the pack turns ready.
+ *
+ * With `needsSectionIds` (locations to pick or show on the morphologies), a pair or small circuit
+ * is drawn per cell without asking Bluenaas, over a kept answer too, as such locations can load
+ * after it.
  */
 export function useCircuitDrawsEachCell(
-  circuit: Pick<ICircuit, 'id' | 'scale'> | undefined
+  circuit: Pick<ICircuit, 'id' | 'scale'> | undefined,
+  needsSectionIds = false
 ): boolean | undefined {
-  const packMorphologies = !!useFlag(circuitMorphologiesFlag.key);
-  const small = circuit !== undefined && circuitSmallForThePack(circuit.scale);
-  const pack = useMorphologyPackStatus(small ? circuit : undefined);
-  const answer = circuit && circuitDrawsEachCell(circuit, packMorphologies, small ? pack : null);
+  const fromPack =
+    circuit !== undefined && circuitSmallForThePack(circuit.scale) && !needsSectionIds;
+  const pack = useMorphologyPackStatus(fromPack ? circuit : undefined);
+  const answer = circuit && circuitDrawsEachCell(circuit, fromPack ? pack : null);
   const [kept, setKept] = useState<{ id: string; drawsEachCell: boolean } | null>(null);
+  if (needsSectionIds) return answer;
   if (circuit && kept?.id === circuit.id) return kept.drawsEachCell;
   if (circuit && answer !== undefined) setKept({ id: circuit.id, drawsEachCell: answer });
   return answer;
