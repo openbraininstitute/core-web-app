@@ -652,8 +652,7 @@ export function RowsHome({
     setSlots((all) => all.map((x, k) => (k === slot ? hero : x)));
     setHero(i);
     setSide(null);
-    // from a video the rows widen back as it comes, so where it would land moves under it: it just fades in there
-    if (!from || side?.kind === 'video') return;
+    if (!from) return;
     setFlight({ id: Date.now(), slot, inbound: i, from, to: null, outbound: home ? { i: hero, home } : null });
     setLanded({ inbound: false, outbound: !home });
   };
@@ -700,13 +699,8 @@ export function RowsHome({
   return (
     <div ref={stage} className="relative flex h-full w-full min-w-0 gap-8 bg-white px-6 pt-5 pb-4">
       {/* the rows fade out at their right edge (no box round them: the user tried one), scrolling with no bar */}
-      {/* 45:55, so Do science's three by three fills the rows' width, and 40:60 while a video plays (the user asked) */}
-      <div
-        className={cn(
-          'flex min-w-0 shrink-0 flex-col transition-[width] duration-500 ease-in-out',
-          side?.kind === 'video' ? 'w-[40%]' : 'w-[45%]'
-        )}
-      >
+      {/* 45:55 whatever is on show (the user asked to try it; 40:60 while a video played before) */}
+      <div className="flex w-[45%] min-w-0 shrink-0 flex-col">
       {/* no scroll up and down (the user asked): Do science takes what the other rows leave; only a very short window
           scrolls, rather than squeezing its cards to nothing */}
       <div className="no-scrollbar flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-2">
