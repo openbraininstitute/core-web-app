@@ -30,14 +30,16 @@ interface IOnShow {
 
 /**
  * A pick under way: the example flying out of its tile to be on show (where it lands is measured once it is laid
- * out there, unseen), and the one that was on show, if any, flying back to its own.
+ * out there, unseen), and the one that was on show, if it was, flying into the tile it left, as on the desktop.
  */
 interface IFlight {
   id: number;
+  /** The row's tile the two trade through. */
+  slot: number;
   inbound: number;
   from: IHexBox;
   to: IOnShow | null;
-  outbound: { i: number; back: IHexBox; home: IOnShow } | null;
+  outbound: { i: number; home: IOnShow } | null;
 }
 
 /** The width of the examples' hexagons in their row (px). */
@@ -88,29 +90,6 @@ function Row({
   );
 }
 
-/** A place of the platform, Learn & teach's or The institute's: its icon, name and what it is for. */
-function PlaceRowCard({ card, base }: { card: IJourneyCard; base: string }) {
-  const body = (
-    <>
-      <img src={`/images/vlab-home/icons/${card.icon}.svg`} alt="" width={20} height={20} />
-      <span className="text-primary-9 text-[13px] leading-[16px] font-semibold">{card.label}</span>
-      <span className="line-clamp-2 text-[11.5px] leading-[14px] text-neutral-500">
-        {card.href ? card.blurb : `${card.blurb} · coming soon`}
-      </span>
-    </>
-  );
-  // the size of Do science's cards (the user asked)
-  const box =
-    'border-neutral-2 flex h-[96px] w-[146px] shrink-0 flex-col gap-1 overflow-hidden rounded-[14px] border bg-white p-2.5 text-left shadow-[0_4px_12px_-6px_rgb(0_39_102/0.12)]';
-  return card.href ? (
-    <Link href={journeyHref(card.href, base)} className={cn(box, 'transition-shadow hover:shadow-md')}>
-      {body}
-    </Link>
-  ) : (
-    <div className={cn(box, 'opacity-50')}>{body}</div>
-  );
-}
-
 /** One of Do science's cards, small, in its colours. */
 function ScienceRowCard({ card, index, base }: { card: IJourneyCard; index: number; base: string }) {
   const { bg, ink } = placeColours(index);
@@ -150,6 +129,87 @@ function ScienceRowCard({ card, index, base }: { card: IJourneyCard; index: numb
     <Link href={card.href ? journeyHref(card.href, base) : '#'} className={box} style={{ background: bg }}>
       {face}
     </Link>
+  );
+}
+
+/** What Learn & teach's long card offers, each opening Learn where it is (a course, or a section of its own). */
+const LEARN_TOPICS = [
+  { label: 'Neuroscience', to: '?course=brain-modeling' },
+  { label: 'Simulation neuroscience', to: '?course=compartmental-modeling' },
+  { label: 'The platform', to: '?course=platform' },
+  { label: 'The data standard', to: '?section=standard' },
+  { label: 'Glossary', to: '?section=glossary' },
+  { label: 'Teach a course', to: '?section=teach' },
+];
+
+/**
+ * Learn & teach as one long card along the foot of the rows (the user asked, in place of its cards among Do
+ * science's): what it is for, its topics to go straight to, and its three places as hexagons at its right end.
+ * Learn behind its flag, the glossary is the documentation's and the rest are still to come.
+ */
+function LearnCard({ base, learn }: { base: string; learn: boolean }) {
+  const chip =
+    'flex h-7 shrink-0 items-center rounded-full border border-[#13306f]/15 bg-white/80 px-2.5 text-[12px] font-semibold text-[#13306f] transition-colors';
+  const hexW = 46;
+  return (
+    <section
+      aria-label="Learn & teach"
+      className="relative mt-3 flex shrink-0 items-center gap-5 overflow-hidden rounded-[14px] py-3.5 pr-4 pl-5"
+      style={{ background: 'linear-gradient(100deg, #e9efff 0%, #f1ecff 60%, #f8f1fb 100%)' }}
+    >
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <div className="flex flex-col gap-0.5">
+          {learn ? (
+            <Link href={`${base}/learn`} className="w-max text-[17px] leading-[21px] font-semibold text-[#13306f] hover:underline">
+              Learn & teach
+            </Link>
+          ) : (
+            <span className="text-[17px] leading-[21px] font-semibold text-[#13306f]">Learn & teach</span>
+          )}
+          <span className="text-[12.5px] leading-[16px] text-neutral-600">
+            Learn what you need, from the neuroscience and simulating it to the platform and its data standard, or
+            teach a course of your own.
+          </span>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {LEARN_TOPICS.map((topic) => {
+            const href = learn
+              ? `${base}/learn${topic.to}`
+              : topic.label === 'Glossary'
+                ? '/app/documentation/glossary'
+                : null;
+            return href ? (
+              <Link key={topic.label} href={href} className={cn(chip, 'hover:bg-[#13306f] hover:text-white')}>
+                {topic.label}
+              </Link>
+            ) : (
+              <span key={topic.label} className={cn(chip, 'opacity-50')} title="Coming soon">
+                {topic.label}
+              </span>
+            );
+          })}
+        </div>
+      </div>
+      {/* its places, courses, glossary and teaching, as a little cluster of hexagons */}
+      <div aria-hidden className="relative shrink-0" style={{ width: 2 * hexW + 6, height: (2 * hexW) / SQRT3 + hexW * 0.75 }}>
+        {(['learning', 'glossary', 'teaching'] as const).map((icon, k) => (
+          <span
+            key={icon}
+            className="absolute drop-shadow-[0_4px_8px_rgb(28_40_72/0.14)]"
+            style={{
+              width: hexW,
+              height: (2 * hexW) / SQRT3,
+              left: k === 2 ? hexW / 2 + 3 : k * (hexW + 6),
+              top: k === 2 ? hexW * 0.75 + 2 : 0,
+            }}
+          >
+            <span className="absolute inset-0 flex items-center justify-center bg-white" style={{ clipPath: HEX_CLIP }}>
+              <img src={`/images/vlab-home/icons/${icon}.svg`} alt="" width={22} height={22} />
+            </span>
+          </span>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -240,7 +300,7 @@ function Shown({
 /**
  * The home's second design (the user asked for it beside the hexagons, chosen with the home's hidden menu): the
  * categories' things each in a row of their own down the left, scrolling sideways (Examples, the videos, Do science
- * with Learn & teach's places in two rows; The institute left out); an example or a video clicked
+ * in two rows; The institute left out), Learn & teach one long card along their foot; an example or a video clicked
  * shows on the right, the places of the platform open their pages.
  */
 export function RowsHome({
@@ -255,7 +315,12 @@ export function RowsHome({
   /** Each row under its category's name; without, the rows alone (the menu's third design). */
   titled?: boolean;
 }) {
-  const [shown, setShown] = useState<TShown>({ kind: 'example', i: 0 });
+  // The example on show (on the right, unless a video is) and which example each of the row's tiles holds: every one
+  // but that, the two trading places when one is picked, as on the desktop (the user asked: no empty or ringed tile).
+  const [hero, setHero] = useState(0);
+  const [slots, setSlots] = useState(() => EXAMPLES.map((_, i) => i).filter((i) => i !== 0));
+  const [video, setVideo] = useState<number | null>(null);
+  const shown: TShown = video === null ? { kind: 'example', i: hero } : { kind: 'video', i: video };
   const tileW = TILE_W;
   const stage = useRef<HTMLDivElement>(null);
   const strip = useRef<HTMLDivElement>(null);
@@ -269,8 +334,8 @@ export function RowsHome({
     const r = el.getBoundingClientRect();
     return { x: r.left + r.width / 2 - R.left, y: r.top + r.height / 2 - R.top, w: r.width };
   };
-  const tileOf = (n: number): IHexBox | null => {
-    const el = strip.current?.querySelector<HTMLElement>(`[data-example="${n}"]`);
+  const tileOf = (slot: number): IHexBox | null => {
+    const el = strip.current?.querySelector<HTMLElement>(`[data-slot="${slot}"]`);
     if (!el) return null;
     const { x, y, w } = centreOf(el);
     // its picture's hexagon, inside the tile's rim
@@ -285,26 +350,18 @@ export function RowsHome({
   };
 
   // A click flies the example out of its tile, growing and its tile melting away, to be on show on the right, as the
-  // one there flies back to its tile, as on the desktop and the phone (the user asked).
-  const pick = (i: number) => {
-    if (flight || (shown.kind === 'example' && shown.i === i)) return;
-    const from = stage.current && tileOf(i);
-    if (!from) {
-      setShown({ kind: 'example', i });
-      return;
-    }
-    const back = shown.kind === 'example' ? tileOf(shown.i) : null;
-    const home = shown.kind === 'example' ? heroOn() : null;
-    setFlight({
-      id: Date.now(),
-      inbound: i,
-      from,
-      // measured once it is laid out on show, unseen (below)
-      to: null,
-      outbound: shown.kind === 'example' && back && home ? { i: shown.i, back, home } : null,
-    });
-    setLanded({ inbound: false, outbound: !(shown.kind === 'example' && back && home) });
-    setShown({ kind: 'example', i });
+  // one there shrinks back into the tile it left, the two trading places, as on the desktop (the user asked).
+  const pick = (slot: number) => {
+    if (flight) return;
+    const i = slots[slot];
+    const from = stage.current && tileOf(slot);
+    const home = video === null ? heroOn() : null;
+    setSlots((all) => all.map((x, k) => (k === slot ? hero : x)));
+    setHero(i);
+    setVideo(null);
+    if (!from) return;
+    setFlight({ id: Date.now(), slot, inbound: i, from, to: null, outbound: home ? { i: hero, home } : null });
+    setLanded({ inbound: false, outbound: !home });
   };
   // where it lands: its place on show, now laid out for it (before the page is painted, so nothing shows meanwhile)
   useLayoutEffect(() => {
@@ -323,9 +380,10 @@ export function RowsHome({
   const pickVideo = (i: number) => {
     setFlight(null);
     setLanded({ inbound: true, outbound: true });
-    setShown({ kind: 'video', i });
+    setVideo(i);
   };
-  const away = flight && !landed.outbound ? flight.outbound?.i : undefined;
+  // the tile they trade through, gone until both are in (the flights draw them), as on the desktop
+  const trading = flight && !(landed.inbound && landed.outbound) ? flight.slot : undefined;
 
   return (
     <div ref={stage} className="relative flex h-full w-full min-w-0 gap-8 bg-white px-6 pt-5 pb-4">
@@ -334,31 +392,26 @@ export function RowsHome({
       <div className="no-scrollbar flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-2">
         <div ref={strip}>
         <Row title="Examples" titled={titled}>
-          {EXAMPLES.map((e, i) => {
-            const on = shown.kind === 'example' && shown.i === i;
+          {slots.map((i, slot) => {
+            const e = EXAMPLES[i];
             return (
               <button
-                key={e.key}
+                // eslint-disable-next-line react/no-array-index-key -- a tile is its place in the row
+                key={slot}
                 type="button"
                 title={e.label}
-                aria-pressed={on}
-                data-example={i}
-                onClick={() => pick(i)}
+                data-slot={slot}
+                onClick={() => pick(slot)}
                 className="group relative flex shrink-0 flex-col items-center"
-                style={{ width: tileW }}
+                style={{ width: tileW, visibility: slot === trading ? 'hidden' : undefined }}
               >
                 <span
                   className="relative block drop-shadow-[0_5px_9px_rgb(28_40_72/0.16)]"
                   style={{ width: tileW, height: (2 * tileW) / SQRT3 }}
                 >
-                  <span
-                    className={cn('absolute inset-0 transition-colors', on ? 'bg-[#002766]' : 'bg-white')}
-                    style={{ clipPath: HEX_CLIP }}
-                  >
-                    {/* its picture gone from it while it is on show, or on its way back (the flights draw it), as on
-                        the phone */}
-                    <span className="absolute inset-[5%] bg-white" style={{ clipPath: HEX_CLIP }}>
-                      {!on && i !== away && <TileMedia example={e} />}
+                  <span className="absolute inset-0 bg-white" style={{ clipPath: HEX_CLIP }}>
+                    <span className="absolute inset-[5%]" style={{ clipPath: HEX_CLIP }}>
+                      <TileMedia key={e.key} example={e} />
                     </span>
                   </span>
                 </span>
@@ -372,8 +425,7 @@ export function RowsHome({
           })}
         </Row>
         </div>
-        {/* the videos second, Do science (with Learn & teach's places) third in two rows, no row for The institute
-            (the user asked) */}
+        {/* the videos second, Do science third in two rows, no row for The institute (the user asked) */}
         <Row title="Tutorial videos" titled={titled}>
           {videos.map((v, i) => (
             <div key={v.key} className="w-[146px] shrink-0">
@@ -392,14 +444,10 @@ export function RowsHome({
           {groups[0].cards.map((card, i) => (
             <ScienceRowCard key={card.label} card={card} index={i} base={base} />
           ))}
-          {/* not Tutorials: the videos have their own row (the user asked) */}
-          {groups[1].cards
-            .filter((card) => card.icon !== 'tutorials')
-            .map((card) => (
-              <PlaceRowCard key={card.label} card={card} base={base} />
-            ))}
         </Row>
       </div>
+      {/* Learn & teach's places in one long card along the foot (the user asked), not among Do science's */}
+      <LearnCard base={base} learn={groups[1].cards.some((card) => card.icon === 'learning' && !!card.href)} />
       </div>
       <div className="min-h-0 min-w-0 flex-1">
         <Shown
@@ -427,7 +475,7 @@ export function RowsHome({
           {flight.outbound && !landed.outbound && (
             <MeltFlier
               key={`out-${flight.id}`}
-              tile={flight.outbound.back}
+              tile={flight.from}
               to={flight.outbound.home.at}
               example={EXAMPLES[flight.outbound.i]}
               width={flight.outbound.home.width}
