@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
 import { WorkspaceMainPages } from '@/constants';
-import { aiButtonFlag, learnFlag, useFlag } from '@/features/feature-flags';
+import { aiButtonFlag, useFlag } from '@/features/feature-flags';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Wallet } from '@/ui/segments/project/balance';
 import { SpaceSwitcher } from '@/ui/segments/workspaces/space-switcher';
@@ -87,14 +87,13 @@ export function ProjectToolbar() {
   const { virtualLabId, projectId } = useWorkspace();
   const pathname = usePathname();
   const active = getActiveSection(pathname) ?? '';
-  const learn = useFlag(learnFlag.key) === true;
   const aiButton = useFlag(aiButtonFlag.key);
 
   const base = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}`;
   const homePath = `${base}/`;
   const homeOn = HOME_SECTIONS.includes(active);
-  // Teach with Learn, behind its flag
-  const sections = SECTIONS.filter((s) => (s.key !== 'learn' && s.key !== 'teach') || learn);
+  // Learn (and Teach) behind no flag (the user asked)
+  const sections = SECTIONS;
 
   return (
     // on a phone, the logo, the switcher, the credits and the assistant along the top, and the tabs along the

@@ -8,7 +8,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { config } from '@/config';
 import ObiLogo from '@/features/learn/components/ui/ObiLogo';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import { learnFlag, useFlag } from '@/features/feature-flags';
 import { getClient } from '@/services/sanity/client';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { usePanelState } from '@/ui/segments/ai/hooks';
@@ -502,8 +501,8 @@ function ModelPanel({ example, base }: { example: IExample; base: string }) {
 export function HexHomePage() {
   const { virtualLabId, projectId } = useWorkspace();
   const base = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}`;
-  const learn = useFlag(learnFlag.key) === true;
-  const groups = journeyGroups({ learn });
+  // Learn behind no flag (the user asked)
+  const groups = journeyGroups({ learn: true });
 
   const client = getClient();
   const { data: tutorials } = useQuery({

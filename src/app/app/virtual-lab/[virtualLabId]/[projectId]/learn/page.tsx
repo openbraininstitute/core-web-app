@@ -1,8 +1,5 @@
-import { notFound } from 'next/navigation';
-
 import { tryCatch } from '@/api/utils';
 import { config } from '@/config';
-import { getAllFlags, learnFlag } from '@/features/feature-flags';
 import { LEARN_COURSES, learnPagePath } from '@/features/learn/catalogue';
 import {
   conferences,
@@ -25,8 +22,6 @@ export default async function Page({
   params: Promise<{ virtualLabId: string; projectId: string }>;
 }) {
   const { virtualLabId, projectId } = await params;
-  const flags = await getAllFlags();
-  if (!flags[learnFlag.key]) notFound();
 
   // the home page's tutorials, fetched the same way and under the same key, so they are shared
   const { data: tutorials } = await tryCatch(

@@ -3,7 +3,6 @@
 import { useMemo } from 'react';
 
 import { config } from '@/config';
-import { learnFlag, useFlag } from '@/features/feature-flags';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { journeyGroups, journeyHref } from '@/ui/segments/project/hex-home/content';
 import { axial, cloudFillers } from '@/ui/segments/project/hex-home/hex-geometry';
@@ -49,9 +48,8 @@ const at = ([q, r]: TCell, k = 0.95): IHexBox => {
  */
 export function GroupCloud({ group: index, from }: { group: number; from: IPoint }) {
   const { virtualLabId, projectId } = useWorkspace();
-  const learn = useFlag(learnFlag.key) === true;
   const base = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}`;
-  const group = journeyGroups({ learn })[index];
+  const group = journeyGroups({ learn: true })[index];
 
   const ring = RINGS[Math.min(6, group.cards.length)];
   const cards = group.cards.slice(0, 6).map((card, i) => ({ card, box: at(ring[i]) }));

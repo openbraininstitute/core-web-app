@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
 import { WorkspaceMainPages } from '@/constants';
-import { learnFlag, useFlag } from '@/features/feature-flags';
 import { SECTION_TYPE_COLORS } from '@/features/scan-config/components/color-by/palette';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { ModelActions, PillLink } from '@/ui/segments/project/models/actions';
@@ -133,9 +132,7 @@ export function SectionKey({ className }: { className?: string }) {
 
 /** The course the chapter's words come from, where Learn is on, coming back to the walkthrough of that `design`. */
 export function CourseLink({ design = 'walkthrough' }: { design?: THomeDesign }) {
-  const learn = useFlag(learnFlag.key) === true;
   const { virtualLabId, projectId } = useWorkspace();
-  if (!learn) return null;
   // Back to the public landing, where there is no project.
   const from = projectId ? `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}?design=${design}` : '/';
   return (
