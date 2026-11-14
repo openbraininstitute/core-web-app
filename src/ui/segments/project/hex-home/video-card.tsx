@@ -67,7 +67,7 @@ export function VideoCard({
   small?: boolean;
   /** A height of its own (px) rather than the poster's shape. */
   height?: number;
-  /** What it is and how long it lasts only while pointed at, its title alone otherwise (the rows home's). */
+  /** What it is only while pointed at, its title and length alone otherwise (the rows home's). */
   detailsOnHover?: boolean;
 }) {
   const [hover, setHover] = useState(false);
@@ -107,7 +107,7 @@ export function VideoCard({
         >
           {video.title}
         </p>
-        <p className={cn('text-primary-2 text-[11px] leading-[14px]', details)}>
+        <p className="text-primary-2 text-[11px] leading-[14px]">
           {duration ? formatDuration(duration) : ' '}
         </p>
       </div>
