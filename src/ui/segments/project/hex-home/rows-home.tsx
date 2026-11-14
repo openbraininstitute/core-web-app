@@ -245,7 +245,7 @@ const FADE_MS = 700;
  * type (the user asked): its stages' screenshots fading in turn with the step each shows, what it is for and what can
  * be done there, and the way in.
  */
-function PlaceShown({ card, base }: { card: IJourneyCard; base: string }) {
+export function PlaceShown({ card, base }: { card: IJourneyCard; base: string }) {
   const { setState: setAi } = usePanelState();
   const details = PLACE_DETAILS[card.icon] ?? { intro: card.blurb, points: [], frames: [] };
   const { frames } = details;
@@ -285,7 +285,8 @@ function PlaceShown({ card, base }: { card: IJourneyCard; base: string }) {
       <div className="no-scrollbar flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-1.5">
         {/* the step on show, the bar under it filling while it stays */}
         {frames.length > 0 && (
-          <div className="flex shrink-0 gap-[18px]">
+          // wrapping on a phone's width
+          <div className="flex shrink-0 flex-wrap gap-x-[18px] gap-y-2">
             {frames.map((f, i) => (
               <span key={f.step} className="flex flex-col gap-[5px]">
                 <span

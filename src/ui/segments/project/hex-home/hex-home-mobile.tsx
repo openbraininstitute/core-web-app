@@ -3,8 +3,6 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
-import { usePanelState } from '@/ui/segments/ai/hooks';
-import { PanelState } from '@/ui/segments/ai/types';
 import { AiSparkles } from '@/ui/segments/project/brains-walkthrough/agent-ready';
 import ObiLogo from '@/features/learn/components/ui/ObiLogo';
 import { VideoPlayer } from '@/ui/segments/project/get-started/elements/video-player';
@@ -12,6 +10,7 @@ import { VideoCard } from '@/ui/segments/project/hex-home/video-card';
 import { EXAMPLES, journeyHref } from '@/ui/segments/project/hex-home/content';
 import { HEX_CLIP, SQRT3 } from '@/ui/segments/project/hex-home/hex-geometry';
 import { FreeMedia, MeltFlier, TileMedia } from '@/ui/segments/project/hex-home/landing-example';
+import { PlaceShown } from '@/ui/segments/project/hex-home/rows-home';
 import { cn } from '@/utils/css-class';
 
 import { AgentMarks } from './agent-marks';
@@ -180,8 +179,23 @@ function ExampleStrip({ shown, away, onPick }: { shown: number; away: number | n
 
 /** Do science's places: the platform's parts as cards, each in colours of its own, as on the desktop. */
 function Places({ cards, base }: { cards: IJourneyCard[]; base: string }) {
-  // AI + MCP Server opens the assistant rather than going anywhere
-  const { setState: setAi } = usePanelState();
+  // one tapped shows its white card, as the desktop's rows do on their right (the user asked), with the way back
+  const [open, setOpen] = useState<number | null>(null);
+  if (open !== null && cards[open])
+    return (
+      <div key={cards[open].label} className={cn(styles.fadeIn, 'flex h-full min-h-[540px] flex-col gap-2.5')}>
+        <button
+          type="button"
+          onClick={() => setOpen(null)}
+          className="text-primary-9 flex w-max items-center gap-1 text-[14px] font-semibold"
+        >
+          ← Do science
+        </button>
+        <div className="min-h-0 flex-1">
+          <PlaceShown card={cards[open]} base={base} />
+        </div>
+      </div>
+    );
   // two to a row, filling the room over the categories so all of them show without a scroll (the user asked)
   return (
     <div
@@ -190,15 +204,11 @@ function Places({ cards, base }: { cards: IJourneyCard[]; base: string }) {
     >
       {cards.map((card, i) => {
         const { bg, ink } = placeColours(i);
-        const Card = card.action === 'ai' ? 'button' : Link;
-        const to =
-          card.action === 'ai'
-            ? { type: 'button' as const, onClick: () => setAi(PanelState.Expanded) }
-            : { href: card.href ? journeyHref(card.href, base) : '#' };
         return (
-          <Card
+          <button
             key={card.label}
-            {...(to as { href: string })}
+            type="button"
+            onClick={() => setOpen(i)}
             className="relative block h-full w-full overflow-hidden rounded-[18px] text-left shadow-[0_6px_18px_rgb(20_40_90/0.16)]"
             style={{ background: bg }}
           >
@@ -228,7 +238,7 @@ function Places({ cards, base }: { cards: IJourneyCard[]; base: string }) {
                 {card.blurb}
               </span>
             </span>
-          </Card>
+          </button>
         );
       })}
     </div>
