@@ -705,6 +705,22 @@ export function RowsHome({
         )}
       >
       <div className="no-scrollbar flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-2">
+        {/* Do science first, above the examples (the user asked to try it): three by three, Learn and Teach among them,
+            the OBI wordmark in the corner */}
+        <Row title="Do science" titled={titled} grid>
+          {places.map((card, i) => {
+            const tile = (
+              <ScienceRowCard
+                key={card.label}
+                card={card}
+                index={i}
+                selected={shown.kind === 'place' && shown.i === i}
+                onPick={() => pickPlace(i)}
+              />
+            );
+            return i === places.length - 2 ? [<ObiCell key="obi" />, tile] : tile;
+          })}
+        </Row>
         <div ref={strip}>
         <Row title="Examples" titled={titled}>
           {slots.map((i, slot) => {
@@ -740,7 +756,7 @@ export function RowsHome({
           })}
         </Row>
         </div>
-        {/* the videos second, Do science third in two rows, no row for The institute (the user asked) */}
+        {/* the videos after the examples, no row for The institute (the user asked) */}
         <Row title="Tutorial videos" titled={titled}>
           {videos.map((v, i) => (
             <div key={v.key} data-video={i} className="w-[146px] shrink-0">
@@ -754,21 +770,6 @@ export function RowsHome({
               />
             </div>
           ))}
-        </Row>
-        {/* three by three, Learn and Teach among them, the OBI wordmark in the corner (the user asked) */}
-        <Row title="Do science" titled={titled} grid>
-          {places.map((card, i) => {
-            const tile = (
-              <ScienceRowCard
-                key={card.label}
-                card={card}
-                index={i}
-                selected={shown.kind === 'place' && shown.i === i}
-                onPick={() => pickPlace(i)}
-              />
-            );
-            return i === places.length - 2 ? [<ObiCell key="obi" />, tile] : tile;
-          })}
         </Row>
       </div>
       </div>
