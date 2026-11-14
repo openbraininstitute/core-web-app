@@ -207,7 +207,7 @@ export function RowsHome({
                 title={e.label}
                 aria-pressed={on}
                 onClick={() => setShown({ kind: 'example', i })}
-                className="flex shrink-0 flex-col items-center gap-1.5"
+                className="group flex shrink-0 flex-col items-center gap-1.5"
                 style={{ width: tileW }}
               >
                 <span
@@ -223,7 +223,8 @@ export function RowsHome({
                     </span>
                   </span>
                 </span>
-                <span className="text-primary-9 line-clamp-2 text-center text-[11.5px] leading-[14px] font-semibold">
+                {/* its name only while pointed at (the user asked), its room kept so the row does not jump */}
+                <span className="text-primary-9 line-clamp-2 text-center text-[11.5px] leading-[14px] font-semibold opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
                   {e.label}
                 </span>
               </button>
