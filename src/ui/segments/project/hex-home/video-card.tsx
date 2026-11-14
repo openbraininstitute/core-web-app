@@ -58,6 +58,7 @@ export function VideoCard({
   delayMs,
   small = false,
   height,
+  detailsOnHover = false,
 }: {
   video: IExampleVideo;
   selected: boolean;
@@ -66,9 +67,12 @@ export function VideoCard({
   small?: boolean;
   /** A height of its own (px) rather than the poster's shape. */
   height?: number;
+  /** What it is and how long it lasts only while pointed at, its title alone otherwise (the rows home's). */
+  detailsOnHover?: boolean;
 }) {
   const [hover, setHover] = useState(false);
   const duration = useVideoDuration(video.video);
+  const details = cn('transition-opacity duration-200', detailsOnHover && !hover && 'opacity-0');
 
   const body: ReactNode = (
     <>
@@ -90,7 +94,7 @@ export function VideoCard({
           hover && 'opacity-80'
         )}
       />
-      <div className="relative flex items-center gap-[5px]">
+      <div className={cn('relative flex items-center gap-[5px]', details)}>
         <img src="/images/vlab-home/card-dot.svg" alt="" width={5} height={5} />
         <p className="text-primary-2 text-[9.5px] leading-[12px]">{video.kind}</p>
       </div>
@@ -103,7 +107,7 @@ export function VideoCard({
         >
           {video.title}
         </p>
-        <p className="text-primary-2 text-[11px] leading-[14px]">
+        <p className={cn('text-primary-2 text-[11px] leading-[14px]', details)}>
           {duration ? formatDuration(duration) : ' '}
         </p>
       </div>

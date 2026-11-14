@@ -747,8 +747,10 @@ export function RowsHome({
         <Row title="Tutorial videos" titled={titled}>
           {videos.map((v, i) => (
             <div key={v.key} data-video={i} className="w-[146px] shrink-0">
+              {/* what it is and its length only while pointed at (the user asked) */}
               <VideoCard
                 small
+                detailsOnHover
                 height={96}
                 video={v}
                 selected={shown.kind === 'video' && shown.i === i}
