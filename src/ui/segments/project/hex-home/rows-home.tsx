@@ -35,12 +35,28 @@ function useSize() {
 }
 
 /** A category's row: its name over its things, which scroll sideways. */
-function Row({ title, titled = true, children }: { title: string; titled?: boolean; children: ReactNode }) {
+function Row({
+  title,
+  titled = true,
+  twoRows = false,
+  children,
+}: {
+  title: string;
+  titled?: boolean;
+  /** Its things in two rows, scrolling sideways together. */
+  twoRows?: boolean;
+  children: ReactNode;
+}) {
   return (
     <section className="flex min-w-0 flex-col gap-2" aria-label={title}>
       {titled && <h2 className="text-primary-9 px-1 text-[13px] font-bold tracking-[0.08em] uppercase">{title}</h2>}
       {/* fading out at the box's right edge rather than cut off there */}
-      <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pt-1 pb-3 [mask-image:linear-gradient(to_right,#000_calc(100%-48px),transparent)]">
+      <div
+        className={cn(
+          'no-scrollbar -mx-1 gap-3 overflow-x-auto px-1 pt-1 pb-3 [mask-image:linear-gradient(to_right,#000_calc(100%-48px),transparent)]',
+          twoRows ? 'grid auto-cols-max grid-flow-col grid-rows-2' : 'flex'
+        )}
+      >
         {children}
         {/* room at the end, so the last one clears the fade */}
         <span aria-hidden className="w-6 shrink-0" />
@@ -179,8 +195,8 @@ function Shown({ shown, videos, base }: { shown: TShown; videos: IExampleVideo[]
 
 /**
  * The home's second design (the user asked for it beside the hexagons, chosen with the home's hidden menu): the
- * categories' things each in a row of their own down the left, scrolling sideways (Examples, Do science, the videos,
- * Learn & teach; The institute left out); an example or a video clicked
+ * categories' things each in a row of their own down the left, scrolling sideways (Examples, the videos, Do science
+ * with Learn & teach's places in two rows; The institute left out); an example or a video clicked
  * shows on the right, the places of the platform open their pages.
  */
 export function RowsHome({
@@ -237,12 +253,8 @@ export function RowsHome({
             );
           })}
         </Row>
-        <Row title="Do science" titled={titled}>
-          {groups[0].cards.map((card, i) => (
-            <ScienceRowCard key={card.label} card={card} index={i} base={base} />
-          ))}
-        </Row>
-        {/* the videos third, and no row for The institute (the user asked) */}
+        {/* the videos second, Do science (with Learn & teach's places) third in two rows, no row for The institute
+            (the user asked) */}
         <Row title="Tutorial videos" titled={titled}>
           {videos.map((v, i) => (
             <div key={v.key} className="w-[146px] shrink-0">
@@ -257,7 +269,10 @@ export function RowsHome({
             </div>
           ))}
         </Row>
-        <Row title="Learn & teach" titled={titled}>
+        <Row title="Do science" titled={titled} twoRows>
+          {groups[0].cards.map((card, i) => (
+            <ScienceRowCard key={card.label} card={card} index={i} base={base} />
+          ))}
           {groups[1].cards.map((card) => (
             <PlaceRowCard key={card.label} card={card} base={base} />
           ))}
