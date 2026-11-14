@@ -494,23 +494,29 @@ function Shown({
     return (
       <div ref={box} className="flex h-full min-h-0 flex-col justify-center gap-3">
         {video && (
-          <div key={video.key} className={cn(styles.fadeIn, 'flex flex-col gap-3')}>
-            {/* its title once it has grown into place, the player only then (it starts as it mounts) */}
-            <div
-              key={landing ? 'landing' : 'landed'}
-              className={cn('flex flex-col', landing ? 'invisible' : styles.fadeIn)}
-            >
-              <span className="text-[12px] font-semibold tracking-[0.12em] uppercase" style={{ color: GREEN }}>
-                {video.kind}
-              </span>
-              <span className="text-primary-9 font-serif text-[28px] leading-[34px]">{video.title}</span>
-            </div>
+          <div key={video.key} className={cn(styles.fadeIn, 'flex flex-col gap-4')}>
             <div
               ref={heroBox}
               className="aspect-video w-full overflow-hidden rounded-2xl shadow-[0_18px_50px_rgb(20_40_90_/_0.18)]"
               style={landing ? { visibility: 'hidden' } : undefined}
             >
+              {/* the player only once it has grown into place (it starts as it mounts) */}
               {!landing && <VideoPlayer url={video.video ?? video.url} title={video.title} />}
+            </div>
+            {/* what it is under it, as an example's words are under it (the user asked), once it is in place; the
+                description a placeholder until the videos carry one */}
+            <div
+              key={landing ? 'landing' : 'landed'}
+              className={cn('flex max-w-[640px] flex-col gap-1.5', landing ? 'invisible' : styles.fadeIn)}
+            >
+              <span className="text-[12px] font-semibold tracking-[0.12em] uppercase" style={{ color: GREEN }}>
+                {video.kind}
+              </span>
+              <span className="text-primary-9 font-serif text-[28px] leading-[34px]">{video.title}</span>
+              <p className="m-0 text-[14px] leading-[21px] text-neutral-600">
+                A short walk through this part of the platform: what it is for, where to find it, and the steps to try
+                it yourself. Placeholder text for now.
+              </p>
             </div>
           </div>
         )}
