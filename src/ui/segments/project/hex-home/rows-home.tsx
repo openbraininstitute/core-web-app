@@ -14,7 +14,7 @@ import { VideoCard } from '@/ui/segments/project/hex-home/video-card';
 import { cn } from '@/utils/css-class';
 
 import { AgentMarks } from './agent-marks';
-import { GREEN, placeColours, wordsFor } from './hex-home-shared';
+import { GREEN, wordsFor } from './hex-home-shared';
 import styles from './hex-cloud.module.css';
 
 import type { ReactNode, RefObject } from 'react';
@@ -92,19 +92,32 @@ function Row({
   );
 }
 
-/** One of Do science's cards, small, in its colours: a click shows it large on the right (the user asked). */
+/** The agents the platform can be driven from, by their marks, with AI's sparkles: the AI card's picture. */
+function AgentsPicture({ className }: { className?: string }) {
+  return (
+    <span className={cn('absolute inset-0 bg-[#f4f7fc] text-[#13306f]', className)}>
+      <AiSparkles className="absolute top-[12%] right-[7%] h-[24%] w-auto opacity-70" />
+      <span className="absolute inset-x-0 top-[34%] flex h-[30%] justify-center opacity-80">
+        <AgentMarks className="h-full gap-[9%]" markClassName="h-[70%] w-auto" />
+      </span>
+    </span>
+  );
+}
+
+/**
+ * One of Do science's cards, small and white (the user asked: no colours), its first stage's screenshot over its
+ * name: a click shows it large on the right.
+ */
 function ScienceRowCard({
   card,
-  index,
   selected,
   onPick,
 }: {
   card: IJourneyCard;
-  index: number;
   selected: boolean;
   onPick: () => void;
 }) {
-  const { bg, ink } = placeColours(index);
+  const first = PLACE_DETAILS[card.icon]?.frames[0];
   return (
     // as wide as they were square, lower (the user asked)
     <button
@@ -112,48 +125,34 @@ function ScienceRowCard({
       onClick={onPick}
       aria-pressed={selected}
       title={`${card.label}: ${card.blurb}`}
-      className="group relative block h-[96px] w-[146px] shrink-0 overflow-hidden rounded-[14px] text-left"
-      style={{ background: bg }}
-    >
-      {card.img ? (
-        <img
-          src={card.img}
-          alt=""
-          className={cn(
-            'absolute inset-0 h-full w-full object-cover mix-blend-luminosity grayscale transition-opacity duration-300 group-hover:opacity-80',
-            selected ? 'opacity-80' : 'opacity-45'
-          )}
-          style={{ objectPosition: card.imgAt ?? 'center' }}
-        />
-      ) : (
-        <span
-          className={cn('absolute inset-0 transition-opacity duration-300 group-hover:opacity-85', selected ? 'opacity-85' : 'opacity-55')}
-          style={{ color: ink }}
-        >
-          <AiSparkles className="absolute top-[9%] right-[8%] h-[20%] w-auto" />
-          <span className="absolute inset-x-0 top-[14%] flex h-[24%] justify-center">
-            <AgentMarks className="h-full gap-[9%]" markClassName="h-[70%] w-auto" />
-          </span>
-        </span>
+      className={cn(
+        'group border-neutral-2 relative flex h-[96px] w-[146px] shrink-0 flex-col overflow-hidden rounded-[14px] border bg-white text-left transition-shadow hover:shadow-md',
+        selected ? 'shadow-[0_6px_16px_-6px_rgb(0_39_102/0.35)]' : 'shadow-[0_4px_12px_-6px_rgb(0_39_102/0.12)]'
       )}
-      <span
-        className="absolute inset-x-0 bottom-0 flex flex-col gap-[2px] px-3.5 pt-8 pb-3"
-        style={{ backgroundImage: `linear-gradient(to top, ${bg} 50%, ${bg}00)` }}
-      >
-        <span className="text-[14px] leading-[17px] font-semibold" style={{ color: ink }}>
-          {card.label}
-        </span>
-        <span className="line-clamp-2 text-[11.5px] leading-[14px] opacity-80" style={{ color: ink }}>
-          {card.blurb}
-        </span>
+    >
+      <span className="border-neutral-2 relative block h-[54px] shrink-0 overflow-hidden border-b bg-neutral-50">
+        {first ? (
+          <img src={first.src} alt="" className="absolute inset-0 h-full w-full object-cover object-top" draggable={false} />
+        ) : (
+          <AgentsPicture />
+        )}
+      </span>
+      <span className="flex min-w-0 flex-col px-2.5 pt-1.5">
+        <span className="text-primary-9 truncate text-[12.5px] leading-[15px] font-semibold">{card.label}</span>
+        <span className="truncate text-[11px] leading-[14px] text-neutral-500">{card.blurb}</span>
       </span>
     </button>
   );
 }
 
 /** What each of Do science's places is for, and what can be done there, on its large card (the user asked). */
-const PLACE_DETAILS: Record<string, { intro: string; points: string[] }> = {
+/** Its stages, each a screenshot of it in use (the user asked, as the Workflows page's types have theirs). */
+type TFrames = Array<{ src: string; step: string }>;
+const shots = (place: string, steps: string[]): TFrames =>
+  steps.map((step, i) => ({ src: `/images/place-previews/${place}-${i + 1}.jpg`, step }));
+const PLACE_DETAILS: Record<string, { intro: string; points: string[]; frames: TFrames }> = {
   data: {
+    frames: shots('data', ['Find', 'Browse', 'Open']),
     intro: 'Experimental data and models from across species, found by brain region.',
     points: [
       'Browse neuron morphologies, electrophysiology recordings, ion channel and neuron models, circuits and more',
@@ -163,6 +162,11 @@ const PLACE_DETAILS: Record<string, { intro: string; points: string[] }> = {
     ],
   },
   workflows: {
+    frames: [
+      { src: '/images/workflow-previews/configure.jpg', step: 'Configure' },
+      { src: '/images/workflow-previews/results.jpg', step: 'Results' },
+      { src: '/images/workflow-previews/analysis.jpg', step: 'Analyse' },
+    ],
     intro: 'Build models and simulate them in guided steps, from single neurons to whole-brain circuits.',
     points: [
       'Build single-neuron models, synaptomes and circuits',
@@ -172,6 +176,7 @@ const PLACE_DETAILS: Record<string, { intro: string; points: string[] }> = {
     ],
   },
   notebooks: {
+    frames: shots('notebooks', ['Choose', 'Code', 'See']),
     intro: 'Python analyses in the browser, with the platform’s data and your results to hand.',
     points: [
       'Start from ready-made notebooks for common analyses',
@@ -181,6 +186,7 @@ const PLACE_DETAILS: Record<string, { intro: string; points: string[] }> = {
     ],
   },
   labs: {
+    frames: shots('labs', ['Labs & projects', 'Project', 'Team']),
     intro: 'Your virtual labs and their projects: where your data, models and results live, and who you work with.',
     points: [
       'Make projects and invite your team to them',
@@ -190,6 +196,7 @@ const PLACE_DETAILS: Record<string, { intro: string; points: string[] }> = {
     ],
   },
   reports: {
+    frames: shots('reports', ['Logs', 'Read', 'Explore']),
     intro: 'Write up what you found, with figures from your simulations and analyses.',
     points: [
       'Research logs that grow as the work does',
@@ -198,6 +205,7 @@ const PLACE_DETAILS: Record<string, { intro: string; points: string[] }> = {
     ],
   },
   ai: {
+    frames: [],
     intro: 'Use the platform from the AI you already work with.',
     points: [
       'Ask the platform’s own assistant about data, models and workflows',
@@ -207,73 +215,110 @@ const PLACE_DETAILS: Record<string, { intro: string; points: string[] }> = {
   },
 };
 
+/** How long each stage's screenshot stays, and how long one takes to fade into the next (the Workflows page's). */
+const HOLD_MS = 2200;
+const FADE_MS = 700;
+
 /**
- * One of Do science's places, large on the right, the pane's whole height (the user asked): its picture, what it is
- * for and what can be done there, and the way in.
+ * One of Do science's places, large on the right, the pane's whole height and white, as the Workflows page shows a
+ * type (the user asked): its stages' screenshots fading in turn with the step each shows, what it is for and what can
+ * be done there, and the way in.
  */
-function PlaceShown({ card, index, base }: { card: IJourneyCard; index: number; base: string }) {
-  const { bg, ink } = placeColours(index);
+function PlaceShown({ card, base }: { card: IJourneyCard; base: string }) {
   const { setState: setAi } = usePanelState();
-  const details = PLACE_DETAILS[card.icon] ?? { intro: card.blurb, points: [] };
-  const go = 'flex h-[44px] w-max shrink-0 items-center rounded-full px-[22px] text-[14px] font-semibold transition-opacity hover:opacity-90';
+  const details = PLACE_DETAILS[card.icon] ?? { intro: card.blurb, points: [], frames: [] };
+  const { frames } = details;
+  const [frame, setFrame] = useState(0);
+  useEffect(() => {
+    setFrame(0);
+    if (frames.length < 2) return;
+    const timer = window.setInterval(() => setFrame((f) => (f + 1) % frames.length), HOLD_MS + FADE_MS);
+    return () => window.clearInterval(timer);
+  }, [card.label, frames.length]);
+  const go =
+    'mt-1 flex h-[44px] w-max shrink-0 items-center rounded-full px-[22px] text-[15px] font-semibold text-white transition-[filter] hover:brightness-110';
   return (
     <div
       className={cn(
         styles.fadeIn,
-        'relative flex h-full w-full flex-col overflow-hidden rounded-[24px] shadow-[0_18px_50px_rgb(20_40_90_/_0.18)]'
+        'flex h-full w-full flex-col gap-4 overflow-hidden rounded-[20px] border border-[rgb(19_48_111/0.08)] bg-white p-4 shadow-[0_18px_44px_rgb(20_40_90/0.18),0_2px_6px_rgb(20_40_90/0.08)]'
       )}
-      style={{ background: bg }}
     >
-      {/* its picture along the top, fading into its colour */}
-      <div className="relative min-h-[140px] shrink-0 basis-[38%]">
-        {card.img ? (
-          <img
-            src={card.img}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover opacity-70 mix-blend-luminosity grayscale"
-            style={{ objectPosition: card.imgAt ?? 'center' }}
-          />
+      {/* no taller than nearly half the card, so its words and the way in fit under it on a short screen */}
+      <div className="border-neutral-2 relative aspect-[1210/714] max-h-[44%] w-full shrink-0 overflow-hidden rounded-[12px] border bg-neutral-50">
+        {frames.length ? (
+          frames.map((f, i) => (
+            <img
+              key={f.src}
+              src={f.src}
+              alt=""
+              draggable={false}
+              className="absolute inset-0 h-full w-full object-cover object-top"
+              style={{ opacity: frame === i ? 1 : 0, transition: `opacity ${FADE_MS}ms ease` }}
+            />
+          ))
         ) : (
-          <span className="absolute inset-0 opacity-80" style={{ color: ink }}>
-            <AiSparkles className="absolute top-[12%] right-[8%] h-[26%] w-auto" />
-            <span className="absolute inset-x-0 top-[30%] flex h-[30%] justify-center">
-              <AgentMarks className="h-full gap-[9%]" markClassName="h-[70%] w-auto" />
-            </span>
-          </span>
+          <AgentsPicture />
         )}
-        <span
-          className="absolute inset-x-0 bottom-0 h-1/2"
-          style={{ backgroundImage: `linear-gradient(to top, ${bg}, ${bg}00)` }}
-        />
       </div>
-      <div className="no-scrollbar flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-8 pt-1 pb-7" style={{ color: ink }}>
-        <div className="flex flex-col gap-2">
-          <span className="text-[32px] leading-[36px] font-semibold">{card.label}</span>
-          <span className="text-[16px] leading-[22px] opacity-90">{details.intro}</span>
+      <div className="no-scrollbar flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-1.5">
+        {/* the step on show, the bar under it filling while it stays */}
+        {frames.length > 0 && (
+          <div className="flex shrink-0 gap-[18px]">
+            {frames.map((f, i) => (
+              <span key={f.step} className="flex flex-col gap-[5px]">
+                <span
+                  className={cn(
+                    'text-[12.5px] leading-[16px] font-bold tracking-[0.08em] uppercase transition-colors duration-300',
+                    frame === i ? 'text-[#008c05]' : 'text-neutral-400'
+                  )}
+                >
+                  {i + 1} · {f.step}
+                </span>
+                <span className="h-[3px] w-full overflow-hidden rounded-full bg-neutral-200">
+                  <span
+                    key={frame === i ? `${card.label}-${frame}` : 'idle'}
+                    className="block h-full rounded-full bg-[#008c05]"
+                    style={frame === i ? { animation: `place-fill ${HOLD_MS + FADE_MS}ms linear both` } : { width: 0 }}
+                  />
+                </span>
+              </span>
+            ))}
+          </div>
+        )}
+        <div className="flex flex-col gap-1.5">
+          <span className="text-neutral-5 text-[12.5px] leading-[16px] font-semibold tracking-[0.08em] uppercase">
+            Do science
+          </span>
+          <h3 className="text-primary-9 m-0 text-[26px] leading-[31px] font-bold">{card.label}</h3>
+          <p className="m-0 text-[15.5px] leading-[22px] text-neutral-700">{details.intro}</p>
         </div>
         {details.points.length > 0 && (
-          <ul className="flex flex-col gap-2.5">
+          <ul className="m-0 flex flex-col gap-2 p-0">
             {details.points.map((point) => (
-              <li key={point} className="flex gap-3 text-[14px] leading-[20px] opacity-85">
-                <span aria-hidden className="mt-[7px] size-[6px] shrink-0 rounded-full" style={{ background: ink }} />
+              <li key={point} className="flex gap-3 text-[14px] leading-[20px] text-neutral-600">
+                <span aria-hidden className="mt-[7px] size-[6px] shrink-0 rounded-full bg-[#008c05]" />
                 {point}
               </li>
             ))}
           </ul>
         )}
-        <span className="min-h-2 flex-1" />
+      </div>
+      {/* the way in, kept in sight under the words, which scroll if they must */}
+      <div className="shrink-0 px-1.5 pb-1">
         {card.action === 'ai' ? (
-          <button type="button" onClick={() => setAi(PanelState.Expanded)} className={go} style={{ background: ink, color: bg }}>
+          <button type="button" onClick={() => setAi(PanelState.Expanded)} className={go} style={{ background: GREEN }}>
             Ask the assistant
           </button>
         ) : (
           card.href && (
-            <Link href={journeyHref(card.href, base)} className={go} style={{ background: ink, color: bg }}>
+            <Link href={journeyHref(card.href, base)} className={go} style={{ background: GREEN }}>
               Open {card.label}
             </Link>
           )
         )}
       </div>
+      <style>{'@keyframes place-fill { from { width: 0 } to { width: 100% } }'}</style>
     </div>
   );
 }
@@ -435,7 +480,7 @@ function Shown({
     const card = places[shown.i];
     return (
       <div ref={box} className="flex h-full min-h-0 flex-col">
-        {card && <PlaceShown key={card.label} card={card} index={shown.i} base={base} />}
+        {card && <PlaceShown key={card.label} card={card} base={base} />}
       </div>
     );
   }
@@ -693,7 +738,6 @@ export function RowsHome({
             <ScienceRowCard
               key={card.label}
               card={card}
-              index={i}
               selected={shown.kind === 'place' && shown.i === i}
               onPick={() => pickPlace(i)}
             />
