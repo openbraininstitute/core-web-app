@@ -39,6 +39,15 @@ const NO_FRONT = empty(THREE.RGBAFormat, 4, THREE.HalfFloatType);
  */
 const TUBE_FROM_PX = 48;
 
+/**
+ * The width on screen, in device pixels, from which a morphology's soma is drawn as a ball, ray-cast and round in
+ * depth; a smaller one is drawn as a flat disc at the sphere's nearest point, lit as the sphere. A ball writes its own
+ * depth, so each of its pixels is shaded under whatever covers it: with every soma of the Male CNS a ball, 164,606 of
+ * them, the whole circuit took 3.3 ms more per frame on a canvas of 2560×1600, and 5.3 ms more at 3456×2234. Discs
+ * under 16 px leave 1.5 ms of that at the larger size; under 48 px, somas zoomed 3 times in are seen to overlap flat.
+ */
+const BALL_FROM_PX = 32;
+
 /** A kind of dot's uniforms as the nodes read them. */
 export class DotUniforms {
   readonly radius = uniform(0);
@@ -99,6 +108,8 @@ export class GpuUniforms {
   readonly segments = uniform(0, 'uint');
   /** The least radius of a segment drawn as the tube itself, in device pixels. */
   readonly tubeFrom = uniform(TUBE_FROM_PX / 2);
+  /** The least radius of a soma drawn as a ball, in device pixels. */
+  readonly ballFrom = uniform(BALL_FROM_PX / 2);
   readonly offset = uniform(new THREE.Vector3());
   readonly radius = uniform(1);
   readonly opacity = uniform(1);

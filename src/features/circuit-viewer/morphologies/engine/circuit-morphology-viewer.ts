@@ -65,17 +65,17 @@ export class CircuitMorphologyViewer extends CircuitView {
     const look = this.look.material;
     this.materials = {
       segment: [impostor(look, 'segment', uniforms)],
-      soma: impostor(look.clone(), 'soma', uniforms),
+      soma: [impostor(look.clone(), 'soma', uniforms)],
       cloud: somaCloudMaterial(uniforms, cloudUniforms),
       wholeCloud: somaCloudMaterial(uniforms, cloudUniforms, { whole: true }),
       ids: {
         segment: [idMaterial('segment', uniforms)],
-        soma: idMaterial('soma', uniforms),
+        soma: [idMaterial('soma', uniforms)],
         cloud: somaCloudIdMaterial(uniforms, cloudUniforms),
       },
       spots: {
         segment: [idMaterial('segment', uniforms, spotUniforms)],
-        soma: idMaterial('soma', uniforms, spotUniforms),
+        soma: [idMaterial('soma', uniforms, spotUniforms)],
       },
       electrode: electrodeMaterial(this.electrodeUniforms, pixelRatio),
       synapse: electrodeMaterial(this.synapseUniforms, pixelRatio, { among: true }),
