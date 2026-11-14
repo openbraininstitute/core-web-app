@@ -561,8 +561,8 @@ export function RowsHome({
   return (
     <div ref={stage} className="relative flex h-full w-full min-w-0 gap-8 bg-white px-6 pt-5 pb-4">
       {/* the rows fade out at their right edge (no box round them: the user tried one), scrolling with no bar */}
-      {/* 60:40 whatever is on show (the user tried 40:60 while a video plays) */}
-      <div className="flex w-[60%] min-w-0 shrink-0 flex-col">
+      {/* 55:45 whatever is on show (the user tried 60:40, and 40:60 while a video plays) */}
+      <div className="flex w-[55%] min-w-0 shrink-0 flex-col">
       <div className="no-scrollbar flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-2">
         <div ref={strip}>
         <Row title="Examples" titled={titled}>
