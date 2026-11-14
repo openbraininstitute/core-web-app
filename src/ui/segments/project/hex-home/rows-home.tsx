@@ -1,24 +1,47 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { usePanelState } from '@/ui/segments/ai/hooks';
 import { PanelState } from '@/ui/segments/ai/types';
 import { VideoPlayer } from '@/ui/segments/project/get-started/elements/video-player';
 import { EXAMPLES, journeyHref } from '@/ui/segments/project/hex-home/content';
 import { HEX_CLIP, SQRT3 } from '@/ui/segments/project/hex-home/hex-geometry';
-import { FreeMedia, TileMedia } from '@/ui/segments/project/hex-home/landing-example';
+import { FreeMedia, MeltFlier, TileMedia } from '@/ui/segments/project/hex-home/landing-example';
 import { VideoCard } from '@/ui/segments/project/hex-home/video-card';
 import { cn } from '@/utils/css-class';
 
 import { GREEN, placeColours, wordsFor } from './hex-home-shared';
 import styles from './hex-cloud.module.css';
 
-import type { ReactNode } from 'react';
+import type { ReactNode, RefObject } from 'react';
 import type { IExampleVideo, IJourneyCard, IJourneyGroup } from '@/ui/segments/project/hex-home/content';
+import type { IHexBox, IPoint } from '@/ui/segments/project/hex-home/hex-geometry';
 
 type TShown = { kind: 'example'; i: number } | { kind: 'video'; i: number };
+
+/** Where an example flies to or from on show: its centre, its width there and the size its tile grows to. */
+interface IOnShow {
+  at: IPoint;
+  width: number;
+  heroR: number;
+}
+
+/**
+ * A pick under way: the example flying out of its tile to be on show (where it lands is measured once it is laid
+ * out there, unseen), and the one that was on show, if any, flying back to its own.
+ */
+interface IFlight {
+  id: number;
+  inbound: number;
+  from: IHexBox;
+  to: IOnShow | null;
+  outbound: { i: number; back: IHexBox; home: IOnShow } | null;
+}
+
+/** The width of the examples' hexagons in their row (px). */
+const TILE_W = 108;
 
 /** A box's size, for what has to be told it in px (the one on show). */
 function useSize() {
@@ -131,7 +154,21 @@ function ScienceRowCard({ card, index, base }: { card: IJourneyCard; index: numb
 }
 
 /** What is open on the right: the example picked, large, with what it is and what to do with it, or a video. */
-function Shown({ shown, videos, base }: { shown: TShown; videos: IExampleVideo[]; base: string }) {
+function Shown({
+  shown,
+  videos,
+  base,
+  heroBox,
+  landing,
+}: {
+  shown: TShown;
+  videos: IExampleVideo[];
+  base: string;
+  /** The example's picture, measured for its flight there. */
+  heroBox: RefObject<HTMLDivElement | null>;
+  /** Flying there out of its tile: kept in its place unseen, its words only after it lands. */
+  landing: boolean;
+}) {
   const [box, size] = useSize();
   const button =
     'flex h-[38px] items-center justify-center rounded-full px-[16px] text-[13px] font-semibold transition-colors';
@@ -163,8 +200,15 @@ function Shown({ shown, videos, base }: { shown: TShown; videos: IExampleVideo[]
     <div ref={box} className="flex h-full min-h-0 flex-col items-center justify-center gap-4">
       {width > 0 && (
         <div key={example.key} className={cn(styles.fadeIn, 'flex flex-col items-center gap-4')}>
-          <FreeMedia example={example} width={width} />
-          <div className="flex max-w-[560px] flex-col items-center gap-2 text-center">
+          {/* no fade of its own once landed: the flight ends with it just as it is here */}
+          <div ref={heroBox} style={landing ? { visibility: 'hidden' } : undefined}>
+            <FreeMedia example={example} width={width} />
+          </div>
+          {/* laid out (so it lands where it will stay) but unseen while it flies, fading in once it is there */}
+          <div
+            key={landing ? 'landing' : 'landed'}
+            className={cn('flex max-w-[560px] flex-col items-center gap-2 text-center', landing ? 'invisible' : styles.fadeIn)}
+          >
             <h2 className="text-[26px] leading-[31px] font-light text-[#13306f]">{words.name}</h2>
             <p className="text-[14px] leading-[21px] text-neutral-600">{words.about}</p>
             <div className="mt-1 flex flex-wrap justify-center gap-2">
@@ -212,12 +256,83 @@ export function RowsHome({
   titled?: boolean;
 }) {
   const [shown, setShown] = useState<TShown>({ kind: 'example', i: 0 });
-  const tileW = 108;
+  const tileW = TILE_W;
+  const stage = useRef<HTMLDivElement>(null);
+  const strip = useRef<HTMLDivElement>(null);
+  const heroBox = useRef<HTMLDivElement>(null);
+  const [flight, setFlight] = useState<IFlight | null>(null);
+  const [landed, setLanded] = useState({ inbound: true, outbound: true });
+
+  // the page's own coordinates of a box on it
+  const centreOf = (el: HTMLElement) => {
+    const R = stage.current!.getBoundingClientRect();
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width / 2 - R.left, y: r.top + r.height / 2 - R.top, w: r.width };
+  };
+  const tileOf = (n: number): IHexBox | null => {
+    const el = strip.current?.querySelector<HTMLElement>(`[data-example="${n}"]`);
+    if (!el) return null;
+    const { x, y, w } = centreOf(el);
+    // its picture's hexagon, inside the tile's rim
+    return { x, y, r: (0.95 * w) / SQRT3 };
+  };
+  const heroOn = (): IOnShow | null => {
+    const el = heroBox.current;
+    if (!el) return null;
+    const { x, y, w } = centreOf(el);
+    // as on the desktop, its tile grows to about two thirds of its width as it melts
+    return { at: { x, y }, width: w, heroR: (0.65 * w) / SQRT3 };
+  };
+
+  // A click flies the example out of its tile, growing and its tile melting away, to be on show on the right, as the
+  // one there flies back to its tile, as on the desktop and the phone (the user asked).
+  const pick = (i: number) => {
+    if (flight || (shown.kind === 'example' && shown.i === i)) return;
+    const from = stage.current && tileOf(i);
+    if (!from) {
+      setShown({ kind: 'example', i });
+      return;
+    }
+    const back = shown.kind === 'example' ? tileOf(shown.i) : null;
+    const home = shown.kind === 'example' ? heroOn() : null;
+    setFlight({
+      id: Date.now(),
+      inbound: i,
+      from,
+      // measured once it is laid out on show, unseen (below)
+      to: null,
+      outbound: shown.kind === 'example' && back && home ? { i: shown.i, back, home } : null,
+    });
+    setLanded({ inbound: false, outbound: !(shown.kind === 'example' && back && home) });
+    setShown({ kind: 'example', i });
+  };
+  // where it lands: its place on show, now laid out for it (before the page is painted, so nothing shows meanwhile)
+  useLayoutEffect(() => {
+    if (!flight || flight.to) return;
+    const to = heroOn();
+    if (to && to.width > 0) setFlight({ ...flight, to });
+    else {
+      setFlight(null);
+      setLanded({ inbound: true, outbound: true });
+    }
+  }, [flight]);
+  // both flights in: each is where it belongs
+  useEffect(() => {
+    if (flight && landed.inbound && landed.outbound) setFlight(null);
+  }, [flight, landed]);
+  const pickVideo = (i: number) => {
+    setFlight(null);
+    setLanded({ inbound: true, outbound: true });
+    setShown({ kind: 'video', i });
+  };
+  const away = flight && !landed.outbound ? flight.outbound?.i : undefined;
+
   return (
-    <div className="flex h-full w-full min-w-0 gap-8 bg-white px-6 pt-5 pb-4">
+    <div ref={stage} className="relative flex h-full w-full min-w-0 gap-8 bg-white px-6 pt-5 pb-4">
       {/* the rows fade out at their right edge (no box round them: the user tried one), scrolling with no bar */}
       <div className="flex w-[60%] min-w-0 shrink-0 flex-col">
       <div className="no-scrollbar flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-2">
+        <div ref={strip}>
         <Row title="Examples" titled={titled}>
           {EXAMPLES.map((e, i) => {
             const on = shown.kind === 'example' && shown.i === i;
@@ -227,7 +342,8 @@ export function RowsHome({
                 type="button"
                 title={e.label}
                 aria-pressed={on}
-                onClick={() => setShown({ kind: 'example', i })}
+                data-example={i}
+                onClick={() => pick(i)}
                 className="group relative flex shrink-0 flex-col items-center"
                 style={{ width: tileW }}
               >
@@ -239,8 +355,10 @@ export function RowsHome({
                     className={cn('absolute inset-0 transition-colors', on ? 'bg-[#002766]' : 'bg-white')}
                     style={{ clipPath: HEX_CLIP }}
                   >
-                    <span className="absolute inset-[5%]" style={{ clipPath: HEX_CLIP }}>
-                      <TileMedia example={e} />
+                    {/* its picture gone from it while it is on show, or on its way back (the flights draw it), as on
+                        the phone */}
+                    <span className="absolute inset-[5%] bg-white" style={{ clipPath: HEX_CLIP }}>
+                      {!on && i !== away && <TileMedia example={e} />}
                     </span>
                   </span>
                 </span>
@@ -253,6 +371,7 @@ export function RowsHome({
             );
           })}
         </Row>
+        </div>
         {/* the videos second, Do science (with Learn & teach's places) third in two rows, no row for The institute
             (the user asked) */}
         <Row title="Tutorial videos" titled={titled}>
@@ -264,7 +383,7 @@ export function RowsHome({
                 video={v}
                 selected={shown.kind === 'video' && shown.i === i}
                 delayMs={0}
-                onPick={() => setShown({ kind: 'video', i })}
+                onPick={() => pickVideo(i)}
               />
             </div>
           ))}
@@ -283,8 +402,42 @@ export function RowsHome({
       </div>
       </div>
       <div className="min-h-0 min-w-0 flex-1">
-        <Shown shown={shown} videos={videos} base={base} />
+        <Shown
+          shown={shown}
+          videos={videos}
+          base={base}
+          heroBox={heroBox}
+          landing={!!flight && !landed.inbound}
+        />
       </div>
+      {flight?.to && (
+        <div className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
+          {/* each gone as it lands, so the one there is not drawn twice over itself */}
+          {!landed.inbound && (
+            <MeltFlier
+              key={`in-${flight.id}`}
+              tile={flight.from}
+              to={flight.to.at}
+              example={EXAMPLES[flight.inbound]}
+              width={flight.to.width}
+              heroR={flight.to.heroR}
+              onDone={() => setLanded((l) => ({ ...l, inbound: true }))}
+            />
+          )}
+          {flight.outbound && !landed.outbound && (
+            <MeltFlier
+              key={`out-${flight.id}`}
+              tile={flight.outbound.back}
+              to={flight.outbound.home.at}
+              example={EXAMPLES[flight.outbound.i]}
+              width={flight.outbound.home.width}
+              heroR={flight.outbound.home.heroR}
+              back
+              onDone={() => setLanded((l) => ({ ...l, outbound: true }))}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 }
