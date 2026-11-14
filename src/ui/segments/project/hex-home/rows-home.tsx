@@ -160,57 +160,195 @@ function AgentsPicture({ className }: { className?: string }) {
  * One of Do science's cards, small, in its colours (the user asked to keep them, white only on the right): a click
  * shows it large on the right (the user asked).
  */
+/** `hex` (#rrggbb) mixed towards `to` by `t` (0 to 1), as #rrggbb. */
+function mix(hex: string, to: string, t: number) {
+  const c = (h: string, i: number) => parseInt(h.slice(1 + 2 * i, 3 + 2 * i), 16);
+  return `#${[0, 1, 2]
+    .map((i) => Math.round(c(hex, i) + (c(to, i) - c(hex, i)) * t).toString(16).padStart(2, '0'))
+    .join('')}`;
+}
+
+/** The Platform cards' looks, chosen with the home's second hidden menu (the user asked): the palette as it was, the
+ * softer one, and ten white ones with a flourish of the card's colour. */
+export const PLATFORM_CARD_STYLES = [
+  { key: 'bold', label: 'Colour (before)' },
+  { key: 'subtle', label: 'Soft colour (now)' },
+  { key: 'top-bar', label: 'White, colour bar on top' },
+  { key: 'left-edge', label: 'White, colour edge on the left' },
+  { key: 'corner-hex', label: 'White, coloured corner hexagon' },
+  { key: 'dot', label: 'White, coloured dot by the name' },
+  { key: 'tinted', label: 'White, picture in its colour' },
+  { key: 'wash', label: 'White, colour wash in a corner' },
+  { key: 'underline', label: 'White, coloured underline' },
+  { key: 'outline', label: 'White, coloured outline' },
+  { key: 'hexes', label: 'White, faint coloured hexagons' },
+  { key: 'glow', label: 'White, coloured glow' },
+] as const;
+export type TCardStyle = (typeof PLATFORM_CARD_STYLES)[number]['key'];
+export const DEFAULT_CARD_STYLE: TCardStyle = 'subtle';
+
+/** A pointy-topped hexagon's outline, `w` wide, for the faint pattern in a card's corner. */
+function HexOutline({ w, color, x, y }: { w: number; color: string; x: number; y: number }) {
+  const h = (2 * w) / SQRT3;
+  const pts = [
+    [w / 2, 0],
+    [w, h / 4],
+    [w, (3 * h) / 4],
+    [w / 2, h],
+    [0, (3 * h) / 4],
+    [0, h / 4],
+  ]
+    .map((pt) => pt.join(','))
+    .join(' ');
+  return (
+    <svg aria-hidden className="absolute" style={{ right: x, bottom: y }} width={w} height={h} viewBox={`-1 -1 ${w + 2} ${h + 2}`}>
+      <polygon points={pts} fill="none" stroke={color} strokeWidth={1.5} />
+    </svg>
+  );
+}
+
+/**
+ * One of Platform's cards, small, in the look chosen (the user asked for options): a click shows it large on the
+ * right. The coloured looks fill it with its colour (the palette's, or paled towards white with its name in a deep
+ * shade of it, as the user asked for more subtle); the white ones keep its picture faint along its top and add a
+ * flourish of its colour.
+ */
 function ScienceRowCard({
   card,
   index,
   selected,
   onPick,
+  look = DEFAULT_CARD_STYLE,
 }: {
   card: IJourneyCard;
   index: number;
   selected: boolean;
   onPick: () => void;
+  look?: TCardStyle;
 }) {
-  const { bg, ink } = placeColours(index);
+  const base = placeColours(index);
+  const pale = mix(base.bg, '#ffffff', 0.42);
+  const deep = mix(base.bg, '#14203f', 0.68);
+  const box = 'group relative block h-full w-full overflow-hidden rounded-[14px] text-left';
+  const marks = (color: string, className: string) => (
+    <span className={cn('absolute inset-0 transition-opacity duration-300', className)} style={{ color }}>
+      <AiSparkles className="absolute top-[9%] right-[8%] h-[20%] w-auto" />
+      <span className="absolute inset-x-0 top-[14%] flex h-[24%] justify-center">
+        <AgentMarks className="h-full gap-[9%]" markClassName="h-[70%] w-auto" />
+      </span>
+    </span>
+  );
+
+  if (look === 'bold' || look === 'subtle') {
+    const { bg, ink } = look === 'bold' ? base : { bg: pale, ink: deep };
+    const [rest, on] = look === 'bold' ? ['opacity-45', 'opacity-80'] : ['opacity-35', 'opacity-70'];
+    return (
+      <button
+        type="button"
+        onClick={onPick}
+        aria-pressed={selected}
+        title={`${card.label}: ${card.blurb}`}
+        className={box}
+        style={{ background: bg }}
+      >
+        {card.img ? (
+          <img
+            src={card.img}
+            alt=""
+            className={cn(
+              'absolute inset-0 h-full w-full object-cover mix-blend-luminosity grayscale transition-opacity duration-300 group-hover:opacity-80',
+              selected ? on : rest
+            )}
+            style={{ objectPosition: card.imgAt ?? 'center' }}
+          />
+        ) : (
+          marks(ink, cn('group-hover:opacity-85', selected ? 'opacity-85' : 'opacity-55'))
+        )}
+        <span
+          className="absolute inset-x-0 bottom-0 flex flex-col gap-[2px] px-3.5 pt-8 pb-3"
+          style={{ backgroundImage: `linear-gradient(to top, ${bg} 50%, ${bg}00)` }}
+        >
+          <span className="text-[14px] leading-[17px] font-semibold" style={{ color: ink }}>
+            {card.label}
+          </span>
+        </span>
+      </button>
+    );
+  }
+
+  // white, its picture faint along its top and fading out, a flourish of its colour
+  const tinted = look === 'tinted';
+  const frame: CSSProperties = {
+    background: '#fff',
+    border: look === 'outline' ? `1.5px solid ${mix(base.bg, '#ffffff', 0.15)}` : '1px solid #e6e9f0',
+    boxShadow:
+      look === 'glow'
+        ? `0 10px 24px -10px ${base.bg}, 0 0 0 1px ${mix(base.bg, '#ffffff', 0.7)}`
+        : selected
+          ? `inset 0 0 0 2px ${base.bg}`
+          : undefined,
+  };
+  if (look === 'glow' && selected) frame.boxShadow = `${frame.boxShadow}, inset 0 0 0 2px ${base.bg}`;
   return (
-    // as wide as they were square, lower (the user asked)
     <button
       type="button"
       onClick={onPick}
       aria-pressed={selected}
       title={`${card.label}: ${card.blurb}`}
-      // its grid cell, whose height is a share of what the rows above leave
-      className="group relative block h-full w-full overflow-hidden rounded-[14px] text-left"
-      style={{ background: bg }}
+      className={box}
+      style={frame}
     >
-      {card.img ? (
-        <img
-          src={card.img}
-          alt=""
-          className={cn(
-            'absolute inset-0 h-full w-full object-cover mix-blend-luminosity grayscale transition-opacity duration-300 group-hover:opacity-80',
-            selected ? 'opacity-80' : 'opacity-45'
-          )}
-          style={{ objectPosition: card.imgAt ?? 'center' }}
-        />
-      ) : (
+      {look === 'wash' && (
         <span
-          className={cn('absolute inset-0 transition-opacity duration-300 group-hover:opacity-85', selected ? 'opacity-85' : 'opacity-55')}
-          style={{ color: ink }}
-        >
-          <AiSparkles className="absolute top-[9%] right-[8%] h-[20%] w-auto" />
-          <span className="absolute inset-x-0 top-[14%] flex h-[24%] justify-center">
-            <AgentMarks className="h-full gap-[9%]" markClassName="h-[70%] w-auto" />
-          </span>
-        </span>
+          aria-hidden
+          className="absolute inset-0"
+          style={{ background: `radial-gradient(circle at 100% 100%, ${pale} 0%, ${mix(base.bg, '#ffffff', 0.8)} 38%, #fff0 70%)` }}
+        />
       )}
       <span
-        className="absolute inset-x-0 bottom-0 flex flex-col gap-[2px] px-3.5 pt-8 pb-3"
-        style={{ backgroundImage: `linear-gradient(to top, ${bg} 50%, ${bg}00)` }}
+        className="absolute inset-x-0 top-0 h-[64%] overflow-hidden [mask-image:linear-gradient(to_bottom,#000_45%,transparent)]"
+        style={tinted ? { background: pale } : undefined}
       >
-        <span className="text-[14px] leading-[17px] font-semibold" style={{ color: ink }}>
+        {card.img ? (
+          <img
+            src={card.img}
+            alt=""
+            className={cn(
+              'absolute inset-0 h-full w-full object-cover grayscale transition-opacity duration-300 group-hover:opacity-70',
+              tinted ? 'mix-blend-luminosity' : '',
+              selected ? 'opacity-60' : tinted ? 'opacity-55' : 'opacity-30'
+            )}
+            style={{ objectPosition: card.imgAt ?? 'center' }}
+          />
+        ) : (
+          marks(deep, cn('group-hover:opacity-75', selected ? 'opacity-75' : 'opacity-45'))
+        )}
+      </span>
+      {look === 'top-bar' && <span aria-hidden className="absolute inset-x-0 top-0 h-[5px]" style={{ background: base.bg }} />}
+      {look === 'left-edge' && <span aria-hidden className="absolute inset-y-0 left-0 w-[5px]" style={{ background: base.bg }} />}
+      {look === 'corner-hex' && (
+        <span
+          aria-hidden
+          className="absolute top-2.5 right-2.5 h-[23px] w-[20px]"
+          style={{ background: base.bg, clipPath: HEX_CLIP }}
+        />
+      )}
+      {look === 'hexes' && (
+        <>
+          <HexOutline w={34} color={pale} x={-8} y={-6} />
+          <HexOutline w={22} color={pale} x={22} y={10} />
+          <HexOutline w={14} color={mix(base.bg, '#ffffff', 0.25)} x={8} y={34} />
+        </>
+      )}
+      <span className={cn('absolute bottom-0 left-0 flex flex-col gap-[5px] pb-3', look === 'left-edge' ? 'pl-[18px]' : 'pl-3.5')}>
+        <span
+          className="flex items-center gap-[7px] text-[14px] leading-[17px] font-semibold"
+          style={{ color: look === 'outline' ? deep : '#13306f' }}
+        >
+          {look === 'dot' && <span aria-hidden className="size-[8px] shrink-0 rounded-full" style={{ background: base.bg }} />}
           {card.label}
         </span>
+        {look === 'underline' && <span aria-hidden className="h-[3px] w-[26px] rounded-full" style={{ background: base.bg }} />}
       </span>
     </button>
   );
@@ -658,12 +796,15 @@ export function RowsHome({
   videos,
   base,
   titled = true,
+  cardStyle = DEFAULT_CARD_STYLE,
 }: {
   groups: IJourneyGroup[];
   videos: IExampleVideo[];
   base: string;
   /** Each row under its category's name; without, the rows alone (the menu's third design). */
   titled?: boolean;
+  /** How Platform's cards look (the home's second hidden menu). */
+  cardStyle?: TCardStyle;
 }) {
   // The example on show (on the right, unless a video is) and which example each of the row's tiles holds: every one
   // but that, the two trading places when one is picked, as on the desktop (the user asked: no empty or ringed tile).
@@ -859,6 +1000,7 @@ export function RowsHome({
                 index={i}
                 selected={shown.kind === 'place' && shown.i === i}
                 onPick={() => pickPlace(i)}
+                look={cardStyle}
               />
             );
             return i === places.length - 2 ? [<ObiCell key="obi" />, tile] : tile;

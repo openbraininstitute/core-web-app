@@ -27,7 +27,9 @@ import { cn } from '@/utils/css-class';
 
 import { AgentMarks } from './agent-marks';
 import { HexHomeMobile } from './hex-home-mobile';
-import { RowsHome } from './rows-home';
+import { DEFAULT_CARD_STYLE, PLATFORM_CARD_STYLES, RowsHome } from './rows-home';
+
+import type { TCardStyle } from './rows-home';
 import { CATEGORIES, GREEN, placeColours, useFadeSwap, WORDS_FADE_MS, wordsFor } from './hex-home-shared';
 import styles from './hex-cloud.module.css';
 
@@ -498,6 +500,10 @@ function ModelPanel({ example, base }: { example: IExample; base: string }) {
  * middle as the landing's chosen one does, beside what the model is and what to do with it. The videos, picked, line
  * up beside the column, with one playing to their right. The categories stay where they are throughout.
  */
+/** The home's hidden settings: shown only while pointed at or focused. */
+const SETTING =
+  'text-primary-9 border-neutral-2 cursor-pointer rounded-full border bg-white px-3 py-1 text-[12px] opacity-0 transition-opacity hover:opacity-100 focus:opacity-100';
+
 export function HexHomePage() {
   const { virtualLabId, projectId } = useWorkspace();
   const base = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}`;
@@ -538,35 +544,64 @@ export function HexHomePage() {
   const rows = design !== 'hexagons';
   const router = useRouter();
   const pathname = usePathname();
-  const chooseDesign = (design: string) => {
+  const setParam = (key: string, value: string, fallback: string) => {
     const next = new URLSearchParams(params.toString());
-    if (design === 'rows') next.delete('home');
-    else next.set('home', design);
+    if (value === fallback) next.delete(key);
+    else next.set(key, value);
     const query = next.toString();
     router.replace(`${pathname}${query ? `?${query}` : ''}`);
   };
+  const chooseDesign = (value: string) => setParam('home', value, 'rows');
+  // how the rows' Platform cards look, from a second hidden menu beside it (the user asked)
+  const cards = params.get('cards');
+  const cardStyle: TCardStyle = PLATFORM_CARD_STYLES.some((c) => c.key === cards)
+    ? (cards as TCardStyle)
+    : DEFAULT_CARD_STYLE;
   if (phone) return <HexHomeMobile groups={groups} videos={videos} base={base} />;
 
   return (
     <div className={cn('relative h-full w-full bg-white', !dynamic && styles.fadeMotion)}>
       {rows ? (
-        <RowsHome groups={groups} videos={videos} base={base} titled={design !== 'rows-bare'} />
+        <RowsHome
+          groups={groups}
+          videos={videos}
+          base={base}
+          titled={design !== 'rows-bare'}
+          cardStyle={cardStyle}
+        />
       ) : (
         <FillFrame width={STAGE_W} minHeight={MIN_H}>
           {(height) => <Home height={height} groups={groups} videos={videos} base={base} />}
         </FillFrame>
       )}
-      {/* invisible until the pointer is on it (or it has the keyboard's focus) */}
-      <select
-        aria-label="Home design"
-        value={design === 'rows-bare' ? 'rows-bare' : rows ? 'rows' : 'hexagons'}
-        onChange={(e) => chooseDesign(e.target.value)}
-        className="text-primary-9 border-neutral-2 absolute top-2 right-3 z-30 cursor-pointer rounded-full border bg-white px-3 py-1 text-[12px] opacity-0 transition-opacity hover:opacity-100 focus:opacity-100"
-      >
-        <option value="rows">Rows</option>
-        <option value="rows-bare">Rows, no headings</option>
-        <option value="hexagons">Hexagons</option>
-      </select>
+      {/* invisible until the pointer is on them (or one has the keyboard's focus): the design, and beside it how the
+          rows' Platform cards look */}
+      <div className="absolute top-2 right-3 z-30 flex items-center gap-2">
+        {rows && (
+          <select
+            aria-label="Platform card style"
+            value={cardStyle}
+            onChange={(e) => setParam('cards', e.target.value, DEFAULT_CARD_STYLE)}
+            className={SETTING}
+          >
+            {PLATFORM_CARD_STYLES.map((c) => (
+              <option key={c.key} value={c.key}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+        )}
+        <select
+          aria-label="Home design"
+          value={design === 'rows-bare' ? 'rows-bare' : rows ? 'rows' : 'hexagons'}
+          onChange={(e) => chooseDesign(e.target.value)}
+          className={SETTING}
+        >
+          <option value="rows">Rows</option>
+          <option value="rows-bare">Rows, no headings</option>
+          <option value="hexagons">Hexagons</option>
+        </select>
+      </div>
     </div>
   );
 }
