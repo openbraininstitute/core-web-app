@@ -6,6 +6,7 @@ import { HOLE, MIN_RADIUS } from '@/features/circuit-viewer/morphologies/engine/
 import { arenaStorage } from '@/features/circuit-viewer/morphologies/engine/webgpu/arena-gpu';
 import { Culling, DRAWS } from '@/features/circuit-viewer/morphologies/engine/webgpu/culling';
 import { MOST_SEEN } from '@/features/circuit-viewer/morphologies/engine/webgpu/culling-wgsl';
+import { DepthPyramid } from '@/features/circuit-viewer/morphologies/engine/webgpu/depth-pyramid';
 
 import { fakeGpu } from './fake-gpu';
 
@@ -69,12 +70,6 @@ function cullingOn(options?: Parameters<typeof fakeGpu>[0]) {
   };
 }
 
-/** The least radius the last tests took a segment at, px, from the view they were handed. */
-const leastOf = (writes: ReturnType<typeof cullingOn>['writes']) => {
-  const view = writes.mock.calls.findLast(([, , data]) => data instanceof ArrayBuffer)?.[2];
-  return new Float32Array(view as ArrayBuffer)[42];
-};
-
 const A = { tested: 300, kept: 200, drawn: 100 };
 const B = { tested: 30, kept: 20, drawn: 10 };
 
@@ -94,11 +89,13 @@ describe("the culling's counts and its failures", () => {
   });
 
   it('tests a segment at the least radius it is drawn with, and at twice that while a replay is loaded', () => {
-    const { run, writes } = cullingOn();
+    const build = vi.spyOn(DepthPyramid.prototype, 'build');
+    const { run } = cullingOn();
     run();
-    expect(leastOf(writes)).toBe(MIN_RADIUS);
+    expect(build.mock.lastCall?.[3][1]).toBe(MIN_RADIUS);
     run(1, false, true, { replaying: true });
-    expect(leastOf(writes)).toBe(2 * MIN_RADIUS);
+    expect(build.mock.lastCall?.[3][1]).toBe(2 * MIN_RADIUS);
+    build.mockRestore();
   });
 
   it('draws each list from a buffer of its own', () => {
