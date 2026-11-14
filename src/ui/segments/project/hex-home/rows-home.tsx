@@ -405,7 +405,6 @@ export function RowsHome({
   const [slots, setSlots] = useState(() => EXAMPLES.map((_, i) => i).filter((i) => i !== 0));
   // a video or one of Do science's places on show instead of the example
   const [side, setSide] = useState<TShown | null>(null);
-  const video = side?.kind === 'video' ? side.i : null;
   const shown: TShown = side ?? { kind: 'example', i: hero };
   const tileW = TILE_W;
   const stage = useRef<HTMLDivElement>(null);
@@ -445,8 +444,7 @@ export function RowsHome({
     setSlots((all) => all.map((x, k) => (k === slot ? hero : x)));
     setHero(i);
     setSide(null);
-    // from a video the rows widen back as it comes, so where it would land moves under it: it just fades in there
-    if (!from || video !== null) return;
+    if (!from) return;
     setFlight({ id: Date.now(), slot, inbound: i, from, to: null, outbound: home ? { i: hero, home } : null });
     setLanded({ inbound: false, outbound: !home });
   };
@@ -480,13 +478,8 @@ export function RowsHome({
   return (
     <div ref={stage} className="relative flex h-full w-full min-w-0 gap-8 bg-white px-6 pt-5 pb-4">
       {/* the rows fade out at their right edge (no box round them: the user tried one), scrolling with no bar */}
-      {/* 60:40, the other way round while a video plays, so it is larger (the user asked) */}
-      <div
-        className={cn(
-          'flex min-w-0 shrink-0 flex-col transition-[width] duration-500 ease-in-out',
-          video === null ? 'w-[60%]' : 'w-[40%]'
-        )}
-      >
+      {/* 60:40 whatever is on show (the user tried 40:60 while a video plays) */}
+      <div className="flex w-[60%] min-w-0 shrink-0 flex-col">
       <div className="no-scrollbar flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-2">
         <div ref={strip}>
         <Row title="Examples" titled={titled}>
