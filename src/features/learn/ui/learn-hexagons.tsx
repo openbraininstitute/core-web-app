@@ -200,3 +200,37 @@ export function LearnHexDock({ section, onSelect, off = [], hidden = [], classNa
     </>
   );
 }
+
+/**
+ * The sections as buttons in a row along the top of Learn (the user asked, in place of the hexagons): the open one
+ * navy, the rest white, those still to come greyed out; a row that scrolls sideways on a narrow screen if it must.
+ */
+export function LearnSectionButtons({ section, onSelect, off = [], hidden = [], className }: ISectionsProps) {
+  const sections = sectionsOf(off, hidden);
+  return (
+    <nav aria-label="Learn sections" className={cn('no-scrollbar flex shrink-0 gap-2 overflow-x-auto', className)}>
+      {sections.map(({ category, live }) => {
+        const on = live && category.key === section;
+        return (
+          <button
+            key={category.key}
+            type="button"
+            disabled={!live}
+            aria-pressed={on}
+            title={live ? undefined : `${category.label}: coming soon`}
+            onClick={() => onSelect(category.key as LearnSection)}
+            className={cn(
+              'flex h-[40px] shrink-0 items-center rounded-full px-[20px] text-[14px] font-semibold whitespace-nowrap transition-colors max-md:h-[36px] max-md:px-[14px] max-md:text-[13px]',
+              on
+                ? 'bg-[#002766] text-white'
+                : 'border border-[#d6e4ff] bg-white text-[#002766] hover:border-[#002766]',
+              !live && 'cursor-default opacity-50'
+            )}
+          >
+            {category.label}
+          </button>
+        );
+      })}
+    </nav>
+  );
+}

@@ -46,7 +46,7 @@ import {
   TILE_DESIGNS,
 } from '@/features/learn/ui/category-tiles';
 import { CoursePreview } from '@/features/learn/ui/course-preview';
-import { LearnHexColumn, LearnHexDock } from '@/features/learn/ui/learn-hexagons';
+import { LearnSectionButtons } from '@/features/learn/ui/learn-hexagons';
 import { FeedCard, FeedIndex, type FeedSource } from '@/features/learn/ui/feeds';
 import { glide } from '@/features/learn/ui/glide';
 import { GlossaryCard, GlossaryIndex } from '@/features/learn/ui/glossary';
@@ -530,11 +530,11 @@ export function LearnPage({
       className={cn(BOX, outerBox && OUTER_BOX, !listBoxOn && 'learn-no-list')}
       data-selected={SELECTED_SLUGS[sel]}
     >
-      {/* the sections as hexagons down the left on a wide screen, as the home's and the Workflows page's
-          categories are (the user asked); on a narrow one a row of them over the list */}
-      <div className="flex min-h-0 flex-1 gap-[16px] max-lg:flex-col">
-      <LearnHexColumn
-        className="max-lg:hidden"
+      {/* the sections as buttons along the top (the user asked; hexagons down the left, and along the foot on a
+          narrow screen, before: LearnHexColumn and LearnHexDock, unused for now) */}
+      <div className="flex min-h-0 flex-1 flex-col gap-[12px]">
+      <LearnSectionButtons
+        className="pt-1"
         hidden={hidden}
         section={section}
         onSelect={setSection}
@@ -976,13 +976,6 @@ export function LearnPage({
         </div>
       </div>
       </div>
-      <LearnHexDock
-        className="lg:hidden"
-        hidden={hidden}
-        section={section}
-        onSelect={setSection}
-        off={[...(noCourses ? (['free'] as const) : [])]}
-      />
     </div>
   );
 }
