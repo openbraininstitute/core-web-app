@@ -88,10 +88,11 @@ function Row({
   return (
     <section className="flex min-w-0 flex-col gap-2" aria-label={title}>
       {titled && <h2 className="text-primary-9 px-1 text-[13px] font-bold tracking-[0.08em] uppercase">{title}</h2>}
-      {/* fading out at the box's right edge rather than cut off there */}
+      {/* fading out at the box's right edge rather than cut off there; sideways only, never up and down (the user
+          asked: a sideways scroll lets the other way scroll too, by a pixel or so of overflow) */}
       <div
         className={cn(
-          'no-scrollbar -mx-1 gap-3 overflow-x-auto px-1 pt-1 pb-3 [mask-image:linear-gradient(to_right,#000_calc(100%-48px),transparent)]',
+          'no-scrollbar -mx-1 gap-3 overflow-x-auto overflow-y-hidden px-1 pt-1 pb-3 [mask-image:linear-gradient(to_right,#000_calc(100%-48px),transparent)]',
           twoRows ? 'grid auto-cols-max grid-flow-col grid-rows-2' : 'flex'
         )}
       >
@@ -103,7 +104,7 @@ function Row({
   );
 }
 
-/** The OBI wordmark in Do science's corner (the user asked), in a cell the size of the cards. */
+/** The OBI wordmark in Do science's top left corner (the user asked), in a cell the size of the cards. */
 function ObiCell() {
   return (
     <div title="Open Brain Institute" className="flex aspect-[146/96] w-full items-center justify-center">
@@ -705,22 +706,6 @@ export function RowsHome({
         )}
       >
       <div className="no-scrollbar flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-2">
-        {/* Do science first, above the examples (the user asked to try it): three by three, Learn and Teach among them,
-            the OBI wordmark in the corner */}
-        <Row title="Do science" titled={titled} grid>
-          {places.map((card, i) => {
-            const tile = (
-              <ScienceRowCard
-                key={card.label}
-                card={card}
-                index={i}
-                selected={shown.kind === 'place' && shown.i === i}
-                onPick={() => pickPlace(i)}
-              />
-            );
-            return i === places.length - 2 ? [<ObiCell key="obi" />, tile] : tile;
-          })}
-        </Row>
         <div ref={strip}>
         <Row title="Examples" titled={titled}>
           {slots.map((i, slot) => {
@@ -770,6 +755,22 @@ export function RowsHome({
               />
             </div>
           ))}
+        </Row>
+        {/* Do science last, under the videos (above the examples was tried): three by three, Learn and Teach among
+            them, the OBI wordmark in the top left corner (the user asked) */}
+        <Row title="Do science" titled={titled} grid>
+          {places.map((card, i) => {
+            const tile = (
+              <ScienceRowCard
+                key={card.label}
+                card={card}
+                index={i}
+                selected={shown.kind === 'place' && shown.i === i}
+                onPick={() => pickPlace(i)}
+              />
+            );
+            return i === 0 ? [<ObiCell key="obi" />, tile] : tile;
+          })}
         </Row>
       </div>
       </div>
