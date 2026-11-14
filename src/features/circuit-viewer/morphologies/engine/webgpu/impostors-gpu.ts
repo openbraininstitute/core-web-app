@@ -355,8 +355,8 @@ const ownDepth = (kind: Kind) => kind === 'tube' || kind === 'soma';
 /**
  * What a segment is drawn from: its cell-and-type word, its ends, and its ends in the dendrogram. `round` is the least
  * radius in pixels of a tube, by which each draw keeps only the segments of its own kind (`GpuUniforms.tubeFrom` where
- * not given). For a soma it is the least radius of a ball: where not given, a `soma` draws every soma, and a `disc`
- * those under `GpuUniforms.ballFrom`.
+ * not given). For a soma it is the least radius of a ball (`GpuUniforms.ballFrom` where not given); at 0, a `soma`
+ * draws every soma.
  */
 interface SegmentInputs {
   word: Node<'uint'>;
@@ -453,7 +453,7 @@ function impostorOf(
         morph: u.mix,
         shift: u.shift,
         ball: float(kind === 'soma' ? 1 : 0),
-        round: inputs.round ?? (kind === 'soma' ? float(0) : u.ballFrom),
+        round: inputs.round ?? u.ballFrom,
         view: cameraViewMatrix,
         world: cameraWorldMatrix,
         projection: cameraProjectionMatrix,
@@ -708,7 +708,7 @@ function depthMaterial(
   const { position, surface, depth } = impostorOf(kind, u, true, inputs);
   material.positionNode = position;
   material.maskNode = col(surface, 0).w.greaterThan(0.5);
-  if (kind === 'tube') material.depthNode = depth;
+  if (ownDepth(kind)) material.depthNode = depth;
   material.colorWrite = false;
   return material;
 }
@@ -719,26 +719,33 @@ const segments = <M extends THREE.Material>(of: (kind: 'segment' | 'tube') => M)
   of('tube'),
 ];
 
+/** A soma's materials for its two draws: the flat discs and the balls. */
+const somas = <M extends THREE.Material>(of: (kind: 'disc' | 'soma') => M) => [
+  of('disc'),
+  of('soma'),
+];
+
 /**
  * The impostors' materials on WebGPU: in the look, in their cells' numbers, in their segments' numbers, and lit through
- * what covers them. Each set draws the segments in two draws, the flat ones and the tubes. The look draws the somas in
- * two as well, the discs and the balls; the other sets draw every soma as a ball.
+ * what covers them. Each set draws the segments in two draws, the flat ones and the tubes. The look and the picks draw
+ * the somas in two as well, the discs and the balls, so that a pick finds the cell the look shows. Lit through what
+ * covers it, every soma is a ball: that draw tests no depth.
  */
 export function impostorMaterials(u: GpuUniforms, look: Look) {
   return {
     segment: segments((kind) => lookMaterial(kind, u, look)),
-    soma: [
-      lookMaterial('disc', u, look),
-      lookMaterial('soma', u, look, { ...fromAttributes(), round: u.ballFrom }),
-    ],
-    ids: { segment: segments((kind) => idMaterial(kind, u)), soma: idMaterial('soma', u) },
+    soma: somas((kind) => lookMaterial(kind, u, look)),
+    ids: {
+      segment: segments((kind) => idMaterial(kind, u)),
+      soma: somas((kind) => idMaterial(kind, u)),
+    },
     spots: {
       segment: segments((kind) => idMaterial(kind, u, true)),
-      soma: idMaterial('soma', u, true),
+      soma: somas((kind) => idMaterial(kind, u, true)),
     },
     through: {
       segment: segments((kind) => throughMaterial(kind, u)),
-      soma: throughMaterial('soma', u),
+      soma: throughMaterial('soma', u, { ...fromAttributes(), round: float(0) }),
     },
   };
 }

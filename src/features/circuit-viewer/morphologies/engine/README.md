@@ -124,7 +124,7 @@ The cloud ([soma-cloud.ts](soma-cloud.ts)) draws a soma as a low hexagonal pyram
 With morphologies, each soma is a quad ray-cast as a sphere ([impostors.ts](impostors.ts)).
 
 - On WebGPU, a soma under 32 device pixels across is drawn as a flat disc instead: its quad stands at the sphere's nearest point and its fragments write no depth of their own, so those hidden are not shaded (`BALL_FROM_PX` in [webgpu/gpu-uniforms.ts](webgpu/gpu-uniforms.ts)). It is lit as the sphere, so what changes is where it meets its neighbours: discs overlap where spheres would cut into each other, and a fibre touching a soma's rim may go under it. With every soma of the Male CNS ray-cast in depth, the whole circuit took 3.3 ms more a frame at 2560×1600 and 5.3 ms more at 3456×2234.
-- The picks and the line through what covers a lit cell draw every soma as a sphere, with its depth.
+- The picks draw the same two kinds, so that a pick finds the cell the look shows. The line through what covers a lit cell draws every soma as a sphere: it tests no depth.
 
 ## Segments and shading
 

@@ -124,7 +124,7 @@ interface Internals {
     wholeCloud: THREE.ShaderMaterial;
     ids: {
       segment: THREE.ShaderMaterial[];
-      soma: THREE.ShaderMaterial;
+      soma: THREE.ShaderMaterial[];
       cloud: THREE.ShaderMaterial;
     };
     electrode: THREE.ShaderMaterial;
@@ -505,9 +505,9 @@ describe('the circuit morphology viewer', () => {
     expect(segments.geometry).toBe(segmentsOf(inner).geometry);
     expect(inner.materials.ids.segment).toEqual([segments.material]);
     expect(somas.geometry).toBe(somasOf(inner).geometry);
-    expect(somas.material).toBe(inner.materials.ids.soma);
+    expect(inner.materials.ids.soma).toEqual([somas.material]);
     for (const quads of [segments, somas]) expect(quads.frustumCulled).toBe(false);
-    expect(inner.materials.ids.soma.uniforms.uCells).toBe(inner.uniforms.uCells);
+    expect(inner.materials.ids.soma[0].uniforms.uCells).toBe(inner.uniforms.uCells);
     // Built with the data, ahead of the first pick, for the target a pick draws into.
     expect(inner.renderer.compile).toHaveBeenCalledExactlyOnceWith(inner.ids, inner.camera);
     expect(steps).toEqual(['into 9x9', 'build', 'back to the canvas']);
@@ -910,7 +910,7 @@ describe('the circuit morphology viewer', () => {
       ...inner.materials.soma,
       inner.look.material,
       ...inner.materials.ids.segment,
-      inner.materials.ids.soma,
+      ...inner.materials.ids.soma,
       inner.materials.ids.cloud,
       inner.materials.cloud,
       inner.idTarget as THREE.WebGLRenderTarget,

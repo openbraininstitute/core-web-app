@@ -297,7 +297,8 @@ function somasBox(positions: Float32Array, keep?: (cell: number) => boolean): So
  * The materials a tier draws the circuit with, all reading the uniforms of `CircuitView`: the segments and the
  * morphologies' somas in the look; the cloud of somas; the same three in cell numbers for the pick; the segments and
  * somas in segment numbers for the pick of a section; and the dots. The segments are drawn once per material, over the
- * same quads, and each material draws its own share of them; so are the morphologies' somas in the look.
+ * same quads, and each material draws its own share of them; so are the morphologies' somas in the look and for the
+ * picks.
  */
 export interface CircuitMaterials {
   segment: THREE.Material[];
@@ -305,8 +306,8 @@ export interface CircuitMaterials {
   cloud: THREE.Material;
   /** The cloud drawn whole, translucent, each soma the cell of its instance. */
   wholeCloud: THREE.Material;
-  ids: { segment: THREE.Material[]; soma: THREE.Material; cloud: THREE.Material };
-  spots: { segment: THREE.Material[]; soma: THREE.Material };
+  ids: { segment: THREE.Material[]; soma: THREE.Material[]; cloud: THREE.Material };
+  spots: { segment: THREE.Material[]; soma: THREE.Material[] };
   /** The lit cells drawn over the frame, through what covers them, where the tier draws them (`throughs`). */
   through?: { segment: THREE.Material[]; soma: THREE.Material };
   electrode: THREE.Material;
@@ -730,12 +731,13 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
         charts === spheres ? sphereAttribute : new THREE.InstancedBufferAttribute(charts, 4)
       )
       .setAttribute('aCell', new THREE.InstancedBufferAttribute(cells, 1));
-    const somaMeshes = materials.soma.map((material) => quads(somas, material));
+    const onSomas = (soma: THREE.Material[]) => soma.map((material) => quads(somas, material));
+    const somaMeshes = onSomas(materials.soma);
     // Beside `chunks`, which holds the segments.
     this.surfaces.add(...somaMeshes);
 
     const segmentIds = onSegments(drawing?.ids ?? materials.ids.segment);
-    const ids = [...segmentIds, quads(somas, materials.ids.soma)];
+    const ids = [...segmentIds, ...onSomas(materials.ids.soma)];
     this.ids.add(...ids);
     let throughSegments: Quads[] = [];
     let through: Quads[] = [];
@@ -752,7 +754,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       for (const mesh of [...segmentMeshes, ...segmentIds, ...throughSegments]) mesh.visible = true;
     // Sections and offsets are known only of morphologies read whole.
     const spots = data.trees
-      ? [...onSegments(materials.spots.segment), quads(somas, materials.spots.soma)]
+      ? [...onSegments(materials.spots.segment), ...onSomas(materials.spots.soma)]
       : [];
     if (spots.length > 0) this.spots.add(...spots);
     this.spotUniforms.uSegments.value = data.segmentCells.length;

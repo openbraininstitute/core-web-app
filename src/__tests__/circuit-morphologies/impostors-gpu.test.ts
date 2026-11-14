@@ -48,6 +48,7 @@ function somaQuadOf(material: THREE.Material): Call {
   while (queue.length > 0) {
     const node = queue.shift();
     if (typeof node !== 'object' || node === null || seen.has(node)) continue;
+    if (ArrayBuffer.isView(node)) continue;
     seen.add(node);
     const call = node as Partial<Call>;
     if (call.functionNode?.code?.includes('fn somaQuad')) return call as Call;
@@ -71,20 +72,22 @@ describe('the somas of the morphologies on WebGPU', () => {
 
   it("stands a disc at the sphere's nearest point, where its fragments write no depth of their own", () => {
     const [disc, ball] = materials.soma;
-    expect(somaQuadOf(disc).functionNode.code).toContain(
-      'if (ball < 0.5) { p = lifted(p, r, projection); }'
-    );
+    expect(somaQuadOf(disc).functionNode.code).toMatch(/if \(ball < 0\.5\)\s*\{\s*p = lifted\(/);
     expect(depthOf(disc)).toBeNull();
     expect(depthOf(ball)).not.toBeNull();
   });
 
-  it('draws every soma as a ball for the picks and through what covers it', () => {
-    const { ids, spots, through } = materials;
-    for (const material of [ids.soma, spots.soma, through.soma]) {
-      const { ball, round } = somaQuadOf(material).parameters;
-      expect([numberOf(ball), numberOf(round)]).toEqual([1, 0]);
+  it('picks a soma as the look draws it, in the same two draws', () => {
+    for (const picks of [materials.ids.soma, materials.spots.soma]) {
+      const calls = picks.map(somaQuadOf);
+      expect(calls.map((call) => numberOf(call.parameters.ball))).toEqual([0, 1]);
+      for (const call of calls) expect(call.parameters.round).toBe(u.ballFrom);
+      expect(picks.map((material) => depthOf(material) !== null)).toEqual([false, true]);
     }
-    expect(depthOf(ids.soma)).not.toBeNull();
-    expect(depthOf(spots.soma)).not.toBeNull();
+  });
+
+  it('draws every soma as a ball where it is lit through what covers it', () => {
+    const { ball, round } = somaQuadOf(materials.through.soma).parameters;
+    expect([numberOf(ball), numberOf(round)]).toEqual([1, 0]);
   });
 });
