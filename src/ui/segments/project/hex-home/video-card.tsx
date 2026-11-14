@@ -57,12 +57,15 @@ export function VideoCard({
   onPick,
   delayMs,
   small = false,
+  height,
 }: {
   video: IExampleVideo;
   selected: boolean;
   onPick: () => void;
   delayMs: number;
   small?: boolean;
+  /** A height of its own (px) rather than the poster's shape. */
+  height?: number;
 }) {
   const [hover, setHover] = useState(false);
   const duration = useVideoDuration(video.video);
@@ -111,7 +114,8 @@ export function VideoCard({
   );
   const face = cn(
     styles.cardFace,
-    'relative flex aspect-[246/168] w-full cursor-pointer flex-col justify-between overflow-hidden rounded-[8px] text-left',
+    'relative flex w-full cursor-pointer flex-col justify-between overflow-hidden rounded-[8px] text-left',
+    height === undefined && 'aspect-[246/168]',
     small ? 'p-[9px]' : 'p-[12px]'
   );
   return (
@@ -122,11 +126,18 @@ export function VideoCard({
       onPointerLeave={() => setHover(false)}
     >
       {video.href ? (
-        <Link href={video.href} className={face} title={video.title}>
+        <Link href={video.href} className={face} style={height ? { height } : undefined} title={video.title}>
           {body}
         </Link>
       ) : (
-        <button type="button" aria-pressed={selected} onClick={onPick} className={face} title={video.title}>
+        <button
+          type="button"
+          aria-pressed={selected}
+          onClick={onPick}
+          className={face}
+          style={height ? { height } : undefined}
+          title={video.title}
+        >
           {body}
         </button>
       )}

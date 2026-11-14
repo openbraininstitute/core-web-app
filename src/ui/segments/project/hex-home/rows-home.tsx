@@ -53,15 +53,16 @@ function Row({ title, children }: { title: string; children: ReactNode }) {
 function PlaceRowCard({ card, base }: { card: IJourneyCard; base: string }) {
   const body = (
     <>
-      <img src={`/images/vlab-home/icons/${card.icon}.svg`} alt="" width={28} height={28} />
-      <span className="text-primary-9 text-[15px] leading-[19px] font-semibold">{card.label}</span>
-      <span className="text-[12.5px] leading-[17px] text-neutral-500">
+      <img src={`/images/vlab-home/icons/${card.icon}.svg`} alt="" width={22} height={22} />
+      <span className="text-primary-9 text-[14px] leading-[17px] font-semibold">{card.label}</span>
+      <span className="line-clamp-2 text-[11.5px] leading-[14px] text-neutral-500">
         {card.href ? card.blurb : `${card.blurb} · coming soon`}
       </span>
     </>
   );
+  // the size of Do science's cards (the user asked)
   const box =
-    'border-neutral-2 flex w-[200px] shrink-0 flex-col gap-2 rounded-2xl border bg-white p-4 text-left shadow-[0_4px_12px_-6px_rgb(0_39_102/0.12)]';
+    'border-neutral-2 flex h-[112px] w-[170px] shrink-0 flex-col gap-1.5 overflow-hidden rounded-[16px] border bg-white p-3 text-left shadow-[0_4px_12px_-6px_rgb(0_39_102/0.12)]';
   return card.href ? (
     <Link href={journeyHref(card.href, base)} className={cn(box, 'transition-shadow hover:shadow-md')}>
       {body}
@@ -207,7 +208,7 @@ export function RowsHome({
                 title={e.label}
                 aria-pressed={on}
                 onClick={() => setShown({ kind: 'example', i })}
-                className="group flex shrink-0 flex-col items-center gap-1.5"
+                className="group relative flex shrink-0 flex-col items-center"
                 style={{ width: tileW }}
               >
                 <span
@@ -223,8 +224,9 @@ export function RowsHome({
                     </span>
                   </span>
                 </span>
-                {/* its name only while pointed at (the user asked), its room kept so the row does not jump */}
-                <span className="text-primary-9 line-clamp-2 text-center text-[11.5px] leading-[14px] font-semibold opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
+                {/* its name only while pointed at (the user asked), over its foot, taking no room (under it, the row's
+                    sideways scroll would cut it off) */}
+                <span className="text-primary-9 pointer-events-none absolute bottom-[10px] left-1/2 z-10 w-max max-w-[150px] -translate-x-1/2 rounded-full bg-white/95 px-2 py-0.5 text-center text-[11.5px] leading-[14px] font-semibold opacity-0 shadow-sm transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
                   {e.label}
                 </span>
               </button>
@@ -243,9 +245,10 @@ export function RowsHome({
         </Row>
         <Row title="Tutorial videos">
           {videos.map((v, i) => (
-            <div key={v.key} className="w-[210px] shrink-0">
+            <div key={v.key} className="w-[170px] shrink-0">
               <VideoCard
                 small
+                height={112}
                 video={v}
                 selected={shown.kind === 'video' && shown.i === i}
                 delayMs={0}
