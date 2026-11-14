@@ -53,8 +53,8 @@ function Row({ title, titled = true, children }: { title: string; titled?: boole
 function PlaceRowCard({ card, base }: { card: IJourneyCard; base: string }) {
   const body = (
     <>
-      <img src={`/images/vlab-home/icons/${card.icon}.svg`} alt="" width={22} height={22} />
-      <span className="text-primary-9 text-[14px] leading-[17px] font-semibold">{card.label}</span>
+      <img src={`/images/vlab-home/icons/${card.icon}.svg`} alt="" width={20} height={20} />
+      <span className="text-primary-9 text-[13px] leading-[16px] font-semibold">{card.label}</span>
       <span className="line-clamp-2 text-[11.5px] leading-[14px] text-neutral-500">
         {card.href ? card.blurb : `${card.blurb} · coming soon`}
       </span>
@@ -62,7 +62,7 @@ function PlaceRowCard({ card, base }: { card: IJourneyCard; base: string }) {
   );
   // the size of Do science's cards (the user asked)
   const box =
-    'border-neutral-2 flex h-[112px] w-[170px] shrink-0 flex-col gap-1.5 overflow-hidden rounded-[16px] border bg-white p-3 text-left shadow-[0_4px_12px_-6px_rgb(0_39_102/0.12)]';
+    'border-neutral-2 flex h-[96px] w-[146px] shrink-0 flex-col gap-1 overflow-hidden rounded-[14px] border bg-white p-2.5 text-left shadow-[0_4px_12px_-6px_rgb(0_39_102/0.12)]';
   return card.href ? (
     <Link href={journeyHref(card.href, base)} className={cn(box, 'transition-shadow hover:shadow-md')}>
       {body}
@@ -90,7 +90,7 @@ function ScienceRowCard({ card, index, base }: { card: IJourneyCard; index: numb
         className="absolute inset-x-0 bottom-0 flex flex-col gap-[2px] px-3.5 pt-8 pb-3"
         style={{ backgroundImage: `linear-gradient(to top, ${bg} 50%, ${bg}00)` }}
       >
-        <span className="text-[16px] leading-[19px] font-semibold" style={{ color: ink }}>
+        <span className="text-[14px] leading-[17px] font-semibold" style={{ color: ink }}>
           {card.label}
         </span>
         <span className="line-clamp-2 text-[11.5px] leading-[14px] opacity-80" style={{ color: ink }}>
@@ -100,7 +100,7 @@ function ScienceRowCard({ card, index, base }: { card: IJourneyCard; index: numb
     </>
   );
   // as wide as they were square, lower (the user asked)
-  const box = 'group relative block h-[112px] w-[170px] shrink-0 overflow-hidden rounded-[16px] text-left';
+  const box = 'group relative block h-[96px] w-[146px] shrink-0 overflow-hidden rounded-[14px] text-left';
   if (card.action === 'ai')
     return (
       <button type="button" onClick={() => setAi(PanelState.Expanded)} className={box} style={{ background: bg }}>
@@ -248,10 +248,10 @@ export function RowsHome({
         </Row>
         <Row title="Tutorial videos" titled={titled}>
           {videos.map((v, i) => (
-            <div key={v.key} className="w-[170px] shrink-0">
+            <div key={v.key} className="w-[146px] shrink-0">
               <VideoCard
                 small
-                height={112}
+                height={96}
                 video={v}
                 selected={shown.kind === 'video' && shown.i === i}
                 delayMs={0}
