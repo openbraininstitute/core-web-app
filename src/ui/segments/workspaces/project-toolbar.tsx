@@ -50,10 +50,10 @@ const HOME_SECTIONS = ['', 'team', 'credits', 'activities', 'tutorials', 'quick-
 
 /** A tab's look: words alone (the user asked), in grey, the active one navy with a bar on the toolbar's line. */
 const TAB =
-  'group relative flex h-full shrink-0 items-center px-4 text-[14px] font-medium text-neutral-600 transition-colors hover:text-primary-9 select-none outline-none focus-visible:text-primary-9 max-[1100px]:px-2.5 max-md:w-full max-md:justify-center max-md:px-0.5 max-md:text-[12px]';
+  'group relative flex h-full shrink-0 items-center px-4 text-[14px] font-medium text-neutral-600 transition-colors hover:text-primary-9 select-none outline-none focus-visible:text-primary-9 max-[1100px]:px-2.5 max-md:w-full max-md:justify-center max-md:px-1 max-md:text-[12px]';
 /** On a phone the tabs are along the screen's foot, so the active one's bar is on the bar's top edge. */
 const TAB_ON =
-  'text-primary-9 font-semibold after:absolute after:inset-x-3 after:-bottom-px after:h-[3px] after:rounded-t-full after:bg-primary-9 max-md:after:top-0 max-md:after:bottom-auto max-md:after:rounded-t-none max-md:after:rounded-b-full';
+  'text-primary-9 font-semibold after:absolute after:inset-x-3 after:-bottom-px after:h-[3px] after:rounded-t-full after:bg-primary-9 max-md:after:inset-x-1 max-md:after:top-0 max-md:after:bottom-auto max-md:after:rounded-t-none max-md:after:rounded-b-full';
 
 function Tab({
   on,
@@ -67,7 +67,8 @@ function Tab({
   children: ReactNode;
 }) {
   return (
-    <span className={cn('group relative flex h-full max-md:min-w-0 max-md:flex-1', className)} title={title}>
+    // on a phone, the foot shared by the names' widths, so all eight fit (Teach too, the user asked)
+    <span className={cn('group relative flex h-full max-md:min-w-0 max-md:flex-auto', className)} title={title}>
       {children}
       {/* hover underline, lighter than the active one's (none on a phone, which has no hover) */}
       {!on && (
@@ -120,8 +121,7 @@ export function ProjectToolbar() {
           {sections.map(({ key, title, path, section }) => {
             const on = active === section;
             return (
-              // no room for Teach along a phone's foot: it is in Learn there
-              <Tab key={key} on={on} title={title} className={key === 'teach' ? 'max-md:hidden' : undefined}>
+              <Tab key={key} on={on} title={title}>
                 <Link prefetch href={`${base}/${path}`} className={cn(TAB, on && TAB_ON)}>
                   {title}
                 </Link>
