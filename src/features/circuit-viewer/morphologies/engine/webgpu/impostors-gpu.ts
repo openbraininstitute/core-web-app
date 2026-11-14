@@ -426,11 +426,10 @@ function behindOf(arena: ArenaStorage, viewZ: Node<'float'>): Node<'bool'> {
 
 /**
  * What every material of a kind shares: the cell, its texel, and, where `glowing`, how lit it is by a spike
- * (`spike-light.ts`), nothing of the spikes being read elsewhere; where the quad's corner is and what the fragments
- * take of it; and whether a pixel is on the tube or the sphere, with its normal, how far it is from the edge, and its
- * depth. The depth comes as the depth buffer stores it, which a segment drawn flat does not write, and in view space.
- * A cell that glows in full and is drawn at the least width is drawn at `GLOW_WIDTH` times that width. The word, and
- * a segment's ends, are read from `inputs`. With `litOnly`, an unlit cell's quads are not drawn.
+ * (`spike-light.ts`); where the quad's corner is and what the fragments take of it; and whether a pixel is on the tube
+ * or the sphere, with its normal, how far it is from the edge, and its depth. The depth comes as the depth buffer
+ * stores it, which a segment drawn flat does not write, and in view space. The word, and a segment's ends, are read
+ * from `inputs`. With `litOnly`, an unlit cell's quads are not drawn.
  */
 function impostorOf(
   kind: Kind,
@@ -523,7 +522,8 @@ function impostorOf(
   }
   const surface = typed<'mat4'>(shape).toVar();
   const { z: depth, w: viewZ } = col(surface, 1);
-  const lit = () => {
+  let spiking: Node<'float'> = float(0);
+  if (glowing) {
     const fromSoma = isSoma(kind)
       ? float(0)
       : somaDistance({
@@ -533,9 +533,8 @@ function impostorOf(
           soma: u.somas.load(xy),
         });
     const pulse = typed<'float'>(pulseFront({ d: fromSoma, glow, afterglow: u.afterglow }));
-    return typed<'float'>(spikeLight({ x: varying(pulse), glow: flat(glow) }));
-  };
-  const spiking = glowing ? lit() : float(0);
+    spiking = typed<'float'>(spikeLight({ x: varying(pulse), glow: flat(glow) }));
+  }
   return { word, cell, texel, spiking, position: col(quad, 0).xyz, surface, depth, viewZ };
 }
 
@@ -674,13 +673,10 @@ function lookMaterial(
   const on = col(surface, 0).w.greaterThan(0.5);
   material.maskNode = kind === 'tube' && arena ? on.and(behindOf(arena, viewZ).not()) : on;
   if (ownDepth(kind)) material.depthNode = depth;
-  let shown = toneMapped(output.rgb);
-  if (spikes) {
-    const spike = spikeLit(kind, colour, col(surface, 0).z, u);
-    shown = toneMapped(mix(output.rgb, spike, spiking));
-    // Add light past white, on a screen that can show it.
-    if (u.overWhite > 0) shown = shown.add(toneMapped(spike).mul(spiking.mul(u.overWhite)));
-  }
+  const spike = spikes ? spikeLit(kind, colour, col(surface, 0).z, u) : null;
+  let shown = toneMapped(spike ? mix(output.rgb, spike, spiking) : output.rgb);
+  // Add light past white, on a screen that can show it.
+  if (spike && u.overWhite > 0) shown = shown.add(toneMapped(spike).mul(spiking.mul(u.overWhite)));
   material.outputNode = vec4(typed<'vec3'>(sRGBTransferOETF(shown)), output.a);
   material.mrtNode = surfaceOf(col(surface, 0).xyz, viewZ, spiking);
   return material;
@@ -744,14 +740,13 @@ const somas = <M extends THREE.Material>(of: (kind: 'disc' | 'soma') => M) => [
  * The impostors' materials on WebGPU: in the look, in their cells' numbers, in their segments' numbers, and lit through
  * what covers them. Each set draws the segments in two draws, the flat ones and the tubes. The look and the picks draw
  * the somas in two as well, the discs and the balls, so that a pick finds the cell the look shows. Lit through what
- * covers it, every soma is a ball: that draw tests no depth. The segments' look comes in two kinds: one that reads
- * nothing of the spikes, and under `spiking` the same lit by them, drawn with while a replay is loaded. The somas' is
- * always the lit one: the other drew them no faster.
+ * covers it, every soma is a ball: that draw tests no depth. The segments' look comes in two kinds (`drawBySpikes`);
+ * the somas' is always the lit one: the other drew them no faster.
  */
 export function impostorMaterials(u: GpuUniforms, look: Look) {
   return {
     segment: segments((kind) => lookMaterial(kind, u, look, false)),
-    spiking: segments((kind) => lookMaterial(kind, u, look, true)),
+    spikingSegment: segments((kind) => lookMaterial(kind, u, look, true)),
     soma: somas((kind) => lookMaterial(kind, u, look, true)),
     ids: {
       segment: segments((kind) => idMaterial(kind, u)),
@@ -771,7 +766,6 @@ export function impostorMaterials(u: GpuUniforms, look: Look) {
 /**
  * The materials for the segments of the arena whose buffers `arena` binds. The look and cell-number materials draw the
  * segments seen; the depth and lit-through materials draw the segments kept (`fromArena`), which include those seen.
- * The look's come in the two kinds of `impostorMaterials`.
  */
 export function arenaMaterials(u: GpuUniforms, look: Look, arena: ArenaStorage) {
   const drawn = (spikes: boolean) =>
@@ -780,10 +774,26 @@ export function arenaMaterials(u: GpuUniforms, look: Look, arena: ArenaStorage) 
     );
   return {
     segment: drawn(false),
-    spiking: drawn(true),
+    spikingSegment: drawn(true),
     ids: segments((kind) => idMaterial(kind, u, false, fromArena(u, arena, kind, 'seen'))),
     kept: segments((kind) => depthMaterial(kind, u, fromArena(u, arena, kind, 'kept'))),
     seenDepth: segments((kind) => depthMaterial(kind, u, fromArena(u, arena, kind, 'seen'))),
     through: segments((kind) => throughMaterial(kind, u, fromArena(u, arena, kind, 'kept'))),
   };
+}
+
+/** The segments' look in its two kinds: one that reads nothing of the spikes, and the same lit by them. */
+export interface SegmentKinds {
+  segment: THREE.Material[];
+  spikingSegment: THREE.Material[];
+}
+
+/**
+ * Has frames drawn with the segments lit by the spikes while a replay is loaded, and otherwise with those that read
+ * nothing of them, which draw the same picture for less. Both kinds are on the same quads, and three leaves out a mesh
+ * whose material is not visible.
+ */
+export function drawBySpikes({ segment, spikingSegment }: SegmentKinds, replaying: boolean): void {
+  for (const material of segment) material.visible = !replaying;
+  for (const material of spikingSegment) material.visible = replaying;
 }

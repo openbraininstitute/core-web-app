@@ -509,12 +509,11 @@ export function impostor<T extends THREE.Material>(
         'vec4 cell = cellTexel();\n\tvGlow = cellGlow();' +
           '\n\t#ifdef USE_COLOR\n\t\tvColor = vec4( cellColour( ownColour( cell ) ), 1.0 );\n\t#endif'
       )
-      // The vertex normal is never shaded: the fragment shader finds its own. A cell that glows in full and is drawn
-      // at the least width is drawn at `GLOW_WIDTH` times that width.
+      // The vertex normal is never shaded: the fragment shader finds its own.
       .replace(
         '#include <beginnormal_vertex>',
         'vec3 cornerView;' +
-          `\n\tbool cornerOn = impostorCorner( position, cell.a, MIN_RADIUS * ( 1.0 + ${(GLOW_WIDTH - 1).toFixed(1)} * vGlow ), cornerView );` +
+          `\n\tbool cornerOn = impostorCorner( position, cell.a, MIN_RADIUS * ( 1.0 + ${(GLOW_WIDTH - 1).toFixed(6)} * vGlow ), cornerView );` +
           '\n\tvPulse = vGlow > 0.0 ? pulseFront( somaDistance( position ), vGlow, uAfterglow ) : 0.0;' +
           '\n\tvec3 objectNormal = vec3( 0.0, 0.0, 1.0 );'
       )

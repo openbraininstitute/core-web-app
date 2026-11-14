@@ -8,6 +8,7 @@ import { arenaStorage } from '@/features/circuit-viewer/morphologies/engine/webg
 import { GpuUniforms } from '@/features/circuit-viewer/morphologies/engine/webgpu/gpu-uniforms';
 import {
   arenaMaterials,
+  drawBySpikes,
   impostorMaterials,
 } from '@/features/circuit-viewer/morphologies/engine/webgpu/impostors-gpu';
 
@@ -122,8 +123,20 @@ describe('the two kinds of the segments on WebGPU', () => {
   });
 
   it('lights the segments by the spikes in the other kind', () => {
-    for (const material of [...materials.spiking, ...arena.spiking]) {
+    for (const material of [...materials.spikingSegment, ...arena.spikingSegment]) {
       expect(spikesRead(material)).toEqual(['glow', 'somas', 'afterglow', 'neon']);
+    }
+  });
+
+  it('draws with the lit kind while a replay is loaded, and with the other while none is', () => {
+    const shown = (list: THREE.Material[]) => list.map((material) => material.visible);
+    for (const kinds of [materials, arena]) {
+      drawBySpikes(kinds, true);
+      expect(shown(kinds.segment)).toEqual([false, false]);
+      expect(shown(kinds.spikingSegment)).toEqual([true, true]);
+      drawBySpikes(kinds, false);
+      expect(shown(kinds.segment)).toEqual([true, true]);
+      expect(shown(kinds.spikingSegment)).toEqual([false, false]);
     }
   });
 
