@@ -119,7 +119,7 @@ interface Internals {
   uniforms: ImpostorUniforms;
   materials: {
     segment: THREE.Material[];
-    soma: THREE.Material;
+    soma: THREE.ShaderMaterial[];
     cloud: THREE.ShaderMaterial;
     wholeCloud: THREE.ShaderMaterial;
     ids: {
@@ -193,7 +193,7 @@ function circuit(): CircuitMorphologyData {
 const segmentsOf = (inner: Internals) => inner.chunks.children[0] as Quads;
 const somasOf = (inner: Internals) =>
   inner.surfaces.children.find(
-    (o) => o instanceof THREE.Mesh && o.material === inner.materials.soma
+    (o) => o instanceof THREE.Mesh && o.material === inner.materials.soma[0]
   ) as Quads;
 /** The cloud's first piece, which holds the few somas of these tests whole. */
 const pieceOf = (inner: Internals) =>
@@ -354,9 +354,10 @@ describe('the circuit morphology viewer', () => {
     const { viewer, inner } = make();
     viewer.setData(circuit());
     const somas = somasOf(inner);
-    expect(somas.material).toBe(inner.materials.soma);
+    expect(inner.materials.soma).toHaveLength(1);
+    expect(somas.material).toBe(inner.materials.soma[0]);
     expect(somas.material).not.toBe(inner.look.material);
-    expect(inner.materials.soma.customProgramCacheKey()).toContain('impostor-soma');
+    expect(inner.materials.soma[0].customProgramCacheKey()).toContain('impostor-soma');
     expect(somas.geometry.instanceCount).toBe(2);
     expect([...somas.geometry.getAttribute('aSoma').array]).toEqual([0, 0, 0, 5, 10, 20, 0, 4]);
     expect([...somas.geometry.getAttribute('aCell').array]).toEqual([0, 2]);
@@ -906,7 +907,7 @@ describe('the circuit morphology viewer', () => {
       somasOf(inner).geometry,
       inner.uniforms.uCells.value as THREE.DataTexture,
       inner.uniforms.uGlow.value as THREE.DataTexture,
-      inner.materials.soma,
+      ...inner.materials.soma,
       inner.look.material,
       ...inner.materials.ids.segment,
       inner.materials.ids.soma,

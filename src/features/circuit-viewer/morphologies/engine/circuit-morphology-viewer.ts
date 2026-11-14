@@ -65,7 +65,7 @@ export class CircuitMorphologyViewer extends CircuitView {
     const look = this.look.material;
     this.materials = {
       segment: [impostor(look, 'segment', uniforms)],
-      soma: impostor(look.clone(), 'soma', uniforms),
+      soma: [impostor(look.clone(), 'soma', uniforms)],
       cloud: somaCloudMaterial(uniforms, cloudUniforms),
       wholeCloud: somaCloudMaterial(uniforms, cloudUniforms, { whole: true }),
       ids: {

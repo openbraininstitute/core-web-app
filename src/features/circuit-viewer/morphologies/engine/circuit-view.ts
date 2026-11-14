@@ -297,11 +297,11 @@ function somasBox(positions: Float32Array, keep?: (cell: number) => boolean): So
  * The materials a tier draws the circuit with, all reading the uniforms of `CircuitView`: the segments and the
  * morphologies' somas in the look; the cloud of somas; the same three in cell numbers for the pick; the segments and
  * somas in segment numbers for the pick of a section; and the dots. The segments are drawn once per material, over the
- * same quads, and each material draws its own share of them.
+ * same quads, and each material draws its own share of them; so are the morphologies' somas in the look.
  */
 export interface CircuitMaterials {
   segment: THREE.Material[];
-  soma: THREE.Material;
+  soma: THREE.Material[];
   cloud: THREE.Material;
   /** The cloud drawn whole, translucent, each soma the cell of its instance. */
   wholeCloud: THREE.Material;
@@ -730,9 +730,9 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
         charts === spheres ? sphereAttribute : new THREE.InstancedBufferAttribute(charts, 4)
       )
       .setAttribute('aCell', new THREE.InstancedBufferAttribute(cells, 1));
-    const somaMesh = quads(somas, materials.soma);
+    const somaMeshes = materials.soma.map((material) => quads(somas, material));
     // Beside `chunks`, which holds the segments.
-    this.surfaces.add(somaMesh);
+    this.surfaces.add(...somaMeshes);
 
     const segmentIds = onSegments(drawing?.ids ?? materials.ids.segment);
     const ids = [...segmentIds, quads(somas, materials.ids.soma)];
@@ -757,7 +757,13 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     if (spots.length > 0) this.spots.add(...spots);
     this.spotUniforms.uSegments.value = data.segmentCells.length;
     const detailed = stream ? { stream, chosenFor: null, seenChanged: false } : null;
-    this.layer = { data, meshes: [...segmentMeshes, somaMesh, ...through], ids, spots, detailed };
+    this.layer = {
+      data,
+      meshes: [...segmentMeshes, ...somaMeshes, ...through],
+      ids,
+      spots,
+      detailed,
+    };
     // Start over: dropping the occlusion for other morphologies says nothing about these.
     this.morphologyMotion?.configure(MORPHOLOGY_MOTION);
     this.compileIds();
