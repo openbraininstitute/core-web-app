@@ -27,7 +27,15 @@ import * as THREE from 'three/webgpu';
 import { EXPOSURE } from '@/features/viewer-3d/engine/looks';
 
 import { BY_SECTION } from '../cell-table';
-import { CELL_MASK, HOLE, HOLE_WORD, MIN_RADIUS, QUAD_REACH, TYPE_SHIFT } from '../impostors';
+import {
+  CELL_MASK,
+  GLOW_WIDTH,
+  HOLE,
+  HOLE_WORD,
+  MIN_RADIUS,
+  QUAD_REACH,
+  TYPE_SHIFT,
+} from '../impostors';
 import { PULSE_FRONT_WGSL, SOMA_LINE, SPIKE_COLOUR_WGSL, SPIKE_LIGHT_WGSL } from '../spike-light';
 import { cellGlow, cellId, cellXY, col, flat, keptUnless, typed, VIEW } from './cells-wgsl';
 import { NEAR_SHARE, NEAR_UM } from './culling-wgsl';
@@ -421,8 +429,8 @@ function behindOf(arena: ArenaStorage, viewZ: Node<'float'>): Node<'bool'> {
  * (`spike-light.ts`), nothing of the spikes being read elsewhere; where the quad's corner is and what the fragments
  * take of it; and whether a pixel is on the tube or the sphere, with its normal, how far it is from the edge, and its
  * depth. The depth comes as the depth buffer stores it, which a segment drawn flat does not write, and in view space.
- * A cell that glows in full and is drawn at the least width is drawn at twice that width, so that it can be seen. The
- * word, and a segment's ends, are read from `inputs`. With `litOnly`, an unlit cell's quads are not drawn.
+ * A cell that glows in full and is drawn at the least width is drawn at `GLOW_WIDTH` times that width. The word, and
+ * a segment's ends, are read from `inputs`. With `litOnly`, an unlit cell's quads are not drawn.
  */
 function impostorOf(
   kind: Kind,
@@ -439,7 +447,7 @@ function impostorOf(
     ? typed<'float'>(cellGlow({ cell, highlighted: u.highlighted, glowTexel: u.glow.load(xy) }))
     : float(0);
   const shown = litOnly ? select(glow.greaterThan(0), texel.a, float(0)) : texel.a;
-  const least = float(MIN_RADIUS).mul(glow.add(1));
+  const least = float(MIN_RADIUS).mul(glow.mul(GLOW_WIDTH - 1).add(1));
   let quad: Node<'mat4'>;
   let shape: Node;
   if (isSoma(kind)) {

@@ -79,6 +79,8 @@ export function packCellTypes(
 
 /** The least radius a fibre is drawn with, in device pixels, so that a thin one far away is not left in dashes. */
 export const MIN_RADIUS = 0.75;
+/** How many times that radius a cell glowing in full is drawn at the least, so that it can be seen. */
+export const GLOW_WIDTH = 2;
 /** How far a segment's quad reaches from its line, in the wider end's radii on screen: a little past the tube. */
 export const QUAD_REACH = 1.15;
 
@@ -508,11 +510,11 @@ export function impostor<T extends THREE.Material>(
           '\n\t#ifdef USE_COLOR\n\t\tvColor = vec4( cellColour( ownColour( cell ) ), 1.0 );\n\t#endif'
       )
       // The vertex normal is never shaded: the fragment shader finds its own. A cell that glows in full and is drawn
-      // at the least width is drawn at twice that width, so that it can be seen.
+      // at the least width is drawn at `GLOW_WIDTH` times that width.
       .replace(
         '#include <beginnormal_vertex>',
         'vec3 cornerView;' +
-          '\n\tbool cornerOn = impostorCorner( position, cell.a, MIN_RADIUS * ( 1.0 + vGlow ), cornerView );' +
+          `\n\tbool cornerOn = impostorCorner( position, cell.a, MIN_RADIUS * ( 1.0 + ${(GLOW_WIDTH - 1).toFixed(1)} * vGlow ), cornerView );` +
           '\n\tvPulse = vGlow > 0.0 ? pulseFront( somaDistance( position ), vGlow, uAfterglow ) : 0.0;' +
           '\n\tvec3 objectNormal = vec3( 0.0, 0.0, 1.0 );'
       )
