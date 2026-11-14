@@ -359,27 +359,43 @@ const GROW_MS = 650;
 
 /**
  * A video's card growing out of its row into the player's place, as the examples grow out of their hexagons (the
- * user asked): its poster under its navy veil, which the player (navy while it loads) then takes over from.
+ * user asked): its poster under its navy veil, which the player (navy while it loads) then takes over from. It
+ * follows the place as it moves (the rows narrow to 40% as it grows), rather than where the place was at the start.
  */
-function VideoGrow({ from, to, video, onDone }: { from: IRect; to: IRect; video: IExampleVideo; onDone: () => void }) {
+function VideoGrow({
+  from,
+  target,
+  video,
+  onDone,
+}: {
+  from: IRect;
+  /** Where the player is now, measured afresh each frame. */
+  target: () => IRect | null;
+  video: IExampleVideo;
+  onDone: () => void;
+}) {
   const card = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = card.current;
     if (!el) return;
-    const place = (r: IRect, radius: number) => ({
-      left: `${r.x}px`,
-      top: `${r.y}px`,
-      width: `${r.w}px`,
-      height: `${r.h}px`,
-      borderRadius: `${radius}px`,
-    });
-    const run = el.animate([place(from, 8), place(to, 16)], {
-      duration: GROW_MS,
-      easing: 'cubic-bezier(0.22, 0.8, 0.24, 1)',
-      fill: 'both',
-    });
-    run.onfinish = () => onDone();
-    return () => run.cancel();
+    const start = performance.now();
+    let last = from;
+    let frame = 0;
+    const step = (now: number) => {
+      const t = Math.min(1, (now - start) / GROW_MS);
+      const e = 1 - (1 - t) ** 3;
+      last = target() ?? last;
+      const at = (a: number, b: number) => a + (b - a) * e;
+      el.style.left = `${at(from.x, last.x)}px`;
+      el.style.top = `${at(from.y, last.y)}px`;
+      el.style.width = `${at(from.w, last.w)}px`;
+      el.style.height = `${at(from.h, last.h)}px`;
+      el.style.borderRadius = `${at(8, 16)}px`;
+      if (t < 1) frame = requestAnimationFrame(step);
+      else onDone();
+    };
+    frame = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frame);
     // one growth per mount
   }, []);
   return (
@@ -566,7 +582,8 @@ export function RowsHome({
     setSlots((all) => all.map((x, k) => (k === slot ? hero : x)));
     setHero(i);
     setSide(null);
-    if (!from) return;
+    // from a video the rows widen back as it comes, so where it would land moves under it: it just fades in there
+    if (!from || side?.kind === 'video') return;
     setFlight({ id: Date.now(), slot, inbound: i, from, to: null, outbound: home ? { i: hero, home } : null });
     setLanded({ inbound: false, outbound: !home });
   };
@@ -613,8 +630,13 @@ export function RowsHome({
   return (
     <div ref={stage} className="relative flex h-full w-full min-w-0 gap-8 bg-white px-6 pt-5 pb-4">
       {/* the rows fade out at their right edge (no box round them: the user tried one), scrolling with no bar */}
-      {/* 55:45 whatever is on show (the user tried 60:40, and 40:60 while a video plays) */}
-      <div className="flex w-[55%] min-w-0 shrink-0 flex-col">
+      {/* 55:45, and 40:60 while a video plays, so it is larger (the user asked) */}
+      <div
+        className={cn(
+          'flex min-w-0 shrink-0 flex-col transition-[width] duration-500 ease-in-out',
+          side?.kind === 'video' ? 'w-[40%]' : 'w-[55%]'
+        )}
+      >
       <div className="no-scrollbar flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-2">
         <div ref={strip}>
         <Row title="Examples" titled={titled}>
@@ -693,7 +715,13 @@ export function RowsHome({
       </div>
       {grow?.to && (
         <div className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
-          <VideoGrow key={grow.id} from={grow.from} to={grow.to} video={grow.video} onDone={() => setGrow(null)} />
+          <VideoGrow
+            key={grow.id}
+            from={grow.from}
+            target={() => (heroBox.current ? rectOf(heroBox.current) : null)}
+            video={grow.video}
+            onDone={() => setGrow(null)}
+          />
         </div>
       )}
       {flight?.to && (
