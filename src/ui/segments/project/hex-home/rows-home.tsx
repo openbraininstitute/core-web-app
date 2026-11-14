@@ -9,6 +9,7 @@ import { VideoPlayer } from '@/ui/segments/project/get-started/elements/video-pl
 import { EXAMPLES, journeyHref } from '@/ui/segments/project/hex-home/content';
 import { HEX_CLIP, SQRT3 } from '@/ui/segments/project/hex-home/hex-geometry';
 import { FreeMedia, MeltFlier, TileMedia } from '@/ui/segments/project/hex-home/landing-example';
+import { Hexagon } from '@/ui/segments/project/hex-home/hex-tile';
 import ObiLogo from '@/features/learn/components/ui/ObiLogo';
 import { AiSparkles } from '@/ui/segments/project/brains-walkthrough/agent-ready';
 import { VideoCard } from '@/ui/segments/project/hex-home/video-card';
@@ -18,7 +19,7 @@ import { AgentMarks } from './agent-marks';
 import { GREEN, placeColours, wordsFor } from './hex-home-shared';
 import styles from './hex-cloud.module.css';
 
-import type { ReactNode, RefObject } from 'react';
+import type { CSSProperties, ReactNode, RefObject } from 'react';
 import type { IExampleVideo, IJourneyCard, IJourneyGroup } from '@/ui/segments/project/hex-home/content';
 import type { IHexBox, IPoint } from '@/ui/segments/project/hex-home/hex-geometry';
 
@@ -64,42 +65,67 @@ function useSize() {
 }
 
 /** A category's row: its name over its things, which scroll sideways. */
+/** A row's name over it, and the gap under the name (px, as are the rows' paddings: this app's rem is 14 px): fixed, so the rows can share the column's height exactly. */
+const ROW_TITLE_H = 16;
+const ROW_TITLE_GAP = 8;
+/** The gap between Platform's cards, and between the videos (px). */
+const CARD_GAP = 14;
+
 function Row({
   title,
   titled = true,
   twoRows = false,
   grid = false,
+  share,
   children,
 }: {
   title: string;
   titled?: boolean;
   /** Its things in two rows, scrolling sideways together. */
   twoRows?: boolean;
-  /** Its things three to a row, filling the width, not scrolling. */
+  /** Its things three to a row, filling the width, not scrolling, three shares of the height left. */
   grid?: boolean;
+  /**
+   * Its part of the height the other rows leave: the videos one share and Platform's three rows three, so a video is
+   * as large as a Platform card (the user asked).
+   */
+  share?: number;
   children: ReactNode;
 }) {
+  const head = titled ? ROW_TITLE_H + ROW_TITLE_GAP : 0;
+  const name = titled && (
+    <h2 className="text-primary-9 px-1 text-[13px] leading-[16px] font-bold tracking-[0.08em] uppercase">{title}</h2>
+  );
   if (grid)
     return (
-      // the room the rows above leave, so the column needs no scroll (the user asked): three rows sharing its height
-      <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-2" aria-label={title}>
-        {titled && <h2 className="text-primary-9 px-1 text-[13px] font-bold tracking-[0.08em] uppercase">{title}</h2>}
-        {/* a little apart, the cards a touch smaller as the rows above grew (the user asked) */}
-        <div className="grid min-h-0 flex-1 grid-cols-3 grid-rows-[repeat(3,minmax(64px,1fr))] gap-3.5 pt-1 pb-1">
+      // three shares of the room the rows above leave, so the column needs no scroll (the user asked)
+      <section
+        className="flex min-h-0 min-w-0 flex-col gap-[8px]"
+        aria-label={title}
+        style={{ flex: `3 1 ${head + 4 + 4 + 2 * CARD_GAP}px` }}
+      >
+        {name}
+        <div className="grid min-h-0 flex-1 grid-cols-3 grid-rows-[repeat(3,minmax(0,1fr))] pt-[4px] pb-[4px]" style={{ gap: CARD_GAP }}>
           {children}
         </div>
       </section>
     );
   return (
-    <section className="flex min-w-0 flex-col gap-2" aria-label={title}>
-      {titled && <h2 className="text-primary-9 px-1 text-[13px] font-bold tracking-[0.08em] uppercase">{title}</h2>}
-      {/* fading a little at the box's right edge rather than cut off there (softer, the user asked); sideways only, never up and down (the user
-          asked: a sideways scroll lets the other way scroll too, by a pixel or so of overflow) */}
+    <section
+      className={cn('flex min-w-0 flex-col gap-[8px]', share && 'min-h-0')}
+      aria-label={title}
+      style={share ? { flex: `${share} 1 ${head + 4 + 12}px` } : undefined}
+    >
+      {name}
+      {/* fading a little at the box's right edge rather than cut off there (softer, the user asked); sideways only,
+          never up and down (the user asked: a sideways scroll lets the other way scroll too, by a pixel or so) */}
       <div
         className={cn(
-          'no-scrollbar -mx-1 gap-3 overflow-x-auto overflow-y-hidden px-1 pt-1 pb-3 [mask-image:linear-gradient(to_right,#000_calc(100%-28px),rgb(0_0_0/0.3))]',
-          twoRows ? 'grid auto-cols-max grid-flow-col grid-rows-2' : 'flex'
+          'no-scrollbar -mx-1 overflow-x-auto overflow-y-hidden px-1 pt-[4px] pb-[12px] [mask-image:linear-gradient(to_right,#000_calc(100%-28px),rgb(0_0_0/0.3))]',
+          twoRows ? 'grid auto-cols-max grid-flow-col grid-rows-2' : 'flex',
+          share ? 'min-h-0 flex-1' : 'gap-3'
         )}
+        style={share ? { gap: CARD_GAP } : undefined}
       >
         {children}
         {/* room at the end, so the last one clears the fade */}
@@ -306,12 +332,13 @@ export function PlaceShown({ card, base }: { card: IJourneyCard; base: string })
     <div
       className={cn(
         styles.fadeIn,
-        // flat on the page, not a raised card (the user asked to try it)
-        'flex h-full w-full flex-col gap-4 overflow-hidden bg-white'
+        // on a bordered card, not raised (the user asked; flat and a raised one were tried)
+        'flex h-full w-full flex-col gap-4 overflow-hidden rounded-[20px] border border-[rgb(19_48_111/0.12)] bg-white p-4'
       )}
     >
       {/* no taller than nearly half the card, so its words and the way in fit under it on a short screen */}
-      <div className="border-neutral-2 relative aspect-[1210/714] max-h-[44%] w-full shrink-0 overflow-hidden rounded-[12px] border bg-neutral-50">
+      {/* no frame round it, flat as the rest (the user asked) */}
+      <div className="relative aspect-[1210/714] max-h-[44%] w-full shrink-0 overflow-hidden rounded-[10px]">
         {frames.length ? (
           frames.map((f, i) => (
             <img
@@ -355,7 +382,7 @@ export function PlaceShown({ card, base }: { card: IJourneyCard; base: string })
         )}
         <div className="flex flex-col gap-1.5">
           <span className="text-neutral-5 text-[12.5px] leading-[16px] font-semibold tracking-[0.08em] uppercase">
-            Do science
+            Platform
           </span>
           <h3 className="text-primary-9 m-0 text-[26px] leading-[31px] font-bold">{card.label}</h3>
           <p className="m-0 text-[15.5px] leading-[22px] text-neutral-700">{details.intro}</p>
@@ -461,6 +488,52 @@ function VideoGrow({
   );
 }
 
+/** Where the hexagons behind the example sit, in % of its pane, and how wide each is (px). */
+const SCATTER: Array<[number, number, number]> = [
+  [3, 6, 86],
+  [18, 64, 118],
+  [1, 38, 54],
+  [80, 4, 104],
+  [91, 32, 62],
+  [83, 68, 126],
+  [42, 0, 58],
+  [62, 84, 78],
+  [30, 90, 50],
+  [72, 46, 46],
+  [10, 86, 64],
+];
+
+/**
+ * A few hexagons scattered behind the example or video on show (the user asked), drawn as the landing's field is: white,
+ * outlined and raised, rising in one after another.
+ */
+function ScatteredHexes() {
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+      {SCATTER.map(([x, y, w], i) => (
+        <span
+          key={`${x}-${y}`}
+          className="absolute"
+          style={{ left: `${x}%`, top: `${y}%`, width: w, height: (2 * w) / SQRT3 }}
+        >
+          <span
+            className={cn(styles.appear, 'absolute inset-0 block')}
+            style={
+              {
+                '--appear-delay': `${200 + i * 70}ms`,
+                filter: 'drop-shadow(-6px 10px 14px rgb(28 40 72 / 0.14))',
+              } as CSSProperties
+            }
+          >
+            <Hexagon className={styles.base} />
+            <Hexagon className={styles.outline} />
+          </span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
 /** What is open on the right: the example picked, large, with what it is and what to do with it, or a video. */
 function Shown({
   shown,
@@ -493,9 +566,11 @@ function Shown({
   if (shown.kind === 'video') {
     const video = videos[shown.i];
     return (
-      <div ref={box} className="flex h-full min-h-0 flex-col justify-center gap-3">
+      <div ref={box} className="relative flex h-full min-h-0 flex-col justify-center gap-3">
+        {/* the same hexagons behind it as behind an example (the user asked) */}
+        <ScatteredHexes />
         {video && (
-          <div key={video.key} className={cn(styles.fadeIn, 'flex flex-col gap-4')}>
+          <div key={video.key} className={cn(styles.fadeIn, 'relative flex flex-col gap-4')}>
             <div
               ref={heroBox}
               className="aspect-video w-full overflow-hidden rounded-2xl shadow-[0_18px_50px_rgb(20_40_90_/_0.18)]"
@@ -529,9 +604,12 @@ function Shown({
   // as large as the pane allows above its words
   const width = Math.max(0, Math.min(size.w * 0.9, (size.h - 220) * example.aspect, 900));
   return (
-    <div ref={box} className="flex h-full min-h-0 flex-col items-center justify-center gap-4">
+    <div ref={box} className="relative flex h-full min-h-0 flex-col items-center justify-center gap-4">
+      <ScatteredHexes />
+      {/* over the hexagons but not cut off from them (no stacking context of its own, and a fade that does not
+          linger): the example's white multiplied out, so they show through it as on the landing */}
       {width > 0 && (
-        <div key={example.key} className={cn(styles.fadeIn, 'flex flex-col items-center gap-4')}>
+        <div key={example.key} className={cn(styles.freeIn, 'relative flex flex-col items-center gap-4')}>
           {/* no fade of its own once landed: the flight ends with it just as it is here */}
           <div ref={heroBox} style={landing ? { visibility: 'hidden' } : undefined}>
             <FreeMedia example={example} width={width} />
@@ -704,6 +782,7 @@ export function RowsHome({
   const trading = flight && !(landed.inbound && landed.outbound) ? flight.slot : undefined;
 
   return (
+    // the rows on the left, what is on show on the right (the sides switched were tried)
     <div ref={stage} className="relative flex h-full w-full min-w-0 gap-8 bg-white px-6 pt-5 pb-4">
       {/* the rows fade out at their right edge (no box round them: the user tried one), scrolling with no bar */}
       {/* 45:55 whatever is on show (the user asked to try it; 40:60 while a video played before) */}
@@ -747,15 +826,20 @@ export function RowsHome({
         </Row>
         </div>
         {/* the videos after the examples, no row for The institute (the user asked) */}
-        <Row title="Tutorial videos" titled={titled}>
+        <Row title="Tutorial videos" titled={titled} share={1}>
           {videos.map((v, i) => (
-            // a little larger (the user asked)
-            <div key={v.key} data-video={i} className="w-[164px] shrink-0">
+            // as wide as a Platform card, and as tall: one share of the height to its three (the user asked)
+            <div
+              key={v.key}
+              data-video={i}
+              className="h-full shrink-0"
+              style={{ width: `calc((100% - ${2 * CARD_GAP}px) / 3)` }}
+            >
               {/* what it is only while pointed at; its length always (the user asked) */}
               <VideoCard
                 small
+                fill
                 detailsOnHover
-                height={108}
                 video={v}
                 selected={shown.kind === 'video' && shown.i === i}
                 delayMs={0}
@@ -766,7 +850,7 @@ export function RowsHome({
         </Row>
         {/* Do science last, under the videos (above the examples was tried): three by three, Learn and Teach among
             them, the OBI wordmark in the bottom left corner (the user asked; top left was tried) */}
-        <Row title="Do science" titled={titled} grid>
+        <Row title="Platform" titled={titled} grid>
           {places.map((card, i) => {
             const tile = (
               <ScienceRowCard

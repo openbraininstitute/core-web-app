@@ -59,6 +59,7 @@ export function VideoCard({
   small = false,
   height,
   detailsOnHover = false,
+  fill = false,
 }: {
   video: IExampleVideo;
   selected: boolean;
@@ -69,6 +70,8 @@ export function VideoCard({
   height?: number;
   /** What it is only while pointed at, its title and length alone otherwise (the rows home's). */
   detailsOnHover?: boolean;
+  /** Its box's whole height and width (a size it is given), rather than the poster's shape. */
+  fill?: boolean;
 }) {
   const [hover, setHover] = useState(false);
   const duration = useVideoDuration(video.video);
@@ -119,12 +122,12 @@ export function VideoCard({
   const face = cn(
     styles.cardFace,
     'relative flex w-full cursor-pointer flex-col justify-between overflow-hidden rounded-[8px] text-left',
-    height === undefined && 'aspect-[246/168]',
+    fill ? 'h-full' : height === undefined && 'aspect-[246/168]',
     small ? 'p-[9px]' : 'p-[12px]'
   );
   return (
     <div
-      className={styles.cardIn}
+      className={cn(styles.cardIn, fill && 'h-full')}
       style={{ animationDelay: `${delayMs}ms` }}
       onPointerEnter={() => setHover(true)}
       onPointerLeave={() => setHover(false)}

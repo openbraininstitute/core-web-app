@@ -180,7 +180,7 @@ export interface IJourneyGroup {
 export function journeyGroups({ learn }: { learn: boolean }): IJourneyGroup[] {
   return [
     {
-      title: 'Do science',
+      title: 'Platform',
       // the whole platform, each with a picture of it
       cards: [
         {

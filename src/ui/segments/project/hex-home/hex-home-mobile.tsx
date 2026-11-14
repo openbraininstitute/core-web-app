@@ -189,7 +189,7 @@ function Places({ cards, base }: { cards: IJourneyCard[]; base: string }) {
           onClick={() => setOpen(null)}
           className="text-primary-9 flex w-max items-center gap-1 text-[14px] font-semibold"
         >
-          ← Do science
+          ← Platform
         </button>
         <div className="min-h-0 flex-1">
           <PlaceShown card={cards[open]} base={base} />

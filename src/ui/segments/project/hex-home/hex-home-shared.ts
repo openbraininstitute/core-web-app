@@ -7,7 +7,8 @@ import type { IExample } from '@/ui/segments/project/hex-home/content';
 /** The five categories: a column of hexagons down the left on a wide screen, a row to tap on a phone. */
 export const CATEGORIES = [
   { key: 'examples', label: 'Examples', note: 'Models across species and scales', icon: 'examples' },
-  { key: 'build', label: 'Do science', note: 'Data, workflows and notebooks', icon: 'workflows' },
+  // "Platform", once "Do science" (the user asked)
+  { key: 'build', label: 'Platform', note: 'Data, workflows and notebooks', icon: 'workflows' },
   { key: 'learn', label: 'Learn & teach', note: 'Tutorials, courses and more', icon: 'learning' },
   { key: 'videos', label: 'Tutorial videos', note: 'See the platform in action', icon: 'tutorials' },
   { key: 'institute', label: 'The institute', note: 'About, news and pricing', icon: 'about' },
