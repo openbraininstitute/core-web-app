@@ -532,14 +532,15 @@ export function HexHomePage() {
   // what a category shows fades in and out (the user asked to try it); `?motion=dynamic` folds it out of its category
   const params = useSearchParams();
   const dynamic = params.get('motion') === 'dynamic';
-  // the design, from the hidden menu at the top right (the user asked): these hexagons, or the categories in rows
-  const design = params.get('home');
-  const rows = design === 'rows' || design === 'rows-bare';
+  // the design, from the hidden menu at the top right (the user asked): the categories in rows by default (the user
+  // asked), or these hexagons (`?home=hexagons`)
+  const design = params.get('home') ?? 'rows';
+  const rows = design !== 'hexagons';
   const router = useRouter();
   const pathname = usePathname();
   const chooseDesign = (design: string) => {
     const next = new URLSearchParams(params.toString());
-    if (design === 'hexagons') next.delete('home');
+    if (design === 'rows') next.delete('home');
     else next.set('home', design);
     const query = next.toString();
     router.replace(`${pathname}${query ? `?${query}` : ''}`);
@@ -558,13 +559,13 @@ export function HexHomePage() {
       {/* invisible until the pointer is on it (or it has the keyboard's focus) */}
       <select
         aria-label="Home design"
-        value={rows ? (design ?? 'rows') : 'hexagons'}
+        value={design === 'rows-bare' ? 'rows-bare' : rows ? 'rows' : 'hexagons'}
         onChange={(e) => chooseDesign(e.target.value)}
         className="text-primary-9 border-neutral-2 absolute top-2 right-3 z-30 cursor-pointer rounded-full border bg-white px-3 py-1 text-[12px] opacity-0 transition-opacity hover:opacity-100 focus:opacity-100"
       >
-        <option value="hexagons">Hexagons</option>
         <option value="rows">Rows</option>
         <option value="rows-bare">Rows, no headings</option>
+        <option value="hexagons">Hexagons</option>
       </select>
     </div>
   );
