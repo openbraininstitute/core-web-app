@@ -1,5 +1,6 @@
 'use client';
 
+import { InfoCircleOutlined } from '@ant-design/icons';
 import { type ReactNode, useEffect, useRef } from 'react';
 
 import { getObiOneErrorReason, toObiOneErrorBody } from '@/api/one/utils';
@@ -12,6 +13,25 @@ import type { Config, ConfigValue } from '@/features/scan-config/types';
 
 const NO_VARIABLES_MESSAGE = 'No ion-channel variables are available for the selected neuron set.';
 const ERROR_MESSAGE = 'Could not load variables for the selected neuron set.';
+
+const WARNINGS_HEADLINE = 'Nothing to tune here';
+
+/** Soft note for an empty result: a friendly headline, then the endpoint's reasons. */
+function WarningsNote({ warnings }: { warnings: string[] }) {
+  return (
+    <div className="flex items-start gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
+      <InfoCircleOutlined className="text-primary-8 mt-1" />
+      <div className="flex flex-col gap-1">
+        <span className="text-primary-9 font-medium">{WARNINGS_HEADLINE}</span>
+        {warnings.map((warning) => (
+          <span key={warning} className="text-sm text-gray-500">
+            {warning}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 /** Parameters for {@link useCircuitManipulationData}. */
 export type TUseCircuitManipulationDataParams = {
@@ -32,7 +52,7 @@ export type TUseCircuitManipulationDataParams = {
 export type TCircuitManipulationData = {
   data: MechanismVariablesRoot | null;
   loading: boolean;
-  /** Status note for the picker (error / empty); `null` when usable. */
+  /** Status note for the picker (error / endpoint warnings / empty); `null` when usable. */
   reason: ReactNode | null;
 };
 
@@ -90,12 +110,14 @@ export function useCircuitManipulationData({
         )}
       </div>
     );
-  } else if (!isLoading && data && Object.keys(data).length === 0) {
-    reason = NO_VARIABLES_MESSAGE;
+  } else if (!isLoading && data && Object.keys(data.variables).length === 0) {
+    // The endpoint says why there is nothing (e.g. the neuron set selects no neurons).
+    reason =
+      data.warnings.length > 0 ? <WarningsNote warnings={data.warnings} /> : NO_VARIABLES_MESSAGE;
   }
 
   return {
-    data: data ?? null,
+    data: data?.variables ?? null,
     loading: isLoading,
     reason,
   };
