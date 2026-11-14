@@ -46,7 +46,8 @@ interface IFlight {
 }
 
 /** The width of the examples' hexagons in their row (px). */
-const TILE_W = 108;
+// a little larger (the user asked)
+const TILE_W = 120;
 
 /** A box's size, for what has to be told it in px (the one on show). */
 function useSize() {
@@ -83,7 +84,8 @@ function Row({
       // the room the rows above leave, so the column needs no scroll (the user asked): three rows sharing its height
       <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-2" aria-label={title}>
         {titled && <h2 className="text-primary-9 px-1 text-[13px] font-bold tracking-[0.08em] uppercase">{title}</h2>}
-        <div className="grid min-h-0 flex-1 grid-cols-3 grid-rows-[repeat(3,minmax(64px,1fr))] gap-3 pt-1 pb-1">
+        {/* a little apart, the cards a touch smaller as the rows above grew (the user asked) */}
+        <div className="grid min-h-0 flex-1 grid-cols-3 grid-rows-[repeat(3,minmax(64px,1fr))] gap-3.5 pt-1 pb-1">
           {children}
         </div>
       </section>
@@ -746,12 +748,13 @@ export function RowsHome({
         {/* the videos after the examples, no row for The institute (the user asked) */}
         <Row title="Tutorial videos" titled={titled}>
           {videos.map((v, i) => (
-            <div key={v.key} data-video={i} className="w-[146px] shrink-0">
+            // a little larger (the user asked)
+            <div key={v.key} data-video={i} className="w-[164px] shrink-0">
               {/* what it is only while pointed at; its length always (the user asked) */}
               <VideoCard
                 small
                 detailsOnHover
-                height={96}
+                height={108}
                 video={v}
                 selected={shown.kind === 'video' && shown.i === i}
                 delayMs={0}
