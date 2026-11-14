@@ -534,13 +534,14 @@ export function HexHomePage() {
   const params = useSearchParams();
   const dynamic = params.get('motion') === 'dynamic';
   // the design, from the hidden menu at the top right (the user asked): these hexagons, or the categories in rows
-  const rows = params.get('home') === 'rows';
+  const design = params.get('home');
+  const rows = design === 'rows' || design === 'rows-bare';
   const router = useRouter();
   const pathname = usePathname();
   const chooseDesign = (design: string) => {
     const next = new URLSearchParams(params.toString());
-    if (design === 'rows') next.set('home', 'rows');
-    else next.delete('home');
+    if (design === 'hexagons') next.delete('home');
+    else next.set('home', design);
     const query = next.toString();
     router.replace(`${pathname}${query ? `?${query}` : ''}`);
   };
@@ -549,7 +550,7 @@ export function HexHomePage() {
   return (
     <div className={cn('relative h-full w-full bg-white', !dynamic && styles.fadeMotion)}>
       {rows ? (
-        <RowsHome groups={groups} videos={videos} base={base} />
+        <RowsHome groups={groups} videos={videos} base={base} titled={design !== 'rows-bare'} />
       ) : (
         <FillFrame width={STAGE_W} minHeight={MIN_H}>
           {(height) => <Home height={height} groups={groups} videos={videos} base={base} />}
@@ -558,12 +559,13 @@ export function HexHomePage() {
       {/* invisible until the pointer is on it (or it has the keyboard's focus) */}
       <select
         aria-label="Home design"
-        value={rows ? 'rows' : 'hexagons'}
+        value={rows ? (design ?? 'rows') : 'hexagons'}
         onChange={(e) => chooseDesign(e.target.value)}
         className="text-primary-9 border-neutral-2 absolute top-2 right-3 z-30 cursor-pointer rounded-full border bg-white px-3 py-1 text-[12px] opacity-0 transition-opacity hover:opacity-100 focus:opacity-100"
       >
         <option value="hexagons">Hexagons</option>
         <option value="rows">Rows</option>
+        <option value="rows-bare">Rows, no headings</option>
       </select>
     </div>
   );

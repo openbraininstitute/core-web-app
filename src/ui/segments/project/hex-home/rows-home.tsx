@@ -35,10 +35,10 @@ function useSize() {
 }
 
 /** A category's row: its name over its things, which scroll sideways. */
-function Row({ title, children }: { title: string; children: ReactNode }) {
+function Row({ title, titled = true, children }: { title: string; titled?: boolean; children: ReactNode }) {
   return (
-    <section className="flex min-w-0 flex-col gap-2">
-      <h2 className="text-primary-9 px-1 text-[13px] font-bold tracking-[0.08em] uppercase">{title}</h2>
+    <section className="flex min-w-0 flex-col gap-2" aria-label={title}>
+      {titled && <h2 className="text-primary-9 px-1 text-[13px] font-bold tracking-[0.08em] uppercase">{title}</h2>}
       {/* fading out at the box's right edge rather than cut off there */}
       <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pt-1 pb-3 [mask-image:linear-gradient(to_right,#000_calc(100%-48px),transparent)]">
         {children}
@@ -186,19 +186,22 @@ export function RowsHome({
   groups,
   videos,
   base,
+  titled = true,
 }: {
   groups: IJourneyGroup[];
   videos: IExampleVideo[];
   base: string;
+  /** Each row under its category's name; without, the rows alone (the menu's third design). */
+  titled?: boolean;
 }) {
   const [shown, setShown] = useState<TShown>({ kind: 'example', i: 0 });
   const tileW = 108;
   return (
     <div className="flex h-full w-full min-w-0 gap-8 bg-white px-6 pt-5 pb-4">
       {/* the rows fade out at their right edge (no box round them: the user tried one), scrolling with no bar */}
-      <div className="flex w-[55%] min-w-0 shrink-0 flex-col">
+      <div className="flex w-[60%] min-w-0 shrink-0 flex-col">
       <div className="no-scrollbar flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-2">
-        <Row title="Examples">
+        <Row title="Examples" titled={titled}>
           {EXAMPLES.map((e, i) => {
             const on = shown.kind === 'example' && shown.i === i;
             return (
@@ -233,17 +236,17 @@ export function RowsHome({
             );
           })}
         </Row>
-        <Row title="Do science">
+        <Row title="Do science" titled={titled}>
           {groups[0].cards.map((card, i) => (
             <ScienceRowCard key={card.label} card={card} index={i} base={base} />
           ))}
         </Row>
-        <Row title="Learn & teach">
+        <Row title="Learn & teach" titled={titled}>
           {groups[1].cards.map((card) => (
             <PlaceRowCard key={card.label} card={card} base={base} />
           ))}
         </Row>
-        <Row title="Tutorial videos">
+        <Row title="Tutorial videos" titled={titled}>
           {videos.map((v, i) => (
             <div key={v.key} className="w-[170px] shrink-0">
               <VideoCard
@@ -257,7 +260,7 @@ export function RowsHome({
             </div>
           ))}
         </Row>
-        <Row title="The institute">
+        <Row title="The institute" titled={titled}>
           {groups[2].cards.map((card) => (
             <PlaceRowCard key={card.label} card={card} base={base} />
           ))}
