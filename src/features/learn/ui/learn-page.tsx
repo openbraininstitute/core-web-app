@@ -107,13 +107,12 @@ const PANEL_FRAME = 'relative flex min-h-0 min-w-0 flex-1 flex-col';
 const PANEL_BOX = `${BOX_CLASS} learn-card min-h-0 w-full flex-1 overflow-y-auto`;
 const PANEL = `${PANEL_BOX} secondary-scrollbar`;
 /**
- * A course's card: the Data page's mini detail view's dark navy (mini-detail-view/index.tsx), with
- * its scrollbar, and its soft drop without the white top highlight, which reads as a hairline on
- * navy.
+ * A course's card: white, as the other sections' cards are (the user asked; it was the Data page's mini detail
+ * view's dark navy), with their soft drop.
  */
 const COURSE_PANEL = cn(
   PANEL_BOX,
-  'primary-scrollbar bg-primary-9 text-white shadow-[0_4px_12px_-6px_rgb(0_39_102/0.08),0_1px_2px_rgb(0_39_102/0.04)]'
+  'secondary-scrollbar bg-white text-primary-9 shadow-[0_4px_12px_-6px_rgb(0_39_102/0.08),0_1px_2px_rgb(0_39_102/0.04)]'
 );
 
 /** The Standard section, and its 0.4 MB of entity types, fetched only once the section is opened. */
@@ -1150,29 +1149,28 @@ function CourseDetail({
           )}
         >
           <div className="flex flex-col gap-[7px]">
-            {/* on the navy, as the mini detail view sets its name and its fields' labels */}
+            {/* navy on the white, as the other sections' cards set their titles */}
             <h1
               className={cn(
-                'font-bold text-white',
+                'font-bold text-[#002766]',
                 inline ? 'text-[21px] leading-[26px]' : 'text-[31px] leading-[38px]'
               )}
             >
               {course.title}
             </h1>
-            <p className="text-primary-3 text-[12.5px] leading-[17px]">{meta}</p>
+            <p className="text-[12.5px] leading-[17px] text-[#8c8c8c]">{meta}</p>
           </div>
           <div className="flex shrink-0 items-center gap-[8px]">
             <Link
               href={href}
               onClick={startAgain}
               data-learn="cta"
-              // Learn's green, with the depth the mini detail view's buttons have on the navy
-              className="flex h-[42px] shrink-0 items-center rounded-[22px] border border-white/16 bg-[#389e0d] px-[26px] text-[14px] leading-[19px] font-semibold whitespace-nowrap text-white shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F] transition-colors hover:bg-[#237804]"
+              // Learn's green, as on the other sections' cards
+              className="flex h-[42px] shrink-0 items-center rounded-[22px] bg-[#389e0d] px-[26px] text-[14px] leading-[19px] font-semibold whitespace-nowrap text-white transition-colors hover:bg-[#237804]"
             >
               {action}
             </Link>
             <ShareButton
-              dark
               what={{
                 title: course.title,
                 text: course.description,
@@ -1182,11 +1180,14 @@ function CourseDetail({
           </div>
         </header>
 
-        <CoursePreview widget={course.preview} />
+        {/* its figure framed on the white, as it was a white box on the navy */}
+        <div className="rounded-[13px] border border-[#f0f0f0]">
+          <CoursePreview widget={course.preview} />
+        </div>
 
         <p
           className={cn(
-            'text-primary-3 max-w-[880px]',
+            'max-w-[880px] text-[#595959]',
             inline ? 'text-[14px] leading-[22px]' : 'text-[16px] leading-[27px]'
           )}
         >
