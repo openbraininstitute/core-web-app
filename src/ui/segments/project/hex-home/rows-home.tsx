@@ -104,7 +104,7 @@ function Row({
   );
 }
 
-/** The OBI wordmark in Do science's top left corner (the user asked), in a cell the size of the cards. */
+/** The OBI wordmark in Do science's bottom left corner (the user asked), in a cell the size of the cards. */
 function ObiCell() {
   return (
     <div title="Open Brain Institute" className="flex aspect-[146/96] w-full items-center justify-center">
@@ -757,7 +757,7 @@ export function RowsHome({
           ))}
         </Row>
         {/* Do science last, under the videos (above the examples was tried): three by three, Learn and Teach among
-            them, the OBI wordmark in the top left corner (the user asked) */}
+            them, the OBI wordmark in the bottom left corner (the user asked; top left was tried) */}
         <Row title="Do science" titled={titled} grid>
           {places.map((card, i) => {
             const tile = (
@@ -769,7 +769,7 @@ export function RowsHome({
                 onPick={() => pickPlace(i)}
               />
             );
-            return i === 0 ? [<ObiCell key="obi" />, tile] : tile;
+            return i === places.length - 2 ? [<ObiCell key="obi" />, tile] : tile;
           })}
         </Row>
       </div>
