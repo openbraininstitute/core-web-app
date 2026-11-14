@@ -188,7 +188,8 @@ export function RowsHome({
   const tileW = 108;
   return (
     <div className="flex h-full w-full min-w-0 gap-8 bg-white px-6 pt-5 pb-4">
-      <div className="secondary-scrollbar flex w-[46%] max-w-[760px] min-w-0 shrink-0 flex-col gap-5 overflow-y-auto pr-2">
+      {/* scrolls with no bar showing (the user asked) */}
+      <div className="no-scrollbar flex w-[46%] max-w-[760px] min-w-0 shrink-0 flex-col gap-5 overflow-y-auto pr-2">
         <Row title="Examples">
           {EXAMPLES.map((e, i) => {
             const on = shown.kind === 'example' && shown.i === i;
