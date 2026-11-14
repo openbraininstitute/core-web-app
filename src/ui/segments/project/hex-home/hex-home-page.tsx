@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
 import { config } from '@/config';
+import ObiLogo from '@/features/learn/components/ui/ObiLogo';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { learnFlag, useFlag } from '@/features/feature-flags';
 import { getClient } from '@/services/sanity/client';
@@ -412,16 +413,23 @@ function CategoryTile({
       glideDelayMs={glideDelayMs}
       scale={scale}
     >
-      {/* the name alone, large, in capitals, as the Workflows page's categories */}
+      {/* the name alone, large, in capitals, as the Workflows page's categories; The institute its wordmark (the user
+          asked, taking it off the top bar) */}
       <div className="flex h-full w-full items-center justify-center px-[8px] text-center">
-        <span
-          className={cn(
-            'text-[17px] leading-[20px] font-bold tracking-[0.04em] uppercase transition-colors duration-300',
-            on ? 'text-white' : 'text-primary-9'
-          )}
-        >
-          {category.label}
-        </span>
+        {category.key === 'institute' ? (
+          <ObiLogo
+            className={cn('h-[46px] w-auto transition-colors duration-300', on ? 'text-white' : 'text-primary-9')}
+          />
+        ) : (
+          <span
+            className={cn(
+              'text-[17px] leading-[20px] font-bold tracking-[0.04em] uppercase transition-colors duration-300',
+              on ? 'text-white' : 'text-primary-9'
+            )}
+          >
+            {category.label}
+          </span>
+        )}
       </div>
     </HexTile>
   );

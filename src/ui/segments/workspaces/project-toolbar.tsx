@@ -7,7 +7,6 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { config } from '@/config';
 import { WorkspaceMainPages } from '@/constants';
 import { aiButtonFlag, learnFlag, useFlag } from '@/features/feature-flags';
-import ObiLogo from '@/features/learn/components/ui/ObiLogo';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Wallet } from '@/ui/segments/project/balance';
 import { SpaceSwitcher } from '@/ui/segments/workspaces/space-switcher';
@@ -89,14 +88,7 @@ export function ProjectToolbar() {
     <header className="flex h-16 w-full items-stretch gap-5 border-b border-[#cfd5df] bg-white px-4 max-md:h-14 max-md:gap-2 max-md:px-3">
       {/* the two sides share what the tabs leave equally, so the tabs sit in the bar's middle */}
       <div className="flex min-w-0 flex-1 basis-0 items-center max-md:h-14">
-        {/* the institute's wordmark, back to the website's landing page */}
-        <Link
-          href="/"
-          title="Open Brain Institute"
-          className="text-primary-9 hover:text-primary-7 mr-6 flex h-full shrink-0 items-center transition-colors max-md:mr-3"
-        >
-          <ObiLogo className="h-[34px] w-auto max-md:h-[22px]" />
-        </Link>
+        {/* no wordmark here: it is on the home's The institute category (the user asked) */}
         {/* the switcher's own box would not shrink below its width: held to what is left, its names cut short */}
         <div className="flex min-w-0 flex-1 [&>div]:max-w-full [&>div]:min-w-0">
           <SpaceSwitcher className="w-[26rem] max-w-full min-w-0" plain />

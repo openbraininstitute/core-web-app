@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { usePanelState } from '@/ui/segments/ai/hooks';
 import { PanelState } from '@/ui/segments/ai/types';
 import { AiSparkles } from '@/ui/segments/project/brains-walkthrough/agent-ready';
+import ObiLogo from '@/features/learn/components/ui/ObiLogo';
 import { VideoPlayer } from '@/ui/segments/project/get-started/elements/video-player';
 import { VideoCard } from '@/ui/segments/project/hex-home/video-card';
 import { EXAMPLES, journeyHref } from '@/ui/segments/project/hex-home/content';
@@ -443,7 +444,8 @@ export function HexHomeMobile({
                       on ? 'text-white' : 'text-primary-9'
                     )}
                   >
-                    {c.label}
+                    {/* The institute its wordmark, as on the desktop (the user asked) */}
+                    {c.key === 'institute' ? <ObiLogo className="h-[24px] w-auto" /> : c.label}
                   </span>
                 </Hex>
               </span>
