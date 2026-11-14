@@ -273,9 +273,12 @@ export function RowsHome({
           {groups[0].cards.map((card, i) => (
             <ScienceRowCard key={card.label} card={card} index={i} base={base} />
           ))}
-          {groups[1].cards.map((card) => (
-            <PlaceRowCard key={card.label} card={card} base={base} />
-          ))}
+          {/* not Tutorials: the videos have their own row (the user asked) */}
+          {groups[1].cards
+            .filter((card) => card.icon !== 'tutorials')
+            .map((card) => (
+              <PlaceRowCard key={card.label} card={card} base={base} />
+            ))}
         </Row>
       </div>
       </div>
