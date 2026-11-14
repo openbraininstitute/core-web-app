@@ -408,6 +408,7 @@ export class CircuitMorphologyGPU extends CircuitView {
           this.camera,
           uShift.value,
           this.gpu.tubeFrom.value,
+          this.spiking.replaying,
           uHidden.value,
           end,
           rest,

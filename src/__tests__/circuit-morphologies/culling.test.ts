@@ -2,7 +2,7 @@
 import * as THREE from 'three/webgpu';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { HOLE } from '@/features/circuit-viewer/morphologies/engine/impostors';
+import { HOLE, MIN_RADIUS } from '@/features/circuit-viewer/morphologies/engine/impostors';
 import { arenaStorage } from '@/features/circuit-viewer/morphologies/engine/webgpu/arena-gpu';
 import { Culling, DRAWS } from '@/features/circuit-viewer/morphologies/engine/webgpu/culling';
 import { MOST_SEEN } from '@/features/circuit-viewer/morphologies/engine/webgpu/culling-wgsl';
@@ -39,6 +39,7 @@ const read = (counts: CullTally, marked = [0, 0], rest = 1) => ({
 
 /** An arena of 64 blocks: two words of them marked. */
 const ARENA = { marked: { size: 8 } } as unknown as ArenaBuffers;
+const TUBE_FROM = 12;
 const camera = new THREE.OrthographicCamera();
 const shift = new THREE.Vector3();
 const cells = new THREE.DataTexture();
@@ -49,8 +50,8 @@ function cullingOn(options?: Parameters<typeof fakeGpu>[0]) {
   const culling = new Culling(renderer, device, arenaStorage(), counted);
   culling.setArena(ARENA);
   culling.targetOf(16, 8);
-  const run = (rest = 1, hiding = false, told = true) =>
-    culling.run(camera, shift, 12, HOLE, 100, rest, cells, hiding, told);
+  const run = (rest = 1, hiding = false, told = true, glows = false) =>
+    culling.run(camera, shift, TUBE_FROM, glows, HOLE, 100, rest, cells, hiding, told);
   /** The next read mapped, finding `counts`, the blocks `marked` and `seen` segments seen. */
   const map = async (counts: CullTally, marked?: number[], seen?: number) => {
     gpu.found = wordsOf(counts, marked, seen);
@@ -69,6 +70,16 @@ function cullingOn(options?: Parameters<typeof fakeGpu>[0]) {
   };
 }
 
+/** The least radius the last tests took a segment at, px, from the view they were handed. */
+function leastOf(writes: { mock: { calls: unknown[][] } }): number | undefined {
+  const views = writes.mock.calls
+    .map(([, , data]) => data)
+    .filter((data): data is ArrayBuffer => data instanceof ArrayBuffer && data.byteLength >= 176)
+    .map((data) => new Float32Array(data, 0, 44))
+    .filter((floats) => floats[41] === TUBE_FROM);
+  return views.at(-1)?.[42];
+}
+
 const A = { tested: 300, kept: 200, drawn: 100 };
 const B = { tested: 30, kept: 20, drawn: 10 };
 
@@ -85,6 +96,14 @@ describe("the culling's counts and its failures", () => {
     culling.setArena(null);
     await map(B);
     expect(counted).toHaveBeenCalledOnce();
+  });
+
+  it('tests a segment at the least radius it is drawn with, and at twice that while cells may glow', () => {
+    const { run, writes } = cullingOn();
+    run();
+    expect(leastOf(writes)).toBe(MIN_RADIUS);
+    run(1, false, true, true);
+    expect(leastOf(writes)).toBe(2 * MIN_RADIUS);
   });
 
   it('draws each list from a buffer of its own', () => {
