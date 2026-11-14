@@ -4,7 +4,7 @@
 export function TeachPage() {
   return (
     <div className="flex h-full min-h-0 items-center justify-center p-6">
-      <p className="text-primary-9 text-[18px] font-medium">Teach content goes here</p>
+      <p className="text-primary-9 text-[18px] font-medium">Teach content</p>
     </div>
   );
 }
