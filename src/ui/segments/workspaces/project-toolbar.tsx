@@ -27,8 +27,6 @@ type Section = {
 
 const SECTIONS: Section[] = [
   { key: 'learn', title: 'Learn', path: WorkspaceMainPages.Learn, section: 'learn' },
-  // a section of its own beside Learn (the user asked to try it): Learn's Teach topics on a page of their own
-  { key: 'teach', title: 'Teach', path: 'teach', section: 'teach' },
   { key: 'data', title: 'Data', path: WorkspaceMainPages.Data, section: WorkspaceMainPages.Data },
   {
     key: 'workflows',
@@ -43,6 +41,8 @@ const SECTIONS: Section[] = [
     section: 'notebooks',
   },
   { key: 'reports', title: 'Reports', path: WorkspaceMainPages.Reports, section: 'reports' },
+  // a section of its own, last (the user asked to try it): a placeholder page for now
+  { key: 'teach', title: 'Teach', path: 'teach', section: 'teach' },
 ];
 
 /** The project's own pages, all under Home: its start page, team, credits and activity. */
