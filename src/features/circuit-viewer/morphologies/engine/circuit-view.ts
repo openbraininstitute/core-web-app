@@ -353,6 +353,11 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   } | null = null;
   private detailRules: DetailRules;
   private detailListeners = new Set<(detail: DetailStats | null) => void>();
+
+  /** The quads the morphologies are drawn with in the frame. */
+  protected get morphologyMeshes(): readonly THREE.Mesh[] {
+    return this.layer?.meshes ?? [];
+  }
   /** What the listeners were last told. */
   private toldDetail: DetailStats | null = null;
   /** What the tier's culling last counted. */
