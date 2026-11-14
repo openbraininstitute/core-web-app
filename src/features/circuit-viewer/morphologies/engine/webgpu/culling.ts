@@ -140,9 +140,9 @@ export class Culling {
   /**
    * Runs and submits the tests once the kept segments are drawn into the target. The tests fill the lists and the
    * draws for three's draw that follows. `shift`: what the arena's positions are moved by; `tubeFrom`: the least radius
-   * in pixels of a tube; `glows`: whether cells may glow, so that every segment is tested as wide as a glowing one is
-   * drawn, and otherwise at the least radius it is drawn with; `hidden`: the section type not drawn (`ImpostorUniforms.uHidden`); `end`: where the arena's
-   * segments end; `rest`: what is told of the frame (`DetailStream.frameRest`), handed on with the frame's read; `cells`:
+   * in pixels of a tube; `replaying`: whether a spike replay is loaded, a segment then tested as wide as a glowing one
+   * is drawn; `hidden`: the section type not drawn (`ImpostorUniforms.uHidden`); `end`: where the arena's segments
+   * end; `rest`: what is told of the frame (`DetailStream.frameRest`), handed on with the frame's read; `cells`:
    * the cell table's texture; `hiding`: whether it hides cells, whose segments then go on no list and mark no block,
    * and the kept list is left as it was, to hide those cells' segments once they are back; `told`: whether the
    * tests' counts are read back, which those of the first of two tests on a frame are not. Returns false where
@@ -152,7 +152,7 @@ export class Culling {
     camera: THREE.Camera & { near: number; far: number },
     shift: THREE.Vector3,
     tubeFrom: number,
-    glows: boolean,
+    replaying: boolean,
     hidden: number,
     end: number,
     rest: number,
@@ -172,7 +172,7 @@ export class Culling {
       pass,
       camera,
       shift,
-      [tubeFrom, MIN_RADIUS * (glows ? GLOW_WIDTH : 1), hiding ? 1 : 0],
+      [tubeFrom, MIN_RADIUS * (replaying ? GLOW_WIDTH : 1), hiding ? 1 : 0],
       [blocks, this.storage.capacity.value, hidden]
     );
     // three made it when it drew the kept segments.
