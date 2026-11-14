@@ -14,7 +14,7 @@ import { VideoCard } from '@/ui/segments/project/hex-home/video-card';
 import { cn } from '@/utils/css-class';
 
 import { AgentMarks } from './agent-marks';
-import { GREEN, wordsFor } from './hex-home-shared';
+import { GREEN, placeColours, wordsFor } from './hex-home-shared';
 import styles from './hex-cloud.module.css';
 
 import type { ReactNode, RefObject } from 'react';
@@ -105,19 +105,21 @@ function AgentsPicture({ className }: { className?: string }) {
 }
 
 /**
- * One of Do science's cards, small and white (the user asked: no colours), its first stage's screenshot over its
- * name: a click shows it large on the right.
+ * One of Do science's cards, small, in its colours (the user asked to keep them, white only on the right): a click
+ * shows it large on the right (the user asked).
  */
 function ScienceRowCard({
   card,
+  index,
   selected,
   onPick,
 }: {
   card: IJourneyCard;
+  index: number;
   selected: boolean;
   onPick: () => void;
 }) {
-  const first = PLACE_DETAILS[card.icon]?.frames[0];
+  const { bg, ink } = placeColours(index);
   return (
     // as wide as they were square, lower (the user asked)
     <button
@@ -125,21 +127,40 @@ function ScienceRowCard({
       onClick={onPick}
       aria-pressed={selected}
       title={`${card.label}: ${card.blurb}`}
-      className={cn(
-        'group border-neutral-2 relative flex h-[96px] w-[146px] shrink-0 flex-col overflow-hidden rounded-[14px] border bg-white text-left transition-shadow hover:shadow-md',
-        selected ? 'shadow-[0_6px_16px_-6px_rgb(0_39_102/0.35)]' : 'shadow-[0_4px_12px_-6px_rgb(0_39_102/0.12)]'
-      )}
+      className="group relative block h-[96px] w-[146px] shrink-0 overflow-hidden rounded-[14px] text-left"
+      style={{ background: bg }}
     >
-      <span className="border-neutral-2 relative block h-[54px] shrink-0 overflow-hidden border-b bg-neutral-50">
-        {first ? (
-          <img src={first.src} alt="" className="absolute inset-0 h-full w-full object-cover object-top" draggable={false} />
-        ) : (
-          <AgentsPicture />
-        )}
-      </span>
-      <span className="flex min-w-0 flex-col px-2.5 pt-1.5">
-        <span className="text-primary-9 truncate text-[12.5px] leading-[15px] font-semibold">{card.label}</span>
-        <span className="truncate text-[11px] leading-[14px] text-neutral-500">{card.blurb}</span>
+      {card.img ? (
+        <img
+          src={card.img}
+          alt=""
+          className={cn(
+            'absolute inset-0 h-full w-full object-cover mix-blend-luminosity grayscale transition-opacity duration-300 group-hover:opacity-80',
+            selected ? 'opacity-80' : 'opacity-45'
+          )}
+          style={{ objectPosition: card.imgAt ?? 'center' }}
+        />
+      ) : (
+        <span
+          className={cn('absolute inset-0 transition-opacity duration-300 group-hover:opacity-85', selected ? 'opacity-85' : 'opacity-55')}
+          style={{ color: ink }}
+        >
+          <AiSparkles className="absolute top-[9%] right-[8%] h-[20%] w-auto" />
+          <span className="absolute inset-x-0 top-[14%] flex h-[24%] justify-center">
+            <AgentMarks className="h-full gap-[9%]" markClassName="h-[70%] w-auto" />
+          </span>
+        </span>
+      )}
+      <span
+        className="absolute inset-x-0 bottom-0 flex flex-col gap-[2px] px-3.5 pt-8 pb-3"
+        style={{ backgroundImage: `linear-gradient(to top, ${bg} 50%, ${bg}00)` }}
+      >
+        <span className="text-[14px] leading-[17px] font-semibold" style={{ color: ink }}>
+          {card.label}
+        </span>
+        <span className="line-clamp-2 text-[11.5px] leading-[14px] opacity-80" style={{ color: ink }}>
+          {card.blurb}
+        </span>
       </span>
     </button>
   );
@@ -738,6 +759,7 @@ export function RowsHome({
             <ScienceRowCard
               key={card.label}
               card={card}
+              index={i}
               selected={shown.kind === 'place' && shown.i === i}
               onPick={() => pickPlace(i)}
             />
