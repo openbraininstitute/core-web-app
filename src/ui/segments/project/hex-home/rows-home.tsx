@@ -178,8 +178,9 @@ function Shown({ shown, videos, base }: { shown: TShown; videos: IExampleVideo[]
 }
 
 /**
- * The home's second design (the user asked for it beside the hexagons, chosen with the home's hidden menu): the five
- * categories' things each in a row of their own down the left, scrolling sideways; an example or a video clicked
+ * The home's second design (the user asked for it beside the hexagons, chosen with the home's hidden menu): the
+ * categories' things each in a row of their own down the left, scrolling sideways (Examples, Do science, the videos,
+ * Learn & teach; The institute left out); an example or a video clicked
  * shows on the right, the places of the platform open their pages.
  */
 export function RowsHome({
@@ -241,11 +242,7 @@ export function RowsHome({
             <ScienceRowCard key={card.label} card={card} index={i} base={base} />
           ))}
         </Row>
-        <Row title="Learn & teach" titled={titled}>
-          {groups[1].cards.map((card) => (
-            <PlaceRowCard key={card.label} card={card} base={base} />
-          ))}
-        </Row>
+        {/* the videos third, and no row for The institute (the user asked) */}
         <Row title="Tutorial videos" titled={titled}>
           {videos.map((v, i) => (
             <div key={v.key} className="w-[146px] shrink-0">
@@ -260,8 +257,8 @@ export function RowsHome({
             </div>
           ))}
         </Row>
-        <Row title="The institute" titled={titled}>
-          {groups[2].cards.map((card) => (
+        <Row title="Learn & teach" titled={titled}>
+          {groups[1].cards.map((card) => (
             <PlaceRowCard key={card.label} card={card} base={base} />
           ))}
         </Row>
