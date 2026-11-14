@@ -7,7 +7,6 @@ import { CATEGORIES, LEARN_SECTIONS } from '@/features/learn/ui/category-tiles';
 import { HEX_CLIP, SQRT3 } from '@/ui/segments/project/hex-home/hex-geometry';
 import styles from '@/ui/segments/project/hex-home/hex-cloud.module.css';
 import { HexTile } from '@/ui/segments/project/hex-home/hex-tile';
-import { HEADING, PANEL } from '@/ui/segments/workflows/elements/workflow-hex-menu';
 import { cn } from '@/utils/css-class';
 
 import type { CSSProperties } from 'react';
@@ -34,27 +33,15 @@ function sectionsOf(off: LearnSection[], hidden: string[]) {
   }));
 }
 
-/** The panel's inner margin, the gap between hexagons and the heading's room (page px). */
+/** The room round the column (for the hexagons' lift and shadow), the gap between them, and their largest size (px). */
 const PAD = 16;
 const GAP = 8;
-const HEAD = 32 + 12;
-const MAX_R = 72;
-
-/** Rows of two and one by turns: a honeycomb two wide. */
-function rowsOf(n: number) {
-  const rows: number[] = [];
-  for (let left = n; left > 0; ) {
-    const k = Math.min(rows.length % 2 ? 1 : 2, left);
-    rows.push(k);
-    left -= k;
-  }
-  return rows;
-}
+const MAX_R = 76;
 
 /**
- * Learn's sections as the home's and the Workflows page's categories are: hexagons down the left (the user asked),
- * white, the open one navy, their names in bold capitals, in a white panel under a "Learn" heading. Eleven do not fit
- * one column at a size their names fit, so they lie in a honeycomb two wide, as large as the panel's height allows.
+ * Learn's sections as the home's categories are (the user asked): hexagons one above another straight down the
+ * left, centred on the height, white, the open one navy, their names in bold capitals, with no heading or panel
+ * round them; as large as the height allows.
  */
 export function LearnHexColumn({ section, onSelect, off = [], hidden = [], className }: ISectionsProps) {
   const box = useRef<HTMLDivElement>(null);
@@ -68,36 +55,20 @@ export function LearnHexColumn({ section, onSelect, off = [], hidden = [], class
   }, []);
 
   const sections = sectionsOf(off, hidden);
-  const rows = rowsOf(sections.length);
-  const rise = (r: number) => 1.5 * r + (GAP * SQRT3) / 2;
-  const room = height - 2 * PAD - HEAD;
-  const r = Math.max(
-    36,
-    Math.min(MAX_R, (room - ((rows.length - 1) * GAP * SQRT3) / 2) / (2 + 1.5 * (rows.length - 1)))
-  );
+  const n = sections.length;
+  const r = Math.max(36, Math.min(MAX_R, (height - 2 * PAD - (n - 1) * GAP) / (2 * n)));
   const w = SQRT3 * r;
-  const places: Array<{ x: number; y: number }> = [];
-  rows.forEach((k, row) => {
-    const y = PAD + HEAD + r + row * rise(r);
-    for (let j = 0; j < k; j++) places.push({ x: k === 2 ? PAD + w / 2 + j * (w + GAP) : PAD + w + GAP / 2, y });
-  });
+  const top = height / 2 - ((n - 1) / 2) * (2 * r + GAP);
 
   return (
-    <div
-      ref={box}
-      className={cn(PANEL, 'relative h-full shrink-0 overflow-hidden', className)}
-      style={{ width: 2 * w + GAP + 2 * PAD }}
-    >
-      <h2 className={cn(HEADING, 'absolute')} style={{ top: PAD, left: PAD }}>
-        Learn
-      </h2>
+    <div ref={box} className={cn('relative h-full shrink-0', className)} style={{ width: w + 2 * PAD }}>
       {height > 0 &&
         sections.map(({ category, live }, i) => {
           const on = live && category.key === section;
           return (
             <HexTile
               key={category.key}
-              box={{ ...places[i], r }}
+              box={{ x: PAD + w / 2, y: top + i * (2 * r + GAP), r }}
               lift={on ? 1.1 : 0.9}
               drift={false}
               tone={on ? 'navy' : 'white'}
@@ -106,11 +77,11 @@ export function LearnHexColumn({ section, onSelect, off = [], hidden = [], class
               appearMs={120 + i * 60}
               className={cn(!live && 'opacity-50 grayscale')}
             >
-              <div className="flex h-full w-full items-center justify-center px-[13%] text-center">
+              <div className="flex h-full w-full items-center justify-center px-[12%] text-center">
                 <span
                   lang="en"
                   className={cn(
-                    'text-[12px] leading-[14px] font-bold tracking-[0.03em] uppercase hyphens-auto transition-colors duration-300',
+                    'text-[14px] leading-[16px] font-bold tracking-[0.04em] uppercase hyphens-auto transition-colors duration-300',
                     on ? 'text-white' : 'text-primary-9'
                   )}
                 >
@@ -153,18 +124,21 @@ export function LearnHexDock({ section, onSelect, off = [], hidden = [], classNa
   }, [mounted]);
 
   const sections = sectionsOf(off, hidden);
-  const top = Math.ceil(sections.length / 2);
+  // a few in one row, as the phone's home has its categories, no larger than those; more in two
+  const oneRow = sections.length <= 5;
+  const top = oneRow ? sections.length : Math.ceil(sections.length / 2);
   // with as many under as over, the lower row sits half a hexagon to the right
-  const even = sections.length % 2 === 0;
+  const even = !oneRow && sections.length % 2 === 0;
   const across = top + (even ? 0.5 : 0);
   const w = width
-    ? (width - 2 * DOCK.side - (top - 1) * DOCK.gap - (even ? DOCK.gap / 2 : 0)) / across
+    ? Math.min(oneRow ? 84 : Infinity, (width - 2 * DOCK.side - (top - 1) * DOCK.gap - (even ? DOCK.gap / 2 : 0)) / across)
     : 0;
   const h = (2 * w) / SQRT3;
-  const rise = 0.75 * h + (DOCK.gap * SQRT3) / 2;
+  const rise = oneRow ? 0 : 0.75 * h + (DOCK.gap * SQRT3) / 2;
   const height = w ? DOCK.top + h + rise + DOCK.bottom : 0;
-  const left = (row: number, j: number) =>
-    DOCK.side + j * (w + DOCK.gap) + (row === 1 ? (w + DOCK.gap) / 2 : 0);
+  // a row narrower than the width centred in it
+  const side = oneRow ? Math.max(DOCK.side, (width - top * w - (top - 1) * DOCK.gap) / 2) : DOCK.side;
+  const left = (row: number, j: number) => side + j * (w + DOCK.gap) + (row === 1 ? (w + DOCK.gap) / 2 : 0);
 
   const bar = (
     <div
@@ -179,7 +153,7 @@ export function LearnHexDock({ section, onSelect, off = [], hidden = [], classNa
     >
       {w > 0 &&
         sections.map(({ category, live }, i) => {
-          const row = i < top ? 0 : 1;
+          const row = oneRow || i < top ? 0 : 1;
           const j = row ? i - top : i;
           const on = live && category.key === section;
           return (

@@ -226,11 +226,20 @@ export function LearnPage({
   );
   // and the courses' cards on the left, small or big: a bigger picture, and what the course covers
   // and which sections' tiles are there at all (the Sections options): those left out, by key
-  // Features, with nothing in it yet, and Tutorials (the user had it taken out) left out unless switched on. ("none"
-  // in the address when every tile is shown, as an empty list there would read as the default again)
+  // Features, with nothing in it yet, Tutorials, Lectures, Literature, Articles, Conferences & Workshops and Showcases
+  // (the user had them taken out) left out unless switched on. ("none" in the address when every tile is shown, as an
+  // empty list there would read as the default again)
   const [hiddenParam, setHidden] = useQueryState(
     'hide',
-    parseAsArrayOf(parseAsString).withDefault(['features', 'tutorials'])
+    parseAsArrayOf(parseAsString).withDefault([
+      'features',
+      'tutorials',
+      'lectures',
+      'literature',
+      'articles',
+      'conferences',
+      'showcases',
+    ])
   );
   const hidden = hiddenParam.filter((k) => k !== 'none');
   const showSection = (key: string, on: boolean) => {
