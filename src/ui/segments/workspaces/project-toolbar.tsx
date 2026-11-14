@@ -27,6 +27,8 @@ type Section = {
 
 const SECTIONS: Section[] = [
   { key: 'learn', title: 'Learn', path: WorkspaceMainPages.Learn, section: 'learn' },
+  // a section of its own beside Learn (the user asked to try it): Learn's Teach topics on a page of their own
+  { key: 'teach', title: 'Teach', path: 'teach', section: 'teach' },
   { key: 'data', title: 'Data', path: WorkspaceMainPages.Data, section: WorkspaceMainPages.Data },
   {
     key: 'workflows',
@@ -53,9 +55,19 @@ const TAB =
 const TAB_ON =
   'text-primary-9 font-semibold after:absolute after:inset-x-3 after:-bottom-px after:h-[3px] after:rounded-t-full after:bg-primary-9 max-md:after:top-0 max-md:after:bottom-auto max-md:after:rounded-t-none max-md:after:rounded-b-full';
 
-function Tab({ on, title, children }: { on: boolean; title: string; children: ReactNode }) {
+function Tab({
+  on,
+  title,
+  className,
+  children,
+}: {
+  on: boolean;
+  title: string;
+  className?: string;
+  children: ReactNode;
+}) {
   return (
-    <span className="group relative flex h-full max-md:min-w-0 max-md:flex-1" title={title}>
+    <span className={cn('group relative flex h-full max-md:min-w-0 max-md:flex-1', className)} title={title}>
       {children}
       {/* hover underline, lighter than the active one's (none on a phone, which has no hover) */}
       {!on && (
@@ -80,7 +92,8 @@ export function ProjectToolbar() {
   const base = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}`;
   const homePath = `${base}/`;
   const homeOn = HOME_SECTIONS.includes(active);
-  const sections = SECTIONS.filter((s) => s.key !== 'learn' || learn);
+  // Teach with Learn, behind its flag
+  const sections = SECTIONS.filter((s) => (s.key !== 'learn' && s.key !== 'teach') || learn);
 
   return (
     // on a phone, the logo, the switcher, the credits and the assistant along the top, and the tabs along the
@@ -107,7 +120,8 @@ export function ProjectToolbar() {
           {sections.map(({ key, title, path, section }) => {
             const on = active === section;
             return (
-              <Tab key={key} on={on} title={title}>
+              // no room for Teach along a phone's foot: it is in Learn there
+              <Tab key={key} on={on} title={title} className={key === 'teach' ? 'max-md:hidden' : undefined}>
                 <Link prefetch href={`${base}/${path}`} className={cn(TAB, on && TAB_ON)}>
                   {title}
                 </Link>
