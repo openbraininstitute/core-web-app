@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
 import { config } from '@/config';
@@ -28,6 +28,7 @@ import { cn } from '@/utils/css-class';
 
 import { AgentMarks } from './agent-marks';
 import { HexHomeMobile } from './hex-home-mobile';
+import { RowsHome } from './rows-home';
 import { CATEGORIES, GREEN, placeColours, useFadeSwap, WORDS_FADE_MS, wordsFor } from './hex-home-shared';
 import styles from './hex-cloud.module.css';
 
@@ -530,14 +531,40 @@ export function HexHomePage() {
   // a phone has no room for the field, nor a pointer to hover with: the home laid out down the page instead
   const phone = useMediaQuery('(max-width: 767px)', false);
   // what a category shows fades in and out (the user asked to try it); `?motion=dynamic` folds it out of its category
-  const dynamic = useSearchParams().get('motion') === 'dynamic';
+  const params = useSearchParams();
+  const dynamic = params.get('motion') === 'dynamic';
+  // the design, from the hidden menu at the top right (the user asked): these hexagons, or the categories in rows
+  const rows = params.get('home') === 'rows';
+  const router = useRouter();
+  const pathname = usePathname();
+  const chooseDesign = (design: string) => {
+    const next = new URLSearchParams(params.toString());
+    if (design === 'rows') next.set('home', 'rows');
+    else next.delete('home');
+    const query = next.toString();
+    router.replace(`${pathname}${query ? `?${query}` : ''}`);
+  };
   if (phone) return <HexHomeMobile groups={groups} videos={videos} base={base} />;
 
   return (
-    <div className={cn('h-full w-full bg-white', !dynamic && styles.fadeMotion)}>
-      <FillFrame width={STAGE_W} minHeight={MIN_H}>
-        {(height) => <Home height={height} groups={groups} videos={videos} base={base} />}
-      </FillFrame>
+    <div className={cn('relative h-full w-full bg-white', !dynamic && styles.fadeMotion)}>
+      {rows ? (
+        <RowsHome groups={groups} videos={videos} base={base} />
+      ) : (
+        <FillFrame width={STAGE_W} minHeight={MIN_H}>
+          {(height) => <Home height={height} groups={groups} videos={videos} base={base} />}
+        </FillFrame>
+      )}
+      {/* invisible until the pointer is on it (or it has the keyboard's focus) */}
+      <select
+        aria-label="Home design"
+        value={rows ? 'rows' : 'hexagons'}
+        onChange={(e) => chooseDesign(e.target.value)}
+        className="text-primary-9 border-neutral-2 absolute top-2 right-3 z-30 cursor-pointer rounded-full border bg-white px-3 py-1 text-[12px] opacity-0 transition-opacity hover:opacity-100 focus:opacity-100"
+      >
+        <option value="hexagons">Hexagons</option>
+        <option value="rows">Rows</option>
+      </select>
     </div>
   );
 }
