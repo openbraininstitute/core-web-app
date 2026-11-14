@@ -98,8 +98,8 @@ function ScienceRowCard({ card, index, base }: { card: IJourneyCard; index: numb
       </span>
     </>
   );
-  // square (the user asked)
-  const box = 'group relative block size-[170px] shrink-0 overflow-hidden rounded-[16px] text-left';
+  // as wide as they were square, lower (the user asked)
+  const box = 'group relative block h-[112px] w-[170px] shrink-0 overflow-hidden rounded-[16px] text-left';
   if (card.action === 'ai')
     return (
       <button type="button" onClick={() => setAi(PanelState.Expanded)} className={box} style={{ background: bg }}>
