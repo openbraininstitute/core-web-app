@@ -67,7 +67,7 @@ export class CircuitMorphologyGPU extends CircuitView {
   /** Made for the first pack and kept, with its programs: a later pack's arena only binds its buffers to `storage`. */
   private arena: GpuArena | null = null;
   /**
-   * The two kinds of each material that has them, by either: the one that reads nothing of the spikes, then the one
+   * The two kinds of the segments' look materials, by either: the one that reads nothing of the spikes, then the one
    * lit by them (`impostorMaterials`).
    */
   private kinds = new Map<THREE.Material, [THREE.Material, THREE.Material]>();
@@ -162,8 +162,7 @@ export class CircuitMorphologyGPU extends CircuitView {
       whole.id.dispose();
       whole.cloud.transparent = true;
       const impostors = impostorMaterials(this.gpu, this.look);
-      this.pair(impostors.segment, impostors.spiking.segment);
-      this.pair(impostors.soma, impostors.spiking.soma);
+      this.pair(impostors.segment, impostors.spiking);
       this.materials = {
         segment: impostors.segment,
         soma: impostors.soma,
@@ -190,8 +189,8 @@ export class CircuitMorphologyGPU extends CircuitView {
   }
 
   /**
-   * Draws the morphologies with the materials lit by the spikes while a replay is loaded, and otherwise with those
-   * that read nothing of them, which draw the same picture for less.
+   * Draws the segments with the materials lit by the spikes while a replay is loaded, and otherwise with those that
+   * read nothing of them, which draw the same picture for less.
    */
   private drawBySpikes(): void {
     const kind = this.spiking.replaying ? 1 : 0;

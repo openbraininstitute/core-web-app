@@ -114,19 +114,21 @@ describe('the somas of the morphologies on WebGPU', () => {
   });
 });
 
-describe('the two kinds of the materials on WebGPU', () => {
-  it('reads nothing of the spikes in the kind drawn with no replay loaded', () => {
-    const plain = [...materials.segment, ...materials.soma, ...arena.segment];
-    expect(plain).toHaveLength(6);
+describe('the two kinds of the segments on WebGPU', () => {
+  it('reads nothing of the spikes in the segments drawn with no replay loaded', () => {
+    const plain = [...materials.segment, ...arena.segment];
+    expect(plain).toHaveLength(4);
     for (const material of plain) expect(spikesRead(material)).toEqual([]);
   });
 
-  it('lights the look by the spikes in the other kind, a soma without its own distance', () => {
-    const { spiking } = materials;
-    for (const material of [...spiking.segment, ...arena.spiking]) {
+  it('lights the segments by the spikes in the other kind', () => {
+    for (const material of [...materials.spiking, ...arena.spiking]) {
       expect(spikesRead(material)).toEqual(['glow', 'somas', 'afterglow', 'neon']);
     }
-    for (const material of spiking.soma) {
+  });
+
+  it('lights the somas in one kind, without a distance of their own', () => {
+    for (const material of materials.soma) {
       expect(spikesRead(material)).toEqual(['glow', 'afterglow', 'neon']);
     }
   });

@@ -744,17 +744,15 @@ const somas = <M extends THREE.Material>(of: (kind: 'disc' | 'soma') => M) => [
  * The impostors' materials on WebGPU: in the look, in their cells' numbers, in their segments' numbers, and lit through
  * what covers them. Each set draws the segments in two draws, the flat ones and the tubes. The look and the picks draw
  * the somas in two as well, the discs and the balls, so that a pick finds the cell the look shows. Lit through what
- * covers it, every soma is a ball: that draw tests no depth. The look's come in two kinds: those that read nothing of
- * the spikes, and under `spiking` the same lit by them, drawn with while a replay is loaded.
+ * covers it, every soma is a ball: that draw tests no depth. The segments' look comes in two kinds: one that reads
+ * nothing of the spikes, and under `spiking` the same lit by them, drawn with while a replay is loaded. The somas' is
+ * always the lit one: the other drew them no faster.
  */
 export function impostorMaterials(u: GpuUniforms, look: Look) {
-  const drawn = (spikes: boolean) => ({
-    segment: segments((kind) => lookMaterial(kind, u, look, spikes)),
-    soma: somas((kind) => lookMaterial(kind, u, look, spikes)),
-  });
   return {
-    ...drawn(false),
-    spiking: drawn(true),
+    segment: segments((kind) => lookMaterial(kind, u, look, false)),
+    spiking: segments((kind) => lookMaterial(kind, u, look, true)),
+    soma: somas((kind) => lookMaterial(kind, u, look, true)),
     ids: {
       segment: segments((kind) => idMaterial(kind, u)),
       soma: somas((kind) => idMaterial(kind, u)),
