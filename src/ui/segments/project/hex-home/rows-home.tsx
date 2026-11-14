@@ -80,19 +80,22 @@ function Row({
 }) {
   if (grid)
     return (
-      <section className="flex min-w-0 flex-col gap-2" aria-label={title}>
+      // the room the rows above leave, so the column needs no scroll (the user asked): three rows sharing its height
+      <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-2" aria-label={title}>
         {titled && <h2 className="text-primary-9 px-1 text-[13px] font-bold tracking-[0.08em] uppercase">{title}</h2>}
-        <div className="grid grid-cols-3 gap-3 pt-1 pb-3">{children}</div>
+        <div className="grid min-h-0 flex-1 grid-cols-3 grid-rows-[repeat(3,minmax(64px,1fr))] gap-3 pt-1 pb-1">
+          {children}
+        </div>
       </section>
     );
   return (
     <section className="flex min-w-0 flex-col gap-2" aria-label={title}>
       {titled && <h2 className="text-primary-9 px-1 text-[13px] font-bold tracking-[0.08em] uppercase">{title}</h2>}
-      {/* fading out at the box's right edge rather than cut off there; sideways only, never up and down (the user
+      {/* fading a little at the box's right edge rather than cut off there (softer, the user asked); sideways only, never up and down (the user
           asked: a sideways scroll lets the other way scroll too, by a pixel or so of overflow) */}
       <div
         className={cn(
-          'no-scrollbar -mx-1 gap-3 overflow-x-auto overflow-y-hidden px-1 pt-1 pb-3 [mask-image:linear-gradient(to_right,#000_calc(100%-48px),transparent)]',
+          'no-scrollbar -mx-1 gap-3 overflow-x-auto overflow-y-hidden px-1 pt-1 pb-3 [mask-image:linear-gradient(to_right,#000_calc(100%-28px),rgb(0_0_0/0.3))]',
           twoRows ? 'grid auto-cols-max grid-flow-col grid-rows-2' : 'flex'
         )}
       >
@@ -107,8 +110,8 @@ function Row({
 /** The OBI wordmark in Do science's bottom left corner (the user asked), in a cell the size of the cards. */
 function ObiCell() {
   return (
-    <div title="Open Brain Institute" className="flex aspect-[146/96] w-full items-center justify-center">
-      <ObiLogo className="text-primary-9 h-[42%] w-auto" />
+    <div title="Open Brain Institute" className="flex h-full w-full items-center justify-center p-[8%]">
+      <ObiLogo className="text-primary-9 h-auto max-h-full w-[70%]" />
     </div>
   );
 }
@@ -148,8 +151,8 @@ function ScienceRowCard({
       onClick={onPick}
       aria-pressed={selected}
       title={`${card.label}: ${card.blurb}`}
-      // its grid cell's width, as wide as it was tall (146 × 96)
-      className="group relative block aspect-[146/96] w-full overflow-hidden rounded-[14px] text-left"
+      // its grid cell, whose height is a share of what the rows above leave
+      className="group relative block h-full w-full overflow-hidden rounded-[14px] text-left"
       style={{ background: bg }}
     >
       {card.img ? (
@@ -179,9 +182,6 @@ function ScienceRowCard({
       >
         <span className="text-[14px] leading-[17px] font-semibold" style={{ color: ink }}>
           {card.label}
-        </span>
-        <span className="line-clamp-2 text-[11.5px] leading-[14px] opacity-80" style={{ color: ink }}>
-          {card.blurb}
         </span>
       </span>
     </button>
@@ -705,6 +705,8 @@ export function RowsHome({
           side?.kind === 'video' ? 'w-[40%]' : 'w-[45%]'
         )}
       >
+      {/* no scroll up and down (the user asked): Do science takes what the other rows leave; only a very short window
+          scrolls, rather than squeezing its cards to nothing */}
       <div className="no-scrollbar flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-2">
         <div ref={strip}>
         <Row title="Examples" titled={titled}>
