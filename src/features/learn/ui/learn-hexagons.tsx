@@ -234,3 +234,49 @@ export function LearnSectionButtons({ section, onSelect, off = [], hidden = [], 
     </nav>
   );
 }
+
+/**
+ * The sections as hexagons in a row along the top of Learn (the user asked to try them where the buttons were), as
+ * the home's categories are drawn: white, the open one navy, their names in bold capitals, rising in one after
+ * another; smaller on a phone.
+ */
+export function LearnSectionHexes({ section, onSelect, off = [], hidden = [], className }: ISectionsProps) {
+  const sections = sectionsOf(off, hidden);
+  return (
+    <nav aria-label="Learn sections" className={cn('no-scrollbar flex shrink-0 gap-2 overflow-x-auto px-1 pt-1 pb-2', className)}>
+      {sections.map(({ category, live }, i) => {
+        const on = live && category.key === section;
+        return (
+          <button
+            key={category.key}
+            type="button"
+            disabled={!live}
+            aria-pressed={on}
+            title={live ? category.label : `${category.label}: coming soon`}
+            onClick={() => onSelect(category.key as LearnSection)}
+            className={cn(
+              'relative h-[116px] w-[100px] shrink-0 drop-shadow-[0_5px_10px_rgb(28_40_72/0.16)] transition-transform hover:-translate-y-0.5 active:scale-95 max-md:h-[92px] max-md:w-[80px]',
+              !live && 'opacity-50 grayscale'
+            )}
+          >
+            <span
+              className={cn(styles.appear, 'absolute inset-0 block')}
+              style={{ '--appear-delay': `${60 + i * 70}ms` } as CSSProperties}
+            >
+              <span
+                lang="en"
+                className={cn(
+                  'absolute inset-0 flex items-center justify-center px-[12%] text-center text-[12px] leading-[14px] font-bold tracking-[0.03em] uppercase hyphens-auto transition-colors duration-300 max-md:text-[10px] max-md:leading-[12px]',
+                  on ? 'bg-[#002766] text-white' : 'text-primary-9 bg-white'
+                )}
+                style={{ clipPath: HEX_CLIP }}
+              >
+                {category.label}
+              </span>
+            </span>
+          </button>
+        );
+      })}
+    </nav>
+  );
+}

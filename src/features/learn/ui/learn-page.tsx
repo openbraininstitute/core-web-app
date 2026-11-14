@@ -46,7 +46,7 @@ import {
   TILE_DESIGNS,
 } from '@/features/learn/ui/category-tiles';
 import { CoursePreview } from '@/features/learn/ui/course-preview';
-import { LearnSectionButtons } from '@/features/learn/ui/learn-hexagons';
+import { LearnSectionHexes } from '@/features/learn/ui/learn-hexagons';
 import { FeedCard, FeedIndex, type FeedSource } from '@/features/learn/ui/feeds';
 import { glide } from '@/features/learn/ui/glide';
 import { GlossaryCard, GlossaryIndex } from '@/features/learn/ui/glossary';
@@ -530,11 +530,10 @@ export function LearnPage({
       className={cn(BOX, outerBox && OUTER_BOX, !listBoxOn && 'learn-no-list')}
       data-selected={SELECTED_SLUGS[sel]}
     >
-      {/* the sections as buttons along the top (the user asked; hexagons down the left, and along the foot on a
-          narrow screen, before: LearnHexColumn and LearnHexDock, unused for now) */}
-      <div className="flex min-h-0 flex-1 flex-col gap-[12px]">
-      <LearnSectionButtons
-        className="pt-1"
+      {/* the sections as hexagons in a row along the top (the user asked to try them there; buttons there before,
+          LearnSectionButtons, and hexagons down the left or along the foot before that, all unused for now) */}
+      <div className="flex min-h-0 flex-1 flex-col gap-[8px]">
+      <LearnSectionHexes
         hidden={hidden}
         section={section}
         onSelect={setSection}
