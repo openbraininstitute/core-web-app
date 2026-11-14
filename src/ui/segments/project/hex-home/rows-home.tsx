@@ -9,6 +9,7 @@ import { VideoPlayer } from '@/ui/segments/project/get-started/elements/video-pl
 import { EXAMPLES, journeyHref } from '@/ui/segments/project/hex-home/content';
 import { HEX_CLIP, SQRT3 } from '@/ui/segments/project/hex-home/hex-geometry';
 import { FreeMedia, MeltFlier, TileMedia } from '@/ui/segments/project/hex-home/landing-example';
+import ObiLogo from '@/features/learn/components/ui/ObiLogo';
 import { AiSparkles } from '@/ui/segments/project/brains-walkthrough/agent-ready';
 import { VideoCard } from '@/ui/segments/project/hex-home/video-card';
 import { cn } from '@/utils/css-class';
@@ -66,14 +67,24 @@ function Row({
   title,
   titled = true,
   twoRows = false,
+  grid = false,
   children,
 }: {
   title: string;
   titled?: boolean;
   /** Its things in two rows, scrolling sideways together. */
   twoRows?: boolean;
+  /** Its things three to a row, filling the width, not scrolling. */
+  grid?: boolean;
   children: ReactNode;
 }) {
+  if (grid)
+    return (
+      <section className="flex min-w-0 flex-col gap-2" aria-label={title}>
+        {titled && <h2 className="text-primary-9 px-1 text-[13px] font-bold tracking-[0.08em] uppercase">{title}</h2>}
+        <div className="grid grid-cols-3 gap-3 pt-1 pb-3">{children}</div>
+      </section>
+    );
   return (
     <section className="flex min-w-0 flex-col gap-2" aria-label={title}>
       {titled && <h2 className="text-primary-9 px-1 text-[13px] font-bold tracking-[0.08em] uppercase">{title}</h2>}
@@ -89,6 +100,15 @@ function Row({
         <span aria-hidden className="w-6 shrink-0" />
       </div>
     </section>
+  );
+}
+
+/** The OBI wordmark in Do science's corner (the user asked), in a cell the size of the cards. */
+function ObiCell() {
+  return (
+    <div title="Open Brain Institute" className="flex aspect-[146/96] w-full items-center justify-center">
+      <ObiLogo className="text-primary-9 h-[42%] w-auto" />
+    </div>
   );
 }
 
@@ -127,7 +147,8 @@ function ScienceRowCard({
       onClick={onPick}
       aria-pressed={selected}
       title={`${card.label}: ${card.blurb}`}
-      className="group relative block h-[96px] w-[146px] shrink-0 overflow-hidden rounded-[14px] text-left"
+      // its grid cell's width, as wide as it was tall (146 × 96)
+      className="group relative block aspect-[146/96] w-full overflow-hidden rounded-[14px] text-left"
       style={{ background: bg }}
     >
       {card.img ? (
@@ -223,6 +244,26 @@ const PLACE_DETAILS: Record<string, { intro: string; points: string[]; frames: T
       'Research logs that grow as the work does',
       'Figures and results taken straight from the project',
       'Share them with your team',
+    ],
+  },
+  learning: {
+    frames: shots('learn', ['Courses', 'Glossary', 'Tutorials', 'Standard']),
+    intro: 'Learn what you need: the neuroscience, simulating it, the platform and its data standard.',
+    points: [
+      'Free courses, from an introduction to brain modeling to synapses and compartmental models',
+      'Slides with live figures and simulations to try as you go',
+      'Video tutorials on each part of the platform',
+      'A glossary of the terms, and the Data & Workflows Standard the platform follows',
+    ],
+  },
+  teaching: {
+    frames: shots('teach', ['Teach', 'Practise', 'Explore']),
+    intro: 'Run a course on the platform: real data, models and simulations in the browser, for a whole class.',
+    points: [
+      'A virtual lab for the course, and a project for each student or group',
+      'The free courses, glossary and tutorials as course material, or your own',
+      'Exercises and notebooks students run with nothing to install',
+      'The class’s credits shared, with a budget for each project if you want one',
     ],
   },
   ai: {
@@ -341,67 +382,6 @@ export function PlaceShown({ card, base }: { card: IJourneyCard; base: string })
         )}
       </div>
       <style>{'@keyframes place-fill { from { width: 0 } to { width: 100% } }'}</style>
-    </div>
-  );
-}
-
-/**
- * Learn & teach as one card along the foot of the rows, a third of their width (the user asked, in place of its cards
- * among Do science's): what it is for, and its three places as hexagons at its right end, opening Learn (behind its
- * flag; still to come without it).
- */
-function LearnCard({ base, learn }: { base: string; learn: boolean }) {
-  const hexW = 30;
-  const body = (
-    <>
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <span className="text-[15px] leading-[19px] font-semibold text-[#13306f]">Learn & teach</span>
-        <span className="line-clamp-3 text-[11.5px] leading-[14px] text-neutral-600">
-          {learn
-            ? 'What you need, from neuroscience and simulating it to the platform and its data standard. Or teach a course.'
-            : 'Neuroscience, simulation, the platform and its data standard · coming soon'}
-        </span>
-      </div>
-      {/* its places, courses, glossary and teaching, as a little cluster of hexagons */}
-      <div
-        aria-hidden
-        className="relative shrink-0"
-        style={{ width: 2 * hexW + 4, height: (2 * hexW) / SQRT3 + hexW * 0.75 }}
-      >
-        {(['learning', 'glossary', 'teaching'] as const).map((icon, k) => (
-          <span
-            key={icon}
-            className="absolute drop-shadow-[0_3px_6px_rgb(28_40_72/0.14)]"
-            style={{
-              width: hexW,
-              height: (2 * hexW) / SQRT3,
-              left: k === 2 ? hexW / 2 + 2 : k * (hexW + 4),
-              top: k === 2 ? hexW * 0.75 + 1 : 0,
-            }}
-          >
-            <span className="absolute inset-0 flex items-center justify-center bg-white" style={{ clipPath: HEX_CLIP }}>
-              <img src={`/images/vlab-home/icons/${icon}.svg`} alt="" width={15} height={15} />
-            </span>
-          </span>
-        ))}
-      </div>
-    </>
-  );
-  const box =
-    'relative mt-3 flex w-1/3 min-w-[240px] shrink-0 items-center gap-3 overflow-hidden rounded-[14px] py-3 pr-3 pl-4';
-  const background = { background: 'linear-gradient(100deg, #e9efff 0%, #f1ecff 60%, #f8f1fb 100%)' };
-  return learn ? (
-    <Link
-      href={`${base}/learn`}
-      aria-label="Learn & teach"
-      className={cn(box, 'transition-shadow hover:shadow-md')}
-      style={background}
-    >
-      {body}
-    </Link>
-  ) : (
-    <div aria-label="Learn & teach" className={cn(box, 'opacity-60')} style={background}>
-      {body}
     </div>
   );
 }
@@ -604,6 +584,26 @@ export function RowsHome({
   // a video or one of Do science's places on show instead of the example
   const [side, setSide] = useState<TShown | null>(null);
   const shown: TShown = side ?? { kind: 'example', i: hero };
+  // Do science's places, Learn and Teach with them (the user asked: Learn & teach in two, part of Do science)
+  const learnOn = groups[1].cards.some((card) => card.icon === 'learning' && !!card.href);
+  const places: IJourneyCard[] = [
+    ...groups[0].cards,
+    {
+      label: 'Learn',
+      icon: 'learning',
+      href: learnOn ? 'learn' : undefined,
+      blurb: 'Courses, tutorials, a glossary and the data standard',
+      img: '/images/place-previews/learn-1.jpg',
+      imgAt: 'left top',
+    },
+    {
+      label: 'Teach',
+      icon: 'teaching',
+      href: 'teach',
+      blurb: 'Run a course on the platform',
+      img: '/images/place-previews/teach-1.jpg',
+    },
+  ];
   const tileW = TILE_W;
   const stage = useRef<HTMLDivElement>(null);
   const strip = useRef<HTMLDivElement>(null);
@@ -697,11 +697,11 @@ export function RowsHome({
   return (
     <div ref={stage} className="relative flex h-full w-full min-w-0 gap-8 bg-white px-6 pt-5 pb-4">
       {/* the rows fade out at their right edge (no box round them: the user tried one), scrolling with no bar */}
-      {/* 55:45, and 40:60 while a video plays, so it is larger (the user asked) */}
+      {/* 45:55, so Do science's three by three fills the rows' width, and 40:60 while a video plays (the user asked) */}
       <div
         className={cn(
           'flex min-w-0 shrink-0 flex-col transition-[width] duration-500 ease-in-out',
-          side?.kind === 'video' ? 'w-[40%]' : 'w-[55%]'
+          side?.kind === 'video' ? 'w-[40%]' : 'w-[45%]'
         )}
       >
       <div className="no-scrollbar flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-2">
@@ -755,26 +755,28 @@ export function RowsHome({
             </div>
           ))}
         </Row>
-        <Row title="Do science" titled={titled} twoRows>
-          {groups[0].cards.map((card, i) => (
-            <ScienceRowCard
-              key={card.label}
-              card={card}
-              index={i}
-              selected={shown.kind === 'place' && shown.i === i}
-              onPick={() => pickPlace(i)}
-            />
-          ))}
+        {/* three by three, Learn and Teach among them, the OBI wordmark in the corner (the user asked) */}
+        <Row title="Do science" titled={titled} grid>
+          {places.map((card, i) => {
+            const tile = (
+              <ScienceRowCard
+                key={card.label}
+                card={card}
+                index={i}
+                selected={shown.kind === 'place' && shown.i === i}
+                onPick={() => pickPlace(i)}
+              />
+            );
+            return i === places.length - 2 ? [<ObiCell key="obi" />, tile] : tile;
+          })}
         </Row>
       </div>
-      {/* Learn & teach's places in one card along the foot, a third as wide (the user asked), not among Do science's */}
-      <LearnCard base={base} learn={groups[1].cards.some((card) => card.icon === 'learning' && !!card.href)} />
       </div>
       <div className="min-h-0 min-w-0 flex-1">
         <Shown
           shown={shown}
           videos={videos}
-          places={groups[0].cards}
+          places={places}
           base={base}
           heroBox={heroBox}
           landing={(!!flight && !landed.inbound) || !!grow}

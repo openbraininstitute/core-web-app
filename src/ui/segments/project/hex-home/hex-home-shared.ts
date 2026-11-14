@@ -64,6 +64,9 @@ export const PLACE_COLOURS = [
   { bg: '#5f9e97', ink: '#ffe1ec' },
   { bg: '#eda083', ink: '#2c2868' },
   { bg: '#a3d9c1', ink: '#4a2453' },
+  // Learn and Teach, on the rows home's Do science (the user asked): lavender and cream, sky and navy
+  { bg: '#a99ad8', ink: '#fff4c9' },
+  { bg: '#8ec3e6', ink: '#24306e' },
 ];
 /**
  * Do science and its sixth card in the order the cards come (Data, Workflows, Notebooks, Virtual labs, Reports,
