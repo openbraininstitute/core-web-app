@@ -471,3 +471,10 @@
     transform: none;
   }
 }
+
+/* the categories coming out of The institute's tile as the page opens move in the fade mode too */
+.fadeMotion .categoryIn .burst {
+  animation-name: burst;
+  animation-duration: 820ms;
+  animation-delay: var(--appear-delay, 0ms) !important;
+}

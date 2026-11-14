@@ -49,6 +49,10 @@ const MIN_H = 760;
 const MAX_VIDEOS = 40;
 
 const EXAMPLES_TONGUE = 0;
+/** The institute's category, whose tile the others come out of as the page opens. */
+const INSTITUTE = 4;
+/** The page's opening (ms): The institute's tile, the others out of it one after another, then the examples. */
+const INTRO = { institute: 80, categories: 420, step: 130, examples: 1500 };
 /** The hexagon the words of the example on show sit in, in the hole the examples lie round (stage px). */
 const WORDS_R = 182;
 const SCIENCE_TONGUE = 1;
@@ -102,6 +106,7 @@ function ExampleTile({
   onPick,
   fold,
   onTongue,
+  delayMs = 0,
 }: {
   tile: ITongueTile;
   example: IExample;
@@ -109,6 +114,8 @@ function ExampleTile({
   onPick: () => void;
   fold: IFold;
   onTongue: (on: boolean) => void;
+  /** Held back this long as the page first opens, behind the categories. */
+  delayMs?: number;
 }) {
   const [hover, setHover] = useState(false);
   return (
@@ -124,7 +131,7 @@ function ExampleTile({
         onTongue(on);
       }}
       title={example.label}
-      appearMs={appearAt(EXAMPLES_TONGUE, tile.s, tile.x)}
+      appearMs={delayMs + appearAt(EXAMPLES_TONGUE, tile.s, tile.x)}
       z={hover ? 10 : undefined}
       overlay={<HoverLabel shown={hover && !empty}>{example.label}</HoverLabel>}
       {...fold}
@@ -387,12 +394,17 @@ function CategoryTile({
   onClick,
   onHover,
   on,
+  appearMs,
+  from,
 }: {
   category: (typeof CATEGORIES)[number];
   box: IHexBox;
   index: number;
   scale: number;
   glideDelayMs: number;
+  /** When it comes in as the page opens, and where from (The institute's tile, for the other four). */
+  appearMs?: number;
+  from?: IPoint;
   onClick?: () => void;
   onHover?: (on: boolean) => void;
   /** Its tongue out, or what it opened on show. */
@@ -404,7 +416,8 @@ function CategoryTile({
       drift={false}
       // white; navy while hovered, its tongue out, or what it opened on show
       tone={on ? 'navy' : 'white'}
-      appearMs={150 + index * 90}
+      appearMs={appearMs ?? 150 + index * 90}
+      from={from}
       onClick={onClick}
       onHover={onHover}
       title={category.label}
@@ -657,6 +670,13 @@ function Home({
   const reach = tongues.map((tiles) => Math.max(0, ...tiles.map((t) => t.s)));
 
   const [view, setView] = useState<TView>({ kind: 'examples' });
+  // the examples held back behind the categories' opening, only as the page first opens
+  const [intro, setIntro] = useState(true);
+  useEffect(() => {
+    const done = window.setTimeout(() => setIntro(false), INTRO.examples + 1600);
+    return () => window.clearTimeout(done);
+  }, []);
+  const introMs = intro ? INTRO.examples : 0;
   // As on the landing: one example on show beside the field, the others in its tiles, one each. A pick flies out of
   // its tile to be on show as the one there flies back into the tile it left, so no tile stays behind empty (the
   // user asked, as on the website; an earlier version kept an empty tile per example).
@@ -879,6 +899,7 @@ function Home({
             style={{
               left: heroAtFor(shown).x - widthOf(shown) / 2,
               top: height / 2 - widthOf(shown) / shown.aspect / 2,
+              animationDelay: `${introMs}ms`,
             }}
           >
             <FreeMedia example={shown} width={widthOf(shown)} />
@@ -892,8 +913,13 @@ function Home({
           >
             <div
               aria-hidden
-              className="absolute h-px bg-neutral-300"
-              style={{ left: leader.x0, top: leader.y, width: leader.x1 - leader.x0 }}
+              className={cn(styles.freeIn, 'absolute h-px bg-neutral-300')}
+              style={{
+                left: leader.x0,
+                top: leader.y,
+                width: leader.x1 - leader.x0,
+                animationDelay: `${introMs + 500}ms`,
+              }}
             >
               <span className="absolute -top-[3px] -right-[3.5px] size-[7px] rounded-full bg-neutral-400" />
             </div>
@@ -905,6 +931,7 @@ function Home({
                 {
                   transformOrigin: `${wordsHex.x}px ${wordsHex.y}px`,
                   '--from-x': `${heroAtFor(said).x - wordsHex.x}px`,
+                  animationDelay: `${introMs + 200}ms`,
                 } as CSSProperties
               }
             >
@@ -968,6 +995,7 @@ function Home({
                 onPick={() => pick(i)}
                 fold={fold(tile)}
                 onTongue={keep}
+                delayMs={introMs}
               />
             );
           }
@@ -1008,6 +1036,9 @@ function Home({
         onHover={onTongue(VIDEOS_TONGUE)}
       />
 
+      {/* as the page opens, The institute's tile (the OBI wordmark) first and the other four out of it, nearest first
+          (the user asked); kept moving in the fade mode too */}
+      <div className={styles.categoryIn}>
       {CATEGORIES.map((category, i) => (
         <CategoryTile
           key={category.key}
@@ -1016,12 +1047,15 @@ function Home({
           index={i}
           scale={1}
           glideDelayMs={0}
+          appearMs={i === INSTITUTE ? INTRO.institute : INTRO.categories + (INSTITUTE - 1 - i) * INTRO.step}
+          from={i === INSTITUTE ? undefined : specs[INSTITUTE].root}
           on={out === i || (out === null && kept === i)}
           onClick={categoryClick(i)}
           // a click opens it, not the pointer passing over (the user asked)
           onHover={() => {}}
         />
       ))}
+      </div>
 
       {flight && (
         <>
