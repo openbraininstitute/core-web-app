@@ -279,6 +279,61 @@ function LearnCard({ base, learn }: { base: string; learn: boolean }) {
   );
 }
 
+/** A box on the page, in its own coordinates. */
+interface IRect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+/** A video picked: its card, from where it is in its row, growing into the player on the right (`to`, once known). */
+interface IGrow {
+  id: number;
+  video: IExampleVideo;
+  from: IRect;
+  to: IRect | null;
+}
+
+const GROW_MS = 650;
+
+/**
+ * A video's card growing out of its row into the player's place, as the examples grow out of their hexagons (the
+ * user asked): its poster under its navy veil, which the player (navy while it loads) then takes over from.
+ */
+function VideoGrow({ from, to, video, onDone }: { from: IRect; to: IRect; video: IExampleVideo; onDone: () => void }) {
+  const card = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = card.current;
+    if (!el) return;
+    const place = (r: IRect, radius: number) => ({
+      left: `${r.x}px`,
+      top: `${r.y}px`,
+      width: `${r.w}px`,
+      height: `${r.h}px`,
+      borderRadius: `${radius}px`,
+    });
+    const run = el.animate([place(from, 8), place(to, 16)], {
+      duration: GROW_MS,
+      easing: 'cubic-bezier(0.22, 0.8, 0.24, 1)',
+      fill: 'both',
+    });
+    run.onfinish = () => onDone();
+    return () => run.cancel();
+    // one growth per mount
+  }, []);
+  return (
+    <div
+      ref={card}
+      className="absolute overflow-hidden rounded-[8px] shadow-[0_18px_50px_rgb(20_40_90_/_0.18)]"
+      style={{ left: from.x, top: from.y, width: from.w, height: from.h }}
+    >
+      <img src={video.poster} alt="" className="absolute inset-0 size-full object-cover" draggable={false} />
+      <div className="absolute inset-0 bg-linear-to-b from-[rgba(0,39,102,0.94)] to-[rgba(0,39,102,0.72)]" />
+    </div>
+  );
+}
+
 /** What is open on the right: the example picked, large, with what it is and what to do with it, or a video. */
 function Shown({
   shown,
@@ -322,14 +377,22 @@ function Shown({
       <div ref={box} className="flex h-full min-h-0 flex-col justify-center gap-3">
         {video && (
           <div key={video.key} className={cn(styles.fadeIn, 'flex flex-col gap-3')}>
-            <div className="flex flex-col">
+            {/* its title once it has grown into place, the player only then (it starts as it mounts) */}
+            <div
+              key={landing ? 'landing' : 'landed'}
+              className={cn('flex flex-col', landing ? 'invisible' : styles.fadeIn)}
+            >
               <span className="text-[12px] font-semibold tracking-[0.12em] uppercase" style={{ color: GREEN }}>
                 {video.kind}
               </span>
               <span className="text-primary-9 font-serif text-[28px] leading-[34px]">{video.title}</span>
             </div>
-            <div className="aspect-video w-full overflow-hidden rounded-2xl shadow-[0_18px_50px_rgb(20_40_90_/_0.18)]">
-              <VideoPlayer url={video.video ?? video.url} title={video.title} />
+            <div
+              ref={heroBox}
+              className="aspect-video w-full overflow-hidden rounded-2xl shadow-[0_18px_50px_rgb(20_40_90_/_0.18)]"
+              style={landing ? { visibility: 'hidden' } : undefined}
+            >
+              {!landing && <VideoPlayer url={video.video ?? video.url} title={video.title} />}
             </div>
           </div>
         )}
@@ -412,12 +475,18 @@ export function RowsHome({
   const heroBox = useRef<HTMLDivElement>(null);
   const [flight, setFlight] = useState<IFlight | null>(null);
   const [landed, setLanded] = useState({ inbound: true, outbound: true });
+  const [grow, setGrow] = useState<IGrow | null>(null);
 
   // the page's own coordinates of a box on it
   const centreOf = (el: HTMLElement) => {
     const R = stage.current!.getBoundingClientRect();
     const r = el.getBoundingClientRect();
     return { x: r.left + r.width / 2 - R.left, y: r.top + r.height / 2 - R.top, w: r.width };
+  };
+  const rectOf = (el: HTMLElement): IRect => {
+    const R = stage.current!.getBoundingClientRect();
+    const r = el.getBoundingClientRect();
+    return { x: r.left - R.left, y: r.top - R.top, w: r.width, h: r.height };
   };
   const tileOf = (slot: number): IHexBox | null => {
     const el = strip.current?.querySelector<HTMLElement>(`[data-slot="${slot}"]`);
@@ -438,6 +507,7 @@ export function RowsHome({
   // one there shrinks back into the tile it left, the two trading places, as on the desktop (the user asked).
   const pick = (slot: number) => {
     if (flight) return;
+    setGrow(null);
     const i = slots[slot];
     const from = stage.current && tileOf(slot);
     const home = side === null ? heroOn() : null;
@@ -462,12 +532,25 @@ export function RowsHome({
   useEffect(() => {
     if (flight && landed.inbound && landed.outbound) setFlight(null);
   }, [flight, landed]);
+  // A video clicked grows out of its card into the player (the user asked), as an example grows out of its hexagon.
   const pickVideo = (i: number) => {
+    if (side?.kind === 'video' && side.i === i) return;
     setFlight(null);
     setLanded({ inbound: true, outbound: true });
     setSide({ kind: 'video', i });
+    const el = stage.current?.querySelector<HTMLElement>(`[data-video="${i}"]`);
+    if (!el || !videos[i]) return setGrow(null);
+    setGrow({ id: Date.now(), video: videos[i], from: rectOf(el), to: null });
   };
+  // where it grows to: the player's place, now laid out for it, unseen
+  useLayoutEffect(() => {
+    if (!grow || grow.to) return;
+    const el = heroBox.current;
+    const to = el && rectOf(el);
+    setGrow(to && to.w > 0 ? { ...grow, to } : null);
+  }, [grow]);
   const pickPlace = (i: number) => {
+    setGrow(null);
     setFlight(null);
     setLanded({ inbound: true, outbound: true });
     setSide({ kind: 'place', i });
@@ -519,7 +602,7 @@ export function RowsHome({
         {/* the videos second, Do science third in two rows, no row for The institute (the user asked) */}
         <Row title="Tutorial videos" titled={titled}>
           {videos.map((v, i) => (
-            <div key={v.key} className="w-[146px] shrink-0">
+            <div key={v.key} data-video={i} className="w-[146px] shrink-0">
               <VideoCard
                 small
                 height={96}
@@ -553,9 +636,14 @@ export function RowsHome({
           places={groups[0].cards}
           base={base}
           heroBox={heroBox}
-          landing={!!flight && !landed.inbound}
+          landing={(!!flight && !landed.inbound) || !!grow}
         />
       </div>
+      {grow?.to && (
+        <div className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
+          <VideoGrow key={grow.id} from={grow.from} to={grow.to} video={grow.video} onDone={() => setGrow(null)} />
+        </div>
+      )}
       {flight?.to && (
         <div className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
           {/* each gone as it lands, so the one there is not drawn twice over itself */}
