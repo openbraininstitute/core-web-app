@@ -132,84 +132,64 @@ function ScienceRowCard({ card, index, base }: { card: IJourneyCard; index: numb
   );
 }
 
-/** What Learn & teach's long card offers, each opening Learn where it is (a course, or a section of its own). */
-const LEARN_TOPICS = [
-  { label: 'Neuroscience', to: '?course=brain-modeling' },
-  { label: 'Simulation neuroscience', to: '?course=compartmental-modeling' },
-  { label: 'The platform', to: '?course=platform' },
-  { label: 'The data standard', to: '?section=standard' },
-  { label: 'Glossary', to: '?section=glossary' },
-  { label: 'Teach a course', to: '?section=teach' },
-];
-
 /**
- * Learn & teach as one long card along the foot of the rows (the user asked, in place of its cards among Do
- * science's): what it is for, its topics to go straight to, and its three places as hexagons at its right end.
- * Learn behind its flag, the glossary is the documentation's and the rest are still to come.
+ * Learn & teach as one card along the foot of the rows, a third of their width (the user asked, in place of its cards
+ * among Do science's): what it is for, and its three places as hexagons at its right end, opening Learn (behind its
+ * flag; still to come without it).
  */
 function LearnCard({ base, learn }: { base: string; learn: boolean }) {
-  const chip =
-    'flex h-7 shrink-0 items-center rounded-full border border-[#13306f]/15 bg-white/80 px-2.5 text-[12px] font-semibold text-[#13306f] transition-colors';
-  const hexW = 46;
-  return (
-    <section
-      aria-label="Learn & teach"
-      className="relative mt-3 flex shrink-0 items-center gap-5 overflow-hidden rounded-[14px] py-3.5 pr-4 pl-5"
-      style={{ background: 'linear-gradient(100deg, #e9efff 0%, #f1ecff 60%, #f8f1fb 100%)' }}
-    >
-      <div className="flex min-w-0 flex-1 flex-col gap-2">
-        <div className="flex flex-col gap-0.5">
-          {learn ? (
-            <Link href={`${base}/learn`} className="w-max text-[17px] leading-[21px] font-semibold text-[#13306f] hover:underline">
-              Learn & teach
-            </Link>
-          ) : (
-            <span className="text-[17px] leading-[21px] font-semibold text-[#13306f]">Learn & teach</span>
-          )}
-          <span className="text-[12.5px] leading-[16px] text-neutral-600">
-            Learn what you need, from the neuroscience and simulating it to the platform and its data standard, or
-            teach a course of your own.
-          </span>
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          {LEARN_TOPICS.map((topic) => {
-            const href = learn
-              ? `${base}/learn${topic.to}`
-              : topic.label === 'Glossary'
-                ? '/app/documentation/glossary'
-                : null;
-            return href ? (
-              <Link key={topic.label} href={href} className={cn(chip, 'hover:bg-[#13306f] hover:text-white')}>
-                {topic.label}
-              </Link>
-            ) : (
-              <span key={topic.label} className={cn(chip, 'opacity-50')} title="Coming soon">
-                {topic.label}
-              </span>
-            );
-          })}
-        </div>
+  const hexW = 30;
+  const body = (
+    <>
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <span className="text-[15px] leading-[19px] font-semibold text-[#13306f]">Learn & teach</span>
+        <span className="line-clamp-3 text-[11.5px] leading-[14px] text-neutral-600">
+          {learn
+            ? 'What you need, from neuroscience and simulating it to the platform and its data standard. Or teach a course.'
+            : 'Neuroscience, simulation, the platform and its data standard · coming soon'}
+        </span>
       </div>
       {/* its places, courses, glossary and teaching, as a little cluster of hexagons */}
-      <div aria-hidden className="relative shrink-0" style={{ width: 2 * hexW + 6, height: (2 * hexW) / SQRT3 + hexW * 0.75 }}>
+      <div
+        aria-hidden
+        className="relative shrink-0"
+        style={{ width: 2 * hexW + 4, height: (2 * hexW) / SQRT3 + hexW * 0.75 }}
+      >
         {(['learning', 'glossary', 'teaching'] as const).map((icon, k) => (
           <span
             key={icon}
-            className="absolute drop-shadow-[0_4px_8px_rgb(28_40_72/0.14)]"
+            className="absolute drop-shadow-[0_3px_6px_rgb(28_40_72/0.14)]"
             style={{
               width: hexW,
               height: (2 * hexW) / SQRT3,
-              left: k === 2 ? hexW / 2 + 3 : k * (hexW + 6),
-              top: k === 2 ? hexW * 0.75 + 2 : 0,
+              left: k === 2 ? hexW / 2 + 2 : k * (hexW + 4),
+              top: k === 2 ? hexW * 0.75 + 1 : 0,
             }}
           >
             <span className="absolute inset-0 flex items-center justify-center bg-white" style={{ clipPath: HEX_CLIP }}>
-              <img src={`/images/vlab-home/icons/${icon}.svg`} alt="" width={22} height={22} />
+              <img src={`/images/vlab-home/icons/${icon}.svg`} alt="" width={15} height={15} />
             </span>
           </span>
         ))}
       </div>
-    </section>
+    </>
+  );
+  const box =
+    'relative mt-3 flex w-1/3 min-w-[240px] shrink-0 items-center gap-3 overflow-hidden rounded-[14px] py-3 pr-3 pl-4';
+  const background = { background: 'linear-gradient(100deg, #e9efff 0%, #f1ecff 60%, #f8f1fb 100%)' };
+  return learn ? (
+    <Link
+      href={`${base}/learn`}
+      aria-label="Learn & teach"
+      className={cn(box, 'transition-shadow hover:shadow-md')}
+      style={background}
+    >
+      {body}
+    </Link>
+  ) : (
+    <div aria-label="Learn & teach" className={cn(box, 'opacity-60')} style={background}>
+      {body}
+    </div>
   );
 }
 
@@ -300,7 +280,7 @@ function Shown({
 /**
  * The home's second design (the user asked for it beside the hexagons, chosen with the home's hidden menu): the
  * categories' things each in a row of their own down the left, scrolling sideways (Examples, the videos, Do science
- * in two rows; The institute left out), Learn & teach one long card along their foot; an example or a video clicked
+ * in two rows; The institute left out), Learn & teach one card along their foot; an example or a video clicked
  * shows on the right, the places of the platform open their pages.
  */
 export function RowsHome({
@@ -446,7 +426,7 @@ export function RowsHome({
           ))}
         </Row>
       </div>
-      {/* Learn & teach's places in one long card along the foot (the user asked), not among Do science's */}
+      {/* Learn & teach's places in one card along the foot, a third as wide (the user asked), not among Do science's */}
       <LearnCard base={base} learn={groups[1].cards.some((card) => card.icon === 'learning' && !!card.href)} />
       </div>
       <div className="min-h-0 min-w-0 flex-1">
