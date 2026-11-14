@@ -56,6 +56,17 @@ import type { Node, TextureNode, UniformNode } from 'three/webgpu';
 const AO_SCALE = 0.5;
 export const AO_RADIUS_CSS = 32;
 const AO_SAMPLES = 16;
+/** The most the occlusion lightens a pixel past its colour, however dark the frame's mean. */
+const AO_LIGHTEN = 1.25;
+/**
+ * The occlusion's mean over the frame is the last level of a target's mipmaps (`Occlusion.sums`), which three makes as
+ * its pass ends. Each level is read at the middle of four pixels of the level before, which is their mean only while
+ * the sides halve exactly. So the target's sides are powers of two, a pixel of it sums a block of the occlusion's this
+ * many a side, and the pixels past the occlusion's are left at nothing.
+ */
+const MEAN_BLOCK = 4;
+/** The mean cover of that target from which the occlusion's mean counts in full; it fades out under it. */
+const MEAN_COVER = 1 / 1024;
 /** How much of a pixel a surface covers for the occlusion to count it. */
 export const AO_COVER = 0.5;
 /**
@@ -110,6 +121,12 @@ function glowOver(
 function drawnOver(under: Node<'vec4'>, over: Node<'vec4'>): Node<'vec4'> {
   // `under` first: three draws the passes in the order it meets them, and what is drawn over reads what is under.
   return under.mul(over.a.oneMinus()).add(over);
+}
+
+/** The side of the target the occlusion's mean is taken in (`MEAN_BLOCK`), for a canvas of `pixels` a side. */
+export function meanSide(pixels: number): number {
+  const blocks = Math.ceil(Math.floor(pixels * AO_SCALE) / MEAN_BLOCK);
+  return 2 ** Math.ceil(Math.log2(Math.max(blocks, 1)));
 }
 
 /** The parts of three's `GTAONode` (r186) its setup reads, which are its own, not its interface. */
@@ -269,8 +286,10 @@ class SurfaceGTAONode extends GTAONode {
  * The circuit drawn with ambient occlusion, apart from the main draw. The scene is drawn into a target of its own, with
  * its surfaces' normals and depth beside the colour (`surfaceOf`). For each of the occlusion's pixels, the most covered
  * of the four pixels under it is picked; three's GTAO runs on those (`SurfaceGTAONode`) and is smoothed; and the
- * colour, darkened by it, goes onto the canvas. The materials write their colours in sRGB, so the occlusion is raised
- * to the power 1 / 2.2, as if it darkened the light. Made for one camera, and to be disposed of.
+ * colour, multiplied by it, goes onto the canvas. The materials write their colours in sRGB, so the occlusion is raised
+ * to the power 1 / 2.2, as if it darkened the light. It is then taken relative to its mean over the frame's covered
+ * pixels: the crevices are darker and the open surfaces lighter (by `AO_LIGHTEN` at the most), and a frame with the
+ * occlusion is as light as one without. Made for one camera, and to be disposed of.
  *
  * Made with `glows`, the surfaces also write a byte of how lit each pixel is by a spike, the spiking cells glow
  * (`glowOver`), and `throughs` are drawn over the frame. This holds on a still frame and on a moving one
@@ -283,12 +302,16 @@ export class Occlusion {
   private moving: THREE.RenderPipeline | null = null;
   private occlusion: SurfaceGTAONode;
   private smooth: ReturnType<typeof denoise>;
+  private sums: ReturnType<typeof rtt>;
+  /** The last level of the mipmaps of `sums`. */
+  private sumsLevel = uniform(0);
+  private drawing = new THREE.Vector2();
   private passes: { dispose(): void }[];
   /** The frame's picture, its alpha how much of each pixel is covered, and its surfaces (`surfaceOf`), resolved. */
   readonly front: { picture: THREE.Texture; surface: THREE.Texture };
 
   constructor(
-    renderer: THREE.WebGPURenderer,
+    private readonly renderer: THREE.WebGPURenderer,
     scene: THREE.Scene,
     camera: THREE.Camera,
     readonly glows: boolean,
@@ -371,9 +394,44 @@ export class Occlusion {
       resolutionScale: AO_SCALE,
       depthBuffer: false,
     });
-    const under = vec4(picture.rgb.mul(pow(smoothed.r, 1 / 2.2)), picture.a);
+    const multiplier = (at: Node<'vec2'>) => pow(smoothed.sample(at).r, 1 / 2.2);
+    // A pixel sums a block of the occlusion's. r: what the occlusion multiplies the picture by, times how much of the
+    // picture under it is covered; g: that cover.
+    const covered = Fn(() => {
+      const size = vec2(textureSize(smoothed, int(0)) as unknown as Node<'ivec2'>).toConst();
+      const first = floor(screenCoordinate.xy).mul(MEAN_BLOCK).toConst();
+      const sum = vec2(0).toVar();
+      for (let i = 0; i < MEAN_BLOCK * MEAN_BLOCK; i++) {
+        const within = vec2((i % MEAN_BLOCK) + 0.5, Math.floor(i / MEAN_BLOCK) + 0.5);
+        const at = first.add(within).div(size).toConst();
+        const cover = picture.sample(at).a.mul(float(at.x.lessThan(1).and(at.y.lessThan(1))));
+        sum.addAssign(vec2(multiplier(at), 1).mul(cover));
+      }
+      return vec4(sum.div(MEAN_BLOCK * MEAN_BLOCK), 0, 1);
+    })();
+    this.sums = rtt(covered, 1, 1, {
+      depthBuffer: false,
+      format: THREE.RGFormat,
+      generateMipmaps: true,
+      minFilter: THREE.LinearMipmapLinearFilter,
+    });
+    const frame = this.sums.sample(vec2(0.5)).level(this.sumsLevel);
+    const mean = mix(1, frame.r.div(max(frame.g, 1e-6)), min(frame.g.div(MEAN_COVER), 1));
+    const relative = min(multiplier(uv()).div(mean), AO_LIGHTEN);
+    // Lightened, a colour stops where it fills what is covered of its pixel.
+    const most = max(picture.rgb, picture.a);
+    const under = vec4(min(picture.rgb.mul(relative), most), picture.a);
     this.pipeline = new THREE.RenderPipeline(renderer);
-    this.passes = [scenePass, surfacePass, this.occlusion, this.smooth, smoothed, quad, corners];
+    this.passes = [
+      scenePass,
+      surfacePass,
+      this.occlusion,
+      this.smooth,
+      smoothed,
+      this.sums,
+      quad,
+      corners,
+    ];
     if (!glows) {
       this.pipeline.outputNode = under;
       return;
@@ -403,6 +461,10 @@ export class Occlusion {
     this.occlusion.radius.value = reach;
     this.occlusion.thickness.value = reach;
     this.smooth.depthPhi.value = reach / 4;
+    const { x, y } = this.renderer.getDrawingBufferSize(this.drawing);
+    const [width, height] = [meanSide(x), meanSide(y)];
+    this.sums.setSize(width, height);
+    this.sumsLevel.value = Math.log2(Math.max(width, height));
     this.pipeline.render();
     if (this.occlusion.failed) throw this.occlusion.failed;
   }
