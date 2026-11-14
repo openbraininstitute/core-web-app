@@ -39,7 +39,12 @@ function Row({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="flex min-w-0 flex-col gap-2">
       <h2 className="text-primary-9 px-1 text-[13px] font-bold tracking-[0.08em] uppercase">{title}</h2>
-      <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pt-1 pb-3">{children}</div>
+      {/* fading out at the box's right edge rather than cut off there */}
+      <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pt-1 pb-3 [mask-image:linear-gradient(to_right,#000_calc(100%-48px),transparent)]">
+        {children}
+        {/* room at the end, so the last one clears the fade */}
+        <span aria-hidden className="w-6 shrink-0" />
+      </div>
     </section>
   );
 }
@@ -189,8 +194,9 @@ export function RowsHome({
   const tileW = 108;
   return (
     <div className="flex h-full w-full min-w-0 gap-8 bg-white px-6 pt-5 pb-4">
-      {/* scrolls with no bar showing (the user asked) */}
-      <div className="no-scrollbar flex w-[55%] min-w-0 shrink-0 flex-col gap-5 overflow-y-auto pr-2">
+      {/* the rows fade out at their right edge (no box round them: the user tried one), scrolling with no bar */}
+      <div className="flex w-[55%] min-w-0 shrink-0 flex-col">
+      <div className="no-scrollbar flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-2">
         <Row title="Examples">
           {EXAMPLES.map((e, i) => {
             const on = shown.kind === 'example' && shown.i === i;
@@ -252,6 +258,7 @@ export function RowsHome({
             <PlaceRowCard key={card.label} card={card} base={base} />
           ))}
         </Row>
+      </div>
       </div>
       <div className="min-h-0 min-w-0 flex-1">
         <Shown shown={shown} videos={videos} base={base} />
