@@ -421,7 +421,8 @@ export function HexHomeMobile({
         )}
       </div>
       <div className="no-scrollbar flex shrink-0 gap-2 overflow-x-auto bg-white px-4 pt-0 pb-3">
-        {CATEGORIES.map((c, i) => {
+        {/* The institute (the OBI wordmark) first, as at the top of the desktop's column (the user asked) */}
+        {[...CATEGORIES.filter((c) => c.key === 'institute'), ...CATEGORIES.filter((c) => c.key !== 'institute')].map((c, i) => {
           const on = c.key === category;
           return (
             <button

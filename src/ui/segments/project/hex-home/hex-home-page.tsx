@@ -51,6 +51,8 @@ const MAX_VIDEOS = 40;
 const EXAMPLES_TONGUE = 0;
 /** The institute's category, whose tile the others come out of as the page opens. */
 const INSTITUTE = 4;
+/** Each category's place down the column, by CATEGORIES' order: The institute at the top, the rest under it. */
+const COLUMN_SLOT = [1, 2, 3, 4, 0];
 /** The page's opening (ms): The institute's tile, the others out of it one after another, then the examples. */
 const INTRO = { institute: 80, categories: 420, step: 130, examples: 1500 };
 /** The hexagon the words of the example on show sit in, in the hole the examples lie round (stage px). */
@@ -566,10 +568,11 @@ function Home({
     0,
     groups[2].cards.length,
   ];
-  const specs = useMemo(
-    () => columnSpecs(STAGE_W, height, counts),
-    [height, counts.join()]
-  );
+  // The institute (the OBI wordmark) at the top of the column, the others under it in their order (the user asked)
+  const specs = useMemo(() => {
+    const column = columnSpecs(STAGE_W, height, counts);
+    return column.map((sp, i) => ({ ...sp, root: { ...sp.root, y: column[COLUMN_SLOT[i]].root.y } }));
+  }, [height, counts.join()]);
   const laid = useMemo(
     () => layTongues({ specs, width: STAGE_W, height, apart: true, along: 2, itemR: PLACE_R }),
     [specs, height]
@@ -1047,7 +1050,7 @@ function Home({
           index={i}
           scale={1}
           glideDelayMs={0}
-          appearMs={i === INSTITUTE ? INTRO.institute : INTRO.categories + (INSTITUTE - 1 - i) * INTRO.step}
+          appearMs={i === INSTITUTE ? INTRO.institute : INTRO.categories + (COLUMN_SLOT[i] - 1) * INTRO.step}
           from={i === INSTITUTE ? undefined : specs[INSTITUTE].root}
           on={out === i || (out === null && kept === i)}
           onClick={categoryClick(i)}
