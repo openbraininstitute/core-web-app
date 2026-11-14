@@ -151,64 +151,124 @@ function ScienceRowCard({
   );
 }
 
-/** More about each of Do science's places than its card has room for, on its large card. */
-const PLACE_MORE: Record<string, string> = {
-  data: 'Browse experimental recordings, reconstructions and models from across species, by brain region, and use them in your own work.',
-  workflows: 'Build circuits and single-cell models, simulate them, and analyse the results, each step a workflow you configure.',
-  notebooks: 'Run Python analyses of the platform’s data and your simulations in the browser, with nothing to install.',
-  labs: 'Your virtual labs and their projects: the data, models and results you and your team have made, and the credits they run on.',
-  reports: 'Write up what you found, with figures from your simulations and analyses, and share it.',
-  ai: 'Drive the platform from Claude, ChatGPT and other agents through its plugins and MCP server, or ask its own assistant.',
+/** What each of Do science's places is for, and what can be done there, on its large card (the user asked). */
+const PLACE_DETAILS: Record<string, { intro: string; points: string[] }> = {
+  data: {
+    intro: 'Experimental data and models from across species, found by brain region.',
+    points: [
+      'Browse neuron morphologies, electrophysiology recordings, ion channel and neuron models, circuits and more',
+      'Pick a species and a brain region in the 3D atlas to see only what is there',
+      'Open anything for its details, previews and files, and use it in your workflows',
+      'Bring your own data into the project',
+    ],
+  },
+  workflows: {
+    intro: 'Build models and simulate them in guided steps, from single neurons to whole-brain circuits.',
+    points: [
+      'Build single-neuron models, synaptomes and circuits',
+      'Set up simulations: stimuli, recordings and sweeps over their parameters',
+      'Launch campaigns and follow them as they run',
+      'Look through the results: voltage traces, spike rasters, statistics and 3D playback',
+    ],
+  },
+  notebooks: {
+    intro: 'Python analyses in the browser, with the platform’s data and your results to hand.',
+    points: [
+      'Start from ready-made notebooks for common analyses',
+      'Read entities and simulation results with the platform’s Python SDK',
+      'Nothing to install: they run in your project’s own sandbox',
+      'Keep them with the project, for your team to run too',
+    ],
+  },
+  labs: {
+    intro: 'Your virtual labs and their projects: where your data, models and results live, and who you work with.',
+    points: [
+      'Make projects and invite your team to them',
+      'See the credits your work runs on',
+      'Keep your private work apart from what is public',
+      'Move between labs and projects from the top bar',
+    ],
+  },
+  reports: {
+    intro: 'Write up what you found, with figures from your simulations and analyses.',
+    points: [
+      'Research logs that grow as the work does',
+      'Figures and results taken straight from the project',
+      'Share them with your team',
+    ],
+  },
+  ai: {
+    intro: 'Use the platform from the AI you already work with.',
+    points: [
+      'Ask the platform’s own assistant about data, models and workflows',
+      'Connect Claude, ChatGPT and other agents through its MCP server',
+      'Plugins and skills that find data, run simulations and analyse them for you',
+    ],
+  },
 };
 
-/** One of Do science's places, large on the right: its picture, what it is for, and the way in. */
-function PlaceShown({ card, index, base, width }: { card: IJourneyCard; index: number; base: string; width: number }) {
+/**
+ * One of Do science's places, large on the right, the pane's whole height (the user asked): its picture, what it is
+ * for and what can be done there, and the way in.
+ */
+function PlaceShown({ card, index, base }: { card: IJourneyCard; index: number; base: string }) {
   const { bg, ink } = placeColours(index);
   const { setState: setAi } = usePanelState();
-  const go = 'flex h-[42px] w-max items-center rounded-full px-[20px] text-[14px] font-semibold transition-opacity hover:opacity-90';
+  const details = PLACE_DETAILS[card.icon] ?? { intro: card.blurb, points: [] };
+  const go = 'flex h-[44px] w-max shrink-0 items-center rounded-full px-[22px] text-[14px] font-semibold transition-opacity hover:opacity-90';
   return (
     <div
-      key={card.label}
-      className={cn(styles.fadeIn, 'relative overflow-hidden rounded-[24px] shadow-[0_18px_50px_rgb(20_40_90_/_0.18)]')}
-      style={{ width, height: width * 0.78, background: bg }}
-    >
-      {card.img ? (
-        <img
-          src={card.img}
-          alt=""
-          className="absolute inset-0 h-full w-full object-cover opacity-70 mix-blend-luminosity grayscale"
-          style={{ objectPosition: card.imgAt ?? 'center' }}
-        />
-      ) : (
-        <span className="absolute inset-0 opacity-80" style={{ color: ink }}>
-          <AiSparkles className="absolute top-[7%] right-[7%] h-[18%] w-auto" />
-          <span className="absolute inset-x-0 top-[16%] flex h-[20%] justify-center">
-            <AgentMarks className="h-full gap-[9%]" markClassName="h-[70%] w-auto" />
-          </span>
-        </span>
+      className={cn(
+        styles.fadeIn,
+        'relative flex h-full w-full flex-col overflow-hidden rounded-[24px] shadow-[0_18px_50px_rgb(20_40_90_/_0.18)]'
       )}
-      <div
-        className="absolute inset-x-0 bottom-0 flex flex-col gap-2 px-8 pt-24 pb-7"
-        style={{ backgroundImage: `linear-gradient(to top, ${bg} 55%, ${bg}00)` }}
-      >
-        <span className="text-[34px] leading-[38px] font-semibold" style={{ color: ink }}>
-          {card.label}
-        </span>
-        <span className="max-w-[520px] text-[15px] leading-[21px] opacity-85" style={{ color: ink }}>
-          {PLACE_MORE[card.icon] ?? card.blurb}
-        </span>
+      style={{ background: bg }}
+    >
+      {/* its picture along the top, fading into its colour */}
+      <div className="relative min-h-[140px] shrink-0 basis-[38%]">
+        {card.img ? (
+          <img
+            src={card.img}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover opacity-70 mix-blend-luminosity grayscale"
+            style={{ objectPosition: card.imgAt ?? 'center' }}
+          />
+        ) : (
+          <span className="absolute inset-0 opacity-80" style={{ color: ink }}>
+            <AiSparkles className="absolute top-[12%] right-[8%] h-[26%] w-auto" />
+            <span className="absolute inset-x-0 top-[30%] flex h-[30%] justify-center">
+              <AgentMarks className="h-full gap-[9%]" markClassName="h-[70%] w-auto" />
+            </span>
+          </span>
+        )}
+        <span
+          className="absolute inset-x-0 bottom-0 h-1/2"
+          style={{ backgroundImage: `linear-gradient(to top, ${bg}, ${bg}00)` }}
+        />
+      </div>
+      <div className="no-scrollbar flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-8 pt-1 pb-7" style={{ color: ink }}>
+        <div className="flex flex-col gap-2">
+          <span className="text-[32px] leading-[36px] font-semibold">{card.label}</span>
+          <span className="text-[16px] leading-[22px] opacity-90">{details.intro}</span>
+        </div>
+        {details.points.length > 0 && (
+          <ul className="flex flex-col gap-2.5">
+            {details.points.map((point) => (
+              <li key={point} className="flex gap-3 text-[14px] leading-[20px] opacity-85">
+                <span aria-hidden className="mt-[7px] size-[6px] shrink-0 rounded-full" style={{ background: ink }} />
+                {point}
+              </li>
+            ))}
+          </ul>
+        )}
+        <span className="min-h-2 flex-1" />
         {card.action === 'ai' ? (
-          <button
-            type="button"
-            onClick={() => setAi(PanelState.Expanded)}
-            className={cn(go, 'mt-2')}
-            style={{ background: ink, color: bg }}
-          >
+          <button type="button" onClick={() => setAi(PanelState.Expanded)} className={go} style={{ background: ink, color: bg }}>
             Ask the assistant
           </button>
         ) : (
           card.href && (
-            <Link href={journeyHref(card.href, base)} className={cn(go, 'mt-2')} style={{ background: ink, color: bg }}>
+            <Link href={journeyHref(card.href, base)} className={go} style={{ background: ink, color: bg }}>
               Open {card.label}
             </Link>
           )
@@ -358,16 +418,8 @@ function Shown({
   if (shown.kind === 'place') {
     const card = places[shown.i];
     return (
-      <div ref={box} className="flex h-full min-h-0 flex-col items-center justify-center">
-        {card && size.w > 0 && (
-          <PlaceShown
-            key={card.label}
-            card={card}
-            index={shown.i}
-            base={base}
-            width={Math.max(0, Math.min(size.w * 0.95, (size.h * 0.9) / 0.78, 680))}
-          />
-        )}
+      <div ref={box} className="flex h-full min-h-0 flex-col">
+        {card && <PlaceShown key={card.label} card={card} index={shown.i} base={base} />}
       </div>
     );
   }
