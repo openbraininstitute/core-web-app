@@ -9,9 +9,11 @@ import { VideoPlayer } from '@/ui/segments/project/get-started/elements/video-pl
 import { EXAMPLES, journeyHref } from '@/ui/segments/project/hex-home/content';
 import { HEX_CLIP, SQRT3 } from '@/ui/segments/project/hex-home/hex-geometry';
 import { FreeMedia, MeltFlier, TileMedia } from '@/ui/segments/project/hex-home/landing-example';
+import { AiSparkles } from '@/ui/segments/project/brains-walkthrough/agent-ready';
 import { VideoCard } from '@/ui/segments/project/hex-home/video-card';
 import { cn } from '@/utils/css-class';
 
+import { AgentMarks } from './agent-marks';
 import { GREEN, placeColours, wordsFor } from './hex-home-shared';
 import styles from './hex-cloud.module.css';
 
@@ -19,7 +21,7 @@ import type { ReactNode, RefObject } from 'react';
 import type { IExampleVideo, IJourneyCard, IJourneyGroup } from '@/ui/segments/project/hex-home/content';
 import type { IHexBox, IPoint } from '@/ui/segments/project/hex-home/hex-geometry';
 
-type TShown = { kind: 'example'; i: number } | { kind: 'video'; i: number };
+type TShown = { kind: 'example' | 'video' | 'place'; i: number };
 
 /** Where an example flies to or from on show: its centre, its width there and the size its tile grows to. */
 interface IOnShow {
@@ -90,19 +92,49 @@ function Row({
   );
 }
 
-/** One of Do science's cards, small, in its colours. */
-function ScienceRowCard({ card, index, base }: { card: IJourneyCard; index: number; base: string }) {
+/** One of Do science's cards, small, in its colours: a click shows it large on the right (the user asked). */
+function ScienceRowCard({
+  card,
+  index,
+  selected,
+  onPick,
+}: {
+  card: IJourneyCard;
+  index: number;
+  selected: boolean;
+  onPick: () => void;
+}) {
   const { bg, ink } = placeColours(index);
-  const { setState: setAi } = usePanelState();
-  const face = (
-    <>
-      {card.img && (
+  return (
+    // as wide as they were square, lower (the user asked)
+    <button
+      type="button"
+      onClick={onPick}
+      aria-pressed={selected}
+      title={`${card.label}: ${card.blurb}`}
+      className="group relative block h-[96px] w-[146px] shrink-0 overflow-hidden rounded-[14px] text-left"
+      style={{ background: bg }}
+    >
+      {card.img ? (
         <img
           src={card.img}
           alt=""
-          className="absolute inset-0 h-full w-full object-cover opacity-45 mix-blend-luminosity grayscale transition-opacity duration-300 group-hover:opacity-80"
+          className={cn(
+            'absolute inset-0 h-full w-full object-cover mix-blend-luminosity grayscale transition-opacity duration-300 group-hover:opacity-80',
+            selected ? 'opacity-80' : 'opacity-45'
+          )}
           style={{ objectPosition: card.imgAt ?? 'center' }}
         />
+      ) : (
+        <span
+          className={cn('absolute inset-0 transition-opacity duration-300 group-hover:opacity-85', selected ? 'opacity-85' : 'opacity-55')}
+          style={{ color: ink }}
+        >
+          <AiSparkles className="absolute top-[9%] right-[8%] h-[20%] w-auto" />
+          <span className="absolute inset-x-0 top-[14%] flex h-[24%] justify-center">
+            <AgentMarks className="h-full gap-[9%]" markClassName="h-[70%] w-auto" />
+          </span>
+        </span>
       )}
       <span
         className="absolute inset-x-0 bottom-0 flex flex-col gap-[2px] px-3.5 pt-8 pb-3"
@@ -115,20 +147,74 @@ function ScienceRowCard({ card, index, base }: { card: IJourneyCard; index: numb
           {card.blurb}
         </span>
       </span>
-    </>
+    </button>
   );
-  // as wide as they were square, lower (the user asked)
-  const box = 'group relative block h-[96px] w-[146px] shrink-0 overflow-hidden rounded-[14px] text-left';
-  if (card.action === 'ai')
-    return (
-      <button type="button" onClick={() => setAi(PanelState.Expanded)} className={box} style={{ background: bg }}>
-        {face}
-      </button>
-    );
+}
+
+/** More about each of Do science's places than its card has room for, on its large card. */
+const PLACE_MORE: Record<string, string> = {
+  data: 'Browse experimental recordings, reconstructions and models from across species, by brain region, and use them in your own work.',
+  workflows: 'Build circuits and single-cell models, simulate them, and analyse the results, each step a workflow you configure.',
+  notebooks: 'Run Python analyses of the platform’s data and your simulations in the browser, with nothing to install.',
+  labs: 'Your virtual labs and their projects: the data, models and results you and your team have made, and the credits they run on.',
+  reports: 'Write up what you found, with figures from your simulations and analyses, and share it.',
+  ai: 'Drive the platform from Claude, ChatGPT and other agents through its plugins and MCP server, or ask its own assistant.',
+};
+
+/** One of Do science's places, large on the right: its picture, what it is for, and the way in. */
+function PlaceShown({ card, index, base, width }: { card: IJourneyCard; index: number; base: string; width: number }) {
+  const { bg, ink } = placeColours(index);
+  const { setState: setAi } = usePanelState();
+  const go = 'flex h-[42px] w-max items-center rounded-full px-[20px] text-[14px] font-semibold transition-opacity hover:opacity-90';
   return (
-    <Link href={card.href ? journeyHref(card.href, base) : '#'} className={box} style={{ background: bg }}>
-      {face}
-    </Link>
+    <div
+      key={card.label}
+      className={cn(styles.fadeIn, 'relative overflow-hidden rounded-[24px] shadow-[0_18px_50px_rgb(20_40_90_/_0.18)]')}
+      style={{ width, height: width * 0.78, background: bg }}
+    >
+      {card.img ? (
+        <img
+          src={card.img}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover opacity-70 mix-blend-luminosity grayscale"
+          style={{ objectPosition: card.imgAt ?? 'center' }}
+        />
+      ) : (
+        <span className="absolute inset-0 opacity-80" style={{ color: ink }}>
+          <AiSparkles className="absolute top-[7%] right-[7%] h-[18%] w-auto" />
+          <span className="absolute inset-x-0 top-[16%] flex h-[20%] justify-center">
+            <AgentMarks className="h-full gap-[9%]" markClassName="h-[70%] w-auto" />
+          </span>
+        </span>
+      )}
+      <div
+        className="absolute inset-x-0 bottom-0 flex flex-col gap-2 px-8 pt-24 pb-7"
+        style={{ backgroundImage: `linear-gradient(to top, ${bg} 55%, ${bg}00)` }}
+      >
+        <span className="text-[34px] leading-[38px] font-semibold" style={{ color: ink }}>
+          {card.label}
+        </span>
+        <span className="max-w-[520px] text-[15px] leading-[21px] opacity-85" style={{ color: ink }}>
+          {PLACE_MORE[card.icon] ?? card.blurb}
+        </span>
+        {card.action === 'ai' ? (
+          <button
+            type="button"
+            onClick={() => setAi(PanelState.Expanded)}
+            className={cn(go, 'mt-2')}
+            style={{ background: ink, color: bg }}
+          >
+            Ask the assistant
+          </button>
+        ) : (
+          card.href && (
+            <Link href={journeyHref(card.href, base)} className={cn(go, 'mt-2')} style={{ background: ink, color: bg }}>
+              Open {card.label}
+            </Link>
+          )
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -197,12 +283,14 @@ function LearnCard({ base, learn }: { base: string; learn: boolean }) {
 function Shown({
   shown,
   videos,
+  places,
   base,
   heroBox,
   landing,
 }: {
   shown: TShown;
   videos: IExampleVideo[];
+  places: IJourneyCard[];
   base: string;
   /** The example's picture, measured for its flight there. */
   heroBox: RefObject<HTMLDivElement | null>;
@@ -212,6 +300,22 @@ function Shown({
   const [box, size] = useSize();
   const button =
     'flex h-[38px] items-center justify-center rounded-full px-[16px] text-[13px] font-semibold transition-colors';
+  if (shown.kind === 'place') {
+    const card = places[shown.i];
+    return (
+      <div ref={box} className="flex h-full min-h-0 flex-col items-center justify-center">
+        {card && size.w > 0 && (
+          <PlaceShown
+            key={card.label}
+            card={card}
+            index={shown.i}
+            base={base}
+            width={Math.max(0, Math.min(size.w * 0.95, (size.h * 0.9) / 0.78, 680))}
+          />
+        )}
+      </div>
+    );
+  }
   if (shown.kind === 'video') {
     const video = videos[shown.i];
     return (
@@ -280,8 +384,8 @@ function Shown({
 /**
  * The home's second design (the user asked for it beside the hexagons, chosen with the home's hidden menu): the
  * categories' things each in a row of their own down the left, scrolling sideways (Examples, the videos, Do science
- * in two rows; The institute left out), Learn & teach one card along their foot; an example or a video clicked
- * shows on the right, the places of the platform open their pages.
+ * in two rows; The institute left out), Learn & teach one card along their foot; an example, a video or one of Do
+ * science's places clicked shows on the right (the places large, with the way in).
  */
 export function RowsHome({
   groups,
@@ -299,8 +403,10 @@ export function RowsHome({
   // but that, the two trading places when one is picked, as on the desktop (the user asked: no empty or ringed tile).
   const [hero, setHero] = useState(0);
   const [slots, setSlots] = useState(() => EXAMPLES.map((_, i) => i).filter((i) => i !== 0));
-  const [video, setVideo] = useState<number | null>(null);
-  const shown: TShown = video === null ? { kind: 'example', i: hero } : { kind: 'video', i: video };
+  // a video or one of Do science's places on show instead of the example
+  const [side, setSide] = useState<TShown | null>(null);
+  const video = side?.kind === 'video' ? side.i : null;
+  const shown: TShown = side ?? { kind: 'example', i: hero };
   const tileW = TILE_W;
   const stage = useRef<HTMLDivElement>(null);
   const strip = useRef<HTMLDivElement>(null);
@@ -335,10 +441,10 @@ export function RowsHome({
     if (flight) return;
     const i = slots[slot];
     const from = stage.current && tileOf(slot);
-    const home = video === null ? heroOn() : null;
+    const home = side === null ? heroOn() : null;
     setSlots((all) => all.map((x, k) => (k === slot ? hero : x)));
     setHero(i);
-    setVideo(null);
+    setSide(null);
     // from a video the rows widen back as it comes, so where it would land moves under it: it just fades in there
     if (!from || video !== null) return;
     setFlight({ id: Date.now(), slot, inbound: i, from, to: null, outbound: home ? { i: hero, home } : null });
@@ -361,7 +467,12 @@ export function RowsHome({
   const pickVideo = (i: number) => {
     setFlight(null);
     setLanded({ inbound: true, outbound: true });
-    setVideo(i);
+    setSide({ kind: 'video', i });
+  };
+  const pickPlace = (i: number) => {
+    setFlight(null);
+    setLanded({ inbound: true, outbound: true });
+    setSide({ kind: 'place', i });
   };
   // the tile they trade through, gone until both are in (the flights draw them), as on the desktop
   const trading = flight && !(landed.inbound && landed.outbound) ? flight.slot : undefined;
@@ -429,7 +540,13 @@ export function RowsHome({
         </Row>
         <Row title="Do science" titled={titled} twoRows>
           {groups[0].cards.map((card, i) => (
-            <ScienceRowCard key={card.label} card={card} index={i} base={base} />
+            <ScienceRowCard
+              key={card.label}
+              card={card}
+              index={i}
+              selected={shown.kind === 'place' && shown.i === i}
+              onPick={() => pickPlace(i)}
+            />
           ))}
         </Row>
       </div>
@@ -440,6 +557,7 @@ export function RowsHome({
         <Shown
           shown={shown}
           videos={videos}
+          places={groups[0].cards}
           base={base}
           heroBox={heroBox}
           landing={!!flight && !landed.inbound}
