@@ -306,7 +306,8 @@ export function PlaceShown({ card, base }: { card: IJourneyCard; base: string })
     <div
       className={cn(
         styles.fadeIn,
-        'flex h-full w-full flex-col gap-4 overflow-hidden rounded-[20px] border border-[rgb(19_48_111/0.08)] bg-white p-4 shadow-[0_18px_44px_rgb(20_40_90/0.18),0_2px_6px_rgb(20_40_90/0.08)]'
+        // flat on the page, not a raised card (the user asked to try it)
+        'flex h-full w-full flex-col gap-4 overflow-hidden bg-white'
       )}
     >
       {/* no taller than nearly half the card, so its words and the way in fit under it on a short screen */}
