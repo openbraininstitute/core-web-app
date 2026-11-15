@@ -302,10 +302,7 @@ export class CircuitMorphologyGPU extends CircuitView {
         if (!occluded) occlusion.renderMoving();
         else {
           const { strength, reach } = this.wideOcclusion;
-          occlusion.render(AO_RADIUS_CSS * umPerPx, {
-            strength,
-            reach: reach * this.height * umPerPx,
-          });
+          occlusion.render(AO_RADIUS_CSS * umPerPx, reach * this.height * umPerPx, strength);
         }
         return;
       } catch (e) {

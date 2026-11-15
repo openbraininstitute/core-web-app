@@ -2,15 +2,17 @@ import { describe, expect, it } from 'vitest';
 
 import { meanSide } from '@/features/circuit-viewer/morphologies/engine/webgpu/occlusion-gpu';
 
+const SIDES = [1, 2, 7, 640, 1117, 1600, 2234, 2560, 3456, 5120];
+
 describe("the target the occlusion's mean is taken in", () => {
   it('has a power of two a side, so that each level of its mipmaps is the mean of the one before', () => {
-    for (const pixels of [1, 2, 7, 640, 1117, 1600, 2234, 2560, 3456, 5120]) {
+    for (const pixels of SIDES) {
       expect(Math.log2(meanSide(pixels)) % 1).toBe(0);
     }
   });
 
   it("holds the occlusion's every pixel, four a side to one of its own", () => {
-    for (const pixels of [1, 2, 7, 640, 1117, 1600, 2234, 2560, 3456, 5120]) {
+    for (const pixels of SIDES) {
       expect(meanSide(pixels) * 4).toBeGreaterThanOrEqual(Math.floor(pixels / 2));
     }
   });

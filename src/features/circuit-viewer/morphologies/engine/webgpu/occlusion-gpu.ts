@@ -6,7 +6,6 @@ import {
   acos,
   cameraFar,
   cameraNear,
-  cameraProjectionMatrix,
   clamp,
   context,
   cos,
@@ -67,7 +66,7 @@ const AO_LIGHTEN = 1.25;
  * many a side, and the pixels past the occlusion's are left at nothing.
  */
 const MEAN_BLOCK = 4;
-/** The mean cover of that target from which the occlusion's mean counts in full; it fades out under it. */
+/** The least cover of that target the occlusion's mean is taken over: what is short of it counts as unshaded. */
 const MEAN_COVER = 1 / 1024;
 /** How much of a pixel a surface covers for the occlusion to count it. */
 export const AO_COVER = 0.5;
@@ -318,10 +317,10 @@ class SurfaceGTAONode extends GTAONode {
   }
 }
 
-/** `pixel` held inside a texture whose last pixel is `last`; three's types have no `clamp` of integers. */
-function inside(pixel: Node<'ivec2'>, last: Node<'ivec2'>): Node<'ivec2'> {
-  const floats = [pixel, ivec2(0), last] as unknown as [Node<'vec2'>, Node<'vec2'>, Node<'vec2'>];
-  return typed<'ivec2'>(clamp(floats[0], floats[1], floats[2]));
+/** `pixel` held inside `texture`; three's types have no `clamp` of integers. */
+function inside(pixel: Node<'ivec2'>, texture: TextureNode): Node<'ivec2'> {
+  const last = ivec2(typed<'ivec2'>(textureSize(texture, int(0)))).sub(1);
+  return typed<'ivec2'>(clamp(typed<'vec2'>(pixel), typed<'vec2'>(ivec2(0)), typed<'vec2'>(last)));
 }
 
 /** One of the occlusion's terms: three's GTAO on surfaces drawn at its size, and what smooths it. */
@@ -408,7 +407,6 @@ export class Occlusion {
   private moving: THREE.RenderPipeline | null = null;
   private fine: Term;
   private wide: Term;
-  private wideEdge = uniform(1);
   private wideStrength = uniform(0);
   private sums: ReturnType<typeof rtt>;
   /** The last level of the mipmaps of `sums`. */
@@ -445,6 +443,17 @@ export class Occlusion {
       picture: scenePass.getTexture('output'),
       surface: scenePass.getTexture('surface'),
     };
+    // The camera's own: a pass that is not the scene's has another.
+    const project = uniform(camera.projectionMatrix);
+    const unproject = uniform(camera.projectionMatrixInverse);
+    const storedAt = (away: Node<'float'>) => {
+      const clip = project.mul(vec4(0, 0, away.negate(), 1)).toConst();
+      return clip.z.div(clip.w);
+    };
+    const awayAt = (stored: Node<'float'>) => {
+      const view = unproject.mul(vec4(0, 0, stored, 1)).toConst();
+      return view.z.div(view.w).negate();
+    };
     // xy: the normal's; z: the depth as the depth buffer stores it (1 at the far plane); w: how much of the pixel is
     // covered, which `surfaceAt` divides the resolve's sum by.
     const picked = Fn(() => {
@@ -465,8 +474,7 @@ export class Occlusion {
         });
       }
       const { normal, across, away } = surfaceAt(sum, cover);
-      const clip = cameraProjectionMatrix.mul(vec4(0, 0, away.negate(), 1)).toConst();
-      const depth = across.greaterThanEqual(1).select(float(1), clip.z.div(clip.w));
+      const depth = across.greaterThanEqual(1).select(float(1), storedAt(away));
       return vec4(normal, depth, cover);
     })();
     const corners = new THREE.BufferGeometry();
@@ -485,32 +493,20 @@ export class Occlusion {
     const { depth, normals } = surfaces;
     this.fine = termOf(depth, normals, camera, AO_SCALE, AO_SAMPLES);
 
-    // The camera's own: a pass that is not the scene's has another.
-    const unproject = uniform(camera.projectionMatrixInverse);
-    const awayAt = (stored: Node<'float'>) => {
-      const view = unproject.mul(vec4(0, 0, stored, 1)).toConst();
-      return view.z.div(view.w).negate();
-    };
     // The depth of a block of those surfaces, at the mean distance of its drawn pixels; 1 where none is drawn. The mean
     // moves evenly as a soma comes into the block, where the nearest pixel's depth jumped.
     const hull = Fn(() => {
-      const last = ivec2(textureSize(depth, int(0)) as unknown as Node<'ivec2'>)
-        .sub(1)
-        .toConst();
       const first = ivec2(screenCoordinate.xy).mul(WIDE_BLOCK).toConst();
       const away = float(0).toVar();
       const drawn = float(0).toVar();
       for (let i = 0; i < WIDE_BLOCK * WIDE_BLOCK; i++) {
         const within = ivec2(i % WIDE_BLOCK, Math.floor(i / WIDE_BLOCK));
-        const stored = depth.load(inside(first.add(within), last)).r.toConst();
+        const stored = depth.load(inside(first.add(within), depth)).r.toConst();
         const is = float(stored.lessThan(1)).toConst();
         away.addAssign(awayAt(stored).mul(is));
         drawn.addAssign(is);
       }
-      const clip = cameraProjectionMatrix
-        .mul(vec4(0, 0, away.div(max(drawn, 1)).negate(), 1))
-        .toConst();
-      return drawn.greaterThan(0).select(clip.z.div(clip.w), 1);
+      return drawn.greaterThan(0).select(storedAt(away.div(max(drawn, 1))), 1);
     })();
     // The normal the smoothing reads; the occlusion takes the way to the eye itself.
     const facing = vec3(0, 0, 1);
@@ -519,15 +515,13 @@ export class Occlusion {
     const wideSmoothed = rtt(this.wide.smooth, null, null, {
       resolutionScale: WIDE_SCALE,
       depthBuffer: false,
+      format: THREE.RedFormat,
     });
 
     // r: the fine term; g: the wide one, spread to this pixel (`WIDE_EDGE`).
     const terms = Fn(() => {
       const stored = depth.load(ivec2(screenCoordinate.xy)).r.toConst();
       const away = awayAt(stored).toConst();
-      const last = ivec2(textureSize(hulls.depth, int(0)) as unknown as Node<'ivec2'>)
-        .sub(1)
-        .toConst();
       const at = screenCoordinate.xy.div(WIDE_BLOCK).toConst();
       const middle = ivec2(floor(at)).toConst();
       const off = fract(at).sub(0.5).toConst();
@@ -537,12 +531,13 @@ export class Occlusion {
         float(0.75).sub(off.pow2()).toConst(),
         off.add(0.5).pow2().mul(0.5).toConst(),
       ];
+      const edge = this.wide.occlusion.radius.mul(WIDE_EDGE).toConst();
       const sum = vec2(0).toVar();
       for (let i = 0; i < 9; i++) {
         const [x, y] = [i % 3, Math.floor(i / 3)];
-        const p = inside(middle.add(ivec2(x - 1, y - 1)), last).toConst();
+        const p = inside(middle.add(ivec2(x - 1, y - 1)), hulls.depth).toConst();
         const its = hulls.depth.load(p).r.toConst();
-        const alike = exp(abs(awayAt(its).sub(away)).div(this.wideEdge).negate()).add(WIDE_FLOOR);
+        const alike = exp(abs(awayAt(its).sub(away)).div(edge).negate()).add(WIDE_FLOOR);
         const weight = mixes[x].x
           .mul(mixes[y].y)
           .mul(float(its.lessThan(1)))
@@ -555,6 +550,7 @@ export class Occlusion {
     const smoothed = rtt(terms, null, null, {
       resolutionScale: AO_SCALE,
       depthBuffer: false,
+      format: THREE.RGFormat,
     });
     const multiplier = (at: Node<'vec2'>) => {
       const { r: fine, g: wide } = smoothed.sample(at);
@@ -563,7 +559,7 @@ export class Occlusion {
     // A pixel sums a block of the occlusion's. r: what the occlusion multiplies the picture by, times how much of the
     // picture under it is covered; g: that cover.
     const covered = Fn(() => {
-      const size = vec2(textureSize(smoothed, int(0)) as unknown as Node<'ivec2'>).toConst();
+      const size = vec2(typed<'ivec2'>(textureSize(smoothed, int(0)))).toConst();
       const first = floor(screenCoordinate.xy).mul(MEAN_BLOCK).toConst();
       const sum = vec2(0).toVar();
       for (let i = 0; i < MEAN_BLOCK * MEAN_BLOCK; i++) {
@@ -581,11 +577,12 @@ export class Occlusion {
       minFilter: THREE.LinearMipmapLinearFilter,
     });
     const frame = this.sums.sample(vec2(0.5)).level(this.sumsLevel);
-    const mean = mix(1, frame.r.div(max(frame.g, 1e-6)), min(frame.g.div(MEAN_COVER), 1));
+    const lack = max(float(MEAN_COVER).sub(frame.g), 0);
+    const mean = frame.r.add(lack).div(frame.g.add(lack));
     const relative = min(multiplier(uv()).div(mean), AO_LIGHTEN);
     // Lightened, a colour's largest channel goes towards filling what is covered of its pixel and cannot pass it: a
     // light colour is lightened less, and keeps its shading and its hue.
-    const top = max(max(picture.r, picture.g), picture.b);
+    const top = max(picture.r, picture.g, picture.b);
     const full = min(top.div(max(picture.a, 1e-6)), 1).toConst();
     const lightened = float(1).sub(pow(full.oneMinus(), relative)).div(max(full, 1e-6));
     const lift = relative.lessThan(1).select(relative, lightened);
@@ -634,13 +631,12 @@ export class Occlusion {
 
   /**
    * Draws a frame with the occlusion reaching `reach` µm: in an orthographic view, the same on screen at any zoom. Its
-   * wide term reaches `wide.reach` µm and is raised to the power `wide.strength`; at 0 it shades nothing.
+   * wide term reaches `wideReach` µm and is raised to the power `wideStrength`; at 0 it shades nothing.
    */
-  render(reach: number, wide: { reach: number; strength: number }): void {
+  render(reach: number, wideReach: number, wideStrength: number): void {
     reachOf(this.fine, reach);
-    reachOf(this.wide, wide.reach);
-    this.wideEdge.value = wide.reach * WIDE_EDGE;
-    this.wideStrength.value = wide.strength;
+    reachOf(this.wide, wideReach);
+    this.wideStrength.value = wideStrength;
     const { x, y } = this.renderer.getDrawingBufferSize(this.drawing);
     const [width, height] = [meanSide(x), meanSide(y)];
     this.sums.setSize(width, height);
