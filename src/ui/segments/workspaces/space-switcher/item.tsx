@@ -9,13 +9,12 @@ import {
 } from '@remixicon/react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { listAllProjects } from '@/api/virtual-lab-svc/queries/project';
 import { authFetch } from '@/auth-fetch';
-import { useConfig } from '@/config';
-import { useMediaQuery } from '@/hooks/use-media-query';
+import { config as appConfig, useConfig } from '@/config';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { Button } from '@/ui/molecules/button';
 import { Skeleton } from '@/ui/molecules/skeleton';
@@ -27,7 +26,6 @@ import {
 } from '@/ui/segments/workspaces/space-manager/event';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
-import { buildWorkspaceSwitchUrl } from '@/utils/workspace-switch-url';
 
 import type { IProject, TVirtualLab } from '@/api/virtual-lab-svc/queries/types';
 
@@ -117,9 +115,9 @@ export function Item({
   };
 
   const router = useRouter();
-  const pathname = usePathname();
-  const phone = useMediaQuery('(max-width: 767px)', false);
 
+  // a project's pill switches to that project, onto its project page (the user asked), rather than opening its
+  // preview first
   const onProjectClick = ({
     virtualLabId,
     project,
@@ -127,28 +125,7 @@ export function Item({
     virtualLabId: string;
     project: IProject;
   }) => {
-    // on a phone a project's pill takes you to it (the user asked), on the page you are on where it has one,
-    // rather than opening its preview, which has no room there
-    if (phone) {
-      router.push(
-        buildWorkspaceSwitchUrl({
-          pathname,
-          searchParams: window.location.search.replace(/^\?/, ''),
-          targetVirtualLabId: virtualLabId,
-          targetProjectId: project.id,
-        })
-      );
-      return;
-    }
-    makeTriggerWorkspaceConfigurationClickEvent({
-      on: true,
-      type: WorkspaceActions.ProjectPreview,
-      data: {
-        virtualLabId,
-        projectId: project.id,
-        data: project,
-      },
-    });
+    router.push(`${appConfig.ROOT_ROUTE}/${virtualLabId}/${project.id}/project`);
   };
 
   const onCreateProject = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
