@@ -7,6 +7,7 @@ import {
   ScanConfigActivity,
   type TScanConfigActivity,
 } from '@/features/scan-config/types';
+import { useMediaQuery } from '@/hooks/use-media-query';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { cn } from '@/utils/css-class';
 
@@ -88,6 +89,9 @@ export function ScanConfigSkeleton({
   className?: string;
   activity?: TScanConfigActivity;
 }) {
+  // on a phone, its own layout (default-columns.tsx's PhoneConfigColumns): the 3D view and its table as small tiles
+  // side by side at the top, the blocks' list in a box under them (the user asked the loading page to match)
+  const phone = useMediaQuery('(max-width: 767px)', false);
   return (
     <div className={cn('flex h-full min-h-0 flex-col', className)}>
       <ScanConfigTabsPanel
@@ -99,6 +103,19 @@ export function ScanConfigSkeleton({
         disableConfigurationTab={false}
         results={null}
         configuration={
+          phone ? (
+            <div className="flex h-full min-h-0 w-full flex-col gap-2 px-1 pb-2">
+              <div className="flex shrink-0 gap-2">
+                <div className="h-28 min-w-0 flex-1 animate-pulse rounded-2xl bg-gray-100" />
+                {activity === ScanConfigActivity.Simulate && (
+                  <div className="h-28 min-w-0 flex-1 animate-pulse rounded-2xl bg-gray-100" />
+                )}
+              </div>
+              <div className={cn(BOX_CLASS, 'min-h-0 flex-1 overflow-hidden py-3')}>
+                <LeftColumnSkeleton />
+              </div>
+            </div>
+          ) : (
           // As the configuration first lays out (the user asked them to match): the blocks' list alone in a slim
           // window on the left, the form folded away, and the preview spread over the rest, edge to edge with the
           // toolbar's ends (default-columns.tsx's ALONE_TRACKS)
@@ -121,6 +138,7 @@ export function ScanConfigSkeleton({
               )}
             </div>
           </div>
+          )
         }
       />
     </div>
