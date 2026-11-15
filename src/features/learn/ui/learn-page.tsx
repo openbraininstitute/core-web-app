@@ -529,15 +529,10 @@ export function LearnPage({
       className={cn(BOX, outerBox && OUTER_BOX, !listBoxOn && 'learn-no-list')}
       data-selected={SELECTED_SLUGS[sel]}
     >
-      {/* the sections as hexagons in a row along the top (the user asked to try them there; buttons there before,
-          LearnSectionButtons, and hexagons down the left or along the foot before that, all unused for now) */}
-      <div className="flex min-h-0 flex-1 flex-col gap-[8px]">
-      <LearnSectionHexes
-        hidden={hidden}
-        section={section}
-        onSelect={setSection}
-        off={[...(noCourses ? (['free'] as const) : [])]}
-      />
+      {/* the sections as hexagons in a row over the left column, the card beside them the page's whole height, its
+          top level with theirs (the user asked; buttons along the top before, LearnSectionButtons, and hexagons down
+          the left or along the foot before that, all unused for now) */}
+      <div className="flex min-h-0 flex-1 flex-col">
       <div
         ref={gridRef}
         className={cn(GRID, 'min-w-0')}
@@ -552,9 +547,13 @@ export function LearnPage({
             : { '--learn-columns': columns }) as CSSProperties
         }
       >
-        <aside className="relative flex min-h-0 w-full min-w-0 flex-col">
-          {/* the section tiles once stood here; the hexagons replace them, down the left or along the foot
-              (CategoryTiles and its designs are left, unused for now) */}
+        <aside className="relative flex min-h-0 w-full min-w-0 flex-col gap-[8px]">
+          <LearnSectionHexes
+            hidden={hidden}
+            section={section}
+            onSelect={setSection}
+            off={[...(noCourses ? (['free'] as const) : [])]}
+          />
 
           {feedSection ? (
             <FeedIndex
