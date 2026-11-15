@@ -89,8 +89,8 @@ export function ScanConfigSkeleton({
   className?: string;
   activity?: TScanConfigActivity;
 }) {
-  // on a phone, its own layout (default-columns.tsx's PhoneConfigColumns): the 3D view and its table as small tiles
-  // side by side at the top, the blocks' list in a box under them (the user asked the loading page to match)
+  // on a phone, its own layout (default-columns.tsx's PhoneConfigColumns): the 3D view alone as a tile at the top, no
+  // table beside it, the blocks' list in a box under it (the user asked the loading page to match)
   const phone = useMediaQuery('(max-width: 767px)', false);
   return (
     <div className={cn('flex h-full min-h-0 flex-col', className)}>
@@ -105,12 +105,7 @@ export function ScanConfigSkeleton({
         configuration={
           phone ? (
             <div className="flex h-full min-h-0 w-full flex-col gap-2 px-1 pb-2">
-              <div className="flex shrink-0 gap-2">
-                <div className="h-28 min-w-0 flex-1 animate-pulse rounded-2xl bg-gray-100" />
-                {activity === ScanConfigActivity.Simulate && (
-                  <div className="h-28 min-w-0 flex-1 animate-pulse rounded-2xl bg-gray-100" />
-                )}
-              </div>
+              <div className="h-36 shrink-0 animate-pulse rounded-2xl bg-gray-100" />
               <div className={cn(BOX_CLASS, 'min-h-0 flex-1 overflow-hidden py-3')}>
                 <LeftColumnSkeleton />
               </div>

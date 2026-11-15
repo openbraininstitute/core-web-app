@@ -4,6 +4,9 @@ import { useMemo, useState } from 'react';
 
 import YouTubePlayer from '@/components/documentation/tutorials/youtube-player';
 import { listBox } from '@/features/learn/ui/category-tiles';
+import { useMediaQuery } from '@/hooks/use-media-query';
+import { VideoPlayer } from '@/ui/segments/project/get-started/elements/video-player';
+import { GREEN } from '@/ui/segments/project/hex-home/hex-home-shared';
 import { VideoCard } from '@/ui/segments/project/hex-home/video-card';
 import { cn } from '@/utils/css-class';
 import { parseYouTubeId } from '@/utils/youtube';
@@ -45,6 +48,29 @@ export function TutorialsIndex({
 
   const lb = listBox();
   const chip = lb.chip;
+  // On a phone as the phone's home has its videos (the user asked): the one picked pinned at the top, playing, its
+  // kind and title over it, and the small blue cards two to a row under it; a tap plays one there.
+  const phone = useMediaQuery('(max-width: 767px)', false);
+  const [tapped, setTapped] = useState(false);
+  const playing = selected ?? shown[0];
+  const card = (t: TTutorial, i: number, small: boolean) => (
+    <VideoCard
+      small={small}
+      video={{
+        key: t.slug,
+        title: sentence(t.title),
+        kind: categoryOf(t),
+        poster: t.posterImage ?? FALLBACK_POSTER,
+        url: t.url,
+      }}
+      selected={t.slug === playing?.slug}
+      onPick={() => {
+        setTapped(true);
+        onSelect(t.slug);
+      }}
+      delayMs={Math.min(i, 10) * 40}
+    />
+  );
 
   return (
     <div className={lb.box}>
@@ -71,12 +97,33 @@ export function TutorialsIndex({
         <p className="px-[4px] py-[20px] text-center text-[13px] text-[#8c8c8c]">
           No tutorials could be loaded.
         </p>
+      ) : phone ? (
+        <div className="secondary-scrollbar -mr-[6px] min-h-0 flex-1 overflow-y-auto pr-[6px]">
+          {playing && (
+            // pinned at the top while the cards scroll under it, on the box's own colour
+            <div className="sticky top-0 z-10 flex flex-col gap-2 bg-[#f0f2f4] pb-3">
+              <div className="flex flex-col">
+                <span className="text-[12px] font-semibold tracking-[0.12em] uppercase" style={{ color: GREEN }}>
+                  {categoryOf(playing)}
+                </span>
+                <span className="text-primary-9 font-serif text-[22px] leading-[27px]">{sentence(playing.title)}</span>
+              </div>
+              <div className="aspect-video w-full overflow-hidden rounded-2xl shadow-[0_12px_30px_rgb(20_40_90/0.18)]">
+                <VideoPlayer key={playing.slug} url={playing.url} title={playing.title} muted={!tapped} />
+              </div>
+            </div>
+          )}
+          <ul className="grid grid-cols-2 gap-2.5">
+            {shown.map((t, i) => (
+              <li key={t.slug}>{card(t, i, true)}</li>
+            ))}
+          </ul>
+        </div>
       ) : (
         // the home's blue video cards, two to a row (the user asked), the one playing ringed
         <ul className="secondary-scrollbar -mr-[6px] grid min-h-0 grid-cols-2 content-start gap-[10px] overflow-y-auto pr-[6px] max-sm:grid-cols-1">
           {shown.map((t, i) => (
-            // on a phone a tap opens its card in the list's place (learn-page.tsx)
-            <li key={t.slug} data-phone-opens>
+            <li key={t.slug}>
               <VideoCard
                 video={{
                   key: t.slug,

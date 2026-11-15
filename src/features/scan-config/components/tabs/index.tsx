@@ -133,15 +133,14 @@ export function ScanConfigTabsPanel({
     };
   });
 
-  // On a phone the breadcrumb (and what the rail's middle holds) is a line of its own over the tabs (the user
-  // asked), which have the rail to themselves, in its middle.
+  // On a phone no breadcrumb (the user asked); what the rail's middle holds is a line of its own over the tabs,
+  // which have the rail to themselves, in its middle.
   const phone = useMediaQuery('(max-width: 767px)', false);
   if (phone)
     return (
       <div className={cn('flex min-h-0 flex-col', className)}>
-        {(start || railCenter) && (
+        {railCenter && (
           <div className="no-scrollbar flex shrink-0 items-center gap-3 overflow-x-auto px-2 pt-1 pb-1.5 [&>*]:shrink-0">
-            {start}
             {railCenter}
           </div>
         )}

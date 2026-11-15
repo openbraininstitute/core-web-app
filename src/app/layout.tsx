@@ -4,6 +4,8 @@ import '@ant-design/v5-patch-for-react-19';
 import { DM_Serif_Text, Gabarito, Titillium_Web } from 'next/font/google';
 import { type ReactNode, Suspense } from 'react';
 
+import type { Metadata, Viewport } from 'next';
+
 import MatomoAnalyticsConsent from '@/components/Matomo';
 import { ConfigProvider, getClientEnvInjectionConfig } from '@/config';
 
@@ -30,6 +32,18 @@ const DMSerifText = DM_Serif_Text({
 type RootLayoutProps = {
   children: ReactNode;
 };
+
+/**
+ * On a phone's home screen the platform opens as an app of its own, without the browser's bars (the user asked), its
+ * icon a white hexagon on navy.
+ */
+export const metadata: Metadata = {
+  appleWebApp: { capable: true, title: 'OBI', statusBarStyle: 'default' },
+  icons: { apple: '/images/apple-icon.png' },
+};
+
+/** Drawn to the screen's edges, so the tabs along a phone's foot keep clear of its home bar themselves. */
+export const viewport: Viewport = { viewportFit: 'cover' };
 
 export default async function RootLayout({ children }: RootLayoutProps) {
   const config = getClientEnvInjectionConfig();

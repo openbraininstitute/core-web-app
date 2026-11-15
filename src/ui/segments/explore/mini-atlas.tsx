@@ -202,10 +202,15 @@ function AllSpeciesBrains() {
 export function MiniAtlas({
   children,
   morph = true,
+  fill = false,
 }: {
   children?: (inCard: boolean) => ReactNode;
   morph?: boolean;
+  /** The atlas as tall as the room it is given, its banner under it (a phone's Data, dragged taller or shorter). */
+  fill?: boolean;
 }) {
+  const card = cn(CARD_CLASS, fill && 'flex h-full min-h-0 flex-col');
+  const box = cn(ATLAS_BOX_CLASS, fill && 'h-auto! min-h-0 flex-1');
   const [isLoading, setIsLoading] = useState(true);
   const { viewer, error: viewerError } = useAtlasViewer();
   const { virtualLabId, projectId } = useWorkspace();
@@ -231,11 +236,11 @@ export function MiniAtlas({
   if (isAllSpeciesMode) {
     return (
       // with no species chosen, every species' brain side by side
-      <div className={CARD_CLASS}>
+      <div className={card}>
         <div
           id="mini-atlas-all"
           data-testid="mini-atlas-all"
-          className={cn(ATLAS_BOX_CLASS, 'isolate')}
+          className={cn(box, 'isolate')}
         >
           <AllSpeciesBrains />
           <AtlasExpandLink href={atlasHref} />
@@ -256,7 +261,7 @@ export function MiniAtlas({
   );
 
   const atlas = (
-    <div id="mini-atlas" data-testid="mini-atlas" className={cn(ATLAS_BOX_CLASS, 'group')}>
+    <div id="mini-atlas" data-testid="mini-atlas" className={cn(box, 'group')}>
           {/* the picture stands in for a viewer that failed to load or to draw */}
           {hasAtlas && !viewerError ? (
             <ErrorBoundary
@@ -289,7 +294,7 @@ export function MiniAtlas({
   );
 
   return (
-    <div className={CARD_CLASS}>
+    <div className={card}>
       {morph ? <AtlasMorph view="mini">{atlas}</AtlasMorph> : atlas}
       {children?.(true)}
     </div>

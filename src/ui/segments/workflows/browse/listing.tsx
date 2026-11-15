@@ -586,7 +586,8 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
         framed
         // the breadcrumb on the search bar's row; the layout hides its own row above while this one shows
         toolbarStart={
-          <div data-toolbar-breadcrumb className="mr-2 flex min-w-0 items-center">
+          // none on a phone (the user asked)
+          <div data-toolbar-breadcrumb className="mr-2 flex min-w-0 items-center max-md:hidden">
             <WorkflowBreadcrumb />
           </div>
         }

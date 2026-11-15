@@ -1,5 +1,6 @@
 'use client';
 
+import { RiHome5Line } from '@remixicon/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -49,7 +50,7 @@ const HOME_SECTIONS = ['', 'team', 'credits', 'activities', 'tutorials', 'quick-
 
 /** A tab's look: words alone (the user asked), in grey, the active one navy with a bar on the toolbar's line. */
 const TAB =
-  'group relative flex h-full shrink-0 items-center px-4 text-[14px] font-medium text-neutral-600 transition-colors hover:text-primary-9 select-none outline-none focus-visible:text-primary-9 max-[1100px]:px-2.5 max-md:w-full max-md:justify-center max-md:px-1 max-md:text-[12px]';
+  'group relative flex h-full shrink-0 items-center px-4 text-[14px] font-medium text-neutral-600 transition-colors hover:text-primary-9 select-none outline-none focus-visible:text-primary-9 max-[1100px]:px-2.5 max-md:w-full max-md:justify-center max-md:px-1 max-md:text-[min(15px,3.75vw)]';
 /** On a phone the tabs are along the screen's foot, so the active one's bar is on the bar's top edge. */
 const TAB_ON =
   'text-primary-9 font-semibold after:absolute after:inset-x-3 after:-bottom-px after:h-[3px] after:rounded-t-full after:bg-primary-9 max-md:after:inset-x-1 max-md:after:top-0 max-md:after:bottom-auto max-md:after:rounded-t-none max-md:after:rounded-b-full';
@@ -111,8 +112,10 @@ export function ProjectToolbar() {
       >
         <HydrateWrapper>
           <Tab on={homeOn} title="Home">
-            <Link prefetch href={homePath} className={cn(TAB, homeOn && TAB_ON)}>
-              Home
+            {/* on a phone a house, so the other sections' names can be larger (the user asked) */}
+            <Link prefetch href={homePath} aria-label="Home" className={cn(TAB, homeOn && TAB_ON)}>
+              <RiHome5Line aria-hidden className="size-[22px] md:hidden" />
+              <span className="max-md:hidden">Home</span>
             </Link>
           </Tab>
           {sections.map(({ key, title, path, section }) => {
