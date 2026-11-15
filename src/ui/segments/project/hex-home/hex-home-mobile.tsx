@@ -117,13 +117,16 @@ function Examples({
       {/* the model in the middle of the room over its words, filling its height or its width */}
       <div ref={heroBox} className="flex min-h-0 flex-1 items-center justify-center">
         {width > 0 && (
-          <div
-            key={example.key}
-            className={cn('relative h-max', !landing && styles.freeIn)}
-            style={landing ? { visibility: 'hidden' } : undefined}
-          >
-            <FreeMedia example={example} width={width} />
-            <div className="absolute inset-x-0 bottom-1 flex justify-center gap-1.5">
+          <div key={example.key} className="relative h-max">
+            {/* unseen while it flies in (the flight draws it), its fade once there */}
+            <div className={cn(!landing && styles.freeIn)} style={landing ? { visibility: 'hidden' } : undefined}>
+              <FreeMedia example={example} width={width} />
+            </div>
+            {/* its actions fading in as it flies, not after it lands (the user asked) */}
+            <div
+              className={cn(styles.fadeIn, 'absolute inset-x-0 bottom-1 flex justify-center gap-1.5')}
+              style={{ animationDelay: '250ms' }}
+            >
               <Link href={`${base}/workflows`} className={cn(pill, 'text-white')} style={{ background: GREEN }}>
                 Simulate
               </Link>
@@ -158,7 +161,9 @@ function ExampleStrip({ shown, away, onPick }: { shown: number; away: number | n
   return (
     // room under the hexagons for their shadows, which a sideways scroll would otherwise cut into a grey band: on the
     // page's white, flush with the rest (the user asked)
-    <div className="no-scrollbar flex shrink-0 overflow-x-auto bg-white px-4 pt-2 pb-4">
+    // Its shadows' room reaching under the categories' row, both see-through, so the hexagons' shadows are not cut
+    // off into a white band between the two (the user saw one).
+    <div className="no-scrollbar -mb-5 flex shrink-0 overflow-x-auto px-4 pt-2 pb-9">
       {EXAMPLES.map((e, i) => (
         // The one on show has no hexagon here, so none stands empty (the user asked, as on the desktop): its own folds
         // away as it flies out, the others closing up, and opens again at its place as it flies back into it.
@@ -171,7 +176,11 @@ function ExampleStrip({ shown, away, onPick }: { shown: number; away: number | n
           tabIndex={i === shown ? -1 : undefined}
           onClick={() => onPick(i)}
           data-example={i}
-          className="shrink-0 overflow-hidden transition-[width,margin,opacity] duration-[380ms] ease-out"
+          // clipped only while folded away: a clip on the others would cut off their shadows (the user saw them cut)
+          className={cn(
+            'shrink-0 transition-[width,margin,opacity] duration-[380ms] ease-out',
+            i === shown && 'pointer-events-none overflow-hidden'
+          )}
           style={{ width: i === shown ? 0 : 64, marginRight: i === shown ? 0 : 8, opacity: i === shown ? 0 : 1 }}
         >
           {/* rising in one after another as the desktop's tiles do (the user asked) */}
@@ -483,7 +492,7 @@ export function HexHomeMobile({
           <ExampleStrip shown={shown} away={flight && !landed.outbound ? flight.outbound : null} onPick={pick} />
         )}
       </div>
-      <div className="no-scrollbar flex shrink-0 gap-2 overflow-x-auto bg-white px-4 pt-0 pb-3">
+      <div className="no-scrollbar flex shrink-0 gap-2 overflow-x-auto px-4 pt-0 pb-3">
         {/* The institute (the OBI wordmark) first, as at the top of the desktop's column (the user asked) */}
         {[...CATEGORIES.filter((c) => c.key === 'institute'), ...CATEGORIES.filter((c) => c.key !== 'institute')].map((c, i) => {
           const on = c.key === category;

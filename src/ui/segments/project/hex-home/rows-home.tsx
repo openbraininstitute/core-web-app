@@ -988,10 +988,13 @@ function Shown({
           </div>
           {/* laid out (so it lands where it will stay) but unseen while it flies, fading in once it is there */}
           <div
-            key={landing ? 'landing' : 'landed'}
-            // a little up from the pane's foot (the user asked), the left column ending as far up to stay level
-            className={cn('flex max-w-[560px] shrink-0 flex-col items-center gap-2 pb-[40px] text-center', landing ? 'invisible' : styles.fadeIn)}
-            style={{ ...(landing ? undefined : wordsIn), ...(foot !== undefined ? { paddingBottom: foot } : undefined) }}
+            // a little up from the pane's foot (the user asked), the left column ending as far up to stay level; its
+            // words and buttons fading in as the example flies there, not once it has landed (the user asked)
+            className={cn('flex max-w-[560px] shrink-0 flex-col items-center gap-2 pb-[40px] text-center', styles.fadeIn)}
+            style={{
+              ...(wordsIn ?? { animationDelay: '250ms' }),
+              ...(foot !== undefined ? { paddingBottom: foot } : undefined),
+            }}
           >
             <h2 className="text-[26px] leading-[31px] font-light text-[#13306f]">{words.name}</h2>
             <p className="text-[14px] leading-[21px] text-neutral-600">{words.about}</p>
