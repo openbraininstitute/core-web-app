@@ -73,9 +73,9 @@ export const AO_COVER = 0.5;
 /**
  * The occlusion's wide term: the same occlusion at this share of the resolution, reaching a share of the view's height
  * (`WideOcclusion`), on the mean surface of each block of the fine term's pixels, taken as facing the eye. Where the
- * fine term shades a soma against its neighbours, this one shades the circuit's shape. Nothing in it is tied to the
+ * fine term shades a soma against its neighbours, this one shades the circuit's shape. Its occlusion is not tied to the
  * screen (`SurfaceGTAONode.steady`): tied so, the same surface got another shade a pixel on, and the term flickered as
- * the view moved.
+ * the view moved. Its smoothing still is: three's `denoise` turns its taps by a noise over the screen.
  */
 const WIDE_SCALE = 0.125;
 const WIDE_BLOCK = AO_SCALE / WIDE_SCALE;
@@ -188,6 +188,12 @@ class SurfaceGTAONode extends GTAONode {
 
   /** What went wrong in `setup`; three logs it and draws on past it, in black. */
   failed: unknown = null;
+
+  /** Its sides are rounded down, as are those of the passes that draw its surfaces: three rounds them to the nearest. */
+  override setSize(width: number, height: number): void {
+    const down = (side: number) => Math.floor(side * this.resolutionScale) / this.resolutionScale;
+    super.setSize(down(width), down(height));
+  }
 
   override setup(builder: THREE.NodeBuilder) {
     try {
