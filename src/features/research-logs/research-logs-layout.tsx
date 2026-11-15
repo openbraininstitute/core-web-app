@@ -12,6 +12,7 @@ import {
   ShutPaneBar,
 } from '@/features/circuit-viewer/pane-resize-handle';
 import { BOX_CLASS } from '@/features/scan-config/components/shared/box-class';
+import { useMediaQuery } from '@/hooks/use-media-query';
 import { Button } from '@/ui/molecules/button';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
@@ -87,6 +88,11 @@ function Shell({ children }: { children: ReactNode }) {
   const [railShut, setRailShut] = useState(false);
   const [dragging, setDragging] = useState(false);
 
+  // On a phone one at a time (the user asked): the list of logs, a log open (its own ← back to the list), or an
+  // entity opened from it; no grab bar to resize them.
+  const phone = useMediaQuery('(max-width: 767px)', false);
+  const phoneArea = panelOpen ? 'mini-view' : logId ? 'body' : 'aside';
+
   // an entity opened from one log has no business beside the next
   // biome-ignore lint/correctness/useExhaustiveDependencies: moving to another log is the trigger
   useEffect(() => {
@@ -97,21 +103,27 @@ function Shell({ children }: { children: ReactNode }) {
     <RailContext.Provider value={{ shut: railShut, setShut: setRailShut }}>
       <div
         data-testid="research-logs-layout"
-        className="bg-background h-full w-full overflow-hidden pt-2 pr-1"
+        // 12px under the toolbar with the grid's padding, as the assistant's panel and the other pages' boxes sit
+        className="bg-background h-full w-full overflow-hidden pt-1 pr-1"
       >
         {/* as the Data page does: with an entity open, the rail makes way and the log shifts left */}
         <motion.div
           ref={gridRef}
-          className="mx-2 mb-2 ml-3 grid h-full max-h-[calc(100vh-8rem)] w-[calc(100%-10px)] grid-rows-[minmax(0,1fr)] gap-4 overflow-hidden p-2"
+          // the whole height, its boxes' feet level with the assistant's panel (the user asked; it was capped shorter)
+          className="mx-2 ml-3 grid h-full w-[calc(100%-10px)] grid-rows-[minmax(0,1fr)] gap-4 overflow-hidden p-2"
           initial={false}
-          animate={{
-            gridTemplateColumns: panelOpen
-              ? '3fr 2fr'
-              : railShut
-                ? `${SHUT_BAR_SIZE}px 1fr`
-                : `${railWidth}px 1fr`,
-            gridTemplateAreas: panelOpen ? "'body mini-view'" : "'aside body'",
-          }}
+          animate={
+            phone
+              ? { gridTemplateColumns: '1fr', gridTemplateAreas: `'${phoneArea}'` }
+              : {
+                  gridTemplateColumns: panelOpen
+                    ? '3fr 2fr'
+                    : railShut
+                      ? `${SHUT_BAR_SIZE}px 1fr`
+                      : `${railWidth}px 1fr`,
+                  gridTemplateAreas: panelOpen ? "'body mini-view'" : "'aside body'",
+                }
+          }
           // while the bar is dragged the columns follow the pointer, not a spring behind it
           transition={
             dragging ? { duration: 0 } : { type: 'spring', stiffness: 320, damping: 30, mass: 0.6 }
@@ -122,7 +134,7 @@ function Shell({ children }: { children: ReactNode }) {
             className={cn(
               BOX_CLASS,
               'flex h-full min-h-0 flex-col gap-3 overflow-hidden p-3 [grid-area:aside]',
-              { hidden: panelOpen || railShut }
+              { hidden: phone ? phoneArea !== 'aside' : panelOpen || railShut }
             )}
           >
             <div className="flex shrink-0 items-center justify-between gap-2">
@@ -139,7 +151,7 @@ function Shell({ children }: { children: ReactNode }) {
               </Button>
             </div>
 
-            <label className="text-primary-9 bg-neutral-1 flex h-10 shrink-0 items-center gap-2 rounded-full px-4">
+            <label className="text-primary-9 flex h-10 shrink-0 items-center gap-2 rounded-full bg-white px-4 ring-1 ring-[rgb(19_48_111/0.12)] ring-inset">
               <SearchOutlined />
               <input
                 value={search}
@@ -169,7 +181,8 @@ function Shell({ children }: { children: ReactNode }) {
                         active={active}
                         className={cn(
                           'h-auto w-full border-none py-3 text-base',
-                          !active && 'bg-neutral-1 shadow-none'
+                          // white, a hairline round them (the user asked; they were grey)
+                          !active && 'bg-white shadow-none ring-1 ring-[rgb(19_48_111/0.12)] ring-inset'
                         )}
                       >
                         <Link href={href(log.id)} className="flex! w-full flex-col items-start!">
@@ -195,7 +208,7 @@ function Shell({ children }: { children: ReactNode }) {
             </nav>
           </aside>
 
-          {railShut && !panelOpen && (
+          {railShut && !panelOpen && !phone && (
             <ShutPaneBar
               title="Reports"
               upright
@@ -204,8 +217,14 @@ function Shell({ children }: { children: ReactNode }) {
             />
           )}
 
-          <main className="relative min-h-0 min-w-0 [grid-area:body]">
-            {!panelOpen && (
+          <main
+            className={cn(
+              'relative min-h-0 min-w-0 [grid-area:body]',
+              phone && 'flex flex-col gap-2',
+              phone && phoneArea !== 'body' && 'hidden'
+            )}
+          >
+            {!panelOpen && !phone && (
               // the grab bar goes halfway across the gap between the two cards: this zero-width
               // anchor is that far (half the gap) left of the page, and the bar centres on it
               <div className="pointer-events-none absolute inset-y-0 -left-2 w-0 *:pointer-events-auto">
@@ -225,13 +244,13 @@ function Shell({ children }: { children: ReactNode }) {
                 />
               </div>
             )}
-            {children}
+            {phone ? <div className="min-h-0 flex-1">{children}</div> : children}
           </main>
 
           <div
             data-testid="research-log-entity-panel"
             className={cn('h-full min-h-0 w-full min-w-0 [grid-area:mini-view]', {
-              hidden: !panelOpen,
+              hidden: phone ? phoneArea !== 'mini-view' : !panelOpen,
             })}
           >
             <EntityPanelView />
