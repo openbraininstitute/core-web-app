@@ -281,3 +281,65 @@ export function LearnSectionHexes({ section, onSelect, off = [], hidden = [], cl
     </nav>
   );
 }
+
+/**
+ * The sections on a phone along the foot, just over the tabs, as the phone's home has its categories (the user
+ * asked): white hexagons of the same size in a row, the open one navy, their names in bold capitals (short ones where
+ * the full name is long), rising in one after another. It keeps its own height free at the end of the page, so
+ * nothing is left under it.
+ */
+export function LearnHexFoot({ section, onSelect, off = [], hidden = [], className }: ISectionsProps) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const sections = sectionsOf(off, hidden);
+  const row = (
+    <nav
+      aria-label="Learn sections"
+      className="no-scrollbar fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 flex gap-2 overflow-x-auto bg-white px-4 pt-2 pb-3 shadow-[0_-4px_14px_rgb(20_40_90/0.06)] md:hidden"
+    >
+      {sections.map(({ category, live }, i) => {
+        const on = live && category.key === section;
+        return (
+          <button
+            key={category.key}
+            type="button"
+            disabled={!live}
+            aria-pressed={on}
+            title={live ? category.label : `${category.label}: coming soon`}
+            onClick={() => onSelect(category.key as LearnSection)}
+            className={cn('w-[74px] shrink-0 transition-transform active:scale-95', !live && 'opacity-50 grayscale')}
+          >
+            <span
+              className={cn(styles.appear, 'block')}
+              style={{ '--appear-delay': `${60 + i * 80}ms` } as CSSProperties}
+            >
+              <span
+                className="relative block drop-shadow-[0_5px_9px_rgb(28_40_72/0.16)]"
+                style={{ aspectRatio: `${SQRT3} / 2` }}
+              >
+                <span
+                  lang="en"
+                  className={cn(
+                    'absolute inset-0 flex items-center justify-center overflow-hidden px-1.5 text-center text-[10.5px] leading-[12.5px] font-bold tracking-[0.03em] uppercase hyphens-auto transition-colors duration-300',
+                    on ? 'bg-[#002766] text-white' : 'text-primary-9 bg-white'
+                  )}
+                  style={{ clipPath: HEX_CLIP }}
+                >
+                  {SHORT[category.key] ?? category.label}
+                </span>
+              </span>
+            </span>
+          </button>
+        );
+      })}
+    </nav>
+  );
+  return (
+    <>
+      {/* its room at the end of the page */}
+      <div aria-hidden className={cn('h-[104px] shrink-0 md:hidden', className)} />
+      {/* fixed to the window, out of any scrolling box it sits in */}
+      {mounted && createPortal(row, document.body)}
+    </>
+  );
+}

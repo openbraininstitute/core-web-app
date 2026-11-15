@@ -353,10 +353,10 @@ function PhoneTile({
 }
 
 /**
- * The scan config on a phone (the user asked): the 3D view and its table as small tiles side by side at the top; a
- * tap on either opens both over the screen, stacked as on a wide screen, the grab bar between them dragging and
- * shutting either into a bar. Under the tiles one of the two config columns at a time: the blocks, then the form of
- * the one tapped (a group's entries opening in the list first), with the way back to the blocks.
+ * The scan config on a phone (the user asked): the 3D view as a small tile at the top; a tap opens it and its table
+ * over the screen, stacked as on a wide screen, the grab bar between them dragging and shutting either into a bar.
+ * Under the tile one of the two config columns at a time: the blocks, then the form of the one tapped (a group's
+ * entries opening in the list first), with the way back to the blocks.
  */
 function PhoneConfigColumns({ props, state }: Props) {
   const boxed = props.activity === ScanConfigActivity.Simulate;
@@ -365,7 +365,6 @@ function PhoneConfigColumns({ props, state }: Props) {
   const [form, setForm] = useState(false);
   // where the previews sit: their small slots, and their panes while open
   const [viewSlot, setViewSlot] = useState<HTMLDivElement | null>(null);
-  const [tableSlot, setTableSlot] = useState<HTMLDivElement | null>(null);
   const [viewPane, setViewPane] = useState<HTMLDivElement | null>(null);
   const [tablePane, setTablePane] = useState<HTMLDivElement | null>(null);
   const withTable = boxed && table.shown;
@@ -387,16 +386,16 @@ function PhoneConfigColumns({ props, state }: Props) {
       {/* the tabs along the foot step aside too, as the keyboard takes their place */}
       {typing.on && <style>{'nav[aria-label="Project"] { display: none; }'}</style>}
       <div className="flex h-full min-h-0 w-full flex-col gap-2 px-1 pb-2">
-        {/* While a field is typed into, the 3D view and its table fold away, smoothly, so the form has the screen
-            over the keyboard (the user asked); they come back as the keyboard goes. */}
+        {/* The 3D view alone over the config, its table only with it once it is opened (the user asked). While a
+            field is typed into it folds away, smoothly, so the form has the screen over the keyboard (the user
+            asked); it comes back as the keyboard goes. */}
         <div
           className={cn(
-            'flex shrink-0 gap-2 overflow-hidden transition-[height,opacity,margin] duration-300 ease-out',
-            typing.on ? '-mb-2 h-0 opacity-0' : 'h-28 opacity-100'
+            'flex shrink-0 overflow-hidden transition-[height,opacity,margin] duration-300 ease-out',
+            typing.on ? '-mb-2 h-0 opacity-0' : 'h-36 opacity-100'
           )}
         >
-          <div ref={setViewSlot} className="h-28 min-w-0 flex-1" />
-          {withTable && <div ref={setTableSlot} className="h-28 min-w-0 flex-1" />}
+          <div ref={setViewSlot} className="h-36 min-w-0 flex-1" />
         </div>
         <div
           className={cn(BOX_CLASS, 'min-h-0 flex-1 overflow-hidden py-3')}
@@ -482,10 +481,11 @@ function PhoneConfigColumns({ props, state }: Props) {
       {withTable && (
         <PhoneTile
           title={tablePaneTitle(table.view)}
-          anchor={open ? tablePane : tableSlot}
+          anchor={open ? tablePane : null}
           open={open}
           onOpen={() => setOpen(true)}
-          away={typing.on}
+          // no tile of its own over the config: shown only with the 3D view, opened
+          away={typing.on || !open}
         >
           <div ref={table.setTarget} className="flex h-full min-h-0 flex-col bg-white px-3 pt-1 pb-2" />
         </PhoneTile>

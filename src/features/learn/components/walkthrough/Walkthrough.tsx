@@ -76,7 +76,11 @@ function ownTouch(target: EventTarget, deck: Element) {
     el && el !== deck;
     el = el.parentElement
   ) {
-    if (el.matches('input, textarea, select, [contenteditable]:not([contenteditable="false"])'))
+    if (
+      el.matches(
+        'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [data-own-touch]'
+      )
+    )
       return true;
     if (el.scrollWidth > el.clientWidth && /auto|scroll/.test(getComputedStyle(el).overflowX))
       return true;
@@ -322,8 +326,19 @@ export default function Walkthrough({
         </div>
       </main>
 
+      {/* On a phone a bar of its own (the dashes and their 6 px gaps outgrow its width on a long course, which widened
+          the page, shrank the slides and stopped the swipes between them) */}
+      <PhoneTimeline
+        n={n}
+        i={i}
+        sections={sections}
+        onPick={(k) => {
+          setDir(k > i ? 1 : -1);
+          setI(k);
+        }}
+      />
       {/* The footer's padding is room for the parts' names, above the bar and below it. */}
-      <footer className="flex items-center justify-between gap-4 px-5 pt-7 pb-7">
+      <footer className="flex items-center justify-between gap-4 px-5 pt-7 pb-7 max-sm:hidden">
         <div
           ref={barRef}
           className="relative flex flex-1 gap-1.5"
@@ -388,6 +403,160 @@ export default function Walkthrough({
         </div>
         <span className="font-mono text-[10px] text-slate-600">← →</span>
       </footer>
+    </div>
+  );
+}
+
+/**
+ * The slides' bar on a phone, in the desktop bar's manner: thin dashes 6 px apart, but one to a part rather than one
+ * to a slide (a long course's would not fit), each as long as its part, filled up to the slide on show. Over them, in
+ * the header's small capitals, the part on show, which opens the list of parts to jump to, and which part it is. The
+ * dashes are dragged along, or tapped, to go to a slide; the swipes between slides leave them alone.
+ */
+function PhoneTimeline({
+  n,
+  i,
+  sections,
+  onPick,
+}: {
+  n: number;
+  i: number;
+  sections: { k: number; name: string }[];
+  onPick: (k: number) => void;
+}) {
+  const [listOpen, setListOpen] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const dashRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const part = sections.findLastIndex(({ k }) => k <= i);
+  // the parts as runs of slides, any before the first part's start a run of its own
+  const starts = [...(sections[0]?.k ? [0] : []), ...sections.map(({ k }) => k)];
+  const runs = (starts.length ? starts : [0]).map((start, j, all) => ({ start, end: all[j + 1] ?? n }));
+  // the slide under `clientX`: in the dash it is over, or the nearest, as far along it as it is
+  const at = (clientX: number) => {
+    let best = i;
+    let gap = Infinity;
+    runs.forEach(({ start, end }, j) => {
+      const box = dashRefs.current[j]?.getBoundingClientRect();
+      if (!box) return;
+      const off = clientX < box.left ? box.left - clientX : clientX > box.right ? clientX - box.right : 0;
+      if (off >= gap) return;
+      gap = off;
+      const f = box.width ? Math.min(0.999, Math.max(0, (clientX - box.left) / box.width)) : 0;
+      best = start + Math.floor(f * (end - start));
+    });
+    return best;
+  };
+  const pick = (k: number) => {
+    if (k !== i) onPick(k);
+  };
+  const pad = (k: number) => String(k).padStart(2, '0');
+  return (
+    <div
+      data-own-touch
+      className="relative px-5 pt-1 pb-[calc(env(safe-area-inset-bottom)+12px)] sm:hidden"
+    >
+      {listOpen && (
+        <>
+          <button
+            type="button"
+            aria-label="Close the parts"
+            className="fixed inset-0 z-40 cursor-default"
+            onClick={() => setListOpen(false)}
+          />
+          <div className="absolute inset-x-3 bottom-full z-50 mb-1 max-h-[60dvh] overflow-y-auto rounded-xl border border-slate-800 bg-slate-950/95 px-2 pt-3 pb-2 shadow-2xl backdrop-blur">
+            <div className="px-3 pb-2 font-mono text-[10px] tracking-widest text-slate-600 uppercase">Parts</div>
+            {sections.map(({ k, name }, j) => (
+              <button
+                type="button"
+                key={k}
+                onClick={() => {
+                  setListOpen(false);
+                  pick(k);
+                }}
+                className={`flex w-full items-baseline gap-3 rounded-lg px-3 py-2 text-left text-[13px] transition-colors ${
+                  j === part ? 'text-sky-300' : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <span className="w-6 shrink-0 font-mono text-[10px] text-slate-600">{pad(j + 1)}</span>
+                <span className="min-w-0 flex-1">{name}</span>
+                <span className="shrink-0 font-mono text-[10px] text-slate-600">{pad(k + 1)}</span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+      <div className="flex items-center justify-between gap-3">
+        {sections.length > 0 ? (
+          <button
+            type="button"
+            onClick={() => setListOpen((o) => !o)}
+            aria-expanded={listOpen}
+            className="flex min-w-0 items-center gap-1.5 text-[11px] leading-[13px] text-sky-300"
+          >
+            <span className="truncate">{part >= 0 ? sections[part].name : 'Parts'}</span>
+            <span aria-hidden className={`text-[8px] text-slate-500 transition-transform ${listOpen ? 'rotate-180' : ''}`}>
+              ▲
+            </span>
+          </button>
+        ) : (
+          <span />
+        )}
+        {part >= 0 && (
+          <span className="shrink-0 font-mono text-[10px] tracking-widest text-slate-600 uppercase">
+            {pad(part + 1)} / {pad(sections.length)}
+          </span>
+        )}
+      </div>
+      <div
+        role="slider"
+        tabIndex={0}
+        aria-label="Slides"
+        aria-valuemin={1}
+        aria-valuemax={n}
+        aria-valuenow={i + 1}
+        className="relative flex h-6 touch-none items-center gap-1.5"
+        onPointerDown={(e) => {
+          e.currentTarget.setPointerCapture(e.pointerId);
+          setDragging(true);
+          pick(at(e.clientX));
+        }}
+        onPointerMove={(e) => {
+          if (dragging) pick(at(e.clientX));
+        }}
+        onPointerUp={() => setDragging(false)}
+        onPointerCancel={() => setDragging(false)}
+      >
+        {runs.map(({ start, end }, j) => {
+          const filled = Math.min(1, Math.max(0, (i + 1 - start) / (end - start)));
+          const here = i >= start && i < end;
+          return (
+            <div
+              key={start}
+              ref={(el) => {
+                dashRefs.current[j] = el;
+              }}
+              className="relative h-full min-w-1"
+              style={{ flexGrow: end - start, flexBasis: 0 }}
+            >
+              <span className="absolute inset-x-0 top-1/2 h-0.5 -translate-y-1/2 rounded-full bg-slate-800" />
+              <span
+                className="absolute top-1/2 left-0 h-0.5 -translate-y-1/2 rounded-full bg-sky-400/80 transition-[width] duration-200"
+                style={{ width: `${filled * 100}%` }}
+              />
+              {/* the slide on show, a short upright mark, taller while dragged */}
+              {here && (
+                <span
+                  aria-hidden
+                  className={`absolute top-1/2 w-0.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-300 transition-[height] ${
+                    dragging ? 'h-4' : 'h-2'
+                  }`}
+                  style={{ left: `${((i - start + 0.5) / (end - start)) * 100}%` }}
+                />
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

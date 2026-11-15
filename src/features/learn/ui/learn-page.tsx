@@ -46,7 +46,7 @@ import {
   TILE_DESIGNS,
 } from '@/features/learn/ui/category-tiles';
 import { CoursePreview } from '@/features/learn/ui/course-preview';
-import { LearnSectionHexes } from '@/features/learn/ui/learn-hexagons';
+import { LearnHexFoot, LearnSectionHexes } from '@/features/learn/ui/learn-hexagons';
 import { FeedCard, FeedIndex, type FeedSource } from '@/features/learn/ui/feeds';
 import { glide } from '@/features/learn/ui/glide';
 import { GlossaryCard, GlossaryIndex } from '@/features/learn/ui/glossary';
@@ -548,7 +548,9 @@ export function LearnPage({
         }
       >
         <aside className="relative flex min-h-0 w-full min-w-0 flex-col gap-[8px]">
+          {/* on a phone along the foot instead, as the phone's home has its categories (the user asked) */}
           <LearnSectionHexes
+            className="max-md:hidden"
             hidden={hidden}
             section={section}
             onSelect={setSection}
@@ -973,6 +975,12 @@ export function LearnPage({
         </div>
       </div>
       </div>
+      <LearnHexFoot
+        hidden={hidden}
+        section={section}
+        onSelect={setSection}
+        off={[...(noCourses ? (['free'] as const) : [])]}
+      />
     </div>
   );
 }
