@@ -391,9 +391,30 @@
   }
 }
 
+/* The home's first landing (the user asked): each part rising in after the one before it, left to right. Backwards
+   only, so nothing is left filling once it is in: an opacity left on would isolate the example's multiply. */
+.enter {
+  animation: enter 650ms cubic-bezier(0.2, 0.8, 0.2, 1) var(--enter-delay, 0ms) backwards;
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+/* the example on show fading in on the landing: on the multiplied picture itself, so its white stays taken out (an
+   opacity on anything round it would isolate the multiply, and its white would show as a box until the fade ended) */
+.enterFade {
+  animation: fadeIn 650ms ease var(--enter-delay, 0ms) backwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .drift,
   .appear,
+  .enter,
+  .enterFade,
   .leave {
     animation: none;
   }

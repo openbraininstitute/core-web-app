@@ -81,10 +81,13 @@ function Row({
   twoRows = false,
   grid = false,
   share,
+  enter,
   children,
 }: {
   title: string;
   titled?: boolean;
+  /** On the home's first landing, when its name rises in (ms). */
+  enter?: number;
   /** Its things in two rows, scrolling sideways together. */
   twoRows?: boolean;
   /** Its things three to a row, filling the width, not scrolling, three shares of the height left. */
@@ -98,7 +101,15 @@ function Row({
 }) {
   const head = titled ? ROW_TITLE_H + ROW_TITLE_GAP : 0;
   const name = titled && (
-    <h2 className="text-primary-9 px-1 text-[13px] leading-[16px] font-bold tracking-[0.08em] uppercase">{title}</h2>
+    <h2
+      className={cn(
+        'text-primary-9 px-1 text-[13px] leading-[16px] font-bold tracking-[0.08em] uppercase',
+        enter !== undefined && styles.enter
+      )}
+      style={enterAt(enter)}
+    >
+      {title}
+    </h2>
   );
   if (grid)
     return (
@@ -125,7 +136,9 @@ function Row({
           never up and down (the user asked: a sideways scroll lets the other way scroll too, by a pixel or so) */}
       <div
         className={cn(
-          'no-scrollbar -mx-1 overflow-x-auto overflow-y-hidden px-1 pt-[4px] pb-[12px] [mask-image:linear-gradient(to_right,#000_calc(100%-28px),rgb(0_0_0/0.3))]',
+          // faded to nothing at the right edge, and room under them for their shadows, so where those are cut off
+          // no faint line shows (the user saw one)
+          'no-scrollbar -mr-1 -mb-[10px] -ml-6 overflow-x-auto overflow-y-hidden pt-[4px] pr-1 pb-[22px] pl-6 [mask-image:linear-gradient(to_right,#000_calc(100%-36px),transparent)]',
           twoRows ? 'grid auto-cols-max grid-flow-col grid-rows-2' : 'flex',
           share ? 'min-h-0 flex-1' : 'gap-3'
         )}
@@ -752,9 +765,12 @@ const SCATTER: Array<[number, number, number]> = [
  * A few hexagons scattered behind the example or video on show (the user asked), drawn as the landing's field is: white,
  * outlined and raised, rising in one after another.
  */
-function ScatteredHexes() {
+function ScatteredHexes({ from = 200, step = 70 }: { from?: number; step?: number }) {
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+    // its box reaching into the gap beside the pane, so the hexagons' shadows are not cut off in a faint line at its
+    // edge (the user saw one); the hexagons placed on the pane itself, inside it
+    <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 -left-8 overflow-hidden">
+      <div className="absolute inset-y-0 right-0 left-8">
       {SCATTER.map(([x, y, w], i) => (
         <span
           key={`${x}-${y}`}
@@ -765,7 +781,7 @@ function ScatteredHexes() {
             className={cn(styles.appear, 'absolute inset-0 block')}
             style={
               {
-                '--appear-delay': `${200 + i * 70}ms`,
+                '--appear-delay': `${from + i * step}ms`,
                 filter: 'drop-shadow(-6px 10px 14px rgb(28 40 72 / 0.14))',
               } as CSSProperties
             }
@@ -775,6 +791,7 @@ function ScatteredHexes() {
           </span>
         </span>
       ))}
+      </div>
     </div>
   );
 }
@@ -845,7 +862,13 @@ function Shown({
   landing,
   backdrop,
   onClosePlace,
+  enter,
+  foot,
 }: {
+  /** How far over the pane's foot its words end (px): level with Platform's cards on the left. */
+  foot?: number;
+  /** On the home's first landing, when the hexagons behind start rising in, and the example with them (ms). */
+  enter?: number;
   shown: TShown;
   videos: IExampleVideo[];
   places: IJourneyCard[];
@@ -861,7 +884,18 @@ function Shown({
 }) {
   const [box, size] = useSize();
   // first in each of the three, so it stays put from one to the next
-  const behind = backdrop ? <BackdropExamples backdrop={backdrop} /> : <ScatteredHexes />;
+  const behind = backdrop ? (
+    <BackdropExamples backdrop={backdrop} />
+  ) : enter !== undefined ? (
+    <ScatteredHexes from={enter} step={45} />
+  ) : (
+    <ScatteredHexes />
+  );
+  // On the landing the example fades in with the hexagons on the picture itself, its white still taken out (the
+  // user asked: no white box), with nothing round it fading; its words just after.
+  const heroIn: CSSProperties | undefined = enter !== undefined ? { animation: 'none' } : undefined;
+  const wordsIn: CSSProperties | undefined =
+    enter !== undefined ? { animationDelay: `${enter + 300}ms`, animationDuration: '600ms' } : undefined;
   const button =
     'flex h-[38px] items-center justify-center rounded-full px-[16px] text-[13px] font-semibold transition-colors';
   if (shown.kind === 'place') {
@@ -926,26 +960,38 @@ function Shown({
   return (
     <div ref={box} className="relative flex h-full min-h-0 flex-col items-center justify-center gap-4">
       {behind}
+      {/* its words and buttons at the pane's foot, level with Platform's cards' on the left (the user asked), the
+          picture centred in the room over them */}
       {/* over the hexagons but not cut off from them (no stacking context of its own, and a fade that does not
           linger): the example's white multiplied out, so they show through it as on the landing */}
       {width > 0 && (
         <div
           key={example.key}
+          style={heroIn}
           className={cn(
             styles.freeIn,
-            'relative flex flex-col items-center gap-4',
+            'relative flex h-full w-full flex-col items-center gap-4',
             // the hexagons under its picture still clickable, its words and buttons too
             backdrop && 'pointer-events-none [&_a]:pointer-events-auto [&_button]:pointer-events-auto'
           )}
         >
           {/* no fade of its own once landed: the flight ends with it just as it is here */}
+          <div className="flex min-h-0 w-full flex-1 items-center justify-center">
           <div ref={heroBox} style={landing ? { visibility: 'hidden' } : undefined}>
-            <FreeMedia example={example} width={width} />
+            <FreeMedia
+              example={example}
+              width={width}
+              className={enter !== undefined ? styles.enterFade : undefined}
+              style={enter !== undefined ? ({ '--enter-delay': `${enter + 100}ms` } as CSSProperties) : undefined}
+            />
+          </div>
           </div>
           {/* laid out (so it lands where it will stay) but unseen while it flies, fading in once it is there */}
           <div
             key={landing ? 'landing' : 'landed'}
-            className={cn('flex max-w-[560px] flex-col items-center gap-2 text-center', landing ? 'invisible' : styles.fadeIn)}
+            // a little up from the pane's foot (the user asked), the left column ending as far up to stay level
+            className={cn('flex max-w-[560px] shrink-0 flex-col items-center gap-2 pb-[40px] text-center', landing ? 'invisible' : styles.fadeIn)}
+            style={{ ...(landing ? undefined : wordsIn), ...(foot !== undefined ? { paddingBottom: foot } : undefined) }}
           >
             <h2 className="text-[26px] leading-[31px] font-light text-[#13306f]">{words.name}</h2>
             <p className="text-[14px] leading-[21px] text-neutral-600">{words.about}</p>
@@ -1262,6 +1308,38 @@ function HexName({ children }: { children: ReactNode }) {
  * in two rows; The institute left out), Learn & teach one card along their foot; an example, a video or one of Do
  * science's places clicked shows on the right (the places large, with the way in).
  */
+/** An element's start in the first landing's sequence, as the `.enter` animation reads it. */
+function enterAt(ms: number | undefined): CSSProperties | undefined {
+  return ms === undefined ? undefined : ({ '--enter-delay': `${ms}ms` } as CSSProperties);
+}
+
+/**
+ * When each part of the home rises in on the first landing (ms): left to right, the wordmark, what the platform is
+ * and the examples one by one; the hexagons behind the example on show as the last example comes in; then the videos
+ * one by one, then Platform's cards; `end`, once it has all played.
+ */
+function entranceTimes(examples: number, videos: number) {
+  const STEP = 70;
+  const examplesAt = 260;
+  // the hexagons and the example on show coming in as the examples' row does (the user asked: sooner)
+  const behind = examplesAt + 120;
+  // the videos and Platform together, and with the examples' small hexagons (the user asked)
+  const videosAt = examplesAt;
+  const platformAt = videosAt;
+  return {
+    logo: 0,
+    about: 130,
+    examples: examplesAt,
+    example: (slot: number) => examplesAt + 60 + slot * STEP,
+    behind,
+    videos: videosAt,
+    video: (i: number) => videosAt + 80 + i * 90,
+    platform: platformAt,
+    place: (i: number) => platformAt + 80 + i * 50,
+    end: platformAt + 80 + Math.max(videos * 90, 8 * 50, examples * STEP) + 800,
+  };
+}
+
 export function RowsHome({
   groups,
   videos,
@@ -1413,6 +1491,40 @@ export function RowsHome({
   };
   // the tile they trade through, gone until both are in (the flights draw them), as on the desktop
   const trading = flight && !(landed.inbound && landed.outbound) ? flight.slot : undefined;
+
+  // The first landing (the user asked): the wordmark, what the platform is and the examples rising in from left to
+  // right, then the hexagons behind the example on show and the example with them; then the videos, then Platform.
+  // Over once it has all played, so nothing picked later waits on it.
+  const [entering, setEntering] = useState(true);
+  const T = entranceTimes(slots.length, videos.length);
+  useEffect(() => {
+    const done = window.setTimeout(() => setEntering(false), T.end);
+    return () => window.clearTimeout(done);
+  }, [T.end]);
+  const enterWhen = (ms: number) => (entering ? ms : undefined);
+  const enterCls = entering ? styles.enter : undefined;
+
+  // The example's words and buttons end level with Platform's cards' foot on the left (the user asked), whatever the
+  // window's height: measured from the section (not the cards, which rise in on the landing), as it changes.
+  const platform = useRef<HTMLElement>(null);
+  const pane = useRef<HTMLDivElement>(null);
+  const [foot, setFoot] = useState<number | undefined>(undefined);
+  useLayoutEffect(() => {
+    const section = platform.current;
+    const right = pane.current;
+    if (!section || !right) return undefined;
+    const measure = () => {
+      // the cards end 4px over the section's foot (its grid's padding)
+      const gap = right.getBoundingClientRect().bottom - (section.getBoundingClientRect().bottom - 4);
+      setFoot(Math.max(0, Math.round(gap)));
+    };
+    measure();
+    const watch = new ResizeObserver(measure);
+    watch.observe(right);
+    watch.observe(section);
+    if (section.parentElement) watch.observe(section.parentElement);
+    return () => watch.disconnect();
+  }, [layout]);
 
   return (
     // the rows on the left, what is on show on the right (the sides switched were tried)
@@ -1581,12 +1693,21 @@ export function RowsHome({
       ) : (
       // no scroll up and down (the user asked): Platform takes what the other rows leave; only a very short window
       // scrolls, rather than squeezing its cards to nothing
-      <div className="no-scrollbar flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-2">
+      // its parts spread down the height, so Platform's foot is at the bottom, level with the example's buttons on the
+      // right (the user asked)
+      // reaching out either side, so the shadows of the first and last things in it are not cut into a band
+      <div className="no-scrollbar -mr-6 -ml-6 flex min-h-0 flex-1 flex-col justify-between gap-3 overflow-y-auto pr-8 pl-6">
         {/* the OBI wordmark at the top left with what the platform is beside it (the small-Platform design) */}
         {compact && (
           <header className="flex shrink-0 items-center gap-5 px-1 pt-1">
-            <ObiLogo className="text-primary-9 h-[46px] w-auto shrink-0" />
-            <p className="m-0 max-w-[460px] text-[13.5px] leading-[20px] text-neutral-600">
+            {/* a little larger (the user asked) */}
+            <span className={cn('shrink-0', enterCls)} style={enterAt(enterWhen(T.logo))}>
+              <ObiLogo className="text-primary-9 h-[58px] w-auto" />
+            </span>
+            <p
+              className={cn('m-0 max-w-[540px] text-[15px] leading-[22px] text-neutral-600', enterCls)}
+              style={enterAt(enterWhen(T.about))}
+            >
               The Open Brain Platform brings the brain’s data, models and simulations together in your browser. Explore
               data from across species, build and simulate models from single neurons to whole brains, and analyse
               what you find.
@@ -1595,7 +1716,7 @@ export function RowsHome({
         )}
         {layout !== 'backdrop' && (
         <div ref={strip}>
-        <Row title="Examples" titled={titled}>
+        <Row title="Examples" titled={titled} enter={enterWhen(T.examples)}>
           {slots.map((i, slot) => {
             const e = EXAMPLES[i];
             return (
@@ -1606,8 +1727,12 @@ export function RowsHome({
                 title={e.label}
                 data-slot={slot}
                 onClick={() => pick(slot)}
-                className="group relative flex shrink-0 flex-col items-center"
-                style={{ width: tileW, visibility: slot === trading ? 'hidden' : undefined }}
+                className={cn('group relative flex shrink-0 flex-col items-center', enterCls)}
+                style={{
+                  width: tileW,
+                  visibility: slot === trading ? 'hidden' : undefined,
+                  ...enterAt(enterWhen(T.example(slot))),
+                }}
               >
                 <span
                   className="relative block drop-shadow-[0_5px_9px_rgb(28_40_72/0.16)]"
@@ -1631,15 +1756,15 @@ export function RowsHome({
         </div>
         )}
         {/* the videos after the examples, no row for The institute (the user asked) */}
-        <Row title="Tutorial videos" titled={titled} share={compact ? undefined : 1}>
+        <Row title="Tutorial videos" titled={titled} share={compact ? undefined : 1} enter={enterWhen(T.videos)}>
           {videos.map((v, i) => (
             // as wide as a Platform card, and as tall: one share of the height to its three (the user asked); with
             // the small Platform squares, three across at the videos' own shape
             <div
               key={v.key}
               data-video={i}
-              className={cn('shrink-0', compact ? 'aspect-[3/2]' : 'h-full')}
-              style={{ width: `calc((100% - ${2 * CARD_GAP}px) / 3)` }}
+              className={cn('shrink-0', compact ? 'aspect-[3/2]' : 'h-full', enterCls)}
+              style={{ width: `calc((100% - ${2 * CARD_GAP}px) / 3)`, ...enterAt(enterWhen(T.video(i))) }}
             >
               {/* what it is only while pointed at; its length always (the user asked) */}
               <VideoCard
@@ -1658,9 +1783,12 @@ export function RowsHome({
             them, the OBI wordmark in the bottom left corner (the user asked; top left was tried) */}
         {layout === 'featured' ? (
           // the five squares, then Learn and Teach half again as wide and the AI card with its prompt (the user asked)
-          <section aria-label="Platform" className="flex min-w-0 shrink-0 flex-col gap-[8px]">
+          <section ref={platform} aria-label="Platform" className="flex min-w-0 shrink-0 flex-col gap-[8px]">
             {titled && (
-              <h2 className="text-primary-9 px-1 text-[13px] leading-[16px] font-bold tracking-[0.08em] uppercase">
+              <h2
+                className={cn('text-primary-9 px-1 text-[13px] leading-[16px] font-bold tracking-[0.08em] uppercase', enterCls)}
+                style={enterAt(enterWhen(T.platform))}
+              >
                 Platform
               </h2>
             )}
@@ -1668,7 +1796,7 @@ export function RowsHome({
                 square */}
             <div className="grid auto-rows-fr grid-cols-10 gap-2.5 pt-[4px] pb-[4px]">
               {places.slice(0, 5).map((card, i) => (
-                <div key={card.label} className="col-span-2 aspect-square">
+                <div key={card.label} className={cn('col-span-2 aspect-square', enterCls)} style={enterAt(enterWhen(T.place(i)))}>
                   <ScienceRowCard
                     card={card}
                     index={i}
@@ -1683,7 +1811,7 @@ export function RowsHome({
                 return (
                   // in the other cards' subtle colours again (the user asked; shiny green and blue, `ShinyCard`, were
                   // tried), half again as wide
-                  <div key={icon} className="col-span-3">
+                  <div key={icon} className={cn('col-span-3', enterCls)} style={enterAt(enterWhen(T.place(icon === 'learning' ? 5 : 6)))}>
                     <ScienceRowCard
                       card={places[at]}
                       index={at}
@@ -1697,7 +1825,7 @@ export function RowsHome({
               {(() => {
                 const at = places.findIndex((c) => c.action === 'ai');
                 return (
-                  <div className="col-span-4">
+                  <div className={cn('col-span-4', enterCls)} style={enterAt(enterWhen(T.place(7)))}>
                     <AiPromptCard
                       card={places[at]}
                       index={at}
@@ -1709,7 +1837,11 @@ export function RowsHome({
               })()}
             </div>
           </section>
-        ) : layout === 'compact' ? (
+        ) : null}
+        {/* room under Platform, lifting it and the example's words a little off the foot (the user asked); the first
+            to give way on a short window */}
+        {layout === 'featured' && <div aria-hidden className="min-h-0 shrink basis-[26px]" />}
+        {layout === 'featured' ? null : layout === 'compact' ? (
           // much smaller: squares, five to a row (the user asked; six was tried), the OBI wordmark at the top instead
           <section aria-label="Platform" className="flex min-w-0 shrink-0 flex-col gap-[8px]">
             {titled && (
@@ -1751,7 +1883,7 @@ export function RowsHome({
       </div>
       )}
       </div>
-      <div className="min-h-0 min-w-0 flex-1">
+      <div ref={pane} className="min-h-0 min-w-0 flex-1">
         <Shown
           shown={shown}
           videos={videos}
@@ -1761,6 +1893,8 @@ export function RowsHome({
           landing={(!!flight && !landed.inbound) || !!grow}
           backdrop={layout === 'backdrop' ? { slots, trading, onPick: pick, strip } : undefined}
           onClosePlace={closePlace}
+          enter={enterWhen(T.behind)}
+          foot={foot}
         />
       </div>
       {shrink && (

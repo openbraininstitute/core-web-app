@@ -81,11 +81,22 @@ export function TileMedia({ example, big }: { example: IExample; big?: boolean }
 }
 
 /** An example out of its tile, as the landing's chosen one beside the field: its white taken out against the page. */
-export function FreeMedia({ example, width }: { example: IExample; width: number }) {
+export function FreeMedia({
+  example,
+  width,
+  className,
+  style,
+}: {
+  example: IExample;
+  width: number;
+  /** Its own fade, say: on the multiplied picture itself, which keeps its white taken out as it fades. */
+  className?: string;
+  style?: CSSProperties;
+}) {
   return (
     <div
-      className={cn(styles.free, example.feather && styles.feather)}
-      style={{ width, height: width / example.aspect }}
+      className={cn(styles.free, example.feather && styles.feather, className)}
+      style={{ width, height: width / example.aspect, ...style }}
     >
       <Loop example={example} />
     </div>
