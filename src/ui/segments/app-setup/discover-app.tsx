@@ -9,7 +9,7 @@ import {
 import { type ReactNode, useLayoutEffect, useMemo } from 'react';
 
 import { OnboardingFeature } from '@/api/virtual-lab-svc/queries/types';
-import { aiButtonFlag, hideHelpFlag, useFlag } from '@/features/feature-flags';
+import { hideHelpFlag, useFlag } from '@/features/feature-flags';
 import { useOnboardingStatus, useUpdateOnboardingStatus } from '@/hooks/use-onboarding';
 import { Button } from '@/ui/molecules/button';
 import { Card } from '@/ui/molecules/card';
@@ -61,9 +61,8 @@ function QuitOnboardingOnClickOutside({
 
 export function AppOnboardingProvider({ children }: { children: ReactNode }) {
   const { mutate: updateBackend } = useUpdateOnboardingStatus();
-  const aiButton = useFlag(aiButtonFlag.key) === true;
   const hideHelp = useFlag(hideHelpFlag.key) === true;
-  const tours = useMemo(() => discoverTours({ aiButton, hideHelp }), [aiButton, hideHelp]);
+  const tours = useMemo(() => discoverTours({ hideHelp }), [hideHelp]);
 
   const onSkipOrComplete = (tour: string | null, step?: number, action?: TTourAction) => {
     if (!tour) return;
@@ -508,17 +507,9 @@ export const OnboardingDiscoverSteps: Tour[] = [
 
 /**
  * The tours, as the top menu stands: no Help step while the `hide-help` flag is on, and the AI step
- * on the AI button when the `ai-button` flag puts one there, as no panel is left to point at while
- * it is closed.
+ * on the AI button, as no panel is left to point at while it is closed.
  */
-export function discoverTours({
-  aiButton,
-  hideHelp,
-}: {
-  aiButton: boolean;
-  hideHelp: boolean;
-}): Tour[] {
-  if (!aiButton && !hideHelp) return OnboardingDiscoverSteps;
+export function discoverTours({ hideHelp }: { hideHelp: boolean }): Tour[] {
   return OnboardingDiscoverSteps.map((t) =>
     t.tour !== projectTour
       ? t
@@ -527,7 +518,7 @@ export function discoverTours({
           steps: t.steps
             .filter((s) => !(hideHelp && s.selector === '#workspace-help'))
             .map((s) =>
-              aiButton && s.selector === '#workspace-ai'
+              s.selector === '#workspace-ai'
                 ? {
                     ...s,
                     selector: '#workspace-ai-button',

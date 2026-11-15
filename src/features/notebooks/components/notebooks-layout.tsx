@@ -16,6 +16,8 @@ import { SessionSizePanel } from '@/features/notebooks/components/session-size-p
 import { SyncNotebookModal } from '@/features/notebooks/components/update-notebook-modal';
 import { useNotebookProfiles } from '@/features/notebooks/hooks/use-run-notebook';
 import { startEmptyNotebook } from '@/services/notebooks';
+import { BOX_CLASS } from '@/features/scan-config/components/shared/box-class';
+import { useMediaQuery } from '@/hooks/use-media-query';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { useContributionEntityClickEvent } from '@/ui/segments/contribute/event';
 import { ContributionModal } from '@/ui/segments/contribute/modal';
@@ -30,6 +32,9 @@ type Props = {
   children: ReactNode;
 };
 
+/** The left box's width, as Reports' (research-logs-layout.tsx). */
+const RAIL_WIDTH = 364;
+
 export function NotebooksLayout({ children }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const notification = useAppNotification();
@@ -37,6 +42,7 @@ export function NotebooksLayout({ children }: Props) {
   const [sizeMenuOpen, setSizeMenuOpen] = useState(false);
   const [isGridAnimating, setIsGridAnimating] = useState(false);
   const { mdv, setMdv } = useMiniDetailView();
+  const phone = useMediaQuery('(max-width: 767px)', false);
 
   useSelectEntityClickEvent((ev) => {
     setMdv(ev.detail.display);
@@ -110,95 +116,105 @@ export function NotebooksLayout({ children }: Props) {
     [projectId, course]
   );
 
+  const upload = (!course || course.template_project_id === projectId) && (
+    <UploadDataButton
+      className="min-w-0 flex-1"
+      entityType={ExtendedEntitiesTypeDict.AnalysisNotebookTemplate}
+      // short, to share the box's top with JupyterHub, as Reports' New does with its scope toggles
+      label="Upload"
+      compact
+    />
+  );
+  const jupyterHub = (
+    <Dropdown
+      trigger={['click']}
+      placement="bottomRight"
+      open={sizeMenuOpen && !loading && !isCourseStudentProject}
+      onOpenChange={setSizeMenuOpen}
+      disabled={loading || isCourseStudentProject}
+      popupRender={() => (
+        <SessionSizePanel
+          profiles={profiles}
+          defaultProfile={defaultProfile}
+          onSelect={(profile) => {
+            setSizeMenuOpen(false);
+            handleRunNotebook(profile);
+          }}
+        />
+      )}
+    >
+      <button
+        disabled={loading}
+        type="button"
+        className="flex h-10 min-w-0 flex-1 items-center justify-between gap-2 rounded-full border border-[#F37726] bg-white px-4 text-[13px] font-semibold text-[#F37726] transition-colors hover:bg-orange-50"
+        data-testid="open-jupyterhub-button"
+        onClick={isCourseStudentProject ? () => handleRunNotebook() : undefined}
+      >
+        <div className="truncate">JupyterHub</div>
+        <span className="flex shrink-0 items-center gap-2">
+          {loading ? (
+            <LoadingOutlined className="size-5 text-[#F37726]" />
+          ) : (
+            <Image src="/images/jupyter.svg" alt="Jupyter hub" width={20} height={20} />
+          )}
+          {!isCourseStudentProject && <DownOutlined className="text-xs" />}
+        </span>
+      </button>
+    </Dropdown>
+  );
+  // the left box, as Reports' list of logs: the ways to add one along its top, then the sections as its pills
+  const aside = (
+    <aside
+      className={cn(
+        BOX_CLASS,
+        'flex min-h-0 flex-col gap-3 overflow-hidden p-3',
+        phone ? 'shrink-0' : cn('h-full [grid-area:aside]', { hidden: mdv })
+      )}
+    >
+      <div className="flex shrink-0 items-center gap-2">
+        {upload}
+        {jupyterHub}
+      </div>
+      <NotebookLeftMenu row={phone} />
+    </aside>
+  );
+
+  // Laid out as Reports is (the user asked): the box down the left and the table in its own white box beside it, tops
+  // and feet level with the assistant's panel; on a phone the box over the table, scrolling as one.
   return (
     <LazyMotion features={domAnimation}>
       <div
         id="notebooks-layout"
         data-testid="notebooks-layout"
-        className="bg-background grid h-full w-full grid-cols-[22rem_1fr] grid-rows-[auto_1fr] gap-2 overflow-hidden [grid-template-areas:'header_header''main_main'] pr-1"
+        className={cn(
+          'bg-background h-full w-full pr-1',
+          phone ? 'no-scrollbar overflow-x-hidden overflow-y-auto' : 'overflow-hidden pt-1'
+        )}
       >
-        <div className="flex w-full items-center justify-end gap-4 pl-3 [grid-area:header]">
-          <div className="flex items-center gap-4">
-            {(!course || course.template_project_id === projectId) && (
-              <UploadDataButton
-                className="min-w-45"
-                entityType={ExtendedEntitiesTypeDict.AnalysisNotebookTemplate}
-                label="Upload notebook"
-              />
-            )}
-
-            <Dropdown
-              trigger={['click']}
-              placement="bottomRight"
-              open={sizeMenuOpen && !loading && !isCourseStudentProject}
-              onOpenChange={setSizeMenuOpen}
-              disabled={loading || isCourseStudentProject}
-              popupRender={() => (
-                <SessionSizePanel
-                  profiles={profiles}
-                  defaultProfile={defaultProfile}
-                  onSelect={(profile) => {
-                    setSizeMenuOpen(false);
-                    handleRunNotebook(profile);
-                  }}
-                />
-              )}
-            >
-              <button
-                disabled={loading}
-                type="button"
-                className="flex h-[40px] items-center justify-between gap-2 rounded-full border border-[#F37726] bg-white px-5 text-[#F37726] transition-colors hover:bg-orange-50"
-                data-testid="open-jupyterhub-button"
-                onClick={isCourseStudentProject ? () => handleRunNotebook() : undefined}
-              >
-                <div>Open JupyterHub</div>
-                {loading ? (
-                  <LoadingOutlined className="size-5 text-[#F37726]" />
-                ) : (
-                  <Image src="/images/jupyter.svg" alt="Jupyter hub" width={20} height={20} />
-                )}
-                {!isCourseStudentProject && <DownOutlined className="text-xs" />}
-              </button>
-            </Dropdown>
+        {phone ? (
+          <div className="flex min-h-full flex-col gap-3 px-2 pt-2 pb-4">
+            {aside}
+            <div className="flex min-h-[70vh] flex-col">{children}</div>
           </div>
-        </div>
-
-        <m.div
-          id="notebooks-inner-layout"
-          className="bg-background border-neutral-2 mx-2 mb-2 ml-3 grid h-full max-h-[calc(100vh-8rem)] w-[calc(100%-10px)] gap-4 overflow-hidden rounded-2xl border p-2 [grid-area:main]"
-          initial={{
-            gridTemplateColumns: '22rem 1fr',
-            gridTemplateAreas: "'aside body'",
-          }}
-          animate={{
-            gridTemplateColumns: mdv ? '3fr 2fr' : '22rem 1fr',
-            gridTemplateAreas: mdv ? "'body mini-view'" : "'aside body'",
-          }}
-          transition={{
-            type: 'spring',
-            stiffness: 320,
-            damping: 30,
-            mass: 0.6,
-          }}
-          style={
-            isGridAnimating
-              ? { willChange: 'grid-template-columns, grid-template-areas' }
-              : undefined
-          }
-          onAnimationStart={() => setIsGridAnimating(true)}
-          onAnimationComplete={() => setIsGridAnimating(false)}
-        >
-          <aside
-            className={cn(
-              'h-full max-h-[calc(100vh-11.8rem)] min-h-0 w-full overflow-y-auto px-1 [grid-area:aside]',
-              { hidden: mdv }
-            )}
+        ) : (
+          <m.div
+            id="notebooks-inner-layout"
+            className="mx-2 ml-3 grid h-full w-[calc(100%-10px)] grid-rows-[minmax(0,1fr)] gap-4 overflow-hidden p-2"
+            initial={{ gridTemplateColumns: `${RAIL_WIDTH}px 1fr`, gridTemplateAreas: "'aside body'" }}
+            animate={{
+              gridTemplateColumns: mdv ? '3fr 2fr' : `${RAIL_WIDTH}px 1fr`,
+              gridTemplateAreas: mdv ? "'body mini-view'" : "'aside body'",
+            }}
+            transition={{ type: 'spring', stiffness: 320, damping: 30, mass: 0.6 }}
+            style={isGridAnimating ? { willChange: 'grid-template-columns, grid-template-areas' } : undefined}
+            onAnimationStart={() => setIsGridAnimating(true)}
+            onAnimationComplete={() => setIsGridAnimating(false)}
           >
-            <NotebookLeftMenu />
-          </aside>
-
-          {children}
-        </m.div>
+            {aside}
+            {children}
+          </m.div>
+        )}
+      </div>
 
         <ContributionModal onCreateSuccess={onNotebookCreateSuccess} />
         {syncRecord && course && (
@@ -211,7 +227,6 @@ export function NotebooksLayout({ children }: Props) {
             courseId={course.id}
           />
         )}
-      </div>
     </LazyMotion>
   );
 }

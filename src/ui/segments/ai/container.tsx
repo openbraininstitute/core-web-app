@@ -1,12 +1,10 @@
 'use client';
 
 import { RiArrowDownSLine, RiArrowUpSLine } from '@remixicon/react';
-import { AnimatePresence, motion } from 'motion/react';
+import { motion } from 'motion/react';
 import dynamic from 'next/dynamic';
 
-import IconPlus from '@/components/icons/Plus';
 import { IconSpinner } from '@/components/icons/spinner';
-import { aiButtonFlag, useFlag } from '@/features/feature-flags';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { usePanelState } from '@/ui/segments/ai/hooks';
 import { PanelState } from '@/ui/segments/ai/types';
@@ -27,11 +25,9 @@ const AiAssistant = dynamic(() => import('@/features/ai-assistant'), {
 
 export function Container() {
   const { state, setState } = usePanelState();
-  const aiButton = useFlag(aiButtonFlag.key);
 
   const isCollapsed = state === PanelState.Collapsed;
   const isFullscreen = state === PanelState.Fullscreen;
-  const targetWidth = state === PanelState.Collapsed ? '3rem' : '400px';
   const phone = useMediaQuery('(max-width: 767px)', false);
 
   function updateState(next: PanelState) {
@@ -39,8 +35,8 @@ export function Container() {
     setState(next);
   }
 
-  // with the AI button in the top menu, there is no rail while it is closed: the button opens it
-  if ((aiButton || phone) && isCollapsed) return null;
+  // no rail while it is closed: the top menu's AI button opens it
+  if (isCollapsed) return null;
 
   // On a phone (the user asked): a frosted window floating along the foot, over the page and above the tabs, which
   // its button (or the assistant's own fullscreen one) grows upwards, still floating, and shrinks back.
@@ -85,54 +81,31 @@ export function Container() {
       id="workspace-ai"
       className={cn(
         styles.aiPanel,
-        'text-white [grid-area:ai] z-[30]',
-        isCollapsed
-          ? 'bg-primary-9 border-primary-9 mr-3 shadow-md rounded-full! [transition:background-color_150ms_ease_200ms,border-color_150ms_ease_200ms]'
-          : cn(
-              // as the home's cards are (the user asked): white, a hairline round it, flat, its top 12px under the
-              // toolbar and its foot 15px over the window's edge, as the pages' own boxes sit
-              'text-primary-9 mt-[12px] mr-3 outline outline-1 outline-[rgb(19_48_111/0.12)] [outline-offset:-1px] bg-white [transition:none]',
-              isFullscreen ? 'rounded-lg!' : 'rounded-[20px]!'
-            )
+        '[grid-area:ai] z-[30]',
+        // as the home's cards are (the user asked): white, a hairline round it, flat, its top 12px under the
+        // toolbar and its foot 15px over the window's edge, as the pages' own boxes sit
+        'text-primary-9 mt-[12px] mr-3 outline outline-1 outline-[rgb(19_48_111/0.12)] [outline-offset:-1px] bg-white [transition:none]',
+        isFullscreen ? 'rounded-lg!' : 'rounded-[20px]!'
       )}
-      animate={{ width: targetWidth, height: isCollapsed ? 'calc(100vh - 6rem)' : 'calc(100vh - 4rem - 27px)' }}
+      animate={{ width: '400px', height: 'calc(100vh - 4rem - 27px)' }}
       initial={false}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
     >
-      <AnimatePresence>
-        {isCollapsed ? (
-          <button
-            key="collapsed"
-            type="button"
-            onClick={() => updateState(PanelState.Expanded)}
-            className={styles.collapsed}
-            aria-label="expand AI assistant"
-            data-testid="ai-assistant-open-button"
-          >
-            <IconPlus />
-            <div>OBI Assistant</div>
-          </button>
-        ) : (
-          <div
-            key="expanded"
-            className="flex h-full w-full flex-col rounded-lg relative overflow-visible"
-          >
-            <HydrateWrapper key="ai-assistant">
-              <AiAssistant
-                section="explore"
-                // white, as the home is, not the old grey
-                className="[--color-background:#ffffff]!"
-                fullscreen={isFullscreen}
-                onFullscreenToggle={() =>
-                  updateState(isFullscreen ? PanelState.Expanded : PanelState.Fullscreen)
-                }
-                aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-                onClose={() => updateState(PanelState.Collapsed)}
-              />
-            </HydrateWrapper>
-          </div>
-        )}
-      </AnimatePresence>
+      <div className="relative flex h-full w-full flex-col overflow-visible rounded-lg">
+        <HydrateWrapper key="ai-assistant">
+          <AiAssistant
+            section="explore"
+            // white, as the home is, not the old grey
+            className="[--color-background:#ffffff]!"
+            fullscreen={isFullscreen}
+            onFullscreenToggle={() =>
+              updateState(isFullscreen ? PanelState.Expanded : PanelState.Fullscreen)
+            }
+            aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+            onClose={() => updateState(PanelState.Collapsed)}
+          />
+        </HydrateWrapper>
+      </div>
     </motion.div>
   );
 }

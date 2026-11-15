@@ -56,7 +56,7 @@ export function Wallet({ plain = false }: { plain?: boolean } = {}) {
           <Link
             prefetch
             id="workspace-project-credits"
-            href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/credits`}
+            href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/project`}
             aria-disabled={isLoading || isError}
             className="text-primary-9 flex h-10 shrink-0 items-center gap-2 rounded-xl px-3 font-bold select-none hover:bg-neutral-50 max-md:px-1.5"
           >
@@ -78,7 +78,7 @@ export function Wallet({ plain = false }: { plain?: boolean } = {}) {
         >
           <Link
             prefetch
-            href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/credits`}
+            href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/project`}
             className="inline-block"
           >
             <CoinsIcon />

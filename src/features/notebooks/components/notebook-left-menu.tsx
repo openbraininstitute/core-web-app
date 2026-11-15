@@ -10,6 +10,7 @@ import { config } from '@/config';
 import { WorkspaceScope } from '@/constants';
 import { NotebookCountLink } from '@/features/notebooks/components/notebook-count-link';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { cn } from '@/utils/css-class';
 import {
   resolveConcreteEntityPathParam,
   resolveExtendedTypeFromPathParamUrl,
@@ -22,7 +23,8 @@ const SECTIONS = [
   { extendedType: ExtendedEntitiesTypeDict.AnalysisNotebookResult, title: 'Results' },
 ] as const;
 
-export function NotebookLeftMenu() {
+/** The notebooks' sections, down a column, or side by side (`row`, on a phone). */
+export function NotebookLeftMenu({ row = false }: { row?: boolean }) {
   const { virtualLabId, projectId } = useWorkspace();
   const { type } = useParams<{ type?: KebabCase<TExtendedEntitiesTypeDict> }>();
 
@@ -31,7 +33,10 @@ export function NotebookLeftMenu() {
     : undefined;
 
   return (
-    <nav data-testid="notebook-left-menu" className="flex w-full flex-col gap-2 py-2">
+    <nav
+      data-testid="notebook-left-menu"
+      className={cn('flex w-full gap-2', row ? 'flex-row *:min-w-0 *:flex-1' : 'flex-col py-2')}
+    >
       {SECTIONS.map(({ extendedType, title }) => {
         const slug = resolveConcreteEntityPathParam(extendedType);
         const href = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks/browse/${slug}`;

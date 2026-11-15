@@ -6,11 +6,10 @@ import { usePathname } from 'next/navigation';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
 import { WorkspaceMainPages } from '@/constants';
-import { aiButtonFlag, useFlag } from '@/features/feature-flags';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { AiButton } from '@/ui/segments/ai/button';
 import { Wallet } from '@/ui/segments/project/balance';
 import { SpaceSwitcher } from '@/ui/segments/workspaces/space-switcher';
-import { AiButton } from '@/ui/segments/workspaces/top-menu';
 import { cn } from '@/utils/css-class';
 import { getActiveSection } from '@/utils/get-section';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
@@ -87,7 +86,6 @@ export function ProjectToolbar() {
   const { virtualLabId, projectId } = useWorkspace();
   const pathname = usePathname();
   const active = getActiveSection(pathname) ?? '';
-  const aiButton = useFlag(aiButtonFlag.key);
 
   const base = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}`;
   const homePath = `${base}/`;
@@ -133,11 +131,9 @@ export function ProjectToolbar() {
       <div className="flex min-w-0 flex-1 basis-0 items-center justify-end gap-1.5 max-md:h-14 max-md:flex-none">
         <HydrateWrapper>
           <Wallet plain />
-          {aiButton && (
-            <span className="ml-1.5">
-              <AiButton />
-            </span>
-          )}
+          <span className="ml-1.5">
+            <AiButton />
+          </span>
         </HydrateWrapper>
       </div>
     </header>

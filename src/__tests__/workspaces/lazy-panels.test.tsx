@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
+import { AiButton } from '@/ui/segments/ai/button';
 import { Container as AiContainer } from '@/ui/segments/ai/container';
 import { SpaceManagerContainer } from '@/ui/segments/workspaces/space-manager';
 import {
@@ -16,11 +17,6 @@ vi.mock('@/features/ai-assistant', () => {
   return { default: () => <div data-testid="ai-assistant-stub" /> };
 });
 
-vi.mock('@/features/feature-flags', () => ({
-  aiButtonFlag: { key: 'aiButton' },
-  useFlag: () => false,
-}));
-
 vi.mock('@/ui/segments/workspaces/space-manager/modal', () => {
   loaded.modal = true;
   return { WorkspaceManagerModal: () => <div data-testid="workspace-manager-modal-stub" /> };
@@ -31,8 +27,13 @@ vi.mock('@/ui/hooks/use-workspace', () => ({
 }));
 
 describe('lazy-loaded layout panels', () => {
-  it('loads the AI assistant when the collapsed panel is expanded', async () => {
-    render(<AiContainer />);
+  it('loads the AI assistant when its button opens the panel', async () => {
+    render(
+      <>
+        <AiButton />
+        <AiContainer />
+      </>
+    );
     expect(loaded.aiAssistant).toBe(false);
     expect(screen.queryByTestId('ai-assistant-stub')).toBeNull();
 

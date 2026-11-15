@@ -72,15 +72,6 @@ export const projectScopeIconFlag = defineFlag<'two' | 'one'>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
-/** The AI assistant opened from a round "AI" button in the top menu, rather than its side rail. */
-export const aiButtonFlag = defineFlag<boolean>({
-  key: 'ai-button',
-  defaultValue: false,
-  values: [true, false],
-  description: 'AI assistant: a round "AI" button in the top menu instead of the side rail',
-  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
-});
-
 /** The project's top bar drawn in the style of the Learn courses' bar. */
 export const courseToolbarFlag = defineFlag<boolean>({
   key: 'course-toolbar',
@@ -126,7 +117,6 @@ export const flags = [
   electrodeOverlaysFlag,
   debugFlag,
   projectScopeIconFlag,
-  aiButtonFlag,
   courseToolbarFlag,
   greyMenuPillsFlag,
   hideHelpFlag,
