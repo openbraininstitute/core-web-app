@@ -46,10 +46,12 @@ export class Arriving implements PackSource {
     return (await this.until(end)) ? this.bytes(start, end) : null;
   }
 
-  /** Lets go of the bytes at once. Nothing may read the file after, nor hold a part of it. */
+  /** Lets go of the bytes at once. Nothing may hold a part of them, and a read after finds none. */
   release(): void {
     detach(this.buffer.buffer);
     this.buffer = new Uint8Array(0);
+    this.received = 0;
+    this.ended = true;
   }
 
   /** Whether the bytes up to `end` come in: true once they have, false where the file ends before them. */

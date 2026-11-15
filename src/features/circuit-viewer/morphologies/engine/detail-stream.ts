@@ -461,13 +461,12 @@ export class DetailStream {
       this.bases.delete(box);
       changed = true;
     }
+    for (const [box, { level, segments }] of this.ready) {
+      if (level === wanted[box]) continue;
+      letGoOf(segments);
+      this.ready.delete(box);
+    }
     const arrived = [...this.ready]
-      .filter(([box, { level, segments }]) => {
-        if (level === wanted[box]) return true;
-        letGoOf(segments);
-        this.ready.delete(box);
-        return false;
-      })
       .map(([box, { level, segments }]) => ({
         box,
         level,
