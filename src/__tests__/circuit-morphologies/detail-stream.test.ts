@@ -58,9 +58,9 @@ function chunksOf() {
 /** Uploads that say when an arena's are made, of how many segments, and let go of. */
 function uploadsSaid() {
   const said: string[] = [];
-  const uploadsOf: UploadsOf = (_ends, words) => {
+  const uploadsOf: UploadsOf = ({ words }) => {
     said.push(`made ${words.length}`);
-    return { upload: vi.fn(), dispose: () => said.push('disposed') };
+    return { upload: vi.fn(), putEnds: vi.fn(), dispose: () => said.push('disposed') };
   };
   return { said, uploadsOf };
 }

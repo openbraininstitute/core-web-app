@@ -6,7 +6,7 @@ import { scoped } from './error-scope';
 import { shareBuffer } from './three-hooks';
 import { COPY_DST, COPY_SRC, STORAGE } from './usage';
 
-import type { ArenaUploads } from '../segment-arena';
+import type { ArenaArrays, ArenaUploads } from '../segment-arena';
 
 /** A texel with no depth drawn, used until the culling has drawn its own. */
 const NOTHING_DRAWN = new THREE.DataTexture(
@@ -55,20 +55,22 @@ export interface ArenaBuffers {
 }
 
 /**
- * Puts an arena's arrays `ends`, `words` and `blocks`, and the culling's lists, in buffers the page makes on `device`,
- * which three binds for `storage`. Only what changes is written to them, and three keeps no copy. `told` is handed the
- * buffers, and null once they are let go of. `outOfMemory` is called a moment later if the device could not make
- * them, unless they were let go of first.
+ * Puts an arena's `arrays`, and the culling's lists, in buffers the page makes on `device`, which three binds for
+ * `storage`. Only what changes is written to them, and three keeps no copy. The ends' buffer holds every slot's: the
+ * base's are written as they are handed over, and are kept nowhere else. `told` is handed the buffers, and null once
+ * they are let go of. `outOfMemory` is called a moment later if the device could not make them, unless they were let
+ * go of first.
  */
 export function arenaOnGpu(
   renderer: THREE.WebGPURenderer,
   device: GPUDevice,
   storage: ArenaStorage,
-  arrays: { ends: Float32Array; words: Uint32Array; blocks: Float32Array },
+  arrays: ArenaArrays,
   told: (buffers: ArenaBuffers | null) => void,
   outOfMemory: () => void
 ): ArenaUploads {
   let { ends, words, blocks } = arrays;
+  const { endsFrom } = arrays;
   const capacity = words.length;
   // A binding cannot be empty.
   const bufferOf = (bytes: number, label: string, usage = STORAGE | COPY_DST) =>
@@ -78,7 +80,7 @@ export function arenaOnGpu(
     device,
     'out-of-memory',
     (): ArenaBuffers => ({
-      ends: bufferOf(ends.byteLength, 'arena ends'),
+      ends: bufferOf(32 * capacity, 'arena ends'),
       words: bufferOf(words.byteLength, 'arena words'),
       blocks: bufferOf(blocks.byteLength, 'arena blocks'),
       lists: bufferOf(2 * 4 * capacity, 'arena lists', STORAGE),
@@ -100,12 +102,17 @@ export function arenaOnGpu(
   told(buffers);
   return {
     upload(start, count, wordsOnly) {
-      if (!wordsOnly)
-        device.queue.writeBuffer(buffers.ends, 32 * start, ends, 8 * start, 8 * count);
+      if (!wordsOnly) {
+        const from = 8 * (start - endsFrom);
+        device.queue.writeBuffer(buffers.ends, 32 * start, ends, from, 8 * count);
+      }
       device.queue.writeBuffer(buffers.words, 4 * start, words, start, count);
       const first = Math.floor(start / BLOCK);
       const last = Math.ceil((start + count) / BLOCK);
       device.queue.writeBuffer(buffers.blocks, 32 * first, blocks, 8 * first, 8 * (last - first));
+    },
+    putEnds(start, segments) {
+      device.queue.writeBuffer(buffers.ends, 32 * start, segments);
     },
     dispose() {
       gone = true;

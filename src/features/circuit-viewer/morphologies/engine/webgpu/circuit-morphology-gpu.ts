@@ -338,12 +338,12 @@ export class CircuitMorphologyGPU extends CircuitView {
       ...this.seenQuads,
     ]);
     return {
-      uploadsOf: (ends, words, blocks) =>
+      uploadsOf: (arrays) =>
         arenaOnGpu(
           this.renderer,
           this.device,
           storage,
-          { ends, words, blocks },
+          arrays,
           (buffers) => culling.setArena(buffers),
           () => this.outOfMemory()
         ),

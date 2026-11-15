@@ -2072,7 +2072,7 @@ describe('the morphologies read a box at a time', () => {
     // The arena's arrays uploaded elsewhere, as on WebGPU, with room for a base.
     const { segment, ids } = inner.materials;
     vi.spyOn(inner, 'arenaDrawing').mockReturnValue({
-      uploadsOf: () => ({ upload: vi.fn(), dispose: vi.fn() }),
+      uploadsOf: () => ({ upload: vi.fn(), putEnds: vi.fn(), dispose: vi.fn() }),
       segment,
       ids: ids.segment,
       quads: [],

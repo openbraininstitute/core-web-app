@@ -8,6 +8,7 @@ import {
   TYPE_SHIFT,
 } from '@/features/circuit-viewer/morphologies/engine/impostors';
 import {
+  type ArenaArrays,
   BLOCK,
   roomFor,
   SegmentArena,
@@ -28,25 +29,57 @@ function segmentsOf(box: number, count: number): MorphologySegments {
   };
 }
 
-/** An arena of `capacity` segments, with room for `base`, its arrays and what it told its uploads. */
+/**
+ * An arena of `capacity` segments, with room for `base`; its words and blocks; what it told its uploads (`told`), and
+ * the ends it handed them (`handed`, a start and a count); and every slot's ends: the base's as handed over, then the
+ * arena's own.
+ */
 function arenaOf(capacity: number, base?: number[]) {
   const told: [number, number, boolean][] = [];
+  const handed: [number, number][] = [];
   const dispose = vi.fn();
-  let arrays: { ends: Float32Array; words: Uint32Array; blocks: Float32Array } = {
+  let arrays: ArenaArrays = {
     ends: new Float32Array(),
+    endsFrom: 0,
     words: new Uint32Array(),
     blocks: new Float32Array(),
   };
+  let baseEnds = new Float32Array();
   const arena = new SegmentArena(
     new THREE.InstancedBufferGeometry(),
     capacity,
-    (ends, words, blocks) => {
-      arrays = { ends, words, blocks };
-      return { upload: (...range) => told.push(range), dispose };
+    (given) => {
+      arrays = given;
+      baseEnds = new Float32Array(8 * given.endsFrom);
+      return {
+        upload: (...range) => told.push(range),
+        putEnds: (start, ends) => {
+          baseEnds.set(ends, 8 * start);
+          handed.push([start, ends.length / 8]);
+        },
+        dispose,
+      };
     },
     base
   );
-  return { arena, ...arrays, blockWords: new Uint32Array(arrays.blocks.buffer), told, dispose };
+  const { words, blocks, endsFrom } = arrays;
+  return {
+    arena,
+    get ends() {
+      if (endsFrom === 0) return arrays.ends;
+      const all = new Float32Array(8 * words.length);
+      all.set(baseEnds);
+      all.set(arrays.ends, 8 * endsFrom);
+      return all;
+    },
+    own: arrays.ends,
+    words,
+    blocks,
+    blockWords: new Uint32Array(blocks.buffer),
+    told,
+    handed,
+    dispose,
+  };
 }
 
 type Made = ReturnType<typeof arenaOf>;
@@ -126,13 +159,14 @@ function expectBlocks({ arena, ends, words, blocks, blockWords }: Made) {
   }
 }
 
-/** The segments and blocks that differ from `before`, each within a range told, or past the end. */
-function expectUploaded({ arena, ends, words, blocks, told }: Made, before: Made) {
+/** The segments and blocks that differ from `before`, each within a range told or handed over, or past the end. */
+function expectUploaded({ arena, ends, words, blocks, told, handed }: Made, before: Made) {
   const end = arena.geometry.instanceCount;
   const toldOf = (i: number, ofEnds: boolean) =>
     told.some(
       ([start, count, wordsOnly]) => start <= i && i < start + count && !(ofEnds && wordsOnly)
-    );
+    ) ||
+    (ofEnds && handed.some(([start, count]) => start <= i && i < start + count));
   const untold: string[] = [];
   for (let i = 0; i < end; i++) {
     if (words[i] !== before.words[i] && !toldOf(i, false)) untold.push(`word ${i}`);
@@ -348,6 +382,23 @@ describe('SegmentArena', () => {
     expect(words.array[BLOCK] & CELL_MASK).toBe(2000);
   });
 
+  it("keeps a base's ends in three's attribute, which is drawn from", () => {
+    const arena = new SegmentArena(
+      new THREE.InstancedBufferGeometry(),
+      4 * BLOCK,
+      undefined,
+      [70, 3]
+    );
+    const ends = (arena.geometry.getAttribute('aA') as THREE.InterleavedBufferAttribute).data;
+    expect(ends.array.length).toBe(8 * 4 * BLOCK);
+    arena.putBase(1, segmentsOf(1, 3));
+
+    expect(ends.updateRanges).toEqual([{ start: 8 * 2 * BLOCK, count: 8 * 3 }]);
+    expect(Array.from(ends.array.subarray(8 * 2 * BLOCK, 8 * (2 * BLOCK + 3)))).toEqual(
+      Array.from(segmentsOf(1, 3).segments)
+    );
+  });
+
   it('refuses a box that does not fit', () => {
     const { arena } = arenaOf(BLOCK);
     arena.replace(1, segmentsOf(1, 3));
@@ -368,7 +419,7 @@ describe('SegmentArena', () => {
       const base = Array.from({ length: 60 }, () => 1 + Math.floor(random() * 100));
       const baseRoom = base.reduce((room, n) => room + roomFor(n), 0);
       const made = withBase ? arenaOf(5000 + baseRoom, base) : arenaOf(5000);
-      const { arena, told } = made;
+      const { arena, told, handed } = made;
       const put = new Map<number, number>();
       const based = new Map<number, number>();
       const drawn = () => new Map([...based, ...put]);
@@ -376,6 +427,7 @@ describe('SegmentArena', () => {
         const box = Math.floor(random() * 60);
         const before = copyOf(made);
         told.length = 0;
+        handed.length = 0;
         if (withBase && !arena.hasBase(box) && random() < 0.5) {
           arena.putBase(box, segmentsOf(box, base[box]));
           based.set(box, base[box]);
@@ -410,9 +462,11 @@ describe('SegmentArena', () => {
   describe('with a base', () => {
     it('keeps room for each box at its start, in the order of the boxes, holes until its base is put', () => {
       const made = arenaOf(10 * BLOCK, [3, 70, 0, 5]);
-      const { arena, words, told } = made;
+      const { arena, own, words, told, handed } = made;
       expect(arena.keepsBase).toBe(true);
       expect(arena.baseRoom).toBe(4 * BLOCK);
+      // Its own ends are those above the base.
+      expect(own.length).toBe(8 * 6 * BLOCK);
       expect(told).toEqual([[0, 4 * BLOCK, true]]);
       expect(arena.geometry.instanceCount).toBe(4 * BLOCK);
       expect(arena.free).toBe(6 * BLOCK);
@@ -420,11 +474,14 @@ describe('SegmentArena', () => {
       expect([0, 1, 2, 3].map((box) => arena.hasBase(box))).toEqual([false, false, true, false]);
 
       told.length = 0;
+      // The base's ends are handed over, not kept: only its words and blocks are the arena's to upload.
       expect(arena.putBase(1, segmentsOf(1, 70))).toBe(70);
-      expect(told).toEqual([[BLOCK, 70, false]]);
+      expect(handed).toEqual([[BLOCK, 70]]);
+      expect(told).toEqual([[BLOCK, 70, true]]);
       // Box 2's base has no segments.
       arena.replace(2, segmentsOf(2, 10));
       expect(told.at(-1)).toEqual([4 * BLOCK, BLOCK, false]);
+      expect(Array.from(own.subarray(0, 8))).toEqual(Array.from(segmentsOf(2, 1).segments));
       expectDrawn(
         made,
         new Map([
@@ -438,10 +495,11 @@ describe('SegmentArena', () => {
 
     it('hides the base of a box put, its blocks emptied, and draws it again once the box is let go of', () => {
       const made = arenaOf(10 * BLOCK, [3, 70]);
-      const { arena, told } = made;
+      const { arena, told, handed } = made;
       arena.putBase(0, segmentsOf(0, 3));
       arena.putBase(1, segmentsOf(1, 70));
       told.length = 0;
+      handed.length = 0;
 
       // Its room, and its base's words.
       expect(arena.replace(1, segmentsOf(1, 10))).toBe(BLOCK + Math.ceil((4 * 70) / 36));
@@ -457,6 +515,8 @@ describe('SegmentArena', () => {
       // The box was the last: its words are past the end once it goes.
       expect(arena.remove(1)).toBe(Math.ceil((4 * 70) / 36));
       expect(told).toEqual([[BLOCK, 70, true]]);
+      // Its ends were handed over once, and its blocks are put back with none of them.
+      expect(handed).toEqual([]);
       expect(arena.geometry.instanceCount).toBe(3 * BLOCK);
       expectDrawn(
         made,

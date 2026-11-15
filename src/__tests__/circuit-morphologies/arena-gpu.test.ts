@@ -2,7 +2,11 @@
 import * as THREE from 'three';
 import { describe, expect, it, vi } from 'vitest';
 
-import { BLOCK, SegmentArena } from '@/features/circuit-viewer/morphologies/engine/segment-arena';
+import {
+  type ArenaArrays,
+  BLOCK,
+  SegmentArena,
+} from '@/features/circuit-viewer/morphologies/engine/segment-arena';
 import {
   type ArenaBuffers,
   arenaOnGpu,
@@ -40,8 +44,8 @@ function fakeDevice(outOfMemory = false) {
         buffer: Bytes,
         offset: number,
         data: Float32Array | Uint32Array,
-        start: number,
-        count: number
+        start = 0,
+        count = data.length - start
       ) => {
         const per = data.BYTES_PER_ELEMENT;
         buffer.bytes.set(
@@ -73,27 +77,29 @@ function segmentsOf(box: number, count: number): MorphologySegments {
 }
 
 /**
- * An arena on the fake device, its own arrays, the buffers it handed the culling, and how often it told of a device out
- * of memory.
+ * An arena on the fake device, with room for `base`, its own arrays, the buffers it handed the culling, and how often
+ * it told of a device out of memory.
  */
-function arenaOnFake(capacity: number, outOfMemory = false) {
+function arenaOnFake(capacity: number, outOfMemory = false, base?: number[]) {
   const { device, made } = fakeDevice(outOfMemory);
   const { renderer, get } = fakeRenderer();
   const storage = arenaStorage();
   const told: (ArenaBuffers | null)[] = [];
   const memory = vi.fn();
-  let arrays: { ends: Float32Array; words: Uint32Array; blocks: Float32Array } = {
+  let arrays: ArenaArrays = {
     ends: new Float32Array(),
+    endsFrom: 0,
     words: new Uint32Array(),
     blocks: new Float32Array(),
   };
   const arena = new SegmentArena(
     new THREE.InstancedBufferGeometry(),
     capacity,
-    (ends, words, blocks) => {
-      arrays = { ends, words, blocks };
+    (given) => {
+      arrays = given;
       return arenaOnGpu(renderer, device, storage, arrays, (buffers) => told.push(buffers), memory);
-    }
+    },
+    base
   );
   const bytesOf = (label: string) => (made.find((b) => b.label === label) as Bytes).bytes;
   return { arena, arrays, storage, told, made, bytesOf, memory, backendOf: get };
@@ -174,6 +180,44 @@ describe("an arena on the page's GPU buffers", () => {
     expectSame();
     arena.remove(4);
     arena.remove(2);
+    expectSame();
+  });
+
+  it("writes a base's ends as they are handed over, keeping none, and its own ends above the base", () => {
+    const { arena, arrays, bytesOf } = arenaOnFake(8 * BLOCK, false, [70, 3]);
+    const ends = bytesOf('arena ends');
+    expect(ends.length).toBe(32 * 8 * BLOCK);
+    expect(arrays.endsFrom).toBe(3 * BLOCK);
+    expect(arrays.ends.length).toBe(8 * 5 * BLOCK);
+    const bases = [segmentsOf(0, 70), segmentsOf(1, 3)];
+    const expectSame = () => {
+      expect(ends.subarray(0, 32 * 70)).toEqual(asBytes(bases[0].segments, 8 * 70));
+      expect(ends.subarray(32 * 2 * BLOCK, 32 * (2 * BLOCK + 3))).toEqual(
+        asBytes(bases[1].segments, 8 * 3)
+      );
+      const own = arena.geometry.instanceCount - 3 * BLOCK;
+      expect(ends.subarray(32 * 3 * BLOCK, 32 * (3 * BLOCK + own))).toEqual(
+        asBytes(arrays.ends, 8 * own)
+      );
+      const end = arena.geometry.instanceCount;
+      expect(bytesOf('arena words').subarray(0, 4 * end)).toEqual(asBytes(arrays.words, end));
+      expect(bytesOf('arena blocks').subarray(0, (32 * end) / BLOCK)).toEqual(
+        asBytes(arrays.blocks, (8 * end) / BLOCK)
+      );
+    };
+    arena.putBase(0, bases[0]);
+    arena.putBase(1, bases[1]);
+    expectSame();
+    arena.replace(1, segmentsOf(1, 100));
+    arena.replace(0, segmentsOf(0, 10));
+    expectSame();
+    arena.remove(1);
+    // Neither the hole nor the room at the end holds three blocks: the box above the base is moved down.
+    arena.replace(1, segmentsOf(1, 190));
+    expect(arena.geometry.instanceCount).toBe(7 * BLOCK);
+    expectSame();
+    arena.remove(0);
+    arena.remove(1);
     expectSame();
   });
 });
