@@ -158,19 +158,24 @@ function ExampleStrip({ shown, away, onPick }: { shown: number; away: number | n
   return (
     // room under the hexagons for their shadows, which a sideways scroll would otherwise cut into a grey band: on the
     // page's white, flush with the rest (the user asked)
-    <div className="no-scrollbar flex shrink-0 gap-2 overflow-x-auto bg-white px-4 pt-2 pb-4">
+    <div className="no-scrollbar flex shrink-0 overflow-x-auto bg-white px-4 pt-2 pb-4">
       {EXAMPLES.map((e, i) => (
+        // The one on show has no hexagon here, so none stands empty (the user asked, as on the desktop): its own folds
+        // away as it flies out, the others closing up, and opens again at its place as it flies back into it.
         <button
           key={e.key}
           type="button"
           title={e.label}
           aria-pressed={i === shown}
+          aria-hidden={i === shown || undefined}
+          tabIndex={i === shown ? -1 : undefined}
           onClick={() => onPick(i)}
           data-example={i}
-          className="w-[64px] shrink-0"
+          className="shrink-0 overflow-hidden transition-[width,margin,opacity] duration-[380ms] ease-out"
+          style={{ width: i === shown ? 0 : 64, marginRight: i === shown ? 0 : 8, opacity: i === shown ? 0 : 1 }}
         >
           {/* rising in one after another as the desktop's tiles do (the user asked) */}
-          <span className={cn(styles.appear, 'block')} style={{ '--appear-delay': `${150 + i * 80}ms` } as CSSProperties}>
+          <span className={cn(styles.appear, 'block w-[64px]')} style={{ '--appear-delay': `${150 + i * 80}ms` } as CSSProperties}>
             <Hex>
               {i !== shown && i !== away && (
                 <span className="absolute inset-[6%]" style={{ clipPath: HEX_CLIP }}>
@@ -393,7 +398,11 @@ export function HexHomeMobile({
   const pick = (i: number) => {
     if (flight || i === shown) return;
     const tileOf = (n: number) => strip.current?.querySelector<HTMLElement>(`[data-example="${n}"]`);
-    const [box, page, a, b] = [heroBox.current, stage.current, tileOf(i), tileOf(shown)];
+    // Its own place once the picked one's hexagon has folded away: the slot its index takes among the others, which
+    // some tile on show holds now.
+    const others = EXAMPLES.map((_, n) => n).filter((n) => n !== shown);
+    const slot = shown < i ? shown : shown - 1;
+    const [box, page, a, b] = [heroBox.current, stage.current, tileOf(i), tileOf(others[slot] ?? i)];
     if (!box || !page || !a || !b) {
       setShown(i);
       return;
