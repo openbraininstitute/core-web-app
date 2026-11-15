@@ -73,9 +73,10 @@ const MEAN_COVER = 1 / 1024;
 export const AO_COVER = 0.5;
 /**
  * The occlusion's wide term: the same occlusion at this share of the resolution, reaching a share of the view's height
- * (`WideOcclusion`), on the nearest surface of each block of the fine term's pixels. Where the fine term shades a soma
- * against its neighbours, this one shades the circuit's shape, and it multiplies the picture as it is, not relative to
- * its mean.
+ * (`WideOcclusion`), on the mean surface of each block of the fine term's pixels, taken as facing the eye. Where the
+ * fine term shades a soma against its neighbours, this one shades the circuit's shape, and it multiplies the picture as
+ * it is, not relative to its mean. Nothing in it is tied to the screen (`SurfaceGTAONode.steady`): tied so, the same
+ * surface got another shade a pixel on, and the term flickered as the view moved.
  */
 const WIDE_SCALE = 0.125;
 const WIDE_BLOCK = AO_SCALE / WIDE_SCALE;
@@ -148,6 +149,10 @@ export function meanSide(pixels: number): number {
   return 2 ** Math.ceil(Math.log2(Math.max(blocks, 1)));
 }
 
+/** What a steady occlusion turns its directions by and shifts its steps by, at every pixel (`SurfaceGTAONode`). */
+const STEADY_TURN = vec3(1, 0.3, 0);
+const STEADY_STEP = 0.5;
+
 /** The parts of three's `GTAONode` (r186) its setup reads, which are its own, not its interface. */
 interface GTAOParts {
   _noiseNode: TextureNode;
@@ -164,12 +169,18 @@ interface GTAOParts {
  * three's GTAO on depth and normals drawn at its own size. Its setup is three's but for two things: in an orthographic
  * view the way to the eye is +z everywhere, where three takes it as towards the camera's position; and a pixel's depth
  * is its own texel's, where three takes the nearest of four, which beside a fibre gave the background the fibre's
- * depth.
+ * depth. `steady`, every surface faces the eye, and every pixel looks along the same directions at the same steps,
+ * where three turns and shifts them by a noise fixed to the screen.
  */
 class SurfaceGTAONode extends GTAONode {
   private readonly orthographic: boolean;
 
-  constructor(depthNode: TextureNode, normalNode: TextureNode, camera: THREE.Camera) {
+  constructor(
+    depthNode: TextureNode,
+    normalNode: TextureNode,
+    camera: THREE.Camera,
+    private readonly steady = false
+  ) {
     super(depthNode, normalNode, camera);
     this.orthographic = (camera as THREE.OrthographicCamera).isOrthographicCamera === true;
     const missing = GTAO_PARTS.filter((part) => !(part in this));
@@ -203,15 +214,19 @@ class SurfaceGTAONode extends GTAONode {
       depth.greaterThanEqual(1.0).discard();
 
       const viewPosition = getViewPosition(uvNode, depth, unproject).toConst();
-      const viewNormal = normalNode.sample(uvNode).rgb.normalize().toConst();
       const radius = this.radius;
       const invRadius = radius.reciprocal().toConst();
       const viewDir = (orthographic ? vec3(0, 0, 1) : normalize(viewPosition.negate())).toConst();
+      const viewNormal = this.steady
+        ? viewDir
+        : normalNode.sample(uvNode).rgb.normalize().toConst();
       const clipPosition = project.mul(vec4(viewPosition, 1.0)).toConst();
 
       const noiseResolution = vec2(textureSize(own._noiseNode, int(0)) as unknown as Node<'ivec2'>);
       const noiseUv = vec2(uvNode.x, uvNode.y.oneMinus()).mul(own._resolution.div(noiseResolution));
-      const randomVec = own._noiseNode.sample(noiseUv).xyz.mul(2.0).sub(1.0);
+      const randomVec = this.steady
+        ? STEADY_TURN
+        : own._noiseNode.sample(noiseUv).xyz.mul(2.0).sub(1.0);
       const tangent = vec3(randomVec.xy, 0.0).normalize();
       const bitangent = vec3(tangent.y.mul(-1.0), tangent.x, 0.0);
       const kernelMatrix = mat3(tangent, bitangent, vec3(0.0, 0.0, 1.0));
@@ -222,9 +237,11 @@ class SurfaceGTAONode extends GTAONode {
       const invSteps = 1 / STEPS;
       const ao = float(0).toVar();
       const noiseJitterIdx = own._temporalDirection.mul(0.02);
-      const stepJitter = interleavedGradientNoise(screenCoordinate.add(own._temporalOffset)).add(
-        rand(uvNode.add(noiseJitterIdx).mul(2).sub(1))
-      );
+      const stepJitter = this.steady
+        ? float(STEADY_STEP)
+        : interleavedGradientNoise(screenCoordinate.add(own._temporalOffset)).add(
+            rand(uvNode.add(noiseJitterIdx).mul(2).sub(1))
+          );
 
       Loop({ start: int(0), end: int(DIRECTIONS), type: 'int', condition: '<' }, ({ i }) => {
         const angle = float(i).div(DIRECTIONS).mul(PI).add(own._temporalDirection).toConst();
@@ -318,9 +335,10 @@ function termOf(
   normals: TextureNode,
   camera: THREE.Camera,
   scale: number,
-  samples: number
+  samples: number,
+  steady = false
 ): Term {
-  const occlusion = new SurfaceGTAONode(depth, normals, camera);
+  const occlusion = new SurfaceGTAONode(depth, normals, camera, steady);
   occlusion.resolutionScale = scale;
   occlusion.samples.value = samples;
   occlusion.scale.value = 1.5;
@@ -467,38 +485,42 @@ export class Occlusion {
     const { depth, normals } = surfaces;
     this.fine = termOf(depth, normals, camera, AO_SCALE, AO_SAMPLES);
 
-    // xyz: the normal of the nearest of a block of those surfaces; w: its depth.
-    const hull = Fn(() => {
-      const last = ivec2(textureSize(depth, int(0)) as unknown as Node<'ivec2'>)
-        .sub(1)
-        .toConst();
-      const first = ivec2(screenCoordinate.xy).mul(WIDE_BLOCK).toConst();
-      const nearest = float(1).toVar();
-      const at = inside(first, last).toVar();
-      for (let i = 0; i < WIDE_BLOCK * WIDE_BLOCK; i++) {
-        const within = ivec2(i % WIDE_BLOCK, Math.floor(i / WIDE_BLOCK));
-        const p = inside(first.add(within), last).toConst();
-        const stored = depth.load(p).r.toConst();
-        If(stored.lessThan(nearest), () => {
-          nearest.assign(stored);
-          at.assign(p);
-        });
-      }
-      return vec4(normals.load(at).xyz, nearest);
-    })();
-    const hulls = surfacesPass(corners, camera, WIDE_SCALE, hull.xyz, hull.w, hull.w.lessThan(1));
-    this.wide = termOf(hulls.depth, hulls.normals, camera, WIDE_SCALE, WIDE_SAMPLES);
-    const wideSmoothed = rtt(this.wide.smooth, null, null, {
-      resolutionScale: WIDE_SCALE,
-      depthBuffer: false,
-    });
-
     // The camera's own: a pass that is not the scene's has another.
     const unproject = uniform(camera.projectionMatrixInverse);
     const awayAt = (stored: Node<'float'>) => {
       const view = unproject.mul(vec4(0, 0, stored, 1)).toConst();
       return view.z.div(view.w).negate();
     };
+    // The depth of a block of those surfaces, at the mean distance of its drawn pixels; 1 where none is drawn. The mean
+    // moves evenly as a soma comes into the block, where the nearest pixel's depth jumped.
+    const hull = Fn(() => {
+      const last = ivec2(textureSize(depth, int(0)) as unknown as Node<'ivec2'>)
+        .sub(1)
+        .toConst();
+      const first = ivec2(screenCoordinate.xy).mul(WIDE_BLOCK).toConst();
+      const away = float(0).toVar();
+      const drawn = float(0).toVar();
+      for (let i = 0; i < WIDE_BLOCK * WIDE_BLOCK; i++) {
+        const within = ivec2(i % WIDE_BLOCK, Math.floor(i / WIDE_BLOCK));
+        const stored = depth.load(inside(first.add(within), last)).r.toConst();
+        const is = float(stored.lessThan(1)).toConst();
+        away.addAssign(awayAt(stored).mul(is));
+        drawn.addAssign(is);
+      }
+      const clip = cameraProjectionMatrix
+        .mul(vec4(0, 0, away.div(max(drawn, 1)).negate(), 1))
+        .toConst();
+      return drawn.greaterThan(0).select(clip.z.div(clip.w), 1);
+    })();
+    // The normal the smoothing reads; the occlusion takes the way to the eye itself.
+    const facing = vec3(0, 0, 1);
+    const hulls = surfacesPass(corners, camera, WIDE_SCALE, facing, hull, hull.lessThan(1));
+    this.wide = termOf(hulls.depth, hulls.normals, camera, WIDE_SCALE, WIDE_SAMPLES, true);
+    const wideSmoothed = rtt(this.wide.smooth, null, null, {
+      resolutionScale: WIDE_SCALE,
+      depthBuffer: false,
+    });
+
     // r: the fine term; g: the wide one, spread to this pixel (`WIDE_EDGE`).
     const terms = Fn(() => {
       const stored = depth.load(ivec2(screenCoordinate.xy)).r.toConst();
