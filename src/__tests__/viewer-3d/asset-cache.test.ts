@@ -1,7 +1,12 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { type CacheBounds, readEntry, writeEntry } from '@/features/viewer-3d/load/asset-cache';
+import {
+  blobEntry,
+  type CacheBounds,
+  readEntry,
+  writeEntry,
+} from '@/features/viewer-3d/load/asset-cache';
 
 import { FakeCacheStorage } from './fake-caches';
 
@@ -29,6 +34,18 @@ describe('the bounded cache', () => {
     expect(await writeEntry(BOUNDS, key('a'), bytes(100).buffer, 100)).toBe(true);
     const read = await readEntry(BOUNDS, key('a'), 100);
     expect(new Uint8Array(read as ArrayBuffer)).toEqual(bytes(100));
+  });
+
+  it('gives what it stored back as a blob too, and deletes a short entry asked for as one', async () => {
+    await writeEntry(BOUNDS, key('a'), bytes(100).buffer, 100);
+    const blob = (await blobEntry(BOUNDS, key('a'), 100)) as Blob;
+    expect(new Uint8Array(await blob.slice(10, 30).arrayBuffer())).toEqual(bytes(20));
+
+    const cache = storage.bucket(BOUNDS.name);
+    const entry = cache.entries.get(key('a'));
+    if (entry) entry.body = entry.body.slice(0, 60);
+    expect(await blobEntry(BOUNDS, key('a'), 100)).toBeNull();
+    expect(cache.entries.has(key('a'))).toBe(false);
   });
 
   it('deletes a short entry, left by an interrupted write, when it is read', async () => {

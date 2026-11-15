@@ -18,7 +18,7 @@ sequenceDiagram
   Load->>W: open
   W->>Cache: the pack, by its SHA-256
   alt in the cache
-    Cache-->>W: the whole pack
+    Cache-->>W: its entry, read a block at a time
   else not there
     W->>Net: GET, streamed
     Net-->>W: bytes, as they come
@@ -29,7 +29,7 @@ sequenceDiagram
     Load->>W: read boxes
     W-->>Load: segments, in Morton order, handed over
   end
-  Note over W: the whole pack in: digest checked, kept in the cache
+  Note over W: the whole pack in: digest checked, kept in the cache, read from there
 ```
 
 ### How it works
@@ -47,6 +47,7 @@ sequenceDiagram
    - An entry of the wrong length, as an interrupted write leaves in Firefox, is deleted on the way out. So is one the reader refuses (`PackError`), and the pack is downloaded again.
    - The browser may still drop the bucket (Safari after a week without a visit): it is only a cache.
    - A pack from the cache tells no progress, and every box is readable at once.
+   - A pack in the cache is not read into memory. The worker takes its entry as a Blob (`blobEntry`) and reads each block from it as a box is asked for (`blobFile` in [pack-file.ts](pack-file.ts)). A downloaded pack is in memory until it is checked and kept, then read from its entry the same way, and the download's buffer is let go of once the reads under way are over. A pack that is not kept (over 1 GiB, a write that fails, no Cache Storage) stays in memory.
 5. **Open** (`openPack` in [pack.ts](pack.ts)). The header (magic `MPCK`, version 1), then the index, deflated JSON checked by a zod schema, then the somas, 16 bytes a cell. All of them are read as soon as their bytes are in.
    - The frame is centred on the box round the finest level and every soma placed. A soma without a finite position is NaN, and stays a soma the page places (`fillSomas` in [cells.ts](cells.ts)).
    - The population boxes, by section type, frame the view. They are used only where every population has them, as an index may leave them out.
@@ -91,6 +92,7 @@ pack.worker.ts        worker entry: the pack's API over Comlink
 worker-api.ts         open from the cache or the download, keep, read boxes
 download.ts           the pack streamed, resumed once where cut short
 arriving.ts           a buffer of the pack's size, filled as the bytes come, read as they are in
+pack-file.ts          what the reader reads from, a part at a time: that buffer, or a blob of the cache's entry
 pack.ts               the reader: header, index, somas, boxes, readableAt, a box read over its base
 cells.ts              the pack's cells numbered as the page numbers them
 morton.ts             a box's segments in Morton order
@@ -111,5 +113,8 @@ Tests: `src/__tests__/circuit-morphologies/`: `load.test.ts` (the load end to en
 
 - The pack is downloaded whole, even where the view will only ever want its coarsest level. A request for each chunk's bytes, by range, would download only what is drawn, at a round trip a box.
 - A download cut short twice is not kept, and Try again starts it over.
-- A pack larger than the cache's 1 GiB is downloaded again at every visit (its digest is still checked).
+- A pack larger than the cache's 1 GiB is downloaded again at every visit (its digest is still checked), and held in memory while it is open.
+- Reading the pack from the cache frees the worker's memory only where the browser keeps the cache on disk, which is measured in Chrome alone: 507 MB less for the Male CNS. In a private window the cache is in memory, and Firefox and Safari are not measured.
+- A block read from the cache takes longer than one read from memory. Over a load the reads take 7% longer in all for the Male CNS and 25% for a circuit of 4,902 neurons, whose blocks are many and small; no single ask takes longer, and the load takes as long to the half second the bench resolves.
+- If the browser clears the site's storage while a circuit is open, the boxes not yet read can no longer be read: what is drawn stays, and a reload downloads the pack again. An entry deleted or pruned through the cache itself stays readable (Chrome).
 - A morphology per cell is read one at a time, on the main thread: fine for the few cells of a pair or small circuit, not for more.

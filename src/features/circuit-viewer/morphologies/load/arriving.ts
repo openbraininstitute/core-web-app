@@ -1,9 +1,13 @@
+import { detach } from '@/utils/buffer';
+
+import type { PackFile } from './pack-file';
+
 /**
  * A file's bytes as they come in, in one buffer of the file's size where that is known. To read a part, wait until its
- * bytes are in (`until`), then take them (`bytes`). The buffer is replaced by a larger one when the file is longer than
- * said, so take a part again for each read and never keep it for a later one.
+ * bytes are in (`until`), then take them (`bytes`), or do both (`read`). The buffer is replaced by a larger one when
+ * the file is longer than said, so take a part again for each read and never keep it for a later one.
  */
-export class Arriving {
+export class Arriving implements PackFile {
   private buffer: Uint8Array;
   private received = 0;
   private ended = false;
@@ -36,6 +40,16 @@ export class Arriving {
   /** Bytes `start` to `end`, which must already be in. */
   bytes(start: number, end: number): Uint8Array {
     return this.buffer.subarray(start, end);
+  }
+
+  async read(start: number, end: number): Promise<Uint8Array | null> {
+    return (await this.until(end)) ? this.bytes(start, end) : null;
+  }
+
+  /** Lets go of the bytes at once. Nothing may read the file after, nor hold a part of it. */
+  release(): void {
+    detach(this.buffer.buffer);
+    this.buffer = new Uint8Array(0);
   }
 
   /** Whether the bytes up to `end` come in: true once they have, false where the file ends before them. */

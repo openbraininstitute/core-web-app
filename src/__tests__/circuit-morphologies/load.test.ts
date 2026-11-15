@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import * as Comlink from 'comlink';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { Arriving } from '@/features/circuit-viewer/morphologies/load/arriving';
 import {
   pageCells,
   renumberSegments,
@@ -324,6 +325,129 @@ describe('loadCircuitMorphologies', () => {
     expect(second).toEqual(await outcome(small(), true));
     expect(served.requests).toBe(1);
     expect(onProgress).not.toHaveBeenCalled();
+  });
+
+  describe('reads the pack from its entry in the cache', () => {
+    /** The parts of a blob asked for, as their lengths. */
+    const partsRead = () => {
+      const slice = vi.spyOn(Blob.prototype, 'slice');
+      return () => slice.mock.calls.map(([start = 0, end = 0]) => end - start);
+    };
+
+    it('a block at a time on a later visit, never whole', async () => {
+      serve(small());
+      await kept();
+      const parts = partsRead();
+      const second = await load();
+      for (const level of [0, 1, 2]) {
+        expect(await readLevel(second.data, level)).toEqual(await asRead(small(), level));
+      }
+
+      expect(parts().length).toBeGreaterThan(3);
+      expect(Math.max(...parts())).toBeLessThan(small().byteLength / 2);
+    });
+
+    it('once a downloaded pack is kept, letting go of the download', async () => {
+      serve(small());
+      const release = vi.spyOn(Arriving.prototype, 'release');
+      const first = await load();
+      // Asked for while the pack may still be coming in, and read through whichever holds it.
+      const coarsest = readLevel(first.data, 2);
+      await first.whole;
+      expect(release).toHaveBeenCalledOnce();
+      expect(await coarsest).toEqual(await asRead(small(), 2));
+
+      const parts = partsRead();
+      for (const level of [0, 1]) {
+        expect(await readLevel(first.data, level)).toEqual(await asRead(small(), level));
+      }
+      expect(parts().length).toBeGreaterThan(0);
+    });
+
+    it('letting go of the download only once the reads begun on it are over', async () => {
+      const bytes = small();
+      // The pack's last byte comes when the test says.
+      let finish = () => {};
+      const last = new Promise<void>((resolve) => {
+        finish = resolve;
+      });
+      vi.stubGlobal('fetch', async () => {
+        const body = new ReadableStream<Uint8Array>({
+          async start(controller) {
+            controller.enqueue(bytes.slice(0, -1));
+            await last;
+            controller.enqueue(bytes.slice(-1));
+            controller.close();
+          },
+        });
+        return new Response(body, { headers: { 'Content-Length': String(bytes.byteLength) } });
+      });
+      const release = vi.spyOn(Arriving.prototype, 'release');
+      // One read of the download is held with its bytes in hand, as a block being inflated is.
+      const read = Arriving.prototype.read;
+      let hold = false;
+      let letOn: (() => void) | null = null;
+      vi.spyOn(Arriving.prototype, 'read').mockImplementation(async function (
+        this: Arriving,
+        start: number,
+        end: number
+      ) {
+        const part = await read.call(this, start, end);
+        if (!hold) return part;
+        hold = false;
+        await new Promise<void>((resolve) => {
+          letOn = resolve;
+        });
+        return part;
+      });
+      const api = createPackApi(BOUNDS);
+      const opened = await api.open(requestOf(bytes), POPULATIONS, () => {});
+      const boxes = Array.from(opened.levels[2].segments, (_, box) => ({ level: 2, box }));
+      hold = true;
+      const coarsest = api.read(boxes);
+      await vi.waitFor(() => expect(letOn).not.toBeNull());
+
+      finish();
+      await vi.waitFor(() => expect(cached()?.body).toEqual(bytes));
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(release).not.toHaveBeenCalled();
+
+      (letOn as unknown as () => void)();
+      expect(joined(await coarsest)).toEqual(await asRead(bytes, 2));
+      await api.whole();
+      expect(release).toHaveBeenCalledOnce();
+      expect(joined(await api.read(boxes.map(({ box }) => ({ level: 0, box }))))).toEqual(
+        await asRead(bytes, 0)
+      );
+    });
+
+    it('not where the pack is not kept: the download stays', async () => {
+      serve(small());
+      BOUNDS.maxBytes = small().byteLength - 1;
+      const release = vi.spyOn(Arriving.prototype, 'release');
+      const parts = partsRead();
+      const first = await load();
+      await first.whole;
+
+      expect(await readLevel(first.data, 0)).toEqual(await asRead(small(), 0));
+      expect(release).not.toHaveBeenCalled();
+      expect(parts()).toEqual([]);
+    });
+
+    it('and fetches it again where the browser cannot read the entry', async () => {
+      const { served } = serve(small());
+      await kept();
+      vi.spyOn(Blob.prototype, 'arrayBuffer').mockRejectedValueOnce(
+        new DOMException('could not be read', 'NotReadableError')
+      );
+      const again = await load();
+
+      expect(again.fromCache).toBe(false);
+      expect(again.data).toEqual(await opened(small()));
+      await again.whole;
+      expect(served.requests).toBe(2);
+      expect(cached()?.body).toEqual(small());
+    });
   });
 
   it('keeps a pack by its digest, whatever its URL', async () => {
