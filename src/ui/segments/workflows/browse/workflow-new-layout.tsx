@@ -3,6 +3,7 @@
 import { motion } from 'motion/react';
 import { useParams } from 'next/navigation';
 
+import { useMediaQuery } from '@/hooks/use-media-query';
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
 import { TopBar } from '@/ui/molecules/top-bar';
 import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
@@ -28,10 +29,18 @@ export function WorkflowNewLayout({ children }: { children: ReactNode }) {
     setMdv(ev.detail.display);
   });
 
+  // On a phone a row's details take the page on their own, the table (and its footer) set aside until they are
+  // closed, rather than squeezed in beside it (the user asked).
+  const phone = useMediaQuery('(max-width: 767px)', false);
+  const alone = phone && !!mdv;
   const gridTemplate = {
-    gridTemplateColumns: mdv ? '3fr 2fr' : '1fr',
+    gridTemplateColumns: mdv && !phone ? '3fr 2fr' : '1fr',
     gridTemplateRows: '1fr auto',
-    gridTemplateAreas: mdv ? "'body mini-view' 'footer mini-view'" : "'body' 'footer'",
+    gridTemplateAreas: alone
+      ? "'mini-view' 'mini-view'"
+      : mdv
+        ? "'body mini-view' 'footer mini-view'"
+        : "'body' 'footer'",
   };
 
   return (
@@ -56,6 +65,12 @@ export function WorkflowNewLayout({ children }: { children: ReactNode }) {
           >
             {children}
           </motion.div>
+          {alone && (
+            <style>
+              {`#browse-workflow-new-inner-layout > [class*="grid-area:body"],
+                #browse-workflow-new-inner-layout > [class*="grid-area:footer"] { display: none; }`}
+            </style>
+          )}
         </div>
       </WorkflowBreadcrumbProvider>
     </div>
