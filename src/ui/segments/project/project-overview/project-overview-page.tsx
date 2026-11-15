@@ -2,8 +2,12 @@
 
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
+import { useState } from 'react';
 
+import { listProjectMembers } from '@/api/virtual-lab-svc/queries/member';
 import { getProject } from '@/api/virtual-lab-svc/queries/project';
+import { getProjectJobReports } from '@/services/virtual-lab/projects';
+import { categoryRenderFn, typeRenderFn } from '@/ui/segments/project/credits/job-report-list';
 import { config } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
@@ -12,7 +16,8 @@ import { cn } from '@/utils/css-class';
 /**
  * The project's own page, after the Figma "OBI Project Home (prototype branch)" (AI-Trial 253:1322): the project
  * on a blue card with its members, its discussion under it, and its credits and activity beside them. The name and
- * description are the project's; the members, messages, credits and activity are the design's placeholders. The
+ * description are the project's, and so is the activity (its job reports, as the credits page lists them); the
+ * members, messages and credits are the design's placeholders. The
  * card's picture is the design's own (public/images/thalamus-project-card.png, its black transparent).
  */
 
@@ -52,16 +57,6 @@ const MESSAGES = [
   },
 ];
 
-const ACTIVITY: Array<[string, string, string, string, number]> = [
-  ['Simulate', 'Small: Microcircuit (3–20 neurons)', 'James Isbister', '24 Jul 2026', 412],
-  ['Build', 'Single cell', 'James Isbister', '24 Jul 2026', 118],
-  ['Simulate', 'Single: Single neuron + extrinsic', 'Marcus Chen', '23 Jul 2026', 96],
-  ['Build', 'Ion channel', 'Elena Rossi', '23 Jul 2026', 254],
-  ['Notebook', 'Notebook', 'Priya Ananth', '22 Jul 2026', 12],
-  ['Build', 'Neuron morphology', 'Marcus Chen', '21 Jul 2026', 76],
-  ['Storage', 'Storage', '—', '21 Jul 2026', 8],
-  ['Simulate', 'Synaptome', 'Elena Rossi', '20 Jul 2026', 143],
-];
 /** The activity table's columns, as wide as the design's. */
 const COLUMNS = [
   { title: 'Activity', w: 110 },
@@ -212,7 +207,58 @@ function Balance({ base }: { base: string }) {
   );
 }
 
+/** How many of the project's activities a page of the table shows. */
+const ACTIVITY_PAGE_SIZE = 8;
+
+/** A report's date as the design writes them, "24 Jul 2026". */
+const shortDate = (iso: string) =>
+  new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+
+/** Credits to two places at most, without trailing zeros. */
+const credits = (amount: string) => {
+  const n = parseFloat(amount);
+  return Number.isNaN(n) ? amount : String(Number(n.toFixed(2)));
+};
+
+/**
+ * The project's activity: what its members ran and what each cost, the credits page's job reports (the user asked
+ * for the real table, as the old home's credits page shows it), in the design's table, a page at a time.
+ */
 function Activity() {
+  const { virtualLabId, projectId } = useWorkspace();
+  const [page, setPage] = useState(1);
+  const { data: reports, isLoading } = useQuery({
+    queryKey: keyBuilder.credits({ virtualLabId, projectId, page, pageSize: ACTIVITY_PAGE_SIZE }),
+    queryFn: () => getProjectJobReports({ virtualLabId, projectId, page, pageSize: ACTIVITY_PAGE_SIZE }),
+    enabled: Boolean(virtualLabId && projectId),
+    placeholderData: (previous) => previous,
+  });
+  const { data: members } = useQuery({
+    queryKey: keyBuilder.listProjectTeam({ virtualLabId, projectId }),
+    queryFn: () => listProjectMembers({ virtualLabId, projectId }),
+    enabled: Boolean(virtualLabId && projectId),
+  });
+  const nameOf = (userId: string) => {
+    const user = members?.data?.users?.find((u) => u.id === userId);
+    return user ? `${user.first_name} ${user.last_name}` : '—';
+  };
+  const items = reports?.data.items ?? [];
+  const total = reports?.data.meta.total_items ?? 0;
+  const pages = Math.max(1, Math.ceil(total / ACTIVITY_PAGE_SIZE));
+  const rows = items.map((r) => ({
+    key: r.job_id,
+    cells: [
+      categoryRenderFn(r.subtype),
+      typeRenderFn(r.subtype),
+      nameOf(r.user_id),
+      shortDate(r.started_at),
+      credits(r.amount),
+    ],
+  }));
+  // up to five pages about the one open
+  const first = Math.max(1, Math.min(page - 2, pages - 4));
+  const shownPages = Array.from({ length: Math.min(5, pages) }, (_, i) => first + i);
+  const empty = !isLoading && rows.length === 0;
   return (
     <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[12px] border border-[#f0f0f0] max-md:flex-none">
       {/* on a phone, each row a short card: what and where, who and when, its credits */}
@@ -220,9 +266,9 @@ function Activity() {
         Activity
       </h3>
       <div className="flex flex-col md:hidden">
-        {ACTIVITY.map(([activity, scale, user, date, credits]) => (
+        {rows.map(({ key, cells: [activity, scale, user, date, cost] }) => (
           <div
-            key={`${activity}${scale}${date}${user}`}
+            key={key}
             className="flex items-center justify-between gap-[12px] border-b border-[#f0f0f0] px-[16px] py-[10px]"
             style={{ color: NAVY }}
           >
@@ -234,7 +280,7 @@ function Activity() {
                 {user} · {date}
               </span>
             </span>
-            <span className="shrink-0 text-[13px] font-semibold">{credits}</span>
+            <span className="shrink-0 text-[13px] font-semibold">{cost}</span>
           </div>
         ))}
       </div>
@@ -246,35 +292,58 @@ function Activity() {
         ))}
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto max-md:hidden">
-        {ACTIVITY.map((row) => (
+        {isLoading &&
+          Array.from({ length: 5 }, (_, i) => (
+            // eslint-disable-next-line react/no-array-index-key -- placeholder rows
+            <div key={i} className="flex h-[40px] items-center border-b border-[#f0f0f0] px-[16px]">
+              <span className="h-[10px] w-3/4 animate-pulse rounded-full bg-[#f0f0f0]" />
+            </div>
+          ))}
+        {empty && <p className="px-[16px] py-[18px] text-[12.5px] text-[#8c8c8c]">No activity in this project yet.</p>}
+        {rows.map(({ key, cells }) => (
           <div
-            key={row.join()}
+            key={key}
             className="flex h-[40px] items-center border-b border-[#f0f0f0] px-[16px] text-[12.5px]"
             style={{ color: NAVY }}
           >
-            {row.map((cell, i) => (
-              <span key={COLUMNS[i].title} className="truncate" style={{ width: COLUMNS[i].w }}>
+            {cells.map((cell, i) => (
+              <span
+                key={COLUMNS[i].title}
+                title={cell}
+                className="truncate pr-[8px]"
+                style={{ width: COLUMNS[i].w, flexShrink: i === 1 ? 1 : 0, minWidth: 0 }}
+              >
                 {cell}
               </span>
             ))}
           </div>
         ))}
       </div>
-      <div className="flex h-[52px] shrink-0 items-center justify-center gap-[6px]">
-        {['‹', '1', '2', '3', '›'].map((p) => (
-          <button
-            key={p}
-            type="button"
-            className={cn(
-              'flex size-[28px] items-center justify-center rounded-full text-[12px]',
-              p === '1' ? 'text-white' : 'border border-[#d9d9d9] text-[#595959] hover:border-[#002766]'
-            )}
-            style={p === '1' ? { background: NAVY } : undefined}
-          >
-            {p}
-          </button>
-        ))}
-      </div>
+      {pages > 1 && (
+        <div className="flex h-[52px] shrink-0 items-center justify-center gap-[6px]">
+          {(['‹', ...shownPages, '›'] as const).map((p) => {
+            const to = p === '‹' ? page - 1 : p === '›' ? page + 1 : p;
+            const on = p === page;
+            const off = to < 1 || to > pages;
+            return (
+              <button
+                key={String(p)}
+                type="button"
+                disabled={off}
+                onClick={() => setPage(to)}
+                aria-current={on ? 'page' : undefined}
+                className={cn(
+                  'flex size-[28px] items-center justify-center rounded-full text-[12px] disabled:opacity-40',
+                  on ? 'text-white' : 'border border-[#d9d9d9] text-[#595959] hover:border-[#002766]'
+                )}
+                style={on ? { background: NAVY } : undefined}
+              >
+                {p}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }
@@ -291,7 +360,7 @@ export function ProjectOverviewPage() {
   const about = project?.description?.trim() || PLACEHOLDER_ABOUT;
 
   return (
-    // on a phone one column down the page, which scrolls: the card, the credits, the discussion, the activity
+    // on a phone one column down the page, which scrolls: the card, the credits, the activity, the discussion
     <div className="flex h-full min-h-[760px] w-full flex-col gap-[14px] bg-white px-[18px] pt-[16px] pb-[18px] max-md:h-auto max-md:min-h-0 max-md:gap-[12px] max-md:px-[12px] max-md:pt-[12px]">
       <h1 className="shrink-0 text-[20px] leading-[28px] max-md:text-[17px] max-md:leading-[23px]" style={{ color: NAVY }}>
         <span className="font-bold">Project Home:</span> {name}
@@ -299,7 +368,8 @@ export function ProjectOverviewPage() {
       <div className="grid min-h-0 flex-1 grid-cols-2 gap-[24px] max-md:flex max-md:flex-col max-md:gap-[12px]">
         <div className="flex min-h-0 flex-col gap-[16px] max-md:contents">
           <ProjectCard name={name} about={about} />
-          <div className="max-md:order-3 md:contents">
+          {/* on a phone after the activity (the user asked) */}
+          <div className="max-md:order-4 md:contents">
             <Discussion />
           </div>
         </div>
@@ -307,7 +377,7 @@ export function ProjectOverviewPage() {
           <div className="max-md:order-2 md:contents">
             <Balance base={base} />
           </div>
-          <div className="max-md:order-4 md:contents">
+          <div className="max-md:order-3 md:contents">
             <Activity />
           </div>
         </div>
