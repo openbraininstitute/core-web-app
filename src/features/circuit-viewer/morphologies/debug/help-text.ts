@@ -50,7 +50,7 @@ export const HELP = {
       "The occlusion's wide term, on WebGPU: it shades the circuit's shape, its lobes and clefts, where the fine " +
       'term shades a soma against its neighbours. Moving frames drawn without the occlusion have neither.',
     effects: [
-      ['Higher', 'Darker hollows.'],
+      ['Higher', 'Darker hollows and lighter open surfaces.'],
       ['Off', 'The fine term alone.'],
     ],
     applies: 'view',

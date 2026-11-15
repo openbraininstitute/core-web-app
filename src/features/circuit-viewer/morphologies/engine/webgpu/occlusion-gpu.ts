@@ -74,9 +74,9 @@ export const AO_COVER = 0.5;
 /**
  * The occlusion's wide term: the same occlusion at this share of the resolution, reaching a share of the view's height
  * (`WideOcclusion`), on the mean surface of each block of the fine term's pixels, taken as facing the eye. Where the
- * fine term shades a soma against its neighbours, this one shades the circuit's shape, and it multiplies the picture as
- * it is, not relative to its mean. Nothing in it is tied to the screen (`SurfaceGTAONode.steady`): tied so, the same
- * surface got another shade a pixel on, and the term flickered as the view moved.
+ * fine term shades a soma against its neighbours, this one shades the circuit's shape. Nothing in it is tied to the
+ * screen (`SurfaceGTAONode.steady`): tied so, the same surface got another shade a pixel on, and the term flickered as
+ * the view moved.
  */
 const WIDE_SCALE = 0.125;
 const WIDE_BLOCK = AO_SCALE / WIDE_SCALE;
@@ -392,10 +392,10 @@ function surfacesPass(
  * its surfaces' normals and depth beside the colour (`surfaceOf`). For each of the occlusion's pixels, the most covered
  * of the four pixels under it is picked; three's GTAO runs on those (`SurfaceGTAONode`) and is smoothed; and the
  * colour, multiplied by it, goes onto the canvas. The materials write their colours in sRGB, so the occlusion is raised
- * to the power 1 / 2.2, as if it darkened the light. It is then taken relative to its mean over the frame's covered
- * pixels: the crevices are darker and the open surfaces lighter (by `AO_LIGHTEN` at the most), and a frame with the
- * occlusion is as light as one without. Over that goes the wide term (`WIDE_SCALE`). Made for one camera, and to be
- * disposed of.
+ * to the power 1 / 2.2, as if it darkened the light, and multiplied by the wide term (`WIDE_SCALE`). The two are then
+ * taken relative to their mean over the frame's covered pixels: the crevices and hollows are darker and the open
+ * surfaces lighter (by `AO_LIGHTEN` at the most), and a frame with the occlusion is as light as one without. Made for
+ * one camera, and to be disposed of.
  *
  * Made with `glows`, the surfaces also write a byte of how lit each pixel is by a spike, the spiking cells glow
  * (`glowOver`), and `throughs` are drawn over the frame. This holds on a still frame and on a moving one
@@ -556,7 +556,10 @@ export class Occlusion {
       resolutionScale: AO_SCALE,
       depthBuffer: false,
     });
-    const multiplier = (at: Node<'vec2'>) => pow(smoothed.sample(at).r, 1 / 2.2);
+    const multiplier = (at: Node<'vec2'>) => {
+      const { r: fine, g: wide } = smoothed.sample(at);
+      return pow(fine, 1 / 2.2).mul(pow(max(wide, 1e-4), this.wideStrength.div(2.2)));
+    };
     // A pixel sums a block of the occlusion's. r: what the occlusion multiplies the picture by, times how much of the
     // picture under it is covered; g: that cover.
     const covered = Fn(() => {
@@ -580,10 +583,10 @@ export class Occlusion {
     const frame = this.sums.sample(vec2(0.5)).level(this.sumsLevel);
     const mean = mix(1, frame.r.div(max(frame.g, 1e-6)), min(frame.g.div(MEAN_COVER), 1));
     const relative = min(multiplier(uv()).div(mean), AO_LIGHTEN);
-    // Lightened, a colour stops where it fills what is covered of its pixel.
-    const most = max(picture.rgb, picture.a);
-    const shape = pow(max(smoothed.g, 1e-4), this.wideStrength.div(2.2));
-    const under = vec4(min(picture.rgb.mul(relative).mul(shape), most), picture.a);
+    // Lightened, a colour stops where its largest channel fills what is covered of its pixel, and so keeps its hue.
+    const top = max(max(picture.r, picture.g), picture.b);
+    const lift = min(relative, max(picture.a.div(max(top, 1e-6)), 1));
+    const under = vec4(picture.rgb.mul(lift), picture.a);
     this.pipeline = new THREE.RenderPipeline(renderer);
     this.passes = [
       scenePass,
