@@ -23,21 +23,25 @@ import type { IExample, IExampleVideo, IJourneyCard, IJourneyGroup } from '@/ui/
 import type { IHexBox, IPoint } from '@/ui/segments/project/hex-home/hex-geometry';
 import type { TCategoryKey } from './hex-home-shared';
 
-/** A box's width, for what has to be told its size in px (an example out of its tile). */
-function useWidth(ref: RefObject<HTMLDivElement | null>) {
-  const [width, setWidth] = useState(0);
+/** A box's width and height, kept up to date. */
+function useBox(ref: RefObject<HTMLDivElement | null>) {
+  const [box, setBox] = useState({ w: 0, h: 0 });
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const observer = new ResizeObserver(() => setWidth(el.clientWidth));
+    const observer = new ResizeObserver(() => setBox({ w: el.clientWidth, h: el.clientHeight }));
     observer.observe(el);
     return () => observer.disconnect();
   }, [ref]);
-  return width;
+  return box;
 }
 
-/** The one on show's width in a box `room` wide. */
-const heroWidth = (example: IExample, room: number) => Math.min(room, 360 * example.aspect);
+/**
+ * The one on show's width in a box `room` wide and `tall` high: as large as fits both (the user asked: on a phone its
+ * words and actions were cut off under it), at its top.
+ */
+const heroWidth = (example: IExample, room: number, tall = Infinity) =>
+  Math.max(0, Math.min(room, 360 * example.aspect, tall * example.aspect));
 /** How much of a strip tile its example fills (it sits inset 6% in its hexagon). */
 const IN_TILE = 0.88;
 
@@ -70,17 +74,17 @@ function Kicker({ children }: { children: ReactNode }) {
  * What the one on show is, and what to do with it: on a pick, the last one's words and buttons fade out and the new
  * one's in (the user asked).
  */
+/** What the one on show is: its name and two lines on it (no "Example" over them, the user asked). */
 function Words({ example, children }: { example: IExample; children?: ReactNode }) {
   const { said, fading } = useFadeSwap(example);
   const words = wordsFor(said);
   return (
     <div
-      className="flex flex-col gap-2 transition-opacity ease-in-out"
+      className="flex shrink-0 flex-col gap-1 transition-opacity ease-in-out"
       style={{ opacity: fading ? 0 : 1, transitionDuration: `${WORDS_FADE_MS}ms` }}
     >
-      <Kicker>{words.kicker}</Kicker>
-      <h2 className="text-[26px] leading-[31px] font-light text-[#13306f]">{words.name}</h2>
-      <p className="text-[15px] leading-[22px] text-neutral-600">{words.about}</p>
+      <h2 className="text-[21px] leading-[26px] font-light text-[#13306f]">{words.name}</h2>
+      <p className="line-clamp-2 text-[13.5px] leading-[19px] text-neutral-600">{words.about}</p>
       {children}
     </div>
   );
@@ -101,44 +105,46 @@ function Examples({
   heroBox: RefObject<HTMLDivElement | null>;
   landing: boolean;
 }) {
-  const width = useWidth(heroBox);
+  const box = useBox(heroBox);
   const example = EXAMPLES[shown];
-  const button =
-    'flex h-[44px] items-center justify-center rounded-full px-[18px] text-[14px] font-semibold transition-colors';
+  const width = heroWidth(example, box.w, box.h);
+  const pill =
+    'flex h-[34px] shrink-0 items-center justify-center rounded-full px-[13px] text-[12.5px] font-semibold shadow-[0_2px_8px_rgb(20_40_90/0.12)]';
+  // The model as large as the room over its words allows, its three actions floating over its foot, so the whole
+  // of it, words and all, fits over the examples' strip without a scroll (the user asked).
   return (
-    <div className="flex flex-col gap-5">
-      <div ref={heroBox} className="flex justify-center">
+    <div className="flex h-full min-h-0 flex-col gap-2">
+      <div ref={heroBox} className="flex min-h-0 flex-1 justify-center">
         {width > 0 && (
           <div
             key={example.key}
-            className={cn(!landing && styles.freeIn)}
+            className={cn('relative h-max', !landing && styles.freeIn)}
             style={landing ? { visibility: 'hidden' } : undefined}
           >
-            <FreeMedia example={example} width={heroWidth(example, width)} />
+            <FreeMedia example={example} width={width} />
+            <div className="absolute inset-x-0 bottom-1 flex justify-center gap-1.5">
+              <Link href={`${base}/workflows`} className={cn(pill, 'text-white')} style={{ background: GREEN }}>
+                Simulate
+              </Link>
+              <Link
+                href={`${base}/notebooks`}
+                className={cn(pill, 'border-[1.5px] bg-white/95 backdrop-blur-sm')}
+                style={{ borderColor: GREEN, color: GREEN }}
+              >
+                Analyse
+              </Link>
+              <Link
+                href={`${base}/data`}
+                className={cn(pill, 'border-[1.5px] bg-white/95 backdrop-blur-sm')}
+                style={{ borderColor: GREEN, color: GREEN }}
+              >
+                View in data
+              </Link>
+            </div>
           </div>
         )}
       </div>
-      <Words example={example}>
-        <div className="mt-2 flex flex-wrap gap-2">
-          <Link href={`${base}/workflows`} className={cn(button, 'text-white')} style={{ background: GREEN }}>
-            Simulate this model
-          </Link>
-          <Link
-            href={`${base}/notebooks`}
-            className={cn(button, 'border-2 bg-white')}
-            style={{ borderColor: GREEN, color: GREEN }}
-          >
-            Analyse in notebook
-          </Link>
-          <Link
-            href={`${base}/data`}
-            className={cn(button, 'border-2 bg-white')}
-            style={{ borderColor: GREEN, color: GREEN }}
-          >
-            View in data
-          </Link>
-        </div>
-      </Words>
+      <Words example={example} />
     </div>
   );
 }
@@ -400,7 +406,7 @@ export function HexHomeMobile({
       return { x: r.left + r.width / 2 - R.left, y: r.top + r.height / 2 - R.top, r: (IN_TILE * r.width) / SQRT3 };
     };
     const onShow = (e: IExample): IOnShow => {
-      const width = heroWidth(e, B.width);
+      const width = heroWidth(e, B.width, B.height);
       return {
         at: { x: B.left + B.width / 2 - R.left, y: B.top + width / e.aspect / 2 - R.top },
         width,
@@ -444,8 +450,9 @@ export function HexHomeMobile({
         ref={scroller}
         className={cn(
           styles.fadeIn,
-          'no-scrollbar min-h-0 flex-1 overflow-y-auto px-4 pt-4',
-          category === 'build' ? 'pb-3' : 'pb-6'
+          'no-scrollbar min-h-0 flex-1 overflow-y-auto px-4',
+          // the example higher up, its words just over the examples' strip (the user asked)
+          category === 'examples' ? 'pt-2 pb-2' : category === 'build' ? 'pt-4 pb-3' : 'pt-4 pb-6'
         )}
       >
         {category === 'examples' && (
