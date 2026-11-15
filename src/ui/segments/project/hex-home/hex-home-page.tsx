@@ -500,6 +500,9 @@ function ModelPanel({ example, base }: { example: IExample; base: string }) {
  * middle as the landing's chosen one does, beside what the model is and what to do with it. The videos, picked, line
  * up beside the column, with one playing to their right. The categories stay where they are throughout.
  */
+/** The home's design when the address names none: the rows with Platform as small squares (the user asked). */
+const DEFAULT_DESIGN = 'rows-small';
+
 /** The home's hidden settings: shown only while pointed at or focused. */
 const SETTING =
   'text-primary-9 border-neutral-2 cursor-pointer rounded-full border bg-white px-3 py-1 text-[12px] opacity-0 transition-opacity hover:opacity-100 focus:opacity-100';
@@ -540,7 +543,7 @@ export function HexHomePage() {
   const dynamic = params.get('motion') === 'dynamic';
   // the design, from the hidden menu at the top right (the user asked): the categories in rows by default (the user
   // asked), or these hexagons (`?home=hexagons`)
-  const design = params.get('home') ?? 'rows';
+  const design = params.get('home') ?? DEFAULT_DESIGN;
   const rows = design !== 'hexagons';
   const router = useRouter();
   const pathname = usePathname();
@@ -551,7 +554,7 @@ export function HexHomePage() {
     const query = next.toString();
     router.replace(`${pathname}${query ? `?${query}` : ''}`);
   };
-  const chooseDesign = (value: string) => setParam('home', value, 'rows');
+  const chooseDesign = (value: string) => setParam('home', value, DEFAULT_DESIGN);
   // how the rows' Platform cards look, from a second hidden menu beside it (the user asked)
   const cards = params.get('cards');
   const cardStyle: TCardStyle = PLATFORM_CARD_STYLES.some((c) => c.key === cards)
@@ -560,7 +563,8 @@ export function HexHomePage() {
   if (phone) return <HexHomeMobile groups={groups} videos={videos} base={base} />;
 
   return (
-    <div className={cn('relative h-full w-full bg-white', !dynamic && styles.fadeMotion)}>
+    // on the pages' own background, as the others are (the user asked: it was white)
+    <div className={cn('bg-background relative h-full w-full', !dynamic && styles.fadeMotion)}>
       {rows ? (
         <RowsHome
           groups={groups}
@@ -568,6 +572,17 @@ export function HexHomePage() {
           base={base}
           titled={design !== 'rows-bare'}
           cardStyle={cardStyle}
+          layout={
+            design === 'clusters'
+              ? 'clusters'
+              : design === 'rows-behind'
+                ? 'backdrop'
+                : design === 'rows-small'
+                  ? 'compact'
+                  : design === 'rows-featured'
+                    ? 'featured'
+                    : 'rows'
+          }
         />
       ) : (
         <FillFrame width={STAGE_W} minHeight={MIN_H}>
@@ -577,7 +592,7 @@ export function HexHomePage() {
       {/* invisible until the pointer is on them (or one has the keyboard's focus): the design, and beside it how the
           rows' Platform cards look */}
       <div className="absolute top-2 right-3 z-30 flex items-center gap-2">
-        {rows && (
+        {rows && design !== 'clusters' && (
           <select
             aria-label="Platform card style"
             value={cardStyle}
@@ -593,12 +608,22 @@ export function HexHomePage() {
         )}
         <select
           aria-label="Home design"
-          value={design === 'rows-bare' ? 'rows-bare' : rows ? 'rows' : 'hexagons'}
+          value={
+            ['rows-bare', 'rows-behind', 'rows-small', 'rows-featured', 'clusters'].includes(design)
+              ? design
+              : rows
+                ? 'rows'
+                : 'hexagons'
+          }
           onChange={(e) => chooseDesign(e.target.value)}
           className={SETTING}
         >
           <option value="rows">Rows</option>
           <option value="rows-bare">Rows, no headings</option>
+          <option value="rows-behind">Rows, examples behind</option>
+          <option value="rows-small">Rows, small Platform</option>
+          <option value="rows-featured">Rows, small Platform, Learn, Teach and AI larger</option>
+          <option value="clusters">Hexagon clusters</option>
           <option value="hexagons">Hexagons</option>
         </select>
       </div>

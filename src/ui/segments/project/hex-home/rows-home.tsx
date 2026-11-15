@@ -7,11 +7,12 @@ import { usePanelState } from '@/ui/segments/ai/hooks';
 import { PanelState } from '@/ui/segments/ai/types';
 import { VideoPlayer } from '@/ui/segments/project/get-started/elements/video-player';
 import { EXAMPLES, journeyHref } from '@/ui/segments/project/hex-home/content';
-import { HEX_CLIP, SQRT3 } from '@/ui/segments/project/hex-home/hex-geometry';
+import { driftOf, HEX_CLIP, SQRT3 } from '@/ui/segments/project/hex-home/hex-geometry';
 import { FreeMedia, MeltFlier, TileMedia } from '@/ui/segments/project/hex-home/landing-example';
 import { Hexagon } from '@/ui/segments/project/hex-home/hex-tile';
 import ObiLogo from '@/features/learn/components/ui/ObiLogo';
 import { AiSparkles } from '@/ui/segments/project/brains-walkthrough/agent-ready';
+import { useAssistantQuestion } from '@/ui/segments/project/get-started/sections/use-assistant-question';
 import { VideoCard } from '@/ui/segments/project/hex-home/video-card';
 import { cn } from '@/utils/css-class';
 
@@ -45,6 +46,9 @@ interface IFlight {
   to: IOnShow | null;
   outbound: { i: number; home: IOnShow } | null;
 }
+
+/** Shorter names for the clusters' hexagons, where the full one does not fit (it is still the hexagon's title). */
+const CLUSTER_NAMES: Record<string, string> = { 'AI, Plugins, MCP Server': 'AI & MCP' };
 
 /** The width of the examples' hexagons in their row (px). */
 // a little larger (the user asked)
@@ -248,6 +252,7 @@ function ScienceRowCard({
         onClick={onPick}
         aria-pressed={selected}
         title={`${card.label}: ${card.blurb}`}
+        data-place={index}
         className={box}
         style={{ background: bg }}
       >
@@ -295,6 +300,7 @@ function ScienceRowCard({
       onClick={onPick}
       aria-pressed={selected}
       title={`${card.label}: ${card.blurb}`}
+      data-place={index}
       className={box}
       style={frame}
     >
@@ -566,7 +572,9 @@ interface IRect {
 /** A video picked: its card, from where it is in its row, growing into the player on the right (`to`, once known). */
 interface IGrow {
   id: number;
-  video: IExampleVideo;
+  /** A video's card growing into the player, or a Platform card into its large card. */
+  video?: IExampleVideo;
+  place?: { card: IJourneyCard; index: number };
   from: IRect;
   to: IRect | null;
 }
@@ -582,15 +590,20 @@ function VideoGrow({
   from,
   target,
   video,
+  place,
   onDone,
 }: {
   from: IRect;
   /** Where the player is now, measured afresh each frame. */
   target: () => IRect | null;
-  video: IExampleVideo;
+  video?: IExampleVideo;
+  /** A Platform card instead (the user asked: they grow as the videos do), from its colours into the white card. */
+  place?: { card: IJourneyCard; index: number };
   onDone: () => void;
 }) {
   const card = useRef<HTMLDivElement>(null);
+  const face = useRef<HTMLDivElement>(null);
+  const radius = place ? [14, 20] : [8, 16];
   useEffect(() => {
     const el = card.current;
     if (!el) return;
@@ -606,7 +619,9 @@ function VideoGrow({
       el.style.top = `${at(from.y, last.y)}px`;
       el.style.width = `${at(from.w, last.w)}px`;
       el.style.height = `${at(from.h, last.h)}px`;
-      el.style.borderRadius = `${at(8, 16)}px`;
+      el.style.borderRadius = `${at(radius[0], radius[1])}px`;
+      // a Platform card's colours give way to the white card it becomes
+      if (face.current) face.current.style.opacity = `${1 - e}`;
       if (t < 1) frame = requestAnimationFrame(step);
       else onDone();
     };
@@ -617,12 +632,55 @@ function VideoGrow({
   return (
     <div
       ref={card}
-      className="absolute overflow-hidden rounded-[8px] shadow-[0_18px_50px_rgb(20_40_90_/_0.18)]"
-      style={{ left: from.x, top: from.y, width: from.w, height: from.h }}
+      className={cn('absolute overflow-hidden', video && 'shadow-[0_18px_50px_rgb(20_40_90_/_0.18)]')}
+      style={{ left: from.x, top: from.y, width: from.w, height: from.h, borderRadius: radius[0] }}
     >
-      <img src={video.poster} alt="" className="absolute inset-0 size-full object-cover" draggable={false} />
-      <div className="absolute inset-0 bg-linear-to-b from-[rgba(0,39,102,0.94)] to-[rgba(0,39,102,0.72)]" />
+      {video && (
+        <>
+          <img src={video.poster} alt="" className="absolute inset-0 size-full object-cover" draggable={false} />
+          <div className="absolute inset-0 bg-linear-to-b from-[rgba(0,39,102,0.94)] to-[rgba(0,39,102,0.72)]" />
+        </>
+      )}
+      {place && <PlaceGrowFaces card={place.card} index={place.index} face={face} />}
     </div>
+  );
+}
+
+/**
+ * What a Platform card looks like as it grows: the white bordered card it becomes, its first stage's screenshot at
+ * its top, under the small card's colours and picture (`face`), which fade as it goes.
+ */
+function PlaceGrowFaces({
+  card,
+  index,
+  face,
+}: {
+  card: IJourneyCard;
+  index: number;
+  face: RefObject<HTMLDivElement | null>;
+}) {
+  const { bg } = placeColours(index);
+  const pale = mix(bg, '#ffffff', 0.42);
+  const first = PLACE_DETAILS[card.icon]?.frames[0];
+  return (
+    <>
+      <div className="absolute inset-0 border border-[rgb(19_48_111/0.12)] bg-white p-[3%]" style={{ borderRadius: 'inherit' }}>
+        {first && (
+          <img src={first.src} alt="" className="h-[42%] w-full rounded-[10px] object-cover object-top" draggable={false} />
+        )}
+      </div>
+      <div ref={face} className="absolute inset-0" style={{ background: pale }}>
+        {card.img && (
+          <img
+            src={card.img}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover opacity-35 mix-blend-luminosity grayscale"
+            style={{ objectPosition: card.imgAt ?? 'center' }}
+            draggable={false}
+          />
+        )}
+      </div>
+    </>
   );
 }
 
@@ -672,6 +730,62 @@ function ScatteredHexes() {
   );
 }
 
+/** What the background design's example hexagons need from the home: the tiles' examples and what a click does. */
+interface IBackdrop {
+  slots: number[];
+  /** The tile the picked and shrinking examples trade through, gone while they fly. */
+  trading?: number;
+  onPick: (slot: number) => void;
+  strip: RefObject<HTMLDivElement | null>;
+}
+
+/**
+ * The examples as the small hexagons behind what is on show, exactly where the plain ones were and as many (the
+ * user asked: the rows' examples row moved here), each bobbing a little; a click flies it into the middle, as from
+ * the row. A video or a Platform card simply comes over them.
+ */
+function BackdropExamples({ backdrop }: { backdrop: IBackdrop }) {
+  const { slots, trading, onPick, strip } = backdrop;
+  return (
+    <div ref={strip} className="pointer-events-none absolute inset-0 overflow-hidden">
+      {slots.slice(0, SCATTER.length).map((i, slot) => {
+        const e = EXAMPLES[i];
+        const [x, y, w] = SCATTER[slot];
+        const place = { left: x, top: y, width: w, height: (2 * w) / SQRT3 };
+        return (
+          <button
+            // eslint-disable-next-line react/no-array-index-key -- a tile is its place round the edge
+            key={slot}
+            type="button"
+            title={e.label}
+            data-slot={slot}
+            onClick={() => onPick(slot)}
+            className="group pointer-events-auto absolute"
+            style={{
+              left: `${x}%`,
+              top: `${y}%`,
+              width: w,
+              height: place.height,
+              visibility: slot === trading ? 'hidden' : undefined,
+            }}
+          >
+            <Bob place={place}>
+              <span className="absolute inset-0 drop-shadow-[0_5px_9px_rgb(28_40_72/0.16)] transition-transform duration-200 group-hover:scale-105">
+                <span className="absolute inset-0 bg-white" style={{ clipPath: HEX_CLIP }}>
+                  <span className="absolute inset-[5%]" style={{ clipPath: HEX_CLIP }}>
+                    <TileMedia key={e.key} example={e} />
+                  </span>
+                </span>
+              </span>
+              <HexName>{e.label}</HexName>
+            </Bob>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 /** What is open on the right: the example picked, large, with what it is and what to do with it, or a video. */
 function Shown({
   shown,
@@ -680,6 +794,7 @@ function Shown({
   base,
   heroBox,
   landing,
+  backdrop,
 }: {
   shown: TShown;
   videos: IExampleVideo[];
@@ -689,15 +804,30 @@ function Shown({
   heroBox: RefObject<HTMLDivElement | null>;
   /** Flying there out of its tile: kept in its place unseen, its words only after it lands. */
   landing: boolean;
+  /** The examples round the edges instead of the plain hexagons (the background design). */
+  backdrop?: IBackdrop;
 }) {
   const [box, size] = useSize();
+  // first in each of the three, so it stays put from one to the next
+  const behind = backdrop ? <BackdropExamples backdrop={backdrop} /> : <ScatteredHexes />;
   const button =
     'flex h-[38px] items-center justify-center rounded-full px-[16px] text-[13px] font-semibold transition-colors';
   if (shown.kind === 'place') {
     const card = places[shown.i];
     return (
-      <div ref={box} className="flex h-full min-h-0 flex-col">
-        {card && <PlaceShown key={card.label} card={card} base={base} />}
+      <div ref={box} className="relative flex h-full min-h-0 flex-col">
+        {/* the examples stay behind, the card simply over them (the user asked) */}
+        {backdrop && behind}
+        {card && (
+          // measured for its card's growth here, unseen until it has grown into place
+          <div
+            ref={heroBox}
+            className="relative flex min-h-0 flex-1 flex-col"
+            style={landing ? { visibility: 'hidden' } : undefined}
+          >
+            <PlaceShown key={card.label} card={card} base={base} />
+          </div>
+        )}
       </div>
     );
   }
@@ -706,7 +836,7 @@ function Shown({
     return (
       <div ref={box} className="relative flex h-full min-h-0 flex-col justify-center gap-3">
         {/* the same hexagons behind it as behind an example (the user asked) */}
-        <ScatteredHexes />
+        {behind}
         {video && (
           <div key={video.key} className={cn(styles.fadeIn, 'relative flex flex-col gap-4')}>
             <div
@@ -743,11 +873,19 @@ function Shown({
   const width = Math.max(0, Math.min(size.w * 0.9, (size.h - 220) * example.aspect, 900));
   return (
     <div ref={box} className="relative flex h-full min-h-0 flex-col items-center justify-center gap-4">
-      <ScatteredHexes />
+      {behind}
       {/* over the hexagons but not cut off from them (no stacking context of its own, and a fade that does not
           linger): the example's white multiplied out, so they show through it as on the landing */}
       {width > 0 && (
-        <div key={example.key} className={cn(styles.freeIn, 'relative flex flex-col items-center gap-4')}>
+        <div
+          key={example.key}
+          className={cn(
+            styles.freeIn,
+            'relative flex flex-col items-center gap-4',
+            // the hexagons under its picture still clickable, its words and buttons too
+            backdrop && 'pointer-events-none [&_a]:pointer-events-auto [&_button]:pointer-events-auto'
+          )}
+        >
           {/* no fade of its own once landed: the flight ends with it just as it is here */}
           <div ref={heroBox} style={landing ? { visibility: 'hidden' } : undefined}>
             <FreeMedia example={example} width={width} />
@@ -786,6 +924,287 @@ function Shown({
 }
 
 /**
+ * Learn or Teach, larger and more obvious than the other places (the user asked): a shiny gradient as the project
+ * page's card has (blue, or the same in green), its picture fading in from the right, a sheen across its top.
+ */
+function ShinyCard({
+  card,
+  index,
+  tone,
+  selected,
+  onPick,
+}: {
+  card: IJourneyCard;
+  index: number;
+  tone: 'green' | 'blue';
+  selected: boolean;
+  onPick: () => void;
+}) {
+  const fill =
+    tone === 'blue'
+      ? { from: '#0050b3', to: '#69c0ff', veil: '0 80 179' }
+      : { from: '#237804', to: '#95de64', veil: '35 120 4' };
+  return (
+    <button
+      type="button"
+      onClick={onPick}
+      aria-pressed={selected}
+      title={`${card.label}: ${card.blurb}`}
+      data-place={index}
+      className={cn(
+        'group relative block h-full w-full overflow-hidden rounded-[14px] text-left shadow-[0_8px_20px_-10px_rgb(0_39_102/0.45)] transition-transform duration-200 hover:-translate-y-0.5',
+        selected && 'ring-2 ring-white ring-offset-2 ring-offset-[#d6e4ff]'
+      )}
+      style={{ background: `linear-gradient(95deg, ${fill.from} 0%, ${fill.from} 19%, ${fill.to} 100%)` }}
+    >
+      {card.img && (
+        <img
+          src={card.img}
+          alt=""
+          className="absolute top-0 right-0 h-full w-[62%] object-cover opacity-70 mix-blend-luminosity"
+          style={{ objectPosition: card.imgAt ?? 'center' }}
+          draggable={false}
+        />
+      )}
+      <span
+        aria-hidden
+        className="absolute inset-0"
+        style={{
+          background: `linear-gradient(90deg, rgb(${fill.veil} / 0.98) 0%, rgb(${fill.veil} / 0.7) 50%, rgb(${fill.veil} / 0.1) 100%)`,
+        }}
+      />
+      {/* the sheen */}
+      <span
+        aria-hidden
+        className="absolute inset-0 opacity-80 transition-opacity duration-300 group-hover:opacity-100"
+        style={{ background: 'radial-gradient(120% 70% at 10% 0%, rgb(255 255 255 / 0.32), transparent 55%)' }}
+      />
+      <span className="absolute inset-x-0 bottom-0 flex flex-col gap-1 p-3.5">
+        <span className="text-[18px] leading-[21px] font-bold text-white">{card.label}</span>
+        <span className="line-clamp-2 text-[12px] leading-[15px] text-white/85">{card.blurb}</span>
+      </span>
+    </button>
+  );
+}
+
+/**
+ * The AI card with a place to ask straight away (the user asked): what it is over a prompt, which opens the
+ * assistant with the question sent, as the home's "Try in Assistant" does; the rest of the card shows it large.
+ */
+function AiPromptCard({
+  card,
+  index,
+  selected,
+  onPick,
+}: {
+  card: IJourneyCard;
+  index: number;
+  selected: boolean;
+  onPick: () => void;
+}) {
+  const { bg } = placeColours(index);
+  const pale = mix(bg, '#ffffff', 0.55);
+  const deep = mix(bg, '#14203f', 0.7);
+  const { sendQuestion } = useAssistantQuestion();
+  const [question, setQuestion] = useState('');
+  const ask = () => {
+    const q = question.trim();
+    if (!q) return;
+    sendQuestion(q);
+    setQuestion('');
+  };
+  return (
+    // a card to click, with a form in it: the click shows it large, the form's own clicks stay its own
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
+    <div
+      onClick={onPick}
+      title={`${card.label}: ${card.blurb}`}
+      data-place={index}
+      className={cn(
+        'group relative flex h-full w-full cursor-pointer flex-col justify-between overflow-hidden rounded-[14px] p-3 text-left',
+        selected ? 'shadow-[inset_0_0_0_2px_rgb(20_32_63/0.35)]' : ''
+      )}
+      style={{ background: pale }}
+    >
+      <span className="flex items-start justify-between gap-2">
+        <span className="min-w-0 text-[14px] leading-[17px] font-semibold" style={{ color: deep }}>
+          {card.label}
+        </span>
+        <span className="flex shrink-0 items-center gap-1.5 opacity-70" style={{ color: deep }}>
+          <AgentMarks className="h-[16px] gap-1.5" markClassName="h-full w-auto" />
+          <AiSparkles className="h-[18px] w-auto" />
+        </span>
+      </span>
+      <form
+        onClick={(e) => e.stopPropagation()}
+        onSubmit={(e) => {
+          e.preventDefault();
+          ask();
+        }}
+        className="flex items-center gap-1.5 rounded-full bg-white py-1 pr-1 pl-3.5 shadow-[0_2px_8px_-2px_rgb(20_32_63/0.18)]"
+      >
+        <input
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+          placeholder="Ask the assistant anything…"
+          aria-label="Ask the assistant"
+          className="min-w-0 flex-1 bg-transparent text-[13px] text-[#13306f] outline-none placeholder:text-neutral-400"
+        />
+        <button
+          type="submit"
+          aria-label="Ask"
+          disabled={!question.trim()}
+          className="flex size-[28px] shrink-0 items-center justify-center rounded-full text-white transition-opacity disabled:opacity-40"
+          style={{ background: deep }}
+        >
+          <svg viewBox="0 0 16 16" aria-hidden className="size-[14px]">
+            <path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      </form>
+    </div>
+  );
+}
+
+/** How far apart a cluster's hexagons are, past touching (a share of their size). */
+const CLUSTER_GAP = 0.1;
+/** The largest a cluster's hexagon may be (its circumradius, px). */
+const CLUSTER_MAX_R = 64;
+/** The largest a band's hexagon may be: larger than a cluster's, so fewer show and a video's title fits. */
+const BAND_MAX_R = 80;
+
+type THexPlace = { left: number; top: number; width: number; height: number };
+
+/**
+ * The `n` cells of a honeycomb nearest its middle, a little wider than tall (the left column's boxes are), for a
+ * hexagon of circumradius 1: the first in the middle, the rest round it.
+ */
+function clusterCells(n: number) {
+  const cells: Array<{ x: number; y: number; d: number }> = [];
+  const reach = Math.ceil(Math.sqrt(n)) + 2;
+  for (let q = -reach; q <= reach; q++)
+    for (let row = -reach; row <= reach; row++) {
+      const x = SQRT3 * (q + row / 2);
+      const y = 1.5 * row;
+      // a small tilt in the tie-break, so equal rings fill the same way each time
+      cells.push({ x, y, d: Math.hypot(x, y * 1.55) + 0.001 * (x + 2 * y) });
+    }
+  return cells.sort((a, b) => a.d - b.d).slice(0, n);
+}
+
+/**
+ * A hexagon's slow bob about its place, as the website home's field does (the user asked): `children` moved by the
+ * landing's drift, its amount and pace from where it is.
+ */
+function Bob({ place, children }: { place: THexPlace; children: ReactNode }) {
+  // a few px, as the field's tiles move
+  const wander = driftOf(place.left, place.top, place.height);
+  // rounded: the server's sines and the browser's differ in their last places, which React calls a mismatch
+  const round = (v: number) => Math.round(v * 100) / 100;
+  return (
+    <span
+      className={cn(styles.drift, 'absolute inset-0 block')}
+      style={
+        {
+          '--dx': `${round(wander.dx)}px`,
+          '--dy': `${round(wander.dy)}px`,
+          '--drift-duration': `${round(wander.duration)}s`,
+          '--drift-delay': `${round(wander.delay)}s`,
+        } as CSSProperties
+      }
+    >
+      {children}
+    </span>
+  );
+}
+
+/**
+ * A cluster of hexagons filling its box (as large as fit, up to CLUSTER_MAX_R), centred: `tile(i, place)` draws the
+ * i-th at its place (its box's left, top, width and height, px).
+ */
+function HexCluster({
+  n,
+  tile,
+  className,
+}: {
+  n: number;
+  tile: (i: number, place: THexPlace) => ReactNode;
+  className?: string;
+}) {
+  const [box, size] = useSize();
+  const cells = clusterCells(n);
+  const xs = cells.map((c) => c.x);
+  const ys = cells.map((c) => c.y);
+  const span = { x: Math.max(...xs) - Math.min(...xs), y: Math.max(...ys) - Math.min(...ys) };
+  const k = 1 + CLUSTER_GAP;
+  const r = Math.max(
+    0,
+    Math.min(CLUSTER_MAX_R, size.w / (span.x * k + SQRT3 + 0.3), size.h / (span.y * k + 2.3))
+  );
+  const mid = { x: (Math.max(...xs) + Math.min(...xs)) / 2, y: (Math.max(...ys) + Math.min(...ys)) / 2 };
+  return (
+    <div ref={box} className={cn('relative min-h-0 flex-1', className)}>
+      {r > 0 &&
+        cells.map((c, i) =>
+          tile(i, {
+            left: size.w / 2 + (c.x - mid.x) * r * k - (SQRT3 * r) / 2,
+            top: size.h / 2 + (c.y - mid.y) * r * k - r,
+            width: SQRT3 * r,
+            height: 2 * r,
+          })
+        )}
+    </div>
+  );
+}
+
+/**
+ * A band of hexagons two rows deep, interlocked, as tall as its box allows (up to BAND_MAX_R), running on to the
+ * right past it and swept through sideways (the user asked: fewer showing, the rest a scroll away), fading a little
+ * at the right edge as the rows do.
+ */
+function HexBand({ n, tile }: { n: number; tile: (i: number, place: THexPlace) => ReactNode }) {
+  const [box, size] = useSize();
+  // room round them for their bob and shadow
+  const pad = 8;
+  const k = 1 + CLUSTER_GAP;
+  const r = Math.max(0, Math.min(BAND_MAX_R, (size.h - 2 * pad) / (2 + 1.5 * k)));
+  const w = SQRT3 * r;
+  const step = w * k;
+  const cols = Math.ceil(n / 2);
+  const width = 2 * pad + (cols - 1) * step + step / 2 + w + 24;
+  return (
+    <div
+      ref={box}
+      className="no-scrollbar relative -mx-1 min-h-0 flex-1 overflow-x-auto overflow-y-hidden [mask-image:linear-gradient(to_right,#000_calc(100%-28px),rgb(0_0_0/0.3))]"
+    >
+      {r > 0 && (
+        <div className="relative h-full" style={{ width }}>
+          {Array.from({ length: n }, (_, i) => {
+            const row = i % 2;
+            const col = Math.floor(i / 2);
+            return tile(i, {
+              left: pad + col * step + (row ? step / 2 : 0),
+              top: pad + row * 1.5 * r * k,
+              width: w,
+              height: 2 * r,
+            });
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** A cluster hexagon's name, over its foot while pointed at. */
+function HexName({ children }: { children: ReactNode }) {
+  return (
+    <span className="text-primary-9 pointer-events-none absolute bottom-[12%] left-1/2 z-10 w-max max-w-[170px] -translate-x-1/2 rounded-full bg-white/95 px-2 py-0.5 text-center text-[11.5px] leading-[14px] font-semibold opacity-0 shadow-sm transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
+      {children}
+    </span>
+  );
+}
+
+/**
  * The home's second design (the user asked for it beside the hexagons, chosen with the home's hidden menu): the
  * categories' things each in a row of their own down the left, scrolling sideways (Examples, the videos, Do science
  * in two rows; The institute left out), Learn & teach one card along their foot; an example, a video or one of Do
@@ -797,10 +1216,16 @@ export function RowsHome({
   base,
   titled = true,
   cardStyle = DEFAULT_CARD_STYLE,
+  layout = 'rows',
 }: {
   groups: IJourneyGroup[];
   videos: IExampleVideo[];
   base: string;
+  /**
+   * The left as rows, as three clusters of hexagons (the menu's fourth design), or as rows with the examples round
+   * the right's edges instead of in a row (the fifth); the user asked for each.
+   */
+  layout?: 'rows' | 'clusters' | 'backdrop' | 'compact' | 'featured';
   /** Each row under its category's name; without, the rows alone (the menu's third design). */
   titled?: boolean;
   /** How Platform's cards look (the home's second hidden menu). */
@@ -810,6 +1235,8 @@ export function RowsHome({
   // but that, the two trading places when one is picked, as on the desktop (the user asked: no empty or ringed tile).
   const [hero, setHero] = useState(0);
   const [slots, setSlots] = useState(() => EXAMPLES.map((_, i) => i).filter((i) => i !== 0));
+  // the small-Platform designs: the wordmark at the top, the videos at their own shape
+  const compact = layout === 'compact' || layout === 'featured';
   // a video or one of Do science's places on show instead of the example
   const [side, setSide] = useState<TShown | null>(null);
   const shown: TShown = side ?? { kind: 'example', i: hero };
@@ -913,24 +1340,199 @@ export function RowsHome({
     const to = el && rectOf(el);
     setGrow(to && to.w > 0 ? { ...grow, to } : null);
   }, [grow]);
+  // A Platform card clicked grows into its large card on the right, as a video into the player (the user asked).
   const pickPlace = (i: number) => {
-    setGrow(null);
+    if (side?.kind === 'place' && side.i === i) return;
     setFlight(null);
     setLanded({ inbound: true, outbound: true });
     setSide({ kind: 'place', i });
+    const el = stage.current?.querySelector<HTMLElement>(`[data-place="${i}"]`);
+    if (!el || !places[i]) return setGrow(null);
+    setGrow({ id: Date.now(), place: { card: places[i], index: i }, from: rectOf(el), to: null });
   };
   // the tile they trade through, gone until both are in (the flights draw them), as on the desktop
   const trading = flight && !(landed.inbound && landed.outbound) ? flight.slot : undefined;
 
   return (
     // the rows on the left, what is on show on the right (the sides switched were tried)
-    <div ref={stage} className="relative flex h-full w-full min-w-0 gap-8 bg-white px-6 pt-5 pb-4">
+    // its content's top and foot level with the assistant's panel beside it (the user asked them aligned)
+    <div ref={stage} className="bg-background relative flex h-full w-full min-w-0 gap-8 px-6 pt-[12px] pb-[8px]">
       {/* the rows fade out at their right edge (no box round them: the user tried one), scrolling with no bar */}
       {/* 45:55 whatever is on show (the user asked to try it; 40:60 while a video played before) */}
       <div className="flex w-[45%] min-w-0 shrink-0 flex-col">
-      {/* no scroll up and down (the user asked): Do science takes what the other rows leave; only a very short window
-          scrolls, rather than squeezing its cards to nothing */}
+      {layout === 'clusters' ? (
+        // three clusters of hexagons down the left, one each for the examples, the videos and Platform (the user
+        // asked); the examples and the videos in bands that sweep on to the right, every hexagon bobbing a little
+        <div className="flex min-h-0 flex-1 flex-col gap-3 pr-2">
+          <section aria-label="Examples" className="flex min-h-0 flex-1 flex-col gap-1">
+            {titled && <h2 className="text-primary-9 px-1 text-[13px] leading-[16px] font-bold tracking-[0.08em] uppercase">Examples</h2>}
+            <div ref={strip} className="flex min-h-0 flex-1 flex-col">
+              <HexBand
+                n={slots.length}
+                tile={(slot, place) => {
+                  const e = EXAMPLES[slots[slot]];
+                  return (
+                    <button
+                      // eslint-disable-next-line react/no-array-index-key -- a tile is its place in the band
+                      key={slot}
+                      type="button"
+                      title={e.label}
+                      data-slot={slot}
+                      onClick={() => pick(slot)}
+                      className="group absolute"
+                      style={{ ...place, visibility: slot === trading ? 'hidden' : undefined }}
+                    >
+                      <Bob place={place}>
+                        <span className="absolute inset-0 drop-shadow-[0_5px_9px_rgb(28_40_72/0.16)]">
+                          <span className="absolute inset-0 bg-white" style={{ clipPath: HEX_CLIP }}>
+                            <span className="absolute inset-[5%]" style={{ clipPath: HEX_CLIP }}>
+                              <TileMedia key={e.key} example={e} />
+                            </span>
+                          </span>
+                        </span>
+                        <HexName>{e.label}</HexName>
+                      </Bob>
+                    </button>
+                  );
+                }}
+              />
+            </div>
+          </section>
+          <section aria-label="Tutorial videos" className="flex min-h-0 flex-1 flex-col gap-1">
+            {titled && <h2 className="text-primary-9 px-1 text-[13px] leading-[16px] font-bold tracking-[0.08em] uppercase">Tutorial videos</h2>}
+            <HexBand
+              n={videos.length}
+              tile={(i, place) => {
+                const v = videos[i];
+                const on = shown.kind === 'video' && shown.i === i;
+                // its title in it, sized to it (the user asked: no white rim, titles shown, room for them)
+                const size = Math.max(10, Math.min(13, place.width * 0.1));
+                return (
+                  <button
+                    key={v.key}
+                    type="button"
+                    title={v.title}
+                    data-video={i}
+                    aria-pressed={on}
+                    onClick={() => pickVideo(i)}
+                    className="group absolute"
+                    style={place}
+                  >
+                    <Bob place={place}>
+                      <span className="absolute inset-0 drop-shadow-[0_6px_10px_rgb(28_40_72/0.22)]">
+                        <span className="absolute inset-0 overflow-hidden" style={{ clipPath: HEX_CLIP }}>
+                          <img src={v.poster} alt="" className="absolute inset-0 h-full w-full object-cover" draggable={false} />
+                          <span
+                            className={cn(
+                              'absolute inset-0 bg-linear-to-b transition-opacity duration-300 group-hover:opacity-80',
+                              on
+                                ? 'from-[rgba(9,88,217,0.88)] to-[rgba(9,88,217,0.7)]'
+                                : 'from-[rgba(0,39,102,0.9)] to-[rgba(0,39,102,0.72)]'
+                            )}
+                          />
+                          <span className="absolute inset-x-[13%] top-1/2 flex -translate-y-1/2 flex-col items-center gap-[6%] text-center">
+                            <svg viewBox="0 0 16 16" aria-hidden className="size-[18px] shrink-0 text-white/85">
+                              <path d="M5.5 3.8v8.4a.6.6 0 0 0 .92.5l6.5-4.2a.6.6 0 0 0 0-1L6.42 3.3a.6.6 0 0 0-.92.5Z" fill="currentColor" />
+                            </svg>
+                            <span
+                              className="line-clamp-3 font-semibold text-white"
+                              style={{ fontSize: size, lineHeight: `${Math.round(size * 1.2)}px` }}
+                            >
+                              {v.title}
+                            </span>
+                          </span>
+                        </span>
+                      </span>
+                    </Bob>
+                  </button>
+                );
+              }}
+            />
+          </section>
+          <section aria-label="Platform" className="flex min-h-0 flex-1 flex-col gap-1">
+            {titled && <h2 className="text-primary-9 px-1 text-[13px] leading-[16px] font-bold tracking-[0.08em] uppercase">Platform</h2>}
+            {/* the OBI wordmark on its own at the bottom left, solid (the user asked), Platform's places beside it */}
+            <div className="flex min-h-0 flex-1 gap-2">
+              <div className="flex w-[22%] shrink-0 items-end pb-2 pl-1">
+                <ObiLogo className="text-primary-9 h-auto w-full max-w-[120px]" />
+              </div>
+              <HexCluster
+                n={places.length}
+                tile={(at, place) => {
+                  const card = places[at];
+                  const on = shown.kind === 'place' && shown.i === at;
+                  const { bg } = placeColours(at);
+                  const pale = mix(bg, '#ffffff', 0.42);
+                  const deep = mix(bg, '#14203f', 0.68);
+                  // its name across its widest part, sized to it, so every one shows whole (the user asked)
+                  const size = Math.max(9, Math.min(12.5, place.width * 0.105));
+                  return (
+                    <button
+                      key={card.label}
+                      type="button"
+                      title={`${card.label}: ${card.blurb}`}
+                      aria-pressed={on}
+                      onClick={() => pickPlace(at)}
+                      data-place={at}
+                      className="group absolute"
+                      style={place}
+                    >
+                      <Bob place={place}>
+                        <span className="absolute inset-0 drop-shadow-[0_5px_9px_rgb(28_40_72/0.16)]">
+                          <span className="absolute inset-0 overflow-hidden" style={{ clipPath: HEX_CLIP, background: pale }}>
+                            {card.img ? (
+                              <img
+                                src={card.img}
+                                alt=""
+                                className={cn(
+                                  'absolute inset-0 h-full w-full object-cover mix-blend-luminosity grayscale transition-opacity duration-300 group-hover:opacity-70',
+                                  on ? 'opacity-70' : 'opacity-35'
+                                )}
+                                style={{ objectPosition: card.imgAt ?? 'center' }}
+                                draggable={false}
+                              />
+                            ) : (
+                              <span className="absolute inset-x-0 top-[16%] flex h-[14%] justify-center opacity-60" style={{ color: deep }}>
+                                <AgentMarks className="h-full gap-[8%]" markClassName="h-full w-auto" />
+                              </span>
+                            )}
+                            <span
+                              className="absolute inset-x-0 top-1/2 flex -translate-y-1/2 items-center justify-center px-[10%] py-[5%] text-center font-bold uppercase"
+                              style={{
+                                color: deep,
+                                fontSize: size,
+                                lineHeight: `${Math.round(size * 1.15)}px`,
+                                background: `${pale}d9`,
+                              }}
+                            >
+                              {CLUSTER_NAMES[card.label] ?? card.label}
+                            </span>
+                          </span>
+                        </span>
+                      </Bob>
+                    </button>
+                  );
+                }}
+              />
+            </div>
+          </section>
+        </div>
+      ) : (
+      // no scroll up and down (the user asked): Platform takes what the other rows leave; only a very short window
+      // scrolls, rather than squeezing its cards to nothing
       <div className="no-scrollbar flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-2">
+        {/* the OBI wordmark at the top left with what the platform is beside it (the small-Platform design) */}
+        {compact && (
+          <header className="flex shrink-0 items-center gap-5 px-1 pt-1">
+            <ObiLogo className="text-primary-9 h-[46px] w-auto shrink-0" />
+            <p className="m-0 max-w-[460px] text-[13.5px] leading-[20px] text-neutral-600">
+              The Open Brain Platform brings the brain’s data, models and simulations together in your browser. Explore
+              data from across species, build and simulate models from single neurons to whole brains, and analyse
+              what you find.
+            </p>
+          </header>
+        )}
+        {layout !== 'backdrop' && (
         <div ref={strip}>
         <Row title="Examples" titled={titled}>
           {slots.map((i, slot) => {
@@ -966,14 +1568,16 @@ export function RowsHome({
           })}
         </Row>
         </div>
+        )}
         {/* the videos after the examples, no row for The institute (the user asked) */}
-        <Row title="Tutorial videos" titled={titled} share={1}>
+        <Row title="Tutorial videos" titled={titled} share={compact ? undefined : 1}>
           {videos.map((v, i) => (
-            // as wide as a Platform card, and as tall: one share of the height to its three (the user asked)
+            // as wide as a Platform card, and as tall: one share of the height to its three (the user asked); with
+            // the small Platform squares, three across at the videos' own shape
             <div
               key={v.key}
               data-video={i}
-              className="h-full shrink-0"
+              className={cn('shrink-0', compact ? 'aspect-[3/2]' : 'h-full')}
               style={{ width: `calc((100% - ${2 * CARD_GAP}px) / 3)` }}
             >
               {/* what it is only while pointed at; its length always (the user asked) */}
@@ -991,6 +1595,80 @@ export function RowsHome({
         </Row>
         {/* Do science last, under the videos (above the examples was tried): three by three, Learn and Teach among
             them, the OBI wordmark in the bottom left corner (the user asked; top left was tried) */}
+        {layout === 'featured' ? (
+          // the five squares, then Learn and Teach half again as wide and the AI card with its prompt (the user asked)
+          <section aria-label="Platform" className="flex min-w-0 shrink-0 flex-col gap-[8px]">
+            {titled && (
+              <h2 className="text-primary-9 px-1 text-[13px] leading-[16px] font-bold tracking-[0.08em] uppercase">
+                Platform
+              </h2>
+            )}
+            {/* ten narrow columns: a square two, Learn and Teach three, the AI card four; its rows equal, as tall as a
+                square */}
+            <div className="grid auto-rows-fr grid-cols-10 gap-2.5 pt-[4px] pb-[4px]">
+              {places.slice(0, 5).map((card, i) => (
+                <div key={card.label} className="col-span-2 aspect-square">
+                  <ScienceRowCard
+                    card={card}
+                    index={i}
+                    selected={shown.kind === 'place' && shown.i === i}
+                    onPick={() => pickPlace(i)}
+                    look={cardStyle}
+                  />
+                </div>
+              ))}
+              {(['learning', 'teaching'] as const).map((icon) => {
+                const at = places.findIndex((c) => c.icon === icon);
+                return (
+                  <div key={icon} className="col-span-3">
+                    <ShinyCard
+                      card={places[at]}
+                      index={at}
+                      tone={icon === 'learning' ? 'green' : 'blue'}
+                      selected={shown.kind === 'place' && shown.i === at}
+                      onPick={() => pickPlace(at)}
+                    />
+                  </div>
+                );
+              })}
+              {(() => {
+                const at = places.findIndex((c) => c.action === 'ai');
+                return (
+                  <div className="col-span-4">
+                    <AiPromptCard
+                      card={places[at]}
+                      index={at}
+                      selected={shown.kind === 'place' && shown.i === at}
+                      onPick={() => pickPlace(at)}
+                    />
+                  </div>
+                );
+              })()}
+            </div>
+          </section>
+        ) : layout === 'compact' ? (
+          // much smaller: squares, five to a row (the user asked; six was tried), the OBI wordmark at the top instead
+          <section aria-label="Platform" className="flex min-w-0 shrink-0 flex-col gap-[8px]">
+            {titled && (
+              <h2 className="text-primary-9 px-1 text-[13px] leading-[16px] font-bold tracking-[0.08em] uppercase">
+                Platform
+              </h2>
+            )}
+            <div className="grid grid-cols-5 gap-2.5 pt-[4px] pb-[4px]">
+              {places.map((card, i) => (
+                <div key={card.label} className="aspect-square">
+                  <ScienceRowCard
+                    card={card}
+                    index={i}
+                    selected={shown.kind === 'place' && shown.i === i}
+                    onPick={() => pickPlace(i)}
+                    look={cardStyle}
+                  />
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : (
         <Row title="Platform" titled={titled} grid>
           {places.map((card, i) => {
             const tile = (
@@ -1006,7 +1684,9 @@ export function RowsHome({
             return i === places.length - 2 ? [<ObiCell key="obi" />, tile] : tile;
           })}
         </Row>
+        )}
       </div>
+      )}
       </div>
       <div className="min-h-0 min-w-0 flex-1">
         <Shown
@@ -1016,6 +1696,7 @@ export function RowsHome({
           base={base}
           heroBox={heroBox}
           landing={(!!flight && !landed.inbound) || !!grow}
+          backdrop={layout === 'backdrop' ? { slots, trading, onPick: pick, strip } : undefined}
         />
       </div>
       {grow?.to && (
@@ -1025,6 +1706,7 @@ export function RowsHome({
             from={grow.from}
             target={() => (heroBox.current ? rectOf(heroBox.current) : null)}
             video={grow.video}
+            place={grow.place}
             onDone={() => setGrow(null)}
           />
         </div>
