@@ -176,7 +176,9 @@ export default function AiAssistant({
               {onClose && (
                 <button
                   type="button"
-                  onClick={() => setConfirmCloseOpen(true)}
+                  // a phone's floating window just folds away (the user asked): asked only while a reply is still
+                  // being written, which closing would cut off
+                  onClick={() => (fill && status === 'ready' ? onClose?.() : setConfirmCloseOpen(true))}
                   className={classNames(styles.headerBtn, styles.collapseBtn)}
                   aria-label="Close"
                   title="Close"
