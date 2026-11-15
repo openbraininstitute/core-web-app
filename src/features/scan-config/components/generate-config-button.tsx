@@ -189,14 +189,15 @@ function CampaignInfoDialog({ onCancel, children }: { onCancel: () => void; chil
   return createPortal(
     <div
       role="presentation"
-      className="animate-in fade-in-0 fixed inset-0 z-[1000] flex items-center justify-center bg-[rgb(240_243_248/0.45)] p-4 backdrop-blur-md duration-200"
+      // on a phone near the top, clear of the keyboard that comes up under it (the user asked)
+      className="animate-in fade-in-0 fixed inset-0 z-[1000] flex items-center justify-center bg-[rgb(240_243_248/0.45)] p-4 backdrop-blur-md duration-200 max-md:items-start max-md:px-3 max-md:pt-[calc(env(safe-area-inset-top)+12px)]"
       onPointerDown={(e) => e.target === e.currentTarget && onCancel()}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Name your campaign"
-        className="animate-in zoom-in-95 fade-in-0 w-full max-w-[460px] rounded-3xl bg-white p-6 shadow-[0_24px_60px_-16px_rgb(0_39_102/0.35)] ring-1 ring-primary-9/5 duration-200"
+        className="animate-in zoom-in-95 fade-in-0 w-full max-w-[460px] rounded-3xl bg-white p-6 shadow-[0_24px_60px_-16px_rgb(0_39_102/0.35)] ring-1 ring-primary-9/5 duration-200 max-md:p-4"
       >
         {children}
       </div>
@@ -273,6 +274,10 @@ function CampaignInfoForm({
   const [description, setDescription] = useState(String(get(config, 'info.campaign_description') ?? ''));
   const [thinking, setThinking] = useState(false);
   const ready = !!name.trim() && !!description.trim();
+  // On a phone the keyboard waits for a tap, so the whole of it, and Suggest with AI, are seen first. Read from the
+  // window as it opens (only ever opened by a click): a media query hook would still say "wide" at the first render,
+  // when autofocus acts.
+  const phone = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
   const field =
     'w-full rounded-xl border border-neutral-3 bg-white px-3 py-2 text-sm text-primary-9 outline-none placeholder:text-neutral-4 focus:border-primary-7';
 
@@ -314,7 +319,7 @@ function CampaignInfoForm({
         <span className="text-primary-9 text-xs font-semibold">Campaign name</span>
         <input
           // eslint-disable-next-line jsx-a11y/no-autofocus
-          autoFocus
+          autoFocus={!phone}
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g. VPM replay into the barrel column"

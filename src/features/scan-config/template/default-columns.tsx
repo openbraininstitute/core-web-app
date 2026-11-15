@@ -530,7 +530,9 @@ function usePhoneTyping() {
   );
   const onFocus = (e: ReactFocusEvent<HTMLElement>) => {
     const field = e.target as HTMLElement;
-    if (!field.matches?.(TYPED_FIELD)) return;
+    // its own fields only: a dialog opened from it (the campaign's name) is portalled out of it, its focus still
+    // passing through here
+    if (!field.matches?.(TYPED_FIELD) || !e.currentTarget.contains(field)) return;
     if (leaving.current) window.clearTimeout(leaving.current);
     leaving.current = null;
     setOn(true);
@@ -545,7 +547,7 @@ function usePhoneTyping() {
     }, KEYBOARD_MS);
   };
   const onBlur = (e: ReactFocusEvent<HTMLElement>) => {
-    if (!(e.target as HTMLElement).matches?.(TYPED_FIELD)) return;
+    if (!(e.target as HTMLElement).matches?.(TYPED_FIELD) || !e.currentTarget.contains(e.target as Node)) return;
     if (leaving.current) window.clearTimeout(leaving.current);
     leaving.current = window.setTimeout(() => {
       leaving.current = null;
