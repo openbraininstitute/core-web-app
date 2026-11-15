@@ -208,15 +208,19 @@ export function GlossaryCard({
     'flex h-[34px] items-center gap-[6px] rounded-full border border-[#e8e8e8] px-[14px] text-[12px] font-semibold text-[#003a8c] hover:border-[#d9d9d9] hover:bg-[#f5f9ff]';
 
   return (
-    <section className={cn(className, 'pt-[12px] pr-[44px] pb-[34px] pl-[40px]')}>
+    <section className={cn(className, 'pt-[12px] pr-[44px] pb-[34px] pl-[40px] max-md:px-[20px]')}>
       <div className="flex max-w-[760px] flex-col gap-[22px]">
         {/* level with the middle of the category tiles, as a course's title is */}
         <header
           data-learn="head"
-          className="flex min-h-[86px] items-center justify-between gap-[20px]"
+          // on a phone the steps to the terms either side go under the name, not beside it, which ran past the card
+          className="flex min-h-[86px] items-center justify-between gap-[20px] max-md:min-h-0 max-md:flex-col max-md:items-start max-md:gap-[14px]"
         >
           <div className="flex flex-col gap-[7px]">
-            <h1 className="text-[31px] leading-[38px] font-bold text-[#002766]">{term.term}</h1>
+            {/* hyphenated where a long name would run past a phone's card (Afterhyperpolarisation) */}
+            <h1 lang="en" className="text-[31px] leading-[38px] font-bold text-[#002766] hyphens-auto max-md:text-[26px] max-md:leading-[32px]">
+              {term.term}
+            </h1>
             <p className="flex flex-wrap items-center gap-[8px] text-[12.5px] leading-[17px] text-[#8c8c8c]">
               <CategoryTag category={term.category} />
               {term.aka?.length ? <span>also {term.aka.join(' · ')}</span> : null}

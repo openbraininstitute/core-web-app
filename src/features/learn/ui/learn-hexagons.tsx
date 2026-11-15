@@ -295,7 +295,8 @@ export function LearnHexFoot({ section, onSelect, off = [], hidden = [], classNa
   const row = (
     <nav
       aria-label="Learn sections"
-      className="no-scrollbar fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 flex gap-2 overflow-x-auto bg-white px-4 pt-2 pb-3 shadow-[0_-4px_14px_rgb(20_40_90/0.06)] md:hidden"
+      // no strip of its own: the hexagons on the page's background (the user asked)
+      className="no-scrollbar fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 flex gap-2 overflow-x-auto px-4 pt-2 pb-3 md:hidden"
     >
       {sections.map(({ category, live }, i) => {
         const on = live && category.key === section;

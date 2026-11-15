@@ -75,7 +75,8 @@ export function TutorialsIndex({
         // the home's blue video cards, two to a row (the user asked), the one playing ringed
         <ul className="secondary-scrollbar -mr-[6px] grid min-h-0 grid-cols-2 content-start gap-[10px] overflow-y-auto pr-[6px] max-sm:grid-cols-1">
           {shown.map((t, i) => (
-            <li key={t.slug}>
+            // on a phone a tap opens its card in the list's place (learn-page.tsx)
+            <li key={t.slug} data-phone-opens>
               <VideoCard
                 video={{
                   key: t.slug,

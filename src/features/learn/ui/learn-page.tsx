@@ -71,7 +71,8 @@ import type { TTutorial } from '@/ui/segments/project/get-started/query';
  * section tiles and the list under them on the left, the card on the right, their edges where the
  * grey window's were. The page is exactly the workspace body's height, so the body does not scroll.
  */
-const BOX = 'mx-3 flex h-full min-h-0 flex-col pt-2 pb-2 max-lg:h-auto';
+// on a phone the page's height too, its lists scrolling in their boxes (the user asked); on a tablet it grows
+const BOX = 'mx-3 flex h-full min-h-0 flex-col pt-2 pb-2 md:max-lg:h-auto';
 /** TEMPORARY, the "Outer box" setting on: the grey window the boxes once sat in, Data's. */
 const OUTER_BOX = 'bg-background border-neutral-2 rounded-2xl border px-2';
 /**
@@ -404,6 +405,15 @@ export function LearnPage({
   // for all its words (the user asked), another shuts it. Wide, the card beside the list, as ever.
   const wide = useMediaQuery('(min-width: 1024px)', true);
   const [openCourse, setOpenCourse] = useState<string | null>(null);
+  // On a phone the list or the card, one at a time (the user asked the lists to fit the screen): an entry tapped
+  // opens its card in the list's place, with the way back to the list; another section starts on its list.
+  const phone = useMediaQuery('(max-width: 767px)', false);
+  const [phoneCard, setPhoneCard] = useState(false);
+  const pickSection = (next: (typeof LEARN_SECTIONS)[number]) => {
+    setPhoneCard(false);
+    void setSection(next);
+  };
+  const sectionLabel = CATEGORIES.find((c) => c.key === section)?.label ?? 'Learn';
   const own = `min(${LEFT.most}px, ${LEFT.share * 100}%)`;
   const listTrack =
     onCourses && wider !== null
@@ -547,13 +557,22 @@ export function LearnPage({
             : { '--learn-columns': columns }) as CSSProperties
         }
       >
-        <aside className="relative flex min-h-0 w-full min-w-0 flex-col gap-[8px]">
+        <aside
+          className={cn(
+            'relative flex min-h-0 w-full min-w-0 flex-col gap-[8px] max-md:flex-1',
+            phoneCard && 'max-md:hidden'
+          )}
+          onClickCapture={(e) => {
+            if (!phone || onCourses) return;
+            if ((e.target as Element).closest('[data-learn="row"], [data-phone-opens]')) setPhoneCard(true);
+          }}
+        >
           {/* on a phone along the foot instead, as the phone's home has its categories (the user asked) */}
           <LearnSectionHexes
             className="max-md:hidden"
             hidden={hidden}
             section={section}
-            onSelect={setSection}
+            onSelect={pickSection}
             off={[...(noCourses ? (['free'] as const) : [])]}
           />
 
@@ -873,7 +892,16 @@ export function LearnPage({
           {overviewOn && <div className="max-lg:hidden">{devSettings}</div>}
         </aside>
 
-        <div className={cn(PANEL_FRAME, onCourses && 'max-lg:hidden')}>
+        <div className={cn(PANEL_FRAME, onCourses && 'max-lg:hidden', !phoneCard && 'max-md:hidden')}>
+          {phoneCard && (
+            <button
+              type="button"
+              onClick={() => setPhoneCard(false)}
+              className="text-primary-9 mb-2 flex w-max shrink-0 items-center gap-1 px-1 text-[14px] font-semibold md:hidden"
+            >
+              ← {sectionLabel}
+            </button>
+          )}
           {onCourses && (
             // the grab bar between the courses and the card, in the gutter's middle: dragged
             // right, the list widens and the card narrows to its floor, then shuts into a bar,
@@ -978,7 +1006,7 @@ export function LearnPage({
       <LearnHexFoot
         hidden={hidden}
         section={section}
-        onSelect={setSection}
+        onSelect={pickSection}
         off={[...(noCourses ? (['free'] as const) : [])]}
       />
     </div>
