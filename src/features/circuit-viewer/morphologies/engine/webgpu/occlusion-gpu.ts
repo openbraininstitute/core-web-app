@@ -394,8 +394,8 @@ function surfacesPass(
  * colour, multiplied by it, goes onto the canvas. The materials write their colours in sRGB, so the occlusion is raised
  * to the power 1 / 2.2, as if it darkened the light, and multiplied by the wide term (`WIDE_SCALE`). The two are then
  * taken relative to their mean over the frame's covered pixels: the crevices and hollows are darker and the open
- * surfaces lighter (by `AO_LIGHTEN` at the most), and a frame with the occlusion is as light as one without. Made for
- * one camera, and to be disposed of.
+ * surfaces lighter (by `AO_LIGHTEN` at the most, and less the lighter the colour, which cannot pass white), and a
+ * frame with the occlusion is nearly as light as one without. Made for one camera, and to be disposed of.
  *
  * Made with `glows`, the surfaces also write a byte of how lit each pixel is by a spike, the spiking cells glow
  * (`glowOver`), and `throughs` are drawn over the frame. This holds on a still frame and on a moving one
@@ -583,9 +583,12 @@ export class Occlusion {
     const frame = this.sums.sample(vec2(0.5)).level(this.sumsLevel);
     const mean = mix(1, frame.r.div(max(frame.g, 1e-6)), min(frame.g.div(MEAN_COVER), 1));
     const relative = min(multiplier(uv()).div(mean), AO_LIGHTEN);
-    // Lightened, a colour stops where its largest channel fills what is covered of its pixel, and so keeps its hue.
+    // Lightened, a colour's largest channel goes towards filling what is covered of its pixel and cannot pass it: a
+    // light colour is lightened less, and keeps its shading and its hue.
     const top = max(max(picture.r, picture.g), picture.b);
-    const lift = min(relative, max(picture.a.div(max(top, 1e-6)), 1));
+    const full = min(top.div(max(picture.a, 1e-6)), 1).toConst();
+    const lightened = float(1).sub(pow(full.oneMinus(), relative)).div(max(full, 1e-6));
+    const lift = relative.lessThan(1).select(relative, lightened);
     const under = vec4(picture.rgb.mul(lift), picture.a);
     this.pipeline = new THREE.RenderPipeline(renderer);
     this.passes = [
