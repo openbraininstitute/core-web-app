@@ -64,7 +64,7 @@ On WebGPU with a base, a box in view may go finer than its base only while the c
 - **Reads.** One batch in flight, of at most 250,000 segments, from the pack's worker. The bases of the boxes in view first, then the finer levels wanted, nearest the focus first, then the other bases. A box that fails to read is left out, and not asked for again.
 - **Finer only at rest.** While the view moves, nothing finer is read, and with a base nothing at all: a turn draws what is there.
 - **Coarser at once.** A box wanted coarser goes back to its base, or out, with no read. A box wanted at the floor keeps what it has until its level is read.
-- **Placing** is paced to 4 MB of upload a turn of the loop, those that make room first, so that a frame stays short.
+- **Placing** is paced to 4 MB of upload a turn of the loop, those that make room first, so that a frame stays short. A box's arrays are detached once it is placed, or dropped unplaced, rather than left for the collector: after a whole load they were most of a gigabyte of the Male CNS's page.
 
 ### Seen boxes
 

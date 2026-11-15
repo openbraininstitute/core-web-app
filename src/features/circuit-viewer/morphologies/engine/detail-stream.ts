@@ -1,3 +1,4 @@
+import { detach } from '@/utils/buffer';
 import { logError } from '@/utils/logger';
 
 import { chooseDetail, type Detail, type DetailView } from './detail';
@@ -69,6 +70,14 @@ function mark(marks: Marks, boxes: readonly number[]): void {
   for (const box of boxes) marks.at[box] = read;
 }
 
+/**
+ * Lets go of a read box's arrays at once, where the browser can. Left to the collector, the boxes of a whole load
+ * stay in the page's memory for some seconds after they are placed.
+ */
+function letGoOf({ segments, segmentCells, segmentTypes }: MorphologySegments): void {
+  for (const { buffer } of [segments, segmentCells, segmentTypes]) detach(buffer);
+}
+
 function isAbort(e: unknown): boolean {
   return e instanceof DOMException && e.name === 'AbortError';
 }
@@ -111,7 +120,8 @@ function arenaPlan(
  * Streams a pack's boxes into an arena at the levels the view wants (`chooseDetail`). Boxes the view no longer wants
  * are let go of at once. The others are read from the pack a batch at a time, nearest the focus first, and swapped in
  * a box at a time as they come. A box goes finer only while the view is still, and coarser at once. Placing is paced
- * (`apply`), so that a frame uploads little.
+ * (`apply`), so that a frame uploads little. What a read hands over is the stream's alone, and it lets go of each
+ * box's arrays once the box is placed or no longer wanted (`letGoOf`).
  *
  * Where the arena keeps a base, every box's coarsest level is read and kept: first the bases of the boxes in view,
  * then the finer levels they want, then the other bases. A box then goes back to its base with no read, and the budget
@@ -444,6 +454,7 @@ export class DetailStream {
         break;
       }
       uploaded += arena.putBase(box, segments);
+      letGoOf(segments);
       // Those out of view are not tested, and stopping the marks for them would hold back the finer levels wanted.
       if (detail.order.subarray(0, detail.inView).includes(box)) this.occludersLost = true;
       if (arena.sizeOf(box) === undefined) drawn[box] = this.coarsest;
@@ -451,8 +462,9 @@ export class DetailStream {
       changed = true;
     }
     const arrived = [...this.ready]
-      .filter(([box, { level }]) => {
+      .filter(([box, { level, segments }]) => {
         if (level === wanted[box]) return true;
+        letGoOf(segments);
         this.ready.delete(box);
         return false;
       })
@@ -470,6 +482,7 @@ export class DetailStream {
         break;
       }
       uploaded += arena.replace(box, segments);
+      letGoOf(segments);
       this.boxMoved();
       drawn[box] = level;
       this.ready.delete(box);
@@ -487,6 +500,8 @@ export class DetailStream {
   stop(): void {
     this.stopped = true;
     this.unlisten?.();
+    for (const { segments } of this.ready.values()) letGoOf(segments);
+    for (const segments of this.bases.values()) letGoOf(segments);
     this.ready.clear();
     this.bases.clear();
     this.arena.dispose();
@@ -584,10 +599,18 @@ export class DetailStream {
     this.chunks.read(batch).then(
       (read) => {
         this.reading = false;
-        if (this.stopped) return;
+        if (this.stopped) {
+          read.forEach(letGoOf);
+          return;
+        }
         batch.forEach(({ level, box }, i) => {
-          if (this.isBase(level)) this.bases.set(box, read[i]);
-          else this.ready.set(box, { level, segments: read[i] });
+          if (this.isBase(level)) {
+            this.bases.set(box, read[i]);
+            return;
+          }
+          const stale = this.ready.get(box);
+          if (stale) letGoOf(stale.segments);
+          this.ready.set(box, { level, segments: read[i] });
         });
         this.onRead();
         this.read();
