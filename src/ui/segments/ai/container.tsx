@@ -89,11 +89,13 @@ export function Container() {
         isCollapsed
           ? 'bg-primary-9 border-primary-9 mr-3 shadow-md rounded-full! [transition:background-color_150ms_ease_200ms,border-color_150ms_ease_200ms]'
           : cn(
-              'text-primary-9 mr-3 outline outline-1 outline-[#ddd] [outline-offset:-1px] bg-white [transition:none]',
-              isFullscreen ? 'rounded-lg!' : 'rounded-2xl!'
+              // as the home's cards are (the user asked): white, a hairline round it, flat, its top 12px under the
+              // toolbar and its foot 15px over the window's edge, as the pages' own boxes sit
+              'text-primary-9 mt-[12px] mr-3 outline outline-1 outline-[rgb(19_48_111/0.12)] [outline-offset:-1px] bg-white [transition:none]',
+              isFullscreen ? 'rounded-lg!' : 'rounded-[20px]!'
             )
       )}
-      animate={{ width: targetWidth, height: 'calc(100vh - 6rem)' }}
+      animate={{ width: targetWidth, height: isCollapsed ? 'calc(100vh - 6rem)' : 'calc(100vh - 4rem - 27px)' }}
       initial={false}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
     >
@@ -118,6 +120,8 @@ export function Container() {
             <HydrateWrapper key="ai-assistant">
               <AiAssistant
                 section="explore"
+                // white, as the home is, not the old grey
+                className="[--color-background:#ffffff]!"
                 fullscreen={isFullscreen}
                 onFullscreenToggle={() =>
                   updateState(isFullscreen ? PanelState.Expanded : PanelState.Fullscreen)

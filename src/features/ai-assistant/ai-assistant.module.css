@@ -48,11 +48,12 @@
   display: grid;
   grid-template-rows: auto 1fr;
   gap: 0;
-  border: 1px solid #d9d9d9;
-  border-radius: 1em;
+  /* flat, with the home cards' hairline and corners (the user asked) */
+  border: 1px solid rgb(19 48 111 / 0.12);
+  border-radius: 20px;
   overflow: hidden;
   pointer-events: auto;
-  box-shadow: rgba(0, 0, 0, 0.12) 0px 6px 16px;
+  box-shadow: none;
 }
 
 .header {
@@ -62,9 +63,9 @@
   gap: 1rem;
   padding: 0.45rem 0.75rem 0.75rem;
   background: var(--color-neutral-9);
-  border-radius: 1em 1em 0 0;
-  border-bottom: 1px solid #d9d9d9;
-  box-shadow: 0 3px 6px rgba(200, 200, 200, 0.3);
+  border-radius: 20px 20px 0 0;
+  border-bottom: 1px solid rgb(19 48 111 / 0.08);
+  box-shadow: none;
   position: relative;
   z-index: 11;
   overflow: visible;

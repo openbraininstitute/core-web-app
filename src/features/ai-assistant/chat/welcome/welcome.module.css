@@ -11,9 +11,68 @@
   font-size: 120%;
   padding: 1.5em;
   background-color: #fff;
-  border: 1px solid color-mix(in srgb, var(--color-primary-9) 10%, #d9d9d9);
-  border-radius: 1em;
-  box-shadow: var(--shadow-lift);
+  /* flat, the home cards' hairline (the user asked) */
+  border: 1px solid rgb(19 48 111 / 0.12);
+  border-radius: 20px;
+  box-shadow: none;
+}
+
+/* a small honeycomb over the welcome, as the home's field: white hexagons, outlined, and the assistant's in navy */
+.hexes {
+  position: relative;
+  width: 150px;
+  height: 92px;
+  margin: 0 auto 0.6em;
+}
+
+.hex {
+  position: absolute;
+  width: 44px;
+  height: 50.8px;
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  background: rgb(19 48 111 / 0.14);
+  animation: bob 9s ease-in-out infinite;
+}
+
+.hex::after {
+  content: '';
+  position: absolute;
+  inset: 1.2px;
+  clip-path: inherit;
+  background: #fff;
+}
+
+.hex.on {
+  background: #002766;
+}
+
+.hex.on::after {
+  display: none;
+}
+
+.hex.on svg {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 22px;
+  height: 22px;
+  color: #fff;
+}
+
+@keyframes bob {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(1.5px, -2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hex {
+    animation: none;
+  }
 }
 
 .welcome > div > p {
