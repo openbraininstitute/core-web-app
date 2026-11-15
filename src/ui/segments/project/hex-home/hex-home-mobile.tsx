@@ -37,11 +37,11 @@ function useBox(ref: RefObject<HTMLDivElement | null>) {
 }
 
 /**
- * The one on show's width in a box `room` wide and `tall` high: as large as fits both (the user asked: on a phone its
- * words and actions were cut off under it), at its top.
+ * The one on show's width in a box `room` wide and `tall` high: as large as fits both, and no larger (the user
+ * asked: on a phone its words and actions were cut off under it, then on a taller one it left the room empty).
  */
-const heroWidth = (example: IExample, room: number, tall = Infinity) =>
-  Math.max(0, Math.min(room, 360 * example.aspect, tall * example.aspect));
+const heroWidth = (example: IExample, room: number, tall: number) =>
+  Math.max(0, Math.min(room, tall * example.aspect));
 /** How much of a strip tile its example fills (it sits inset 6% in its hexagon). */
 const IN_TILE = 0.88;
 
@@ -114,7 +114,8 @@ function Examples({
   // of it, words and all, fits over the examples' strip without a scroll (the user asked).
   return (
     <div className="flex h-full min-h-0 flex-col gap-2">
-      <div ref={heroBox} className="flex min-h-0 flex-1 justify-center">
+      {/* the model in the middle of the room over its words, filling its height or its width */}
+      <div ref={heroBox} className="flex min-h-0 flex-1 items-center justify-center">
         {width > 0 && (
           <div
             key={example.key}
@@ -408,7 +409,8 @@ export function HexHomeMobile({
     const onShow = (e: IExample): IOnShow => {
       const width = heroWidth(e, B.width, B.height);
       return {
-        at: { x: B.left + B.width / 2 - R.left, y: B.top + width / e.aspect / 2 - R.top },
+        // in the middle of its room, as Examples sets it
+        at: { x: B.left + B.width / 2 - R.left, y: B.top + B.height / 2 - R.top },
         width,
         // as on the desktop, its tile grows to about two thirds of its width as it melts
         heroR: (0.65 * width) / SQRT3,
