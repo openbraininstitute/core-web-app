@@ -74,6 +74,16 @@ function Kicker({ children }: { children: ReactNode }) {
  * What the one on show is, and what to do with it: on a pick, the last one's words and buttons fade out and the new
  * one's in (the user asked).
  */
+/**
+ * The example on show, its white taken out against the page. One that flew in shows just as the flight left it, with
+ * no fade; one there from the start fades in on the picture itself, so its white stays taken out as it does (a fade on
+ * anything round it would show the white as a box, the user saw it).
+ */
+function HeroMedia({ example, width, flewIn }: { example: IExample; width: number; flewIn: boolean }) {
+  const [flew] = useState(flewIn);
+  return <FreeMedia example={example} width={width} className={flew ? undefined : styles.enterFade} />;
+}
+
 /** What the one on show is: its name and two lines on it (no "Example" over them, the user asked). */
 function Words({ example, children }: { example: IExample; children?: ReactNode }) {
   const { said, fading } = useFadeSwap(example);
@@ -118,9 +128,9 @@ function Examples({
       <div ref={heroBox} className="flex min-h-0 flex-1 items-center justify-center">
         {width > 0 && (
           <div key={example.key} className="relative h-max">
-            {/* unseen while it flies in (the flight draws it), its fade once there */}
-            <div className={cn(!landing && styles.freeIn)} style={landing ? { visibility: 'hidden' } : undefined}>
-              <FreeMedia example={example} width={width} />
+            {/* unseen while it flies in (the flight draws it) */}
+            <div style={landing ? { visibility: 'hidden' } : undefined}>
+              <HeroMedia example={example} width={width} flewIn={landing} />
             </div>
             {/* its actions fading in as it flies, not after it lands (the user asked) */}
             <div
@@ -527,7 +537,9 @@ export function HexHomeMobile({
         })}
       </div>
       {flight && (
-        <div className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
+        // no z-index of its own, and the fliers blended: a layer of its own would cut their multiply off from the page
+        // under them, and their white would show as a box as they fly (the user saw it), as on the desktop
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <MeltFlier
             key={`in-${flight.id}`}
             tile={flight.from}
@@ -535,6 +547,7 @@ export function HexHomeMobile({
             example={EXAMPLES[flight.inbound]}
             width={flight.to.width}
             heroR={flight.to.heroR}
+            blend
             onDone={() => setLanded((l) => ({ ...l, inbound: true }))}
           />
           <MeltFlier
@@ -545,6 +558,7 @@ export function HexHomeMobile({
             width={flight.home.width}
             heroR={flight.home.heroR}
             back
+            blend
             onDone={() => setLanded((l) => ({ ...l, outbound: true }))}
           />
         </div>
