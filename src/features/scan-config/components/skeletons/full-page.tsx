@@ -1,11 +1,17 @@
 'use client';
 
+import { useSearchParams } from 'next/navigation';
+
 import { BOX_CLASS } from '@/features/scan-config/components/shared/box-class';
 import ScanConfigTabsPanel, { toScanConfigTab } from '@/features/scan-config/components/tabs';
+import { ScanConfigTabSearchParam } from '@/features/scan-config/helpers';
 import {
   BaseScanConfigTabs,
   ScanConfigActivity,
+  ScanConfigTabs,
+  SimulateScanConfigTabs,
   type TScanConfigActivity,
+  type TScanConfigTabs,
 } from '@/features/scan-config/types';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { cn } from '@/utils/css-class';
@@ -109,22 +115,77 @@ function BoxedPreviewSkeleton() {
  * Renders the real tab chrome around skeleton columns, so nothing about the
  * frame moves or swaps when the configuration resolves.
  */
+/** The overview's frame while it loads: its header, and its columns of cards. */
+function OverviewSkeleton() {
+  const column = (cards: number, height: string) => (
+    <div className="flex flex-col justify-center gap-6">
+      {Array.from({ length: cards }, (_, i) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: placeholders in a fixed order
+        <Skeleton key={i} className={cn('w-56 rounded-xl', height)} />
+      ))}
+    </div>
+  );
+  return (
+    <div className="flex min-h-0 flex-1 overflow-hidden pt-2 pb-2">
+      <div className="flex h-full w-full flex-col rounded-2xl bg-white">
+        <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3">
+          <Skeleton className="h-6 w-56 rounded-full" />
+          <Skeleton className="h-8 w-36 rounded-full" />
+        </div>
+        <div className="flex min-h-0 flex-1 items-center justify-center gap-16">
+          {column(2, 'h-48')}
+          {column(3, 'h-28')}
+          {column(1, 'h-32')}
+          {column(2, 'h-48')}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Renders the real tab chrome around skeleton columns, so nothing about the
+ * frame moves or swaps when the configuration resolves: the same tabs, the overview's among
+ * them where the campaign has one, and the one the page opens on already picked.
+ */
 export function ScanConfigSkeleton({
   className,
   activity = ScanConfigActivity.Simulate,
+  defaultTab,
+  hasCampaign = false,
+  withOverview = false,
 }: {
   className?: string;
   activity?: TScanConfigActivity;
+  /** The tab the page opens on, once it has a campaign. */
+  defaultTab?: TScanConfigTabs;
+  hasCampaign?: boolean;
+  withOverview?: boolean;
 }) {
+  // as the template resolves it: the URL's tab, else the page's default; without a campaign, its
+  // configuration
+  // no search params outside the app router
+  const asked = useSearchParams()?.get(ScanConfigTabSearchParam);
+  const known = Object.values(ScanConfigTabs[activity]) as string[];
+  const opening =
+    hasCampaign && asked && known.includes(asked)
+      ? asked
+      : hasCampaign && defaultTab
+        ? defaultTab.id
+        : BaseScanConfigTabs.configuration;
+  const onOverview = opening === SimulateScanConfigTabs.overview && withOverview;
   return (
     <div className={cn('flex h-full min-h-0 flex-col', className)}>
       <ScanConfigTabsPanel
         className="min-h-0 flex-1"
         activity={activity}
-        tab={toScanConfigTab(activity, BaseScanConfigTabs.configuration)}
+        tab={toScanConfigTab(activity, onOverview ? opening : BaseScanConfigTabs.configuration)}
         setTab={() => {}}
         disableResultsTab
         disableConfigurationTab={false}
+        hasOverview={withOverview}
+        // without a campaign there is no overview yet: disabled, as the page will have it
+        overview={hasCampaign ? <OverviewSkeleton /> : undefined}
         results={null}
         configuration={
           // As the configuration lays out: the blocks and their form in one window, the preview

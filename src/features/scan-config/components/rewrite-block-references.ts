@@ -5,7 +5,7 @@ import { isPlainObject } from '@/features/scan-config/components/utils';
  * `block_dict_name`). Used by `reference` fields and nested inside
  * `combined_with` (`neuron_set_combination`) tuples: `[ref | null, operation]`.
  */
-function isBlockReference(value: unknown): value is { block_name: string } {
+export function isBlockReference(value: unknown): value is { block_name: string } {
   return isPlainObject(value) && typeof value.block_name === 'string';
 }
 

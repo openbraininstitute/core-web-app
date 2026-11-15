@@ -6,7 +6,10 @@ import {
 } from '@/features/scan-config/components/hooks/use-scan-configuration';
 import ScanConfigSkeleton from '@/features/scan-config/components/skeletons/full-page';
 import { ScanConfigTopBar } from '@/features/scan-config/components/top-bar/context';
+import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
+import { hasOverview } from '@/features/scan-config/overview/availability';
 import { ScanConfigTemplate } from '@/features/scan-config/template';
+import { ScanConfigActivity } from '@/features/scan-config/types';
 import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 
 import type { ReactNode } from 'react';
@@ -35,7 +38,25 @@ export function ScanConfigContainer(props: ScanConfigContainerProps) {
   const { isLoading, error, unresolvedMessage, ready } = useScanConfiguration(configurationParams);
 
   if (isLoading) {
-    return <ScanConfigSkeleton activity={configurationParams.activity} className={className} />;
+    const {
+      activity = ScanConfigActivity.Simulate,
+      origin,
+      campaignOriginAction,
+    } = configurationParams;
+    return (
+      <ScanConfigSkeleton
+        activity={activity}
+        className={className}
+        defaultTab={configurationParams.defaultTab}
+        // a duplicate opens as a new, unsaved campaign
+        hasCampaign={
+          Boolean(origin) && campaignOriginAction !== ScanConfigCampaignOriginActionDict.Duplicate
+        }
+        withOverview={
+          !hideTabs && hasOverview(activity, Boolean(configurationParams.taskTypeBindings))
+        }
+      />
+    );
   }
 
   if (error) {

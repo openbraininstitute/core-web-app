@@ -3,7 +3,7 @@
 import { isEqual } from 'es-toolkit';
 import { get } from 'es-toolkit/compat';
 import { useSetAtom } from 'jotai';
-import { Activity, Suspense, useEffect, useMemo } from 'react';
+import { Activity, Suspense, useEffect, useMemo, useState } from 'react';
 import { match, P } from 'ts-pattern';
 
 import { DefaultLookupProvider } from '@/features/scan-config/bridge/default-lookup-context';
@@ -17,6 +17,9 @@ import {
 } from '@/features/scan-config/components/memodel-compatibility';
 import { ScanConfigTabsPanel } from '@/features/scan-config/components/tabs';
 import { IonChannelModelPropertiesChecks } from '@/features/scan-config/components/ui-elements/ion-channel-model-properties';
+import { ScanConfigConfigurationTab, ScanConfigResultsTab } from '@/features/scan-config/helpers';
+import { hasOverview } from '@/features/scan-config/overview/availability';
+import { CampaignOverview } from '@/features/scan-config/overview/campaign-overview';
 import { DefaultConfigColumns } from '@/features/scan-config/template/default-columns';
 import {
   EMODEL_OPTIMISATION_COLUMNS_GRID,
@@ -30,10 +33,14 @@ import {
   OptimizationTab,
   type TTaskNoun,
 } from '@/features/scan-config/use-cases/optimization/results';
-import { SimulationsTab } from '@/features/scan-config/use-cases/simulations/results';
+import {
+  SimulationsTab,
+  type TSimulationOpenRequest,
+} from '@/features/scan-config/use-cases/simulations/results';
 import { SkeletonizationTab } from '@/features/scan-config/use-cases/skeletonization/results';
 import { workflowBreadcrumbRefsAtom } from '@/features/scan-config/workflow/breadcrumb-entities';
 import { resolveWorkflowEntityRefs } from '@/features/scan-config/workflow/workflow-schema-selection';
+import { expandedRootElementsAtom } from '@/state/config-highlights';
 import { BreadcrumbChip } from '@/ui/molecules/breadcrumb';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { MiddleEllipsis } from '@/ui/molecules/middle-ellipsis';
@@ -80,6 +87,10 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
   }, [entityRefs, setBreadcrumbRefs]);
   // module state outlives the route: hand back to the session / campaign fallbacks on unmount
   useEffect(() => () => setBreadcrumbRefs(null), [setBreadcrumbRefs]);
+
+  // the overview's links: the block to open in the configuration, the result to open
+  const setExpandedRootElements = useSetAtom(expandedRootElementsAtom);
+  const [openRequest, setOpenRequest] = useState<TSimulationOpenRequest | null>(null);
 
   const configurationContent = (
     <div
@@ -138,6 +149,34 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
     </div>
   );
 
+  const activity = props.activity;
+  const withOverview = hasOverview(activity, Boolean(props.taskTypeBindings));
+  const overviewContent =
+    withOverview && state.campaignId ? (
+      <div className="flex min-h-0 flex-1 overflow-hidden pt-2 pb-2">
+        <CampaignOverview
+          activity={activity}
+          campaignId={state.campaignId}
+          schema={props.schema}
+          config={state.config}
+          entityId={props.entity?.id}
+          taskTypeBindings={props.taskTypeBindings}
+          onOpenBlock={(block) => {
+            setExpandedRootElements((prev) => new Set(prev).add(block.rootElement));
+            state.setSelectedRootElement(block.rootElement);
+            state.setSelectedEntry(block.entry);
+            state.setEditing(true);
+            state.setTab(ScanConfigConfigurationTab[activity]);
+          }}
+          onOpenResults={(simulationId, assetId) => {
+            // a new object each time, so a second click on the same link opens it again
+            if (simulationId) setOpenRequest({ simulationId, assetId });
+            state.setTab(ScanConfigResultsTab[activity]);
+          }}
+        />
+      </div>
+    ) : undefined;
+
   const resultsContent = (
     <Activity mode={isConfigurationTab ? 'hidden' : 'visible'} name="scan-config-results">
       <div
@@ -146,7 +185,7 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
         // Edge to edge, as the configuration's, so its windows meet the toolbar's ends.
         className="w-full grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-1.25 min-h-0 flex-1 overflow-hidden pt-2 pb-2"
       >
-        <ScanConfigResults props={props} state={state} />
+        <ScanConfigResults props={props} state={state} openRequest={openRequest} />
       </div>
     </Activity>
   );
@@ -162,6 +201,8 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
         disableConfigurationTab={Boolean(!props.initialConfig && props.readOnly)}
         configuration={configurationContent}
         results={resultsContent}
+        hasOverview={withOverview}
+        overview={overviewContent}
         // the centre copy button exists only once a campaign has been generated (its id is known)
         railCenter={
           state.campaignId ? (
@@ -196,14 +237,18 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
 function ScanConfigResults({
   props,
   state,
+  openRequest,
 }: {
   props: ScanConfigTemplateProps;
   state: ScanConfigTemplateState;
+  /** A simulation (and result file) the overview asked to open. */
+  openRequest: TSimulationOpenRequest | null;
 }) {
   return match(props.activity)
     .with(ScanConfigActivity.Simulate, () => (
       <Suspense>
         <SimulationsTab
+          openRequest={openRequest}
           campaignId={state.campaignId}
           campaignOriginAction={props.campaignOriginAction}
           isCampaignIdChanged={state.isCampaignIdChanged}

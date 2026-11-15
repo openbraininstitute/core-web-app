@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { get } from 'es-toolkit/compat';
 import { useSearchParams } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
@@ -64,7 +64,12 @@ import type { TSimulationLaunchTarget } from '@/entity-configuration/domain/simu
 import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import type { TimelineSchema } from '@/features/spike-viewer/config-timeline';
 
+/** The overview's ask to show a simulation, and one of its result files when named. */
+export type TSimulationOpenRequest = { simulationId: string; assetId?: string };
+
 type SimulationTabProps = {
+  /** Opened on change: a new request object reopens even the same simulation. */
+  openRequest?: TSimulationOpenRequest | null;
   campaignId: string;
   campaignOriginAction: TScanConfigCampaignOriginActionDict;
   isCampaignIdChanged: boolean;
@@ -75,6 +80,7 @@ type SimulationTabProps = {
 };
 
 export function SimulationsTab({
+  openRequest,
   campaignId,
   campaignOriginAction,
   isCampaignIdChanged,
@@ -295,6 +301,29 @@ export function SimulationsTab({
       ? [shownReport, ...reports]
       : reports;
   }, [resultFiles, activeSimulation, shownReport]);
+  // The overview's link: open its simulation, then its file once the result's files are in.
+  const { onActiveSimulationChange: openSimulation, onSelectedFileChange: openFile } = act;
+  // Each request is acted on once, so a refetch of the list does not undo a pick made since.
+  const handledRequest = useRef<{ request: TSimulationOpenRequest; fileOpened: boolean } | null>(
+    null
+  );
+  useEffect(() => {
+    if (!openRequest) return;
+    if (handledRequest.current?.request !== openRequest) {
+      const simulation = simulations.find(({ id }) => id === openRequest.simulationId);
+      if (!simulation) return;
+      handledRequest.current = { request: openRequest, fileOpened: !openRequest.assetId };
+      openSimulation(simulation);
+    }
+    // its file, once that simulation is the one on show and its result's files are in
+    const handled = handledRequest.current;
+    if (handled.fileOpened || activeSimulation?.id !== openRequest.simulationId) return;
+    const file = resultFiles.find(({ asset }) => asset.id === openRequest.assetId);
+    if (!file) return;
+    handled.fileOpened = true;
+    openFile(file);
+  }, [openRequest, simulations, activeSimulation?.id, resultFiles, openSimulation, openFile]);
+
   const activeSimulationJobIdFromLaunch = activeSimulation
     ? jobIdMap.get(activeSimulation.id)
     : undefined;

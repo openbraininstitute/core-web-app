@@ -67,6 +67,7 @@ export type TBuildScanConfigTabs = {
 };
 
 export const ProcessScanConfigTabs = {
+  overview: 'overview',
   ...BaseScanConfigTabs,
   skeletonizations: 'skeletonizations',
 } as const;
@@ -95,21 +96,26 @@ export type TScanConfigTabs =
   | Prettify<TValidateScanConfigTabs>;
 
 export const SimulateScanConfigTabs = {
+  /** Inputs → simulations → results on one page, each linking to where it is shown in full. */
+  overview: 'overview',
   ...BaseScanConfigTabs,
   simulations: 'simulations',
 } as const;
 
 export const ExtractScanConfigTabs = {
+  overview: 'overview',
   ...BaseScanConfigTabs,
   extractions: 'extractions',
 } as const;
 
 export const BuildScanConfigTabs = {
+  overview: 'overview',
   ...BaseScanConfigTabs,
   results: 'results',
 } as const;
 
 export const OptimizeScanConfigTabs = {
+  overview: 'overview',
   ...BaseScanConfigTabs,
   optimizations: 'optimizations',
 } as const;

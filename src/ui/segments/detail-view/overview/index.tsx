@@ -222,7 +222,7 @@ export default async function Overview({
           readOnly={!isWorkflow}
           defaultTab={{
             __activity: ScanConfigActivity.Extract,
-            id: ExtractScanConfigTabs.configuration,
+            id: ExtractScanConfigTabs.overview,
           }}
           activity={ScanConfigActivity.Extract}
           campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
@@ -254,7 +254,7 @@ export default async function Overview({
           readOnly={!isWorkflow}
           defaultTab={{
             __activity: ScanConfigActivity.Optimize,
-            id: OptimizeScanConfigTabs.configuration,
+            id: OptimizeScanConfigTabs.overview,
           }}
           activity={ScanConfigActivity.Optimize}
           campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
@@ -375,7 +375,7 @@ export default async function Overview({
           readOnly={!isWorkflow}
           defaultTab={{
             __activity: ScanConfigActivity.Build,
-            id: BuildScanConfigTabs.configuration,
+            id: BuildScanConfigTabs.overview,
           }}
           activity={ScanConfigActivity.Build}
           campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
@@ -428,7 +428,7 @@ export default async function Overview({
             extendedType === ExtendedEntitiesTypeDict.MicrocircuitSimulation ||
             extendedType === ExtendedEntitiesTypeDict.WholeBrainCircuitSimulation
               ? SimulateScanConfigTabs.simulations
-              : ExtractScanConfigTabs.configuration,
+              : SimulateScanConfigTabs.overview,
         }}
         activity={ScanConfigActivity.Simulate}
         campaignOriginAction={ScanConfigCampaignOriginActionDict.View}

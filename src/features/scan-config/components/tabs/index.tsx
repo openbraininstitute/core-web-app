@@ -1,4 +1,5 @@
 import { InfoCircleFilled } from '@ant-design/icons';
+import { RiFlowChart } from '@remixicon/react';
 import { useAtomValue } from 'jotai';
 
 import { ConfigurationIcon, ResultsIcon } from '@/components/icons';
@@ -35,6 +36,10 @@ type ScanConfigTabsPanelProps = {
   disableConfigurationTab: boolean;
   configuration: ReactNode;
   results: ReactNode;
+  /** Whether the campaign has an overview tab (see `hasOverview`); it is shown from the first frame. */
+  hasOverview?: boolean;
+  /** The overview tab's content; disabled, like the results, until there is a campaign to show. */
+  overview?: ReactNode;
   /** Rail-level content centred on the panel edge (e.g. the selection's copy action). */
   railCenter?: ReactNode;
 };
@@ -108,6 +113,8 @@ export function ScanConfigTabsPanel({
   disableConfigurationTab,
   configuration,
   results,
+  hasOverview = false,
+  overview,
   railCenter,
 }: ScanConfigTabsPanelProps) {
   // the host's breadcrumb leads the rail, so the skeleton and the ready template share it
@@ -115,22 +122,29 @@ export function ScanConfigTabsPanel({
   // a results view's side panel takes the whole surface, rail and all
   const railCollapsed = useAtomValue(resultsSidePanelOpenAtom);
   // not memoised: `configuration` and `results` are fresh nodes on every render
-  const items: MorphingTabsItem[] = Object.entries(ScanConfigTabs[activity]).map(([id, label]) => {
-    const isConfiguration = id === BaseScanConfigTabs.configuration;
-    const disableConfiguration = disableConfigurationTab && isConfiguration;
-    const disabled = (isResultsTab(id) && disableResultsTab) || disableConfiguration;
-    const Icon = isConfiguration ? ConfigurationIcon : ResultsIcon;
+  const items: MorphingTabsItem[] = Object.entries(ScanConfigTabs[activity])
+    .filter(([id]) => id !== SimulateScanConfigTabs.overview || hasOverview)
+    .map(([id, label]) => {
+      const isConfiguration = id === BaseScanConfigTabs.configuration;
+      const isOverview = id === SimulateScanConfigTabs.overview;
+      const disableConfiguration = disableConfigurationTab && isConfiguration;
+      // the overview opens whenever it has something to show, its own skeleton included
+      const disabled =
+        (isResultsTab(id) && disableResultsTab) ||
+        (isOverview && overview === undefined) ||
+        disableConfiguration;
+      const Icon = isConfiguration ? ConfigurationIcon : isOverview ? RiFlowChart : ResultsIcon;
 
-    return {
-      id,
-      label,
-      testId: `scan-config-tab-${id}`,
-      icon: <Icon className="size-5" />,
-      disabled,
-      tooltip: disableConfiguration ? <LegacyConfigurationTooltip /> : undefined,
-      content: isConfiguration ? configuration : results,
-    };
-  });
+      return {
+        id,
+        label,
+        testId: `scan-config-tab-${id}`,
+        icon: <Icon className="size-5" />,
+        disabled,
+        tooltip: disableConfiguration ? <LegacyConfigurationTooltip /> : undefined,
+        content: isConfiguration ? configuration : isOverview ? overview : results,
+      };
+    });
 
   return (
     <MorphingTabs
