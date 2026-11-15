@@ -107,6 +107,7 @@ export function MeltFlier({
   heroR,
   hexAt,
   back = false,
+  blend = false,
   onDone,
 }: {
   tile: IHexBox;
@@ -119,6 +120,12 @@ export function MeltFlier({
   /** Where the tile ends up, when not round the example on show (a frame it grows into). */
   hexAt?: IPoint;
   back?: boolean;
+  /**
+   * Multiplied into the page as a whole, so its picture's white drops out against whatever is under it all the way
+   * (the user asked: on a grey page, or over hexagons, it showed as a white box until it landed). Its own layer
+   * otherwise keeps the picture's multiply from reaching the page.
+   */
+  blend?: boolean;
   onDone?: () => void;
 }) {
   const mover = useRef<HTMLDivElement>(null);
@@ -178,7 +185,11 @@ export function MeltFlier({
   const hw = SQRT3 * heroR;
   const height = width / example.aspect;
   return (
-    <div ref={mover} className="pointer-events-none absolute top-0 left-0" style={{ zIndex: 6 }}>
+    <div
+      ref={mover}
+      className="pointer-events-none absolute top-0 left-0"
+      style={{ zIndex: 6, mixBlendMode: blend ? 'multiply' : undefined }}
+    >
       <div
         ref={hex}
         className="absolute"

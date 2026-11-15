@@ -165,7 +165,7 @@ function AgentsPicture({ className }: { className?: string }) {
  * shows it large on the right (the user asked).
  */
 /** `hex` (#rrggbb) mixed towards `to` by `t` (0 to 1), as #rrggbb. */
-function mix(hex: string, to: string, t: number) {
+export function mix(hex: string, to: string, t: number) {
   const c = (h: string, i: number) => parseInt(h.slice(1 + 2 * i, 3 + 2 * i), 16);
   return `#${[0, 1, 2]
     .map((i) => Math.round(c(hex, i) + (c(to, i) - c(hex, i)) * t).toString(16).padStart(2, '0'))
@@ -360,6 +360,25 @@ function ScienceRowCard({
   );
 }
 
+/** Learn and Teach as places of their own, beside Platform's (the user asked), on the desktop's rows and the phone. */
+export const LEARN_TEACH_CARDS: IJourneyCard[] = [
+  {
+    label: 'Learn',
+    icon: 'learning',
+    href: 'learn',
+    blurb: 'Courses, tutorials, a glossary and the data standard',
+    img: '/images/place-previews/learn-1.jpg',
+    imgAt: 'left top',
+  },
+  {
+    label: 'Teach',
+    icon: 'teaching',
+    href: 'teach',
+    blurb: 'Run a course on the platform',
+    img: '/images/place-previews/teach-1.jpg',
+  },
+];
+
 /** What each of Do science's places is for, and what can be done there, on its large card (the user asked). */
 /** Its stages, each a screenshot of it in use (the user asked, as the Workflows page's types have theirs). */
 type TFrames = Array<{ src: string; step: string }>;
@@ -459,7 +478,16 @@ const FADE_MS = 700;
  * type (the user asked): its stages' screenshots fading in turn with the step each shows, what it is for and what can
  * be done there, and the way in.
  */
-export function PlaceShown({ card, base }: { card: IJourneyCard; base: string }) {
+export function PlaceShown({
+  card,
+  base,
+  onClose,
+}: {
+  card: IJourneyCard;
+  base: string;
+  /** Dismissed with the × in its corner (the user asked). */
+  onClose?: () => void;
+}) {
   const { setState: setAi } = usePanelState();
   const details = PLACE_DETAILS[card.icon] ?? { intro: card.blurb, points: [], frames: [] };
   const { frames } = details;
@@ -477,10 +505,24 @@ export function PlaceShown({ card, base }: { card: IJourneyCard; base: string })
       className={cn(
         styles.fadeIn,
         // on a bordered card, not raised (the user asked; flat and a raised one were tried)
-        'flex h-full w-full flex-col gap-4 overflow-hidden rounded-[20px] border border-[rgb(19_48_111/0.12)] bg-white p-4'
+        'relative flex h-full w-full flex-col gap-4 overflow-hidden rounded-[20px] border border-[rgb(19_48_111/0.12)] bg-white p-4'
       )}
     >
       {/* no taller than nearly half the card, so its words and the way in fit under it on a short screen */}
+      {onClose && (
+        // over the screenshot's corner, white so it shows on any of them
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label={`Close ${card.label}`}
+          title="Close"
+          className="text-primary-9 absolute top-6 right-6 z-10 flex size-[34px] items-center justify-center rounded-full border border-[rgb(19_48_111/0.12)] bg-white/95 transition-colors hover:bg-white"
+        >
+          <svg viewBox="0 0 16 16" aria-hidden className="size-[14px]">
+            <path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+        </button>
+      )}
       {/* no frame round it, flat as the rest (the user asked) */}
       <div className="relative aspect-[1210/714] max-h-[44%] w-full shrink-0 overflow-hidden rounded-[10px]">
         {frames.length ? (
@@ -591,6 +633,7 @@ function VideoGrow({
   target,
   video,
   place,
+  back = false,
   onDone,
 }: {
   from: IRect;
@@ -599,11 +642,14 @@ function VideoGrow({
   video?: IExampleVideo;
   /** A Platform card instead (the user asked: they grow as the videos do), from its colours into the white card. */
   place?: { card: IJourneyCard; index: number };
+  /** Shrinking back into its card, something else picked (the user asked): `from` the large one, `target` the card. */
+  back?: boolean;
   onDone: () => void;
 }) {
   const card = useRef<HTMLDivElement>(null);
   const face = useRef<HTMLDivElement>(null);
   const radius = place ? [14, 20] : [8, 16];
+  if (back) radius.reverse();
   useEffect(() => {
     const el = card.current;
     if (!el) return;
@@ -620,8 +666,8 @@ function VideoGrow({
       el.style.width = `${at(from.w, last.w)}px`;
       el.style.height = `${at(from.h, last.h)}px`;
       el.style.borderRadius = `${at(radius[0], radius[1])}px`;
-      // a Platform card's colours give way to the white card it becomes
-      if (face.current) face.current.style.opacity = `${1 - e}`;
+      // a Platform card's colours give way to the white card it becomes, or come back as it shrinks
+      if (face.current) face.current.style.opacity = `${back ? e : 1 - e}`;
       if (t < 1) frame = requestAnimationFrame(step);
       else onDone();
     };
@@ -641,7 +687,7 @@ function VideoGrow({
           <div className="absolute inset-0 bg-linear-to-b from-[rgba(0,39,102,0.94)] to-[rgba(0,39,102,0.72)]" />
         </>
       )}
-      {place && <PlaceGrowFaces card={place.card} index={place.index} face={face} />}
+      {place && <PlaceGrowFaces card={place.card} index={place.index} face={face} faceShown={!back} />}
     </div>
   );
 }
@@ -654,10 +700,13 @@ function PlaceGrowFaces({
   card,
   index,
   face,
+  faceShown,
 }: {
   card: IJourneyCard;
   index: number;
   face: RefObject<HTMLDivElement | null>;
+  /** The small card's colours over it at the start (growing), or not yet (shrinking). */
+  faceShown: boolean;
 }) {
   const { bg } = placeColours(index);
   const pale = mix(bg, '#ffffff', 0.42);
@@ -669,7 +718,7 @@ function PlaceGrowFaces({
           <img src={first.src} alt="" className="h-[42%] w-full rounded-[10px] object-cover object-top" draggable={false} />
         )}
       </div>
-      <div ref={face} className="absolute inset-0" style={{ background: pale }}>
+      <div ref={face} className="absolute inset-0" style={{ background: pale, opacity: faceShown ? 1 : 0 }}>
         {card.img && (
           <img
             src={card.img}
@@ -795,6 +844,7 @@ function Shown({
   heroBox,
   landing,
   backdrop,
+  onClosePlace,
 }: {
   shown: TShown;
   videos: IExampleVideo[];
@@ -806,6 +856,8 @@ function Shown({
   landing: boolean;
   /** The examples round the edges instead of the plain hexagons (the background design). */
   backdrop?: IBackdrop;
+  /** A Platform card's × closes it, back to the example. */
+  onClosePlace?: () => void;
 }) {
   const [box, size] = useSize();
   // first in each of the three, so it stays put from one to the next
@@ -825,7 +877,7 @@ function Shown({
             className="relative flex min-h-0 flex-1 flex-col"
             style={landing ? { visibility: 'hidden' } : undefined}
           >
-            <PlaceShown key={card.label} card={card} base={base} />
+            <PlaceShown key={card.label} card={card} base={base} onClose={onClosePlace} />
           </div>
         )}
       </div>
@@ -1241,25 +1293,7 @@ export function RowsHome({
   const [side, setSide] = useState<TShown | null>(null);
   const shown: TShown = side ?? { kind: 'example', i: hero };
   // Do science's places, Learn and Teach with them (the user asked: Learn & teach in two, part of Do science)
-  const learnOn = groups[1].cards.some((card) => card.icon === 'learning' && !!card.href);
-  const places: IJourneyCard[] = [
-    ...groups[0].cards,
-    {
-      label: 'Learn',
-      icon: 'learning',
-      href: learnOn ? 'learn' : undefined,
-      blurb: 'Courses, tutorials, a glossary and the data standard',
-      img: '/images/place-previews/learn-1.jpg',
-      imgAt: 'left top',
-    },
-    {
-      label: 'Teach',
-      icon: 'teaching',
-      href: 'teach',
-      blurb: 'Run a course on the platform',
-      img: '/images/place-previews/teach-1.jpg',
-    },
-  ];
+  const places: IJourneyCard[] = [...groups[0].cards, ...LEARN_TEACH_CARDS];
   const tileW = TILE_W;
   const stage = useRef<HTMLDivElement>(null);
   const strip = useRef<HTMLDivElement>(null);
@@ -1267,6 +1301,8 @@ export function RowsHome({
   const [flight, setFlight] = useState<IFlight | null>(null);
   const [landed, setLanded] = useState({ inbound: true, outbound: true });
   const [grow, setGrow] = useState<IGrow | null>(null);
+  // the video or Platform card on show shrinking back into its card as something else is picked (the user asked)
+  const [shrink, setShrink] = useState<(IGrow & { selector: string }) | null>(null);
 
   // the page's own coordinates of a box on it
   const centreOf = (el: HTMLElement) => {
@@ -1298,6 +1334,7 @@ export function RowsHome({
   // one there shrinks back into the tile it left, the two trading places, as on the desktop (the user asked).
   const pick = (slot: number) => {
     if (flight) return;
+    contract();
     setGrow(null);
     const i = slots[slot];
     const from = stage.current && tileOf(slot);
@@ -1323,9 +1360,26 @@ export function RowsHome({
   useEffect(() => {
     if (flight && landed.inbound && landed.outbound) setFlight(null);
   }, [flight, landed]);
+  // The video or Platform card on show, as something else is picked, shrinks back into its card (the user asked), as
+  // an example flies back into its tile; not one still growing, which has nowhere settled to shrink from.
+  const contract = () => {
+    if ((side?.kind !== 'video' && side?.kind !== 'place') || grow) return;
+    const big = heroBox.current;
+    if (!big) return;
+    const selector = side.kind === 'video' ? `[data-video="${side.i}"]` : `[data-place="${side.i}"]`;
+    setShrink({
+      id: Date.now(),
+      from: rectOf(big),
+      to: null,
+      selector,
+      video: side.kind === 'video' ? videos[side.i] : undefined,
+      place: side.kind === 'place' && places[side.i] ? { card: places[side.i], index: side.i } : undefined,
+    });
+  };
   // A video clicked grows out of its card into the player (the user asked), as an example grows out of its hexagon.
   const pickVideo = (i: number) => {
     if (side?.kind === 'video' && side.i === i) return;
+    contract();
     setFlight(null);
     setLanded({ inbound: true, outbound: true });
     setSide({ kind: 'video', i });
@@ -1340,9 +1394,16 @@ export function RowsHome({
     const to = el && rectOf(el);
     setGrow(to && to.w > 0 ? { ...grow, to } : null);
   }, [grow]);
+  // Its × shrinks a Platform card back into its own, the example on show again (the user asked).
+  const closePlace = () => {
+    contract();
+    setGrow(null);
+    setSide(null);
+  };
   // A Platform card clicked grows into its large card on the right, as a video into the player (the user asked).
   const pickPlace = (i: number) => {
     if (side?.kind === 'place' && side.i === i) return;
+    contract();
     setFlight(null);
     setLanded({ inbound: true, outbound: true });
     setSide({ kind: 'place', i });
@@ -1620,13 +1681,15 @@ export function RowsHome({
               {(['learning', 'teaching'] as const).map((icon) => {
                 const at = places.findIndex((c) => c.icon === icon);
                 return (
+                  // in the other cards' subtle colours again (the user asked; shiny green and blue, `ShinyCard`, were
+                  // tried), half again as wide
                   <div key={icon} className="col-span-3">
-                    <ShinyCard
+                    <ScienceRowCard
                       card={places[at]}
                       index={at}
-                      tone={icon === 'learning' ? 'green' : 'blue'}
                       selected={shown.kind === 'place' && shown.i === at}
                       onPick={() => pickPlace(at)}
+                      look={cardStyle}
                     />
                   </div>
                 );
@@ -1697,8 +1760,25 @@ export function RowsHome({
           heroBox={heroBox}
           landing={(!!flight && !landed.inbound) || !!grow}
           backdrop={layout === 'backdrop' ? { slots, trading, onPick: pick, strip } : undefined}
+          onClosePlace={closePlace}
         />
       </div>
+      {shrink && (
+        <div className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
+          <VideoGrow
+            key={`back-${shrink.id}`}
+            back
+            from={shrink.from}
+            target={() => {
+              const el = stage.current?.querySelector<HTMLElement>(shrink.selector);
+              return el ? rectOf(el) : null;
+            }}
+            video={shrink.video}
+            place={shrink.place}
+            onDone={() => setShrink(null)}
+          />
+        </div>
+      )}
       {grow?.to && (
         <div className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
           <VideoGrow
@@ -1712,7 +1792,8 @@ export function RowsHome({
         </div>
       )}
       {flight?.to && (
-        <div className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
+        // no z-index of its own: a layer of its own would cut the fliers' multiply off from the page under them
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
           {/* each gone as it lands, so the one there is not drawn twice over itself */}
           {!landed.inbound && (
             <MeltFlier
@@ -1722,6 +1803,7 @@ export function RowsHome({
               example={EXAMPLES[flight.inbound]}
               width={flight.to.width}
               heroR={flight.to.heroR}
+              blend
               onDone={() => setLanded((l) => ({ ...l, inbound: true }))}
             />
           )}
@@ -1734,6 +1816,7 @@ export function RowsHome({
               width={flight.outbound.home.width}
               heroR={flight.outbound.home.heroR}
               back
+              blend
               onDone={() => setLanded((l) => ({ ...l, outbound: true }))}
             />
           )}

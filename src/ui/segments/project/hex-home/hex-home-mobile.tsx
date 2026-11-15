@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 import { AiSparkles } from '@/ui/segments/project/brains-walkthrough/agent-ready';
@@ -10,7 +11,7 @@ import { VideoCard } from '@/ui/segments/project/hex-home/video-card';
 import { EXAMPLES, journeyHref } from '@/ui/segments/project/hex-home/content';
 import { HEX_CLIP, SQRT3 } from '@/ui/segments/project/hex-home/hex-geometry';
 import { FreeMedia, MeltFlier, TileMedia } from '@/ui/segments/project/hex-home/landing-example';
-import { PlaceShown } from '@/ui/segments/project/hex-home/rows-home';
+import { LEARN_TEACH_CARDS, mix, PlaceShown } from '@/ui/segments/project/hex-home/rows-home';
 import { cn } from '@/utils/css-class';
 
 import { AgentMarks } from './agent-marks';
@@ -178,7 +179,25 @@ function ExampleStrip({ shown, away, onPick }: { shown: number; away: number | n
 }
 
 /** Do science's places: the platform's parts as cards, each in colours of its own, as on the desktop. */
-function Places({ cards, base }: { cards: IJourneyCard[]; base: string }) {
+function Places({
+  cards,
+  base,
+  colourFrom = 0,
+  subtle = false,
+  backTo = 'Platform',
+  stacked = false,
+}: {
+  cards: IJourneyCard[];
+  base: string;
+  /** Where in the palette their colours start (Learn and Teach have the seventh and eighth). */
+  colourFrom?: number;
+  /** In the desktop's soft colours: the palette's paled, the name a deep shade of it. */
+  subtle?: boolean;
+  /** What the way back from a card's white one says. */
+  backTo?: string;
+  /** One to a row, stacked, rather than two (Learn and Teach, the user asked). */
+  stacked?: boolean;
+}) {
   // one tapped shows its white card, as the desktop's rows do on their right (the user asked), with the way back
   const [open, setOpen] = useState<number | null>(null);
   if (open !== null && cards[open])
@@ -189,21 +208,24 @@ function Places({ cards, base }: { cards: IJourneyCard[]; base: string }) {
           onClick={() => setOpen(null)}
           className="text-primary-9 flex w-max items-center gap-1 text-[14px] font-semibold"
         >
-          ← Platform
+          ← {backTo}
         </button>
         <div className="min-h-0 flex-1">
-          <PlaceShown card={cards[open]} base={base} />
+          <PlaceShown card={cards[open]} base={base} onClose={() => setOpen(null)} />
         </div>
       </div>
     );
   // two to a row, filling the room over the categories so all of them show without a scroll (the user asked)
   return (
     <div
-      className="grid h-full min-h-[360px] grid-cols-2 gap-2.5"
-      style={{ gridTemplateRows: `repeat(${Math.ceil(cards.length / 2)}, minmax(0, 1fr))` }}
+      className={cn('grid h-full min-h-[360px] gap-2.5', stacked ? 'grid-cols-1' : 'grid-cols-2')}
+      style={{ gridTemplateRows: `repeat(${stacked ? cards.length : Math.ceil(cards.length / 2)}, minmax(0, 1fr))` }}
     >
       {cards.map((card, i) => {
-        const { bg, ink } = placeColours(i);
+        const palette = placeColours(i + colourFrom);
+        const { bg, ink } = subtle
+          ? { bg: mix(palette.bg, '#ffffff', 0.42), ink: mix(palette.bg, '#14203f', 0.68) }
+          : palette;
         return (
           <button
             key={card.label}
@@ -216,7 +238,10 @@ function Places({ cards, base }: { cards: IJourneyCard[]; base: string }) {
               <img
                 src={card.img}
                 alt=""
-                className="absolute inset-0 h-full w-full object-cover opacity-45 mix-blend-luminosity grayscale"
+                className={cn(
+                  'absolute inset-0 h-full w-full object-cover mix-blend-luminosity grayscale',
+                  subtle ? 'opacity-35' : 'opacity-45'
+                )}
                 style={{ objectPosition: card.imgAt ?? 'center' }}
               />
             ) : (
@@ -399,7 +424,13 @@ export function HexHomeMobile({
   useEffect(() => {
     if (flight && landed.inbound && landed.outbound) setFlight(null);
   }, [flight, landed]);
+  const router = useRouter();
   const showCategory = (key: TCategoryKey) => {
+    // The institute's hexagon (the OBI wordmark) goes to the website's landing page (the user asked)
+    if (key === 'institute') {
+      router.push('/');
+      return;
+    }
     setCategory(key);
     setFlight(null);
     setLanded({ inbound: true, outbound: true });
@@ -420,8 +451,12 @@ export function HexHomeMobile({
         {category === 'examples' && (
           <Examples base={base} shown={shown} heroBox={heroBox} landing={!!flight && !landed.inbound} />
         )}
-        {category === 'build' && <Places cards={groups[0].cards} base={base} />}
-        {category === 'learn' && <Rows cards={groups[1].cards} base={base} />}
+        {/* in the desktop rows' soft colours, as Learn and Teach are (the user asked) */}
+        {category === 'build' && <Places cards={groups[0].cards} base={base} subtle />}
+        {/* Learn and Teach as the desktop's cards, in its soft colours, opening their white cards (the user asked) */}
+        {category === 'learn' && (
+          <Places cards={LEARN_TEACH_CARDS} base={base} colourFrom={6} subtle stacked backTo="Learn & teach" />
+        )}
         {category === 'videos' && <Videos videos={videos} />}
         {category === 'institute' && <Rows cards={groups[2].cards} base={base} />}
       </section>
