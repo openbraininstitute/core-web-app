@@ -20,7 +20,7 @@ import { cn } from '@/utils/css-class';
 import { useCollapsingColumns } from './collapsing-columns';
 import { LeftColumn, MiddleColumn } from './columns';
 
-import type { ReactNode, RefObject } from 'react';
+import type { FocusEvent as ReactFocusEvent, ReactNode, RefObject } from 'react';
 import type { ScanConfigTemplateProps } from './types';
 import type { ScanConfigTemplateState } from './use-scan-config-template';
 
@@ -299,20 +299,24 @@ function PhoneTile({
   anchor,
   open,
   onOpen,
+  away = false,
   children,
 }: {
   title: string;
   anchor: HTMLElement | null;
   open: boolean;
   onOpen: () => void;
+  /** faded out and untouchable, while a field of the form is typed into */
+  away?: boolean;
   children: ReactNode;
 }) {
   const rect = useAnchorRect(anchor, open);
   const tile = (
     <div
       className={cn(
-        'fixed overflow-hidden',
+        'fixed overflow-hidden transition-opacity duration-200 ease-out',
         open ? 'z-[70] rounded-3xl' : 'ring-primary-9/10 z-30 rounded-2xl bg-white ring-1',
+        away && !open && 'pointer-events-none opacity-0',
         (!rect || !rect.shown) && 'invisible'
       )}
       style={rect ? { left: rect.left, top: rect.top, width: rect.width, height: rect.height } : undefined}
@@ -377,14 +381,28 @@ function PhoneConfigColumns({ props, state }: Props) {
     setSelectedRootElement: toForm(state.setSelectedRootElement),
     setSelectedEntry: toForm(state.setSelectedEntry),
   };
+  const typing = usePhoneTyping();
   return (
     <SceneTablePaneProvider value={table.value}>
+      {/* the tabs along the foot step aside too, as the keyboard takes their place */}
+      {typing.on && <style>{'nav[aria-label="Project"] { display: none; }'}</style>}
       <div className="flex h-full min-h-0 w-full flex-col gap-2 px-1 pb-2">
-        <div className="flex shrink-0 gap-2">
+        {/* While a field is typed into, the 3D view and its table fold away, smoothly, so the form has the screen
+            over the keyboard (the user asked); they come back as the keyboard goes. */}
+        <div
+          className={cn(
+            'flex shrink-0 gap-2 overflow-hidden transition-[height,opacity,margin] duration-300 ease-out',
+            typing.on ? '-mb-2 h-0 opacity-0' : 'h-28 opacity-100'
+          )}
+        >
           <div ref={setViewSlot} className="h-28 min-w-0 flex-1" />
           {withTable && <div ref={setTableSlot} className="h-28 min-w-0 flex-1" />}
         </div>
-        <div className={cn(BOX_CLASS, 'min-h-0 flex-1 overflow-hidden py-3')}>
+        <div
+          className={cn(BOX_CLASS, 'min-h-0 flex-1 overflow-hidden py-3')}
+          onFocus={typing.onFocus}
+          onBlur={typing.onBlur}
+        >
           {form && state.editing && state.selectedSchema !== undefined ? (
             <div className="flex h-full min-h-0 flex-col">
               <button
@@ -437,7 +455,13 @@ function PhoneConfigColumns({ props, state }: Props) {
           </div>,
           document.body
         )}
-      <PhoneTile title="3D View" anchor={open ? viewPane : viewSlot} open={open} onOpen={() => setOpen(true)}>
+      <PhoneTile
+        title="3D View"
+        anchor={open ? viewPane : viewSlot}
+        open={open}
+        onOpen={() => setOpen(true)}
+        away={typing.on}
+      >
         <div className="h-full min-h-0 overflow-hidden">
           <Right
             activity={props.activity}
@@ -461,10 +485,73 @@ function PhoneConfigColumns({ props, state }: Props) {
           anchor={open ? tablePane : tableSlot}
           open={open}
           onOpen={() => setOpen(true)}
+          away={typing.on}
         >
           <div ref={table.setTarget} className="flex h-full min-h-0 flex-col bg-white px-3 pt-1 pb-2" />
         </PhoneTile>
       )}
     </SceneTablePaneProvider>
   );
+}
+
+/** What raises a phone's keyboard: a text field that can be typed into, not a checkbox or a read-only picker. */
+const TYPED_FIELD =
+  'input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]):not([type=range]):not([readonly]), textarea:not([readonly]), [contenteditable="true"]';
+/** How long after the keyboard starts opening a field is brought up into view (ms). */
+const KEYBOARD_MS = 350;
+/** How far under the top of its scrolling box a field typed into is put (px). */
+const FIELD_TOP_GAP = 56;
+
+/** The nearest box `el` scrolls in, up to and including `limit`. */
+function scrollBoxOf(el: HTMLElement, limit: HTMLElement): HTMLElement | null {
+  for (let s = el.parentElement; s; s = s.parentElement) {
+    const { overflowY } = getComputedStyle(s);
+    if ((overflowY === 'auto' || overflowY === 'scroll') && s.scrollHeight > s.clientHeight) return s;
+    if (s === limit) return null;
+  }
+  return null;
+}
+
+/**
+ * Whether a field of the phone's form is being typed into, from focus going in and out of it: on as one takes the
+ * focus, off a moment after the last lets it go, so going from one field to the next does not bring the previews
+ * back between them. The field is brought up near the top of its box once the keyboard is up, above it.
+ */
+function usePhoneTyping() {
+  const [on, setOn] = useState(false);
+  const leaving = useRef<number | null>(null);
+  const raising = useRef<number | null>(null);
+  useEffect(
+    () => () => {
+      if (leaving.current) window.clearTimeout(leaving.current);
+      if (raising.current) window.clearTimeout(raising.current);
+    },
+    []
+  );
+  const onFocus = (e: ReactFocusEvent<HTMLElement>) => {
+    const field = e.target as HTMLElement;
+    if (!field.matches?.(TYPED_FIELD)) return;
+    if (leaving.current) window.clearTimeout(leaving.current);
+    leaving.current = null;
+    setOn(true);
+    const box = e.currentTarget;
+    if (raising.current) window.clearTimeout(raising.current);
+    raising.current = window.setTimeout(() => {
+      const scroller = scrollBoxOf(field, box);
+      if (!scroller || document.activeElement !== field) return;
+      const top =
+        field.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop - FIELD_TOP_GAP;
+      scroller.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    }, KEYBOARD_MS);
+  };
+  const onBlur = (e: ReactFocusEvent<HTMLElement>) => {
+    if (!(e.target as HTMLElement).matches?.(TYPED_FIELD)) return;
+    if (leaving.current) window.clearTimeout(leaving.current);
+    leaving.current = window.setTimeout(() => {
+      leaving.current = null;
+      const now = document.activeElement as HTMLElement | null;
+      if (!now?.matches?.(TYPED_FIELD)) setOn(false);
+    }, 200);
+  };
+  return { on, onFocus, onBlur };
 }
