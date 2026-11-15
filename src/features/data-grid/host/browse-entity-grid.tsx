@@ -3,8 +3,9 @@
 import { WarningOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { usePathname, useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AppRouterContext } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import { usePathname } from 'next/navigation';
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   dataBrowseListingUsesBrainRegionHierarchy,
@@ -203,7 +204,8 @@ export function EntityDataGrid({
 }: TEntityDataGridProps) {
   const { virtualLabId, projectId } = useWorkspace();
   const pathname = usePathname();
-  const router = useRouter();
+  // the router only for a phone's row tap, read without useRouter's throw where there is none (the grid's tests)
+  const router = useContext(AppRouterContext);
   // On a phone the search is an icon to open, and Upload data folds to its + while it is open, so the toolbar keeps
   // to one row (the user asked).
   const phone = useMediaQuery('(max-width: 767px)');
@@ -272,7 +274,7 @@ export function EntityDataGrid({
             ? ExtendedEntitiesTypeDict.SingleNeuronCircuit
             : dataType;
         if ((getEntityByExtendedType({ type })?.detailViewSections?.length ?? 0) > 0) {
-          router.push(
+          router?.push(
             `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${resolveConcreteEntityPathParam(type)}/${row.id}`
           );
           return;
