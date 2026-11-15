@@ -47,7 +47,7 @@ sequenceDiagram
    - An entry of the wrong length, as an interrupted write leaves in Firefox, is deleted on the way out. So is one the reader refuses (`PackError`), and the pack is downloaded again.
    - The browser may still drop the bucket (Safari after a week without a visit): it is only a cache.
    - A pack from the cache tells no progress, and every box is readable at once.
-   - A pack in the cache is not read into memory. The worker takes its entry as a Blob (`blobEntry`) and reads each block from it as a box is asked for (`blobFile` in [pack-file.ts](pack-file.ts)). A downloaded pack is in memory until it is checked and kept, then read from its entry the same way, and the download's buffer is let go of once the reads under way are over. A pack that is not kept (over 1 GiB, a write that fails, no Cache Storage) stays in memory.
+   - A pack in the cache is not read into memory. The worker takes its entry as a Blob (`blobEntry`) and reads each block from it as a box is asked for (`blobSource` in [pack-source.ts](pack-source.ts)). A downloaded pack is in memory until it is checked and kept, then read from its entry the same way, and the download's buffer is let go of once the reads under way are over. A pack that is not kept (over 1 GiB, a write that fails, no Cache Storage) stays in memory.
 5. **Open** (`openPack` in [pack.ts](pack.ts)). The header (magic `MPCK`, version 1), then the index, deflated JSON checked by a zod schema, then the somas, 16 bytes a cell. All of them are read as soon as their bytes are in.
    - The frame is centred on the box round the finest level and every soma placed. A soma without a finite position is NaN, and stays a soma the page places (`fillSomas` in [cells.ts](cells.ts)).
    - The population boxes, by section type, frame the view. They are used only where every population has them, as an index may leave them out.
@@ -92,7 +92,7 @@ pack.worker.ts        worker entry: the pack's API over Comlink
 worker-api.ts         open from the cache or the download, keep, read boxes
 download.ts           the pack streamed, resumed once where cut short
 arriving.ts           a buffer of the pack's size, filled as the bytes come, read as they are in
-pack-file.ts          what the reader reads from, a part at a time: that buffer, or a blob of the cache's entry
+pack-source.ts        what the reader reads from, a part at a time: that buffer, or a blob of the cache's entry
 pack.ts               the reader: header, index, somas, boxes, readableAt, a box read over its base
 cells.ts              the pack's cells numbered as the page numbers them
 morton.ts             a box's segments in Morton order

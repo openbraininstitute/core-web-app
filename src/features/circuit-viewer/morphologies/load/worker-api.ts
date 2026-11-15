@@ -27,7 +27,7 @@ import {
 } from './download';
 import { mortonOrder } from './morton';
 import { openPack, type Pack, PackError } from './pack';
-import { blobFile, type PackFile } from './pack-file';
+import { blobSource, type PackSource } from './pack-source';
 
 import type {
   BoxRead,
@@ -59,7 +59,7 @@ async function openCached(cache: CacheBounds, key: string, size: number): Promis
   const blob = await blobEntry(cache, key, size);
   if (!blob) return null;
   try {
-    return await openPack(blobFile(blob));
+    return await openPack(blobSource(blob));
   } catch (e) {
     // Not a sound pack, or an entry the browser cannot read (a DOMException): either way it is downloaded again.
     if (!(e instanceof PackError || e instanceof DOMException)) throw e;
@@ -89,13 +89,54 @@ async function keep(
   return writeEntry(cache, packCacheKey(sha256), bytes.buffer as ArrayBuffer, bytes.byteLength);
 }
 
-/** A pack's file whose bytes can be held somewhere else (`from`) while the pack is open. */
-class Held implements PackFile {
-  constructor(public from: PackFile) {}
+/**
+ * A pack's bytes, which can come to be held somewhere else while the pack is open. A read of the pack may hold a part
+ * of them until it is over, so what held them is let go of only once `moveTo` resolves.
+ */
+class Held implements PackSource {
+  private reads = new Set<Promise<unknown>>();
+
+  constructor(private from: PackSource) {}
 
   read(start: number, end: number): Promise<Uint8Array | null> {
     return this.from.read(start, end);
   }
+
+  /** `pack`, opened on these bytes, with each of its reads known to be under way until it is over. */
+  watching({ readBox, ...pack }: Pack): Pack {
+    return {
+      ...pack,
+      readBox: (level, box) => {
+        const read = readBox(level, box);
+        const over = () => this.reads.delete(read);
+        this.reads.add(read);
+        read.then(over, over);
+        return read;
+      },
+    };
+  }
+
+  /** Reads from `source` from now on; resolves once the reads begun before are over. */
+  async moveTo(source: PackSource): Promise<void> {
+    this.from = source;
+    await Promise.allSettled([...this.reads]);
+  }
+}
+
+/**
+ * Has the pack that was downloaded and kept read from its entry in the cache, and lets go of the download. Where the
+ * entry cannot be opened, the download stays.
+ */
+async function readStored(
+  held: Held,
+  download: Arriving,
+  { pack }: PackRequest,
+  cache: CacheBounds
+): Promise<void> {
+  const blob = await blobEntry(cache, packCacheKey(pack.sha256), pack.size);
+  if (!blob) return;
+  await held.moveTo(blobSource(blob));
+  download.release();
 }
 
 const buffersOf = ({ segments, segmentCells, segmentTypes }: MorphologySegments) => [
@@ -107,26 +148,6 @@ const buffersOf = ({ segments, segmentCells, segmentTypes }: MorphologySegments)
 export function createPackApi(cache: CacheBounds) {
   let opened: { readBox: Pack['readBox']; numbers: Uint32Array; whole: Promise<void> } | null =
     null;
-  /** The boxes being read, each of which may hold a part of the file. */
-  const reading = new Set<Promise<unknown>>();
-  const tracked = <Read>(read: Promise<Read>): Promise<Read> => {
-    const done = () => reading.delete(read);
-    reading.add(read);
-    read.then(done, done);
-    return read;
-  };
-
-  /**
-   * Has the pack that was downloaded and kept read from its entry in the cache, and lets go of the download once the
-   * reads that began on it are over. Where the entry cannot be opened, the download stays.
-   */
-  const readStored = async (file: Held, download: Arriving, { pack }: PackRequest) => {
-    const blob = await blobEntry(cache, packCacheKey(pack.sha256), pack.size);
-    if (!blob) return;
-    file.from = blobFile(blob);
-    await Promise.allSettled([...reading]);
-    download.release();
-  };
 
   return {
     async open(
@@ -140,10 +161,10 @@ export function createPackApi(cache: CacheBounds) {
       let whole = Promise.resolve();
       if (!pack) {
         const download = await downloadPack(request, onProgress, freshHeaders);
-        const file = new Held(download.file);
-        pack = await openPack(file);
+        const held = new Held(download.file);
+        pack = held.watching(await openPack(held));
         whole = keep(download.whole, request, cache).then((kept) =>
-          kept ? readStored(file, download.file, request) : undefined
+          kept ? readStored(held, download.file, request, cache) : undefined
         );
         whole.catch(() => {});
       }
@@ -171,7 +192,7 @@ export function createPackApi(cache: CacheBounds) {
       const { readBox, numbers } = opened;
       const read = await Promise.all(
         wanted.map(async ({ level, box }) =>
-          mortonOrder(renumberSegments(await tracked(readBox(level, box)), numbers))
+          mortonOrder(renumberSegments(await readBox(level, box), numbers))
         )
       );
       return Comlink.transfer(read, read.flatMap(buffersOf) as ArrayBuffer[]);

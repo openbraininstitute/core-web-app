@@ -3,7 +3,7 @@
  * circuit and cut into chunks of space. The format is specified in Bluenaas's `app/core/morphology_pack/docs/`
  * (`format.md`; what this reader relies on is in `reader-contract.md`). The reader reads the index and the somas when
  * it opens the pack, and the chunks one box of space at a time. A level's box is read over its base level's box, and
- * the base boxes read last are kept a while for the finer levels. The bytes are asked of a `PackFile` a block at a
+ * the base boxes read last are kept a while for the finer levels. The bytes are asked of a `PackSource` a block at a
  * time, so the file need not be in memory.
  */
 // Importing `z` by name brings in the whole of zod, and this reader runs in a worker with a bundle of its own.
@@ -12,7 +12,7 @@ import * as z from 'zod';
 import { Arriving } from './arriving';
 
 import type { CircuitMorphologyData, MorphologySegments, PackBoxes, Vec3 } from '../types';
-import type { PackFile } from './pack-file';
+import type { PackSource } from './pack-source';
 
 const MAGIC = 0x4b43504d;
 const VERSION = 1;
@@ -123,11 +123,10 @@ async function inflate(deflated: Uint8Array, maxBytes: number): Promise<Uint8Arr
 }
 
 /** The index, and where in the file the blocks start: the index's offsets count from there. */
-async function openIndex(file: PackFile): Promise<{ index: PackIndex; blocks: number }> {
+async function openIndex(file: PackSource): Promise<{ index: PackIndex; blocks: number }> {
   const header = await file.read(0, HEADER_BYTES);
-  if (!header) throw new PackError('not a morphology pack');
-  const view = new DataView(header.buffer, header.byteOffset, header.byteLength);
-  if (view.getUint32(0, true) !== MAGIC) throw new PackError('not a morphology pack');
+  const view = header && new DataView(header.buffer, header.byteOffset, header.byteLength);
+  if (view?.getUint32(0, true) !== MAGIC) throw new PackError('not a morphology pack');
   const version = view.getUint16(4, true);
   if (version !== VERSION) throw new PackError(`morphology pack version ${version}`);
   const end = HEADER_BYTES + view.getUint32(8, true);
@@ -168,7 +167,7 @@ function soundLevels({ levels }: PackIndex): boolean {
 }
 
 /** The block at `start` in the file, once its bytes are in. */
-async function blockAt(file: PackFile, start: number, bytes: number): Promise<Uint8Array> {
+async function blockAt(file: PackSource, start: number, bytes: number): Promise<Uint8Array> {
   const block = await file.read(start, start + bytes);
   if (!block) throw new PackError(CUT_SHORT);
   return block;
@@ -510,7 +509,7 @@ export interface Pack extends PackBoxes {
  * Opens a pack: reads its index and somas now, or once their bytes are in if the pack is still coming in. Its chunks
  * are read a box at a time (`readBox`), each once its bytes and its bases' bytes are in.
  */
-export async function openPack(bytes: Uint8Array | PackFile): Promise<Pack> {
+export async function openPack(bytes: Uint8Array | PackSource): Promise<Pack> {
   const file = bytes instanceof Uint8Array ? Arriving.whole(bytes) : bytes;
   const { index, blocks } = await openIndex(file);
   if (!soundLevels(index)) throw new PackError(AT_ODDS);

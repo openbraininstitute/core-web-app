@@ -1,13 +1,13 @@
 import { detach } from '@/utils/buffer';
 
-import type { PackFile } from './pack-file';
+import type { PackSource } from './pack-source';
 
 /**
  * A file's bytes as they come in, in one buffer of the file's size where that is known. To read a part, wait until its
  * bytes are in (`until`), then take them (`bytes`), or do both (`read`). The buffer is replaced by a larger one when
  * the file is longer than said, so take a part again for each read and never keep it for a later one.
  */
-export class Arriving implements PackFile {
+export class Arriving implements PackSource {
   private buffer: Uint8Array;
   private received = 0;
   private ended = false;

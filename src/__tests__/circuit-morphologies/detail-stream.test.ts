@@ -72,7 +72,7 @@ function uploadsSaid() {
   const said: string[] = [];
   const uploadsOf: UploadsOf = ({ words }) => {
     said.push(`made ${words.length}`);
-    return { upload: vi.fn(), putEnds: vi.fn(), dispose: () => said.push('disposed') };
+    return { upload: vi.fn(), dispose: () => said.push('disposed') };
   };
   return { said, uploadsOf };
 }

@@ -367,15 +367,12 @@ describe('loadCircuitMorphologies', () => {
     it('letting go of the download only once the reads begun on it are over', async () => {
       const bytes = small();
       // The pack's last byte comes when the test says.
-      let finish = () => {};
-      const last = new Promise<void>((resolve) => {
-        finish = resolve;
-      });
+      const last = Promise.withResolvers<void>();
       vi.stubGlobal('fetch', async () => {
         const body = new ReadableStream<Uint8Array>({
           async start(controller) {
             controller.enqueue(bytes.slice(0, -1));
-            await last;
+            await last.promise;
             controller.enqueue(bytes.slice(-1));
             controller.close();
           },
@@ -386,7 +383,8 @@ describe('loadCircuitMorphologies', () => {
       // One read of the download is held with its bytes in hand, as a block being inflated is.
       const read = Arriving.prototype.read;
       let hold = false;
-      let letOn: (() => void) | null = null;
+      const held = Promise.withResolvers<void>();
+      const letOn = Promise.withResolvers<void>();
       vi.spyOn(Arriving.prototype, 'read').mockImplementation(async function (
         this: Arriving,
         start: number,
@@ -395,9 +393,8 @@ describe('loadCircuitMorphologies', () => {
         const part = await read.call(this, start, end);
         if (!hold) return part;
         hold = false;
-        await new Promise<void>((resolve) => {
-          letOn = resolve;
-        });
+        held.resolve();
+        await letOn.promise;
         return part;
       });
       const api = createPackApi(BOUNDS);
@@ -405,14 +402,14 @@ describe('loadCircuitMorphologies', () => {
       const boxes = Array.from(opened.levels[2].segments, (_, box) => ({ level: 2, box }));
       hold = true;
       const coarsest = api.read(boxes);
-      await vi.waitFor(() => expect(letOn).not.toBeNull());
+      await held.promise;
 
-      finish();
+      last.resolve();
       await vi.waitFor(() => expect(cached()?.body).toEqual(bytes));
       await new Promise((resolve) => setTimeout(resolve, 20));
       expect(release).not.toHaveBeenCalled();
 
-      (letOn as unknown as () => void)();
+      letOn.resolve();
       expect(joined(await coarsest)).toEqual(await asRead(bytes, 2));
       await api.whole();
       expect(release).toHaveBeenCalledOnce();
