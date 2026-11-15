@@ -170,6 +170,8 @@ export function ScanConfigTabsPanel({
       // The panel's boxes sit on the page; the top bar, breadcrumb, name and tabs, one long pill over them
       surfaceless
       railPill
+      // its tabs as the project toolbar's, words alone with a bar under the open one (the user asked)
+      toolbarTabs
       items={items}
       value={tab.id}
       onValueChange={(id) => id && setTab(toScanConfigTab(activity, id))}

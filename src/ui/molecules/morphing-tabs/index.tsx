@@ -82,6 +82,11 @@ export interface MorphingTabsProps {
    * tabs alike (a workflow's top bar, the user asked).
    */
   railPill?: boolean;
+  /**
+   * In the rail's pill, the tabs as the project toolbar's are (the user asked): words alone, grey, the active one navy
+   * with a bar under it, rather than a shared pill with the active one raised white.
+   */
+  toolbarTabs?: boolean;
   ariaLabel?: string;
   className?: string;
   classNames?: MorphingTabsClassNames;
@@ -295,6 +300,7 @@ export function MorphingTabs({
   railCollapsed = false,
   surfaceless = false,
   railPill = false,
+  toolbarTabs = false,
   ariaLabel = 'Tabs',
   className,
   classNames,
@@ -499,7 +505,7 @@ export function MorphingTabs({
               style={{ left: SURFACE_INSET, right: SURFACE_INSET, height: SHARED_PILL_HEIGHT }}
             />
           )}
-          {surfaceless && (
+          {surfaceless && !toolbarTabs && (
             // The one pill the tabs share, the active one raised white inside it.
             <span
               aria-hidden
@@ -531,7 +537,19 @@ export function MorphingTabs({
                     style={{ width: tabWidth, height: TAB_HEIGHT }}
                     className="relative flex items-stretch"
                   >
-                    {!isActive || surfaceless ? (
+                    {toolbarTabs ? (
+                      // the toolbar's bar under the active one, at the pill's foot; a lighter one under one pointed at
+                      <span
+                        aria-hidden
+                        className={cn(
+                          'absolute inset-x-4 h-[3px] rounded-t-full transition-transform duration-200',
+                          isActive
+                            ? 'bg-primary-9'
+                            : 'bg-primary-3 scale-x-0 group-hover:scale-x-100'
+                        )}
+                        style={{ top: SHARED_PILL_HEIGHT - 3 }}
+                      />
+                    ) : !isActive || surfaceless ? (
                       <span
                         aria-hidden
                         className={cn(
@@ -566,9 +584,14 @@ export function MorphingTabs({
                       onKeyDown={(event) => handleTabKeyDown(index, event)}
                       className={cn(
                         'group relative z-10 flex h-full w-full min-w-0 items-center gap-2 overflow-hidden rounded-t-[1.5rem] px-3 text-left outline-none transition-colors',
-                        isActive
-                          ? cn('text-primary-8', surfaceless && 'pb-2')
-                          : 'pb-2 text-neutral-4 hover:text-[#181818]',
+                        toolbarTabs
+                          ? cn(
+                              'pb-2 justify-center',
+                              isActive ? 'text-primary-9 font-semibold' : 'text-neutral-600 hover:text-primary-9'
+                            )
+                          : isActive
+                            ? cn('text-primary-8', surfaceless && 'pb-2')
+                            : 'pb-2 text-neutral-4 hover:text-[#181818]',
                         item.disabled && 'cursor-not-allowed opacity-60 hover:text-neutral-4',
                         classNames?.tab
                       )}
@@ -584,7 +607,7 @@ export function MorphingTabs({
                             : 'bottom-2 rounded-[1rem] border-2 border-black/20'
                         )}
                       />
-                      {item.icon ? (
+                      {item.icon && !toolbarTabs ? (
                         <span
                           aria-hidden
                           className={cn(
@@ -603,7 +626,9 @@ export function MorphingTabs({
                           tabLabelRefs.current[item.id] = node;
                         }}
                         className={cn(
-                          'min-w-0 truncate whitespace-nowrap text-lg font-medium leading-[normal] tracking-[-0.01em]',
+                          toolbarTabs
+                            ? 'min-w-0 truncate whitespace-nowrap text-[14px] leading-[normal]'
+                            : 'min-w-0 truncate whitespace-nowrap text-lg font-medium leading-[normal] tracking-[-0.01em]',
                           classNames?.label
                         )}
                       >

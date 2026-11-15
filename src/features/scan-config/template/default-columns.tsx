@@ -146,6 +146,8 @@ export function DefaultConfigColumns({ props, state }: Props) {
 
 /** How long the form takes to open out beside the list (ms). */
 const REVEAL_MS = 650;
+/** How long a loading preview keeps its table's box before deciding none is coming (ms). */
+const TABLE_WAIT_MS = 8000;
 /** The columns as DEFAULT_COLUMNS_GRID has them, and with the form folded to nothing and the preview the wider. */
 const DEFAULT_TRACKS = 'minmax(0,1fr) minmax(0,1fr) minmax(0,2fr)';
 const ALONE_TRACKS = 'minmax(0,1fr) minmax(0,0fr) minmax(0,3fr)';
@@ -171,6 +173,13 @@ export function PreviewColumn({
   children: ReactNode;
 }) {
   const table = useSceneTablePaneHost();
+  // While the scene loads, its table's box is kept, empty, so the preview has its final shape from the start (the
+  // user asked the loading page to match it), until the table claims it; with none coming, it goes after a while.
+  const [awaitingTable, setAwaitingTable] = useState(true);
+  useEffect(() => {
+    const t = window.setTimeout(() => setAwaitingTable(false), TABLE_WAIT_MS);
+    return () => window.clearTimeout(t);
+  }, []);
   const handle = edge && (
     // A double click puts the columns back as they were. Boxed, the bar sits halfway between the
     // column before and the box: past the grid's gap (0.3125rem) the box is inset 0.75rem.
@@ -209,7 +218,20 @@ export function PreviewColumn({
                   boxClassName: 'px-3 pt-1 pb-2',
                   content: <div ref={table.setTarget} className="flex h-full min-h-0 flex-col" />,
                 }
-              : null
+              : awaitingTable
+                ? {
+                    title: tablePaneTitle(table.view),
+                    boxClassName: 'px-3 pt-1 pb-2',
+                    content: (
+                      <div className="flex h-full min-h-0 flex-col gap-3 pt-2" aria-hidden>
+                        {['w-full', 'w-full', 'w-4/5', 'w-3/5'].map((w, i) => (
+                          // eslint-disable-next-line react/no-array-index-key -- fixed placeholder lines
+                          <div key={i} className={cn('h-4 animate-pulse rounded-full bg-gray-100', w)} />
+                        ))}
+                      </div>
+                    ),
+                  }
+                : null
           }
         />
       </div>
