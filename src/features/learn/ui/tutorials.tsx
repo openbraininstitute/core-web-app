@@ -129,6 +129,7 @@ export function TutorialCard({
   return (
     <TutorialPlayer
       key={tutorial.slug}
+      className={className}
       tutorial={tutorial}
       meta={`Video tutorial · ${categoryOf(tutorial)} · ${index + 1} of ${tutorials.length}`}
       nav={
@@ -166,16 +167,19 @@ function TutorialPlayer({
   tutorial,
   meta,
   nav,
+  className,
 }: {
   tutorial: TTutorial;
   meta: string;
   nav: React.ReactNode;
+  /** The right-hand panel it fills, the whole height, as the other sections' cards do (the user asked). */
+  className?: string;
 }) {
   const [played, setPlayed] = useState(false);
   const title = sentence(tutorial.title);
   const youTubeId = parseYouTubeId(tutorial.url);
   return (
-    <section className="flex min-h-0 w-full flex-1 flex-col gap-[16px] overflow-y-auto">
+    <section className={cn(className, 'flex min-h-0 w-full flex-1 flex-col gap-[16px] overflow-y-auto p-[16px]')}>
       <div className="relative overflow-hidden rounded-[12px] bg-[#002766]">
         {/* not autoplaying, since the section opens on one */}
         {youTubeId ? (
