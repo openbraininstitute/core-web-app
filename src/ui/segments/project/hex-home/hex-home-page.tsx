@@ -500,8 +500,8 @@ function ModelPanel({ example, base }: { example: IExample; base: string }) {
  * middle as the landing's chosen one does, beside what the model is and what to do with it. The videos, picked, line
  * up beside the column, with one playing to their right. The categories stay where they are throughout.
  */
-/** The home's design when the address names none: the rows with Platform as small squares (the user asked). */
-const DEFAULT_DESIGN = 'rows-small';
+/** The home's design when the address names none: the rows with small Platform squares and Learn, Teach and the AI card larger (the user asked; the plain small squares before). */
+const DEFAULT_DESIGN = 'rows-featured';
 
 /** The home's hidden settings: shown only while pointed at or focused. */
 const SETTING =
