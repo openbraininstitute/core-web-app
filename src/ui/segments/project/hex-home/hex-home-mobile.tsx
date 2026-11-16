@@ -270,7 +270,8 @@ function Places({
           ← {backTo}
         </button>
         <div className="min-h-0 flex-1">
-          <PlaceShown card={cards[open]} base={base} onClose={() => setOpen(null)} />
+          {/* no card's border round it on a phone, for the room (the user asked) */}
+          <PlaceShown card={cards[open]} base={base} onClose={() => setOpen(null)} bare />
         </div>
       </div>
     );

@@ -496,11 +496,14 @@ export function PlaceShown({
   card,
   base,
   onClose,
+  bare = false,
 }: {
   card: IJourneyCard;
   base: string;
   /** Dismissed with the × in its corner (the user asked). */
   onClose?: () => void;
+  /** Straight on the page, with no card's border round it (a phone's, for the room: the user asked). */
+  bare?: boolean;
 }) {
   const { setState: setAi } = usePanelState();
   const details = PLACE_DETAILS[card.icon] ?? { intro: card.blurb, points: [], frames: [] };
@@ -518,8 +521,9 @@ export function PlaceShown({
     <div
       className={cn(
         styles.fadeIn,
-        // on a bordered card, not raised (the user asked; flat and a raised one were tried)
-        'relative flex h-full w-full flex-col gap-4 overflow-hidden rounded-[20px] border border-[rgb(19_48_111/0.12)] bg-white p-4'
+        // on a bordered card, not raised (the user asked; flat and a raised one were tried); bare, on the page itself
+        'relative flex h-full w-full flex-col gap-4 overflow-hidden',
+        bare ? 'bg-transparent' : 'rounded-[20px] border border-[rgb(19_48_111/0.12)] bg-white p-4'
       )}
     >
       {/* no taller than nearly half the card, so its words and the way in fit under it on a short screen */}
@@ -530,7 +534,10 @@ export function PlaceShown({
           onClick={onClose}
           aria-label={`Close ${card.label}`}
           title="Close"
-          className="text-primary-9 absolute top-6 right-6 z-10 flex size-[34px] items-center justify-center rounded-full border border-[rgb(19_48_111/0.12)] bg-white/95 transition-colors hover:bg-white"
+          className={cn(
+            'text-primary-9 absolute z-10 flex size-[34px] items-center justify-center rounded-full border border-[rgb(19_48_111/0.12)] bg-white/95 transition-colors hover:bg-white',
+            bare ? 'top-2 right-2' : 'top-6 right-6'
+          )}
         >
           <svg viewBox="0 0 16 16" aria-hidden className="size-[14px]">
             <path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
