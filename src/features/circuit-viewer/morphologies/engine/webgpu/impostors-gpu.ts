@@ -393,21 +393,21 @@ const fromAttributes = (): SegmentInputs => ({
 type List = 'kept' | 'seen';
 
 /**
- * The arena's segment for this instance, its ends unpacked. Where the arena is culled (`listed`), it is the one at the instance's place in
- * `list` for the draw's kind: the list holds the flat segments from its start and the tubes back from its end. Where
- * it is not culled, every segment is drawn in turn. An index at or past the arena's end gives a hole, which is not
- * drawn. With no dendrogram, the segment's ends stand in for it. The culling chose each seen segment's kind, and its
- * draw keeps that choice. A kept segment is drawn by its kind now, so a kept segment whose kind changed is left out,
- * which is allowed.
+ * The arena's segment for this instance, its ends unpacked. Where the arena is culled (`listed`), it is the one at the
+ * instance's place in `list` for the draw's kind: the list holds the flat segments from its start and the tubes back
+ * from its end, the kept list as long as the arena and the seen list, after it, twice the arena's `seenRoom`. Where it
+ * is not culled, every segment is drawn in turn. An index at or past the arena's end gives a hole, which is not drawn.
+ * With no dendrogram, the segment's ends stand in for it. The culling chose each seen segment's kind, and its draw
+ * keeps that choice. A kept segment is drawn by its kind now, so a kept segment whose kind changed is left out, which
+ * is allowed.
  */
 function fromArena(u: GpuUniforms, arena: ArenaStorage, kind: 'segment' | 'tube', list: List) {
   const { capacity, end } = arena;
   const listed = arena.listed.equal(uint(1));
-  const first = capacity.mul(uint(list === 'kept' ? 0 : 1));
+  const first = list === 'kept' ? uint(0) : capacity;
+  const length = list === 'kept' ? capacity : arena.seenRoom.mul(uint(2));
   const at =
-    kind === 'tube'
-      ? first.add(capacity).sub(uint(1)).sub(instanceIndex)
-      : first.add(instanceIndex);
+    kind === 'tube' ? first.add(length).sub(uint(1)).sub(instanceIndex) : first.add(instanceIndex);
   const i = select(listed, arena.lists.element(at), instanceIndex).toVar();
   const { packing } = arena;
   const packed = (k: number) =>

@@ -128,6 +128,7 @@ describe("an arena on the page's GPU buffers", () => {
     const capacity = 16 * BLOCK;
     const { arena, storage, told, made } = arenaOnFake(capacity);
     expect(storage.capacity.value).toBe(capacity);
+    expect(storage.seenRoom.value).toBe(capacity);
     expect(storage.packing.value.toArray()).toEqual([PACKING.gridUm, 1 / PACKING.radiusSteps]);
     expect(told).toHaveLength(1);
     const sizes = Object.fromEntries(made.map((b) => [b.label, b.bytes.length]));
@@ -135,7 +136,8 @@ describe("an arena on the page's GPU buffers", () => {
       'arena ends': 20 * capacity,
       'arena words': 4 * capacity,
       'arena blocks': (32 * capacity) / BLOCK,
-      'arena lists': 8 * capacity,
+      // The kept, then the seen's two parts, each as long as the arena where it is under the most seen.
+      'arena lists': 12 * capacity,
       'arena blocks passed': (4 * capacity) / BLOCK,
       // A word a 32 blocks, and 32 bytes at least.
       'arena blocks marked': 32,

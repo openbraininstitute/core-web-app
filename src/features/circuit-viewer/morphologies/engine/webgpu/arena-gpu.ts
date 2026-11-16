@@ -3,6 +3,7 @@ import * as THREE from 'three/webgpu';
 
 import { PACKED_WORDS } from '../../load/packed-ends';
 import { BLOCK } from '../segment-arena';
+import { seenRoom } from './culling-wgsl';
 import { scoped } from './error-scope';
 import { shareBuffer } from './three-hooks';
 import { COPY_DST, COPY_SRC, STORAGE } from './usage';
@@ -25,8 +26,9 @@ const wordsAttribute = () => new THREE.StorageBufferAttribute(new Uint32Array(4)
 /**
  * What an arena's materials read, and how: its segments' ends, packed (`packed-ends.ts`), with the pack's grid, µm,
  * and one over its radius steps in `packing`; their cell-and-type words, and the culling's lists; where the arena
- * ends; how many segments it and each list hold; whether it is drawn culled, through the lists (`listed` is 1); and
- * the farthest depth drawn before the culling's tests, in µm from the eye.
+ * ends; how many segments it and the kept list hold, and how many each part of the seen list (`seenRoom`); whether it
+ * is drawn culled, through the lists (`listed` is 1); and the farthest depth drawn before the culling's tests, in µm
+ * from the eye.
  */
 export function arenaStorage() {
   return {
@@ -36,6 +38,7 @@ export function arenaStorage() {
     lists: storageNode(wordsAttribute(), 'uint', 0).toReadOnly(),
     end: uniform(0, 'uint'),
     capacity: uniform(0, 'uint'),
+    seenRoom: uniform(0, 'uint'),
     listed: uniform(0, 'uint'),
     farthest: texture(NOTHING_DRAWN),
   };
@@ -48,7 +51,10 @@ export interface ArenaBuffers {
   ends: GPUBuffer;
   words: GPUBuffer;
   blocks: GPUBuffer;
-  /** The kept, then the seen: in each, the flat segments from its start and the tubes back from its end. */
+  /**
+   * The kept, as long as the arena, then the seen, twice `seenRoom` long: in each, the flat segments from its start and
+   * the tubes back from its end.
+   */
   lists: GPUBuffer;
   /** The blocks that pass their test. */
   passed: GPUBuffer;
@@ -85,7 +91,7 @@ export function arenaOnGpu(
       ends: bufferOf(4 * PACKED_WORDS * capacity, 'arena ends'),
       words: bufferOf(words.byteLength, 'arena words'),
       blocks: bufferOf(blocks.byteLength, 'arena blocks'),
-      lists: bufferOf(2 * 4 * capacity, 'arena lists', STORAGE),
+      lists: bufferOf(4 * (capacity + 2 * seenRoom(capacity)), 'arena lists', STORAGE),
       passed: bufferOf((4 * capacity) / BLOCK, 'arena blocks passed', STORAGE),
       marked: bufferOf(
         4 * Math.ceil(capacity / BLOCK / 32),
@@ -102,6 +108,7 @@ export function arenaOnGpu(
   storage.words.value = shareBuffer(renderer, wordsAttribute(), buffers.words);
   storage.lists.value = shareBuffer(renderer, wordsAttribute(), buffers.lists);
   storage.capacity.value = capacity;
+  storage.seenRoom.value = seenRoom(capacity);
   told(buffers);
   return {
     upload(start, count, ends) {
