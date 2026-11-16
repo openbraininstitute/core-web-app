@@ -25,13 +25,14 @@
   all: unset;
   display: inline-block;
   cursor: pointer;
-  padding: 1em 2em;
-  border: 1px solid currentColor;
-  transition: all 0.4s;
+  padding: 13px 23px;
+  border-radius: 999px;
+  color: #fff;
+  background-color: var(--color-primary);
+  transition: background-color 0.2s;
   margin-top: 1em;
 }
 
 .hero.light a.button:hover {
-  color: #fff;
-  background-color: var(--color-primary);
+  background-color: #00428b;
 }

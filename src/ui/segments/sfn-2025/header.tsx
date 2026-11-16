@@ -4,13 +4,10 @@ import { useState } from 'react';
 
 import Menu from '@/ui/segments/landing/layout/menu/menu';
 import { cn } from '@/utils/css-class';
-import { useScrollHasStarted } from '@/utils/scroll-has-started';
 
 import styles from '@/ui/segments/sfn-2025/landing-page.module.css';
 
 export default function HeaderSFN2025() {
-  const scrollHasStarted = useScrollHasStarted();
-
   const [videoReady, setVideoReady] = useState(false);
 
   const videoURL =
@@ -18,7 +15,7 @@ export default function HeaderSFN2025() {
 
   return (
     <div className={styles.landingPage}>
-      <Menu scrollHasStarted={scrollHasStarted} />
+      <Menu />
       <div className="relative z-10 flex h-screen w-screen items-center justify-center">
         <h1 className="text-[10vw] font-bold text-white">
           SfN 2025 Neuroscience at the Speed of Thought{' '}

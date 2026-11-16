@@ -44,6 +44,7 @@ import { isExpanderClick } from '@/features/data-grid/renderers/aggrid/expand-ce
 import { AgHeader } from '@/features/data-grid/renderers/aggrid/header';
 import { isInteractiveClick } from '@/features/data-grid/renderers/aggrid/interactive-target';
 import { registerDataGridModules } from '@/features/data-grid/renderers/aggrid/register-modules';
+import { useRowClassRedraw } from '@/features/data-grid/renderers/aggrid/row-class-redraw';
 import {
   DATA_GRID_LOCALE_TEXT,
   dataGridTheme,
@@ -336,6 +337,13 @@ export function InMemoryGrid<Row>({
   useEffect(() => setMounted(true), []);
 
   const apiRef = useRef<GridApi<TDisplayRow<Row>> | null>(null);
+  const rowClassOf = useMemo(
+    () =>
+      getRowClass &&
+      ((data: TDisplayRow<Row>) => (isDetailRow(data) ? undefined : getRowClass(data as Row))),
+    [getRowClass]
+  );
+  const redrawChangedRowClasses = useRowClassRedraw(apiRef, rowClassOf);
   const operatorRegistry = useMemo(() => operators ?? createDefaultOperatorRegistry(), [operators]);
 
   // Stable row-id resolver: use the caller's accessor, else a per-object fallback.
@@ -877,7 +885,7 @@ export function InMemoryGrid<Row>({
           getRowHeight={(p) => (isDetailRow(p.data) ? initialDetailHeight : rowHeight)}
           getRowClass={(p) =>
             cn(
-              !isDetailRow(p.data) && getRowClass && getRowClass(p.data as Row),
+              p.data != null && rowClassOf?.(p.data),
               !isDetailRow(p.data) && onRowClick && 'cursor-pointer'
             )
           }
@@ -901,8 +909,12 @@ export function InMemoryGrid<Row>({
           onGridReady={(e: GridReadyEvent<TDisplayRow<Row>>) => {
             apiRef.current = e.api;
             applySelection();
+            redrawChangedRowClasses();
           }}
-          onRowDataUpdated={applySelection}
+          onRowDataUpdated={() => {
+            applySelection();
+            redrawChangedRowClasses();
+          }}
         />
       </div>
       {showPagination && (

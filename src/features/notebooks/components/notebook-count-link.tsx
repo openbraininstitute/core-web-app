@@ -38,7 +38,11 @@ export function NotebookCountLink({
       size="lg"
       active={isActive}
       data-testid={`notebook-count-link-${extendedType}`}
-      className="group w-full shrink grow border-none text-base"
+      // as Reports' list pills: white with a hairline, the open one navy (the user asked Notebooks to match Reports)
+      className={cn(
+        'group h-auto w-full shrink grow border-none py-3 text-base',
+        !isActive && 'bg-white shadow-none ring-1 ring-[rgb(19_48_111/0.12)] ring-inset'
+      )}
     >
       <Link href={href} className="flex! w-full items-center justify-between!">
         <span className="font-bold text-current">{title}</span>

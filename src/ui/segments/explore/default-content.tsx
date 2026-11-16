@@ -1,5 +1,6 @@
 'use client';
 
+import { DATA_PANEL_MAX_HEIGHT } from '@/constants';
 import { Card } from '@/ui/molecules/card';
 import { EntityLeftMenu } from '@/ui/segments/explore/entity-left-menu';
 import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
@@ -22,7 +23,9 @@ export function DefaultContent({ children, dataKey }: Props) {
         id="explore-left-menu"
         data-testid="explore-left-menu"
         className={cn(
-          'h-full max-h-[calc(100vh-10.8rem)] px-1 min-h-0 w-full overflow-hidden [grid-area:aside]',
+          // on a phone as tall as it needs, or the screen's height for the data types split (the user asked)
+          '-ml-2 h-full min-h-0 overflow-x-clip px-1 [grid-area:aside] max-md:ml-0 max-md:h-auto max-md:max-h-none max-md:shrink-0 max-md:px-0 max-md:has-[[data-phone-split]]:h-full',
+          DATA_PANEL_MAX_HEIGHT,
           { hidden: mdv }
         )}
       >

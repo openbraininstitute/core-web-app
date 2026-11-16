@@ -1,0 +1,69 @@
+/*
+ * The first screen's layout: down the left, the title and the platform's statements under it; the model over
+ * the right, large. Its lines are set in the viewport, so that the three layers drawing it, the words, the
+ * stage and the floating model, put them on the same lines.
+ */
+.grid {
+  /* From the words' own margin to clear of the pager, a gutter out: 70% to the words, 30% to the model. */
+  --grid-x0: clamp(32px, 5vw, 88px);
+  --grid-gap: clamp(28px, 3.5vw, 64px);
+  --grid-room: calc(100vw - clamp(110px, 12vw, 210px) - var(--grid-x0) - var(--grid-gap));
+  --grid-col: calc(var(--grid-room) * 0.7);
+  --grid-right: calc(var(--grid-room) * 0.3);
+  /*
+   * The Male CNS, 737 x 1015 um from below, over the right side, from the gutter to the page's margin: as tall
+   * as that side lets it be across, at most 80vh, its middle at 44vh, so that it stays inside the screen and
+   * never shows over the page above.
+   */
+  --cns-h: min(80vh, calc((100vw - var(--grid-x0) - var(--grid-x2)) * 1.3));
+  --cns-x: calc((var(--grid-x2) + 100vw - var(--grid-x0)) / 2);
+  --cns-y: 44vh;
+  --grid-x2: calc(var(--grid-x0) + var(--grid-col) + var(--grid-gap));
+  /* The title from under the logo. */
+  --grid-y0: 11vh;
+  /* The brain, 839 x 411 um from in front: across the right from the gutter, a little past the page's edge. */
+  --grid-brain-w: calc((100vw - var(--grid-x2)) * 1.05);
+}
+
+/*
+ * White behind the left column, from the page's edge to the gutter, then fading out across it: the model,
+ * under it, fades out as it turns or is turned into it.
+ */
+.fade {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: var(--grid-x2);
+  background: linear-gradient(to right, #fff calc(100% - var(--grid-gap)), transparent);
+}
+
+/*
+ * The Male CNS's view, over the right side: a square a quarter taller than the CNS, so that neither turning nor
+ * a drag brings it to the view's edges.
+ */
+.cns {
+  left: calc(var(--cns-x) - var(--cns-h) * 0.625);
+  top: calc(var(--cns-y) - var(--cns-h) * 0.625);
+  width: calc(var(--cns-h) * 1.25);
+  height: calc(var(--cns-h) * 1.25);
+}
+
+/* The model's name and size, just under it. */
+.caption {
+  position: absolute;
+  left: var(--cns-x);
+  top: calc(var(--cns-y) + var(--cns-h) / 2 + 14px);
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+/*
+ * The brain's view, over the right half: a square a quarter wider than the brain, so that neither turning nor
+ * a drag brings it to the view's edges, with the brain at its middle, from the gutter and half way down.
+ */
+.brain {
+  left: calc(var(--grid-x2) - var(--grid-brain-w) * 0.125);
+  top: calc(50vh - var(--grid-brain-w) * 0.625);
+  width: calc(var(--grid-brain-w) * 1.25);
+  height: calc(var(--grid-brain-w) * 1.25);
+}

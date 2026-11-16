@@ -22,6 +22,8 @@ interface SectionNewsProps {
 }
 
 const PAGE_SIZE = 10;
+/** How many articles a section of the page holds. */
+const ON_A_SCREEN = 2;
 
 export default function SectionNews({
   className,
@@ -80,12 +82,19 @@ export default function SectionNews({
         </header>
       )}
       <main>
-        {newsListOBI.map((item) => (
-          <Card key={item.id} news={item} />
-        ))}
+        {Array.from({ length: Math.ceil(newsListOBI.length / ON_A_SCREEN) }, (_, screen) => {
+          const onThisScreen = newsListOBI.slice(screen * ON_A_SCREEN, (screen + 1) * ON_A_SCREEN);
+          return (
+            <section key={onThisScreen[0].id} data-page-section className={styles.screen}>
+              {onThisScreen.map((item) => (
+                <Card key={item.id} news={item} />
+              ))}
+            </section>
+          );
+        })}
       </main>
       {newsListEPFL.length > 0 && (
-        <div className={styles.epflNews}>
+        <div data-page-section className={classNames(styles.epflNews, styles.screen)}>
           <h1 className={styles.separator}>BBP news highlight</h1>
           <div className={styles.copyright}>Copyright © EPFL - BBP</div>
           <hr className={styles.separator} />

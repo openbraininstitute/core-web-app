@@ -7,6 +7,7 @@ import {
   ScanConfigActivity,
   type TScanConfigActivity,
 } from '@/features/scan-config/types';
+import { useMediaQuery } from '@/hooks/use-media-query';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { cn } from '@/utils/css-class';
 
@@ -54,34 +55,6 @@ function LeftColumnSkeleton() {
   );
 }
 
-function MiddleColumnSkeleton() {
-  return (
-    <div
-      className={cn(
-        styles.scrollable,
-        'h-full overflow-y-auto no-scrollbar border-l border-gray-200 px-3'
-      )}
-    >
-      <div className="space-y-4 flex flex-col gap-4">
-        <div className="space-y-2 mb-10">
-          <Skeleton className="h-3 w-48 rounded-full" />
-          <Skeleton className="h-3 w-full rounded-full" />
-          <Skeleton className="h-3 w-full rounded-full" />
-          <Skeleton className="h-3 w-3/4 rounded-full" />
-        </div>
-        <div className="space-y-2 h-14!">
-          <Skeleton className="h-3 w-28 rounded-full" />
-          <Skeleton className="h-12! w-full rounded-full" />
-        </div>
-        <div className="space-y-2 h-14!">
-          <Skeleton className="h-3 w-32 rounded-full" />
-          <Skeleton className="h-12! w-full rounded-full" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function ModelPreviewSkeleton() {
   return <div className="h-full rounded-lg bg-gray-100 animate-pulse mr-3" />;
 }
@@ -116,6 +89,9 @@ export function ScanConfigSkeleton({
   className?: string;
   activity?: TScanConfigActivity;
 }) {
+  // on a phone, its own layout (default-columns.tsx's PhoneConfigColumns): the 3D view alone as a tile at the top, no
+  // table beside it, the blocks' list in a box under it (the user asked the loading page to match)
+  const phone = useMediaQuery('(max-width: 767px)', false);
   return (
     <div className={cn('flex h-full min-h-0 flex-col', className)}>
       <ScanConfigTabsPanel
@@ -127,19 +103,27 @@ export function ScanConfigSkeleton({
         disableConfigurationTab={false}
         results={null}
         configuration={
-          // As the configuration lays out: the blocks and their form in one window, the preview
-          // beside it, edge to edge with the toolbar's ends.
-          <div className="flex min-h-0 flex-1 flex-col pt-2 pb-2">
-            <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-1.25 overflow-hidden *:min-w-0">
-              <div
-                className={cn(
-                  BOX_CLASS,
-                  'col-span-2 mt-px mb-3 ml-px grid min-h-0 grid-cols-subgrid grid-rows-1 gap-x-0 overflow-hidden py-3'
-                )}
-              >
+          phone ? (
+            <div className="flex h-full min-h-0 w-full flex-col gap-2 px-1 pb-2">
+              <div className="h-36 shrink-0 animate-pulse rounded-2xl bg-gray-100" />
+              <div className={cn(BOX_CLASS, 'min-h-0 flex-1 overflow-hidden py-3')}>
                 <LeftColumnSkeleton />
-                <MiddleColumnSkeleton />
               </div>
+            </div>
+          ) : (
+          // As the configuration first lays out (the user asked them to match): the blocks' list alone in a slim
+          // window on the left, the form folded away, and the preview spread over the rest, edge to edge with the
+          // toolbar's ends (default-columns.tsx's ALONE_TRACKS)
+          <div className="flex min-h-0 flex-1 flex-col pt-2 pb-2">
+            <div
+              className="grid min-h-0 flex-1 gap-1.25 overflow-hidden *:min-w-0"
+              style={{ gridTemplateColumns: 'minmax(0,1fr) minmax(0,0fr) minmax(0,3fr)' }}
+            >
+              <div className={cn(BOX_CLASS, 'mt-px mb-3 ml-px min-h-0 overflow-hidden py-3')}>
+                <LeftColumnSkeleton />
+              </div>
+              {/* the form's track, folded to nothing */}
+              <div aria-hidden />
               {activity === ScanConfigActivity.Simulate ? (
                 <BoxedPreviewSkeleton />
               ) : (
@@ -149,6 +133,7 @@ export function ScanConfigSkeleton({
               )}
             </div>
           </div>
+          )
         }
       />
     </div>

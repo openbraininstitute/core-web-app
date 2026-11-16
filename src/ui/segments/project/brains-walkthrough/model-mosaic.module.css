@@ -1,0 +1,77 @@
+/* Match the other walkthrough movies' stage and margins. */
+.gallery {
+  position: absolute;
+  inset-block: 10vh;
+  left: -5%;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.movie {
+  position: relative;
+  width: 100%;
+  margin: 0;
+}
+
+.movie video {
+  display: block;
+  width: 92%;
+  max-height: calc(80vh - 36px);
+  aspect-ratio: 16 / 9;
+  object-fit: contain;
+  background: transparent;
+}
+
+.controls {
+  position: absolute;
+  top: 100%;
+  inset-inline: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding-top: 10px;
+  color: #526178;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.controls button {
+  flex-shrink: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.controls button:hover {
+  color: #002766;
+}
+
+.controls button:focus-visible {
+  outline: 3px solid #096dd9;
+  outline-offset: 4px;
+}
+
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .chapter {
+    padding-top: calc(var(--stage-video-top) + var(--stage-video-h) + 60px);
+  }
+
+  .gallery {
+    inset-inline: 0;
+    top: var(--stage-video-top);
+    bottom: auto;
+    height: var(--stage-video-h);
+  }
+
+  .movie video {
+    max-height: none;
+  }
+
+  .controls {
+    gap: 12px;
+    font-size: 11px;
+  }
+}

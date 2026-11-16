@@ -20,6 +20,8 @@ export interface IGridSearchProps {
    * the input's own layout together, so the two cannot disagree.
    */
   inputWidthClass?: string;
+  /** Told whenever it opens or closes (a phone's toolbar makes room for it). */
+  onOpenChange?: (open: boolean) => void;
 }
 
 /**
@@ -34,6 +36,7 @@ export function GridSearch({
   value,
   placeholder = 'Search for entities…',
   inputWidthClass = 'w-64',
+  onOpenChange,
 }: IGridSearchProps) {
   const [open, setOpen] = useState(openOnMount || Boolean(value));
   const [text, setText] = useState(value ?? '');
@@ -67,6 +70,14 @@ export function GridSearch({
 
   useEffect(() => {
     if (open) inputRef.current?.focus();
+  }, [open]);
+
+  const onOpenChangeRef = useRef(onOpenChange);
+  useEffect(() => {
+    onOpenChangeRef.current = onOpenChange;
+  });
+  useEffect(() => {
+    onOpenChangeRef.current?.(open);
   }, [open]);
 
   /** Push a term immediately, cancelling any pending debounce. */

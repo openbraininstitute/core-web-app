@@ -1,5 +1,5 @@
 import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
-import type { ViewControls } from '@/features/viewer-3d/engine/scene-view';
+import type { CameraPose, FrameBox, ViewControls, ViewFrame } from '@/features/viewer-3d/engine/scene-view';
 import type { SectionType } from '../section-type';
 import type { CircuitSpikes } from '../types';
 import type { MortonSorted } from './load/morton';
@@ -360,9 +360,21 @@ export interface CircuitMorphologyView extends ViewControls {
   onSpikeTime(listener: (timeInMs: number) => void): () => void;
   /** Told when the replay plays or stops, the end of the spikes included. */
   onSpikesPlaying(listener: (playing: boolean) => void): () => void;
-  setDark(dark: boolean): void;
+  /** `light`: the canvas when it is not dark, the viewer's own grey when omitted. */
+  setDark(dark: boolean, light?: string): void;
+  /** Frame the cells at `zoom` from now on, below 1 leaving room round them; the view now too while it is as framed. */
+  setFrameZoom?(zoom: number): void;
+  /** Frame this box of the circuit's own frame, µm, in place of the cells, from its side; null frames the cells again. */
+  setFrameBox?(box: FrameBox | null): void;
+  /** Hold the camera at `pose`, in the circuit's own frame, the spin held off; null lets it go to its framing. */
+  holdCamera?(pose: CameraPose | null): void;
+  /** The camera as the last framing left it, and as it is now. */
+  framedCamera?(): CameraPose | null;
+  cameraNow?(): CameraPose | null;
   /** Turn the view slowly about the screen's vertical, but not while a pointer holds it. */
   setSpin(on: boolean): void;
+  /** Moving frames keep the ambient occlusion whatever they cost, where the tier draws one, or drop it to keep up. */
+  setAoMoving?(on: boolean): void;
   resetView(): void;
   /** Zoom in a little and back out once, to point at the view; any move of the user's ends it. */
   nudge(): void;
@@ -380,5 +392,7 @@ export interface CircuitMorphologyView extends ViewControls {
   snapshot(): HTMLCanvasElement | null;
   /** Told when a wheel turned outside fullscreen without Ctrl, which scrolls the page instead of zooming. */
   onWheelWithoutCtrl(listener: () => void): () => void;
+  /** Told after every frame drawn what it was drawn with, to draw over the view in step with it. */
+  onFrame(listener: (frame: ViewFrame) => void): () => void;
   dispose(): void;
 }

@@ -1,18 +1,21 @@
 button.nextPanel {
   all: unset;
   width: 100%;
-  color: #fff;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
   padding: 0;
-  gap: 1em;
-  height: 120px;
+  gap: 10px;
+  height: 64px;
   margin: 0;
   cursor: pointer;
-  opacity: 0.8;
+  opacity: 0.7;
   transition: opacity 0.2s;
 }
 
@@ -29,13 +32,13 @@ button.nextPanel > div.ruler {
   content: "";
   margin: 0;
   height: 100%;
-  width: 2px;
-  background-color: #fff;
+  width: 1px;
+  background-color: currentColor;
 }
 
 @media (max-height: 480px) {
   button.nextPanel {
-    height: 48px;
-    gap: 0.125em;
+    height: 40px;
+    gap: 4px;
   }
 }

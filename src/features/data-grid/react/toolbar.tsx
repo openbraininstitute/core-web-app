@@ -7,7 +7,11 @@ import type { ReactNode } from 'react';
  * decides the order. All optional — a surface renders only the pickers it needs.
  */
 export interface IDataGridToolbarSlots {
-  /** entity-type count selector — left cluster, first */
+  /** what the page is, before everything else on the left (e.g. a breadcrumb) */
+  start?: ReactNode;
+  /** the page's own call to action (e.g. upload) — left cluster, before the pickers */
+  action?: ReactNode;
+  /** entity-type count selector — left cluster, first picker */
   entityType?: ReactNode;
   /** scope (Public / Project) selector — left cluster, second */
   scope?: ReactNode;
@@ -21,6 +25,8 @@ export interface IDataGridToolbarSlots {
 
 export interface IDataGridToolbarProps {
   slots?: IDataGridToolbarSlots;
+  /** the selection's actions kept in place — left cluster, right after the call to action */
+  selection?: ReactNode;
   /** the advanced/active filters control — right cluster, after the search */
   filters?: ReactNode;
   /** the column chooser — right cluster, last */
@@ -35,21 +41,37 @@ export interface IDataGridToolbarProps {
  */
 export function DataGridToolbar({
   slots,
+  selection,
   filters,
   columnChooser,
   className,
 }: IDataGridToolbarProps) {
-  const hasLeft = slots?.entityType || slots?.scope || slots?.brainRegion || slots?.left;
+  const hasLeft =
+    slots?.start ||
+    slots?.action ||
+    selection ||
+    slots?.entityType ||
+    slots?.scope ||
+    slots?.brainRegion ||
+    slots?.left;
   const hasRight = slots?.search || filters || columnChooser;
   if (!hasLeft && !hasRight) return null;
 
   return (
     <div
-      className={cn('flex min-h-10 w-full flex-wrap items-center gap-2 px-1 py-2', className)}
+      className={cn(
+        'flex min-h-10 w-full flex-wrap items-center gap-2 px-1 py-2',
+        // a phone keeps it all on one row (the user asked), scrolling sideways should it ever not fit
+        'no-scrollbar max-md:flex-nowrap max-md:overflow-x-auto',
+        className
+      )}
       data-testid="data-grid-toolbar"
     >
       {hasLeft ? (
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-2 max-md:shrink-0 max-md:flex-nowrap">
+          {slots?.start}
+          {slots?.action}
+          {selection}
           {slots?.entityType}
           {slots?.scope}
           {slots?.brainRegion}

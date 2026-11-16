@@ -114,7 +114,7 @@ export class DepthPyramid {
         depthTexture: new THREE.DepthTexture(width, height, THREE.FloatType),
         format: THREE.RedFormat,
         resolveColorBuffer: false,
-        storeMultisampledColorBuffer: false,
+        // Stored though unread: see `Occlusion`'s scene pass.
       });
     }
     this.target.setSize(width, height);

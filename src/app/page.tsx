@@ -1,6 +1,8 @@
-import LandingPage from '@/ui/segments/landing';
+import { Suspense } from 'react';
+
+import { BrainsLanding } from '@/ui/segments/landing/brains-landing';
+import { LandingFirstPaint } from '@/ui/segments/landing/landing-first-paint';
 import { generateMetadataFromSanity } from '@/ui/segments/landing/metadata/metadata';
-import { EnumSection } from '@/ui/segments/landing/sections/sections';
 
 import type { Metadata } from 'next';
 
@@ -11,24 +13,15 @@ export async function generateMetadata(): Promise<Metadata> {
   return metadata;
 }
 
-export default async function RootPage({
-  searchParams: promisedParams,
-}: {
-  searchParams: Promise<{
-    errorcode: string | undefined;
-    original_code: string | undefined;
-    description: string | undefined;
-  }>;
-}) {
-  const searchParams = await promisedParams;
+/** The platform's landing: the Fly brain walkthrough, in place of the marketing home page. */
+export default function RootPage() {
+  // The logo and words go out in the first HTML, not held back with the landing while it waits on the session.
   return (
-    <LandingPage
-      section={EnumSection.Home}
-      error={{
-        errorcode: searchParams.errorcode,
-        originalCode: searchParams.original_code,
-        description: searchParams.description,
-      }}
-    />
+    <>
+      <LandingFirstPaint />
+      <Suspense fallback={null}>
+        <BrainsLanding />
+      </Suspense>
+    </>
   );
 }

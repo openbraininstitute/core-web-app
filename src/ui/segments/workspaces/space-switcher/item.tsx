@@ -9,11 +9,12 @@ import {
 } from '@remixicon/react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { listAllProjects } from '@/api/virtual-lab-svc/queries/project';
 import { authFetch } from '@/auth-fetch';
-import { useConfig } from '@/config';
+import { config as appConfig, useConfig } from '@/config';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { Button } from '@/ui/molecules/button';
 import { Skeleton } from '@/ui/molecules/skeleton';
@@ -113,6 +114,10 @@ export function Item({
     toggle();
   };
 
+  const router = useRouter();
+
+  // a project's pill switches to that project, onto its project page (the user asked), rather than opening its
+  // preview first
   const onProjectClick = ({
     virtualLabId,
     project,
@@ -120,15 +125,7 @@ export function Item({
     virtualLabId: string;
     project: IProject;
   }) => {
-    makeTriggerWorkspaceConfigurationClickEvent({
-      on: true,
-      type: WorkspaceActions.ProjectPreview,
-      data: {
-        virtualLabId,
-        projectId: project.id,
-        data: project,
-      },
-    });
+    router.push(`${appConfig.ROOT_ROUTE}/${virtualLabId}/${project.id}/project`);
   };
 
   const onCreateProject = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {

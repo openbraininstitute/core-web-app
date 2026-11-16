@@ -12,6 +12,8 @@ const base = `/app/virtual-lab/${VLAB}/${PROJECT}`;
 vi.mock('next/navigation', () => ({
   usePathname: () => `${base}/learn`,
   useParams: () => ({ virtualLabId: VLAB, projectId: PROJECT }),
+  // the project home menu reads the selected design from the query string
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 // the menu's lab and membership queries are beside the point here
@@ -39,10 +41,9 @@ describe('TopMenuNavigation / Learn', () => {
     expect(ids.indexOf('workspace-learn')).toBe(ids.indexOf('workspace-home') + 1);
   });
 
-  it('leaves Learn out by default: its flag is off unless switched on', () => {
+  it('shows Learn whatever the flags, as it is behind none now', () => {
     renderMenu();
-    expect(screen.queryByTestId('workspace-learn')).toBeNull();
-    expect(screen.getByTestId('workspace-explore-data')).toBeInTheDocument();
+    expect(screen.getByTestId('workspace-learn')).toBeInTheDocument();
   });
 });
 

@@ -1,0 +1,51 @@
+'use client';
+
+import Link from 'next/link';
+
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { config } from '@/config';
+import { WorkspaceMainPages } from '@/constants';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { useWalkthroughActions } from '@/ui/segments/project/walkthrough/walkthrough';
+
+import labs from './virtual-labs.module.css';
+
+const PATHS = {
+  data: WorkspaceMainPages.Data,
+  workflows: WorkspaceMainPages.Workflows,
+  notebooks: `${WorkspaceMainPages.Notebooks}/browse/${ExtendedEntitiesTypeDict.AnalysisNotebookTemplate}`,
+};
+
+type Destination = keyof typeof PATHS | 'learn' | 'platform';
+
+/** A consistent next step, using project routes when a workspace is available. */
+export function ChapterAction({ label, destination }: { label: string; destination: Destination }) {
+  const { virtualLabId, projectId } = useWorkspace();
+  const actions = useWalkthroughActions();
+  const home = projectId ? `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}` : '/';
+
+  if (destination === 'platform') {
+    return (
+      <div className={labs.chapterAction} data-chapter-action>
+        <button type="button" onClick={actions?.enter} className={labs.button}>
+          {label}
+        </button>
+      </div>
+    );
+  }
+
+  const href =
+    destination === 'learn'
+      ? `/app/learn/brain-modeling?from=${encodeURIComponent(home + (projectId ? '?design=brains' : ''))}`
+      : projectId
+        ? `${home}/${PATHS[destination]}`
+        : config.ROOT_ROUTE;
+
+  return (
+    <div className={labs.chapterAction} data-chapter-action>
+      <Link href={href} className={labs.button}>
+        {label}
+      </Link>
+    </div>
+  );
+}

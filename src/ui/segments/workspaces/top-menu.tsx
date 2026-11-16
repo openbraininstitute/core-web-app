@@ -1,10 +1,8 @@
 'use client';
 
-import { aiButtonFlag, courseToolbarFlag, useFlag } from '@/features/feature-flags';
+import { courseToolbarFlag, useFlag } from '@/features/feature-flags';
 import ObiLogo from '@/features/learn/components/ui/ObiLogo';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { usePanelState } from '@/ui/segments/ai/hooks';
-import { PanelState } from '@/ui/segments/ai/types';
+import { AiButton } from '@/ui/segments/ai/button';
 import { Wallet } from '@/ui/segments/project/balance';
 import { SpaceSwitcher } from '@/ui/segments/workspaces/space-switcher';
 import { TopMenuNavigation } from '@/ui/segments/workspaces/top-menu-nav';
@@ -17,34 +15,7 @@ type Props = {
   className?: ComponentProps<'div'>['className'];
 };
 
-/** The AI assistant's button, behind its flag: a navy circle that opens the panel, and closes it. */
-function AiButton() {
-  const { isCollapsed, setState } = usePanelState();
-  const breakpoint = useDefaultBreakpoint();
-  return (
-    <button
-      type="button"
-      // where the onboarding tour points for the assistant, as the panel is gone while closed
-      id="workspace-ai-button"
-      onClick={() => setState(isCollapsed ? PanelState.Expanded : PanelState.Collapsed)}
-      aria-label={isCollapsed ? 'Open the AI assistant' : 'Close the AI assistant'}
-      aria-expanded={!isCollapsed}
-      title="OBI Assistant"
-      data-testid="ai-assistant-open-button"
-      className={cn(
-        'bg-primary-9 flex shrink-0 items-center justify-center rounded-full font-bold tracking-[0.5px] text-white shadow-md transition-all select-none',
-        'hover:bg-primary-8 hover:shadow-[0_4px_14px_rgba(0,39,102,0.35)] active:scale-95',
-        breakpoint === 'xl' ? 'size-12 text-[15px]' : 'size-10 text-[13px]',
-        !isCollapsed && 'ring-primary-4 ring-2 ring-offset-2 ring-offset-white'
-      )}
-    >
-      AI
-    </button>
-  );
-}
-
 export function WorkspaceTopMenu({ className }: Props) {
-  const aiButton = useFlag(aiButtonFlag.key);
   const courseToolbar = useFlag(courseToolbarFlag.key);
   if (courseToolbar)
     return (
@@ -65,7 +36,7 @@ export function WorkspaceTopMenu({ className }: Props) {
         <div className="flex items-center gap-1">
           <HydrateWrapper>
             <TopMenuNavigation plain />
-            {aiButton && <AiButton />}
+            <AiButton />
           </HydrateWrapper>
         </div>
       </div>
@@ -79,7 +50,7 @@ export function WorkspaceTopMenu({ className }: Props) {
       <div className="flex items-center justify-center gap-2">
         <HydrateWrapper>
           <TopMenuNavigation />
-          {aiButton && <AiButton />}
+          <AiButton />
         </HydrateWrapper>
       </div>
     </div>

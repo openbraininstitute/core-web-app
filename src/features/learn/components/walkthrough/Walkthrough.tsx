@@ -9,7 +9,15 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 
 import ChargeWidget from '@/features/learn/components/basics/ChargeWidget';
 import ExcitationWidget from '@/features/learn/components/basics/ExcitationWidget';
@@ -54,6 +62,8 @@ export interface Slide {
     | 'synapse-long';
   /** A closing link: to another course, by its id, or, naming none, to the Learn page. */
   cta?: { label: string; course?: string };
+  /** The name of the part of the course this slide starts: marked along the slides' bar, and named there on hover. */
+  section?: string;
 }
 
 /**
@@ -66,7 +76,11 @@ function ownTouch(target: EventTarget, deck: Element) {
     el && el !== deck;
     el = el.parentElement
   ) {
-    if (el.matches('input, textarea, select, [contenteditable]:not([contenteditable="false"])'))
+    if (
+      el.matches(
+        'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [data-own-touch]'
+      )
+    )
       return true;
     if (el.scrollWidth > el.clientWidth && /auto|scroll/.test(getComputedStyle(el).overflowX))
       return true;
@@ -169,6 +183,59 @@ export default function Walkthrough({
 
   const s = slides[i];
   const wide = Boolean(s.widget);
+  // the course's parts, each where it starts along the bar
+  const sections = slides.flatMap((slide, k) =>
+    slide.section ? [{ k, name: slide.section }] : []
+  );
+  const n = slides.length;
+  // the left of the kth slide's dash: the dashes share the bar, 6 px (gap-1.5) apart
+  const dashLeft = (k: number) => `calc(${k} * ((100% - ${(n - 1) * 6}px) / ${n}) + ${k * 6}px)`;
+  // where each part's name goes, always shown: above the bar or below it, by turns, over its tick — reading on from it
+  // where there is room, or slid back along it where the next name or the bar's end is in the way — so that no two in a
+  // row overlap; and, where neither row has room for all of it, cut short. Laid out from the bar's end back, so that
+  // names crowded near it make room by sliding back; once the bar has a width, and again whenever it changes.
+  const barRef = useRef<HTMLDivElement>(null);
+  const nameRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [places, setPlaces] = useState<{ below: boolean; left: number; max?: number }[]>([]);
+  const partNames = sections.map(({ name }) => name).join('|');
+  // biome-ignore lint/correctness/useExhaustiveDependencies: laid out again only when the parts or the slide count change
+  useLayoutEffect(() => {
+    const bar = barRef.current;
+    if (!bar) return undefined;
+    const lay = () => {
+      const width = bar.clientWidth;
+      const slot = (width - (n - 1) * 6) / n + 6;
+      // in each row, how far right a name may still reach, px
+      const limit = [width, width];
+      const next: { below: boolean; left: number; max?: number }[] = [];
+      for (let j = sections.length - 1; j >= 0; j--) {
+        const x = sections[j].k * slot;
+        const span = (nameRefs.current[j]?.scrollWidth ?? 0) + 2;
+        // as far right as it can start, still over its tick and short of the next name in the row
+        const fit = (row: number) => {
+          const at = Math.min(x, limit[row] - span);
+          return at >= x - span && at >= 0 ? at : null;
+        };
+        const row = [j % 2, 1 - (j % 2)].find((r) => fit(r) !== null);
+        if (row !== undefined) {
+          const at = fit(row) ?? x;
+          limit[row] = at - 10;
+          next[j] = { below: row === 1, left: at };
+          continue;
+        }
+        // no room for all of it: in the row with more, from its tick — or as far back as that row allows — cut short
+        const more = limit[0] >= limit[1] ? 0 : 1;
+        const at = Math.max(0, Math.min(x, limit[more] - 28));
+        next[j] = { below: more === 1, left: at, max: Math.max(28, limit[more] - at) };
+        limit[more] = at - 10;
+      }
+      setPlaces(next);
+    };
+    lay();
+    const watch = new ResizeObserver(lay);
+    watch.observe(bar);
+    return () => watch.disconnect();
+  }, [n, partNames]);
   // Typed out on the way forward only: a slide you go back to is as you left it.
   const typing = !!typewriter && typewriterOn === true && dir > 0;
 
@@ -259,8 +326,25 @@ export default function Walkthrough({
         </div>
       </main>
 
-      <footer className="flex items-center justify-between gap-4 px-5 pb-5">
-        <div className="flex flex-1 gap-1.5" role="tablist" aria-label="Slides">
+      {/* On a phone a bar of its own (the dashes and their 6 px gaps outgrow its width on a long course, which widened
+          the page, shrank the slides and stopped the swipes between them) */}
+      <PhoneTimeline
+        n={n}
+        i={i}
+        sections={sections}
+        onPick={(k) => {
+          setDir(k > i ? 1 : -1);
+          setI(k);
+        }}
+      />
+      {/* The footer's padding is room for the parts' names, above the bar and below it. */}
+      <footer className="flex items-center justify-between gap-4 px-5 pt-7 pb-7 max-sm:hidden">
+        <div
+          ref={barRef}
+          className="relative flex flex-1 gap-1.5"
+          role="tablist"
+          aria-label="Slides"
+        >
           {slides.map((_, k) => (
             <button
               type="button"
@@ -277,9 +361,202 @@ export default function Walkthrough({
               }`}
             />
           ))}
+          {sections.map(({ k, name }, j) => {
+            const place = places[j];
+            const below = place?.below ?? j % 2 === 1;
+            // the part the slide on show is in, picked out
+            const here = k <= i && (sections[j + 1]?.k ?? n) > i;
+            return (
+              <span key={`part-${k}`}>
+                {/* a tick from the bar, up or down to the name */}
+                <span
+                  aria-hidden="true"
+                  className={`pointer-events-none absolute h-2 w-0.5 rounded-full ${below ? 'top-1' : 'bottom-1'} ${
+                    k <= i ? 'bg-sky-400' : 'bg-slate-500'
+                  }`}
+                  style={{ left: dashLeft(k) }}
+                />
+                <button
+                  type="button"
+                  ref={(el) => {
+                    nameRefs.current[j] = el;
+                  }}
+                  onClick={() => {
+                    setDir(k > i ? 1 : -1);
+                    setI(k);
+                  }}
+                  title={name}
+                  aria-label={`${name}, from slide ${k + 1}`}
+                  className={`absolute overflow-hidden text-[11px] leading-[13px] text-ellipsis whitespace-nowrap transition-colors ${
+                    below ? 'top-3' : 'bottom-3'
+                  } ${here ? 'text-sky-300' : 'text-slate-400 hover:text-slate-200'}`}
+                  style={{
+                    left: place ? place.left : dashLeft(k),
+                    maxWidth: place?.max,
+                  }}
+                >
+                  {name}
+                </button>
+              </span>
+            );
+          })}
         </div>
         <span className="font-mono text-[10px] text-slate-600">← →</span>
       </footer>
+    </div>
+  );
+}
+
+/**
+ * The slides' bar on a phone, in the desktop bar's manner: thin dashes 6 px apart, but one to a part rather than one
+ * to a slide (a long course's would not fit), each as long as its part, filled up to the slide on show. Over them, in
+ * the header's small capitals, the part on show, which opens the list of parts to jump to, and which part it is. The
+ * dashes are dragged along, or tapped, to go to a slide; the swipes between slides leave them alone.
+ */
+function PhoneTimeline({
+  n,
+  i,
+  sections,
+  onPick,
+}: {
+  n: number;
+  i: number;
+  sections: { k: number; name: string }[];
+  onPick: (k: number) => void;
+}) {
+  const [listOpen, setListOpen] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const dashRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const part = sections.findLastIndex(({ k }) => k <= i);
+  // the parts as runs of slides, any before the first part's start a run of its own
+  const starts = [...(sections[0]?.k ? [0] : []), ...sections.map(({ k }) => k)];
+  const runs = (starts.length ? starts : [0]).map((start, j, all) => ({ start, end: all[j + 1] ?? n }));
+  // the slide under `clientX`: in the dash it is over, or the nearest, as far along it as it is
+  const at = (clientX: number) => {
+    let best = i;
+    let gap = Infinity;
+    runs.forEach(({ start, end }, j) => {
+      const box = dashRefs.current[j]?.getBoundingClientRect();
+      if (!box) return;
+      const off = clientX < box.left ? box.left - clientX : clientX > box.right ? clientX - box.right : 0;
+      if (off >= gap) return;
+      gap = off;
+      const f = box.width ? Math.min(0.999, Math.max(0, (clientX - box.left) / box.width)) : 0;
+      best = start + Math.floor(f * (end - start));
+    });
+    return best;
+  };
+  const pick = (k: number) => {
+    if (k !== i) onPick(k);
+  };
+  const pad = (k: number) => String(k).padStart(2, '0');
+  return (
+    <div
+      data-own-touch
+      className="relative px-5 pt-1 pb-[calc(env(safe-area-inset-bottom)+12px)] sm:hidden"
+    >
+      {listOpen && (
+        <>
+          <button
+            type="button"
+            aria-label="Close the parts"
+            className="fixed inset-0 z-40 cursor-default"
+            onClick={() => setListOpen(false)}
+          />
+          <div className="absolute inset-x-3 bottom-full z-50 mb-1 max-h-[60dvh] overflow-y-auto rounded-xl border border-slate-800 bg-slate-950/95 px-2 pt-3 pb-2 shadow-2xl backdrop-blur">
+            <div className="px-3 pb-2 font-mono text-[10px] tracking-widest text-slate-600 uppercase">Parts</div>
+            {sections.map(({ k, name }, j) => (
+              <button
+                type="button"
+                key={k}
+                onClick={() => {
+                  setListOpen(false);
+                  pick(k);
+                }}
+                className={`flex w-full items-baseline gap-3 rounded-lg px-3 py-2 text-left text-[13px] transition-colors ${
+                  j === part ? 'text-sky-300' : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <span className="w-6 shrink-0 font-mono text-[10px] text-slate-600">{pad(j + 1)}</span>
+                <span className="min-w-0 flex-1">{name}</span>
+                <span className="shrink-0 font-mono text-[10px] text-slate-600">{pad(k + 1)}</span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+      <div className="flex items-center justify-between gap-3">
+        {sections.length > 0 ? (
+          <button
+            type="button"
+            onClick={() => setListOpen((o) => !o)}
+            aria-expanded={listOpen}
+            className="flex min-w-0 items-center gap-1.5 text-[11px] leading-[13px] text-sky-300"
+          >
+            <span className="truncate">{part >= 0 ? sections[part].name : 'Parts'}</span>
+            <span aria-hidden className={`text-[8px] text-slate-500 transition-transform ${listOpen ? 'rotate-180' : ''}`}>
+              ▲
+            </span>
+          </button>
+        ) : (
+          <span />
+        )}
+        {part >= 0 && (
+          <span className="shrink-0 font-mono text-[10px] tracking-widest text-slate-600 uppercase">
+            {pad(part + 1)} / {pad(sections.length)}
+          </span>
+        )}
+      </div>
+      <div
+        role="slider"
+        tabIndex={0}
+        aria-label="Slides"
+        aria-valuemin={1}
+        aria-valuemax={n}
+        aria-valuenow={i + 1}
+        className="relative flex h-6 touch-none items-center gap-1.5"
+        onPointerDown={(e) => {
+          e.currentTarget.setPointerCapture(e.pointerId);
+          setDragging(true);
+          pick(at(e.clientX));
+        }}
+        onPointerMove={(e) => {
+          if (dragging) pick(at(e.clientX));
+        }}
+        onPointerUp={() => setDragging(false)}
+        onPointerCancel={() => setDragging(false)}
+      >
+        {runs.map(({ start, end }, j) => {
+          const filled = Math.min(1, Math.max(0, (i + 1 - start) / (end - start)));
+          const here = i >= start && i < end;
+          return (
+            <div
+              key={start}
+              ref={(el) => {
+                dashRefs.current[j] = el;
+              }}
+              className="relative h-full min-w-1"
+              style={{ flexGrow: end - start, flexBasis: 0 }}
+            >
+              <span className="absolute inset-x-0 top-1/2 h-0.5 -translate-y-1/2 rounded-full bg-slate-800" />
+              <span
+                className="absolute top-1/2 left-0 h-0.5 -translate-y-1/2 rounded-full bg-sky-400/80 transition-[width] duration-200"
+                style={{ width: `${filled * 100}%` }}
+              />
+              {/* the slide on show, a short upright mark, taller while dragged */}
+              {here && (
+                <span
+                  aria-hidden
+                  className={`absolute top-1/2 w-0.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-300 transition-[height] ${
+                    dragging ? 'h-4' : 'h-2'
+                  }`}
+                  style={{ left: `${((i - start + 0.5) / (end - start)) * 100}%` }}
+                />
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

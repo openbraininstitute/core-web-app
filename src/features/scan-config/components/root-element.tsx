@@ -193,9 +193,11 @@ export function RootElement({
               <div className="flex items-center gap-3">
                 {entryCount ? <CountBadge count={entryCount} selected={lit} /> : null}
 
-                {/* A warning where the block has a problem; one that is fine needs no tick. */}
-                {(errors?.some((error) => error.instancePath.startsWith(`/${rootElement}`)) ||
-                  hasFieldErrors) && <WarningFilled className="text-yellow-400!" />}
+                {/* A warning where the block has a problem; one that is fine needs no tick. None on Info, whose name
+                    and description are asked for as the campaign is generated (a stopgap, the user asked). */}
+                {rootElement !== 'info' &&
+                  (errors?.some((error) => error.instancePath.startsWith(`/${rootElement}`)) ||
+                    hasFieldErrors) && <WarningFilled className="text-yellow-400!" />}
 
                 <Chevron
                   // A dictionary's points down while open; the e-model's is never shut.

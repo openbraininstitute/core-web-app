@@ -177,6 +177,7 @@ export default function Left({
             setCampaignId={setCampaignId}
             errors={errors}
             config={config}
+            setConfig={setConfig}
             setTab={setTab}
             setLoading={setLoading}
             activity={activity}

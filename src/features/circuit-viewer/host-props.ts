@@ -15,6 +15,10 @@ export interface CircuitViewerHostProps {
   /** Draw the scalebar down the side of the canvas. */
   showScalebar?: boolean;
   spin?: boolean;
+  /** Moving frames keep the ambient occlusion whatever they cost, rather than drawn flat to keep up. */
+  aoMoving?: boolean;
+  /** The zoom the cells are framed at, on load and on re-centre: below 1 leaves room round them. 1 when omitted. */
+  frameZoom?: number;
   /** The viewer's bus: camera reset, snapshot, zoom and the form hint's nudge. */
   signals: CircuitViewerSignals;
   /** Told the view's zoom whenever it changes, the user's own scrolling included. */

@@ -96,7 +96,9 @@ async function expectOpen() {
   expect(screen.getByTestId('card')).toHaveTextContent('lit: simulate');
 }
 
-describe('the workflows page’s top window', () => {
+// Skipped on the ui-prototype-and-mobile branch: its Workflows page draws the categories as a hexagon menu
+// (workflow-hex-menu.tsx), not the top window, category menu and Type row these tests drive.
+describe.skip('the workflows page’s top window', () => {
   it('deselects the category and shuts the Type row on a click on its lit card', async () => {
     await page();
 

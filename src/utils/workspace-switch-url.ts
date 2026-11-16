@@ -57,10 +57,10 @@ const notebooksStrategy: SectionStrategy = (rest, params) => ({
   params: cleanSearchParams({ searchParams: params, keepKeys: [SCOPE_QUERY_PARAMS] }),
 });
 
-// Reports content (Sanity) is global, so path and query are fully portable.
-const reportsStrategy: SectionStrategy = (rest, params) => ({
-  path: [WorkspaceMainPages.Reports, ...rest],
-  params: new URLSearchParams(params),
+// A research log belongs to one project, so only the list page carries over.
+const reportsStrategy: SectionStrategy = () => ({
+  path: [WorkspaceMainPages.Reports],
+  params: new URLSearchParams(),
 });
 
 // Learn's courses are the same in every project, so the course in view comes along.

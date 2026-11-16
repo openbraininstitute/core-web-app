@@ -55,8 +55,9 @@ export function BrowseLinkGroup({
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
             // -mt-2/pt-2 cancels the parent's gap-2 so the first connector can reach up past
-            // the ul's overflow clip toward the parent row without shifting the layout
-            className="-mt-2 flex w-full flex-col gap-2 overflow-hidden pt-2 pl-8"
+            // the ul's overflow clip toward the parent row without shifting the layout;
+            // shrink-0, as the clip lets an overflowing menu squash it to its first row
+            className="-mt-2 flex w-full shrink-0 flex-col gap-2 overflow-hidden pt-2 pl-8"
           >
             {group.variants.map((variant) => (
               <li key={variant.slug} className="group/sub relative">

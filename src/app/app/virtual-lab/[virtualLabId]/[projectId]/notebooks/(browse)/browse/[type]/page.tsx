@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 
-import { WorkspaceSection } from '@/constants';
+import { DATA_PANEL_MAX_HEIGHT, WorkspaceSection } from '@/constants';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
@@ -53,11 +53,15 @@ export default async function NotebooksBrowsePage({
   if (!entity || entity.group !== EntityTypeGroup.Notebooks) notFound();
 
   return (
+    // in Data's white box, as tall as Data's (the user asked them to match)
     <BrowseEntityScope
       section={WorkspaceSection.Notebooks}
       dataType={entity.extendedType}
       requireBrainRegion={false}
       requireMiniDetailView
+      requireScopeSelector
+      framed
+      classNames={{ container: DATA_PANEL_MAX_HEIGHT, miniView: DATA_PANEL_MAX_HEIGHT }}
     />
   );
 }

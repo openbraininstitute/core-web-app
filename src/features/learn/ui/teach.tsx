@@ -76,11 +76,11 @@ export function TeachCard({
   const next = TEACH_TOPICS[index + 1];
   const label = 'text-[11px] leading-[15px] font-bold tracking-[0.8px] text-[#8c8c8c] uppercase';
   return (
-    <section className={cn(className, 'pt-0 pr-[44px] pb-[34px] pl-[40px]')}>
+    <section className={cn(className, 'pt-[12px] pr-[44px] pb-[34px] pl-[40px]')}>
       <div className="flex max-w-[760px] flex-col gap-[22px]">
         <header
           data-learn="head"
-          className="flex min-h-[84px] items-center justify-between gap-[20px]"
+          className="flex min-h-[86px] items-center justify-between gap-[20px]"
         >
           <div className="flex flex-col gap-[7px]">
             <h1 className="text-[31px] leading-[38px] font-bold text-[#002766]">{topic.title}</h1>

@@ -41,14 +41,15 @@ export function EntityNameDisplay({
     return (
       <div className="mb-4">
         <div className="text-neutral-4 uppercase">Name</div>
-        <div className="text-primary-8 line-clamp-3 text-2xl font-bold">{name}</div>
+        <div className="text-primary-8 line-clamp-3 text-2xl font-bold max-md:text-xl max-md:wrap-anywhere">{name}</div>
       </div>
     );
   }
 
   return (
     <div className="mb-4">
-      <div className="line-clamp-3 text-2xl font-bold text-white">{name}</div>
+      {/* a name without spaces breaks anywhere on a phone rather than running off its edge */}
+      <div className="line-clamp-3 text-2xl font-bold text-white max-md:text-xl max-md:wrap-anywhere">{name}</div>
       {description && (
         <ExpandableText
           id="entity-description"

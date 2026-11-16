@@ -12,26 +12,26 @@ const projectSteps = (tours: Tour[]) => tours.find((t) => t.tour === projectTour
 const selectors = (tours: Tour[]) => projectSteps(tours).map((s) => s.selector);
 
 describe('discoverTours', () => {
-  it('is the tours as they are while both platform trials are off', () => {
-    expect(discoverTours({ aiButton: false, hideHelp: false })).toBe(OnboardingDiscoverSteps);
-    expect(selectors(OnboardingDiscoverSteps)).toContain('#workspace-help');
-    expect(selectors(OnboardingDiscoverSteps)).toContain('#workspace-ai');
+  it('keeps the Help step while Help is shown', () => {
+    const tours = discoverTours({ hideHelp: false });
+    expect(selectors(tours)).toContain('#workspace-help');
+    expect(projectSteps(tours)).toHaveLength(projectSteps(OnboardingDiscoverSteps).length);
   });
 
   it('leaves out the Help step while Help is hidden', () => {
-    const tours = discoverTours({ aiButton: false, hideHelp: true });
+    const tours = discoverTours({ hideHelp: true });
     expect(selectors(tours)).not.toContain('#workspace-help');
     expect(projectSteps(tours)).toHaveLength(projectSteps(OnboardingDiscoverSteps).length - 1);
   });
 
-  it('points the AI step at the AI button when the flag puts one in the top menu', () => {
-    const tours = discoverTours({ aiButton: true, hideHelp: false });
+  it('points the AI step at the AI button, as the panel is gone while closed', () => {
+    const tours = discoverTours({ hideHelp: false });
     expect(selectors(tours)).not.toContain('#workspace-ai');
     expect(selectors(tours).at(-1)).toBe('#workspace-ai-button');
   });
 
   it('leaves the other tours alone', () => {
-    const tours = discoverTours({ aiButton: true, hideHelp: true });
+    const tours = discoverTours({ hideHelp: true });
     for (const [i, tour] of tours.entries())
       if (tour.tour !== projectTour) expect(tour).toBe(OnboardingDiscoverSteps[i]);
   });

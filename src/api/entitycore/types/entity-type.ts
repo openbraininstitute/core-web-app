@@ -11,6 +11,7 @@ export const EntityTypeDict = {
   IonChannelRecording: 'ion_channel_recording',
   SingleNeuronSimulation: 'single_neuron_simulation',
   SingleNeuronSynaptome: 'single_neuron_synaptome',
+  ResearchLog: 'research_log',
   Subject: 'subject',
   SynapticPathway: 'synaptic_pathway',
   SingleNeuronSynaptomeSimulation: 'single_neuron_synaptome_simulation',

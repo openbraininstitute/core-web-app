@@ -23,7 +23,7 @@ import {
 import { FeedbackStarIcon } from '@/components/icons/FeedbackStarIcon';
 import { config } from '@/config';
 import { WorkspaceMainPages } from '@/constants';
-import { greyMenuPillsFlag, hideHelpFlag, learnFlag, useFlag } from '@/features/feature-flags';
+import { greyMenuPillsFlag, hideHelpFlag, useFlag } from '@/features/feature-flags';
 import { createBreakpoint, useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Badge } from '@/ui/molecules/badge';
@@ -34,6 +34,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/ui/molecules/dropdown-menu';
+import { HomeMenu } from '@/ui/segments/project/home-menu';
 import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
@@ -195,7 +196,6 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
     staleTime: 1000 * 60 * 5,
   });
 
-  const learn = useFlag(learnFlag.key);
   const help = useFlag(hideHelpFlag.key) !== true;
   // the links, all but the active one, on the page's grey rather than white: behind its flag
   const grey = useFlag(greyMenuPillsFlag.key) === true;
@@ -212,7 +212,6 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
   const filteredLinks = useMemo(
     () =>
       links.filter((link) => {
-        if (link.id === 'workspace-learn') return learn;
         if (link.id === 'workspace-help') return help;
         if (link.id === 'workspace-course') {
           return (
@@ -221,7 +220,7 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
         }
         return true;
       }),
-    [learn, help, hasCourse, isVlabAdmin, projectId, virtualLabData?.course?.template_project_id]
+    [help, hasCourse, isVlabAdmin, projectId, virtualLabData?.course?.template_project_id]
   );
 
   const hashedLinks = filteredLinks.map((link) => ({
@@ -229,6 +228,9 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
     baseUrl: link.url,
     url: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/${link.url}`,
   }));
+  // Home opens a menu of the home's designs; where it is a plain link, it leads to the home as on main.
+  const homePath = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/`;
+  const homeHref = { pathname: homePath };
 
   // (after tests:) breakpoint for 950px threshold
   const useCustomBreakpoint = createBreakpoint({ mobile: 0, desktop: 950 });
@@ -299,9 +301,7 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
                 >
                   <Link
                     prefetch
-                    href={{
-                      pathname: link.url,
-                    }}
+                    href={link.key === 'home' ? homeHref : { pathname: link.url }}
                   >
                     {link.icon}
                     <span className="text-lg">{link.title}</span>
@@ -426,9 +426,7 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
           }
 
           const isActiveLink = activeSection === baseUrl || isActive?.(pathname);
-          return (
-            <div key={key} className="group flex w-max items-center justify-center gap-0">
-              <div className="relative flex items-center">
+          const badge = (inner: ReactNode) => (
                 <Badge
                   asChild
                   rounded
@@ -457,16 +455,33 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
                     clx
                   )}
                 >
-                  <Link
-                    prefetch
-                    href={{
-                      pathname: url,
-                    }}
-                  >
-                    {allowText && <span className="group-hover:text-primary-3">{title}</span>}
-                    {icon}
-                  </Link>
+                  {inner}
                 </Badge>
+          );
+          const content = (
+            <>
+              {allowText && <span className="group-hover:text-primary-3">{title}</span>}
+              {icon}
+            </>
+          );
+          return (
+            <div key={key} className="group flex w-max items-center justify-center gap-0">
+              <div className="relative flex items-center">
+                {key === 'home' ? (
+                  <HomeMenu homePath={homePath}>
+                    {badge(
+                      <button type="button" aria-label="Home: choose a design">
+                        {content}
+                      </button>
+                    )}
+                  </HomeMenu>
+                ) : (
+                  badge(
+                    <Link prefetch href={{ pathname: url }}>
+                      {content}
+                    </Link>
+                  )
+                )}
               </div>
             </div>
           );

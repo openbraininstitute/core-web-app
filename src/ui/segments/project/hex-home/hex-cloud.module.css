@@ -1,0 +1,501 @@
+/* The landing's tiles as DOM hexagons: white on white, shown by their shadow, picked ones raised and wandering. */
+
+@property --lift {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+.frame {
+  position: relative;
+  width: 100%;
+}
+
+.stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+}
+
+.slot {
+  position: absolute;
+  /* only the tile itself takes the pointer: a folded one's box would otherwise cover what is under it */
+  pointer-events: none;
+}
+
+.slot .tile {
+  pointer-events: auto;
+}
+
+.fold[data-folded='true'] .tile {
+  pointer-events: none;
+}
+
+/* a tile moving to a new place, or size, smoothly */
+.glide {
+  transition:
+    left 820ms cubic-bezier(0.55, 0, 0.25, 1) var(--glide-delay, 0ms),
+    top 820ms cubic-bezier(0.55, 0, 0.25, 1) var(--glide-delay, 0ms),
+    scale 820ms cubic-bezier(0.55, 0, 0.25, 1) var(--glide-delay, 0ms);
+}
+
+.drift {
+  animation: drift var(--drift-duration, 12s) ease-in-out var(--drift-delay, 0s) infinite;
+  will-change: transform;
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(var(--dx), calc(var(--dy) * -0.6));
+  }
+  50% {
+    transform: translate(calc(var(--dx) * -0.3), var(--dy));
+  }
+  75% {
+    transform: translate(calc(var(--dx) * -1), calc(var(--dy) * -0.2));
+  }
+}
+
+.appear {
+  width: 100%;
+  height: 100%;
+  animation: appear 750ms cubic-bezier(0.2, 0.8, 0.2, 1) var(--appear-delay, 0ms) both;
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.82);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* out of the tile it was opened from, growing on the way to its place */
+.burst {
+  animation-name: burst;
+  animation-duration: 820ms;
+}
+
+@keyframes burst {
+  0% {
+    opacity: 0;
+    transform: translate(var(--from-x), var(--from-y)) scale(0.18);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* an example out of its tile, as the landing's chosen one: its white taken out against the page */
+.free {
+  position: relative;
+  mix-blend-mode: multiply;
+  clip-path: inset(3px);
+}
+
+.free > img,
+.free > video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.freeIn {
+  /* backwards only: an opacity animation left filling would isolate the multiply, the picture's white then hiding the
+     tiles under it */
+  animation: fadeIn 260ms ease backwards;
+}
+
+/* the example's words and actions, in a floating window as the landing's bubble is: frosted white, bobbing */
+.floatWindow {
+  z-index: 7;
+  padding: 16px 19px 17px;
+  border-radius: 16px;
+  border: 1px solid rgb(19 48 111 / 0.08);
+  /* more see-through than it was (0.86, the user asked) */
+  background: rgb(255 255 255 / 0.5);
+  backdrop-filter: blur(10px) saturate(1.1);
+  box-shadow:
+    0 14px 34px rgb(20 40 90 / 0.14),
+    0 2px 6px rgb(20 40 90 / 0.08);
+  animation:
+    bubble-float 5.5s ease-in-out infinite,
+    fadeIn 700ms ease 400ms both;
+}
+
+/* the landing's bubble beside the one on show, its tail pointing back at it */
+.bubble {
+  position: absolute;
+  z-index: 7;
+  max-width: 340px;
+  margin: 0;
+  padding: 14px 19px 15px;
+  border-radius: 16px;
+  border: 1px solid rgb(19 48 111 / 0.08);
+  background: rgb(255 255 255 / 0.86);
+  backdrop-filter: blur(8px);
+  box-shadow:
+    0 14px 34px rgb(20 40 90 / 0.14),
+    0 2px 6px rgb(20 40 90 / 0.08);
+  font-size: 21px;
+  line-height: 1.22;
+  font-weight: 300;
+  color: #13306f;
+  pointer-events: none;
+  animation:
+    bubble-float 5.5s ease-in-out infinite,
+    fadeIn 700ms ease 250ms both;
+}
+
+.bubble strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #008c05;
+}
+
+.bubble::before {
+  content: '';
+  position: absolute;
+  top: 24px;
+  left: -8px;
+  width: 14px;
+  height: 14px;
+  rotate: 45deg;
+  background: inherit;
+  border-bottom: 1px solid rgb(19 48 111 / 0.08);
+  border-left: 1px solid rgb(19 48 111 / 0.08);
+}
+
+@keyframes bubble-float {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -7px;
+  }
+}
+
+/* the videos' column beside the categories: out of its category and back into it, scrolling when long */
+.column {
+  position: absolute;
+  z-index: 2;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  transition:
+    transform 560ms cubic-bezier(0.55, 0, 0.25, 1),
+    opacity 420ms ease;
+}
+
+.column[data-open='false'] {
+  transform: scale(0.1);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cardIn {
+  animation: appear 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.cardFace {
+  box-shadow: 0 6px 18px rgb(20 40 90 / 0.16);
+  transition:
+    transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 280ms ease;
+}
+
+.cardFace:hover,
+.cardFace:focus-visible {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 30px rgb(20 40 90 / 0.24);
+  outline: none;
+}
+
+/* a tongue drawn back into its category's tile, and out again */
+.fold {
+  width: 100%;
+  height: 100%;
+  transition:
+    transform 560ms cubic-bezier(0.55, 0, 0.25, 1),
+    opacity 480ms ease;
+}
+
+.fold[data-folded='true'] {
+  transform: translate(var(--to-x), var(--to-y)) scale(0.14);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* a cloud going as another comes */
+.leave {
+  animation: leave 320ms ease forwards;
+  pointer-events: none;
+}
+
+@keyframes leave {
+  to {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+}
+
+.tile {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  --lift: var(--rest-lift, 0);
+  /* a soft shadow down and to the left, longer and softer the higher the tile stands, as on the landing */
+  filter: drop-shadow(
+    calc(-7px * var(--lift)) calc(13px * var(--lift)) calc(4px + 16px * var(--lift))
+      rgb(28 40 72 / calc(0.04 + 0.2 * var(--lift)))
+  );
+  transition:
+    --lift 380ms ease,
+    transform 380ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.interactive {
+  cursor: pointer;
+}
+
+.interactive:hover,
+.interactive:focus-visible {
+  --lift: calc(var(--rest-lift) + 0.35);
+  transform: translateY(-4px) scale(1.04);
+  outline: none;
+}
+
+/* Do science's cards: a gentler rise than a hexagon's, for their width */
+.place.interactive:hover,
+.place.interactive:focus-visible {
+  transform: translateY(-4px) scale(1.02);
+}
+
+.base,
+.outline {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.base polygon {
+  fill: #fff;
+}
+
+.outline polygon {
+  fill: none;
+  stroke: rgb(120 130 150 / 0.16);
+  stroke-width: 1.2;
+}
+
+.interactive:hover .outline polygon,
+.interactive:focus-visible .outline polygon {
+  stroke: rgb(0 58 140 / 0.35);
+}
+
+.floor .base polygon {
+  fill: #fbfcfd;
+}
+
+.tint .base polygon {
+  fill: #eef3fa;
+}
+
+.navy .base polygon {
+  fill: #002766;
+}
+
+.base polygon {
+  transition: fill 260ms ease;
+}
+
+.outline polygon {
+  transition: stroke 260ms ease;
+}
+
+.navy .outline polygon,
+.navy.interactive:hover .outline polygon {
+  stroke: rgb(0 39 102 / 0.7);
+}
+
+.face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* a picture or video, `--zoom` times the tile's width, centred */
+.picture {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(var(--zoom, 1) * 100%);
+  max-width: none;
+  height: auto;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  user-select: none;
+}
+
+.cover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.feather {
+  mask-image: radial-gradient(closest-side, #000 72%, transparent 100%);
+}
+
+.label {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.fadeIn {
+  animation: fadeIn 500ms ease both;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+}
+
+/* The home's first landing (the user asked): each part rising in after the one before it, left to right. Backwards
+   only, so nothing is left filling once it is in: an opacity left on would isolate the example's multiply. */
+.enter {
+  animation: enter 650ms cubic-bezier(0.2, 0.8, 0.2, 1) var(--enter-delay, 0ms) backwards;
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+/* the example on show fading in on the landing: on the multiplied picture itself, so its white stays taken out (an
+   opacity on anything round it would isolate the multiply, and its white would show as a box until the fade ended) */
+.enterFade {
+  animation: fadeIn 650ms ease var(--enter-delay, 0ms) backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drift,
+  .appear,
+  .enter,
+  .enterFade,
+  .leave {
+    animation: none;
+  }
+
+  .fold,
+  .glide,
+  .column {
+    transition: none;
+  }
+
+  .cardIn {
+    animation: none;
+  }
+
+  .bubble,
+  .floatWindow {
+    animation: fadeIn 700ms ease 250ms both;
+  }
+}
+
+/* Just fading (the user asked to try it, as the folding may be too much; `?motion=dynamic` keeps the folding and
+   flying out of the categories): what a category shows fades in and out where it stands, all at once. */
+.fadeMotion {
+  /* slow enough to read as a fade rather than a cut (the user asked for slower) */
+  --fade-ms: 700ms;
+}
+
+.fadeMotion .fold {
+  transition: opacity var(--fade-ms) ease !important;
+  transition-delay: 0ms !important;
+}
+
+.fadeMotion .fold[data-folded='true'] {
+  transform: none;
+}
+
+.fadeMotion .burst {
+  animation-name: fadeIn;
+  animation-duration: var(--fade-ms);
+  animation-delay: 0ms !important;
+}
+
+.fadeMotion .column {
+  transition: opacity var(--fade-ms) ease;
+}
+
+.fadeMotion .column[data-open='false'] {
+  transform: none;
+}
+
+.fadeMotion .cardIn {
+  animation: fadeIn var(--fade-ms) ease both;
+  animation-delay: 0ms !important;
+}
+
+.fadeMotion .openLayer {
+  transition-duration: var(--fade-ms) !important;
+}
+
+/* the words of the one on show, in their hexagon, expanding out of it (from `--from-x`, its middle) */
+.wordsIn {
+  animation: wordsIn 720ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes wordsIn {
+  from {
+    opacity: 0;
+    transform: translateX(var(--from-x, 0px)) scale(0.25);
+  }
+  45% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* the categories coming out of The institute's tile as the page opens move in the fade mode too */
+.fadeMotion .categoryIn .burst {
+  animation-name: burst;
+  animation-duration: 820ms;
+  animation-delay: var(--appear-delay, 0ms) !important;
+}

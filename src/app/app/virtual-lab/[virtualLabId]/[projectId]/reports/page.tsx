@@ -1,20 +1,5 @@
-import { match } from 'ts-pattern';
+import { ResearchLogList } from '@/features/research-logs/research-log-list';
 
-import OBIShowcasesPage from '@/ui/segments/reports/obi-showcases';
-import ShowcasesPage from '@/ui/segments/reports/showcases';
-import SummariesPage from '@/ui/segments/reports/summaries';
-
-export default async function ReportsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ section?: string | string[] }>;
-}) {
-  const params = await searchParams;
-  const section = Array.isArray(params.section) ? params.section[0] : params.section || null;
-
-  return match(section)
-    .with('showcases', () => <ShowcasesPage />)
-    .with('summaries', () => <SummariesPage />)
-    .with('obi-showcases', () => <OBIShowcasesPage />)
-    .otherwise(() => <OBIShowcasesPage />);
+export default function ReportsPage() {
+  return <ResearchLogList />;
 }

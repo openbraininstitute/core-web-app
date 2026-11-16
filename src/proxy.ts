@@ -46,6 +46,8 @@ const ASSETS = [
   '/downloads*',
   '/_next*',
   '/favicon.ico',
+  // the home screen app's manifest, fetched by the browser without the session
+  '/manifest.webmanifest',
   '/video*',
   '*.map',
 ];

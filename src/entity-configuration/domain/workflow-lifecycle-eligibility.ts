@@ -63,6 +63,8 @@ export const WORKFLOW_LIFECYCLE_BLOCKED_ROW_CLASS = [
   '[&_td]:bg-neutral-1! [&_td]:text-neutral-4!',
   'hover:[&_td]:bg-neutral-1!',
   '[&_td>*]:opacity-50',
+  // the scope icon keeps its own colours otherwise
+  '[&_.scope-mark]:text-inherit! [&_.scope-badge]:fill-gray-300!',
 ].join(' ');
 
 export function workflowLifecycleRowClass(entity: TLifecycleStatusCarrier): string | undefined {

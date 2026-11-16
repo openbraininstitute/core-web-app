@@ -10,6 +10,7 @@ import type {
   IGridPage,
   IGridQuery,
   IGridSchema,
+  IGridWorkspace,
   TFacets,
 } from '@/features/data-grid/core';
 import type { WorkspaceContext } from '@/types/common';
@@ -40,10 +41,11 @@ export interface IEntitycorePagedDataSourceOptions<Row> {
 export function serializeEntitycoreQuery<Row>(
   dataType: TExtendedEntitiesTypeDict,
   schema: IGridSchema<Row>,
-  query: IGridQuery
+  query: IGridQuery,
+  workspace?: IGridWorkspace
 ): TEntitycoreParams {
   const ilike = getEntityByExtendedType({ type: dataType })?.api?.config?.ilikeSearchEnabled;
-  return serializeQuery(query, schema, { searchMode: ilike ? 'ilike' : 'plain' });
+  return serializeQuery(query, schema, { searchMode: ilike ? 'ilike' : 'plain', workspace });
 }
 
 /**
@@ -58,7 +60,7 @@ export function createEntitycorePagedDataSource<Row>(
   const entity = getEntityByExtendedType({ type: dataType });
 
   const paramsFor = (query: IGridQuery): TEntitycoreParams => {
-    const serialized = serializeEntitycoreQuery(dataType, schema, query);
+    const serialized = serializeEntitycoreQuery(dataType, schema, query, context);
     return transformParams ? transformParams(serialized) : serialized;
   };
   const run = (args: Parameters<TListQueryFn<Row>>[0]) =>

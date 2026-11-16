@@ -5,9 +5,7 @@ import type { IGridState, IStatePersistence } from '@/features/data-grid/core';
 /**
  * Slices stored apart: session = transient browse state, cleared with the tab; local =
  * durable view layout; selection = in-memory basket (see `createSelectionPersistence`).
- * Expansion is never persisted. Keys are
- * namespaced `data-grid:<version>:*`; the session slice is at v2 after the
- * `quickFilter` → `freeTextSearch` rename, which a v1 entry cannot satisfy.
+ * Expansion is never persisted. Keys are namespaced `data-grid:<version>:<slice>:`.
  */
 const SESSION_KEYS = [
   'filters',
@@ -22,8 +20,18 @@ const LOCAL_KEYS = [
   'columnWidths',
 ] as const satisfies ReadonlyArray<keyof IGridState>;
 
+/**
+ * Version of the session slices' key format: the date of the change plus that day's
+ * counter (`yyyymmdd` + `n`). Changing it orphans every saved entry, so bump it only when
+ * an old entry can no longer be read. 202611091: Data listings keyed without the workspace.
+ */
+const SESSION_VERSION = '202611091';
+
 /** sessionStorage key prefix of the session slice; the full key appends the `instanceKey`. */
-export const SESSION_NAMESPACE = 'data-grid:v2:s:';
+export const SESSION_NAMESPACE = `data-grid:${SESSION_VERSION}:state:`;
+
+/** sessionStorage key prefix of the workspace that saved a Data listing's session slice. */
+const WORKSPACE_NAMESPACE = `data-grid:${SESSION_VERSION}:workspace:`;
 
 /**
  * Same-tab sessionStorage change event, as `useSessionStorage` dispatches it: the `storage`
@@ -111,6 +119,56 @@ export function createSessionStatePersistence(): IStatePersistence {
   );
 }
 
+/**
+ * Session slice for a listing whose key leaves out the workspace (see
+ * `makeListingStateKey`): filters, sort and search follow it into any vlab/project, and
+ * the page goes back to 1 in another workspace, whose rows are not the ones paged through.
+ * The workspace that saved the slice sits in a key of its own, so the slice format and its
+ * readers (the sidebar counts) are unchanged. The reset is written back at load, so the
+ * stored page is always the one on screen.
+ */
+export function createWorkspaceSessionPersistence(workspace: string): IStatePersistence {
+  const base = createSessionStatePersistence();
+  const savedBy = (key: string) => `${WORKSPACE_NAMESPACE}${key}`;
+  const ownerOf = (key: string) => {
+    try {
+      return window.sessionStorage.getItem(savedBy(key));
+    } catch {
+      return null;
+    }
+  };
+  const own = (key: string) => {
+    try {
+      if (ownerOf(key) !== workspace) window.sessionStorage.setItem(savedBy(key), workspace);
+    } catch {
+      /* ignore quota errors */
+    }
+  };
+  return {
+    load(key) {
+      const slice = base.load(key);
+      const owner = ownerOf(key);
+      if (!slice || owner === null || owner === workspace) return slice;
+      const reset = { ...slice, page: 1 };
+      base.save(key, reset as IGridState);
+      own(key);
+      return reset;
+    },
+    save(key, state) {
+      base.save(key, state);
+      own(key);
+    },
+    clear(key) {
+      base.clear?.(key);
+      try {
+        window.sessionStorage.removeItem(savedBy(key));
+      } catch {
+        /* ignore */
+      }
+    },
+  };
+}
+
 /** A persistence adapter that remembers nothing, for when a slice is switched off. */
 const NO_PERSISTENCE: IStatePersistence = {
   load: () => null,
@@ -168,18 +226,23 @@ export function createSelectionPersistence(selectionKey: string): IStatePersiste
  */
 export function createDefaultPersistence(
   layoutKey?: string,
-  selectionKey?: string
+  selectionKey?: string,
+  /** set when the `instanceKey` leaves out the workspace: this one, for the page reset */
+  workspace?: string
 ): IStatePersistence[] {
-  const slices = [createSessionStatePersistence(), createLocalLayoutPersistence(layoutKey)];
+  const slices = [
+    workspace ? createWorkspaceSessionPersistence(workspace) : createSessionStatePersistence(),
+    createLocalLayoutPersistence(layoutKey),
+  ];
   if (selectionKey) slices.push(createSelectionPersistence(selectionKey));
   return slices;
 }
 
 /**
  * Layout key for an entity listing: section + entity type and nothing else. Deliberately
- * narrower than `instanceKey`, which also carries lab/project/scope — including those
- * would give the user a different column layout per project and per scope toggle. The
- * session slice keeps the full `instanceKey`, since filters should not leak across them.
+ * narrower than `instanceKey`, which also carries the scope (and, outside Data, the
+ * lab/project) — including those would give the user a different column layout per
+ * scope toggle. The session slice keeps the full `instanceKey`.
  */
 export function layoutKeyFor(section: string, dataType: string): string {
   return `${section}/${dataType}`;
