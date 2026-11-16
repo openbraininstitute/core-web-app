@@ -87,6 +87,20 @@ describe('pageCells, renumberSomas and renumberSegments', () => {
     expect([...somas]).toEqual(NONE);
   });
 
+  it('leave out the packed ends, five words each, of the segments left out', () => {
+    const { segmentCells, segmentTypes } = data();
+    const segments = Uint32Array.from({ length: 5 * 5 }, (_, k) => k);
+    const kept = renumberSegments(
+      { segments, segmentCells, segmentTypes },
+      pageCells(PACKED, [{ name: 'a', cells: 3 }])
+    );
+
+    expect([...kept.segmentCells]).toEqual([0, 1, 2]);
+    expect([...kept.segments]).toEqual(
+      [1, 3, 4].flatMap((n) => [0, 1, 2, 3, 4].map((k) => 5 * n + k))
+    );
+  });
+
   it('refuse a pack with a population the page has with another number of cells', () => {
     const page = [
       { name: 'a', cells: 4 },

@@ -1,6 +1,7 @@
 import { storage as storageNode, texture, uniform } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
+import { PACKED_WORDS } from '../../load/packed-ends';
 import { BLOCK } from '../segment-arena';
 import { scoped } from './error-scope';
 import { shareBuffer } from './three-hooks';
@@ -19,17 +20,18 @@ const NOTHING_DRAWN = new THREE.DataTexture(
 NOTHING_DRAWN.needsUpdate = true;
 
 /** Any length will do: the arena's buffers are bound in place of these attributes' own. */
-const endsAttribute = () => new THREE.StorageBufferAttribute(new Float32Array(4), 4);
 const wordsAttribute = () => new THREE.StorageBufferAttribute(new Uint32Array(4), 1);
 
 /**
- * What an arena's materials read, and how: its segments' ends (two `vec4`s each), their cell-and-type words, and the
- * culling's lists; where the arena ends; how many segments it and each list hold; whether it is drawn culled, through
- * the lists (`listed` is 1); and the farthest depth drawn before the culling's tests, in µm from the eye.
+ * What an arena's materials read, and how: its segments' ends, packed (`packed-ends.ts`), with the pack's grid, µm,
+ * and one over its radius steps in `packing`; their cell-and-type words, and the culling's lists; where the arena
+ * ends; how many segments it and each list hold; whether it is drawn culled, through the lists (`listed` is 1); and
+ * the farthest depth drawn before the culling's tests, in µm from the eye.
  */
 export function arenaStorage() {
   return {
-    ends: storageNode(endsAttribute(), 'vec4', 0).toReadOnly(),
+    ends: storageNode(wordsAttribute(), 'uint', 0).toReadOnly(),
+    packing: uniform(new THREE.Vector2(1, 1)),
     words: storageNode(wordsAttribute(), 'uint', 0).toReadOnly(),
     lists: storageNode(wordsAttribute(), 'uint', 0).toReadOnly(),
     end: uniform(0, 'uint'),
@@ -56,7 +58,7 @@ export interface ArenaBuffers {
 
 /**
  * Puts an arena's `arrays`, and the culling's lists, in buffers the page makes on `device`, which three binds for
- * `storage`. Only what changes is written to them, and three keeps no copy. `told` is handed the buffers, and null once
+ * `storage`. The arena's ends must be packed. Only what changes is written to them, and three keeps no copy. `told` is handed the buffers, and null once
  * they are let go of. `outOfMemory` is called a moment later if the device could not make them, unless they were let
  * go of first.
  */
@@ -69,6 +71,8 @@ export function arenaOnGpu(
   outOfMemory: () => void
 ): ArenaUploads {
   let { words, blocks } = arrays;
+  const { packing } = arrays;
+  if (!packing) throw new Error('an arena on the GPU holds its ends packed');
   const capacity = words.length;
   // A binding cannot be empty.
   const bufferOf = (bytes: number, label: string, usage = STORAGE | COPY_DST) =>
@@ -78,7 +82,7 @@ export function arenaOnGpu(
     device,
     'out-of-memory',
     (): ArenaBuffers => ({
-      ends: bufferOf(32 * capacity, 'arena ends'),
+      ends: bufferOf(4 * PACKED_WORDS * capacity, 'arena ends'),
       words: bufferOf(words.byteLength, 'arena words'),
       blocks: bufferOf(blocks.byteLength, 'arena blocks'),
       lists: bufferOf(2 * 4 * capacity, 'arena lists', STORAGE),
@@ -93,14 +97,15 @@ export function arenaOnGpu(
       if (!gone) outOfMemory();
     }
   );
-  storage.ends.value = shareBuffer(renderer, endsAttribute(), buffers.ends);
+  storage.ends.value = shareBuffer(renderer, wordsAttribute(), buffers.ends);
+  storage.packing.value.set(packing.gridUm, 1 / packing.radiusSteps);
   storage.words.value = shareBuffer(renderer, wordsAttribute(), buffers.words);
   storage.lists.value = shareBuffer(renderer, wordsAttribute(), buffers.lists);
   storage.capacity.value = capacity;
   told(buffers);
   return {
     upload(start, count, ends) {
-      if (ends) device.queue.writeBuffer(buffers.ends, 32 * start, ends);
+      if (ends) device.queue.writeBuffer(buffers.ends, 4 * PACKED_WORDS * start, ends);
       device.queue.writeBuffer(buffers.words, 4 * start, words, start, count);
       const first = Math.floor(start / BLOCK);
       const last = Math.ceil((start + count) / BLOCK);

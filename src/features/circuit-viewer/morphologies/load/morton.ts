@@ -1,4 +1,6 @@
-import type { MorphologySegments } from '../types';
+import { endSums, strideOf } from './packed-ends';
+
+import type { BoxSegments, Packing } from '../types';
 
 /** The bits per axis of a Morton code, and per pass of its sort. */
 const MORTON_BITS = 10;
@@ -78,30 +80,33 @@ export function mortonSorted(points: Float32Array): MortonSorted {
 }
 
 /**
- * The segments in the Morton order of their midpoints over the box they span, segments of one code in the order they
- * came. The WebGPU tier culls blocks of 64 consecutive segments by the box around each block, and this order keeps
+ * The segments, their ends packed or not, in the Morton order of their midpoints over the box they span, segments of
+ * one code in the order they came. The WebGPU tier culls blocks of 64 consecutive segments by the box around each block, and this order keeps
  * those boxes small.
  */
-export function mortonOrder(read: MorphologySegments): MorphologySegments {
+export function mortonOrder(read: BoxSegments, { gridUm }: Packing): BoxSegments {
   const { segments, segmentCells, segmentTypes } = read;
   const n = segmentCells.length;
   if (n < 2) return read;
   // Each midpoint doubled (the sum of the ends), which gives the same order.
   const mids = new Float32Array(3 * n);
-  for (let i = 0; i < n; i++) {
-    for (let k = 0; k < 3; k++) mids[3 * i + k] = segments[8 * i + k] + segments[8 * i + 4 + k];
+  if (segments instanceof Uint32Array) endSums(segments, gridUm, mids);
+  else {
+    for (let i = 0; i < n; i++) {
+      for (let k = 0; k < 3; k++) mids[3 * i + k] = segments[8 * i + k] + segments[8 * i + 4 + k];
+    }
   }
   const order = mortonPermutation(mids);
-  const out: MorphologySegments = {
-    segments: new Float32Array(8 * n),
-    segmentCells: new Uint32Array(n),
-    segmentTypes: new Uint8Array(n),
-  };
+  const stride = strideOf(segments);
+  const sorted =
+    segments instanceof Uint32Array ? new Uint32Array(stride * n) : new Float32Array(stride * n);
+  const cells = new Uint32Array(n);
+  const types = new Uint8Array(n);
   for (let to = 0; to < n; to++) {
     const from = order[to];
-    for (let k = 0; k < 8; k++) out.segments[8 * to + k] = segments[8 * from + k];
-    out.segmentCells[to] = segmentCells[from];
-    out.segmentTypes[to] = segmentTypes[from];
+    for (let k = 0; k < stride; k++) sorted[stride * to + k] = segments[stride * from + k];
+    cells[to] = segmentCells[from];
+    types[to] = segmentTypes[from];
   }
-  return out;
+  return { segments: sorted, segmentCells: cells, segmentTypes: types };
 }

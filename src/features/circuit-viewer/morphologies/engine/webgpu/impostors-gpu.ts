@@ -26,6 +26,7 @@ import * as THREE from 'three/webgpu';
 
 import { EXPOSURE } from '@/features/viewer-3d/engine/looks';
 
+import { PACKED_WORDS } from '../../load/packed-ends';
 import { BY_SECTION } from '../cell-table';
 import {
   CELL_MASK,
@@ -40,6 +41,7 @@ import { PULSE_FRONT_WGSL, SOMA_LINE, SPIKE_COLOUR_WGSL, SPIKE_LIGHT_WGSL } from
 import { cellGlow, cellId, cellXY, col, flat, keptUnless, typed, VIEW } from './cells-wgsl';
 import { NEAR_SHARE, NEAR_UM } from './culling-wgsl';
 import { AO_COVER, surfaceAt, surfaceOf } from './occlusion-gpu';
+import { PACKED_FAR_WGSL, PACKED_NEAR_WGSL, PACKED_RADIUS_WGSL } from './packed-ends-wgsl';
 
 import type { Node } from 'three/webgpu';
 import type { Look } from '@/features/viewer-3d/engine/looks';
@@ -128,6 +130,9 @@ fn segmentEnds(word: u32, hidden: u32, shown: f32, least: f32, endA: vec4f, endB
   return mat4x4f(vec4f(a, ra), vec4f(b, rb), vec4f(ra / umA, rb / umB, umA, umB), vec4f(0.0, 0.0, 0.0, 1.0));
 }`;
 const segmentEnds = wgslFn(SEGMENT_ENDS_WGSL, [IMPOSTORS]);
+const PACKED_RADIUS = wgsl(PACKED_RADIUS_WGSL);
+const packedNear = wgslFn(PACKED_NEAR_WGSL, [PACKED_RADIUS]);
+const packedFar = wgslFn(PACKED_FAR_WGSL, [PACKED_RADIUS]);
 
 /**
  * A segment's quad, built from its `ends`. Columns: the corner in the world, with w 1 where the segment is drawn; its
@@ -388,7 +393,7 @@ const fromAttributes = (): SegmentInputs => ({
 type List = 'kept' | 'seen';
 
 /**
- * The arena's segment for this instance. Where the arena is culled (`listed`), it is the one at the instance's place in
+ * The arena's segment for this instance, its ends unpacked. Where the arena is culled (`listed`), it is the one at the instance's place in
  * `list` for the draw's kind: the list holds the flat segments from its start and the tubes back from its end. Where
  * it is not culled, every segment is drawn in turn. An index at or past the arena's end gives a hole, which is not
  * drawn. With no dendrogram, the segment's ends stand in for it. The culling chose each seen segment's kind, and its
@@ -404,8 +409,13 @@ function fromArena(u: GpuUniforms, arena: ArenaStorage, kind: 'segment' | 'tube'
       ? first.add(capacity).sub(uint(1)).sub(instanceIndex)
       : first.add(instanceIndex);
   const i = select(listed, arena.lists.element(at), instanceIndex).toVar();
-  const endA = typed<'vec4'>(arena.ends.element(i.mul(uint(2))));
-  const endB = typed<'vec4'>(arena.ends.element(i.mul(uint(2)).add(uint(1))));
+  const { packing } = arena;
+  const packed = (k: number) =>
+    typed<'uint'>(arena.ends.element(i.mul(uint(PACKED_WORDS)).add(uint(k))));
+  const endA = typed<'vec4'>(
+    packedNear({ x: packed(0), y: packed(1), z: packed(2), e: packed(4), packing })
+  ).toVar();
+  const endB = typed<'vec4'>(packedFar({ a: endA, d: packed(3), e: packed(4), packing })).toVar();
   const word = typed<'uint'>(select(i.lessThan(end), arena.words.element(i), uint(HOLE_WORD)));
   const round =
     list === 'kept' ? u.tubeFrom : select(listed, float(kind === 'tube' ? 0 : 1e30), u.tubeFrom);

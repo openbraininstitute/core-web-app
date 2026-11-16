@@ -46,6 +46,7 @@ describe('DetailStream, over a long run of views', () => {
     const chunks: MorphologyChunks = {
       boxes,
       levels,
+      packing: { gridUm: 0.025, radiusSteps: 16 },
       read: async (wanted) =>
         wanted.map(({ level, box }) => {
           const n = levels[level].segments[box];

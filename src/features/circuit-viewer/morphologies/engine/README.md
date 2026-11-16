@@ -78,7 +78,7 @@ With a base, the culling marks the blocks it found seen or just hidden, and the 
 
 ## The arena
 
-`SegmentArena` ([segment-arena.ts](segment-arena.ts)) holds the segments drawn, 36 bytes each: the two ends with their radii, and a word of cell and section type.
+`SegmentArena` ([segment-arena.ts](segment-arena.ts)) holds the segments drawn: the two ends with their radii, and a word of cell and section type. On WebGL 2 that is 36 bytes a segment, the ends as eight floats. On WebGPU it is 24, the ends packed into five words ([../load/packed-ends.ts](../load/packed-ends.ts)): the pack's worker hands them over packed, the arena holds and uploads them so, and the segments' vertex stage and the culling's segment test unpack them ([webgpu/packed-ends-wgsl.ts](webgpu/packed-ends-wgsl.ts)). The arena unpacks a block at a time only to work out the box round it.
 
 - A box's segments start a block of 64 and its last block is padded with holes. Each block keeps the box round its segments, which the culling tests.
 - A box taken out leaves a hole: its words are marked `HOLE`, which the shaders draw nothing of, and its blocks are emptied. Only those words are uploaded.

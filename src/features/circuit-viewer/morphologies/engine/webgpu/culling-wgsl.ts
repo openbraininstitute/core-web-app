@@ -4,7 +4,9 @@
  * `segmentEnds` places a segment as its draw does.
  */
 
+import { PACKED_WORDS } from '../../load/packed-ends';
 import { CELL_MASK, QUAD_REACH } from '../impostors';
+import { PACKED_FAR_WGSL, PACKED_NEAR_WGSL, PACKED_RADIUS_WGSL } from './packed-ends-wgsl';
 
 /** A segment is taken to be nearer than it is by this many µm plus this share of its distance, to cover rounding. */
 export const NEAR_UM = 0.02;
@@ -39,6 +41,8 @@ struct View {
   // x: the pyramid's levels; y: the blocks; z: the arena's capacity; w: the somas, or for the segments the type not
   // drawn, as segmentEnds takes it.
   counts: vec4u,
+  // xy: for the segments, the arena's packing: its grid, µm, and one over its radius steps to a doubling.
+  packing: vec4f,
 }
 @group(0) @binding(0) var<uniform> view: View;
 
@@ -202,12 +206,13 @@ struct Draws { keptFlat: Args, keptTubes: Args, seenFlat: Args, seenTubes: Args 
 @group(0) @binding(3) var<storage, read> blocks: array<Block>;
 @group(0) @binding(4) var<storage, read> passed: array<u32>;
 @group(0) @binding(5) var<storage, read> counters: array<u32>;
-@group(0) @binding(6) var<storage, read> ends: array<vec4f>;
+@group(0) @binding(6) var<storage, read> ends: array<u32>;
 @group(0) @binding(7) var<storage, read> words: array<u32>;
 @group(0) @binding(8) var<storage, read_write> lists: array<u32>;
 @group(0) @binding(9) var<storage, read_write> draws: Draws;
 @group(0) @binding(10) var<storage, read_write> marked: array<atomic<u32>>;
 @group(0) @binding(11) var cells: texture_2d<f32>;
+${PACKED_RADIUS_WGSL}${PACKED_NEAR_WGSL}${PACKED_FAR_WGSL}
 
 // 0 out of view, 1 hidden as a whole, 2 hidden texel by texel, 3 seen, 4 hidden by little enough to be kept. a, b:
 // its ends on screen, px; r: how far it reaches from the line between them, px; near: its nearest, µm from the eye.
@@ -283,8 +288,9 @@ fn seen(a: vec2f, b: vec2f, r: f32, near: f32) -> u32 {
 
 // Puts segment \`i\` on the lists it belongs on; returns whether it is kept.
 fn listed(i: u32) -> bool {
-  let A = ends[2u * i];
-  let B = ends[2u * i + 1u];
+  let p = ${PACKED_WORDS}u * i;
+  let A = packedNear(ends[p], ends[p + 1u], ends[p + 2u], ends[p + 4u], view.packing.xy);
+  let B = packedFar(A, ends[p + 3u], ends[p + 4u], view.packing.xy);
   let hiding = view.more.w > 0.5;
   var shown = 1.0;
   if (hiding) { shown = textureLoad(cells, cellXY(words[i] & ${CELL_MASK}u), 0).a; }
