@@ -42,6 +42,8 @@ function useBox(ref: RefObject<HTMLDivElement | null>) {
  */
 const heroWidth = (example: IExample, room: number, tall: number) =>
   Math.max(0, Math.min(room, tall * example.aspect));
+/** Under this much room for the example and its words (px), they go over its foot rather than under it. */
+const SHORT_ROOM = 470;
 /** How much of a strip tile its example fills (it sits inset 6% in its hexagon). */
 const IN_TILE = 0.88;
 
@@ -116,14 +118,41 @@ function Examples({
   landing: boolean;
 }) {
   const box = useBox(heroBox);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const room = useBox(rootRef);
   const example = EXAMPLES[shown];
   const width = heroWidth(example, box.w, box.h);
   const pill =
     'flex h-[34px] shrink-0 items-center justify-center rounded-full px-[13px] text-[12.5px] font-semibold shadow-[0_2px_8px_rgb(20_40_90/0.12)]';
+  // On a short screen (the browser's bars showing along the foot, say) the words and actions go over the model's
+  // foot on a white fade, the model keeping the room, rather than the categories being pushed out of sight (the user
+  // asked).
+  const short = room.h > 0 && room.h < SHORT_ROOM;
+  const actions = (
+    <>
+      <Link href={`${base}/workflows`} className={cn(pill, 'text-white')} style={{ background: GREEN }}>
+        Simulate
+      </Link>
+      <Link
+        href={`${base}/notebooks`}
+        className={cn(pill, 'border-[1.5px] bg-white/95 backdrop-blur-sm')}
+        style={{ borderColor: GREEN, color: GREEN }}
+      >
+        Analyse
+      </Link>
+      <Link
+        href={`${base}/data`}
+        className={cn(pill, 'border-[1.5px] bg-white/95 backdrop-blur-sm')}
+        style={{ borderColor: GREEN, color: GREEN }}
+      >
+        View in data
+      </Link>
+    </>
+  );
   // The model as large as the room over its words allows, its three actions floating over its foot, so the whole
   // of it, words and all, fits over the examples' strip without a scroll (the user asked).
   return (
-    <div className="flex h-full min-h-0 flex-col gap-2">
+    <div ref={rootRef} className="relative flex h-full min-h-0 flex-col gap-2">
       {/* the model in the middle of the room over its words, filling its height or its width */}
       <div ref={heroBox} className="flex min-h-0 flex-1 items-center justify-center">
         {width > 0 && (
@@ -133,32 +162,31 @@ function Examples({
               <HeroMedia example={example} width={width} flewIn={landing} />
             </div>
             {/* its actions fading in as it flies, not after it lands (the user asked) */}
-            <div
-              className={cn(styles.fadeIn, 'absolute inset-x-0 bottom-1 flex justify-center gap-1.5')}
-              style={{ animationDelay: '250ms' }}
-            >
-              <Link href={`${base}/workflows`} className={cn(pill, 'text-white')} style={{ background: GREEN }}>
-                Simulate
-              </Link>
-              <Link
-                href={`${base}/notebooks`}
-                className={cn(pill, 'border-[1.5px] bg-white/95 backdrop-blur-sm')}
-                style={{ borderColor: GREEN, color: GREEN }}
+            {!short && (
+              <div
+                className={cn(styles.fadeIn, 'absolute inset-x-0 bottom-1 flex justify-center gap-1.5')}
+                style={{ animationDelay: '250ms' }}
               >
-                Analyse
-              </Link>
-              <Link
-                href={`${base}/data`}
-                className={cn(pill, 'border-[1.5px] bg-white/95 backdrop-blur-sm')}
-                style={{ borderColor: GREEN, color: GREEN }}
-              >
-                View in data
-              </Link>
-            </div>
+                {actions}
+              </div>
+            )}
           </div>
         )}
       </div>
-      <Words example={example} />
+      {short ? (
+        // over the model's foot, a little up from the strip, on a white fade
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-2 bg-linear-to-t from-white from-60% via-white/85 to-white/0 px-0 pt-10 pb-1 [&_a]:pointer-events-auto">
+          <div
+            className={cn(styles.fadeIn, 'flex justify-center gap-1.5')}
+            style={{ animationDelay: '250ms' }}
+          >
+            {actions}
+          </div>
+          <Words example={example} />
+        </div>
+      ) : (
+        <Words example={example} />
+      )}
     </div>
   );
 }
@@ -404,7 +432,14 @@ export function HexHomeMobile({
   base: string;
 }) {
   const [category, setCategory] = useState<TCategoryKey>('examples');
+  // each tap on a category's hexagon, so its page starts afresh
+  const [visit, setVisit] = useState(0);
   const [shown, setShown] = useState(0);
+  // Opened at the top, whatever scroll the last page or the browser left (the user saw it half way down).
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.getElementById('workspace-body')?.scrollTo(0, 0);
+  }, []);
   const stage = useRef<HTMLDivElement>(null);
   const scroller = useRef<HTMLElement>(null);
   const heroBox = useRef<HTMLDivElement>(null);
@@ -468,6 +503,8 @@ export function HexHomeMobile({
       return;
     }
     setCategory(key);
+    // tapped again, its own first page again: a card open in it (Platform's Workflows, say) shut (the user asked)
+    setVisit((v) => v + 1);
     setFlight(null);
     setLanded({ inbound: true, outbound: true });
   };
@@ -476,7 +513,7 @@ export function HexHomeMobile({
   return (
     <div ref={stage} className="relative flex h-full w-full flex-col bg-white">
       <section
-        key={category}
+        key={`${category}-${visit}`}
         ref={scroller}
         className={cn(
           styles.fadeIn,

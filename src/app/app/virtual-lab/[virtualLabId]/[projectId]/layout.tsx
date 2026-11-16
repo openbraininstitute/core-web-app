@@ -67,7 +67,8 @@ export default async function Layout({ children, params: promisedParams }: Props
   // Prefetch here only together with `HydrateClient` (`@/query-provider/server`).
 
   return (
-    <div className="h-screen w-full">
+    // on a phone the height that can be seen, not the full screen's under the browser's bars
+    <div className="h-screen w-full max-md:h-dvh">
       {/* one stream of chat events per tab, for the chat button and its window */}
       <ChatStreamProvider>
         <ProjectRootLayout>

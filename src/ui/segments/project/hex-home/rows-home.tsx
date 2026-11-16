@@ -189,8 +189,8 @@ export function mix(hex: string, to: string, t: number) {
  * softer one, and ten white ones with a flourish of the card's colour. */
 export const PLATFORM_CARD_STYLES = [
   { key: 'bold', label: 'Colour (before)' },
-  { key: 'subtle', label: 'Soft colour (now)' },
-  { key: 'top-bar', label: 'White, colour bar on top' },
+  { key: 'subtle', label: 'Soft colour' },
+  { key: 'top-bar', label: 'White, colour bar on top (now)' },
   { key: 'left-edge', label: 'White, colour edge on the left' },
   { key: 'corner-hex', label: 'White, coloured corner hexagon' },
   { key: 'dot', label: 'White, coloured dot by the name' },
@@ -202,7 +202,8 @@ export const PLATFORM_CARD_STYLES = [
   { key: 'glow', label: 'White, coloured glow' },
 ] as const;
 export type TCardStyle = (typeof PLATFORM_CARD_STYLES)[number]['key'];
-export const DEFAULT_CARD_STYLE: TCardStyle = 'subtle';
+// white with a bar of its colour on top by default (the user asked; the soft colour before)
+export const DEFAULT_CARD_STYLE: TCardStyle = 'top-bar';
 
 /** A pointy-topped hexagon's outline, `w` wide, for the faint pattern in a card's corner. */
 function HexOutline({ w, color, x, y }: { w: number; color: string; x: number; y: number }) {
@@ -1626,7 +1627,7 @@ export function RowsHome({
             />
           </section>
           <section aria-label="Platform" className="flex min-h-0 flex-1 flex-col gap-1">
-            {titled && <h2 className="text-primary-9 px-1 text-[13px] leading-[16px] font-bold tracking-[0.08em] uppercase">Platform</h2>}
+            {titled && <h2 className="text-primary-9 px-1 text-[13px] leading-[16px] font-bold tracking-[0.08em] uppercase">About the platform</h2>}
             {/* the OBI wordmark on its own at the bottom left, solid (the user asked), Platform's places beside it */}
             <div className="flex min-h-0 flex-1 gap-2">
               <div className="flex w-[22%] shrink-0 items-end pb-2 pl-1">
@@ -1792,7 +1793,8 @@ export function RowsHome({
                 className={cn('text-primary-9 px-1 text-[13px] leading-[16px] font-bold tracking-[0.08em] uppercase', enterCls)}
                 style={enterAt(enterWhen(T.platform))}
               >
-                Platform
+                {/* (the user asked: "Platform" before) */}
+                About the platform
               </h2>
             )}
             {/* ten narrow columns: a square two, Learn and Teach three, the AI card four; its rows equal, as tall as a
@@ -1849,7 +1851,7 @@ export function RowsHome({
           <section aria-label="Platform" className="flex min-w-0 shrink-0 flex-col gap-[8px]">
             {titled && (
               <h2 className="text-primary-9 px-1 text-[13px] leading-[16px] font-bold tracking-[0.08em] uppercase">
-                Platform
+                About the platform
               </h2>
             )}
             <div className="grid grid-cols-5 gap-2.5 pt-[4px] pb-[4px]">
@@ -1867,7 +1869,7 @@ export function RowsHome({
             </div>
           </section>
         ) : (
-        <Row title="Platform" titled={titled} grid>
+        <Row title="About the platform" titled={titled} grid>
           {places.map((card, i) => {
             const tile = (
               <ScienceRowCard

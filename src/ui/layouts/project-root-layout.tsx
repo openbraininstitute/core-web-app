@@ -33,7 +33,9 @@ export function ProjectRootLayout({ children }: Props) {
     <div
       id="project-root-layout"
       className={cn(
-        'bg-background grid h-screen w-full',
+        // on a phone as tall as can be seen, the browser's bars showing or not (the full height put the foot under
+        // them, the user saw the categories hidden)
+        'bg-background grid h-screen w-full max-md:h-dvh',
         noRail ? 'grid-cols-[1fr_0px] gap-x-0' : 'grid-cols-[1fr_minmax(3rem,auto)]',
         // the header row as tall as the toolbar, and the page straight under its line
         "grid-rows-[4rem_1fr] gap-x-2 gap-y-0 overflow-hidden [grid-template-areas:'header_header''main_ai']",
