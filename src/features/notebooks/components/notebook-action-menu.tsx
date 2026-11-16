@@ -11,15 +11,16 @@ import {
 } from '@ant-design/icons';
 import { RiPlayFill } from '@remixicon/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Modal, Popconfirm } from 'antd';
+import { Dropdown, Modal, Popconfirm } from 'antd';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 
 import { deleteAnalysisNotebookResult } from '@/api/entitycore/queries/analysis-notebook-result';
 import { deleteAnalysisNotebookTemplate } from '@/api/entitycore/queries/analysis-notebook-template';
 import { useAppNotification } from '@/components/notification';
 import { type TViewVariant, ViewVariant } from '@/constants';
 import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
+import { SessionSizePanel } from '@/features/notebooks/components/session-size-panel';
 import { useRunNotebook } from '@/features/notebooks/hooks/use-run-notebook';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive, downloadFailedNotification } from '@/services/entity-download';
@@ -28,6 +29,7 @@ import { cn } from '@/utils/css-class';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type { IAsset } from '@/api/entitycore/types/shared/global';
+import type { NotebookProfile } from '@/services/notebooks';
 import type { WorkspaceContext } from '@/types/common';
 
 type NotebookEntityLike = {
@@ -36,6 +38,52 @@ type NotebookEntityLike = {
   description?: string | null;
   assets: IAsset[];
 };
+
+function SizePicker({
+  disabled,
+  busy,
+  profiles,
+  defaultProfile,
+  onSelect,
+  children,
+}: {
+  disabled: boolean;
+  busy: boolean;
+  profiles: NotebookProfile[];
+  defaultProfile: string | null;
+  onSelect: (profileName?: string) => void;
+  children: ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+
+  if (disabled) return <div>{children}</div>;
+
+  return (
+    <Dropdown
+      trigger={['click']}
+      placement="bottomRight"
+      open={open && !busy}
+      onOpenChange={setOpen}
+      popupRender={() => (
+        // antd stretches the popup to the trigger width; keep the panel under the play icon.
+        <div className="pointer-events-none flex justify-end">
+          <div className="pointer-events-auto">
+            <SessionSizePanel
+              profiles={profiles}
+              defaultProfile={defaultProfile}
+              onSelect={(profileName) => {
+                setOpen(false);
+                onSelect(profileName);
+              }}
+            />
+          </div>
+        </div>
+      )}
+    >
+      <div>{children}</div>
+    </Dropdown>
+  );
+}
 
 export function NotebookActionMenu({
   entity,
@@ -58,8 +106,22 @@ export function NotebookActionMenu({
   const queryClient = useQueryClient();
   const { replace: navigate } = useRouter();
   const [readmeOpen, setReadmeOpen] = useState(false);
-  const { run, runTargets, runningTarget, running, openJupyterHub, opening, creditsModal } =
-    useRunNotebook({ id: entity.id, assets: entity.assets });
+  const {
+    run,
+    runTargets,
+    runningTarget,
+    running,
+    openJupyterHub,
+    opening,
+    creditsModal,
+    profiles,
+    defaultProfile,
+    virtualLabData,
+  } = useRunNotebook({ id: entity.id, assets: entity.assets });
+
+  // Course students run with the backend default size instead of choosing one.
+  const isCourseStudentProject =
+    !!virtualLabData?.course && virtualLabData.course.template_project_id !== ctx.projectId;
 
   const [, copy, , copying] = useCopyToClipboard({
     onSuccess: () =>
@@ -183,47 +245,72 @@ export function NotebookActionMenu({
 
       {isTemplate ? (
         runTargets.map((target) => (
-          <Action
+          <SizePicker
             key={target.key}
-            variant={variant}
-            kind={ActionKind.Button}
-            onClick={() => run(target)}
-            icon={
-              runningTarget === target.key ? (
-                <LoadingOutlined />
-              ) : (
-                <target.Icon className="size-4" />
-              )
-            }
+            disabled={isCourseStudentProject}
+            busy={running}
+            profiles={profiles}
+            defaultProfile={defaultProfile}
+            onSelect={(profileName) => run(target, profileName)}
           >
-            <div className="flex flex-col items-start">
-              {target.hideInProduction && (
-                <small className="text-gray-500 text-xs font-light mb-0 leading-2.5">
-                  Hidden in production
-                </small>
-              )}
-              {runningTarget === target.key ? 'Starting...' : target.label}
-            </div>
-          </Action>
+            <Action
+              variant={variant}
+              kind={ActionKind.Button}
+              onClick={isCourseStudentProject ? () => run(target) : undefined}
+              testId={`notebook-run-${target.key}-button`}
+              icon={
+                runningTarget === target.key ? (
+                  <LoadingOutlined />
+                ) : (
+                  <target.Icon className="size-4" />
+                )
+              }
+            >
+              <div className="flex flex-col items-start">
+                {target.hideInProduction && (
+                  <small className="text-gray-500 text-xs font-light mb-0 leading-2.5">
+                    Hidden in production
+                  </small>
+                )}
+                {runningTarget === target.key ? 'Starting...' : target.label}
+              </div>
+            </Action>
+          </SizePicker>
         ))
       ) : (
         <>
-          <Action
-            variant={variant}
-            kind={ActionKind.Button}
-            onClick={() => run()}
-            icon={running ? <LoadingOutlined /> : <RiPlayFill />}
+          <SizePicker
+            disabled={isCourseStudentProject}
+            busy={running}
+            profiles={profiles}
+            defaultProfile={defaultProfile}
+            onSelect={(profileName) => run(undefined, profileName)}
           >
-            {running ? 'Starting...' : 'Run notebook'}
-          </Action>
-          <Action
-            variant={variant}
-            kind={ActionKind.Button}
-            onClick={openJupyterHub}
-            icon={opening ? <LoadingOutlined /> : <ExportOutlined />}
+            <Action
+              variant={variant}
+              kind={ActionKind.Button}
+              onClick={isCourseStudentProject ? () => run() : undefined}
+              icon={running ? <LoadingOutlined /> : <RiPlayFill />}
+            >
+              {running ? 'Starting...' : 'Run notebook'}
+            </Action>
+          </SizePicker>
+          <SizePicker
+            disabled={isCourseStudentProject}
+            busy={opening}
+            profiles={profiles}
+            defaultProfile={defaultProfile}
+            onSelect={(profileName) => openJupyterHub(profileName)}
           >
-            {opening ? 'Opening...' : 'Open notebook'}
-          </Action>
+            <Action
+              variant={variant}
+              kind={ActionKind.Button}
+              onClick={isCourseStudentProject ? () => openJupyterHub() : undefined}
+              icon={opening ? <LoadingOutlined /> : <ExportOutlined />}
+            >
+              {opening ? 'Opening...' : 'Open notebook'}
+            </Action>
+          </SizePicker>
         </>
       )}
 

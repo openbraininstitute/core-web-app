@@ -297,64 +297,10 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
           </MiniActionIcon>
         )}
 
-        {isTemplate ? (
-          isCourseStudentProject ? (
-            <MiniActionIcon
-              label="Run notebook"
-              testId="notebook-run-default-button"
-              theme={theme}
-              onClick={() => run()}
-            >
-              {running ? (
-                <LoadingOutlined spin className="text-primary-3" />
-              ) : (
-                <RiPlayFill className="text-xl" />
-              )}
-            </MiniActionIcon>
-          ) : (
-            runTargets.map((target) => (
-              <Dropdown
-                key={target.key}
-                trigger={['click']}
-                open={openSizeMenu === target.key}
-                onOpenChange={(open) => setOpenSizeMenu(open ? target.key : null)}
-                popupRender={() => (
-                  <SessionSizePanel
-                    profiles={profiles}
-                    defaultProfile={defaultProfile}
-                    onSelect={(profileName) => {
-                      setOpenSizeMenu(null);
-                      run(target, profileName);
-                    }}
-                  />
-                )}
-              >
-                {/* Plain Button (not MiniActionIcon) so antd Dropdown can attach
-                    its click trigger to a real DOM element. */}
-                <Button
-                  rounded
-                  title={target.label}
-                  data-testid={`notebook-run-${target.key}-button`}
-                  className={cn(
-                    'group hover:bg-primary-7/40 h-12 w-12 border border-white/16 shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]',
-                    {
-                      'hover:bg-white! hover:text-primary-8!': theme === ViewVariant.Light,
-                    }
-                  )}
-                >
-                  {runningTarget === target.key ? (
-                    <LoadingOutlined spin className="text-primary-3" />
-                  ) : (
-                    <target.Icon className="size-6" />
-                  )}
-                </Button>
-              </Dropdown>
-            ))
-          )
-        ) : (
+        {isCourseStudentProject ? (
           <MiniActionIcon
-            label="Run"
-            testId="notebook-run-button"
+            label="Run notebook"
+            testId="notebook-run-default-button"
             theme={theme}
             onClick={() => run()}
           >
@@ -364,6 +310,45 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
               <RiPlayFill className="text-xl" />
             )}
           </MiniActionIcon>
+        ) : (
+          runTargets.map((target) => (
+            <Dropdown
+              key={target.key}
+              trigger={['click']}
+              open={openSizeMenu === target.key}
+              onOpenChange={(open) => setOpenSizeMenu(open ? target.key : null)}
+              popupRender={() => (
+                <SessionSizePanel
+                  profiles={profiles}
+                  defaultProfile={defaultProfile}
+                  onSelect={(profileName) => {
+                    setOpenSizeMenu(null);
+                    run(target, profileName);
+                  }}
+                />
+              )}
+            >
+              {/* Plain Button (not MiniActionIcon) so antd Dropdown can attach
+                    its click trigger to a real DOM element. */}
+              <Button
+                rounded
+                title={target.label}
+                data-testid={`notebook-run-${target.key}-button`}
+                className={cn(
+                  'group hover:bg-primary-7/40 h-12 w-12 border border-white/16 shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]',
+                  {
+                    'hover:bg-white! hover:text-primary-8!': theme === ViewVariant.Light,
+                  }
+                )}
+              >
+                {runningTarget === target.key ? (
+                  <LoadingOutlined spin className="text-primary-3" />
+                ) : (
+                  <target.Icon className="size-6" />
+                )}
+              </Button>
+            </Dropdown>
+          ))
         )}
 
         {canDelete && (
