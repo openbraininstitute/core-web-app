@@ -19,10 +19,13 @@ import { dotMaterials } from './dots-gpu';
 import { GpuUniforms } from './gpu-uniforms';
 import {
   arenaMaterials,
+  drawBySpikes,
   impostorMaterials,
+  type SegmentKinds,
   THROUGH_CSS_PX,
   THROUGH_LINE_CSS_PX,
 } from './impostors-gpu';
+import { KeptView } from './kept-view';
 import { AO_RADIUS_CSS, Occlusion } from './occlusion-gpu';
 import { somaCloudMaterials } from './soma-cloud-gpu';
 import { SomaCulling } from './soma-culling';
@@ -65,6 +68,8 @@ export class CircuitMorphologyGPU extends CircuitView {
   private glowWorks = true;
   /** Made for the first pack and kept, with its programs: a later pack's arena only binds its buffers to `storage`. */
   private arena: GpuArena | null = null;
+  /** The segments' look materials in their two kinds (`drawBySpikes`): the view's own, and the arena's once made. */
+  private segmentKinds: SegmentKinds[] = [];
   /**
    * The kept segments' quads, drawn to depth before the culling's tests. While the cell table hides cells, the kept
    * list stays as it was (`Culling.run`), so the segments seen last frame are drawn to depth with them (`seenQuads`):
@@ -73,6 +78,7 @@ export class CircuitMorphologyGPU extends CircuitView {
   private keptQuads = new THREE.Scene();
   private seenQuads: THREE.Mesh<THREE.InstancedBufferGeometry>[] = [];
   private wasHiding = false;
+  private keptView = new KeptView();
   /** Made when the cloud's somas are placed, and let go of with them. */
   private somaCulling: SomaCulling | null = null;
   private drawingSize = new THREE.Vector2();
@@ -155,8 +161,9 @@ export class CircuitMorphologyGPU extends CircuitView {
       whole.id.dispose();
       whole.cloud.transparent = true;
       const impostors = impostorMaterials(this.gpu, this.look);
+      this.segmentKinds.push(impostors);
       this.materials = {
-        segment: impostors.segment,
+        segment: [...impostors.segment, ...impostors.spikingSegment],
         soma: impostors.soma,
         cloud: cloud.cloud,
         wholeCloud: whole.cloud,
@@ -203,7 +210,8 @@ export class CircuitMorphologyGPU extends CircuitView {
     this.idTarget?.dispose();
     this.occlusion?.dispose();
     const { segment = [], ids = [], kept = [], seenDepth = [], through = [] } = this.arena ?? {};
-    for (const material of [...segment, ...ids, ...kept, ...seenDepth, ...through]) {
+    const spiking = this.arena?.spikingSegment ?? [];
+    for (const material of [...segment, ...spiking, ...ids, ...kept, ...seenDepth, ...through]) {
       material.dispose();
     }
     this.arena?.culling.dispose();
@@ -276,6 +284,7 @@ export class CircuitMorphologyGPU extends CircuitView {
 
   private drawFrame(moving: boolean): void {
     this.gpu.sync();
+    for (const kinds of this.segmentKinds) drawBySpikes(kinds, this.spiking.replaying);
     this.cull(this.restOf(moving));
     this.cullSomas();
     const glowing = this.glowing && this.glowWorks;
@@ -291,7 +300,10 @@ export class CircuitMorphologyGPU extends CircuitView {
         const umPerPx = this.umPerCssPx();
         this.gpu.throughUm.value = Math.min(THROUGH_CSS_PX * umPerPx, KEEP_UM);
         if (!occluded) occlusion.renderMoving();
-        else occlusion.render(AO_RADIUS_CSS * umPerPx);
+        else {
+          const { strength, reach } = this.wideOcclusion;
+          occlusion.render(AO_RADIUS_CSS * umPerPx, reach * this.height * umPerPx, strength);
+        }
         return;
       } catch (e) {
         // The occlusion builds its passes at its first frame, which throws if parts of three it reads are missing.
@@ -303,6 +315,7 @@ export class CircuitMorphologyGPU extends CircuitView {
 
   /** The occlusion was made for the other camera, and the somas kept for that camera hide little in this one. */
   protected override projectionChanged(): void {
+    this.keptView.projectionChanged();
     this.dropOcclusion();
     this.somaCulling?.reseed();
   }
@@ -326,8 +339,9 @@ export class CircuitMorphologyGPU extends CircuitView {
           this.tellCulled(counts)
         ),
       };
+      this.segmentKinds.push(this.arena);
     }
-    const { storage, segment, ids, kept, seenDepth, through, culling } = this.arena;
+    const { storage, segment, spikingSegment, ids, kept, seenDepth, through, culling } = this.arena;
     this.seenQuads = [
       new THREE.Mesh(culling.quads(DRAWS.seenFlat), seenDepth[0]),
       new THREE.Mesh(culling.quads(DRAWS.seenTubes), seenDepth[1]),
@@ -337,6 +351,8 @@ export class CircuitMorphologyGPU extends CircuitView {
       new THREE.Mesh(culling.quads(DRAWS.keptTubes), kept[1]),
       ...this.seenQuads,
     ]);
+    // Both kinds of the look, and the picks, draw the same quads.
+    const seen = [culling.quads(DRAWS.seenFlat), culling.quads(DRAWS.seenTubes)];
     return {
       uploadsOf: (arrays) =>
         arenaOnGpu(
@@ -347,9 +363,9 @@ export class CircuitMorphologyGPU extends CircuitView {
           (buffers) => culling.setArena(buffers),
           () => this.outOfMemory()
         ),
-      segment,
+      segment: [...segment, ...spikingSegment],
       ids,
-      quads: [culling.quads(DRAWS.seenFlat), culling.quads(DRAWS.seenTubes)],
+      quads: [...seen, ...seen],
       through: {
         materials: through,
         quads: [culling.quads(DRAWS.keptFlat), culling.quads(DRAWS.keptTubes)],
@@ -390,23 +406,34 @@ export class CircuitMorphologyGPU extends CircuitView {
       // Once more as the hidden cells come back: the view may have moved since the kept list was left alone.
       for (const mesh of this.seenQuads) mesh.visible = hiding || this.wasHiding;
       this.wasHiding = hiding;
-      renderer.setRenderTarget(culling.targetOf(size.x, size.y));
-      renderer.render(this.keptQuads, this.camera);
-      renderer.setRenderTarget(null);
       const { uShift, uHidden } = this.uniforms;
-      if (
-        culling.run(
+      const { target } = this.controls;
+      const span = this.umPerCssPx();
+      // A stale kept list is made again by a first test, whose lists the second test is run behind.
+      const stale =
+        !hiding && this.keptView.stale(this.camera.quaternion, target, span, this.height);
+      let tested = true;
+      for (let round = stale ? 0 : 1; tested && round < 2; round++) {
+        renderer.setRenderTarget(culling.targetOf(size.x, size.y));
+        renderer.render(this.keptQuads, this.camera);
+        renderer.setRenderTarget(null);
+        tested = culling.run(
           this.camera,
           uShift.value,
           this.gpu.tubeFrom.value,
+          this.spiking.replaying,
           uHidden.value,
           end,
           rest,
           cells,
-          hiding
-        )
-      )
+          hiding,
+          round === 1
+        );
+      }
+      if (tested) {
+        if (!hiding) this.keptView.set(this.camera.quaternion, target, span);
         return;
+      }
     } else if (this.culls && culling.failed) {
       // The culling reported its failure once, when it failed. A pack's stream made since then, or one that was there
       // while culling was off, did not hear it, so report it again.

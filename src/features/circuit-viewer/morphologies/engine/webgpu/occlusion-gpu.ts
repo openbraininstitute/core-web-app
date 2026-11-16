@@ -6,12 +6,12 @@ import {
   acos,
   cameraFar,
   cameraNear,
-  cameraProjectionMatrix,
   clamp,
   context,
   cos,
   cross,
   dot,
+  exp,
   Fn,
   float,
   floor,
@@ -48,6 +48,7 @@ import {
 } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
+import { typed } from './cells-wgsl';
 import { GTAO_PARTS } from './three-hooks';
 
 import type { Node, TextureNode, UniformNode } from 'three/webgpu';
@@ -56,8 +57,37 @@ import type { Node, TextureNode, UniformNode } from 'three/webgpu';
 const AO_SCALE = 0.5;
 export const AO_RADIUS_CSS = 32;
 const AO_SAMPLES = 16;
+/** The most the occlusion lightens a pixel past its colour, however dark the frame's mean. */
+const AO_LIGHTEN = 1.25;
+/**
+ * The occlusion's mean over the frame is the last level of a target's mipmaps (`Occlusion.sums`), which three makes as
+ * its pass ends. Each level is read at the middle of four pixels of the level before, which is their mean only while
+ * the sides halve exactly. So the target's sides are powers of two, a pixel of it sums a block of the occlusion's this
+ * many a side, and the pixels past the occlusion's are left at nothing.
+ */
+const MEAN_BLOCK = 4;
+/** The least cover of that target the occlusion's mean is taken over: what is short of it counts as unshaded. */
+const MEAN_COVER = 1 / 1024;
 /** How much of a pixel a surface covers for the occlusion to count it. */
 export const AO_COVER = 0.5;
+/**
+ * The occlusion's wide term: the same occlusion at this share of the resolution, reaching a share of the view's height
+ * (`WideOcclusion`), on the mean surface of each block of the fine term's pixels, taken as facing the eye. Where the
+ * fine term shades a soma against its neighbours, this one shades the circuit's shape. Its occlusion is not tied to the
+ * screen (`SurfaceGTAONode.steady`): tied so, the same surface got another shade a pixel on, and the term flickered as
+ * the view moved. Its smoothing still is: three's `denoise` turns its taps by a noise over the screen.
+ */
+const WIDE_SCALE = 0.125;
+const WIDE_BLOCK = AO_SCALE / WIDE_SCALE;
+/**
+ * The wide term is spread to the fine term's pixels from the nine of its own round each. One whose surface is this
+ * share of the wide term's reach nearer the eye or farther than the pixel's counts e times less, down to `WIDE_FLOOR`:
+ * a rim keeps its shade apart from the hollow beside it, and a pixel far from all nine takes a plain mix of them.
+ */
+const WIDE_EDGE = 1 / 16;
+const WIDE_FLOOR = 0.01;
+/** The wide term's samples: its reach is long for the fine term's sixteen, and its pixels few. */
+const WIDE_SAMPLES = 32;
 /**
  * The glow round a spiking cell: its colour as shown times how lit it is (`spike-light.ts`), blurred by three's bloom
  * with this strength and radius, and added over the frame and its background.
@@ -112,6 +142,16 @@ function drawnOver(under: Node<'vec4'>, over: Node<'vec4'>): Node<'vec4'> {
   return under.mul(over.a.oneMinus()).add(over);
 }
 
+/** The side of the target the occlusion's mean is taken in (`MEAN_BLOCK`), for a canvas of `pixels` a side. */
+export function meanSide(pixels: number): number {
+  const blocks = Math.ceil(Math.floor(pixels * AO_SCALE) / MEAN_BLOCK);
+  return 2 ** Math.ceil(Math.log2(Math.max(blocks, 1)));
+}
+
+/** What a steady occlusion turns its directions by and shifts its steps by, at every pixel (`SurfaceGTAONode`). */
+const STEADY_TURN = vec3(1, 0.3, 0);
+const STEADY_STEP = 0.5;
+
 /** The parts of three's `GTAONode` (r186) its setup reads, which are its own, not its interface. */
 interface GTAOParts {
   _noiseNode: TextureNode;
@@ -128,12 +168,18 @@ interface GTAOParts {
  * three's GTAO on depth and normals drawn at its own size. Its setup is three's but for two things: in an orthographic
  * view the way to the eye is +z everywhere, where three takes it as towards the camera's position; and a pixel's depth
  * is its own texel's, where three takes the nearest of four, which beside a fibre gave the background the fibre's
- * depth.
+ * depth. `steady`, every surface faces the eye, and every pixel looks along the same directions at the same steps,
+ * where three turns and shifts them by a noise fixed to the screen.
  */
 class SurfaceGTAONode extends GTAONode {
   private readonly orthographic: boolean;
 
-  constructor(depthNode: TextureNode, normalNode: TextureNode, camera: THREE.Camera) {
+  constructor(
+    depthNode: TextureNode,
+    normalNode: TextureNode,
+    camera: THREE.Camera,
+    private readonly steady = false
+  ) {
     super(depthNode, normalNode, camera);
     this.orthographic = (camera as THREE.OrthographicCamera).isOrthographicCamera === true;
     const missing = GTAO_PARTS.filter((part) => !(part in this));
@@ -142,6 +188,12 @@ class SurfaceGTAONode extends GTAONode {
 
   /** What went wrong in `setup`; three logs it and draws on past it, in black. */
   failed: unknown = null;
+
+  /** Its sides are rounded down, as are those of the passes that draw its surfaces: three rounds them to the nearest. */
+  override setSize(width: number, height: number): void {
+    const down = (side: number) => Math.floor(side * this.resolutionScale) / this.resolutionScale;
+    super.setSize(down(width), down(height));
+  }
 
   override setup(builder: THREE.NodeBuilder) {
     try {
@@ -167,15 +219,19 @@ class SurfaceGTAONode extends GTAONode {
       depth.greaterThanEqual(1.0).discard();
 
       const viewPosition = getViewPosition(uvNode, depth, unproject).toConst();
-      const viewNormal = normalNode.sample(uvNode).rgb.normalize().toConst();
       const radius = this.radius;
       const invRadius = radius.reciprocal().toConst();
       const viewDir = (orthographic ? vec3(0, 0, 1) : normalize(viewPosition.negate())).toConst();
+      const viewNormal = this.steady
+        ? viewDir
+        : normalNode.sample(uvNode).rgb.normalize().toConst();
       const clipPosition = project.mul(vec4(viewPosition, 1.0)).toConst();
 
       const noiseResolution = vec2(textureSize(own._noiseNode, int(0)) as unknown as Node<'ivec2'>);
       const noiseUv = vec2(uvNode.x, uvNode.y.oneMinus()).mul(own._resolution.div(noiseResolution));
-      const randomVec = own._noiseNode.sample(noiseUv).xyz.mul(2.0).sub(1.0);
+      const randomVec = this.steady
+        ? STEADY_TURN
+        : own._noiseNode.sample(noiseUv).xyz.mul(2.0).sub(1.0);
       const tangent = vec3(randomVec.xy, 0.0).normalize();
       const bitangent = vec3(tangent.y.mul(-1.0), tangent.x, 0.0);
       const kernelMatrix = mat3(tangent, bitangent, vec3(0.0, 0.0, 1.0));
@@ -186,9 +242,11 @@ class SurfaceGTAONode extends GTAONode {
       const invSteps = 1 / STEPS;
       const ao = float(0).toVar();
       const noiseJitterIdx = own._temporalDirection.mul(0.02);
-      const stepJitter = interleavedGradientNoise(screenCoordinate.add(own._temporalOffset)).add(
-        rand(uvNode.add(noiseJitterIdx).mul(2).sub(1))
-      );
+      const stepJitter = this.steady
+        ? float(STEADY_STEP)
+        : interleavedGradientNoise(screenCoordinate.add(own._temporalOffset)).add(
+            rand(uvNode.add(noiseJitterIdx).mul(2).sub(1))
+          );
 
       Loop({ start: int(0), end: int(DIRECTIONS), type: 'int', condition: '<' }, ({ i }) => {
         const angle = float(i).div(DIRECTIONS).mul(PI).add(own._temporalDirection).toConst();
@@ -265,12 +323,84 @@ class SurfaceGTAONode extends GTAONode {
   }
 }
 
+/** `pixel` held inside `texture`; three's types have no `clamp` of integers. */
+function inside(pixel: Node<'ivec2'>, texture: TextureNode): Node<'ivec2'> {
+  const last = ivec2(typed<'ivec2'>(textureSize(texture, int(0)))).sub(1);
+  return typed<'ivec2'>(clamp(typed<'vec2'>(pixel), typed<'vec2'>(ivec2(0)), typed<'vec2'>(last)));
+}
+
+/** One of the occlusion's terms: three's GTAO on surfaces drawn at its size, and what smooths it. */
+interface Term {
+  occlusion: SurfaceGTAONode;
+  smooth: ReturnType<typeof denoise>;
+}
+
+function termOf(
+  depth: TextureNode,
+  normals: TextureNode,
+  camera: THREE.Camera,
+  scale: number,
+  samples: number,
+  steady = false
+): Term {
+  const occlusion = new SurfaceGTAONode(depth, normals, camera, steady);
+  occlusion.resolutionScale = scale;
+  occlusion.samples.value = samples;
+  occlusion.scale.value = 1.5;
+  const smooth = denoise(occlusion.getTextureNode(), depth, normals, camera);
+  smooth.lumaPhi.value = 10;
+  smooth.normalPhi.value = 3;
+  smooth.radius.value = 4;
+  return { occlusion, smooth };
+}
+
+function reachOf({ occlusion, smooth }: Term, reach: number): void {
+  occlusion.radius.value = reach;
+  occlusion.thickness.value = reach;
+  smooth.depthPhi.value = reach / 4;
+}
+
+/**
+ * A pass at `scale` of the resolution that writes surfaces worked out a pixel at a time, for a term to read: `normal`
+ * and `depth`, as the depth buffer stores it, where `drawn`.
+ */
+function surfacesPass(
+  corners: THREE.BufferGeometry,
+  camera: THREE.Camera,
+  scale: number,
+  normal: Node<'vec3'>,
+  depth: Node<'float'>,
+  drawn: Node<'bool'>
+) {
+  const quad = new THREE.MeshBasicNodeMaterial();
+  quad.vertexNode = vec4(positionGeometry.xy, 0, 1);
+  quad.maskNode = drawn;
+  quad.depthNode = depth;
+  quad.depthFunc = THREE.AlwaysDepth;
+  const whole = new THREE.Mesh(corners, quad);
+  whole.frustumCulled = false;
+  const surfaces = new THREE.Scene();
+  surfaces.add(whole);
+  const drawing = pass(surfaces, camera, { samples: 0 });
+  drawing.setResolutionScale(scale);
+  // Write the surfaces' normals directly: three's basic material would give `normalView` the quad's own normal.
+  drawing.setMRT(mrt({ output: vec4(normal, 1) }));
+  return {
+    depth: drawing.getTextureNode('depth'),
+    normals: drawing.getTextureNode('output'),
+    parts: [drawing, quad],
+  };
+}
+
 /**
  * The circuit drawn with ambient occlusion, apart from the main draw. The scene is drawn into a target of its own, with
  * its surfaces' normals and depth beside the colour (`surfaceOf`). For each of the occlusion's pixels, the most covered
  * of the four pixels under it is picked; three's GTAO runs on those (`SurfaceGTAONode`) and is smoothed; and the
- * colour, darkened by it, goes onto the canvas. The materials write their colours in sRGB, so the occlusion is raised
- * to the power 1 / 2.2, as if it darkened the light. Made for one camera, and to be disposed of.
+ * colour, multiplied by it, goes onto the canvas. The materials write their colours in sRGB, so the occlusion is raised
+ * to the power 1 / 2.2, as if it darkened the light, and multiplied by the wide term (`WIDE_SCALE`). The two are then
+ * taken relative to their mean over the frame's covered pixels: the crevices and hollows are darker and the open
+ * surfaces lighter (by `AO_LIGHTEN` at the most, and less the lighter the colour, which cannot pass white), and a
+ * frame with the occlusion is nearly as light as one without. Made for one camera, and to be disposed of.
  *
  * Made with `glows`, the surfaces also write a byte of how lit each pixel is by a spike, the spiking cells glow
  * (`glowOver`), and `throughs` are drawn over the frame. This holds on a still frame and on a moving one
@@ -281,14 +411,19 @@ export class Occlusion {
   readonly background = uniform(new THREE.Color());
   private pipeline: THREE.RenderPipeline;
   private moving: THREE.RenderPipeline | null = null;
-  private occlusion: SurfaceGTAONode;
-  private smooth: ReturnType<typeof denoise>;
+  private fine: Term;
+  private wide: Term;
+  private wideStrength = uniform(0);
+  private sums: ReturnType<typeof rtt>;
+  /** The last level of the mipmaps of `sums`. */
+  private sumsLevel = uniform(0);
+  private drawing = new THREE.Vector2();
   private passes: { dispose(): void }[];
   /** The frame's picture, its alpha how much of each pixel is covered, and its surfaces (`surfaceOf`), resolved. */
   readonly front: { picture: THREE.Texture; surface: THREE.Texture };
 
   constructor(
-    renderer: THREE.WebGPURenderer,
+    private readonly renderer: THREE.WebGPURenderer,
     scene: THREE.Scene,
     camera: THREE.Camera,
     readonly glows: boolean,
@@ -314,6 +449,17 @@ export class Occlusion {
       picture: scenePass.getTexture('output'),
       surface: scenePass.getTexture('surface'),
     };
+    // The camera's own: a pass that is not the scene's has another.
+    const project = uniform(camera.projectionMatrix);
+    const unproject = uniform(camera.projectionMatrixInverse);
+    const storedAt = (away: Node<'float'>) => {
+      const clip = project.mul(vec4(0, 0, away.negate(), 1)).toConst();
+      return clip.z.div(clip.w);
+    };
+    const awayAt = (stored: Node<'float'>) => {
+      const view = unproject.mul(vec4(0, 0, stored, 1)).toConst();
+      return view.z.div(view.w).negate();
+    };
     // xy: the normal's; z: the depth as the depth buffer stores it (1 at the far plane); w: how much of the pixel is
     // covered, which `surfaceAt` divides the resolve's sum by.
     const picked = Fn(() => {
@@ -334,46 +480,133 @@ export class Occlusion {
         });
       }
       const { normal, across, away } = surfaceAt(sum, cover);
-      const clip = cameraProjectionMatrix.mul(vec4(0, 0, away.negate(), 1)).toConst();
-      const depth = across.greaterThanEqual(1).select(float(1), clip.z.div(clip.w));
+      const depth = across.greaterThanEqual(1).select(float(1), storedAt(away));
       return vec4(normal, depth, cover);
     })();
-    const quad = new THREE.MeshBasicNodeMaterial();
-    quad.vertexNode = vec4(positionGeometry.xy, 0, 1);
-    quad.maskNode = picked.w.greaterThanEqual(AO_COVER);
-    quad.depthNode = picked.z;
-    quad.depthFunc = THREE.AlwaysDepth;
     const corners = new THREE.BufferGeometry();
     corners.setAttribute(
       'position',
       new THREE.BufferAttribute(new Float32Array([-1, -1, 0, 3, -1, 0, -1, 3, 0]), 3)
     );
-    const whole = new THREE.Mesh(corners, quad);
-    whole.frustumCulled = false;
-    const surfaces = new THREE.Scene();
-    surfaces.add(whole);
-    const surfacePass = pass(surfaces, camera, { samples: 0 });
-    surfacePass.setResolutionScale(AO_SCALE);
-    // Write the surfaces' normals directly: three's basic material would give `normalView` the quad's own normal.
-    surfacePass.setMRT(mrt({ output: vec4(unpackNormal(picked.xy), 1) }));
-    const depth = surfacePass.getTextureNode('depth');
-    const normals = surfacePass.getTextureNode('output');
+    const surfaces = surfacesPass(
+      corners,
+      camera,
+      AO_SCALE,
+      unpackNormal(picked.xy),
+      picked.z,
+      picked.w.greaterThanEqual(AO_COVER)
+    );
+    const { depth, normals } = surfaces;
+    this.fine = termOf(depth, normals, camera, AO_SCALE, AO_SAMPLES);
 
-    this.occlusion = new SurfaceGTAONode(depth, normals, camera);
-    this.occlusion.resolutionScale = AO_SCALE;
-    this.occlusion.samples.value = AO_SAMPLES;
-    this.occlusion.scale.value = 1.5;
-    this.smooth = denoise(this.occlusion.getTextureNode(), depth, normals, camera);
-    this.smooth.lumaPhi.value = 10;
-    this.smooth.normalPhi.value = 3;
-    this.smooth.radius.value = 4;
-    const smoothed = rtt(this.smooth, null, null, {
+    // The depth of a block of those surfaces, at the mean distance of its drawn pixels; 1 where none is drawn. The mean
+    // moves evenly as a soma comes into the block, where the nearest pixel's depth jumped.
+    const hull = Fn(() => {
+      const first = ivec2(screenCoordinate.xy).mul(WIDE_BLOCK).toConst();
+      const away = float(0).toVar();
+      const drawn = float(0).toVar();
+      for (let i = 0; i < WIDE_BLOCK * WIDE_BLOCK; i++) {
+        const within = ivec2(i % WIDE_BLOCK, Math.floor(i / WIDE_BLOCK));
+        const stored = depth.load(inside(first.add(within), depth)).r.toConst();
+        const is = float(stored.lessThan(1)).toConst();
+        away.addAssign(awayAt(stored).mul(is));
+        drawn.addAssign(is);
+      }
+      return drawn.greaterThan(0).select(storedAt(away.div(max(drawn, 1))), 1);
+    })();
+    // The normal the smoothing reads; the occlusion takes the way to the eye itself.
+    const facing = vec3(0, 0, 1);
+    const hulls = surfacesPass(corners, camera, WIDE_SCALE, facing, hull, hull.lessThan(1));
+    this.wide = termOf(hulls.depth, hulls.normals, camera, WIDE_SCALE, WIDE_SAMPLES, true);
+    const wideSmoothed = rtt(this.wide.smooth, null, null, {
+      resolutionScale: WIDE_SCALE,
+      depthBuffer: false,
+      format: THREE.RedFormat,
+    });
+
+    // r: the fine term; g: the wide one, spread to this pixel (`WIDE_EDGE`).
+    const terms = Fn(() => {
+      const stored = depth.load(ivec2(screenCoordinate.xy)).r.toConst();
+      const away = awayAt(stored).toConst();
+      const at = screenCoordinate.xy.div(WIDE_BLOCK).toConst();
+      const middle = ivec2(floor(at)).toConst();
+      const off = fract(at).sub(0.5).toConst();
+      // How much the pixel before the middle one, the middle one and the one after count: a smooth mix of the three.
+      const mixes = [
+        off.oneMinus().sub(0.5).pow2().mul(0.5).toConst(),
+        float(0.75).sub(off.pow2()).toConst(),
+        off.add(0.5).pow2().mul(0.5).toConst(),
+      ];
+      const edge = this.wide.occlusion.radius.mul(WIDE_EDGE).toConst();
+      const sum = vec2(0).toVar();
+      for (let i = 0; i < 9; i++) {
+        const [x, y] = [i % 3, Math.floor(i / 3)];
+        const p = inside(middle.add(ivec2(x - 1, y - 1)), hulls.depth).toConst();
+        const its = hulls.depth.load(p).r.toConst();
+        const alike = exp(abs(awayAt(its).sub(away)).div(edge).negate()).add(WIDE_FLOOR);
+        const weight = mixes[x].x
+          .mul(mixes[y].y)
+          .mul(float(its.lessThan(1)))
+          .mul(stored.lessThan(1).select(alike, 1));
+        sum.addAssign(vec2(wideSmoothed.load(p).r, 1).mul(weight));
+      }
+      const wide = sum.y.greaterThan(1e-6).select(sum.x.div(sum.y), 1);
+      return vec4(typed<'vec4'>(this.fine.smooth).r, wide, 0, 1);
+    })();
+    const smoothed = rtt(terms, null, null, {
       resolutionScale: AO_SCALE,
       depthBuffer: false,
+      format: THREE.RGFormat,
     });
-    const under = vec4(picture.rgb.mul(pow(smoothed.r, 1 / 2.2)), picture.a);
+    const multiplier = (at: Node<'vec2'>) => {
+      const { r: fine, g: wide } = smoothed.sample(at);
+      return pow(fine, 1 / 2.2).mul(pow(max(wide, 1e-4), this.wideStrength.div(2.2)));
+    };
+    // A pixel sums a block of the occlusion's. r: what the occlusion multiplies the picture by, times how much of the
+    // picture under it is covered; g: that cover.
+    const covered = Fn(() => {
+      const size = vec2(typed<'ivec2'>(textureSize(smoothed, int(0)))).toConst();
+      const first = floor(screenCoordinate.xy).mul(MEAN_BLOCK).toConst();
+      const sum = vec2(0).toVar();
+      for (let i = 0; i < MEAN_BLOCK * MEAN_BLOCK; i++) {
+        const within = vec2((i % MEAN_BLOCK) + 0.5, Math.floor(i / MEAN_BLOCK) + 0.5);
+        const at = first.add(within).div(size).toConst();
+        const cover = picture.sample(at).a.mul(float(at.x.lessThan(1).and(at.y.lessThan(1))));
+        sum.addAssign(vec2(multiplier(at), 1).mul(cover));
+      }
+      return vec4(sum.div(MEAN_BLOCK * MEAN_BLOCK), 0, 1);
+    })();
+    this.sums = rtt(covered, 1, 1, {
+      depthBuffer: false,
+      format: THREE.RGFormat,
+      generateMipmaps: true,
+      minFilter: THREE.LinearMipmapLinearFilter,
+    });
+    const frame = this.sums.sample(vec2(0.5)).level(this.sumsLevel);
+    const lack = max(float(MEAN_COVER).sub(frame.g), 0);
+    const mean = frame.r.add(lack).div(frame.g.add(lack));
+    const relative = min(multiplier(uv()).div(mean), AO_LIGHTEN);
+    // Lightened, a colour's largest channel goes towards filling what is covered of its pixel and cannot pass it: a
+    // light colour is lightened less, and keeps its shading and its hue.
+    const top = max(picture.r, picture.g, picture.b);
+    const full = min(top.div(max(picture.a, 1e-6)), 1).toConst();
+    const lightened = float(1).sub(pow(full.oneMinus(), relative)).div(max(full, 1e-6));
+    const lift = relative.lessThan(1).select(relative, lightened);
+    const under = vec4(picture.rgb.mul(lift), picture.a);
     this.pipeline = new THREE.RenderPipeline(renderer);
-    this.passes = [scenePass, surfacePass, this.occlusion, this.smooth, smoothed, quad, corners];
+    this.passes = [
+      scenePass,
+      ...surfaces.parts,
+      ...hulls.parts,
+      this.fine.occlusion,
+      this.fine.smooth,
+      this.wide.occlusion,
+      this.wide.smooth,
+      wideSmoothed,
+      smoothed,
+      this.sums,
+      corners,
+    ];
     if (!glows) {
       this.pipeline.outputNode = under;
       return;
@@ -395,16 +628,27 @@ export class Occlusion {
 
   /** Whether three's occlusion failed, rather than what glows. */
   get occlusionFailed(): boolean {
-    return this.occlusion.failed !== null;
+    return this.failed !== null;
   }
 
-  /** Draws a frame with the occlusion reaching `reach` µm: in an orthographic view, the same on screen at any zoom. */
-  render(reach: number): void {
-    this.occlusion.radius.value = reach;
-    this.occlusion.thickness.value = reach;
-    this.smooth.depthPhi.value = reach / 4;
+  private get failed(): unknown {
+    return this.fine.occlusion.failed ?? this.wide.occlusion.failed;
+  }
+
+  /**
+   * Draws a frame with the occlusion reaching `reach` µm: in an orthographic view, the same on screen at any zoom. Its
+   * wide term reaches `wideReach` µm and is raised to the power `wideStrength`; at 0 it shades nothing.
+   */
+  render(reach: number, wideReach: number, wideStrength: number): void {
+    reachOf(this.fine, reach);
+    reachOf(this.wide, wideReach);
+    this.wideStrength.value = wideStrength;
+    const { x, y } = this.renderer.getDrawingBufferSize(this.drawing);
+    const [width, height] = [meanSide(x), meanSide(y)];
+    this.sums.setSize(width, height);
+    this.sumsLevel.value = Math.log2(Math.max(width, height));
     this.pipeline.render();
-    if (this.occlusion.failed) throw this.occlusion.failed;
+    if (this.failed) throw this.failed;
   }
 
   /** Draws a frame while the view moves, with the glow and without the occlusion; only when made to glow. */

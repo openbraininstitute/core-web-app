@@ -119,12 +119,12 @@ interface Internals {
   uniforms: ImpostorUniforms;
   materials: {
     segment: THREE.Material[];
-    soma: THREE.Material;
+    soma: THREE.ShaderMaterial[];
     cloud: THREE.ShaderMaterial;
     wholeCloud: THREE.ShaderMaterial;
     ids: {
       segment: THREE.ShaderMaterial[];
-      soma: THREE.ShaderMaterial;
+      soma: THREE.ShaderMaterial[];
       cloud: THREE.ShaderMaterial;
     };
     electrode: THREE.ShaderMaterial;
@@ -193,7 +193,7 @@ function circuit(): CircuitMorphologyData {
 const segmentsOf = (inner: Internals) => inner.chunks.children[0] as Quads;
 const somasOf = (inner: Internals) =>
   inner.surfaces.children.find(
-    (o) => o instanceof THREE.Mesh && o.material === inner.materials.soma
+    (o) => o instanceof THREE.Mesh && o.material === inner.materials.soma[0]
   ) as Quads;
 /** The cloud's first piece, which holds the few somas of these tests whole. */
 const pieceOf = (inner: Internals) =>
@@ -354,9 +354,10 @@ describe('the circuit morphology viewer', () => {
     const { viewer, inner } = make();
     viewer.setData(circuit());
     const somas = somasOf(inner);
-    expect(somas.material).toBe(inner.materials.soma);
+    expect(inner.materials.soma).toHaveLength(1);
+    expect(somas.material).toBe(inner.materials.soma[0]);
     expect(somas.material).not.toBe(inner.look.material);
-    expect(inner.materials.soma.customProgramCacheKey()).toContain('impostor-soma');
+    expect(inner.materials.soma[0].customProgramCacheKey()).toContain('impostor-soma');
     expect(somas.geometry.instanceCount).toBe(2);
     expect([...somas.geometry.getAttribute('aSoma').array]).toEqual([0, 0, 0, 5, 10, 20, 0, 4]);
     expect([...somas.geometry.getAttribute('aCell').array]).toEqual([0, 2]);
@@ -504,9 +505,9 @@ describe('the circuit morphology viewer', () => {
     expect(segments.geometry).toBe(segmentsOf(inner).geometry);
     expect(inner.materials.ids.segment).toEqual([segments.material]);
     expect(somas.geometry).toBe(somasOf(inner).geometry);
-    expect(somas.material).toBe(inner.materials.ids.soma);
+    expect(inner.materials.ids.soma).toEqual([somas.material]);
     for (const quads of [segments, somas]) expect(quads.frustumCulled).toBe(false);
-    expect(inner.materials.ids.soma.uniforms.uCells).toBe(inner.uniforms.uCells);
+    expect(inner.materials.ids.soma[0].uniforms.uCells).toBe(inner.uniforms.uCells);
     // Built with the data, ahead of the first pick, for the target a pick draws into.
     expect(inner.renderer.compile).toHaveBeenCalledExactlyOnceWith(inner.ids, inner.camera);
     expect(steps).toEqual(['into 9x9', 'build', 'back to the canvas']);
@@ -906,10 +907,10 @@ describe('the circuit morphology viewer', () => {
       somasOf(inner).geometry,
       inner.uniforms.uCells.value as THREE.DataTexture,
       inner.uniforms.uGlow.value as THREE.DataTexture,
-      inner.materials.soma,
+      ...inner.materials.soma,
       inner.look.material,
       ...inner.materials.ids.segment,
-      inner.materials.ids.soma,
+      ...inner.materials.ids.soma,
       inner.materials.ids.cloud,
       inner.materials.cloud,
       inner.idTarget as THREE.WebGLRenderTarget,
@@ -1920,6 +1921,7 @@ describe('the morphologies read a box at a time', () => {
         drawn: 0,
         marked: new Uint32Array(1),
         rest,
+        clamped: false,
       });
       inner.tellCulled(read(SEES_THROUGH));
       expect(see).not.toHaveBeenCalled();
@@ -1966,6 +1968,7 @@ describe('the morphologies read a box at a time', () => {
         drawn: 0,
         marked: new Uint32Array(1),
         rest,
+        clamped: false,
       });
       const first = inner.restOf(false);
       expect(first).toBe(SEES_THROUGH);
@@ -1977,6 +1980,89 @@ describe('the morphologies read a box at a time', () => {
       inner.tellCulled(read(next));
       expect(see).toHaveBeenCalledOnce();
     });
+  });
+
+  it('draws again after a frame that drew part of what it saw, and gives up, saying so, after 30 on end', async () => {
+    vi.useFakeTimers({ toFake: ['performance'] });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const { viewer, inner } = make();
+    viewer.setData(chunked());
+    frames(inner);
+    await readAll(inner);
+    const { stream } = inner.layer.detailed;
+    const asked = (clamped: boolean) => {
+      inner.dirty = false;
+      inner.tellCulled({
+        tested: 0,
+        kept: 0,
+        drawn: 0,
+        marked: new Uint32Array(1),
+        rest: stream.rest,
+        clamped,
+      });
+      return inner.dirty;
+    };
+    expect(asked(false)).toBe(false);
+    for (let frame = 0; frame < 30; frame++) expect(asked(true)).toBe(true);
+    expect(warn).not.toHaveBeenCalled();
+    expect(asked(true)).toBe(false);
+    expect(asked(true)).toBe(false);
+    expect(warn).toHaveBeenCalledOnce();
+
+    expect(asked(false)).toBe(false);
+    expect(asked(true)).toBe(true);
+    warn.mockRestore();
+    vi.useRealTimers();
+  });
+
+  it('counts a frame drawn in part a second after the last as the first of its own', async () => {
+    vi.useFakeTimers({ toFake: ['performance'] });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const { viewer, inner } = make();
+    viewer.setData(chunked());
+    frames(inner);
+    await readAll(inner);
+    const { stream } = inner.layer.detailed;
+    const asked = () => {
+      inner.dirty = false;
+      inner.tellCulled({
+        tested: 0,
+        kept: 0,
+        drawn: 0,
+        marked: new Uint32Array(1),
+        rest: stream.rest,
+        clamped: true,
+      });
+      return inner.dirty;
+    };
+    for (let frame = 0; frame < 31; frame++) asked();
+    expect(asked()).toBe(false);
+    vi.advanceTimersByTime(1500);
+    expect(asked()).toBe(true);
+    expect(warn).toHaveBeenCalledOnce();
+    warn.mockRestore();
+    vi.useRealTimers();
+  });
+
+  it('takes no marks of a frame that drew part of what it saw', async () => {
+    const { viewer, inner } = make();
+    viewer.setData(chunked());
+    frames(inner);
+    await readAll(inner);
+    const { stream } = inner.layer.detailed;
+    const see = vi.spyOn(stream, 'see');
+    const read = (clamped: boolean) => ({
+      tested: 0,
+      kept: 0,
+      drawn: 0,
+      marked: new Uint32Array(1),
+      rest: stream.rest,
+      clamped,
+    });
+    inner.tellCulled(read(true));
+    expect(see).not.toHaveBeenCalled();
+    inner.tellCulled(read(false));
+    expect(see).toHaveBeenCalledOnce();
   });
 
   it('tells what it draws, the rules included, and null once the morphologies go', async () => {

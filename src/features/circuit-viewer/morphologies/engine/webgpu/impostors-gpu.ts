@@ -27,7 +27,15 @@ import * as THREE from 'three/webgpu';
 import { EXPOSURE } from '@/features/viewer-3d/engine/looks';
 
 import { BY_SECTION } from '../cell-table';
-import { CELL_MASK, HOLE, HOLE_WORD, MIN_RADIUS, QUAD_REACH, TYPE_SHIFT } from '../impostors';
+import {
+  CELL_MASK,
+  GLOW_WIDTH,
+  HOLE,
+  HOLE_WORD,
+  MIN_RADIUS,
+  QUAD_REACH,
+  TYPE_SHIFT,
+} from '../impostors';
 import { PULSE_FRONT_WGSL, SOMA_LINE, SPIKE_COLOUR_WGSL, SPIKE_LIGHT_WGSL } from '../spike-light';
 import { cellGlow, cellId, cellXY, col, flat, keptUnless, typed, VIEW } from './cells-wgsl';
 import { NEAR_SHARE, NEAR_UM } from './culling-wgsl';
@@ -252,18 +260,21 @@ fn tubeSurface(p: vec3f, a: vec4f, b: vec4f, radii: vec4f, projection: mat4x4f) 
 
 /**
  * A soma's quad. Columns: the corner in the world, with w 1 where the soma is drawn; the centre in view space and the
- * radius; the radius in pixels; the corner in view space.
+ * radius; the radius in pixels; the corner in view space. `ball` is 1 in the draw of the somas round in depth and 0 in
+ * the flat draw, and only the draw of the kind that the soma's radius on screen asks for draws it (`round` is the least
+ * radius in pixels of a ball). A flat soma's quad stands at the sphere's nearest point.
  */
 const somaQuad = wgslFn(
   /* wgsl */ `
-fn somaQuad(corner: vec3f, shown: f32, least: f32, sphere: vec4f, chart: vec4f, morph: f32, shift: vec3f,
-            view: mat4x4f, world: mat4x4f, projection: mat4x4f, vp: vec4f) -> mat4x4f {
+fn somaQuad(corner: vec3f, shown: f32, least: f32, sphere: vec4f, chart: vec4f, morph: f32, shift: vec3f, ball: f32,
+            round: f32, view: mat4x4f, world: mat4x4f, projection: mat4x4f, vp: vec4f) -> mat4x4f {
   let none = mat4x4f(vec4f(0.0), vec4f(0.0), vec4f(0.0), vec4f(0.0));
   if (shown < 0.5) { return none; }
   let S = mix(sphere, chart, morph);
   let c = (view * vec4f(S.xyz + shift, 1.0)).xyz;
   let um = pixelUm(c.z, projection, vp);
   let r = max(S.w, 1.5 * least * um);
+  if ((r / um >= round) != (ball > 0.5)) { return none; }
   // How far from its centre the sphere reaches on screen, in µm at the centre's depth.
   var reach = r;
   if (!isOrthographic(projection)) {
@@ -275,8 +286,9 @@ fn somaQuad(corner: vec3f, shown: f32, least: f32, sphere: vec4f, chart: vec4f, 
     if (8.0 * lean < d2) { return none; }
     reach = r * d2 / lean;
   }
-  // Make the quad a little wider than the sphere. The fragment writes its depth.
-  let p = vec3f(c.xy + corner.xy * (1.2 * reach), c.z);
+  // Make the quad a little wider than the sphere. A ball's fragment writes its depth.
+  var p = vec3f(c.xy + corner.xy * (1.2 * reach), c.z);
+  if (ball < 0.5) { p = lifted(p, r, projection); }
   return mat4x4f(world * vec4f(p, 1.0), vec4f(c, r), vec4f(r / um, 0.0, 0.0, 0.0), vec4f(p, 0.0));
 }`,
   [VIEW]
@@ -338,13 +350,21 @@ fn roughnessOf(n: vec3f, roughness: f32) -> f32 {
   return min(max(roughness, 0.0525) + max(max(turn.x, turn.y), turn.z), 1.0);
 }`);
 
-/** A segment drawn flat or as the tube itself (`GpuUniforms.tubeFrom`), or a soma. */
-type Kind = 'segment' | 'tube' | 'soma';
+/**
+ * A segment drawn flat or as the tube itself (`GpuUniforms.tubeFrom`); a soma ray-cast as a sphere, round in depth, or
+ * one small on screen drawn as a flat disc (`GpuUniforms.ballFrom`).
+ */
+type Kind = 'segment' | 'tube' | 'soma' | 'disc';
+
+const isSoma = (kind: Kind) => kind === 'soma' || kind === 'disc';
+/** Whether a kind's fragments write their own depth, in place of their quad's. */
+const ownDepth = (kind: Kind) => kind === 'tube' || kind === 'soma';
 
 /**
  * What a segment is drawn from: its cell-and-type word, its ends, and its ends in the dendrogram. `round` is the least
  * radius in pixels of a tube, by which each draw keeps only the segments of its own kind (`GpuUniforms.tubeFrom` where
- * not given).
+ * not given). For a soma it is the least radius of a ball (`GpuUniforms.ballFrom` where not given); at 0, a `soma`
+ * draws every soma.
  */
 interface SegmentInputs {
   word: Node<'uint'>;
@@ -408,9 +428,8 @@ function behindOf(arena: ArenaStorage, viewZ: Node<'float'>): Node<'bool'> {
  * What every material of a kind shares: the cell, its texel, and, where `glowing`, how lit it is by a spike
  * (`spike-light.ts`); where the quad's corner is and what the fragments take of it; and whether a pixel is on the tube
  * or the sphere, with its normal, how far it is from the edge, and its depth. The depth comes as the depth buffer
- * stores it, which a segment drawn flat does not write, and in view space. A cell that glows in full and is drawn at
- * the least width is drawn at twice that width, so that it can be seen. The word, and a segment's ends, are read from
- * `inputs`. With `litOnly`, an unlit cell's quads are not drawn.
+ * stores it, which a segment drawn flat does not write, and in view space. The word, and a segment's ends, are read
+ * from `inputs`. With `litOnly`, an unlit cell's quads are not drawn.
  */
 function impostorOf(
   kind: Kind,
@@ -427,10 +446,10 @@ function impostorOf(
     ? typed<'float'>(cellGlow({ cell, highlighted: u.highlighted, glowTexel: u.glow.load(xy) }))
     : float(0);
   const shown = litOnly ? select(glow.greaterThan(0), texel.a, float(0)) : texel.a;
-  const least = float(MIN_RADIUS).mul(glow.add(1));
+  const least = float(MIN_RADIUS).mul(glow.mul(GLOW_WIDTH - 1).add(1));
   let quad: Node<'mat4'>;
   let shape: Node;
-  if (kind === 'soma') {
+  if (isSoma(kind)) {
     quad = typed<'mat4'>(
       somaQuad({
         corner: positionGeometry,
@@ -440,6 +459,8 @@ function impostorOf(
         chart: attribute('aSomaChart', 'vec4'),
         morph: u.mix,
         shift: u.shift,
+        ball: float(kind === 'soma' ? 1 : 0),
+        round: inputs.round ?? u.ballFrom,
         view: cameraViewMatrix,
         world: cameraWorldMatrix,
         projection: cameraProjectionMatrix,
@@ -501,8 +522,9 @@ function impostorOf(
   }
   const surface = typed<'mat4'>(shape).toVar();
   const { z: depth, w: viewZ } = col(surface, 1);
-  const fromSoma =
-    kind === 'soma'
+  let spiking: Node<'float'> = float(0);
+  if (glowing) {
+    const fromSoma = isSoma(kind)
       ? float(0)
       : somaDistance({
           corner: positionGeometry,
@@ -510,8 +532,9 @@ function impostorOf(
           endB: inputs.endB,
           soma: u.somas.load(xy),
         });
-  const pulse = typed<'float'>(pulseFront({ d: fromSoma, glow, afterglow: u.afterglow }));
-  const spiking = typed<'float'>(spikeLight({ x: varying(pulse), glow: flat(glow) }));
+    const pulse = typed<'float'>(pulseFront({ d: fromSoma, glow, afterglow: u.afterglow }));
+    spiking = typed<'float'>(spikeLight({ x: varying(pulse), glow: flat(glow) }));
+  }
   return { word, cell, texel, spiking, position: col(quad, 0).xyz, surface, depth, viewZ };
 }
 
@@ -531,7 +554,7 @@ function cellColour(
         highlighted: u.highlighted,
         highlight: u.highlight,
         texel,
-        type_: kind === 'soma' ? uint(1) : word.shiftRight(uint(TYPE_SHIFT)),
+        type_: isSoma(kind) ? uint(1) : word.shiftRight(uint(TYPE_SHIFT)),
         unknown,
         soma,
         axon,
@@ -544,7 +567,7 @@ function cellColour(
 
 /** A lit cell of `kind` in its spike's colour, linear. */
 function spikeLit(kind: Kind, colour: Node<'vec3'>, facing: Node<'float'>, u: GpuUniforms) {
-  const neon = kind === 'soma' ? u.neon.mul(vec2(1, SOMA_LINE)) : u.neon;
+  const neon = isSoma(kind) ? u.neon.mul(vec2(1, SOMA_LINE)) : u.neon;
   return typed<'vec3'>(spikeColour({ own: colour, facing, neon, hue: u.spikeHue }));
 }
 
@@ -593,7 +616,7 @@ function throughMaterial(
   );
   const { cover, behind } = behindFront(u, viewZ.negate());
   const { x: edge, y: radius } = col(surface, 1);
-  const half = kind === 'soma' ? u.throughHalfPx.mul(THROUGH_DOT) : u.throughHalfPx;
+  const half = isSoma(kind) ? u.throughHalfPx.mul(THROUGH_DOT) : u.throughHalfPx;
   const line = radius.sub(edge).sub(half).add(0.5).clamp(0, 1).oneMinus();
   material.positionNode = position;
   material.maskNode = col(surface, 0)
@@ -615,14 +638,17 @@ function throughMaterial(
 /**
  * An impostor of `kind` in the look's material: three's standard material under the look's lights. It takes the cell's
  * colour from the cell table where the vertex colour would go, lights it by a spike (`spike-light.ts`), tone maps it as
- * Studio is on WebGL 2 and writes it as shown. It also writes its surface for the occlusion (`surfaceOf`). A tube of a
- * culled `arena` is not drawn where it lies behind what was drawn before the tests (`behindOf`): it writes its own
- * depth, so it would otherwise be shaded there under what covers it.
+ * Studio is on WebGL 2 and writes it as shown. Without `spikes` it reads nothing of them, and draws what an unlit cell
+ * is drawn as. It also writes its surface for the occlusion (`surfaceOf`). A tube of a culled `arena` is not drawn
+ * where it lies behind what was drawn before the tests (`behindOf`): it writes its own depth, so it would otherwise be
+ * shaded there under what covers it. A disc is lit as the sphere and writes the sphere's surface, but its depth is its
+ * quad's, so what its quad hides is not shaded.
  */
 function lookMaterial(
   kind: Kind,
   u: GpuUniforms,
   look: Look,
+  spikes: boolean,
   inputs: SegmentInputs = fromAttributes(),
   arena?: ArenaStorage
 ): THREE.MeshStandardNodeMaterial {
@@ -634,7 +660,7 @@ function lookMaterial(
   const { word, cell, texel, spiking, position, surface, depth, viewZ } = impostorOf(
     kind,
     u,
-    true,
+    spikes,
     inputs
   );
   const colour = cellColour(kind, u, word, cell, texel);
@@ -646,12 +672,11 @@ function lookMaterial(
   );
   const on = col(surface, 0).w.greaterThan(0.5);
   material.maskNode = kind === 'tube' && arena ? on.and(behindOf(arena, viewZ).not()) : on;
-  if (kind !== 'segment') material.depthNode = depth;
-  const facing = col(surface, 0).z;
-  const spike = spikeLit(kind, colour, facing, u);
-  let shown = toneMapped(mix(output.rgb, spike, spiking));
+  if (ownDepth(kind)) material.depthNode = depth;
+  const spike = spikes ? spikeLit(kind, colour, col(surface, 0).z, u) : null;
+  let shown = toneMapped(spike ? mix(output.rgb, spike, spiking) : output.rgb);
   // Add light past white, on a screen that can show it.
-  if (u.overWhite > 0) shown = shown.add(toneMapped(spike).mul(spiking.mul(u.overWhite)));
+  if (spike && u.overWhite > 0) shown = shown.add(toneMapped(spike).mul(spiking.mul(u.overWhite)));
   material.outputNode = vec4(typed<'vec3'>(sRGBTransferOETF(shown)), output.a);
   material.mrtNode = surfaceOf(col(surface, 0).xyz, viewZ, spiking);
   return material;
@@ -670,9 +695,9 @@ function idMaterial(
   const material = new THREE.MeshBasicNodeMaterial();
   const { cell, position, surface, depth } = impostorOf(kind, u, false, inputs);
   let n: Node<'uint'> = cell;
-  if (segments) n = kind === 'soma' ? u.segments.add(cell) : instanceIndex;
+  if (segments) n = isSoma(kind) ? u.segments.add(cell) : instanceIndex;
   material.positionNode = position;
-  if (kind !== 'segment') material.depthNode = depth;
+  if (ownDepth(kind)) material.depthNode = depth;
   material.fragmentNode = keptUnless(
     col(surface, 0).w.lessThan(0.5),
     flat(typed<'vec4'>(cellId({ cell: n })))
@@ -694,7 +719,7 @@ function depthMaterial(
   const { position, surface, depth } = impostorOf(kind, u, true, inputs);
   material.positionNode = position;
   material.maskNode = col(surface, 0).w.greaterThan(0.5);
-  if (kind === 'tube') material.depthNode = depth;
+  if (ownDepth(kind)) material.depthNode = depth;
   material.colorWrite = false;
   return material;
 }
@@ -705,22 +730,35 @@ const segments = <M extends THREE.Material>(of: (kind: 'segment' | 'tube') => M)
   of('tube'),
 ];
 
+/** A soma's materials for its two draws: the flat discs and the balls. */
+const somas = <M extends THREE.Material>(of: (kind: 'disc' | 'soma') => M) => [
+  of('disc'),
+  of('soma'),
+];
+
 /**
  * The impostors' materials on WebGPU: in the look, in their cells' numbers, in their segments' numbers, and lit through
- * what covers them. Each set draws the segments in two draws, the flat ones and the tubes.
+ * what covers them. Each set draws the segments in two draws, the flat ones and the tubes. The look and the picks draw
+ * the somas in two as well, the discs and the balls, so that a pick finds the cell the look shows. Lit through what
+ * covers it, every soma is a ball: that draw tests no depth. The segments' look comes in two kinds (`drawBySpikes`);
+ * the somas' is always the lit one: the other drew them no faster.
  */
 export function impostorMaterials(u: GpuUniforms, look: Look) {
   return {
-    segment: segments((kind) => lookMaterial(kind, u, look)),
-    soma: lookMaterial('soma', u, look),
-    ids: { segment: segments((kind) => idMaterial(kind, u)), soma: idMaterial('soma', u) },
+    segment: segments((kind) => lookMaterial(kind, u, look, false)),
+    spikingSegment: segments((kind) => lookMaterial(kind, u, look, true)),
+    soma: somas((kind) => lookMaterial(kind, u, look, true)),
+    ids: {
+      segment: segments((kind) => idMaterial(kind, u)),
+      soma: somas((kind) => idMaterial(kind, u)),
+    },
     spots: {
       segment: segments((kind) => idMaterial(kind, u, true)),
-      soma: idMaterial('soma', u, true),
+      soma: somas((kind) => idMaterial(kind, u, true)),
     },
     through: {
       segment: segments((kind) => throughMaterial(kind, u)),
-      soma: throughMaterial('soma', u),
+      soma: throughMaterial('soma', u, { ...fromAttributes(), round: float(0) }),
     },
   };
 }
@@ -730,13 +768,32 @@ export function impostorMaterials(u: GpuUniforms, look: Look) {
  * segments seen; the depth and lit-through materials draw the segments kept (`fromArena`), which include those seen.
  */
 export function arenaMaterials(u: GpuUniforms, look: Look, arena: ArenaStorage) {
+  const drawn = (spikes: boolean) =>
+    segments((kind) =>
+      lookMaterial(kind, u, look, spikes, fromArena(u, arena, kind, 'seen'), arena)
+    );
   return {
-    segment: segments((kind) =>
-      lookMaterial(kind, u, look, fromArena(u, arena, kind, 'seen'), arena)
-    ),
+    segment: drawn(false),
+    spikingSegment: drawn(true),
     ids: segments((kind) => idMaterial(kind, u, false, fromArena(u, arena, kind, 'seen'))),
     kept: segments((kind) => depthMaterial(kind, u, fromArena(u, arena, kind, 'kept'))),
     seenDepth: segments((kind) => depthMaterial(kind, u, fromArena(u, arena, kind, 'seen'))),
     through: segments((kind) => throughMaterial(kind, u, fromArena(u, arena, kind, 'kept'))),
   };
+}
+
+/** The segments' look in its two kinds: one that reads nothing of the spikes, and the same lit by them. */
+export interface SegmentKinds {
+  segment: THREE.Material[];
+  spikingSegment: THREE.Material[];
+}
+
+/**
+ * Has frames drawn with the segments lit by the spikes while a replay is loaded, and otherwise with those that read
+ * nothing of them, which draw the same picture for less. Both kinds are on the same quads, and three leaves out a mesh
+ * whose material is not visible.
+ */
+export function drawBySpikes({ segment, spikingSegment }: SegmentKinds, replaying: boolean): void {
+  for (const material of segment) material.visible = !replaying;
+  for (const material of spikingSegment) material.visible = replaying;
 }

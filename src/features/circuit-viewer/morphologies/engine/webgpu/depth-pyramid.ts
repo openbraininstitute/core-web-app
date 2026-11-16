@@ -88,7 +88,12 @@ export class DepthPyramid {
     renderer: THREE.WebGPURenderer,
     device: GPUDevice,
     label: string,
-    failed: (error: unknown) => void
+    failed: (error: unknown) => void,
+    /**
+     * Whether the depth's pass keeps its multisampled colour in memory. A pass into memoryless buffers loses the device
+     * on Apple GPUs where it draws too much, so a pass that may draw a whole arena wants them stored.
+     */
+    private stored = false
   ) {
     this.renderer = renderer;
     this.device = device;
@@ -114,7 +119,7 @@ export class DepthPyramid {
         depthTexture: new THREE.DepthTexture(width, height, THREE.FloatType),
         format: THREE.RedFormat,
         resolveColorBuffer: false,
-        storeMultisampledColorBuffer: false,
+        storeMultisampledColorBuffer: this.stored,
       });
     }
     this.target.setSize(width, height);
