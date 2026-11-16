@@ -609,7 +609,7 @@ export class DetailStream {
         const clamped = read.reduce((sum, box) => sum + (box.clamped ?? 0), 0);
         if (clamped > 0 && !this.toldClamped) {
           logWarn(
-            `${clamped} segments drawn cut short or with another radius: past what packed ends hold`
+            `${clamped} segments of one read cut short or given another radius, past what packed ends hold`
           );
           this.toldClamped = true;
         }

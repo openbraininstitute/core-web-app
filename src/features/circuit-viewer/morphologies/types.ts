@@ -72,8 +72,8 @@ export interface Packing {
 
 /**
  * A box's segments as a read hands them over: `segments` as `MorphologySegments` has them, or packed, five words each,
- * where the read was asked for that. `clamped` counts the packed segments that did not fit and are drawn cut short or
- * with another radius.
+ * where the read was asked for that. `clamped` counts the box's segments that did not fit packed, and were cut short
+ * or given another radius: as the pack has them, some of which the page may not draw.
  */
 export type BoxSegments = Omit<MorphologySegments, 'segments'> & {
   segments: Float32Array | Uint32Array;

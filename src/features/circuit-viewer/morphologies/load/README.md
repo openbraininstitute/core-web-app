@@ -113,7 +113,7 @@ Tests: `src/__tests__/circuit-morphologies/`: `load.test.ts` (the load end to en
 
 ## Limitations
 
-- Packed ends hold no segment longer than 1,048,512 grid steps on an axis (26 mm on a 25 nm grid) and no radius step outside a byte (0.004 to 245 µm at 16 steps to a doubling). Such a segment is drawn cut short along its line, or with the nearest radius a byte holds, and the page warns once of how many (`BoxSegments.clamped`). No pack built so far has one.
+- Packed ends hold no segment longer than 1,048,512 grid steps on an axis (26 mm on a 25 nm grid) and no radius step outside a byte (0.004 to 245 µm at 16 steps to a doubling). Such a segment is drawn cut short along its line, or with the nearest radius a byte holds, and the page warns once, with how many the first such read had (`BoxSegments.clamped`). No pack built so far has one.
 - The pack is downloaded whole, even where the view will only ever want its coarsest level. A request for each chunk's bytes, by range, would download only what is drawn, at a round trip a box.
 - A download cut short twice is not kept, and Try again starts it over.
 - A pack larger than the cache's 1 GiB is downloaded again at every visit (its digest is still checked), and held in memory while it is open.
