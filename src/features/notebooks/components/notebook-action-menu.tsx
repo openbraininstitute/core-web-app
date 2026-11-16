@@ -11,7 +11,7 @@ import {
 } from '@ant-design/icons';
 import { RiPlayFill } from '@remixicon/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Modal, Popconfirm } from 'antd';
+import { Dropdown, Modal, Popconfirm } from 'antd';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -20,6 +20,7 @@ import { deleteAnalysisNotebookTemplate } from '@/api/entitycore/queries/analysi
 import { useAppNotification } from '@/components/notification';
 import { type TViewVariant, ViewVariant } from '@/constants';
 import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
+import { SessionSizePanel } from '@/features/notebooks/components/session-size-panel';
 import { useRunNotebook } from '@/features/notebooks/hooks/use-run-notebook';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive, downloadFailedNotification } from '@/services/entity-download';
@@ -58,8 +59,23 @@ export function NotebookActionMenu({
   const queryClient = useQueryClient();
   const { replace: navigate } = useRouter();
   const [readmeOpen, setReadmeOpen] = useState(false);
-  const { run, runTargets, runningTarget, running, openJupyterHub, opening, creditsModal } =
-    useRunNotebook({ id: entity.id, assets: entity.assets });
+  const [openSizeMenu, setOpenSizeMenu] = useState<string | null>(null);
+  const {
+    run,
+    runTargets,
+    runningTarget,
+    running,
+    openJupyterHub,
+    opening,
+    creditsModal,
+    profiles,
+    defaultProfile,
+    virtualLabData,
+  } = useRunNotebook({ id: entity.id, assets: entity.assets });
+
+  // Course students run with the backend default size instead of choosing one.
+  const isCourseStudentProject =
+    !!virtualLabData?.course && virtualLabData.course.template_project_id !== ctx.projectId;
 
   const [, copy, , copying] = useCopyToClipboard({
     onSuccess: () =>
@@ -182,30 +198,55 @@ export function NotebookActionMenu({
       ) : null}
 
       {isTemplate ? (
-        runTargets.map((target) => (
-          <Action
-            key={target.key}
-            variant={variant}
-            kind={ActionKind.Button}
-            onClick={() => run(target)}
-            icon={
-              runningTarget === target.key ? (
-                <LoadingOutlined />
-              ) : (
-                <target.Icon className="size-4" />
-              )
-            }
-          >
-            <div className="flex flex-col items-start">
-              {target.hideInProduction && (
-                <small className="text-gray-500 text-xs font-light mb-0 leading-2.5">
-                  Hidden in production
-                </small>
+        runTargets.map((target) => {
+          const runAction = (
+            <Action
+              variant={variant}
+              kind={ActionKind.Button}
+              onClick={isCourseStudentProject ? () => run(target) : undefined}
+              icon={
+                runningTarget === target.key ? (
+                  <LoadingOutlined />
+                ) : (
+                  <target.Icon className="size-4" />
+                )
+              }
+            >
+              <div className="flex flex-col items-start">
+                {target.hideInProduction && (
+                  <small className="text-gray-500 text-xs font-light mb-0 leading-2.5">
+                    Hidden in production
+                  </small>
+                )}
+                {runningTarget === target.key ? 'Starting...' : target.label}
+              </div>
+            </Action>
+          );
+
+          if (isCourseStudentProject) return <div key={target.key}>{runAction}</div>;
+
+          return (
+            <Dropdown
+              key={target.key}
+              trigger={['click']}
+              placement="bottomLeft"
+              open={openSizeMenu === target.key && !running}
+              onOpenChange={(open) => setOpenSizeMenu(open ? target.key : null)}
+              popupRender={() => (
+                <SessionSizePanel
+                  profiles={profiles}
+                  defaultProfile={defaultProfile}
+                  onSelect={(profileName) => {
+                    setOpenSizeMenu(null);
+                    run(target, profileName);
+                  }}
+                />
               )}
-              {runningTarget === target.key ? 'Starting...' : target.label}
-            </div>
-          </Action>
-        ))
+            >
+              <div data-testid={`notebook-run-${target.key}-button`}>{runAction}</div>
+            </Dropdown>
+          );
+        })
       ) : (
         <>
           <Action

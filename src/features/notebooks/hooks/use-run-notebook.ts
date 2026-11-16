@@ -171,5 +171,6 @@ export function useRunNotebook({
     creditsModal,
     profiles,
     defaultProfile,
+    virtualLabData,
   };
 }
