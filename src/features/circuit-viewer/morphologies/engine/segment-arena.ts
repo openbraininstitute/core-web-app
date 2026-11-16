@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-import { floatsOf, PACKED_WORDS, radiiOf, unpackEnds } from '../load/packed-ends';
+import { PACKED_WORDS, unpackerOf } from '../load/packed-ends';
 import { HOLE_WORD, packCellTypes, QUAD_REACH, segmentAttributes } from './impostors';
 
 import type { BoxSegments, Packing } from '../types';
@@ -122,9 +122,8 @@ export class SegmentArena {
   /** The words a slot's ends take. */
   private stride: number;
   private packing?: Packing;
-  /** Where the ends are packed: the radius of each radius byte, and a block's ends unpacked. */
-  private radii: Float32Array = new Float32Array(0);
-  private unpacked = new Float32Array(0);
+  /** Reads a block's ends where they are packed. */
+  private unpack?: ReturnType<typeof unpackerOf>;
   private words: Uint32Array;
   private blocks: Float32Array;
   private uploads: ArenaUploads;
@@ -169,10 +168,7 @@ export class SegmentArena {
     this.endsFrom = uploadsOf ? this.baseRoom : 0;
     this.stride = packing ? PACKED_WORDS : 8;
     this.packing = packing;
-    if (packing) {
-      this.radii = radiiOf(packing);
-      this.unpacked = new Float32Array(8 * BLOCK);
-    }
+    this.unpack = packing && unpackerOf(packing, BLOCK);
     const held = this.capacity - this.endsFrom;
     const floats = new Float32Array(packing ? 0 : 8 * held);
     this.ends = packing ? new Uint32Array(PACKED_WORDS * held) : floats;
@@ -424,19 +420,11 @@ export class SegmentArena {
   private bound(segments: ArenaEnds, start: number, blocks = this.blocks): void {
     const blockWords = new Uint32Array(blocks.buffer);
     const n = segments.length / this.stride;
-    const packed = segments instanceof Uint32Array ? segments : null;
-    const near = packed && floatsOf(packed);
-    const gridUm = this.packing?.gridUm ?? 0;
+    const unpacked = this.unpack && segments instanceof Uint32Array ? this.unpack(segments) : null;
     for (let s = 0, o = rowOf(start); s < n; s += BLOCK, o += 8) {
       const last = Math.min(n, s + BLOCK);
-      // A block of packed ends is unpacked first.
-      let ends = segments;
-      let from = 8 * s;
-      if (packed && near) {
-        unpackEnds(packed, near, s, last - s, gridUm, this.radii, this.unpacked);
-        ends = this.unpacked;
-        from = 0;
-      }
+      const ends = unpacked ? unpacked(s, last - s) : segments;
+      const from = unpacked ? 0 : 8 * s;
       const to = from + 8 * (last - s);
       let x0 = Infinity;
       let y0 = Infinity;

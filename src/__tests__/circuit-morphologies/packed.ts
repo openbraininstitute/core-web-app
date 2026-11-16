@@ -2,8 +2,7 @@ import {
   floatsOf,
   PACKED_WORDS,
   packFar,
-  radiiOf,
-  unpackEnds,
+  unpackerOf,
 } from '@/features/circuit-viewer/morphologies/load/packed-ends';
 
 import type { Packing } from '@/features/circuit-viewer/morphologies/types';
@@ -29,7 +28,5 @@ export function packedOf(ends: ArrayLike<number>, packing = PACKING): Uint32Arra
 /** Packed ends as eight floats each. */
 export function unpackedOf(packed: Uint32Array, packing = PACKING): Float32Array {
   const count = packed.length / PACKED_WORDS;
-  const ends = new Float32Array(8 * count);
-  unpackEnds(packed, floatsOf(packed), 0, count, packing.gridUm, radiiOf(packing), ends);
-  return ends;
+  return unpackerOf(packing, count)(packed)(0, count);
 }

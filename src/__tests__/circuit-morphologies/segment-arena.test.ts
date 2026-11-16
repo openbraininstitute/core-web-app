@@ -16,7 +16,7 @@ import {
 
 import { PACKING, packedOf, unpackedOf } from './packed';
 
-import type { MorphologySegments } from '@/features/circuit-viewer/morphologies/types';
+import type { MorphologySegments, Packing } from '@/features/circuit-viewer/morphologies/types';
 
 /** `count` segments of `box`, each told apart by its cell, `1000 * box + i`, which its ends and type carry too. */
 function segmentsOf(box: number, count: number): MorphologySegments {
@@ -33,36 +33,40 @@ function segmentsOf(box: number, count: number): MorphologySegments {
 
 /**
  * An arena of `capacity` segments, with room for `base`; its words and blocks; what it told its uploads (`told`: a
- * start, a count, and whether no ends came with them); every slot's ends as they were uploaded (`ends`); and the ends
- * uploaded last, as they were given (`given`).
+ * start, a count, and whether no ends came with them); every slot's ends as they were uploaded (`ends`), eight floats
+ * each, or five words with a `packing`; and the ends uploaded last, as they were given (`given`).
  */
-function arenaOf(capacity: number, base?: number[]) {
+function arenaOf(capacity: number, base?: number[], packing?: Packing) {
   const told: [number, number, boolean][] = [];
   const dispose = vi.fn();
+  const stride = packing ? 5 : 8;
   let arrays: ArenaArrays = { words: new Uint32Array(), blocks: new Float32Array() };
-  let ends = new Float32Array();
+  let ends = new Float32Array() as Float32Array | Uint32Array;
   let last: Float32Array | Uint32Array | null = null;
   const arena = new SegmentArena(
     new THREE.InstancedBufferGeometry(),
     capacity,
     (given) => {
       arrays = given;
-      ends = new Float32Array(8 * given.words.length);
+      const slots = stride * given.words.length;
+      ends = packing ? new Uint32Array(slots) : new Float32Array(slots);
       return {
         upload: (start, count, changed) => {
           told.push([start, count, changed === null]);
           if (!changed) return;
-          ends.set(changed, 8 * start);
+          ends.set(changed, stride * start);
           last = changed;
         },
         dispose,
       };
     },
-    base
+    base,
+    packing
   );
   const { words, blocks } = arrays;
   return {
     arena,
+    arrays,
     ends,
     given: () => last,
     words,
@@ -402,28 +406,7 @@ describe('SegmentArena', () => {
       return { floats: { ...floats, segments: unpackedOf(packed.segments) }, packed };
     }
 
-    /** An arena of packed ends, with every slot's ends as they were uploaded, five words each. */
-    function packedArena(capacity: number, base?: number[]) {
-      let arrays: ArenaArrays = { words: new Uint32Array(), blocks: new Float32Array() };
-      let ends = new Uint32Array();
-      const arena = new SegmentArena(
-        new THREE.InstancedBufferGeometry(),
-        capacity,
-        (given) => {
-          arrays = given;
-          ends = new Uint32Array(5 * given.words.length);
-          return {
-            upload: (start, _count, changed) => {
-              if (changed) ends.set(changed, 5 * start);
-            },
-            dispose: vi.fn(),
-          };
-        },
-        base,
-        PACKING
-      );
-      return { arena, ends, arrays };
-    }
+    const packedArena = (capacity: number, base?: number[]) => arenaOf(capacity, base, PACKING);
 
     it('hands its uploads the packing and the ends as they were put, and bounds its blocks as it does the same ends as floats', () => {
       const packed = packedArena(4 * BLOCK);
@@ -466,7 +449,7 @@ describe('SegmentArena', () => {
 
       const end = packed.arena.geometry.instanceCount;
       expect(end).toBe(floats.arena.geometry.instanceCount);
-      const unpacked = unpackedOf(packed.ends.subarray(0, 5 * end));
+      const unpacked = unpackedOf(packed.ends.subarray(0, 5 * end) as Uint32Array);
       // A slot past its box's segments holds whatever was there.
       const drawn = Array.from({ length: end }, (_, slot) => slot).filter(
         (slot) => floats.words[slot] >>> TYPE_SHIFT !== HOLE

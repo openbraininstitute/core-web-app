@@ -198,9 +198,9 @@ export function createPackApi(cache: CacheBounds) {
       const { readBox, packing, numbers } = opened;
       const read = await Promise.all(
         wanted.map(async ({ level, box }) => {
-          const { clamped, ...segments } = await readBox(level, box, packed);
-          const ordered = mortonOrder(renumberSegments(segments, numbers), packing);
-          return clamped ? { ...ordered, clamped } : ordered;
+          const read = await readBox(level, box, packed);
+          const ordered = mortonOrder(renumberSegments(read, numbers), packing);
+          return read.clamped ? { ...ordered, clamped: read.clamped } : ordered;
         })
       );
       return Comlink.transfer(read, read.flatMap(buffersOf) as ArrayBuffer[]);

@@ -81,8 +81,8 @@ export function mortonSorted(points: Float32Array): MortonSorted {
 
 /**
  * The segments, their ends packed or not, in the Morton order of their midpoints over the box they span, segments of
- * one code in the order they came. The WebGPU tier culls blocks of 64 consecutive segments by the box around each block, and this order keeps
- * those boxes small.
+ * one code in the order they came. The WebGPU tier culls blocks of 64 consecutive segments by the box around each
+ * block, and this order keeps those boxes small.
  */
 export function mortonOrder(read: BoxSegments, { gridUm }: Packing): BoxSegments {
   const { segments, segmentCells, segmentTypes } = read;

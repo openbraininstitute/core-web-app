@@ -1,6 +1,4 @@
-import { STEP_BITS } from '../../load/packed-ends';
-
-const TOP = 32 - STEP_BITS;
+import { SCALE_AT, STEP_NEXT, STEP_TOP } from '../../load/packed-ends';
 
 /**
  * Unpack a segment's ends from the arena's words (`packed-ends.ts`), each as x, y and z in µm and its radius.
@@ -16,8 +14,8 @@ fn packedNear(x: u32, y: u32, z: u32, e: u32, packing: vec2f) -> vec4f {
 }`;
 export const PACKED_FAR_WGSL = /* wgsl */ `
 fn packedFar(a: vec4f, d: u32, e: u32, packing: vec2f) -> vec4f {
-  let steps = vec3i(bitcast<i32>(d << ${TOP}u) >> ${TOP}u, bitcast<i32>(d << ${TOP - STEP_BITS}u) >> ${TOP}u,
-                    bitcast<i32>(e << ${TOP}u) >> ${TOP}u);
-  let unit = packing.x * f32(1u << (2u * (d >> 30u)));
+  let steps = vec3i(bitcast<i32>(d << ${STEP_TOP}u) >> ${STEP_TOP}u, bitcast<i32>(d << ${STEP_NEXT}u) >> ${STEP_TOP}u,
+                    bitcast<i32>(e << ${STEP_TOP}u) >> ${STEP_TOP}u);
+  let unit = packing.x * f32(1u << (2u * (d >> ${SCALE_AT}u)));
   return vec4f(a.xyz + vec3f(steps) * unit, packedRadius(e >> 24u, packing.y));
 }`;

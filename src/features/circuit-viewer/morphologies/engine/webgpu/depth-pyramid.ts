@@ -131,8 +131,8 @@ export class DepthPyramid {
 
   /**
    * Runs once the depth is drawn into the target. It writes the view for the passes, with `more` after the far plane,
-   * `counts` after the number of the pyramid's levels, and `packing` (`culling-wgsl.ts`), and makes the farthest depth and the
-   * pyramid in `pass`. Returns what the tests bind of them; null where three made no texture of the depth.
+   * `counts` after the number of the pyramid's levels, and `packing` (`culling-wgsl.ts`), and makes the farthest depth
+   * and the pyramid in `pass`. Returns what the tests bind of them; null where three made no texture of the depth.
    */
   build(
     pass: GPUComputePassEncoder,
@@ -140,7 +140,7 @@ export class DepthPyramid {
     shift: THREE.Vector3,
     more: readonly [number, number, number],
     counts: readonly [number, number, number],
-    packing: readonly [number, number] = [0, 0]
+    packing: readonly [number, number]
   ): Levels | null {
     const { target } = this;
     if (!target) return null;

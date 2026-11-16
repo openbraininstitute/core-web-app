@@ -15,11 +15,18 @@ import type { Packing } from '../types';
 
 /** The words a segment's ends take packed. */
 export const PACKED_WORDS = 5;
-export const STEP_BITS = 15;
+const STEP_BITS = 15;
 /** The most whole steps a far end lies from its near end on an axis. */
 export const MOST_STEP = 2 ** (STEP_BITS - 1) - 1;
 const STEP_MASK = 2 ** STEP_BITS - 1;
 const MOST_SCALE = 3;
+/**
+ * Where a word's steps and scale are: its first step is `<< STEP_TOP >> STEP_TOP`, sign and all, its second
+ * `<< STEP_NEXT >> STEP_TOP`, and the scale is the bits from `SCALE_AT` up.
+ */
+export const STEP_TOP = 32 - STEP_BITS;
+export const STEP_NEXT = STEP_TOP - STEP_BITS;
+export const SCALE_AT = 2 * STEP_BITS;
 
 const inByte = (step: number) => Math.max(-128, Math.min(127, step));
 
@@ -53,7 +60,7 @@ export function packFar(
   }
   const a = inByte(nearRadius);
   const b = inByte(farRadius);
-  words[at + 3] = ((x & STEP_MASK) | ((y & STEP_MASK) << STEP_BITS) | (scale << 30)) >>> 0;
+  words[at + 3] = ((x & STEP_MASK) | ((y & STEP_MASK) << STEP_BITS) | (scale << SCALE_AT)) >>> 0;
   words[at + 4] = ((z & STEP_MASK) | ((a & 0xff) << 16) | ((b & 0xff) << 24)) >>> 0;
   return clamped || a !== nearRadius || b !== farRadius;
 }
@@ -66,37 +73,39 @@ export const strideOf = (segments: Float32Array | Uint32Array) =>
 export const floatsOf = (packed: Uint32Array) =>
   new Float32Array(packed.buffer, packed.byteOffset, packed.length);
 
-/** The radius of each radius byte, µm. */
-export function radiiOf({ radiusSteps }: Packing): Float32Array {
-  return Float32Array.from({ length: 256 }, (_, byte) => 2 ** (((byte << 24) >> 24) / radiusSteps));
-}
+/** A word 3's step, in grid steps: 4 to its scale. */
+const stepOf = (d: number) => 1 << (2 * (d >>> SCALE_AT));
 
 /**
- * Writes into `ends` the `count` segments of `packed` from segment `from`, eight floats each: the near end's x, y, z
- * and radius, then the far end's. `near` is `floatsOf(packed)` and `radii` is `radiiOf` the packing.
+ * A reader of packed ends as floats, up to `most` segments at a time. Given `packed`, it reads its `count` segments
+ * from segment `from` into an array of its own, which it returns and writes over at the next read: eight floats each,
+ * the near end's x, y, z and radius, then the far end's.
  */
-export function unpackEnds(
-  packed: Uint32Array,
-  near: Float32Array,
-  from: number,
-  count: number,
-  gridUm: number,
-  radii: Float32Array,
-  ends: Float32Array
-): void {
-  for (let i = 0, p = PACKED_WORDS * from, o = 0; i < count; i++, p += PACKED_WORDS, o += 8) {
-    const d = packed[p + 3];
-    const e = packed[p + 4];
-    const step = gridUm * 4 ** (d >>> 30);
-    ends[o] = near[p];
-    ends[o + 1] = near[p + 1];
-    ends[o + 2] = near[p + 2];
-    ends[o + 3] = radii[(e >>> 16) & 0xff];
-    ends[o + 4] = near[p] + ((d << 17) >> 17) * step;
-    ends[o + 5] = near[p + 1] + ((d << 2) >> 17) * step;
-    ends[o + 6] = near[p + 2] + ((e << 17) >> 17) * step;
-    ends[o + 7] = radii[e >>> 24];
-  }
+export function unpackerOf({ gridUm, radiusSteps }: Packing, most: number) {
+  const radii = Float32Array.from(
+    { length: 256 },
+    (_, byte) => 2 ** (((byte << 24) >> 24) / radiusSteps)
+  );
+  const ends = new Float32Array(8 * most);
+  return (packed: Uint32Array) => {
+    const near = floatsOf(packed);
+    return (from: number, count: number): Float32Array => {
+      for (let i = 0, p = PACKED_WORDS * from, o = 0; i < count; i++, p += PACKED_WORDS, o += 8) {
+        const d = packed[p + 3];
+        const e = packed[p + 4];
+        const step = gridUm * stepOf(d);
+        ends[o] = near[p];
+        ends[o + 1] = near[p + 1];
+        ends[o + 2] = near[p + 2];
+        ends[o + 3] = radii[(e >>> 16) & 0xff];
+        ends[o + 4] = near[p] + ((d << STEP_TOP) >> STEP_TOP) * step;
+        ends[o + 5] = near[p + 1] + ((d << STEP_NEXT) >> STEP_TOP) * step;
+        ends[o + 6] = near[p + 2] + ((e << STEP_TOP) >> STEP_TOP) * step;
+        ends[o + 7] = radii[e >>> 24];
+      }
+      return ends;
+    };
+  };
 }
 
 /** Writes into `sums`, three floats a segment, the sum of each packed segment's two ends: its midpoint doubled. */
@@ -104,9 +113,9 @@ export function endSums(packed: Uint32Array, gridUm: number, sums: Float32Array)
   const near = floatsOf(packed);
   for (let p = 0, o = 0; p < packed.length; p += PACKED_WORDS, o += 3) {
     const d = packed[p + 3];
-    const step = gridUm * 4 ** (d >>> 30);
-    sums[o] = 2 * near[p] + ((d << 17) >> 17) * step;
-    sums[o + 1] = 2 * near[p + 1] + ((d << 2) >> 17) * step;
-    sums[o + 2] = 2 * near[p + 2] + ((packed[p + 4] << 17) >> 17) * step;
+    const step = gridUm * stepOf(d);
+    sums[o] = 2 * near[p] + ((d << STEP_TOP) >> STEP_TOP) * step;
+    sums[o + 1] = 2 * near[p + 1] + ((d << STEP_NEXT) >> STEP_TOP) * step;
+    sums[o + 2] = 2 * near[p + 2] + ((packed[p + 4] << STEP_TOP) >> STEP_TOP) * step;
   }
 }

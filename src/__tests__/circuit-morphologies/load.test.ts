@@ -178,27 +178,24 @@ async function asRead(bytes: Uint8Array, level = 0, populations = POPULATIONS) {
   return joined(await Promise.all(boxes));
 }
 
-/** Every box of a level, read through the load's data with its ends packed, then unpacked. */
-async function readLevelPacked(data: CircuitMorphologyData, level = 0) {
+/** Every box of a level, read through the load's data; with `packed`, read with its ends packed, then unpacked. */
+async function readLevel(
+  data: CircuitMorphologyData,
+  level = 0,
+  packed = false
+): Promise<MorphologySegments> {
   const chunks = data.chunks;
   if (!chunks) throw new Error('no chunks');
   const boxes = Array.from({ length: chunks.boxes.length / 6 }, (_, box) => ({ level, box }));
-  const read = await chunks.read(boxes, true);
-  for (const box of read) expect(box.segments).toBeInstanceOf(Uint32Array);
+  const read = await chunks.read(boxes, packed);
   return joined(
-    read.map((box) => ({
-      ...box,
-      segments: unpackedOf(box.segments as Uint32Array, chunks.packing),
-    }))
+    read.map((box) => {
+      expect(box.segments instanceof Uint32Array).toBe(packed);
+      return box.segments instanceof Uint32Array
+        ? { ...box, segments: unpackedOf(box.segments, chunks.packing) }
+        : box;
+    })
   );
-}
-
-/** Every box of a level, read through the load's data. */
-async function readLevel(data: CircuitMorphologyData, level = 0): Promise<MorphologySegments> {
-  const chunks = data.chunks;
-  if (!chunks) throw new Error('no chunks');
-  const boxes = Array.from({ length: chunks.boxes.length / 6 }, (_, box) => ({ level, box }));
-  return joined(await chunks.read(boxes));
 }
 
 const serve = (bytes: Uint8Array) => {
@@ -249,7 +246,7 @@ describe('loadCircuitMorphologies', () => {
 
     expect(data.chunks?.packing).toEqual((await openPack(small())).packing);
     for (const level of [0, 1, 2]) {
-      const packed = await readLevelPacked(data, level);
+      const packed = await readLevel(data, level, true);
       const floats = await asRead(small(), level);
       expect(packed.segmentCells).toEqual(floats.segmentCells);
       expect(packed.segmentTypes).toEqual(floats.segmentTypes);

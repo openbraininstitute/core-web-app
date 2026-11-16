@@ -27,6 +27,7 @@ import { SectionType } from '@/features/circuit-viewer/section-type';
 import { DEFAULT_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
 
 import { arrivalOf } from './arrival';
+import { PACKING } from './packed';
 
 import type { ArenaDrawing } from '@/features/circuit-viewer/morphologies/engine/circuit-view';
 import type { ImpostorUniforms } from '@/features/circuit-viewer/morphologies/engine/impostors';
@@ -1780,7 +1781,7 @@ describe('the morphologies read a box at a time', () => {
           pruneUm: 0,
           segments: Uint32Array.of(COUNTS[level], COUNTS[level]),
         })),
-        packing: { gridUm: 0.025, radiusSteps: 16 },
+        packing: PACKING,
         read: (wanted, packed) =>
           new Promise((resolve) => {
             reads.push({

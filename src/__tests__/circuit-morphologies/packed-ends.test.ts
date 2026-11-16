@@ -70,12 +70,18 @@ describe('packed ends', () => {
   });
 
   it('sum to twice their midpoints', () => {
-    const ends = Float32Array.of(0, 10, 20, 1, 2.5, 9, 20, 2, -3, 0, 4, 0.5, 400, -800, 1200, 0.25);
+    const ends = Float32Array.of(
+      ...[0, 10, 20, 1, 2.5, 9, 20, 2],
+      ...[-3, 0, 4, 0.5, 400, -800, 1200, 0.25],
+      ...[0, 0, 0, 1, 4000, 0, -40, 1],
+      ...[0, 0, 0, 1, 16, -25000, 0, 1]
+    );
     const words = packedOf(ends);
-    const sums = new Float32Array(6);
+    expect([0, 1, 2, 3].map((i) => words[5 * i + 3] >>> 30)).toEqual([0, 1, 2, 3]);
+    const sums = new Float32Array(12);
     endSums(words, gridUm, sums);
     const unpacked = unpackedOf(words);
-    for (let k = 0; k < 6; k++) {
+    for (let k = 0; k < 12; k++) {
       const o = 8 * Math.floor(k / 3) + (k % 3);
       expect(sums[k]).toBeCloseTo(unpacked[o] + unpacked[o + 4], 3);
     }

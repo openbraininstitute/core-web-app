@@ -64,9 +64,9 @@ export interface ArenaBuffers {
 
 /**
  * Puts an arena's `arrays`, and the culling's lists, in buffers the page makes on `device`, which three binds for
- * `storage`. The arena's ends must be packed. Only what changes is written to them, and three keeps no copy. `told` is handed the buffers, and null once
- * they are let go of. `outOfMemory` is called a moment later if the device could not make them, unless they were let
- * go of first.
+ * `storage`. The arena's ends must be packed. Only what changes is written to them, and three keeps no copy. `told` is
+ * handed the buffers, and null once they are let go of. `outOfMemory` is called a moment later if the device could not
+ * make them, unless they were let go of first.
  */
 export function arenaOnGpu(
   renderer: THREE.WebGPURenderer,
