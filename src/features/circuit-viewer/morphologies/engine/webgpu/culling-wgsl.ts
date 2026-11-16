@@ -26,10 +26,11 @@ const BLOCK_TEXELS = 8;
  */
 export const MOST_SEEN = 6_000_000;
 /**
- * The room the seen list has for its flat segments, and for its tubes, in an arena of `capacity`: the draws take no
- * more of either (`CLAMP`). The segment test (`SEGMENTS`) works out the same.
+ * How long the seen list is in an arena of `capacity`: the flat segments from its start and the tubes back from its
+ * end, of which the draws take `MOST_SEEN` each at the most (`CLAMP`), and no more than the arena holds between them.
+ * The segment test (`SEGMENTS`) works out the same.
  */
-export const seenRoom = (capacity: number) => Math.min(capacity, MOST_SEEN);
+export const seenRoom = (capacity: number) => Math.min(capacity, 2 * MOST_SEEN);
 const ROWS = 4;
 
 const VIEW = /* wgsl */ `
@@ -196,8 +197,8 @@ export const ARGS = /* wgsl */ `
  * when the view moves, what was seen parts in thin cracks, and with nothing behind them every block would show through
  * one. A segment as wide on screen as a tube (\`GpuUniforms.tubeFrom\`) goes in the tubes' part of the lists. The kept
  * list is as long as the arena, so no frame can overfill it. The seen list has room for what its draws take
- * (\`seenRoom\`) and what is seen past that is counted and not written. A block with a kept segment is marked, a bit a
- * block (\`marked\`), so that the boxes seen can be read back.
+ * (\`seenRoom\`), and a segment seen past \`MOST_SEEN\` of its kind is counted and not written. A block with a kept
+ * segment is marked, a bit a block (\`marked\`), so that the boxes seen can be read back.
  *
  * While the cell table hides cells, a segment of a hidden cell goes on neither list and marks no block: it draws
  * nothing, so it hides nothing, and with nothing to hide it the test would count it as seen. The kept list is then left
@@ -318,13 +319,13 @@ fn listed(i: u32) -> bool {
     }
   }
   if (v != 3u) { return !hiding; }
-  let room = min(cap, ${MOST_SEEN}u);
+  let room = min(cap, ${2 * MOST_SEEN}u);
   if (tube) {
     let k = atomicAdd(&draws.seenTubes.instances, 1u);
-    if (k < room) { lists[cap + 2u * room - 1u - k] = i; }
+    if (k < ${MOST_SEEN}u) { lists[cap + room - 1u - k] = i; }
   } else {
     let k = atomicAdd(&draws.seenFlat.instances, 1u);
-    if (k < room) { lists[cap + k] = i; }
+    if (k < ${MOST_SEEN}u) { lists[cap + k] = i; }
   }
   return true;
 }

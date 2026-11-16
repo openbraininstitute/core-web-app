@@ -260,13 +260,15 @@ describe('the culling while the cell table hides cells', () => {
 });
 
 describe('the seen list', () => {
-  it('has room for what its draws take: the arena where that is less than the most seen', () => {
+  it('has room for the most seen of each kind, and is no longer than the arena', () => {
     expect(seenRoom(640)).toBe(640);
-    expect(seenRoom(MOST_SEEN + 64)).toBe(MOST_SEEN);
+    expect(seenRoom(MOST_SEEN + 64)).toBe(MOST_SEEN + 64);
+    expect(seenRoom(3 * MOST_SEEN)).toBe(2 * MOST_SEEN);
   });
 
-  it('is written no further than its room, by the same count', () => {
-    expect(SEGMENTS).toContain(`let room = min(cap, ${MOST_SEEN}u);`);
-    expect(SEGMENTS.match(/if \(k < room\) \{ lists\[/g)).toHaveLength(2);
+  it('is as long for the test, which writes no more of a kind than its draw takes', () => {
+    expect(SEGMENTS).toContain(`let room = min(cap, ${2 * MOST_SEEN}u);`);
+    expect(SEGMENTS).toContain(`if (k < ${MOST_SEEN}u) { lists[cap + room - 1u - k] = i; }`);
+    expect(SEGMENTS).toContain(`if (k < ${MOST_SEEN}u) { lists[cap + k] = i; }`);
   });
 });

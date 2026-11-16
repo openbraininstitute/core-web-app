@@ -136,8 +136,8 @@ describe("an arena on the page's GPU buffers", () => {
       'arena ends': 20 * capacity,
       'arena words': 4 * capacity,
       'arena blocks': (32 * capacity) / BLOCK,
-      // The kept, then the seen's two parts, each as long as the arena where it is under the most seen.
-      'arena lists': 12 * capacity,
+      // The kept, then the seen, as long as the arena where that is under twice the most seen.
+      'arena lists': 8 * capacity,
       'arena blocks passed': (4 * capacity) / BLOCK,
       // A word a 32 blocks, and 32 bytes at least.
       'arena blocks marked': 32,
