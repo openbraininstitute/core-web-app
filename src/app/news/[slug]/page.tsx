@@ -1,5 +1,6 @@
 import { ErrorBoundary } from 'react-error-boundary';
 
+import { auth } from '@/auth';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import { getNewsItem } from '@/services/sanity/api/get-news-item';
 import LandingPage from '@/ui/segments/landing';
@@ -21,9 +22,12 @@ export default async function MainPage({
     return <LandingPage section={EnumSection.News} />;
   }
 
+  const session = await auth();
+  const isAuthenticated = Boolean(session?.user && !session.error);
+
   return (
     <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-      <NewsPageClient newsItem={newsItem} />
+      <NewsPageClient newsItem={newsItem} isAuthenticated={isAuthenticated} />
       <FooterServer />
     </ErrorBoundary>
   );
