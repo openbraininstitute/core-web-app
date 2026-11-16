@@ -13,7 +13,7 @@ import { RiPlayFill } from '@remixicon/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Dropdown, Modal, Popconfirm } from 'antd';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 
 import { deleteAnalysisNotebookResult } from '@/api/entitycore/queries/analysis-notebook-result';
 import { deleteAnalysisNotebookTemplate } from '@/api/entitycore/queries/analysis-notebook-template';
@@ -29,6 +29,7 @@ import { cn } from '@/utils/css-class';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type { IAsset } from '@/api/entitycore/types/shared/global';
+import type { NotebookProfile } from '@/services/notebooks';
 import type { WorkspaceContext } from '@/types/common';
 
 type NotebookEntityLike = {
@@ -37,6 +38,52 @@ type NotebookEntityLike = {
   description?: string | null;
   assets: IAsset[];
 };
+
+function SizePicker({
+  disabled,
+  busy,
+  profiles,
+  defaultProfile,
+  onSelect,
+  children,
+}: {
+  disabled: boolean;
+  busy: boolean;
+  profiles: NotebookProfile[];
+  defaultProfile: string | null;
+  onSelect: (profileName?: string) => void;
+  children: ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+
+  if (disabled) return <div>{children}</div>;
+
+  return (
+    <Dropdown
+      trigger={['click']}
+      placement="bottomRight"
+      open={open && !busy}
+      onOpenChange={setOpen}
+      popupRender={() => (
+        // antd stretches the popup to the trigger width; keep the panel under the play icon.
+        <div className="pointer-events-none flex justify-end">
+          <div className="pointer-events-auto">
+            <SessionSizePanel
+              profiles={profiles}
+              defaultProfile={defaultProfile}
+              onSelect={(profileName) => {
+                setOpen(false);
+                onSelect(profileName);
+              }}
+            />
+          </div>
+        </div>
+      )}
+    >
+      <div>{children}</div>
+    </Dropdown>
+  );
+}
 
 export function NotebookActionMenu({
   entity,
@@ -59,7 +106,6 @@ export function NotebookActionMenu({
   const queryClient = useQueryClient();
   const { replace: navigate } = useRouter();
   const [readmeOpen, setReadmeOpen] = useState(false);
-  const [openSizeMenu, setOpenSizeMenu] = useState<string | null>(null);
   const {
     run,
     runTargets,
@@ -198,12 +244,20 @@ export function NotebookActionMenu({
       ) : null}
 
       {isTemplate ? (
-        runTargets.map((target) => {
-          const runAction = (
+        runTargets.map((target) => (
+          <SizePicker
+            key={target.key}
+            disabled={isCourseStudentProject}
+            busy={running}
+            profiles={profiles}
+            defaultProfile={defaultProfile}
+            onSelect={(profileName) => run(target, profileName)}
+          >
             <Action
               variant={variant}
               kind={ActionKind.Button}
               onClick={isCourseStudentProject ? () => run(target) : undefined}
+              testId={`notebook-run-${target.key}-button`}
               icon={
                 runningTarget === target.key ? (
                   <LoadingOutlined />
@@ -221,50 +275,42 @@ export function NotebookActionMenu({
                 {runningTarget === target.key ? 'Starting...' : target.label}
               </div>
             </Action>
-          );
-
-          if (isCourseStudentProject) return <div key={target.key}>{runAction}</div>;
-
-          return (
-            <Dropdown
-              key={target.key}
-              trigger={['click']}
-              placement="bottomLeft"
-              open={openSizeMenu === target.key && !running}
-              onOpenChange={(open) => setOpenSizeMenu(open ? target.key : null)}
-              popupRender={() => (
-                <SessionSizePanel
-                  profiles={profiles}
-                  defaultProfile={defaultProfile}
-                  onSelect={(profileName) => {
-                    setOpenSizeMenu(null);
-                    run(target, profileName);
-                  }}
-                />
-              )}
-            >
-              <div data-testid={`notebook-run-${target.key}-button`}>{runAction}</div>
-            </Dropdown>
-          );
-        })
+          </SizePicker>
+        ))
       ) : (
         <>
-          <Action
-            variant={variant}
-            kind={ActionKind.Button}
-            onClick={() => run()}
-            icon={running ? <LoadingOutlined /> : <RiPlayFill />}
+          <SizePicker
+            disabled={isCourseStudentProject}
+            busy={running}
+            profiles={profiles}
+            defaultProfile={defaultProfile}
+            onSelect={(profileName) => run(undefined, profileName)}
           >
-            {running ? 'Starting...' : 'Run notebook'}
-          </Action>
-          <Action
-            variant={variant}
-            kind={ActionKind.Button}
-            onClick={openJupyterHub}
-            icon={opening ? <LoadingOutlined /> : <ExportOutlined />}
+            <Action
+              variant={variant}
+              kind={ActionKind.Button}
+              onClick={isCourseStudentProject ? () => run() : undefined}
+              icon={running ? <LoadingOutlined /> : <RiPlayFill />}
+            >
+              {running ? 'Starting...' : 'Run notebook'}
+            </Action>
+          </SizePicker>
+          <SizePicker
+            disabled={isCourseStudentProject}
+            busy={opening}
+            profiles={profiles}
+            defaultProfile={defaultProfile}
+            onSelect={(profileName) => openJupyterHub(profileName)}
           >
-            {opening ? 'Opening...' : 'Open notebook'}
-          </Action>
+            <Action
+              variant={variant}
+              kind={ActionKind.Button}
+              onClick={isCourseStudentProject ? () => openJupyterHub() : undefined}
+              icon={opening ? <LoadingOutlined /> : <ExportOutlined />}
+            >
+              {opening ? 'Opening...' : 'Open notebook'}
+            </Action>
+          </SizePicker>
         </>
       )}
 

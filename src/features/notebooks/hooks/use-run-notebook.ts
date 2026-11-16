@@ -143,11 +143,16 @@ export function useRunNotebook({
     }
   }
 
-  async function openJupyterHub() {
+  async function openJupyterHub(profile?: string) {
     if (opening || !virtualLabData) return;
     setOpening(true);
     try {
-      const retval = await startEmptyNotebook(virtualLabId, projectId, virtualLabData.compute_cell);
+      const retval = await startEmptyNotebook(
+        virtualLabId,
+        projectId,
+        virtualLabData.compute_cell,
+        profile
+      );
       window.open(retval.url, '_blank');
     } catch (error) {
       if (reportLowCredits(error)) return;
