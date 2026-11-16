@@ -87,6 +87,10 @@ export default async function Layout({ children, params: promisedParams }: Props
         </ProjectRootLayout>
         <ChatLauncher />
       </ChatStreamProvider>
+      {/* On a phone, room to scroll the page by exactly the browser's bars while they show (the full height less what
+          is seen), so a swipe still tucks them away (the user asked; with the page only the height seen, they never
+          went), and none once they have gone. */}
+      <div aria-hidden className="h-[calc(100lvh-100dvh)] md:hidden" />
     </div>
   );
 }
