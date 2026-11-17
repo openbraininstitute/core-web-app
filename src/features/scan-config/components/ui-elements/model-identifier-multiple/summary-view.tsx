@@ -18,6 +18,7 @@ import {
   useSetScanConfigEntityPreview,
 } from '@/features/scan-config/bridge/entity-preview';
 import { useFieldError } from '@/features/scan-config/components/hooks/field-errors';
+import { ScanHint, ScanHintTooltip } from '@/features/scan-config/components/shared/scan-hint';
 import { ModelIdentifierEntityCard } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/entity-card';
 import { mergeConfigurationInputs } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/helpers';
 import { getFromIdRefTypeBadgeLabel, type TFromIdRef } from '@/features/scan-config/helpers';
@@ -37,6 +38,8 @@ import type { IWorkflowConfigurationInput } from '@/ui/segments/workflows/config
 
 type TModelIdentifierAddActionButtonProps = {
   label: string;
+  /** Hover text explaining what the button adds, for the buttons that add to a scan. */
+  hint?: string;
   disabled?: boolean;
   onClick: () => void;
   className?: string;
@@ -44,11 +47,12 @@ type TModelIdentifierAddActionButtonProps = {
 
 export function ModelIdentifierAddActionButton({
   label,
+  hint,
   disabled,
   onClick,
   className,
 }: TModelIdentifierAddActionButtonProps) {
-  return (
+  const button = (
     <button
       type="button"
       data-testid="scan-config-select-model"
@@ -67,6 +71,10 @@ export function ModelIdentifierAddActionButton({
       </span>
     </button>
   );
+
+  if (!hint) return button;
+  // no title: the button already shows its label
+  return <ScanHintTooltip hint={hint}>{button}</ScanHintTooltip>;
 }
 
 type Props = {
@@ -90,8 +98,14 @@ type Props = {
   onRemoveGroup?: (groupIndex: number) => void;
   /** max rows before the list scrolls; raise it when the field stands alone in its column */
   visibleItemCount?: number;
-  /** replaces the default "Add <entity> to scan" label of the add button (flat lists only) */
+  /** replaces the default label of the add button (flat lists only) */
   addLabel?: string;
+  /**
+   * Whether each entity in a flat list runs as its own configuration, which
+   * gives the add button its "to scan" label and hint. Defaults to true for
+   * lists and false for tuples, which obi-one uses to keep a list out of the scan.
+   */
+  isScan?: boolean;
 };
 
 function findEntityForRef(
@@ -123,7 +137,8 @@ function getAddToScanLabel(mergedInputs: TModelIdentifierConfigurationInput[]): 
  * renders list or grouped summary ui for the middle configure column
  *
  * supports three schema shapes via `parsedValue.storageMode`:
- * - **list / tuple**: flat card + "Add X to scan"
+ * - **list**: flat card + "Add X to scan"
+ * - **tuple**: flat card + "Add X(s)", since a tuple is one value, not a scan
  * - **grouped**: per-group cards + "Add group to scan"
  *
  * group list keys use array index (stable while editing names; groups are not reordered in ui)
@@ -143,13 +158,14 @@ export function ModelIdentifierSummaryView({
   onRemoveGroup,
   visibleItemCount,
   addLabel,
+  isScan = parsedValue.storageMode !== ModelIdentifierFieldStorageMode.Tuple,
 }: Props) {
   const instanceId = useId();
   const entityPreview = useScanConfigEntityPreview();
   const setEntityPreview = useSetScanConfigEntityPreview();
   const mergedInputs = mergeConfigurationInputs({ paramSchema: fieldSchema, configurationInputs });
   const addEntitiesLabel = getAddEntitiesLabel(mergedInputs);
-  const addToScanLabel = addLabel ?? getAddToScanLabel(mergedInputs);
+  const addToListLabel = addLabel ?? (isScan ? getAddToScanLabel(mergedInputs) : addEntitiesLabel);
 
   // group names must be unique (backend rejects duplicate NamedTuple names); flag
   // every name that collides so the offending inputs can surface the error
@@ -304,6 +320,7 @@ export function ModelIdentifierSummaryView({
         {onAddGroup ? (
           <ModelIdentifierAddActionButton
             label="Add group to scan"
+            hint={ScanHint.addGroup}
             disabled={disabled}
             onClick={onAddGroup}
           />
@@ -331,7 +348,8 @@ export function ModelIdentifierSummaryView({
         {renderEntityCards(parsedValue.items)}
       </ScrollableList>
       <ModelIdentifierAddActionButton
-        label={addToScanLabel}
+        label={addToListLabel}
+        hint={isScan ? ScanHint.addToList : undefined}
         disabled={disabled}
         onClick={() => onAddEntities()}
       />
