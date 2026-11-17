@@ -1,7 +1,18 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render as rtlRender, screen } from '@testing-library/react';
+import { createPortal } from 'react-dom';
 import { describe, expect, it, vi } from 'vitest';
 
 import { useDismissOnOutsideInteraction } from '@/hooks/use-dismiss-on-outside-interaction';
+
+import type { ReactElement, ReactNode } from 'react';
+
+function AppRoot({ children }: { children: ReactNode }) {
+  return <div data-app-root="">{children}</div>;
+}
+
+function render(ui: ReactElement) {
+  return rtlRender(ui, { wrapper: AppRoot });
+}
 
 function Harness({
   enabled = true,
@@ -19,7 +30,7 @@ function Harness({
     ignoreSelector: '.ag-row, [data-testid="data-grid-pagination"]',
   });
   return (
-    <div>
+    <>
       <div ref={ref} data-dismissable="" data-testid="panel">
         <button type="button">inside</button>
       </div>
@@ -30,15 +41,13 @@ function Harness({
       <div data-testid="data-grid-pagination">
         <span>page 2</span>
       </div>
-      <div data-radix-popper-content-wrapper="">
-        <div role="listbox">
-          <span>50 / page</span>
-        </div>
-      </div>
-      <div role="dialog">
-        <span>dialog</span>
-      </div>
-    </div>
+      {createPortal(
+        <div>
+          <button type="button">popup</button>
+        </div>,
+        document.body
+      )}
+    </>
   );
 }
 
@@ -62,8 +71,7 @@ describe('useDismissOnOutsideInteraction', () => {
     render(<Harness onDismiss={onDismiss} />);
     fireEvent.mouseDown(screen.getByText('row'));
     fireEvent.mouseDown(screen.getByText('page 2'));
-    fireEvent.mouseDown(screen.getByText('50 / page'));
-    fireEvent.mouseDown(screen.getByText('dialog'));
+    fireEvent.mouseDown(screen.getByText('popup'));
     expect(onDismiss).not.toHaveBeenCalled();
   });
 
@@ -72,6 +80,15 @@ describe('useDismissOnOutsideInteraction', () => {
     render(<Harness onDismiss={onDismiss} />);
     fireEvent.keyDown(document.body, { key: 'Escape', code: 'Escape' });
     expect(onDismiss).toHaveBeenCalledTimes(1);
+  });
+
+  it('leaves Esc to a popup that has focus', () => {
+    const onDismiss = vi.fn();
+    render(<Harness onDismiss={onDismiss} />);
+    const popup = screen.getByText('popup');
+    popup.focus();
+    fireEvent.keyDown(popup, { key: 'Escape', code: 'Escape' });
+    expect(onDismiss).not.toHaveBeenCalled();
   });
 
   it('does nothing when disabled', () => {
@@ -129,24 +146,6 @@ describe('useDismissOnOutsideInteraction', () => {
     expect(onEscape).not.toHaveBeenCalled();
     fireEvent.keyDown(document.body, { key: 'Escape', code: 'Escape' });
     expect(onEscape).toHaveBeenCalledTimes(1);
-  });
-
-  it('ignores clicks on the onboarding tour but not on its app wrappers', () => {
-    const onDismiss = vi.fn();
-    render(
-      <div data-name="nextstep-wrapper">
-        <div data-name="nextstep-site">
-          <Harness onDismiss={onDismiss} />
-        </div>
-        <div data-name="nextstep-card">
-          <button type="button">next step</button>
-        </div>
-      </div>
-    );
-    fireEvent.mouseDown(screen.getByText('next step'));
-    expect(onDismiss).not.toHaveBeenCalled();
-    fireEvent.mouseDown(screen.getByText('outside'));
-    expect(onDismiss).toHaveBeenCalledTimes(1);
   });
 
   it('does not dismiss on clicks inside another dismissable element', () => {

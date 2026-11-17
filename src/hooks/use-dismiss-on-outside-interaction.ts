@@ -1,30 +1,15 @@
 import { useCallback, useEffect, useRef } from 'react';
 
+import { APP_ROOT_ATTRIBUTE } from '@/hooks/app-root-attribute';
 import { useOnClickOutside } from '@/hooks/useOnClickOutside';
 
-// Overlays rendered outside the dismissable element: interacting with them is not "outside".
-const OVERLAY_IGNORED_SELECTOR = [
-  '.ant-modal-root',
-  '.ant-dropdown',
-  '.ant-select-dropdown',
-  '.ant-popover',
-  '.ant-notification',
-  '[role="dialog"]',
-  '[role="menu"]',
-  '[role="listbox"]',
-  '[data-radix-popper-content-wrapper]',
-  // onboarding tour, minus the wrappers it puts around the whole app
-  '[data-name^="nextstep-"]:not([data-name="nextstep-site"]):not([data-name="nextstep-wrapper"])',
-].join(',');
+const APP_ROOT_SELECTOR = `[${APP_ROOT_ATTRIBUTE}]`;
 
-// An open overlay owns Esc: its first press closes the overlay, not the element behind it.
-const OVERLAY_SELECTOR = [
-  '.ant-modal-root',
-  '[role="dialog"]',
-  '[role="menu"]',
-  '[role="listbox"]',
-  '[data-name="nextstep-overlay"]',
-].join(',');
+// Popups (modals, dropdowns, tours) are portaled to <body>, outside the app root: they never
+// count as "outside" and an Esc pressed while focus is in one belongs to them.
+function isInsideAppRoot(node: Element | null) {
+  return node?.closest(APP_ROOT_SELECTOR) != null;
+}
 
 const FORM_FIELD_SELECTOR =
   'input, textarea, select, [contenteditable]:not([contenteditable="false"])';
@@ -60,11 +45,9 @@ function pickEscapeEntry(focused: Element | null) {
 
 function handleEscape(event: KeyboardEvent) {
   if (event.key !== 'Escape' || event.defaultPrevented) return;
-  const hasVisibleOverlay = Array.from(document.querySelectorAll(OVERLAY_SELECTOR)).some(
-    (el) => el.getClientRects().length > 0
-  );
-  if (hasVisibleOverlay) return;
-  pickEscapeEntry(document.activeElement)?.onEscape();
+  const focused = document.activeElement;
+  if (focused && focused !== document.body && !isInsideAppRoot(focused)) return;
+  pickEscapeEntry(focused)?.onEscape();
 }
 
 function registerEscapeEntry(entry: EscapeEntry) {
@@ -93,20 +76,17 @@ export function useDismissOnOutsideInteraction<T extends HTMLElement>({
   ignoreSelector,
 }: Options) {
   const ref = useRef<T>(null);
-  const selector = ignoreSelector
-    ? `${OVERLAY_IGNORED_SELECTOR},${ignoreSelector}`
-    : OVERLAY_IGNORED_SELECTOR;
-
   const canDismiss = enabled && Boolean(onDismiss);
   const shouldIgnorePointer = useCallback(
     (event: Event) => {
       if (!canDismiss) return true;
       const target = event.target;
       if (!(target instanceof Element)) return true;
+      if (!isInsideAppRoot(target)) return true;
       if (belongsToAnotherDismissable(target, ref.current)) return true;
-      return target.closest(selector) !== null;
+      return ignoreSelector ? target.closest(ignoreSelector) !== null : false;
     },
-    [canDismiss, selector]
+    [canDismiss, ignoreSelector]
   );
 
   useOnClickOutside(ref, () => onDismiss?.(), undefined, shouldIgnorePointer);

@@ -35,23 +35,25 @@ describe('card next to another dismissable panel', () => {
     const onClose = vi.fn();
     render(
       <QueryClientProvider client={new QueryClient()}>
-        <MiniDetailViewRenderer
-          section={WorkspaceSection.Notebooks}
-          record={record}
-          dataType={ExtendedEntitiesTypeDict.IonChannelModel}
-          enableAnimation={false}
-          onClose={onClose}
-          dismissOnOutsideInteraction
-        />
-        <div data-dismissable="">
-          <button type="button">assistant</button>
+        <div data-app-root="">
+          <MiniDetailViewRenderer
+            section={WorkspaceSection.Notebooks}
+            record={record}
+            dataType={ExtendedEntitiesTypeDict.IonChannelModel}
+            enableAnimation={false}
+            onClose={onClose}
+            dismissOnOutsideInteraction
+          />
+          <div data-dismissable="">
+            <button type="button">assistant</button>
+          </div>
+          <div data-dismissable="">
+            <button type="button" aria-label="expand AI assistant">
+              OBI Assistant
+            </button>
+          </div>
+          <button type="button">page</button>
         </div>
-        <div data-dismissable="">
-          <button type="button" aria-label="expand AI assistant">
-            OBI Assistant
-          </button>
-        </div>
-        <button type="button">page</button>
       </QueryClientProvider>
     );
     expect(screen.getByTestId('mini-viewer').closest('[data-dismissable]')).not.toBeNull();
