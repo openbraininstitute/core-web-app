@@ -38,27 +38,39 @@ const segmentsOf = (count: number): MorphologySegments => ({
   segmentTypes: new Uint8Array(count),
 });
 
-/** Four boxes 10 µm wide down -z, and every read waiting for the test to end it. */
+/** Four boxes 10 µm wide down -z, and every read waiting for the test to end it, with what it hands over. */
 function chunksOf() {
-  const reads: { wanted: BoxRead[]; resolve(): void; reject(e: unknown): void }[] = [];
+  const reads: {
+    wanted: BoxRead[];
+    handed: MorphologySegments[];
+    resolve(): void;
+    reject(e: unknown): void;
+  }[] = [];
   const chunks: MorphologyChunks = {
     ...boxesAt(DEPTHS, COUNTS),
     read: (wanted) =>
       new Promise((resolve, reject) => {
-        reads.push({
-          wanted,
-          resolve: () => resolve(wanted.map(({ level }) => segmentsOf(COUNTS[level]))),
-          reject,
-        });
+        const handed = wanted.map(({ level }) => segmentsOf(COUNTS[level]));
+        reads.push({ wanted, handed, resolve: () => resolve(handed), reject });
       }),
   };
   return { chunks, reads };
 }
 
+/** Whether each of the boxes read has been let go of: every array of it detached, or none. */
+const letGo = (boxes: MorphologySegments[]) =>
+  boxes.map(({ segments, segmentCells, segmentTypes }) => {
+    const gone = [segments, segmentCells, segmentTypes].map(
+      ({ buffer }) => (buffer as ArrayBuffer).detached
+    );
+    expect(new Set(gone).size).toBe(1);
+    return gone[0];
+  });
+
 /** Uploads that say when an arena's are made, of how many segments, and let go of. */
 function uploadsSaid() {
   const said: string[] = [];
-  const uploadsOf: UploadsOf = (_ends, words) => {
+  const uploadsOf: UploadsOf = ({ words }) => {
     said.push(`made ${words.length}`);
     return { upload: vi.fn(), dispose: () => said.push('disposed') };
   };
@@ -787,6 +799,65 @@ describe('DetailStream', () => {
       expect(said).toEqual([`made ${7 * BLOCK}`, 'disposed', `made ${3 * BLOCK}`]);
       expect(without.holds(2 * BLOCK, 0)).toBe(true);
       expect(without.holds(2 * BLOCK, 500)).toBe(false);
+    });
+  });
+
+  describe('lets go of the arrays of a box read', () => {
+    it('once the box is placed, and of none still to place', async () => {
+      const { stream, reads } = make();
+      stream.update(viewOf(20), RULES, true);
+      reads[0].resolve();
+      await settled();
+      const { handed } = reads[0];
+      expect(letGo(handed)).toEqual([false, false, false, false]);
+
+      // A box of the finest level takes two blocks of room, 128 segments: two are placed.
+      stream.apply(300);
+      expect(letGo(handed)).toEqual([true, true, false, false]);
+      stream.apply();
+      expect(letGo(handed)).toEqual([true, true, true, true]);
+    });
+
+    it('once its base is placed', async () => {
+      const { stream, reads } = make(1000, true);
+      stream.update(viewOf(500), RULES, true);
+      reads[0].resolve();
+      await settled();
+      expect(letGo(reads[0].handed)).toEqual([false, false, false, false]);
+
+      stream.apply();
+      expect(letGo(reads[0].handed)).toEqual([true, true, true, true]);
+    });
+
+    it('where it came in for a level no longer wanted, or again for another level', async () => {
+      const { stream, reads } = make();
+      stream.update(viewOf(500), RULES, true);
+      stream.update(viewOf(20), RULES, true);
+      reads[0].resolve();
+      await settled();
+      stream.update(viewOf(100), RULES, true);
+      reads[1].resolve();
+      await settled();
+      // The finest level came in over the coarsest, for each box.
+      expect(letGo(reads[0].handed)).toEqual([true, true, true, true]);
+      expect(letGo(reads[1].handed)).toEqual([false, false, false, false]);
+
+      stream.apply();
+      expect(letGo(reads[1].handed)).toEqual([true, true, true, true]);
+    });
+
+    it('where it waits to be placed, or comes in, once the stream is stopped', async () => {
+      const { stream, reads } = make();
+      stream.update(viewOf(500), RULES, true);
+      reads[0].resolve();
+      await settled();
+      stream.update(viewOf(20), RULES, true);
+      stream.stop();
+      expect(letGo(reads[0].handed)).toEqual([true, true, true, true]);
+
+      reads[1].resolve();
+      await settled();
+      expect(letGo(reads[1].handed)).toEqual([true, true, true, true]);
     });
   });
 

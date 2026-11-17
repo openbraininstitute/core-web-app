@@ -64,7 +64,7 @@ On WebGPU with a base, a box in view may go finer than its base only while the c
 - **Reads.** One batch in flight, of at most 250,000 segments, from the pack's worker. The bases of the boxes in view first, then the finer levels wanted, nearest the focus first, then the other bases. A box that fails to read is left out, and not asked for again.
 - **Finer only at rest.** While the view moves, nothing finer is read, and with a base nothing at all: a turn draws what is there.
 - **Coarser at once.** A box wanted coarser goes back to its base, or out, with no read. A box wanted at the floor keeps what it has until its level is read.
-- **Placing** is paced to 4 MB of upload a turn of the loop, those that make room first, so that a frame stays short.
+- **Placing** is paced to 4 MB of upload a turn of the loop, those that make room first, so that a frame stays short. A box's arrays are detached once it is placed, or dropped unplaced, rather than left for the collector: after a whole load they were most of a gigabyte of the Male CNS's page.
 
 ### Seen boxes
 
@@ -85,7 +85,7 @@ With a base, the culling marks the blocks it found seen or just hidden, and the 
 - A box goes into the smallest hole it fits, or at the end. Where neither has room, every box is moved down to close the holes. The arena has room for the most the budget allows and a quarter more, so that this is seldom needed.
 - Only what lies before the end is drawn and uploaded.
 
-**The base.** On WebGPU, where the coarsest level of every box fits one storage binding, the arena starts with room for each box at it, in box order, never moved. A box put at a finer level has its base made holes in the same upload, and its base shown again when it is taken out. So every draw of the arena draws each box once. The culling's depth prepass, which draws last frame's kept segments, never tests against geometry the frame does not draw, with no second copy of the arena to swap between. It may test against less than the frame draws, for the one frame after a box is put or taken out (*Seen boxes*).
+**The base.** On WebGPU, where the coarsest level of every box fits one storage binding, the arena starts with room for each box at it, in box order, never moved. A box put at a finer level has its base made holes in the same upload, and its base shown again when it is taken out. So every draw of the arena draws each box once. The base's ends are written to the GPU as they are read and kept nowhere on the page: to hide a base and show it again the arena needs only its words and its blocks, which it keeps. The culling's depth prepass, which draws last frame's kept segments, never tests against geometry the frame does not draw, with no second copy of the arena to swap between. It may test against less than the frame draws, for the one frame after a box is put or taken out (*Seen boxes*).
 
 On WebGL 2 the arena is three's instanced attributes, uploaded by range. On WebGPU it is buffers the engine owns and three binds (`shareBuffer` in [webgpu/three-hooks.ts](webgpu/three-hooks.ts)), uploaded with `writeBuffer` and drawn by indirect draws from the culling's lists ([webgpu/arena-gpu.ts](webgpu/arena-gpu.ts)).
 
