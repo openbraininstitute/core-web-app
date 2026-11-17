@@ -73,10 +73,11 @@ export function useCircuitManipulationData({
   entityId,
 }: TUseCircuitManipulationDataParams): TCircuitManipulationData {
   const workspace = useWorkspace();
-  const { signature: neuronSetSignature, value: neuronSet } = resolveNeuronSet(
-    config,
-    state[sourceField]
-  );
+  const {
+    signature: neuronSetSignature,
+    value: neuronSet,
+    referencedSets: neuronSets,
+  } = resolveNeuronSet(config, state[sourceField]);
 
   const latestRef = useRef({ state, setState, fieldKey });
   latestRef.current = { state, setState, fieldKey };
@@ -95,6 +96,7 @@ export function useCircuitManipulationData({
     entityId,
     endpoint,
     neuronSet,
+    neuronSets,
     includeNeuronSet: true,
   });
 

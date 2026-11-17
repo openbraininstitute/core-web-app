@@ -27,6 +27,8 @@ export type TUseNeuronalManipulationPropertiesParams = {
    * Omit for MEModel fetches.
    */
   neuronSet?: unknown;
+  /** Circuit-only named neuron sets that `neuronSet` references (a combined set). */
+  neuronSets?: Record<string, unknown>;
   /** When `true`, include `neuron_set` in the POST body (Circuit endpoint). */
   includeNeuronSet?: boolean;
   /** Additional enable gate for the query. */
@@ -81,13 +83,14 @@ export function useNeuronalManipulationProperties({
   entityId,
   endpoint,
   neuronSet,
+  neuronSets,
   includeNeuronSet = false,
   enabled = true,
 }: TUseNeuronalManipulationPropertiesParams) {
   return useQuery({
     queryKey: [
       'neuronal-manipulation-properties',
-      { workspace, entityId, endpoint, neuronSet, includeNeuronSet },
+      { workspace, entityId, endpoint, neuronSet, neuronSets, includeNeuronSet },
     ],
     queryFn: ({ signal }) =>
       fetchNeuronalManipulationProperties({
@@ -95,6 +98,7 @@ export function useNeuronalManipulationProperties({
         endpoint: endpoint as string,
         entityId: entityId as string,
         neuronSet,
+        neuronSets,
         includeNeuronSet,
         signal,
       }),
