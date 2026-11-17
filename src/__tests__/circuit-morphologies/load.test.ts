@@ -23,7 +23,7 @@ import {
   packCacheKey,
 } from '@/features/circuit-viewer/morphologies/load/worker-api';
 
-import { FakeCacheStorage, fakeServer } from '../viewer-3d/fake-caches';
+import { FakeCacheStorage, fakeServer } from '../utils/fake-caches';
 import { indexEnd, indexOf, joined, pack } from './packs';
 
 import type { OnProgress } from '@/features/circuit-viewer/morphologies/load/download';
@@ -32,8 +32,8 @@ import type {
   MorphologySegments,
   Population,
 } from '@/features/circuit-viewer/morphologies/types';
-import type { CacheBounds } from '@/features/viewer-3d/load/asset-cache';
 import type { WorkerHandle } from '@/features/viewer-3d/load/worker-handle';
+import type { CacheBounds } from '@/utils/asset-cache';
 
 const URL_A = 'https://bluenaas.test/circuit/a/morphology-pack';
 /**

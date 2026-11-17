@@ -41,7 +41,7 @@ sequenceDiagram
    A stream that ends short is asked once more, from where it stopped, with `Range` and headers the page makes again (`freshHeaders`), as the token may have run out during a long download. The rest is taken only as a 206 of exactly the bytes missing. Every byte of the pack's size in is the whole pack, whatever broke the stream after.
 
    The size Bluenaas gives must be a whole number of bytes up to 2 GiB (`MOST_PACK_BYTES`), or nothing is downloaded. A body longer than the size is read no further, and the pack is taken as changed (`PackChanged`).
-4. **The cache.** The bucket `circuit-morphology-mpack` (`PACK_CACHE` in [worker-api.ts](worker-api.ts)), keyed by the pack's SHA-256 (`packCacheKey`): Bluenaas serves a circuit's pack under one URL, and builds it again whenever its cache is cleared. It keeps entries 30 days and 1 GiB in all, the least recently opened going first (`bucket` in [asset-cache.ts](../../../viewer-3d/load/asset-cache.ts), shared with the EM cell mesh viewer).
+4. **The cache.** The bucket `circuit-morphology-mpack` (`PACK_CACHE` in [worker-api.ts](worker-api.ts)), keyed by the pack's SHA-256 (`packCacheKey`): Bluenaas serves a circuit's pack under one URL, and builds it again whenever its cache is cleared. It keeps entries 30 days and 1 GiB in all, the least recently opened going first (`bucket` in [asset-cache.ts](../../../../utils/asset-cache.ts), shared with the EM cell mesh viewer).
    - Once the whole pack is in, its SHA-256 is checked against the one Bluenaas gave, whatever its size. A mismatch is `PackChanged`: Bluenaas built the pack again since it answered.
    - Only a pack that matches and fits the bucket's 1 GiB is kept. A larger one is checked but downloaded again at every visit.
    - An entry of the wrong length, as an interrupted write leaves in Firefox, is deleted on the way out. So is one the reader refuses (`PackError`), and the pack is downloaded again.
@@ -105,7 +105,7 @@ place-trees.ts        the cells placed in the circuit
 dendrogram.ts         an ME-model's dendrogram
 ```
 
-Shared with the EM cell mesh viewer, in `src/features/viewer-3d/load/`: [asset-cache.ts](../../../viewer-3d/load/asset-cache.ts) and [worker-handle.ts](../../../viewer-3d/load/worker-handle.ts).
+Shared with the EM cell mesh viewer: [asset-cache.ts](../../../../utils/asset-cache.ts) in `src/utils/`, and [worker-handle.ts](../../../viewer-3d/load/worker-handle.ts).
 
 Tests: `src/__tests__/circuit-morphologies/`: `load.test.ts` (the load end to end, with a fake worker and cache: resume, digest, cache hits and damaged entries, abort, a dead worker), `pack.test.ts` (every level against OBI-One's own reader, every `PackError`, streaming), and one file each for the cells, Morton order, crowding, sections, trees and dendrograms. The packs in `fixtures/` are written by OBI-One.
 

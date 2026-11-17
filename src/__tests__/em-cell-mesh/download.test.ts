@@ -2,9 +2,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { downloadGlb } from '@/features/entities/em-cell-mesh/viewer/engine/download';
-import { type CacheBounds, writeEntry } from '@/features/viewer-3d/load/asset-cache';
+import { type CacheBounds, writeEntry } from '@/utils/asset-cache';
 
-import { FakeCacheStorage, fakeServer } from '../viewer-3d/fake-caches';
+import { FakeCacheStorage, fakeServer } from '../utils/fake-caches';
 import { encodeGlb, torus } from './mesh-fixtures';
 
 const URL_A = 'https://entitycore.test/em-cell-mesh/1/assets/a/download';

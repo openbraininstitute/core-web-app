@@ -9,13 +9,7 @@
  */
 import * as Comlink from 'comlink';
 
-import {
-  blobEntry,
-  bucket,
-  type CacheBounds,
-  deleteEntry,
-  writeEntry,
-} from '@/features/viewer-3d/load/asset-cache';
+import { blobEntry, bucket, type CacheBounds, deleteEntry, writeEntry } from '@/utils/asset-cache';
 
 import { pageCells, renumberSegments, renumberSomas } from './cells';
 import {

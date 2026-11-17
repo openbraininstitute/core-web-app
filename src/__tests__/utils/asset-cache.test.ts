@@ -1,12 +1,7 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  blobEntry,
-  type CacheBounds,
-  readEntry,
-  writeEntry,
-} from '@/features/viewer-3d/load/asset-cache';
+import { blobEntry, type CacheBounds, readEntry, writeEntry } from '@/utils/asset-cache';
 
 import { FakeCacheStorage } from './fake-caches';
 
