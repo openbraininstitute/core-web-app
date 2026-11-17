@@ -25,14 +25,14 @@ export function useListFilters({ scoped, placeholder }: { scoped?: boolean; plac
   return {
     params: { query: query || undefined, ...(scoped ? SCOPES[scope].params : {}) },
     controls: (
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <Input.Search
           key={query}
           allowClear
           defaultValue={query}
           placeholder={placeholder}
           onSearch={(value) => setQuery(value.trim())}
-          className="w-96!"
+          className="w-96! max-w-full"
         />
         {scoped && (
           <Segmented

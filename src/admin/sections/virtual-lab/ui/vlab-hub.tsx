@@ -209,7 +209,7 @@ function LabPage({ lab }: { lab: AdminLab }) {
             content: <ProjectsGrid params={{ virtual_lab_id: lab.id, include_deleted: true }} />,
           },
           {
-            key: 'subscriptions',
+            key: 'billing',
             label: 'Billing',
             content: <Billing owner={{ virtual_lab_id: lab.id }} />,
           },

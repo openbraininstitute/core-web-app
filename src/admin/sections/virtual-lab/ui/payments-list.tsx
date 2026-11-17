@@ -64,7 +64,7 @@ export function PaymentsList() {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
       <PageHeader title="Payments" />
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         {controls}
         <Segmented
           value={type}

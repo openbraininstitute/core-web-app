@@ -31,7 +31,7 @@ export function SubscriptionsList() {
       <Select
         allowClear
         placeholder="Any status"
-        value={status}
+        value={status ?? undefined}
         options={STATUS_OPTIONS}
         onChange={(value) => setStatus(value ?? null)}
         className="w-56"

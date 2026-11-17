@@ -90,6 +90,7 @@ function PlanEdit({ plan, onClose }: { plan: AdminPlan; onClose: () => void }) {
           label: 'Monthly discount, in cents',
           kind: 'integer',
           min: 0,
+          max: plan.monthly_amount,
           extra: DISCOUNT_WARNING,
         },
         {
@@ -97,6 +98,7 @@ function PlanEdit({ plan, onClose }: { plan: AdminPlan; onClose: () => void }) {
           label: 'Yearly discount, in cents',
           kind: 'integer',
           min: 0,
+          max: plan.yearly_amount,
           extra: DISCOUNT_WARNING,
         },
       ]}
@@ -182,7 +184,7 @@ function CreditRateEdit({ rate, onClose }: { rate: AdminCreditRate; onClose: () 
             { required: true, message: 'Give a rate' },
             {
               validator: async (_, value) => {
-                if (!/^\d+(\.\d+)?$/.test(value) || Number(value) <= 0) {
+                if (value && (!/^\d+(\.\d+)?$/.test(value) || Number(value) <= 0)) {
                   throw new Error('Enter a number above 0');
                 }
               },
@@ -201,7 +203,7 @@ function CreditRateEdit({ rate, onClose }: { rate: AdminCreditRate; onClose: () 
           name: 'max_credits',
           label: 'Up to credits',
           kind: 'integer',
-          min: rate.min_credits,
+          min: Math.max(rate.min_credits, 1),
           placeholder: 'No upper limit',
         },
         { name: 'active', label: 'Active', kind: 'switch' },

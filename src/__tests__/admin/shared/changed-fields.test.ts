@@ -13,6 +13,10 @@ describe('changedFields', () => {
     expect(changedFields({ discount: undefined }, { discount: null })).toEqual({});
   });
 
+  it('reports no change for an emptied text field over a null column', () => {
+    expect(changedFields({ description: '' }, { description: null })).toEqual({});
+  });
+
   it('keeps a false and a zero', () => {
     expect(changedFields({ active: false, credits: 0 }, { active: true, credits: 5 })).toEqual({
       active: false,
