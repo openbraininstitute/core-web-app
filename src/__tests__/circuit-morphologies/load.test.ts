@@ -431,6 +431,20 @@ describe('loadCircuitMorphologies', () => {
       expect(parts()).toEqual([]);
     });
 
+    it('not where the browser cannot read the entry the pack was kept in: the download stays', async () => {
+      serve(small());
+      const release = vi.spyOn(Arriving.prototype, 'release');
+      vi.spyOn(Blob.prototype, 'arrayBuffer').mockRejectedValue(
+        new DOMException('could not be read', 'NotReadableError')
+      );
+      const first = await load();
+      await first.whole;
+
+      expect(cached()?.body).toEqual(small());
+      expect(release).not.toHaveBeenCalled();
+      expect(await readLevel(first.data, 0)).toEqual(await asRead(small(), 0));
+    });
+
     it('and fetches it again where the browser cannot read the entry', async () => {
       const { served } = serve(small());
       await kept();

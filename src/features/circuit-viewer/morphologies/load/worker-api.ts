@@ -125,7 +125,7 @@ class Held implements PackSource {
 
 /**
  * Has the pack that was downloaded and kept read from its entry in the cache, and lets go of the download. Where the
- * entry cannot be opened, the download stays.
+ * entry cannot be opened, or the browser cannot read a byte of it, the download stays.
  */
 async function readStored(
   held: Held,
@@ -135,7 +135,14 @@ async function readStored(
 ): Promise<void> {
   const blob = await blobEntry(cache, packCacheKey(pack.sha256), pack.size);
   if (!blob) return;
-  await held.moveTo(blobSource(blob));
+  const stored = blobSource(blob);
+  try {
+    await stored.read(0, 1);
+  } catch (e) {
+    if (!(e instanceof DOMException)) throw e;
+    return;
+  }
+  await held.moveTo(stored);
   download.release();
 }
 
