@@ -1,5 +1,6 @@
 'use client';
 
+import { ConfigProvider } from 'antd';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -10,9 +11,12 @@ import { cn } from '@/utils/css-class';
 
 import { hasCapability } from '../capabilities/has-capability';
 import { ADMIN_NAV, ADMIN_ROOT, PLATFORM_HOME } from '../routes';
+import { CapabilitiesProvider } from './capability-gate';
 
 import type { ReactNode } from 'react';
 import type { OperatorCapabilities } from '../capabilities/types';
+
+const ADMIN_ANTD_THEME = { token: { colorPrimary: '#002766' } };
 
 export function AdminShell({
   capabilities,
@@ -78,7 +82,11 @@ export function AdminShell({
         ))}
       </nav>
 
-      <main className="flex min-h-0 min-w-0 flex-col overflow-auto p-6">{children}</main>
+      <main className="relative flex min-h-0 min-w-0 flex-col overflow-auto p-6">
+        <ConfigProvider theme={ADMIN_ANTD_THEME}>
+          <CapabilitiesProvider value={capabilities}>{children}</CapabilitiesProvider>
+        </ConfigProvider>
+      </main>
     </div>
   );
 }
