@@ -50,6 +50,18 @@ describe('the view the kept list was made for', () => {
     expect(view.stale(turned(0), at(0), SPAN, HEIGHT)).toBe(false);
   });
 
+  it.each([
+    0,
+    Number.NaN,
+    -1,
+  ])('is stale where the list was made with a pixel spanning %s', (span) => {
+    const view = new KeptView();
+    view.set(turned(0), at(0), span);
+    expect(view.stale(turned(0), at(0), SPAN, HEIGHT)).toBe(true);
+    view.set(turned(0), at(0), SPAN);
+    expect(view.stale(turned(0), at(0), SPAN, HEIGHT)).toBe(false);
+  });
+
   it('is measured from the view the list was last made for', () => {
     const view = kept();
     view.set(turned(90), at(1000), SPAN);

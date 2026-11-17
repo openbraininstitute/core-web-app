@@ -142,7 +142,7 @@ export class Culling {
    * is drawn; `hidden`: the section type not drawn (`ImpostorUniforms.uHidden`); `end`: where the arena's segments
    * end; `rest`: what is told of the frame (`DetailStream.frameRest`), handed on with the frame's read; `cells`:
    * the cell table's texture; `hiding`: whether it hides cells, whose segments then go on no list and mark no block,
-   * and the kept list is left as it was, to hide those cells' segments once they are back; `told`: whether the
+   * and the kept list is left as it was, to hide those cells' segments once they are back; `readBack`: whether the
    * tests' counts are read back, which those of the first of two tests on a frame are not. Returns false where
    * nothing was tested.
    */
@@ -156,7 +156,7 @@ export class Culling {
     rest: number,
     cells: THREE.Texture,
     hiding: boolean,
-    told = true
+    readBack = true
   ): boolean {
     const { device, arena } = this;
     if (!arena || this.broken) return false;
@@ -201,7 +201,7 @@ export class Culling {
     pass.end();
     this.indirect.copy(encoder, this.drawsBuffer);
     this.rest = rest;
-    if (told) this.submit(encoder, arena.marked);
+    if (readBack) this.submit(encoder, arena.marked);
     else device.queue.submit([encoder.finish()]);
     return true;
   }
