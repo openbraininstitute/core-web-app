@@ -36,14 +36,6 @@ export const extracellularRecordingArrayBuildFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
-export const memodelBuildViaLaunchSystemFlag = defineFlag<boolean>({
-  key: 'memodel-build-via-launch-system',
-  defaultValue: false,
-  values: [true, false],
-  description: 'Launch single neuron (ME-model) builds via the launch system',
-  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
-});
-
 /** Interactive electrode overlays in circuit preview (independent of the build workflow). */
 export const electrodeOverlaysFlag = defineFlag<boolean>({
   key: 'electrode-overlays',
@@ -122,7 +114,6 @@ export const flags = [
   extractionActivityFlag,
   brainRegionSimulationFlag,
   extracellularRecordingArrayBuildFlag,
-  memodelBuildViaLaunchSystemFlag,
   electrodeOverlaysFlag,
   debugFlag,
   learnFlag,
