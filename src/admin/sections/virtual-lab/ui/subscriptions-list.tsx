@@ -5,6 +5,7 @@ import { parseAsStringLiteral, useQueryState } from 'nuqs';
 
 import { PageHeader } from '../../../shared/page-header';
 import { SubscriptionsGrid } from './billing';
+import { shallow } from './list-filters';
 
 // virtual-lab-api SubscriptionStatus
 const STATUSES = [
@@ -21,7 +22,7 @@ const STATUS_OPTIONS = STATUSES.map((value) => ({ value, label: value.replaceAll
 export function SubscriptionsList() {
   const [status, setStatus] = useQueryState(
     'status',
-    parseAsStringLiteral(STATUSES).withOptions({ shallow: true })
+    parseAsStringLiteral(STATUSES).withOptions(shallow)
   );
 
   return (
@@ -35,7 +36,7 @@ export function SubscriptionsList() {
         onChange={(value) => setStatus(value ?? null)}
         className="w-56"
       />
-      <SubscriptionsGrid key={status} acrossOwners params={{ status: status ?? undefined }} />
+      <SubscriptionsGrid acrossOwners params={{ status: status ?? undefined }} />
     </div>
   );
 }

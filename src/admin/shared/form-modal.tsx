@@ -8,7 +8,7 @@ import type { ReactNode } from 'react';
 type FormModalField = {
   name: string;
   label: string;
-  kind?: 'text' | 'multiline' | 'integer' | 'switch' | 'select';
+  kind?: 'multiline' | 'integer' | 'switch' | 'select';
   min?: number;
   max?: number;
   options?: { value: string; label: string }[];
@@ -17,10 +17,10 @@ type FormModalField = {
   rules?: Rule[];
 };
 
-function fieldControl({ kind = 'text', min, max, options, placeholder }: FormModalField) {
+function fieldControl({ kind, min, max, options, placeholder }: FormModalField) {
   switch (kind) {
     case 'multiline':
-      return <Input.TextArea rows={3} placeholder={placeholder} />;
+      return <Input.TextArea rows={3} />;
     case 'integer':
       return (
         <InputNumber
@@ -36,7 +36,7 @@ function fieldControl({ kind = 'text', min, max, options, placeholder }: FormMod
     case 'select':
       return <Select options={options} />;
     default:
-      return <Input placeholder={placeholder} />;
+      return <Input />;
   }
 }
 

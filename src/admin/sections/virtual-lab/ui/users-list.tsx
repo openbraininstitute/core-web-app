@@ -54,7 +54,7 @@ const COLUMNS: Array<ISimpleColumn<AdminUser>> = [
 
 export function UsersList() {
   const router = useRouter();
-  const { params, gridKey, controls } = useListFilters({
+  const { params, controls } = useListFilters({
     placeholder: 'Search by name, username or email',
   });
 
@@ -63,7 +63,6 @@ export function UsersList() {
       <PageHeader title="Users" />
       {controls}
       <AdminPagedGrid<AdminUser>
-        key={gridKey}
         fill
         what="users"
         columns={COLUMNS}

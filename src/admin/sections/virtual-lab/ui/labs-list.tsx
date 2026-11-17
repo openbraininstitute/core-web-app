@@ -42,7 +42,7 @@ const COLUMNS: Array<ISimpleColumn<AdminLab>> = [
 
 export function LabsList() {
   const router = useRouter();
-  const { params, gridKey, controls } = useListFilters({
+  const { params, controls } = useListFilters({
     scoped: true,
     placeholder: 'Search by name',
   });
@@ -52,7 +52,6 @@ export function LabsList() {
       <PageHeader title="Virtual labs" />
       {controls}
       <AdminPagedGrid<AdminLab>
-        key={gridKey}
         fill
         what="virtual labs"
         columns={COLUMNS}

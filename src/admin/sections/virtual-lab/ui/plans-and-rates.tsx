@@ -2,12 +2,12 @@
 
 import { useState } from 'react';
 
+import { formatMinorCurrency } from '@/features/stripe/utils';
 import { Button } from '@/ui/molecules/button';
-import { formatCurrency } from '@/utils/format';
 
 import { adminQueryKeys } from '../../../query-keys';
 import { AdminTabs } from '../../../shared/admin-tabs';
-import { changedFields } from '../../../shared/changed-fields';
+import { saveChanges } from '../../../shared/changed-fields';
 import { DESCRIPTION_FIELD, FormModal, NAME_FIELD } from '../../../shared/form-modal';
 import { AdminQueryGrid } from '../../../shared/grid';
 import { PageHeader } from '../../../shared/page-header';
@@ -28,15 +28,12 @@ import type {
 const useBillingWrite = <Args,>(options: AdminWriteOptions<Args>) =>
   useAdminWrite({ ...options, refreshes: adminQueryKeys.billing() });
 
-// Amounts arrive as integer cents.
-const money = (cents: number, currency: string) => formatCurrency(cents / 100, currency);
-
 const DISCOUNT_WARNING =
   'Has to match the Stripe coupon: this changes the price customers are quoted, while the coupon sets what they are charged.';
 
 function planPrice(plan: AdminPlan, amount: number, discount: number | null, credits: number) {
-  const price = `${money(amount, plan.currency)}, ${credits} credits`;
-  return discount ? `${price}, ${money(discount, plan.currency)} off` : price;
+  const price = `${formatMinorCurrency(amount, plan.currency)}, ${credits} credits`;
+  return discount ? `${price}, ${formatMinorCurrency(discount, plan.currency)} off` : price;
 }
 
 const creditBand = ({ min_credits: min, max_credits: max }: AdminCreditRate) =>
@@ -103,22 +100,10 @@ function PlanEdit({ plan, onClose }: { plan: AdminPlan; onClose: () => void }) {
           extra: DISCOUNT_WARNING,
         },
       ]}
-      initialValues={{
-        name: plan.name,
-        description: plan.description,
-        active: plan.active,
-        monthly_credits: plan.monthly_credits,
-        yearly_credits: plan.yearly_credits,
-        monthly_discount: plan.monthly_discount,
-        yearly_discount: plan.yearly_discount,
-      }}
+      initialValues={plan}
       okText="Save"
       pending={write.isPending}
-      onSubmit={(values) => {
-        const update = changedFields(values, plan);
-        if (Object.keys(update).length) write.mutate(update);
-        else onClose();
-      }}
+      onSubmit={(values) => saveChanges(values, plan, write.mutate, onClose)}
       onClose={onClose}
     />
   );
@@ -221,19 +206,10 @@ function CreditRateEdit({ rate, onClose }: { rate: AdminCreditRate; onClose: () 
         },
         { name: 'active', label: 'Active', kind: 'switch' },
       ]}
-      initialValues={{
-        rate: rate.rate,
-        discount_pct: rate.discount_pct,
-        max_credits: rate.max_credits,
-        active: rate.active,
-      }}
+      initialValues={rate}
       okText="Save"
       pending={write.isPending}
-      onSubmit={(values) => {
-        const update = changedFields(values, rate);
-        if (Object.keys(update).length) write.mutate(update);
-        else onClose();
-      }}
+      onSubmit={(values) => saveChanges(values, rate, write.mutate, onClose)}
       onClose={onClose}
     />
   );

@@ -6,7 +6,7 @@ import { parseAsString, parseAsStringLiteral, useQueryState } from 'nuqs';
 
 import { PageHeader } from '../../../shared/page-header';
 import { PaymentsGrid } from './billing';
-import { useListFilters } from './list-filters';
+import { shallow, useListFilters } from './list-filters';
 
 import type { Dayjs } from 'dayjs';
 import type { PaymentFilters } from '../api/admin-types';
@@ -20,7 +20,6 @@ const TYPE_OPTIONS = [
 ];
 
 const DATE_FORMAT = 'YYYY-MM-DD';
-const shallow = { shallow: true };
 
 // The dates come from the URL, so a mangled link is ignored rather than sent. dayjs rolls an
 // impossible date such as month 13 over into a real one, so it has to format back unchanged.
@@ -60,10 +59,13 @@ export function PaymentsList() {
   );
   const [from, setFrom] = useQueryState('from', parseAsString.withDefault('').withOptions(shallow));
   const [to, setTo] = useQueryState('to', parseAsString.withDefault('').withOptions(shallow));
-  const { params, gridKey, controls } = useListFilters({
-    placeholder: 'Last 4 digits of the card',
-    extra: (
-      <>
+  const { params, controls } = useListFilters({ placeholder: 'Last 4 digits of the card' });
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
+      <PageHeader title="Payments" />
+      <div className="flex items-center gap-3">
+        {controls}
         <Segmented
           value={type}
           options={TYPE_OPTIONS}
@@ -76,19 +78,8 @@ export function PaymentsList() {
             setTo(dates?.[1]?.format(DATE_FORMAT) ?? '');
           }}
         />
-      </>
-    ),
-  });
-
-  return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4">
-      <PageHeader title="Payments" />
-      {controls}
-      <PaymentsGrid
-        key={`${gridKey}:${type}:${from}:${to}`}
-        acrossOwners
-        params={paymentFilters({ card: params.query, type, from, to })}
-      />
+      </div>
+      <PaymentsGrid acrossOwners params={paymentFilters({ card: params.query, type, from, to })} />
     </div>
   );
 }

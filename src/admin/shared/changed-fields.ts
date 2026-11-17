@@ -8,3 +8,14 @@ export function changedFields<Update extends Record<string, unknown>>(
     Object.entries(next).filter(([key, value]) => (value ?? null) !== (current[key] ?? null))
   ) as Partial<Update>;
 }
+
+export function saveChanges<Update extends Record<string, unknown>>(
+  next: Update,
+  current: Partial<Record<keyof Update, unknown>>,
+  save: (update: Partial<Update>) => void,
+  close: () => void
+) {
+  const update = changedFields(next, current);
+  if (Object.keys(update).length) save(update);
+  else close();
+}

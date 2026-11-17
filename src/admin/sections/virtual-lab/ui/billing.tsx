@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 
+import { formatMinorCurrency } from '@/features/stripe/utils';
 import { Button } from '@/ui/molecules/button';
-import { formatCurrency } from '@/utils/format';
 
 import { adminQueryKeys } from '../../../query-keys';
 import { FormModal } from '../../../shared/form-modal';
@@ -38,8 +38,7 @@ const PAYMENT_COLUMNS: Array<ISimpleColumn<AdminPayment>> = [
     id: 'amount',
     header: 'Amount',
     width: { width: 140 },
-    // Amounts arrive as integer cents.
-    getValue: (payment) => formatCurrency(payment.amount_paid / 100, payment.currency),
+    getValue: (payment) => formatMinorCurrency(payment.amount_paid, payment.currency),
   },
   {
     id: 'credits',
@@ -78,20 +77,19 @@ const PAYMENT_COLUMNS: Array<ISimpleColumn<AdminPayment>> = [
   },
 ];
 
-const PAYMENT_LAB_COLUMN: ISimpleColumn<AdminPayment> = {
-  id: 'lab',
-  header: 'Virtual lab',
-  width: { width: 140 },
-  renderCell: (payment) => <AdminLink kind="vlab" id={payment.virtual_lab_id} />,
-};
-
-const SUBSCRIPTION_OWNER_COLUMNS: Array<ISimpleColumn<AdminSubscription>> = [
-  {
+function labColumn<Row extends { virtual_lab_id: string | null }>(): ISimpleColumn<Row> {
+  return {
     id: 'lab',
     header: 'Virtual lab',
     width: { width: 140 },
-    renderCell: (subscription) => <AdminLink kind="vlab" id={subscription.virtual_lab_id} />,
-  },
+    renderCell: (row) => <AdminLink kind="vlab" id={row.virtual_lab_id} />,
+  };
+}
+
+const PAYMENT_COLUMNS_ACROSS_OWNERS = [labColumn<AdminPayment>(), ...PAYMENT_COLUMNS];
+
+const SUBSCRIPTION_OWNER_COLUMNS: Array<ISimpleColumn<AdminSubscription>> = [
+  labColumn(),
   {
     id: 'user',
     header: 'User',
@@ -194,7 +192,7 @@ export function PaymentsGrid({ params, acrossOwners }: BillingGridProps<PaymentF
     <AdminPagedGrid<AdminPayment>
       fill={acrossOwners}
       what="payments"
-      columns={acrossOwners ? [PAYMENT_LAB_COLUMN, ...PAYMENT_COLUMNS] : PAYMENT_COLUMNS}
+      columns={acrossOwners ? PAYMENT_COLUMNS_ACROSS_OWNERS : PAYMENT_COLUMNS}
       getRowId={(payment) => payment.id}
       dataSource={PAYMENTS_SOURCE}
       queryKey={adminQueryKeys.payments()}

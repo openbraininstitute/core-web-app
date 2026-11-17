@@ -134,7 +134,7 @@ type OwnerFilters = { virtual_lab_id?: string; user_id?: string };
 
 export type SubscriptionFilters = OwnerFilters & { status?: string };
 
-// `card_last4` is an exact match, and the dates are naive UTC: the column has no time zone.
+// `card_last4` is an exact match.
 export type PaymentFilters = OwnerFilters & {
   payment_type?: 'subscription' | 'standalone';
   card_last4?: string;
@@ -144,7 +144,6 @@ export type PaymentFilters = OwnerFilters & {
 
 export type ComputeCell = AdminLab['compute_cell'];
 
-// Prices and Stripe ids come from Stripe through a seeding script, so they can't be edited here.
 export type AdminPlan = {
   id: string;
   tier: string;
