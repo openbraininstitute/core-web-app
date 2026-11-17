@@ -17,6 +17,7 @@ import {
   type IBlockSingle,
   type IEModelOptimisationParameters,
   type IRootBlockUnion,
+  isSingleBlockElement,
   isType,
   ScanConfigUIElementDict,
   type TBlock,
@@ -54,6 +55,7 @@ export function RootElement({
   setIsEditingKey,
   selectedMechanismsTab,
   setSelectedMechanismsTab,
+  formShown = false,
 }: {
   schema: ConfigSchema | null; // The global schema
   rootElement: string;
@@ -80,6 +82,12 @@ export function RootElement({
   setIsEditingKey: (k: boolean) => void;
   selectedMechanismsTab: string;
   setSelectedMechanismsTab: (tab: string) => void;
+  /**
+   * Whether the form column is showing a form at the moment: a block picked can be picked with
+   * its form folded away, and a click on it then opens the form where it would otherwise put the
+   * block away.
+   */
+  formShown?: boolean;
 }) {
   const { isChatReady } = useAIConfig();
   const setExpandedRootElements = useSetAtom(expandedRootElementsAtom);
@@ -97,6 +105,13 @@ export function RootElement({
   const lit = isBlockDictionary ? holdsSelected && !isExpanded : isSelected;
 
   if (!schema?.properties) return;
+
+  /** Folds the form away and leaves nothing picked: no block, and no dictionary lit for one. */
+  const putAway = () => {
+    setSelectedRootElement('');
+    setSelectedEntry('');
+    setEditing(false);
+  };
 
   const handleEntryClick = (subkey: string) => {
     setSelectedRootElement(rootElement); // Select the parent block
@@ -132,29 +147,34 @@ export function RootElement({
                   !isRootBlock(schema, rootElement) &&
                   rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion;
 
-                // BlockDictionary: always toggle expand/collapse on click,
-                // regardless of whether this root element is currently selected.
+                // BlockDictionary: a click only opens or shuts it, whichever block is picked.
                 if (isDictionary) {
-                  // The block picked stays picked, its form open, as its own dictionary opens or shuts.
-                  if (!holdsSelected) {
-                    setSelectedRootElement(rootElement);
-                    setSelectedEntry('');
-                    setEditing(false);
-                  }
-
                   if (isExpanded) {
+                    // Shut, it takes the form with it where the form is one of its own: that
+                    // of a block picked in it, or its kinds of block to add. Another block's
+                    // form is left as it is, and that block picked.
+                    if (isSelected) putAway();
                     setExpandedRootElements((prev) => {
                       const newSet = new Set(prev);
                       newSet.delete(rootElement);
                       return newSet;
                     });
                   } else {
+                    // Opened, it only shows its blocks: the block picked and its form stay as
+                    // they are.
                     setExpandedRootElements((prev) => {
                       const newSet = new Set(prev);
                       newSet.add(rootElement);
                       return newSet;
                     });
                   }
+                  return;
+                }
+
+                // What is left has a form of its own. Clicked again while that form is
+                // showing, the block is put away.
+                if (isSelected && formShown) {
+                  putAway();
                   return;
                 }
 
@@ -169,7 +189,7 @@ export function RootElement({
                 setSelectedEntry('');
 
                 if (
-                  rootElementSchema.ui_element === ScanConfigUIElementDict.BlockSingle ||
+                  isSingleBlockElement(rootElementSchema) ||
                   rootElementSchema.ui_element === ScanConfigUIElementDict.BlockUnion
                 )
                   setEditing(true);

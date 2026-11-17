@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { tablePaneTitle } from '@/features/circuit-nodes/types';
 import { PaneSideResizeHandle, ShutPaneBar } from '@/features/circuit-viewer/pane-resize-handle';
@@ -28,31 +28,57 @@ type Props = {
 
 /**
  * Default scan-config layout: Left tabs, Middle form, Right preview in a
- * `1fr 1fr 2fr` grid. Dragging the preview's left edge left narrows the middle
- * column, then shuts it into a Parameters bar, then shuts the left one into the
- * same bar, so the preview, the 3D view and its table, has the width; the bar
- * opens them again. It never drags right of the middle, so the preview keeps
- * half the width at least.
+ * `1fr 1fr 2fr` grid.
+ *
+ * The page opens on the blocks' list alone, in a slim window on the left, the form folded away
+ * and the preview spread over the rest. The form opens out beside the list, the preview
+ * narrowing to make room, when a block is picked, and folds away again when there is no form to
+ * show, or by the × at its top right.
+ *
+ * Dragging the preview's left edge left narrows the middle column, then shuts it, then shuts the
+ * left one too, into a Parameters bar, so the preview, the 3D view and its table, has the width.
+ * The form shut alone leaves no bar: picking a block opens it again. The bar opens both. The edge
+ * never drags right of the middle, so the preview keeps half the width at least.
  */
 export function DefaultConfigColumns({ props, state }: Props) {
   const boxed = props.activity === ScanConfigActivity.Simulate;
-  const { gridRef, template, shut, onEdgeDrag, reset } = useCollapsingColumns();
+  const { gridRef, template, shut, onEdgeDrag, reset } = useCollapsingColumns({ middleBar: false });
   // Opening a block, from the list or the table's Neuron Set, shows its form again.
   const opened = `${state.selectedRootElement}/${state.selectedEntry}`;
   const lastOpened = useRef(opened);
+  // Whether a block has been picked yet: the form open on the page's first block waits for that.
+  const [revealed, setRevealed] = useState(false);
   useEffect(() => {
     if (lastOpened.current === opened) return;
     lastOpened.current = opened;
+    setRevealed(true);
     if (shut !== 'none') reset();
   }, [opened, shut, reset]);
+  // A pick in the list counts even where it changes nothing: the block already selected.
+  const picking =
+    <A extends unknown[]>(set: (...args: A) => void) =>
+    (...args: A) => {
+      set(...args);
+      setRevealed(true);
+      if (shut === 'middle') reset();
+    };
+  const listState: ScanConfigTemplateState = {
+    ...state,
+    setSelectedRootElement: picking(state.setSelectedRootElement),
+    setSelectedEntry: picking(state.setSelectedEntry),
+  };
+  const alone = shut === 'none' && (!revealed || !state.editing);
+  // Folded, the list is alone whatever width the form had been dragged to: that width is back
+  // when it opens again.
+  const dragged = template !== null && !alone;
   return (
     <div
       ref={gridRef}
       className={cn(
         'grid h-full min-h-0 w-full gap-1.25 *:min-w-0',
-        !template && DEFAULT_COLUMNS_GRID
+        !dragged && [COLUMNS_EASE, alone ? ALONE_COLUMNS_GRID : DEFAULT_COLUMNS_GRID]
       )}
-      style={template ? { gridTemplateColumns: template } : undefined}
+      style={dragged ? { gridTemplateColumns: template } : undefined}
     >
       {/* The blocks and their form in one window, as the preview's views are: its ring a pixel
           under the page's clip, its foot level with theirs. The form keeps only the rule between
@@ -67,18 +93,36 @@ export function DefaultConfigColumns({ props, state }: Props) {
         )}
       >
         <div className="h-full min-h-0">
-          <LeftColumn props={props} state={state} />
+          {/* folded, a form is not showing even for a block picked: a click on it opens it */}
+          <LeftColumn props={props} state={listState} formShown={!alone && shut === 'none'} />
         </div>
-        {shut === 'none' && <MiddleColumn props={props} state={state} className="border-r-0" />}
+        {shut === 'none' && (
+          <div
+            className={cn(
+              'h-full min-h-0 min-w-0 transition-opacity duration-650',
+              alone ? 'opacity-0' : 'opacity-100 delay-160'
+            )}
+            // folded away, it is not there to read, to click or to tab into either
+            inert={alone}
+          >
+            <MiddleColumn
+              props={props}
+              state={state}
+              className="border-r-0"
+              // the × at the form's top right folds it away again, until a block is next picked
+              onClose={() => setRevealed(false)}
+            />
+          </div>
+        )}
       </div>
-      {shut !== 'none' && (
-        // Its ring a pixel under the page's clip, and its foot level with the preview's boxes.
-        <ShutPaneBar
-          upright
-          title="Parameters"
-          onOpen={reset}
-          className={cn('mt-px mb-3', shut === 'both' && 'ml-px')}
-        />
+      {shut === 'middle' && (
+        // the form's track with nothing in it, so the preview keeps its own
+        <div aria-hidden />
+      )}
+      {shut === 'both' && (
+        // Its ring a pixel under the page's clip, and its foot level with the preview's boxes:
+        // with the list shut too, the one way back.
+        <ShutPaneBar upright title="Parameters" onOpen={reset} className="mt-px mb-3 ml-px" />
       )}
       <PreviewColumn boxed={boxed} edge={{ gridRef, onDrag: onEdgeDrag, onReset: reset }}>
         <Right
@@ -168,3 +212,8 @@ export function PreviewColumn({
 }
 
 export const DEFAULT_COLUMNS_GRID = 'grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)]';
+/** The same with the form's track folded to nothing and the preview the wider for it. */
+const ALONE_COLUMNS_GRID = 'grid-cols-[minmax(0,1fr)_minmax(0,0fr)_minmax(0,3fr)]';
+/** The form opening out beside the list, and folding away. */
+const COLUMNS_EASE =
+  'transition-[grid-template-columns] duration-650 ease-[cubic-bezier(0.22,1,0.36,1)]';

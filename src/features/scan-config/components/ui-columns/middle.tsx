@@ -13,6 +13,7 @@ import {
   type IBlockSingle,
   type IEModelOptimisationParameters,
   type IRootBlockUnion,
+  isSingleBlockElement,
   ScanConfigUIElementDict,
   type TSupportedEntitiesForScanConfiguration,
   type TSupportedEntityTypesForScanConfiguration,
@@ -52,6 +53,8 @@ type MiddleProps = {
   setSelectedRegionChoice: (choice: string) => void;
   /** ajv schema errors of the whole config */
   errors: ErrorObject[] | null;
+  /** Folds the form column away, where the layout can: gives what is shown an × to do it with. */
+  onClose?: () => void;
 };
 
 export default function Middle({
@@ -73,6 +76,7 @@ export default function Middle({
   selectedRegionChoice,
   setSelectedRegionChoice,
   errors,
+  onClose,
 }: MiddleProps) {
   const { aiConfig, isChatReady } = useAIConfig();
   const showingDiffs = useShowingDiffs();
@@ -115,27 +119,29 @@ export default function Middle({
           onNewBlockClick={onNewBlockClick}
           schemaMappingConfig={schemaMappingConfig}
           errorPathPrefix={errorPathPrefix}
+          onClose={onClose}
         />
       )}
 
-      {selectedSchema.ui_element === ScanConfigUIElementDict.BlockSingle &&
-        isPlainObject(config[selectedRootElement]) && (
-          <Block
-            schema={schema}
-            disabled={editingLocked}
-            config={config}
-            blockSchema={selectedSchema}
-            state={preview ?? config[selectedRootElement] ?? {}}
-            setState={(newState) => {
-              setConfig({ ...config, [selectedRootElement]: newState });
-            }}
-            entity={entity}
-            schemaMappingConfig={schemaMappingConfig}
-            rootElement={selectedRootElement}
-            selectedEntry={selectedEntry}
-            errorPathPrefix={errorPathPrefix}
-          />
-        )}
+      {isSingleBlockElement(selectedSchema) && isPlainObject(config[selectedRootElement]) && (
+        <Block
+          schema={schema}
+          disabled={editingLocked}
+          config={config}
+          blockSchema={selectedSchema}
+          state={preview ?? config[selectedRootElement] ?? {}}
+          setState={(newState) => {
+            setConfig({ ...config, [selectedRootElement]: newState });
+          }}
+          entity={entity}
+          schemaMappingConfig={schemaMappingConfig}
+          rootElement={selectedRootElement}
+          selectedEntry={selectedEntry}
+          errorPathPrefix={errorPathPrefix}
+          notRequired={selectedSchema.ui_element === ScanConfigUIElementDict.BlockInfo}
+          onClose={onClose}
+        />
+      )}
 
       {selectedSchema.ui_element === ScanConfigUIElementDict.BlockUnion && (
         <BlockUnion
@@ -150,6 +156,7 @@ export default function Middle({
           entityType={entityType}
           schemaMappingConfig={schemaMappingConfig}
           errorPathPrefix={errorPathPrefix}
+          onClose={onClose}
         />
       )}
 

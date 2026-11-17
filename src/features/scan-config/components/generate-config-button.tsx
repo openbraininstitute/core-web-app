@@ -1,12 +1,22 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { get } from 'es-toolkit/compat';
+import { useState } from 'react';
 
 import { ScanConfigGenerationError, ScanConfigGenerationStep } from '@/api/one/utils';
 import { useAppNotification } from '@/components/notification';
 import { useLowCredits } from '@/features/low-credits';
+import { CampaignInfoDialog } from '@/features/scan-config/components/campaign-info/dialog';
+import {
+  campaignInfoOf,
+  infoBlockKey,
+  withCampaignInfo,
+} from '@/features/scan-config/components/campaign-info/info-block';
 import { useFieldErrors } from '@/features/scan-config/components/hooks/field-errors';
 import { useGenerateScanConfigCampaign } from '@/features/scan-config/components/hooks/use-generate-scan-config-campaign';
-import { LAUNCH_GREEN } from '@/features/scan-config/components/shared/task-launch-button';
+import {
+  GENERATE_CLICKABLE,
+  LAUNCH_GREEN,
+} from '@/features/scan-config/components/shared/task-launch-button';
 import { ScanConfigResultsTab } from '@/features/scan-config/helpers';
 import {
   ScanConfigActivity,
@@ -20,14 +30,7 @@ import { assertErrorMessage, classNames } from '@/util/utils';
 
 import type { ErrorObject } from 'ajv';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { Config } from '@/features/scan-config/types';
-
-/**
- * A generate button that can be clicked: a soft shadow in the launch green's dark end, and a
- * slight grow under the pointer.
- */
-export const GENERATE_CLICKABLE =
-  'shadow-[0_3px_8px_-1px_rgb(20_56_5/0.3)] transition-[scale] duration-200 ease-out motion-safe:hover:scale-[1.02]';
+import type { Config, ConfigSchema } from '@/features/scan-config/types';
 
 const LOW_CREDITS_SUBJECT: Record<TScanConfigActivity, string> = {
   [ScanConfigActivity.Simulate]: 'run the simulation',
@@ -51,6 +54,8 @@ export default function GenerateConfigButton({
   setCampaignId,
   setLoading,
   config,
+  setConfig,
+  schema,
   setTab,
   activity,
   generatedApiUrl,
@@ -63,6 +68,8 @@ export default function GenerateConfigButton({
   setCampaignId: (campaignId: string) => void;
   setLoading: (loading: boolean) => void;
   config: Config;
+  setConfig: (config: Config) => void;
+  schema: ConfigSchema;
   setTab: (tab: TScanConfigTabs) => void;
   activity: TScanConfigActivity;
   generatedApiUrl: string;
@@ -74,6 +81,10 @@ export default function GenerateConfigButton({
   // schema validation can't catch; either kind blocks generation
   const fieldErrors = useFieldErrors();
   const hasBlockingErrors = (!!errors && errors.length > 0) || fieldErrors.size > 0;
+  // The campaign's name and description hold nothing up while the config is edited (their errors
+  // are not among `errors`): pressing Generate shows both first, to fill in or to change.
+  const infoKey = infoBlockKey(schema);
+  const [asking, setAsking] = useState(false);
   const notification = useAppNotification();
   // Generation doesn't consume credits (issue #250): don't gate on balance.
   const { reportError: reportLowCredits, creditsModal } = useLowCredits({
@@ -105,16 +116,29 @@ export default function GenerateConfigButton({
     },
   });
 
+  const generate = (withConfig: Config) => {
+    setLoading(true);
+    generateCampaign.mutate(
+      { config: withConfig, generatedApiUrl },
+      { onSettled: () => setLoading(false) }
+    );
+  };
+
   const onClick = () => {
     if (loading || generateCampaign.isPending) return;
     if (campaignId) {
       setCampaignId('');
       return;
     }
-
-    setLoading(true);
-    generateCampaign.mutate({ config, generatedApiUrl }, { onSettled: () => setLoading(false) });
+    // every time, filled in or not: the last chance to change them
+    if (infoKey) {
+      setAsking(true);
+      return;
+    }
+    generate(config);
   };
+
+  const generateLabel = get(messages, `${activity}.Generate`, 'Generate campaign');
 
   return (
     <>
@@ -133,12 +157,27 @@ export default function GenerateConfigButton({
         disabled={hasBlockingErrors || loading}
       >
         <div className="flex justify-between gap-5">
-          {!campaignId
-            ? get(messages, `${activity}.Generate`, 'Generate campaign')
-            : get(messages, `${activity}.New`, 'New campaign')}
+          {!campaignId ? generateLabel : get(messages, `${activity}.New`, 'New campaign')}
           {loading && <LoadingOutlined />}
         </div>
       </button>
+      {asking && infoKey && (
+        <CampaignInfoDialog
+          initial={campaignInfoOf(config, infoKey)}
+          submitLabel={generateLabel}
+          onCancel={(typed) => {
+            // kept in the Info block, to go on with there or the next time
+            setConfig(withCampaignInfo(config, infoKey, typed));
+            setAsking(false);
+          }}
+          onDone={(info) => {
+            const named = withCampaignInfo(config, infoKey, info);
+            setConfig(named);
+            setAsking(false);
+            generate(named);
+          }}
+        />
+      )}
     </>
   );
 }

@@ -203,6 +203,7 @@ function Block({
 
 const KIND: Record<string, string> = {
   block_single: 'One block',
+  block_info: 'One block, not required until the campaign is generated',
   block_dictionary: 'Block dictionary: any number, each named, of these kinds',
   block_union: 'One block, of one of these kinds',
 };

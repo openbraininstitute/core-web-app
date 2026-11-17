@@ -16,6 +16,7 @@ import {
   seedElectrodeInitialOrigin,
 } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import { DESCRIPTION_TOOLTIP_CLASS } from '@/features/scan-config/components/shared/box-class';
+import { CloseFormButton } from '@/features/scan-config/components/shared/form-header-buttons';
 import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import Block from '@/features/scan-config/components/ui-blocks/block';
 import { ScanValueSelectorProvider } from '@/features/scan-config/components/ui-elements/parameter-sweep';
@@ -55,6 +56,8 @@ type Props = {
   onNewBlockClick?: () => void;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
   errorPathPrefix?: string;
+  /** Folds the form column away. */
+  onClose?: () => void;
 };
 
 export default function BlockDictionary({
@@ -72,6 +75,7 @@ export default function BlockDictionary({
   onNewBlockClick,
   schemaMappingConfig,
   errorPathPrefix,
+  onClose,
 }: Props) {
   const { aiConfig, isChatReady } = useAIConfig();
   const diffs = useAtomValue(configDiffsAtom);
@@ -154,6 +158,7 @@ export default function BlockDictionary({
         rootElement={selectedRootElement}
         selectedEntry={selectedEntry}
         errorPathPrefix={errorPathPrefix}
+        onClose={onClose}
       />
     );
 
@@ -187,6 +192,11 @@ export default function BlockDictionary({
       className="flex flex-col items-center gap-2"
       data-scan-config-block={blockDictionarySchema.ui_element}
     >
+      {onClose && (
+        <div className="flex w-full justify-end">
+          <CloseFormButton onClose={onClose} />
+        </div>
+      )}
       {blockDictionarySchema.additionalProperties.oneOf.map((o) => {
         const usability = getBlockUsabilityConfig({ block: o });
         let disable = false,
