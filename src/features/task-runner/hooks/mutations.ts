@@ -56,10 +56,6 @@ const LaunchersByTaskType: Partial<Record<TObiOneTaskType, TTaskLauncher>> = {
   [ObiOneTaskTypeDict.IonChannelFitting]: taskConfigRunner('/ion-channel/build/run'),
 };
 
-export function pickLauncher(taskType: TObiOneTaskType): TTaskLauncher {
-  return LaunchersByTaskType[taskType] ?? runTask;
-}
-
 export type TTaskLaunchMutationOptions = {
   context: WorkspaceContext;
   obiOneTaskType: TObiOneTaskType;
@@ -106,7 +102,7 @@ export function useTaskLaunchMutation({
     mutationFn: async (configIdsOrId: string[] | string) => {
       const configIds = Array.isArray(configIdsOrId) ? configIdsOrId : [configIdsOrId];
 
-      const launch = pickLauncher(obiOneTaskType);
+      const launch = LaunchersByTaskType[obiOneTaskType] ?? runTask;
       const runLaunches = async () => {
         let launched = false;
         for (const configId of configIds) {
