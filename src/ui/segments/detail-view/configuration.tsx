@@ -178,6 +178,7 @@ export default async function Configuration({
             activity={scanConfig.definition.activity}
             config={config}
             campaignId={workflow.campaign.id}
+            singleScanId={workflow.coordinateConfig.id}
             virtualLabId={context.virtualLabId}
             projectId={context.projectId}
             variant={fieldVariant}

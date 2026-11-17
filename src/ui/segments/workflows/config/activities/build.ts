@@ -348,7 +348,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     sourceType: ExtendedEntitiesTypeDict.Circuit,
     targetType: ExtendedEntitiesTypeDict.CircuitSynapticPhysiologyCampaign,
     label: 'Circuit synaptic physiology',
-    verb: 'Synapse physiology',
+    verb: 'Parameterize synapse physiology',
     breadcrumb: {
       root: 'Circuit synaptic physiology build',
       steps: {

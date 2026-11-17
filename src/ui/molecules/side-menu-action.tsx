@@ -53,8 +53,13 @@ export function Action(props: Props) {
     testId,
   } = props;
   const className = cn(
-    'group border flex w-full items-center justify-between gap-3 pl-4 pr-2! py-2! rounded-full',
-    'h-10 gap-1.5 text-md py-3 px-4 has-[>svg]:px-3 xl:h-12 xl:py-3 xl:px-6 xl:text-lg xl:has-[>svg]:px-4',
+    // overrides the Button base class's `whitespace-nowrap`, so a long label wraps instead of
+    // overflowing past the pill's edge
+    'group border flex w-full items-center justify-between gap-3 pl-4 pr-2! py-3! rounded-full whitespace-normal',
+    // the Button size variant's `h-10`/`xl:h-12` is a fixed height (a different property than
+    // `min-h-*`, so it doesn't get deduped away): override it so the pill can grow for a wrapped
+    // two-line label instead of clipping it.
+    'h-auto min-h-10 gap-1.5 text-md py-3 px-4 has-[>svg]:px-3 xl:h-auto xl:min-h-12 xl:py-3 xl:px-6 xl:text-lg xl:has-[>svg]:px-4',
     !disabled && 'cursor-pointer',
     disabled &&
       'cursor-not-allowed bg-gray-100! text-gray-400! border-gray-200! shadow-none disabled:opacity-100 hover:bg-gray-100! hover:text-gray-400! hover:shadow-none hover:border-gray-200!',
@@ -71,7 +76,8 @@ export function Action(props: Props) {
       'from-destructive via-destructive/80 to-destructive border-white/20 bg-linear-to-r bg-size-[200%_100%] text-white hover:text-white! hover:shadow-xs',
     prominent &&
       !disabled &&
-      'border-green-700/20 bg-green-600 text-white hover:text-white! hover:bg-green-700 hover:shadow-xs active:bg-green-800'
+      // Same green gradient as the campaign generate button (task-launch-button.tsx's LAUNCH_GREEN).
+      'bg-[linear-gradient(94.93deg,#389E0D_18.84%,#143805_116.7%)] border-white/20 text-white hover:text-white! hover:shadow-xs hover:brightness-110 active:brightness-90'
   );
 
   const content = (

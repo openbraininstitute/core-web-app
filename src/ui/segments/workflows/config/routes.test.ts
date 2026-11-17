@@ -150,7 +150,12 @@ describe('listLaunchActionsFromDataViewEntity', () => {
     [extractionActivityFlag.key]: true,
     [extracellularRecordingArrayBuildFlag.key]: true,
   } as never;
-  const all = ['Simulate circuit', 'Recording array', 'Synapse physiology', 'Extract circuit'];
+  const all = [
+    'Simulate circuit',
+    'Recording array',
+    'Parameterize synapse physiology',
+    'Extract circuit',
+  ];
   it.each([
     [ExtendedEntitiesTypeDict.Circuit, CircuitScaleDictionary.Microcircuit, all.toSpliced(2, 1)],
     [
@@ -183,7 +188,7 @@ describe('listLaunchActionsFromDataViewEntity', () => {
         },
         {} as never
       )
-    ).toEqual(['Simulate circuit', 'Synapse physiology']);
+    ).toEqual(['Simulate circuit', 'Parameterize synapse physiology']);
   });
 
   it('omits the recording array for circuits over its neuron limit', () => {

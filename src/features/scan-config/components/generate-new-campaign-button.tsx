@@ -27,12 +27,20 @@ import type { TScanConfigActivity } from '@/features/scan-config/types';
 /**
  * Reopens a read-only campaign as a new, editable duplicate in the workflows editor — the same
  * `?origin=<id>&mode=duplicate` flow the workflow activities table's "Duplicate" row action uses.
+ *
+ * Duplicates from `singleScanId` (a specific single-coordinate `TaskConfig`/result, e.g. the one
+ * that generated the model data entity this is rendered under) when given, rather than the
+ * campaign itself — opening the duplicate without the campaign's parameter sweep. A single
+ * coordinate's own config is a strict subset of the campaign's, so the same schema validates it.
  */
 export default function GenerateNewCampaignButton({
   campaignId,
+  singleScanId,
   activity,
 }: {
   campaignId: string;
+  /** a specific single-coordinate config to duplicate from instead of the campaign itself */
+  singleScanId?: string;
   activity: TScanConfigActivity;
 }) {
   const router = useRouter();
@@ -57,7 +65,7 @@ export default function GenerateNewCampaignButton({
 
     setLoading(true);
     void resolveWorkflowConfigureHrefForEntity({
-      entityId: campaignId,
+      entityId: singleScanId ?? campaignId,
       workspace: { virtualLabId, projectId },
       flags,
       mode: ScanConfigCampaignOriginActionDict.Duplicate,
@@ -95,7 +103,7 @@ export default function GenerateNewCampaignButton({
       disabled={loading}
     >
       <div className="flex items-center justify-between gap-5">
-        {get(messages, `${activity}.GenerateNewCampaign`, 'Generate new campaign')}
+        {get(messages, `${activity}.New`, 'New campaign')}
         {showLegacyMigrationWarning && (
           <Tooltip title="This e-model's campaign was reconstructed from its original optimisation export, not captured live, so the underlying e-feature data may be incomplete. A new optimisation run may not reproduce the original e-model's result.">
             <WarningFilled
