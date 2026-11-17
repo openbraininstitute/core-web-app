@@ -66,6 +66,10 @@ const DRAW_ARGS = /* wgsl */ `
 struct Args { indices: u32, instances: atomic<u32>, firstIndex: u32, baseVertex: u32, firstInstance: u32 }
 `;
 
+/** The segments' draws, in the order of `DRAWS` (`culling.ts`). */
+const SEGMENT_DRAWS =
+  'struct Draws { keptFlat: Args, keptTubes: Args, seenFlat: Args, seenTubes: Args }';
+
 /**
  * Turns the depth drawn before the tests into µm from the eye, taking the farthest of each pixel's samples. It adds a
  * few of the depth buffer's steps to cover the precision lost in turning depth back into distance.
@@ -116,7 +120,7 @@ export const PYRAMID = /* wgsl */ `
  */
 export const BLOCKS = /* wgsl */ `
 ${VIEW}${BLOCK}${FARTHEST}
-struct Counters { blocks: atomic<u32>, candidates: atomic<u32>, pad: vec2u }
+struct Counters { blocks: atomic<u32>, candidates: atomic<u32>, seen: u32, pad: u32 }
 @group(0) @binding(1) var full: texture_2d<f32>;
 @group(0) @binding(2) var hiz: texture_2d<f32>;
 @group(0) @binding(3) var<storage, read> blocks: array<Block>;
@@ -196,7 +200,7 @@ export const ARGS = /* wgsl */ `
  */
 export const SEGMENTS = /* wgsl */ `
 ${VIEW}${BLOCK}${FARTHEST}${DRAW_ARGS}
-struct Draws { keptFlat: Args, keptTubes: Args, seenFlat: Args, seenTubes: Args }
+${SEGMENT_DRAWS}
 @group(0) @binding(1) var full: texture_2d<f32>;
 @group(0) @binding(2) var hiz: texture_2d<f32>;
 @group(0) @binding(3) var<storage, read> blocks: array<Block>;
@@ -336,7 +340,7 @@ var<workgroup> keeps: atomic<u32>;
  */
 export const CLAMP = /* wgsl */ `
 struct Args { indices: u32, instances: u32, firstIndex: u32, baseVertex: u32, firstInstance: u32 }
-struct Draws { keptFlat: Args, keptTubes: Args, seenFlat: Args, seenTubes: Args }
+${SEGMENT_DRAWS}
 @group(0) @binding(0) var<storage, read_write> draws: Draws;
 @group(0) @binding(1) var<storage, read_write> counters: array<u32>;
 @compute @workgroup_size(1) fn main() {
