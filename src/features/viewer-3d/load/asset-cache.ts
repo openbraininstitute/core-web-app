@@ -89,12 +89,13 @@ async function fresh(cache: Cache, bounds: CacheBounds, key: string): Promise<Re
   return null;
 }
 
-/** The entry's body if it is there, fresh and whole, which counts as opening it; null otherwise. */
-export async function readEntry(
+/** The entry's body, as `bodyOf` takes it, if it is there, fresh and whole, which counts as opening it. */
+async function wholeEntry<Body extends ArrayBuffer | Blob>(
   bounds: CacheBounds,
   key: string,
-  size?: number
-): Promise<ArrayBuffer | null> {
+  size: number | undefined,
+  bodyOf: (hit: Response) => Promise<Body>
+): Promise<Body | null> {
   if (!available()) return null;
   try {
     const cache = await caches.open(bounds.name);
@@ -102,8 +103,8 @@ export async function readEntry(
     if (!hit) return null;
     const expected = size ?? Number(hit.headers.get('Content-Length'));
     // A short entry is touched too, and forgotten by the next `prune`.
-    const [body] = await Promise.all([hit.arrayBuffer(), touch(cache, normal(key))]);
-    if (body.byteLength !== expected) {
+    const [body] = await Promise.all([bodyOf(hit), touch(cache, normal(key))]);
+    if ((body instanceof Blob ? body.size : body.byteLength) !== expected) {
       await cache.delete(key);
       return null;
     }
@@ -112,6 +113,21 @@ export async function readEntry(
     return null;
   }
 }
+
+/** The entry's body if it is there, fresh and whole, which counts as opening it; null otherwise. */
+export const readEntry = (
+  bounds: CacheBounds,
+  key: string,
+  size?: number
+): Promise<ArrayBuffer | null> => wholeEntry(bounds, key, size, (hit) => hit.arrayBuffer());
+
+/**
+ * The entry's body as a Blob, on the same terms as `readEntry`. Where the browser keeps the cache on disk, the blob's
+ * parts are read from there as they are asked for (`slice`), and the body is never in memory whole. In Chrome it stays
+ * readable after the entry is deleted or pruned, but not once the browser clears the site's storage.
+ */
+export const blobEntry = (bounds: CacheBounds, key: string, size?: number): Promise<Blob | null> =>
+  wholeEntry(bounds, key, size, (hit) => hit.blob());
 
 /** Whether the entry is there and fresh, without reading it, which doesn't count as opening it. */
 export async function hasEntry(bounds: CacheBounds, key: string): Promise<boolean> {

@@ -28,28 +28,41 @@ function boxAt(starts: Uint32Array, slot: number): number {
   return lo;
 }
 
+/** Where each box's room starts, and where the last one ends, for boxes of `counts` segments. */
+function startsOf(counts: ArrayLike<number>): Uint32Array {
+  const starts = new Uint32Array(counts.length + 1);
+  for (let box = 0; box < counts.length; box++)
+    starts[box + 1] = starts[box] + roomFor(counts[box]);
+  return starts;
+}
+
 /**
- * Uploads an arena's arrays. It is told which segments changed, and always uploads the blocks over them too;
- * `wordsOnly` leaves out the segments' ends, never the blocks.
+ * Uploads an arena's segments. It is told which changed, and always uploads the words and the blocks over them from
+ * the arena's arrays. `ends` holds their ends (8 floats each) where those changed too, for this call alone: a base's
+ * ends are kept nowhere else, so whatever is drawn from must keep them.
  */
 export interface ArenaUploads {
-  upload(start: number, count: number, wordsOnly: boolean): void;
+  upload(start: number, count: number, ends: Float32Array | null): void;
   dispose(): void;
 }
 
 /**
- * Makes an arena's uploads for its segments' ends (8 floats each), their cell-and-type words, and its blocks (8 words
- * each: the least x, y and z of the block's box, its first segment, the greatest x, y and z, and its segment count).
+ * An arena's arrays the uploads read: its segments' cell-and-type words, and its blocks (8 words each: the least x, y
+ * and z of the block's box, its first segment, the greatest x, y and z, and its segment count).
  */
-export type UploadsOf = (
-  ends: Float32Array,
-  words: Uint32Array,
-  blocks: Float32Array
-) => ArenaUploads;
+export interface ArenaArrays {
+  words: Uint32Array;
+  blocks: Float32Array;
+}
+
+export type UploadsOf = (arrays: ArenaArrays) => ArenaUploads;
 
 const NO_UPLOADS: ArenaUploads = { upload() {}, dispose() {} };
 
-/** The arrays as three's attributes on the quads' `geometry`; three uploads the ranges that changed. */
+/**
+ * The arrays as three's attributes on the quads' `geometry`; three uploads the ranges that changed, from `ends`, which
+ * must hold every slot's.
+ */
 function attributesOf(
   geometry: THREE.InstancedBufferGeometry,
   ends: Float32Array,
@@ -60,9 +73,9 @@ function attributesOf(
   // No dendrogram: the ends stand for it, and the morph moves nothing.
   segmentAttributes(geometry, endsBuffer, endsBuffer, cellTypes);
   return {
-    upload(start: number, count: number, wordsOnly: boolean) {
-      if (!wordsOnly) {
-        endsBuffer.addUpdateRange(8 * start, 8 * count);
+    upload(start: number, count: number, changed: Float32Array | null) {
+      if (changed) {
+        endsBuffer.addUpdateRange(8 * start, changed.length);
         endsBuffer.needsUpdate = true;
       }
       cellTypes.addUpdateRange(start, count);
@@ -87,17 +100,19 @@ interface Place {
  *
  * With a base, the arena starts with room for each box at its base level, in the boxes' order. No other box takes that
  * room, and it never moves. A box's base is drawn there (`putBase`) while the box is not put at another level; while
- * it is, the base's room is holes with its blocks emptied. So every draw of the arena draws each box once.
+ * it is, the base's room is holes with its blocks emptied. So every draw of the arena draws each box once. The arena
+ * keeps the base's words and blocks, and its ends only where three draws from the arena's own array.
  */
 export class SegmentArena {
   readonly geometry: THREE.InstancedBufferGeometry;
   readonly capacity: number;
   /** The room kept for the base, none without one. */
   readonly baseRoom: number;
+  /** The ends of the slots from `endsFrom` on: all of them without `uploadsOf`, else those past the base. */
   private ends: Float32Array;
+  private endsFrom: number;
   private words: Uint32Array;
   private blocks: Float32Array;
-  private blockWords: Uint32Array;
   private uploads: ArenaUploads;
   private uploadsOf?: UploadsOf;
   private places = new Map<number, Place>();
@@ -108,11 +123,13 @@ export class SegmentArena {
   private live = 0;
   private used = 0;
   /** Where each box's base starts, and where the last ends; null without a base. */
-  private baseAt: Uint32Array | null = null;
+  private baseAt: Uint32Array | null;
   /** Each box's base segments, -1 until it is put. */
   private baseCounts = new Int32Array(0);
   /** The base's words. The arena's words match them wherever no box hides the base. */
   private baseWords = new Uint32Array(0);
+  /** The base's blocks. The arena's blocks match them wherever no box hides the base. */
+  private baseBlocks = new Float32Array(0);
 
   /**
    * `geometry` is the segments' quad, drawn once for each slot up to the end of the last box; `capacity` is rounded
@@ -127,30 +144,27 @@ export class SegmentArena {
   ) {
     this.geometry = geometry;
     this.capacity = roomFor(capacity);
-    this.ends = new Float32Array(8 * this.capacity);
-    this.words = new Uint32Array(this.capacity);
-    this.blocks = new Float32Array(rowOf(this.capacity));
-    this.blockWords = new Uint32Array(this.blocks.buffer);
-    this.uploadsOf = uploadsOf;
-    this.uploads = uploadsOf
-      ? uploadsOf(this.ends, this.words, this.blocks)
-      : attributesOf(geometry, this.ends, this.words);
-    geometry.instanceCount = 0;
-    this.baseRoom = 0;
-    if (!base) return;
-    const baseAt = new Uint32Array(base.length + 1);
-    for (let box = 0; box < base.length; box++) baseAt[box + 1] = baseAt[box] + roomFor(base[box]);
-    this.baseRoom = baseAt[base.length];
+    this.baseAt = base ? startsOf(base) : null;
+    this.baseRoom = this.baseAt?.at(-1) ?? 0;
     if (this.baseRoom > this.capacity) {
       throw new RangeError(`a base of ${this.baseRoom}, where ${this.capacity} are held`);
     }
-    this.baseAt = baseAt;
+    this.endsFrom = uploadsOf ? this.baseRoom : 0;
+    this.ends = new Float32Array(8 * (this.capacity - this.endsFrom));
+    this.words = new Uint32Array(this.capacity);
+    this.blocks = new Float32Array(rowOf(this.capacity));
+    this.uploadsOf = uploadsOf;
+    const { ends, words, blocks } = this;
+    this.uploads = uploadsOf ? uploadsOf({ words, blocks }) : attributesOf(geometry, ends, words);
+    geometry.instanceCount = 0;
+    if (!base) return;
     this.baseCounts = Int32Array.from(base, (n) => (n === 0 ? 0 : -1));
     this.baseWords = new Uint32Array(this.baseRoom);
+    this.baseBlocks = new Float32Array(rowOf(this.baseRoom));
     this.words.fill(HOLE_WORD, 0, this.baseRoom);
     this.end = this.baseRoom;
     this.used = this.baseRoom;
-    this.upload(0, this.baseRoom, true);
+    this.upload(0, this.baseRoom);
   }
 
   /** An empty arena of `capacity` on `geometry`, uploaded as this one is, with room for `base`. */
@@ -239,11 +253,12 @@ export class SegmentArena {
     if (roomFor(n) > baseAt[box + 1] - start) {
       throw new RangeError(`a base of ${n}, where ${baseAt[box + 1] - start} are kept`);
     }
-    this.ends.set(segments, 8 * start);
+    if (!this.uploadsOf) this.ends.set(segments, 8 * start);
     packCellTypes(segmentCells, segmentTypes, this.baseWords, start);
+    this.bound(segments, start, this.baseBlocks);
     this.baseCounts[box] = n;
     if (!this.places.has(box)) this.drawBase(box);
-    this.upload(start, n);
+    this.upload(start, n, segments);
     return n;
   }
 
@@ -252,13 +267,14 @@ export class SegmentArena {
     return this.baseAt && this.baseCounts[box] > 0 ? this.baseAt[box] : -1;
   }
 
-  /** Draws `box`'s base, if it has one: sets its words, and its blocks over its ends. Returns its segments. */
+  /** Draws `box`'s base, if it has one: sets its words and its blocks. Returns its segments. */
   private drawBase(box: number): number {
     const start = this.baseStart(box);
     if (start < 0) return 0;
     const n = this.baseCounts[box];
     this.words.set(this.baseWords.subarray(start, start + n), start);
-    this.bound(this.ends.subarray(8 * start, 8 * (start + n)), start);
+    const row = rowOf(start);
+    this.blocks.set(this.baseBlocks.subarray(row, rowOf(start + roomFor(n))), row);
     this.live += n;
     return n;
   }
@@ -266,7 +282,7 @@ export class SegmentArena {
   /** Draws `box`'s base again and uploads its words and blocks; returns what was uploaded, in segments. */
   private showBase(box: number): number {
     const n = this.drawBase(box);
-    if (n > 0) this.upload(this.baseStart(box), n, true);
+    if (n > 0) this.upload(this.baseStart(box), n);
     return wordsOf(n);
   }
 
@@ -277,7 +293,7 @@ export class SegmentArena {
     const n = this.baseCounts[box];
     this.hole(start, n);
     this.live -= n;
-    this.upload(start, n, true);
+    this.upload(start, n);
     return wordsOf(n);
   }
 
@@ -317,14 +333,15 @@ export class SegmentArena {
       start = this.end;
       this.end += room;
     }
-    this.ends.set(segments, 8 * start);
+    const ends = this.endsOf(start, room);
+    ends.set(segments);
     packCellTypes(segmentCells, segmentTypes, this.words, start);
     this.words.fill(HOLE_WORD, start + n, start + room);
     this.bound(segments, start);
     this.places.set(box, { start, count: n });
     this.live += n;
     this.used += room;
-    this.upload(start, room);
+    this.upload(start, room, ends);
     return uploaded;
   }
 
@@ -341,7 +358,7 @@ export class SegmentArena {
     this.leave({ start: place.start, count: room });
     // Once the last box goes, its words are past the end, where nothing is drawn.
     const count = place.start < this.end ? place.count : 0;
-    this.upload(place.start, count, true);
+    this.upload(place.start, count);
     return wordsOf(count);
   }
 
@@ -361,17 +378,17 @@ export class SegmentArena {
     this.ends = new Float32Array(0);
     this.words = new Uint32Array(0);
     this.blocks = new Float32Array(0);
-    this.blockWords = new Uint32Array(0);
     this.baseWords = new Uint32Array(0);
+    this.baseBlocks = new Float32Array(0);
   }
 
   /**
-   * Sets the boxes of the blocks over `segments`, from the block at `start`: each box covers each end's reach
-   * (`QUAD_REACH`) in each axis. A block keeps its first segment next to its box's least corner, and its segment count
-   * next to the greatest.
+   * Sets in `blocks` the boxes of the blocks over `segments`, from the block at `start`: each box covers each end's
+   * reach (`QUAD_REACH`) in each axis. A block keeps its first segment next to its box's least corner, and its segment
+   * count next to the greatest.
    */
-  private bound(segments: Float32Array, start: number): void {
-    const { blocks, blockWords } = this;
+  private bound(segments: Float32Array, start: number, blocks = this.blocks): void {
+    const blockWords = new Uint32Array(blocks.buffer);
     const n = segments.length / 8;
     for (let s = 0, o = rowOf(start); s < n; s += BLOCK, o += 8) {
       const last = Math.min(n, s + BLOCK);
@@ -446,13 +463,15 @@ export class SegmentArena {
    * uploaded: those from the first hole on.
    */
   private compact(): number {
-    const { ends, words, blocks } = this;
+    const { ends, endsFrom, words, blocks } = this;
+    const blockWords = new Uint32Array(blocks.buffer);
     const from = this.holes[0]?.start ?? this.end;
     let at = this.baseRoom;
     for (const place of [...this.places.values()].sort((a, b) => a.start - b.start)) {
       const room = roomFor(place.count);
       if (place.start !== at) {
-        ends.copyWithin(8 * at, 8 * place.start, 8 * (place.start + room));
+        const was = place.start - endsFrom;
+        ends.copyWithin(8 * (at - endsFrom), 8 * was, 8 * (was + room));
         words.copyWithin(at, place.start, place.start + room);
         blocks.copyWithin(rowOf(at), rowOf(place.start), rowOf(place.start + room));
         place.start = at;
@@ -460,16 +479,23 @@ export class SegmentArena {
       at += room;
     }
     // Every box from the first hole on has moved, so each block's first segment is now where the block is.
-    for (let slot = from; slot < at; slot += BLOCK) this.blockWords[rowOf(slot) + 3] = slot;
+    for (let slot = from; slot < at; slot += BLOCK) blockWords[rowOf(slot) + 3] = slot;
     blocks.fill(0, rowOf(at), rowOf(this.end));
     this.holes = [];
     this.end = at;
-    this.upload(from, at - from);
+    this.upload(from, at - from, this.endsOf(from, at - from));
     return at - from;
   }
 
-  private upload(start: number, count: number, wordsOnly = false): void {
+  /** The ends of the `count` slots from `start`, which the arena must hold. */
+  private endsOf(start: number, count: number): Float32Array {
+    const from = 8 * (start - this.endsFrom);
+    return this.ends.subarray(from, from + 8 * count);
+  }
+
+  /** Uploads the `count` segments from `start`: their words and blocks, and their `ends` where those changed. */
+  private upload(start: number, count: number, ends: Float32Array | null = null): void {
     this.geometry.instanceCount = this.end;
-    if (count > 0) this.uploads.upload(start, count, wordsOnly);
+    if (count > 0) this.uploads.upload(start, count, ends);
   }
 }
