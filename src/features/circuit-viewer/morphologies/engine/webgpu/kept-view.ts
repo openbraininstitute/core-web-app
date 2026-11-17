@@ -14,15 +14,18 @@ export class KeptView {
   private target = new THREE.Vector3();
   private span = 0;
   private projected = true;
+  private made = false;
 
   /**
    * Whether the view is far from the kept list's: `turn` the camera's, `target` the orbit's, `span` the µm a CSS pixel
-   * spans there and `height` the view's, in CSS pixels.
+   * spans there and `height` the view's, in CSS pixels. A list made where a pixel spanned nothing, or no number, is
+   * far from any view.
    */
   stale(turn: THREE.Quaternion, target: THREE.Vector3, span: number, height: number): boolean {
-    if (this.span === 0) return false;
+    if (!this.made) return false;
     return (
       !this.projected ||
+      !(this.span > 0) ||
       this.turn.angleTo(turn) > STALE_TURN ||
       span > this.span * STALE_ZOOM_OUT ||
       this.target.distanceTo(target) > STALE_PAN * span * height
@@ -34,6 +37,7 @@ export class KeptView {
     this.target.copy(target);
     this.span = span;
     this.projected = true;
+    this.made = true;
   }
 
   /** The kept list was made for the other camera. */
