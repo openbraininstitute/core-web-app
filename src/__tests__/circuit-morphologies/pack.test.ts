@@ -689,4 +689,12 @@ describe('Arriving', () => {
     await expect(file.until(2)).resolves.toBe(true);
     await expect(file.until(3)).resolves.toBe(false);
   });
+
+  it('holds no bytes once let go of: a read after finds none', async () => {
+    const file = Arriving.whole(Uint8Array.of(1, 2, 3));
+    expect([...((await file.read(1, 3)) as Uint8Array)]).toEqual([2, 3]);
+    file.release();
+    await expect(file.read(1, 3)).resolves.toBeNull();
+    expect(file.in).toBe(0);
+  });
 });

@@ -49,6 +49,7 @@ export default function Page() {
   const hasInitiated = useRef(false);
 
   const redirectURL = searchParams.get('callbackUrl');
+  const reauth = searchParams.get('reauth') === '1';
 
   useEffect(() => {
     if (hasInitiated.current) return;
@@ -59,7 +60,8 @@ export default function Page() {
 
     // A 'RefreshAccessTokenError' session decrypts as authenticated but can't
     // mint fresh access tokens — fall through to re-auth instead of bouncing.
-    if (session.status === 'authenticated' && !session.data?.error) {
+    // `reauth=1` asks for the same when a service has rejected the token.
+    if (session.status === 'authenticated' && !session.data?.error && !reauth) {
       const safeTarget = redirectURL && isSameOriginTarget(redirectURL) ? redirectURL : SYNC_PATH;
       window.location.replace(safeTarget);
       return;
@@ -74,7 +76,7 @@ export default function Page() {
     } else {
       signIn('keycloak', { callbackUrl });
     }
-  }, [redirectURL, session.status, session.data?.error]);
+  }, [redirectURL, reauth, session.status, session.data?.error]);
 
   return (
     <div className="flex flex-col items-center justify-center space-y-4">
