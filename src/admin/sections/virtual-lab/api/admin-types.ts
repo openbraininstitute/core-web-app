@@ -119,6 +119,8 @@ export type AdminPayment = {
   status: string;
   payment_date: string;
   payment_type: string;
+  card_brand: string;
+  card_last4: string;
   receipt_url: string | null;
   virtual_lab_id: string | null;
 };
@@ -127,3 +129,63 @@ export type AdminPaymentsPage = { total_count: number; payments: AdminPayment[] 
 
 // Subscriptions and payments of one lab or one user.
 export type BillingOwner = { virtual_lab_id: string } | { user_id: string };
+
+type OwnerFilters = { virtual_lab_id?: string; user_id?: string };
+
+export type SubscriptionFilters = OwnerFilters & { status?: string };
+
+// `card_last4` is an exact match, and the dates are naive UTC: the column has no time zone.
+export type PaymentFilters = OwnerFilters & {
+  payment_type?: 'subscription' | 'standalone';
+  card_last4?: string;
+  start_date?: string;
+  end_date?: string;
+};
+
+export type ComputeCell = AdminLab['compute_cell'];
+
+// Prices and Stripe ids come from Stripe through a seeding script, so they can't be edited here.
+export type AdminPlan = {
+  id: string;
+  tier: string;
+  name: string;
+  description: string | null;
+  active: boolean;
+  currency: string;
+  monthly_amount: number;
+  monthly_discount: number | null;
+  yearly_amount: number;
+  yearly_discount: number | null;
+  monthly_credits: number;
+  yearly_credits: number;
+  updated_at: string;
+};
+
+export type AdminPlanUpdate = Partial<
+  Pick<
+    AdminPlan,
+    | 'name'
+    | 'description'
+    | 'active'
+    | 'monthly_credits'
+    | 'yearly_credits'
+    | 'monthly_discount'
+    | 'yearly_discount'
+  >
+>;
+
+// `rate` is a decimal that arrives as a string, and is kept as one so it stays exact.
+export type AdminCreditRate = {
+  id: string;
+  currency: string;
+  min_credits: number;
+  max_credits: number | null;
+  rate: string;
+  discount_pct: number;
+  active: boolean;
+  updated_at: string;
+};
+
+export type AdminCreditRateUpdate = Partial<
+  Pick<AdminCreditRate, 'rate' | 'discount_pct' | 'max_credits' | 'active'>
+>;

@@ -3,6 +3,7 @@
 import { Input, Segmented } from 'antd';
 import { parseAsString, parseAsStringLiteral, useQueryState } from 'nuqs';
 
+import type { ReactNode } from 'react';
 import type { DeletedScope } from '../api/admin-types';
 
 const SCOPE_KEYS = ['live', 'all', 'deleted'] as const;
@@ -15,8 +16,17 @@ const SCOPE_OPTIONS = SCOPE_KEYS.map((value) => ({ value, label: SCOPES[value].l
 
 const shallow = { shallow: true };
 
-// `gridKey` goes on the grid, so a changed filter returns to page 1.
-export function useListFilters({ scoped, placeholder }: { scoped?: boolean; placeholder: string }) {
+// `gridKey` goes on the grid, so a changed filter returns to page 1. A page with filters of its
+// own passes their controls as `extra` and adds their values to its grid's key.
+export function useListFilters({
+  scoped,
+  placeholder,
+  extra,
+}: {
+  scoped?: boolean;
+  placeholder: string;
+  extra?: ReactNode;
+}) {
   const [query, setQuery] = useQueryState('q', parseAsString.withDefault('').withOptions(shallow));
   const [scope, setScope] = useQueryState(
     'deleted',
@@ -43,6 +53,7 @@ export function useListFilters({ scoped, placeholder }: { scoped?: boolean; plac
             onChange={(value) => setScope(value as (typeof SCOPE_KEYS)[number])}
           />
         )}
+        {extra}
       </div>
     ),
   };

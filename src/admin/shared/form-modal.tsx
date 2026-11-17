@@ -1,6 +1,6 @@
 'use client';
 
-import { Form, Input, Modal } from 'antd';
+import { Form, Input, InputNumber, Modal, Select, Switch } from 'antd';
 
 import type { Rule } from 'antd/es/form';
 import type { ReactNode } from 'react';
@@ -8,9 +8,37 @@ import type { ReactNode } from 'react';
 type FormModalField = {
   name: string;
   label: string;
-  multiline?: boolean;
+  kind?: 'text' | 'multiline' | 'integer' | 'switch' | 'select';
+  min?: number;
+  max?: number;
+  options?: { value: string; label: string }[];
+  placeholder?: string;
+  extra?: ReactNode;
   rules?: Rule[];
 };
+
+function fieldControl({ kind = 'text', min, max, options, placeholder }: FormModalField) {
+  switch (kind) {
+    case 'multiline':
+      return <Input.TextArea rows={3} placeholder={placeholder} />;
+    case 'integer':
+      return (
+        <InputNumber
+          min={min}
+          max={max}
+          precision={0}
+          placeholder={placeholder}
+          className="w-full"
+        />
+      );
+    case 'switch':
+      return <Switch />;
+    case 'select':
+      return <Select options={options} />;
+    default:
+      return <Input placeholder={placeholder} />;
+  }
+}
 
 export const NAME_FIELD: FormModalField = {
   name: 'name',
@@ -21,12 +49,12 @@ export const NAME_FIELD: FormModalField = {
 export const DESCRIPTION_FIELD: FormModalField = {
   name: 'description',
   label: 'Description',
-  multiline: true,
+  kind: 'multiline',
 };
 
 // Edits, reasons and typed confirmations are all a short form in a modal. It stays mounted
 // only while open, so `initialValues` are always the current ones.
-export function FormModal<Values extends Record<string, string | undefined>>({
+export function FormModal<Values extends Record<string, unknown>>({
   title,
   description,
   fields,
@@ -77,10 +105,20 @@ export function FormModal<Values extends Record<string, string | undefined>>({
           if (!pending) onSubmit(values);
         }}
       >
-        {fields.map(({ name, label, multiline, rules }) => (
-          <Form.Item key={name} name={name} label={label} rules={rules}>
-            {multiline ? <Input.TextArea rows={3} /> : <Input />}
-          </Form.Item>
+        {fields.map((field) => (
+          // Form.Item's own `extra` shifts the form when a field first shows an error.
+          <div key={field.name} className="mb-6">
+            <Form.Item
+              name={field.name}
+              label={field.label}
+              rules={field.rules}
+              valuePropName={field.kind === 'switch' ? 'checked' : 'value'}
+              style={{ marginBottom: 0 }}
+            >
+              {fieldControl(field)}
+            </Form.Item>
+            {field.extra && <div className="text-neutral-4 mt-1 text-sm">{field.extra}</div>}
+          </div>
         ))}
       </Form>
     </Modal>
