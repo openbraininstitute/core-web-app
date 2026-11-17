@@ -18,15 +18,14 @@ import {
   useSetScanConfigEntityPreview,
 } from '@/features/scan-config/bridge/entity-preview';
 import { useFieldError } from '@/features/scan-config/components/hooks/field-errors';
+import { ScanHint, ScanHintTooltip } from '@/features/scan-config/components/shared/scan-hint';
 import { ModelIdentifierEntityCard } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/entity-card';
 import { mergeConfigurationInputs } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/helpers';
-import { ScanHint } from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { getFromIdRefTypeBadgeLabel, type TFromIdRef } from '@/features/scan-config/helpers';
 import { ModelIdentifierFieldStorageMode } from '@/features/scan-config/workflow/workflow-schema-selection';
 import { Badge } from '@/ui/molecules/badge';
 import { ScrollableList } from '@/ui/molecules/scrollable';
 import { Skeleton } from '@/ui/molecules/skeleton';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
 import type {
@@ -63,8 +62,6 @@ export function ModelIdentifierAddActionButton({
         'grid h-auto min-h-11 w-full max-w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] px-4 py-2.5 pr-2',
         'items-center gap-2 overflow-hidden rounded-full border border-gray-200 bg-white text-sm text-primary-9',
         'transition-colors hover:border-gray-300 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50',
-        // lets Block hide the field's description while this hint shows
-        hint && 'scan-hint-trigger',
         className
       )}
     >
@@ -76,14 +73,8 @@ export function ModelIdentifierAddActionButton({
   );
 
   if (!hint) return button;
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>{button}</TooltipTrigger>
-      <TooltipContent side="top" sideOffset={6} className="max-w-64 text-left text-wrap">
-        {hint}
-      </TooltipContent>
-    </Tooltip>
-  );
+  // no title: the button already shows its label
+  return <ScanHintTooltip hint={hint}>{button}</ScanHintTooltip>;
 }
 
 type Props = {
@@ -107,8 +98,14 @@ type Props = {
   onRemoveGroup?: (groupIndex: number) => void;
   /** max rows before the list scrolls; raise it when the field stands alone in its column */
   visibleItemCount?: number;
-  /** replaces the default "Add <entity> to scan" label of the add button (flat lists only) */
+  /** replaces the default label of the add button (flat lists only) */
   addLabel?: string;
+  /**
+   * Whether each entity in a flat list runs as its own configuration, which
+   * gives the add button its "to scan" label and hint. Defaults to true for
+   * lists and false for tuples, which obi-one uses to keep a list out of the scan.
+   */
+  isScan?: boolean;
 };
 
 function findEntityForRef(
@@ -140,7 +137,8 @@ function getAddToScanLabel(mergedInputs: TModelIdentifierConfigurationInput[]): 
  * renders list or grouped summary ui for the middle configure column
  *
  * supports three schema shapes via `parsedValue.storageMode`:
- * - **list / tuple**: flat card + "Add X to scan"
+ * - **list**: flat card + "Add X to scan"
+ * - **tuple**: flat card + "Add X(s)", since a tuple is one value, not a scan
  * - **grouped**: per-group cards + "Add group to scan"
  *
  * group list keys use array index (stable while editing names; groups are not reordered in ui)
@@ -160,13 +158,14 @@ export function ModelIdentifierSummaryView({
   onRemoveGroup,
   visibleItemCount,
   addLabel,
+  isScan = parsedValue.storageMode !== ModelIdentifierFieldStorageMode.Tuple,
 }: Props) {
   const instanceId = useId();
   const entityPreview = useScanConfigEntityPreview();
   const setEntityPreview = useSetScanConfigEntityPreview();
   const mergedInputs = mergeConfigurationInputs({ paramSchema: fieldSchema, configurationInputs });
   const addEntitiesLabel = getAddEntitiesLabel(mergedInputs);
-  const addToScanLabel = addLabel ?? getAddToScanLabel(mergedInputs);
+  const addToListLabel = addLabel ?? (isScan ? getAddToScanLabel(mergedInputs) : addEntitiesLabel);
 
   // group names must be unique (backend rejects duplicate NamedTuple names); flag
   // every name that collides so the offending inputs can surface the error
@@ -349,13 +348,8 @@ export function ModelIdentifierSummaryView({
         {renderEntityCards(parsedValue.items)}
       </ScrollableList>
       <ModelIdentifierAddActionButton
-        label={addToScanLabel}
-        // a custom label means the list is not a scan (e.g. the mechanisms to optimise)
-        hint={
-          !addLabel && parsedValue.storageMode === ModelIdentifierFieldStorageMode.List
-            ? ScanHint.addToList
-            : undefined
-        }
+        label={addToListLabel}
+        hint={isScan ? ScanHint.addToList : undefined}
         disabled={disabled}
         onClick={() => onAddEntities()}
       />

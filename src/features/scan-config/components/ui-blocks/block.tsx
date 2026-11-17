@@ -1,7 +1,7 @@
 import { RiCloseLine } from '@remixicon/react';
 import { isNil } from 'es-toolkit/compat';
 
-import { DESCRIPTION_TOOLTIP_CLASS } from '@/features/scan-config/components/shared/box-class';
+import { FieldDescriptionTooltip } from '@/features/scan-config/components/shared/field-description-tooltip';
 import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
 import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import { UIElementRender } from '@/features/scan-config/components/ui-elements';
@@ -22,7 +22,6 @@ import {
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { MarkdownDescription } from '@/ui/molecules/markdown-description';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
@@ -152,54 +151,40 @@ export default function Block({
                     )}
                   </div>
 
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="block w-full">
-                        <div
-                          className={cn(
-                            'w-full min-w-0 max-w-full border',
-                            isPillField ? 'rounded-full' : 'rounded-lg',
-                            fieldBorderClass,
-                            !fieldBorderClass && 'border-transparent'
-                          )}
-                        >
-                          <UIElementRender
-                            k={k}
-                            disabled={disabled}
-                            paramSchema={blockElementSchema}
-                            config={config}
-                            schema={schema}
-                            entity={entity}
-                            schemaMappingConfig={schemaMappingConfig}
-                            state={state}
-                            setState={setState}
-                            selectedEntry={selectedEntry}
-                            errorPathPrefix={
-                              errorPathPrefix ? `${errorPathPrefix}/${k}` : undefined
-                            }
-                          />
-                        </div>
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent
-                      avoidCollisions
-                      hideWhenDetached
-                      align="center"
-                      side="right"
-                      showArrow={false}
-                      className={cn(
-                        DESCRIPTION_TOOLTIP_CLASS,
-                        // a scan + has its own hint; showing this one too stacks two tooltips
-                        '[body:has(.scan-hint-trigger:hover)_&]:hidden'
-                      )}
-                    >
-                      {k === 'circuit' && entity ? (
+                  <FieldDescriptionTooltip
+                    content={
+                      k === 'circuit' && entity ? (
                         entity.description
                       ) : (
                         <MarkdownDescription>{blockElementSchema.description}</MarkdownDescription>
-                      )}
-                    </TooltipContent>
-                  </Tooltip>
+                      )
+                    }
+                  >
+                    <span className="block w-full">
+                      <div
+                        className={cn(
+                          'w-full min-w-0 max-w-full border',
+                          isPillField ? 'rounded-full' : 'rounded-lg',
+                          fieldBorderClass,
+                          !fieldBorderClass && 'border-transparent'
+                        )}
+                      >
+                        <UIElementRender
+                          k={k}
+                          disabled={disabled}
+                          paramSchema={blockElementSchema}
+                          config={config}
+                          schema={schema}
+                          entity={entity}
+                          schemaMappingConfig={schemaMappingConfig}
+                          state={state}
+                          setState={setState}
+                          selectedEntry={selectedEntry}
+                          errorPathPrefix={errorPathPrefix ? `${errorPathPrefix}/${k}` : undefined}
+                        />
+                      </div>
+                    </span>
+                  </FieldDescriptionTooltip>
 
                   {(() => {
                     if (
