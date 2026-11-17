@@ -50,8 +50,8 @@ function cullingOn(options?: Parameters<typeof fakeGpu>[0]) {
   const culling = new Culling(renderer, device, arenaStorage(), counted);
   culling.setArena(ARENA);
   culling.targetOf(16, 8);
-  const run = (rest = 1, hiding = false, told = true, { replaying = false } = {}) =>
-    culling.run(camera, shift, 12, replaying, HOLE, 100, rest, cells, hiding, told);
+  const run = (rest = 1, hiding = false, readBack = true, { replaying = false } = {}) =>
+    culling.run(camera, shift, 12, replaying, HOLE, 100, rest, cells, hiding, readBack);
   /** The next read mapped, finding `counts`, the blocks `marked` and `seen` segments seen. */
   const map = async (counts: CullTally, marked?: number[], seen?: number) => {
     gpu.found = wordsOf(counts, marked, seen);
@@ -161,13 +161,32 @@ describe("the culling's counts and its failures", () => {
     expect(counted).toHaveBeenLastCalledWith({ ...read(most), clamped: true });
   });
 
-  it('reads nothing back of tests not told of', () => {
+  it('reads nothing back of tests not read back', () => {
     const { run, maps, submits } = cullingOn();
     expect(run(1, false, false)).toBe(true);
     expect(submits).toHaveBeenCalledOnce();
     expect(maps).toHaveLength(0);
     run();
     expect(maps).toHaveLength(1);
+  });
+
+  it('reads the second of two tests once, where the frame before them went unread', async () => {
+    const { counted, run, map, maps, submits } = cullingOn();
+    for (let frame = 0; frame < 9; frame++) run();
+    run(2, false, false);
+    run(2);
+    expect(maps).toHaveLength(8);
+    expect(submits).toHaveBeenCalledTimes(11);
+
+    // The second test's, read once the first frame's buffer was free.
+    await map(A);
+    expect(submits).toHaveBeenCalledTimes(12);
+    for (let k = 0; k < 7; k++) await map(A);
+    expect(submits).toHaveBeenCalledTimes(12);
+    expect(maps).toHaveLength(1);
+    await map(B);
+    expect(counted).toHaveBeenLastCalledWith(read(B, undefined, 2));
+    expect(maps).toHaveLength(0);
   });
 
   it('hands on the blocks a frame marked with its counts', async () => {
