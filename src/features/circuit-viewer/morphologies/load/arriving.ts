@@ -1,9 +1,13 @@
+import { detach } from '@/utils/buffer';
+
+import type { PackSource } from './pack-source';
+
 /**
  * A file's bytes as they come in, in one buffer of the file's size where that is known. To read a part, wait until its
- * bytes are in (`until`), then take them (`bytes`). The buffer is replaced by a larger one when the file is longer than
- * said, so take a part again for each read and never keep it for a later one.
+ * bytes are in (`until`), then take them (`bytes`), or do both (`read`). The buffer is replaced by a larger one when
+ * the file is longer than said, so take a part again for each read and never keep it for a later one.
  */
-export class Arriving {
+export class Arriving implements PackSource {
   private buffer: Uint8Array;
   private received = 0;
   private ended = false;
@@ -36,6 +40,18 @@ export class Arriving {
   /** Bytes `start` to `end`, which must already be in. */
   bytes(start: number, end: number): Uint8Array {
     return this.buffer.subarray(start, end);
+  }
+
+  async read(start: number, end: number): Promise<Uint8Array | null> {
+    return (await this.until(end)) ? this.bytes(start, end) : null;
+  }
+
+  /** Lets go of the bytes at once. Nothing may hold a part of them, and a read after finds none. */
+  release(): void {
+    detach(this.buffer.buffer);
+    this.buffer = new Uint8Array(0);
+    this.received = 0;
+    this.ended = true;
   }
 
   /** Whether the bytes up to `end` come in: true once they have, false where the file ends before them. */

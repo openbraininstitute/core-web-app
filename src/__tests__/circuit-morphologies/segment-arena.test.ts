@@ -8,6 +8,7 @@ import {
   TYPE_SHIFT,
 } from '@/features/circuit-viewer/morphologies/engine/impostors';
 import {
+  type ArenaArrays,
   BLOCK,
   roomFor,
   SegmentArena,
@@ -28,25 +29,46 @@ function segmentsOf(box: number, count: number): MorphologySegments {
   };
 }
 
-/** An arena of `capacity` segments, with room for `base`, its arrays and what it told its uploads. */
+/**
+ * An arena of `capacity` segments, with room for `base`; its words and blocks; what it told its uploads (`told`: a
+ * start, a count, and whether no ends came with them); every slot's ends as they were uploaded (`ends`); and the ends
+ * uploaded last, as they were given (`given`).
+ */
 function arenaOf(capacity: number, base?: number[]) {
   const told: [number, number, boolean][] = [];
   const dispose = vi.fn();
-  let arrays: { ends: Float32Array; words: Uint32Array; blocks: Float32Array } = {
-    ends: new Float32Array(),
-    words: new Uint32Array(),
-    blocks: new Float32Array(),
-  };
+  let arrays: ArenaArrays = { words: new Uint32Array(), blocks: new Float32Array() };
+  let ends = new Float32Array();
+  let last: Float32Array | null = null;
   const arena = new SegmentArena(
     new THREE.InstancedBufferGeometry(),
     capacity,
-    (ends, words, blocks) => {
-      arrays = { ends, words, blocks };
-      return { upload: (...range) => told.push(range), dispose };
+    (given) => {
+      arrays = given;
+      ends = new Float32Array(8 * given.words.length);
+      return {
+        upload: (start, count, changed) => {
+          told.push([start, count, changed === null]);
+          if (!changed) return;
+          ends.set(changed, 8 * start);
+          last = changed;
+        },
+        dispose,
+      };
     },
     base
   );
-  return { arena, ...arrays, blockWords: new Uint32Array(arrays.blocks.buffer), told, dispose };
+  const { words, blocks } = arrays;
+  return {
+    arena,
+    ends,
+    given: () => last,
+    words,
+    blocks,
+    blockWords: new Uint32Array(blocks.buffer),
+    told,
+    dispose,
+  };
 }
 
 type Made = ReturnType<typeof arenaOf>;
@@ -126,19 +148,23 @@ function expectBlocks({ arena, ends, words, blocks, blockWords }: Made) {
   }
 }
 
-/** The segments and blocks that differ from `before`, each within a range told, or past the end. */
+/**
+ * The words and blocks that differ from `before`, each within a range told or past the end; and every segment drawn
+ * with its own ends uploaded.
+ */
 function expectUploaded({ arena, ends, words, blocks, told }: Made, before: Made) {
   const end = arena.geometry.instanceCount;
-  const toldOf = (i: number, ofEnds: boolean) =>
-    told.some(
-      ([start, count, wordsOnly]) => start <= i && i < start + count && !(ofEnds && wordsOnly)
-    );
+  const toldOf = (i: number) => told.some(([start, count]) => start <= i && i < start + count);
   const untold: string[] = [];
   for (let i = 0; i < end; i++) {
-    if (words[i] !== before.words[i] && !toldOf(i, false)) untold.push(`word ${i}`);
+    if (words[i] !== before.words[i] && !toldOf(i)) untold.push(`word ${i}`);
     if (typeAt(words, i) === HOLE) continue;
-    const moved = ends.subarray(8 * i, 8 * i + 8).some((v, k) => v !== before.ends[8 * i + k]);
-    if (moved && !toldOf(i, true)) untold.push(`ends ${i}`);
+    const cell = cellAt(words, i);
+    for (let k = 0; k < 8; k++) {
+      if (ends[8 * i + k] === cell + k) continue;
+      untold.push(`ends ${i}`);
+      break;
+    }
   }
   for (let b = 0; b < end / BLOCK; b++) {
     const changed = blocks
@@ -348,6 +374,23 @@ describe('SegmentArena', () => {
     expect(words.array[BLOCK] & CELL_MASK).toBe(2000);
   });
 
+  it("keeps a base's ends in three's attribute, which is drawn from", () => {
+    const arena = new SegmentArena(
+      new THREE.InstancedBufferGeometry(),
+      4 * BLOCK,
+      undefined,
+      [70, 3]
+    );
+    const ends = (arena.geometry.getAttribute('aA') as THREE.InterleavedBufferAttribute).data;
+    expect(ends.array.length).toBe(8 * 4 * BLOCK);
+    arena.putBase(1, segmentsOf(1, 3));
+
+    expect(ends.updateRanges).toEqual([{ start: 8 * 2 * BLOCK, count: 8 * 3 }]);
+    expect(Array.from(ends.array.subarray(8 * 2 * BLOCK, 8 * (2 * BLOCK + 3)))).toEqual(
+      Array.from(segmentsOf(1, 3).segments)
+    );
+  });
+
   it('refuses a box that does not fit', () => {
     const { arena } = arenaOf(BLOCK);
     arena.replace(1, segmentsOf(1, 3));
@@ -410,7 +453,7 @@ describe('SegmentArena', () => {
   describe('with a base', () => {
     it('keeps room for each box at its start, in the order of the boxes, holes until its base is put', () => {
       const made = arenaOf(10 * BLOCK, [3, 70, 0, 5]);
-      const { arena, words, told } = made;
+      const { arena, words, told, given } = made;
       expect(arena.keepsBase).toBe(true);
       expect(arena.baseRoom).toBe(4 * BLOCK);
       expect(told).toEqual([[0, 4 * BLOCK, true]]);
@@ -420,11 +463,18 @@ describe('SegmentArena', () => {
       expect([0, 1, 2, 3].map((box) => arena.hasBase(box))).toEqual([false, false, true, false]);
 
       told.length = 0;
-      expect(arena.putBase(1, segmentsOf(1, 70))).toBe(70);
+      // The base's ends are uploaded as they were read, and not kept.
+      const read = segmentsOf(1, 70);
+      expect(arena.putBase(1, read)).toBe(70);
       expect(told).toEqual([[BLOCK, 70, false]]);
+      expect(given()).toBe(read.segments);
       // Box 2's base has no segments.
       arena.replace(2, segmentsOf(2, 10));
       expect(told.at(-1)).toEqual([4 * BLOCK, BLOCK, false]);
+      // The arena's own ends are those above the base.
+      const own = given() as Float32Array;
+      expect([own.byteOffset, own.length]).toEqual([0, 8 * BLOCK]);
+      expect(own.buffer.byteLength).toBe(4 * 8 * 6 * BLOCK);
       expectDrawn(
         made,
         new Map([
@@ -456,6 +506,7 @@ describe('SegmentArena', () => {
       told.length = 0;
       // The box was the last: its words are past the end once it goes.
       expect(arena.remove(1)).toBe(Math.ceil((4 * 70) / 36));
+      // Its ends were uploaded once, and its blocks are put back with none of them.
       expect(told).toEqual([[BLOCK, 70, true]]);
       expect(arena.geometry.instanceCount).toBe(3 * BLOCK);
       expectDrawn(
