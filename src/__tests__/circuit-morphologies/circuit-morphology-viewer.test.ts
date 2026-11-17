@@ -2069,6 +2069,42 @@ describe('the morphologies read a box at a time', () => {
     expect(see).toHaveBeenCalledOnce();
   });
 
+  it('takes the read of a frame drawn in part as it is once 30 on end were each followed by another', async () => {
+    vi.useFakeTimers({ toFake: ['performance'] });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const { viewer, inner } = make();
+    const told = vi.fn();
+    viewer.onDetail(told);
+    viewer.setData(chunked());
+    frames(inner);
+    await readAll(inner);
+    const { stream } = inner.layer.detailed;
+    const see = vi.spyOn(stream, 'see');
+    const read = (clamped: boolean) => ({
+      tested: 9,
+      kept: 5,
+      drawn: 4,
+      marked: new Uint32Array(1),
+      rest: stream.rest,
+      clamped,
+    });
+    for (let frame = 0; frame < 30; frame++) inner.tellCulled(read(true));
+    expect(see).not.toHaveBeenCalled();
+
+    inner.tellCulled(read(true));
+    expect(see).toHaveBeenCalledOnce();
+    expect(told.mock.lastCall?.[0].culled).toEqual({ tested: 9, kept: 5, drawn: 4, boxes: 0 });
+    inner.tellCulled(read(true));
+    expect(see).toHaveBeenCalledTimes(2);
+
+    // A frame that drew all it saw starts the count again.
+    inner.tellCulled(read(false));
+    inner.tellCulled(read(true));
+    expect(see).toHaveBeenCalledTimes(3);
+    warn.mockRestore();
+    vi.useRealTimers();
+  });
+
   it('tells what it draws, the rules included, and null once the morphologies go', async () => {
     const { viewer, inner } = make();
     const told = vi.fn();

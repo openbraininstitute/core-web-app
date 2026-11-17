@@ -862,7 +862,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       const { marked, rest, clamped, ...counted } = read;
       // Tested behind a depth that hid little, it marked nearly every box in view: as with a frame that saw through,
       // its marks are not what is seen.
-      if (this.afterClamped(clamped)) return;
+      if (this.noteClamped(clamped)) return;
       boxes = stream.boxesMarked(marked);
       counts = { ...counted, boxes: boxes.length };
       still = rest === stream.rest;
@@ -877,19 +877,27 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
 
   /**
    * A frame that drew part of what it saw is followed by another, which tests against all of it. While cells are
-   * hidden that takes a few frames, so they follow one another, up to `CLAMPED_FRAMES` of them. Returns `clamped`.
+   * hidden that takes a few frames, so they follow one another, up to `CLAMPED_FRAMES` of them. The read of a frame
+   * after those is taken as it is: no test hides more, and the boxes it marked are the nearest to what is seen. Returns
+   * whether the read is left out.
    */
-  private afterClamped(clamped: boolean): boolean {
+  private noteClamped(clamped: boolean): boolean {
+    if (!clamped) {
+      this.clampedFrames = 0;
+      return false;
+    }
     const now = performance.now();
-    const follows = clamped && now - this.clampedAt < CLAMPED_APART_MS;
-    this.clampedFrames = clamped ? (follows ? this.clampedFrames + 1 : 1) : 0;
-    if (!clamped) return false;
+    const follows = now - this.clampedAt < CLAMPED_APART_MS;
+    this.clampedFrames = follows ? this.clampedFrames + 1 : 1;
     this.clampedAt = now;
-    if (this.clampedFrames <= CLAMPED_FRAMES) this.invalidate();
-    else if (this.clampedFrames === CLAMPED_FRAMES + 1) {
+    if (this.clampedFrames <= CLAMPED_FRAMES) {
+      this.invalidate();
+      return true;
+    }
+    if (this.clampedFrames === CLAMPED_FRAMES + 1) {
       logWarn('More segments seen than a frame may draw: drawn in part');
     }
-    return true;
+    return false;
   }
 
   /**

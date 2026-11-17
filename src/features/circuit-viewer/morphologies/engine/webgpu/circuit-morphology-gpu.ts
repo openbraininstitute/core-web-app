@@ -412,8 +412,9 @@ export class CircuitMorphologyGPU extends CircuitView {
       // A stale kept list is made again by a first test, whose lists the second test is run behind.
       const stale =
         !hiding && this.keptView.stale(this.camera.quaternion, target, span, this.height);
+      const rounds = stale ? 2 : 1;
       let tested = true;
-      for (let round = stale ? 0 : 1; tested && round < 2; round++) {
+      for (let round = 0; tested && round < rounds; round++) {
         renderer.setRenderTarget(culling.targetOf(size.x, size.y));
         renderer.render(this.keptQuads, this.camera);
         renderer.setRenderTarget(null);
@@ -427,7 +428,7 @@ export class CircuitMorphologyGPU extends CircuitView {
           rest,
           cells,
           hiding,
-          round === 1
+          round === rounds - 1
         );
       }
       if (tested) {
