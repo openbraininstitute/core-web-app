@@ -45,7 +45,7 @@ import { AgHeader } from '@/features/data-grid/renderers/aggrid/header';
 import { isInteractiveClick } from '@/features/data-grid/renderers/aggrid/interactive-target';
 import { registerDataGridModules } from '@/features/data-grid/renderers/aggrid/register-modules';
 import {
-  DATA_GRID_LOCALE_TEXT,
+  dataGridLocaleText,
   dataGridTheme,
   SINGLE_SELECT_RADIO_CLASS,
 } from '@/features/data-grid/renderers/aggrid/theme';
@@ -208,6 +208,8 @@ export interface IInMemoryGridProps<Row> {
   /** per-row class hook (e.g. hierarchy filtered-in/out styling). */
   getRowClass?: (row: Row) => string | undefined;
   onRowClick?: (row: Row) => void;
+  /** Empty-state text, for rows that aren't entities. */
+  noRowsText?: string;
   /** AG Grid `domLayout` (default: 'autoHeight' so it embeds in expanded rows). */
   autoHeight?: boolean;
   className?: string;
@@ -328,6 +330,7 @@ export function InMemoryGrid<Row>({
   expansion,
   getRowClass,
   onRowClick,
+  noRowsText,
   autoHeight = true,
   className,
   gridClassName,
@@ -855,7 +858,7 @@ export function InMemoryGrid<Row>({
       >
         <AgGridReact<TDisplayRow<Row>>
           theme={dataGridTheme}
-          localeText={DATA_GRID_LOCALE_TEXT}
+          localeText={dataGridLocaleText(noRowsText)}
           defaultColDef={IM_DEFAULT_COL_DEF}
           columnDefs={colDefs}
           rowData={displayRows}
