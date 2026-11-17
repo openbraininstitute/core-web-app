@@ -27,7 +27,7 @@ import {
 } from './download';
 import { mortonOrder } from './morton';
 import { openPack, type Pack, PackError } from './pack';
-import { blobSource, type PackSource } from './pack-source';
+import { blobSource, type PackSource, Unreadable } from './pack-source';
 
 import type {
   BoxRead,
@@ -61,8 +61,8 @@ async function openCached(cache: CacheBounds, key: string, size: number): Promis
   try {
     return await openPack(blobSource(blob));
   } catch (e) {
-    // Not a sound pack, or an entry the browser cannot read (a DOMException): either way it is downloaded again.
-    if (!(e instanceof PackError || e instanceof DOMException)) throw e;
+    // Not a sound pack, or an entry the browser cannot read: either way it is downloaded again.
+    if (!(e instanceof PackError || e instanceof Unreadable)) throw e;
     await deleteEntry(cache, key);
     return null;
   }
@@ -139,7 +139,7 @@ async function readStored(
   try {
     await stored.read(0, 1);
   } catch (e) {
-    if (!(e instanceof DOMException)) throw e;
+    if (!(e instanceof Unreadable)) throw e;
     return;
   }
   await held.moveTo(stored);
