@@ -14,7 +14,7 @@ import {
   WAKE_FRAMES,
 } from '@/features/viewer-3d/engine/motion-quality';
 import { SceneView } from '@/features/viewer-3d/engine/scene-view';
-import { logError } from '@/utils/logger';
+import { logError, logWarn } from '@/utils/logger';
 
 import { extentOf, morphologiesExtent, packExtent } from '../extent';
 import {
@@ -103,6 +103,10 @@ const NUDGE_MS = 900;
 const NUDGE_GROWTH = 0.06;
 /** How long a full morph into the dendrogram, or back, takes in ms, as in morphoviewer. */
 const MORPH_MS = 600;
+/** How many frames on end that drew part of what they saw are each followed by another. */
+const CLAMPED_FRAMES = 30;
+/** How long after such a frame the next one no longer counts as following it, ms. */
+const CLAMPED_APART_MS = 1000;
 /**
  * Moving frames over the somas alone are cut down as in the EM mesh viewer, but a step down in resolution is kept only
  * where it saves a tenth: drawn front first, many somas cost more in corners than in pixels.
@@ -393,6 +397,9 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
    * down.
    */
   protected timing: FrameTiming | null = null;
+  /** The frames on end that drew part of what they saw, and when the last one was told of. */
+  private clampedFrames = 0;
+  private clampedAt = 0;
   /** Whether a moving frame keeps the occlusion, where the tier draws one. */
   protected get aoMoving(): boolean {
     return this.motionNow()?.rung.ao === true;
@@ -835,7 +842,10 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     let boxes: number[] | null = null;
     let still = false;
     if (read) {
-      const { marked, rest, ...counted } = read;
+      const { marked, rest, clamped, ...counted } = read;
+      // Tested behind a depth that hid little, it marked nearly every box in view: as with a frame that saw through,
+      // its marks are not what is seen.
+      if (this.noteClamped(clamped)) return;
       boxes = stream.boxesMarked(marked);
       counts = { ...counted, boxes: boxes.length };
       still = rest === stream.rest;
@@ -846,6 +856,31 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     }
     this.culled = counts;
     if (this.toldDetail) this.tell({ ...this.toldDetail, culled: counts });
+  }
+
+  /**
+   * A frame that drew part of what it saw is followed by another, which tests against all of it. While cells are
+   * hidden that takes a few frames, so they follow one another, up to `CLAMPED_FRAMES` of them. The read of a frame
+   * after those is taken as it is: no test hides more, and the boxes it marked are the nearest to what is seen. Returns
+   * whether the read is left out.
+   */
+  private noteClamped(clamped: boolean): boolean {
+    if (!clamped) {
+      this.clampedFrames = 0;
+      return false;
+    }
+    const now = performance.now();
+    const follows = now - this.clampedAt < CLAMPED_APART_MS;
+    this.clampedFrames = follows ? this.clampedFrames + 1 : 1;
+    this.clampedAt = now;
+    if (this.clampedFrames <= CLAMPED_FRAMES) {
+      this.invalidate();
+      return true;
+    }
+    if (this.clampedFrames === CLAMPED_FRAMES + 1) {
+      logWarn('More segments seen than a frame may draw: drawn in part');
+    }
+    return false;
   }
 
   /**
