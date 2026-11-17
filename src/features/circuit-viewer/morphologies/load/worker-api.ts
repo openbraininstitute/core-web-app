@@ -27,7 +27,7 @@ import {
 } from './download';
 import { mortonOrder } from './morton';
 import { openPack, type Pack, PackError } from './pack';
-import { blobSource, type PackSource } from './pack-source';
+import { blobSource, type PackSource, Unreadable } from './pack-source';
 
 import type {
   BoxRead,
@@ -63,8 +63,8 @@ async function openCached(cache: CacheBounds, key: string, size: number): Promis
   try {
     return await openPack(blobSource(blob));
   } catch (e) {
-    // Not a sound pack, or an entry the browser cannot read (a DOMException): either way it is downloaded again.
-    if (!(e instanceof PackError || e instanceof DOMException)) throw e;
+    // Not a sound pack, or an entry the browser cannot read: either way it is downloaded again.
+    if (!(e instanceof PackError || e instanceof Unreadable)) throw e;
     await deleteEntry(cache, key);
     return null;
   }
@@ -127,7 +127,7 @@ class Held implements PackSource {
 
 /**
  * Has the pack that was downloaded and kept read from its entry in the cache, and lets go of the download. Where the
- * entry cannot be opened, the download stays.
+ * entry cannot be opened, or the browser cannot read a byte of it, the download stays.
  */
 async function readStored(
   held: Held,
@@ -137,7 +137,14 @@ async function readStored(
 ): Promise<void> {
   const blob = await blobEntry(cache, packCacheKey(pack.sha256), pack.size);
   if (!blob) return;
-  await held.moveTo(blobSource(blob));
+  const stored = blobSource(blob);
+  try {
+    await stored.read(0, 1);
+  } catch (e) {
+    if (!(e instanceof Unreadable)) throw e;
+    return;
+  }
+  await held.moveTo(stored);
   download.release();
 }
 

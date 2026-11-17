@@ -461,12 +461,32 @@ describe('loadCircuitMorphologies', () => {
       expect(parts()).toEqual([]);
     });
 
-    it('and fetches it again where the browser cannot read the entry', async () => {
+    /** What a browser may say of a body it cannot read. */
+    const unreadable = [
+      ['a DOMException', () => new DOMException('could not be read', 'NotReadableError')],
+      ['another error', () => new TypeError('could not be read')],
+    ] as const;
+
+    it.each(
+      unreadable
+    )('not where the browser cannot read the entry the pack was kept in, saying so with %s: the download stays', async (_, error) => {
+      serve(small());
+      const release = vi.spyOn(Arriving.prototype, 'release');
+      vi.spyOn(Blob.prototype, 'arrayBuffer').mockRejectedValue(error());
+      const first = await load();
+      await first.whole;
+
+      expect(cached()?.body).toEqual(small());
+      expect(release).not.toHaveBeenCalled();
+      expect(await readLevel(first.data, 0)).toEqual(await asRead(small(), 0));
+    });
+
+    it.each(
+      unreadable
+    )('and fetches it again where the browser cannot read the entry, saying so with %s', async (_, error) => {
       const { served } = serve(small());
       await kept();
-      vi.spyOn(Blob.prototype, 'arrayBuffer').mockRejectedValueOnce(
-        new DOMException('could not be read', 'NotReadableError')
-      );
+      vi.spyOn(Blob.prototype, 'arrayBuffer').mockRejectedValueOnce(error());
       const again = await load();
 
       expect(again.fromCache).toBe(false);
