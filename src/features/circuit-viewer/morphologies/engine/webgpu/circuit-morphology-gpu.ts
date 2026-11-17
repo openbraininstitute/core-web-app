@@ -351,12 +351,12 @@ export class CircuitMorphologyGPU extends CircuitView {
     // Both kinds of the look, and the picks, draw the same quads.
     const seen = [culling.quads(DRAWS.seenFlat), culling.quads(DRAWS.seenTubes)];
     return {
-      uploadsOf: (ends, words, blocks) =>
+      uploadsOf: (arrays) =>
         arenaOnGpu(
           this.renderer,
           this.device,
           storage,
-          { ends, words, blocks },
+          arrays,
           (buffers) => culling.setArena(buffers),
           () => this.outOfMemory()
         ),

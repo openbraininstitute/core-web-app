@@ -1,7 +1,12 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { type CacheBounds, readEntry, writeEntry } from '@/features/viewer-3d/load/asset-cache';
+import {
+  blobEntry,
+  type CacheBounds,
+  readEntry,
+  writeEntry,
+} from '@/features/viewer-3d/load/asset-cache';
 
 import { FakeCacheStorage } from './fake-caches';
 
@@ -31,12 +36,21 @@ describe('the bounded cache', () => {
     expect(new Uint8Array(read as ArrayBuffer)).toEqual(bytes(100));
   });
 
-  it('deletes a short entry, left by an interrupted write, when it is read', async () => {
+  it('gives what it stored back as a blob too', async () => {
+    await writeEntry(BOUNDS, key('a'), bytes(100).buffer, 100);
+    const blob = (await blobEntry(BOUNDS, key('a'), 100)) as Blob;
+    expect(new Uint8Array(await blob.slice(10, 30).arrayBuffer())).toEqual(bytes(20));
+  });
+
+  it.each([
+    ['read', readEntry],
+    ['asked for as a blob', blobEntry],
+  ])('deletes a short entry, left by an interrupted write, when it is %s', async (_how, entryOf) => {
     await writeEntry(BOUNDS, key('a'), bytes(100).buffer, 100);
     const cache = storage.bucket(BOUNDS.name);
     const entry = cache.entries.get(key('a'));
     if (entry) entry.body = entry.body.slice(0, 60);
-    expect(await readEntry(BOUNDS, key('a'), 100)).toBeNull();
+    expect(await entryOf(BOUNDS, key('a'), 100)).toBeNull();
     expect(cache.entries.has(key('a'))).toBe(false);
   });
 

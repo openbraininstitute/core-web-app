@@ -5,7 +5,6 @@ import { ApiError } from '@/api/error';
 import { config } from '@/config';
 
 export async function obioneApi(url?: string) {
-  // @ts-expect-error: url is required and validated in the app build
   const api = await authApiClient(url ?? config.OBI_ONE_URL);
   return api;
 }
