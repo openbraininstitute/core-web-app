@@ -28,6 +28,12 @@ export default defineConfig({
       // evaluates module by module (~1.7k files) in every test file that reaches
       // it; Node loads its CJS build natively instead.
       { find: /^@ant-design\/icons$/, replacement: require.resolve('@ant-design/icons') },
+      // Next aliases `server-only` at build time and no package provides it, so tests load
+      // Next's own empty stub.
+      {
+        find: /^server-only$/,
+        replacement: require.resolve('next/dist/compiled/server-only/empty.js'),
+      },
     ],
   },
   plugins: [
