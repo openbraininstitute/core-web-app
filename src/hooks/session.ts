@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import { useEffect } from 'react';
 
 import sessionAtom from '@/state/session';
+import { claimProjectDataCaches } from '@/utils/project-data-caches';
 
 import { usePrevious } from './hooks';
 
@@ -55,6 +56,20 @@ export default function useSessionState() {
   if (currentSession?.status === 'unauthenticated' && previousSession?.status === 'authenticated') {
     window.location.reload();
   }
+
+  const userId =
+    currentSession?.status === 'authenticated' ? currentSession.data.user?.id : undefined;
+  const previousUserId =
+    previousSession?.status === 'authenticated' ? previousSession.data.user?.id : undefined;
+  // Another user signed in from another window: start afresh, so nothing of the first user's is
+  // still on its way into the caches the second one now owns.
+  if (userId && previousUserId && userId !== previousUserId) {
+    window.location.reload();
+  }
+
+  useEffect(() => {
+    if (userId) claimProjectDataCaches(userId).catch(() => {});
+  }, [userId]);
 
   useEffect(() => {
     if (currentSession?.status === 'unauthenticated') {

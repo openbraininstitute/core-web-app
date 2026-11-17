@@ -7,13 +7,14 @@ import { AssetContentType as ContentType } from '@/api/entitycore/types/shared/g
 import { getSession } from '@/auth-fetch';
 import { compactRecord } from '@/utils/dictionary';
 import { log } from '@/utils/logger';
+import { PROJECT_DATA_CACHES } from '@/utils/project-data-caches';
 
 import type { WorkspaceContext } from '@/types/common';
 
 export const AllowedTypes = [ContentType.pdf, ContentType.png, ContentType.jpeg] as const;
 export type TAllowedTypes = (typeof AllowedTypes)[number];
 
-const DEFAULT_CACHE_NAME = 'analysis-pdf-cache-v1';
+const DEFAULT_CACHE_NAME = PROJECT_DATA_CACHES.analysisAssets;
 const DEFAULT_CACHE_EXPIRE_AFTER = 1 * 60 * 60 * 1000; // 1 Hour
 
 // TODO: allow the hook to be used for other types of resources, not just Blobs (PDFs)

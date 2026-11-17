@@ -10,6 +10,7 @@
 import * as Comlink from 'comlink';
 
 import { blobEntry, bucket, type CacheBounds, deleteEntry, writeEntry } from '@/utils/asset-cache';
+import { PROJECT_DATA_CACHES } from '@/utils/project-data-caches';
 
 import { pageCells, renumberSegments, renumberSomas } from './cells';
 import {
@@ -33,7 +34,7 @@ import type {
 import type { Arriving } from './arriving';
 
 /** Packs by their digest: Bluenaas serves a circuit's pack under one URL and rebuilds it when its cache is cleared. */
-export const PACK_CACHE = { ...bucket('circuit-morphology-mpack'), maxBytes: 2 ** 30 };
+export const PACK_CACHE = { ...bucket(PROJECT_DATA_CACHES.morphologyPack), maxBytes: 2 ** 30 };
 
 /** A pack's key in the cache, which must be a URL. */
 export const packCacheKey = (sha256: string) =>

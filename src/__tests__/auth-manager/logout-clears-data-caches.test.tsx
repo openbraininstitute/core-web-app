@@ -26,6 +26,15 @@ describe('logging out', () => {
 
     await waitFor(() => expect(signOut).toHaveBeenCalledWith({ callbackUrl: '/' }));
     expect(dropped.sort()).toEqual([
+      'analysis-pdf-cache-v1',
+      'circuit-h5-v1',
+      'circuit-morphology-mpack',
+      'connectivity-h5-v1',
+      'em-cell-mesh-full',
+      'em-cell-mesh-glb',
+      'em-cell-mesh-stand-in',
+      'ephys-nwb-assets',
+      'ephys-nwb-v1',
       'obi-circuit-h5-v1',
       'obi-connectivity-h5-v1',
       'obi-ephys-nwb-v1',

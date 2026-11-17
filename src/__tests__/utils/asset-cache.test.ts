@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { blobEntry, type CacheBounds, readEntry, writeEntry } from '@/utils/asset-cache';
+import { blobEntry, type CacheBounds, openEntry, readEntry, writeEntry } from '@/utils/asset-cache';
 
 import { FakeCacheStorage } from './fake-caches';
 
@@ -104,5 +104,56 @@ describe('the bounded cache', () => {
     expect(await writeEntry(BOUNDS, key('a'), stream, 20_000)).toBe(false);
     expect(stream.locked).toBe(false);
     await expect(stream.getReader().read()).resolves.toMatchObject({ done: true });
+  });
+
+  it('opens an entry as a stream with the size it was stored under', async () => {
+    await writeEntry(BOUNDS, key('a'), bytes(100).buffer, 100);
+    const opened = await openEntry(BOUNDS, key('a'));
+    expect(opened?.size).toBe(100);
+    expect(new Uint8Array(await new Response(opened?.body).arrayBuffer())).toEqual(bytes(100));
+  });
+
+  it('stores nothing the browser says its storage can not take, and lets go of the stream', async () => {
+    vi.stubGlobal('navigator', {
+      storage: { estimate: async () => ({ quota: 1000, usage: 950 }) },
+    });
+    const stream = new Response(bytes(100)).body as ReadableStream<Uint8Array>;
+    expect(await writeEntry(BOUNDS, key('a'), stream, 100)).toBe(false);
+    expect(storage.bucket(BOUNDS.name).entries.has(key('a'))).toBe(false);
+    expect(stream.locked).toBe(false);
+  });
+
+  it('makes room in itself before asking the browser for it', async () => {
+    await writeEntry(BOUNDS, key('a'), bytes(6000).buffer, 6000);
+    const cache = storage.bucket(BOUNDS.name);
+    let heldWhenAsked: string[] = [];
+    vi.stubGlobal('navigator', {
+      storage: {
+        estimate: async () => {
+          heldWhenAsked = [...cache.entries.keys()];
+          return { quota: 1_000_000, usage: 0 };
+        },
+      },
+    });
+    expect(await writeEntry(BOUNDS, key('b'), bytes(6000).buffer, 6000)).toBe(true);
+    expect(heldWhenAsked).not.toContain(key('a'));
+    expect([...cache.entries.keys()]).toContain(key('b'));
+  });
+
+  it('keeps a stored entry where keeping its books fails', async () => {
+    const cache = await storage.open(BOUNDS.name);
+    cache.keys = async () => {
+      throw new Error('keys failed');
+    };
+    expect(await writeEntry(BOUNDS, key('a'), bytes(100).buffer, 100)).toBe(true);
+    expect(cache.entries.has(key('a'))).toBe(true);
+  });
+
+  it('reads past an index it can not parse', async () => {
+    await writeEntry(BOUNDS, key('a'), bytes(100).buffer, 100);
+    const cache = storage.bucket(BOUNDS.name);
+    const index = cache.entries.get('https://opened.invalid/');
+    if (index) index.body = new TextEncoder().encode('{not json');
+    expect(await readEntry(BOUNDS, key('a'), 100)).not.toBeNull();
   });
 });

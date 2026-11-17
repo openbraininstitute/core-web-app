@@ -232,8 +232,6 @@ export function tablePaneTitle(view: ViewMode): string {
   return view === 'connectivity' ? 'Connectivity' : 'Neuron Table';
 }
 
-export const CIRCUIT_H5_CACHE = 'obi-circuit-h5-v1';
-
 export type PreferredColumn = {
   name: string;
   width?: number;

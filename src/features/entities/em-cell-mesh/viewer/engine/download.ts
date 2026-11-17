@@ -55,7 +55,7 @@ export async function downloadGlb(
 
   const entry = cache && (await openEntry(cache, request.url));
   if (entry) {
-    const read = await readBody(entry, request.size, hooks, check).catch(() => null);
+    const read = await readBody(entry.body, request.size, hooks, check).catch(() => null);
     if (read?.kind === 'stopped') return read;
     if (read?.header && read.bytes.byteLength === request.size) {
       return {

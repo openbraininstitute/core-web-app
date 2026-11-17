@@ -140,29 +140,41 @@ export async function hasEntry(bounds: CacheBounds, key: string): Promise<boolea
 }
 
 /**
- * The entry's body as a stream, if it is there and fresh, which counts as opening it; null otherwise. The reader can
- * stop early, and must check that the body is whole, deleting it (`deleteEntry`) where it is short.
+ * The entry's body as a stream, with the size it was stored under, if it is there and fresh, which counts as opening
+ * it; null otherwise. The reader can stop early, and must check that the body is whole, deleting it (`deleteEntry`)
+ * where it is short.
  */
 export async function openEntry(
   bounds: CacheBounds,
   key: string
-): Promise<ReadableStream<Uint8Array> | null> {
+): Promise<{ body: ReadableStream<Uint8Array>; size: number } | null> {
   if (!available()) return null;
   try {
     const cache = await caches.open(bounds.name);
     const hit = await fresh(cache, bounds, key);
     if (!hit?.body) return null;
     await touch(cache, normal(key));
-    return hit.body;
+    return { body: hit.body, size: Number(hit.headers.get('Content-Length')) };
   } catch {
     return null;
   }
 }
 
+/** Whether the browser says the origin's storage can't take `size` more bytes; false where it doesn't say. */
+async function lacksRoom(size: number): Promise<boolean> {
+  try {
+    const { quota, usage } = await navigator.storage.estimate();
+    return quota !== undefined && usage !== undefined && quota - usage < size;
+  } catch {
+    return false;
+  }
+}
+
 /**
- * Store a body of `size` bytes: a stream (a branch of a download's tee, say) is read to its end. A write that fails,
- * the stream erroring with it, leaves no entry. Then expired entries are deleted, and the least recently opened past
- * the bucket's size. Resolves whether the entry was stored.
+ * Store a body of `size` bytes: a stream (a branch of a download's tee, say) is read to its end. Expired entries are
+ * deleted first, then the least recently opened until the bucket has room for it; where the browser then says its
+ * storage can't take it, it is not stored. A write that fails, the stream erroring with it, leaves no entry. Resolves
+ * whether the entry was stored.
  */
 export async function writeEntry(
   bounds: CacheBounds,
@@ -179,20 +191,26 @@ export async function writeEntry(
   let cache: Cache | null = null;
   try {
     cache = await caches.open(bounds.name);
+    await prune(cache, bounds, null, size).catch(() => {});
+    if (await lacksRoom(size)) {
+      if (body instanceof ReadableStream) await body.cancel().catch(() => {});
+      return false;
+    }
     const headers = {
       'Content-Type': contentType,
       'Content-Length': String(size),
       [STORED_AT]: String(Date.now()),
     };
     await cache.put(key, new Response(body, { headers }));
-    await prune(cache, bounds, normal(key));
-    return true;
   } catch {
     // A quota error, or the download aborted: whatever was committed is a partial copy.
     await cache?.delete(key).catch(() => {});
     if (body instanceof ReadableStream) await body.cancel().catch(() => {});
     return false;
   }
+  // Apart from the write: the entry is whole, and failing to keep the bucket's books is no reason to drop it.
+  await prune(cache, bounds, normal(key)).catch(() => {});
+  return true;
 }
 
 export async function deleteEntry(bounds: CacheBounds, key: string): Promise<void> {
@@ -206,7 +224,7 @@ export async function deleteEntry(bounds: CacheBounds, key: string): Promise<voi
 
 async function readOpened(cache: Cache): Promise<Record<string, number>> {
   const hit = await cache.match(OPENED);
-  return hit ? hit.json() : {};
+  return hit ? hit.json().catch(() => ({})) : {};
 }
 
 async function writeOpened(cache: Cache, index: Record<string, number>): Promise<void> {
@@ -220,7 +238,13 @@ async function touch(cache: Cache, key: string): Promise<void> {
   await writeOpened(cache, index);
 }
 
-async function prune(cache: Cache, bounds: CacheBounds, written: string): Promise<void> {
+/** Delete the expired entries, then the least recently opened until `room` more bytes fit, never `written`. */
+async function prune(
+  cache: Cache,
+  bounds: CacheBounds,
+  written: string | null,
+  room = 0
+): Promise<void> {
   const index = await readOpened(cache);
   const now = Date.now();
   const entries: { key: string; size: number; opened: number }[] = [];
@@ -242,7 +266,7 @@ async function prune(cache: Cache, bounds: CacheBounds, written: string): Promis
   // Made afresh from the entries left, so that it forgets those deleted anywhere else too: short, expired, aborted.
   const opened: Record<string, number> = {};
   for (const e of entries) {
-    if (total > bounds.maxBytes && e.key !== written) {
+    if (total + room > bounds.maxBytes && e.key !== written) {
       await cache.delete(e.key);
       total -= e.size;
     } else opened[e.key] = e.opened;
