@@ -19,6 +19,14 @@ export const ADMIN_NAV: { label: string; items: AdminNavItem[] }[] = [
     ],
   },
   {
+    label: 'Billing',
+    items: [
+      { label: 'Subscriptions', href: `${ADMIN_ROOT}/subscriptions`, need: 'virtualLab.read' },
+      { label: 'Payments', href: `${ADMIN_ROOT}/payments`, need: 'virtualLab.read' },
+      { label: 'Plans and rates', href: `${ADMIN_ROOT}/plans`, need: 'virtualLab.read' },
+    ],
+  },
+  {
     label: 'Ops',
     items: [{ label: 'Services', href: `${ADMIN_ROOT}/services`, need: 'admin.access' }],
   },

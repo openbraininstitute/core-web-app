@@ -7,6 +7,8 @@ import {
   getProjectMembers,
   listLabs,
   restoreProject,
+  updateComputeCell,
+  updateCreditRate,
 } from '@/admin/sections/virtual-lab/api/admin';
 
 const api = vi.hoisted(() => ({
@@ -72,6 +74,24 @@ describe('virtual-lab admin client', () => {
     expect(api.post).toHaveBeenCalledWith(
       '/admin/projects/p/restore',
       expect.not.objectContaining({ body: expect.anything() })
+    );
+  });
+
+  it('changes the compute cell on the lab route outside /admin', async () => {
+    await updateComputeCell('lab/1', 'cell_b');
+
+    expect(api.patch).toHaveBeenCalledWith(
+      '/virtual-labs/lab%2F1/compute-cell',
+      expect.objectContaining({ body: { compute_cell: 'cell_b' } })
+    );
+  });
+
+  it('sends a rate as the exact string it was given', async () => {
+    await updateCreditRate('rate-1', { rate: '0.050' });
+
+    expect(api.patch).toHaveBeenCalledWith(
+      '/admin/credit-rates/rate-1',
+      expect.objectContaining({ body: { rate: '0.050' } })
     );
   });
 });
