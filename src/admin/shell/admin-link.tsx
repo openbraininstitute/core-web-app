@@ -10,6 +10,7 @@ const ROUTES = {
   vlab: 'virtual-labs',
   project: 'projects',
   user: 'users',
+  promotion: 'promotions',
 };
 
 export function adminHref(kind: keyof typeof ROUTES, id: string) {

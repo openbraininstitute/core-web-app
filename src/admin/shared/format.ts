@@ -2,7 +2,6 @@ import { formatDate } from '@/util/utils';
 
 // Some columns store UTC with no offset, such as a subscription's period, and `Date` would read
 // those as local time.
-export function formatDateTime(iso: string) {
-  const hasOffset = /(Z|[+-]\d{2}:?\d{2})$/.test(iso);
-  return formatDate(hasOffset ? iso : `${iso}Z`, 'dd.MM.yyyy | HH:mm');
-}
+export const asUtc = (iso: string) => (/(Z|[+-]\d{2}:?\d{2})$/.test(iso) ? iso : `${iso}Z`);
+
+export const formatDateTime = (iso: string) => formatDate(asUtc(iso), 'dd.MM.yyyy | HH:mm');

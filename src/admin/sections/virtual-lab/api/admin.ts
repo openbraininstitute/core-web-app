@@ -15,6 +15,12 @@ import type {
   AdminPlanUpdate,
   AdminProject,
   AdminProjectUpdate,
+  AdminPromotion,
+  AdminPromotionAnalytics,
+  AdminPromotionCreate,
+  AdminPromotionsPage,
+  AdminPromotionUpdate,
+  AdminPromotionUsage,
   AdminSubscription,
   AdminUser,
   AdminUserDetails,
@@ -23,6 +29,7 @@ import type {
   Paged,
   PageParams,
   PaymentFilters,
+  PromotionFilters,
   SubscriptionFilters,
 } from './admin-types';
 
@@ -42,13 +49,22 @@ async function getJson<T>(path: string, params?: Record<string, unknown>, signal
   });
 }
 
-async function getEnveloped<T>(path: string) {
-  return (await getJson<VlmResponse<T>>(path)).data;
+async function getEnveloped<T>(
+  path: string,
+  params?: Record<string, unknown>,
+  signal?: AbortSignal
+) {
+  return (await getJson<VlmResponse<T>>(path, params, signal)).data;
 }
 
 async function patchJson(path: string, body: Record<string, unknown>) {
   const api = await virtualLabRootApi();
   await api.patch(`/admin${path}`, { headers: JSON_HEADERS, body });
+}
+
+async function putJson(path: string, body: Record<string, unknown>) {
+  const api = await virtualLabRootApi();
+  await api.put(`/admin${path}`, { headers: JSON_HEADERS, body });
 }
 
 async function deleteAt(path: string) {
@@ -152,3 +168,32 @@ export async function updateComputeCell(vlabId: string, computeCell: ComputeCell
     body: { compute_cell: computeCell },
   });
 }
+
+// Unlike the rest of /admin, promotions page by limit and offset, and update with PUT.
+export async function listPromotions(params: PageParams & PromotionFilters, signal?: AbortSignal) {
+  const { page = 1, page_size: pageSize = 20, active, search } = params;
+  const { promotions, pagination } = await getEnveloped<AdminPromotionsPage>(
+    '/promotions',
+    { active, search, limit: pageSize, offset: (page - 1) * pageSize },
+    signal
+  );
+  return { data: promotions, pagination };
+}
+
+export const getPromotion = (promotionId: string) =>
+  getEnveloped<AdminPromotion>(at`/promotions/${promotionId}`);
+
+export const getPromotionUsage = (promotionId: string) =>
+  getEnveloped<AdminPromotionUsage>(at`/promotions/${promotionId}/usage`);
+
+export const getPromotionAnalytics = (signal?: AbortSignal) =>
+  getEnveloped<AdminPromotionAnalytics>('/promotions/analytics/system', undefined, signal);
+
+export const createPromotion = (promotion: AdminPromotionCreate) =>
+  postJson('/promotions', promotion);
+
+export const updatePromotion = (promotionId: string, update: AdminPromotionUpdate) =>
+  putJson(at`/promotions/${promotionId}`, update);
+
+export const deactivatePromotion = (promotionId: string) =>
+  deleteAt(at`/promotions/${promotionId}`);

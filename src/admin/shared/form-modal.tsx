@@ -1,6 +1,6 @@
 'use client';
 
-import { Form, Input, InputNumber, Modal, Select, Switch } from 'antd';
+import { DatePicker, Form, Input, InputNumber, Modal, Select, Switch } from 'antd';
 
 import type { Rule } from 'antd/es/form';
 import type { ReactNode } from 'react';
@@ -8,7 +8,7 @@ import type { ReactNode } from 'react';
 type FormModalField = {
   name: string;
   label: string;
-  kind?: 'multiline' | 'integer' | 'switch' | 'select';
+  kind?: 'multiline' | 'integer' | 'switch' | 'select' | 'datetime';
   min?: number;
   max?: number;
   options?: { value: string; label: string }[];
@@ -35,6 +35,8 @@ function fieldControl({ kind, min, max, options, placeholder }: FormModalField) 
       return <Switch />;
     case 'select':
       return <Select options={options} />;
+    case 'datetime':
+      return <DatePicker showTime className="w-full" />;
     default:
       return <Input />;
   }

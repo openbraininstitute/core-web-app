@@ -1,6 +1,7 @@
 const SERVICES = ['admin', 'services'] as const;
 const TENANCY = ['admin', 'tenancy'] as const;
 const BILLING = ['admin', 'billing'] as const;
+const PROMOTIONS = [...BILLING, 'promotions'] as const;
 
 export const adminQueryKeys = {
   services: () => SERVICES,
@@ -22,4 +23,9 @@ export const adminQueryKeys = {
   billing: () => BILLING,
   plans: () => [...BILLING, 'plans'] as const,
   creditRates: () => [...BILLING, 'credit-rates'] as const,
+  promotions: () => PROMOTIONS,
+  promotionList: () => [...PROMOTIONS, 'list'] as const,
+  promotionAnalytics: () => [...PROMOTIONS, 'analytics'] as const,
+  promotion: (promotionId: string) => [...PROMOTIONS, 'code', promotionId] as const,
+  promotionUsage: (promotionId: string) => [...PROMOTIONS, 'code', promotionId, 'usage'] as const,
 };
