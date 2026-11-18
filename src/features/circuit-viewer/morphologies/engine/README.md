@@ -123,6 +123,9 @@ The cloud ([soma-cloud.ts](soma-cloud.ts)) draws a soma as a low hexagonal pyram
 
 With morphologies, each soma is a quad ray-cast as a sphere ([impostors.ts](impostors.ts)).
 
+- On WebGPU, a soma under 32 device pixels across is drawn as a flat disc instead: its quad stands at the sphere's nearest point and its fragments write no depth of their own, so those hidden are not shaded (`BALL_FROM_PX` in [webgpu/gpu-uniforms.ts](webgpu/gpu-uniforms.ts)). It is lit as the sphere, so what changes is where it meets its neighbours: discs overlap where spheres would cut into each other, and a fibre touching a soma's rim may go under it. With every soma of the Male CNS ray-cast in depth, the whole circuit took 3.3 ms more a frame at 2560×1600 and 5.3 ms more at 3456×2234.
+- The picks draw the same two kinds, so that a pick finds the cell the look shows. The line through what covers a lit cell draws every soma as a sphere: it tests no depth.
+
 ## Segments and shading
 
 - **Segments** are one quad each. On WebGL 2 a quad is shaded as a cylinder across its width at one depth, the tube's nearest.
@@ -155,6 +158,7 @@ With morphologies, each soma is a quad ray-cast as a sphere ([impostors.ts](impo
 | `MOST_SEEN` | `webgpu/culling-wgsl.ts` | 6M | The most segments the seen draws draw in a frame |
 | `STALE_TURN`, `STALE_ZOOM_OUT`, `STALE_PAN` | `webgpu/kept-view.ts` | 15°, 1.5×, 0.25 view heights | How far the view may be from the kept list's before a frame is tested twice |
 | `TUBE_FROM_PX` | `webgpu/gpu-uniforms.ts` | 48 | From how wide a segment is a tube |
+| `BALL_FROM_PX` | `webgpu/gpu-uniforms.ts` | 32 | From how wide a morphology's soma is ray-cast in depth |
 | `AO_SCALE`, `AO_RADIUS_CSS`, `AO_SAMPLES` | `webgpu/occlusion-gpu.ts` | 0.5, 32, 16 | The occlusion's resolution, reach and samples |
 | `QUADS_BELOW_PX`, `PYRAMIDS_ABOVE_PX` | `soma-cloud.ts` | 3, 3.6 | When a soma is a quad |
 | `PULSE_UM_PER_S` | `spike-light.ts` | 400 | How fast a spike runs out from the soma |
