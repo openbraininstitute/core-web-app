@@ -40,9 +40,9 @@ export function pagedSource<Row, Params>(
 }
 
 // `what` is the plural noun for the loading, empty and error text. Filters belong outside the
-// grid: give it a `key` built from them, so a change returns to page 1. A column sorts only if
-// it says so, and its id is then the API's `order_by` value. A `renderCell` cell has no value, so
-// it only refreshes as a new row: put whatever such a cell shows into `getRowId`.
+// grid, in `params`, and a change to them returns to page 1. A column sorts only if it says so,
+// and its id is then the API's `order_by` value. A `renderCell` cell has no value, so it only
+// refreshes as a new row: put whatever such a cell shows into `getRowId`.
 export function AdminPagedGrid<Row>({
   what,
   columns,
@@ -65,6 +65,7 @@ export function AdminPagedGrid<Row>({
   return (
     <div className={cn('border-neutral-2 rounded-lg border bg-white', fill && 'min-h-0 flex-1')}>
       <SimpleGrid<Row>
+        key={JSON.stringify(params)}
         columns={columns.map((column) => ({ ...column, sortable: column.sortable ?? false }))}
         getRowId={getRowId}
         pageSize={ADMIN_PAGE_SIZE}
@@ -120,9 +121,9 @@ export function AdminQueryGrid<Row>({
   columns: Array<ISimpleColumn<Row>>;
   getRowId: (row: Row) => string;
   queryKey: QueryKey;
-  queryFn: () => Promise<Row[]>;
+  queryFn: (signal: AbortSignal) => Promise<Row[]>;
 }) {
-  const query = useQuery({ queryKey, queryFn });
+  const query = useQuery({ queryKey, queryFn: ({ signal }) => queryFn(signal) });
 
   return (
     <Loaded query={query} what={grid.what}>
