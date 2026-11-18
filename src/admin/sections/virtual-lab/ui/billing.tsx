@@ -10,10 +10,10 @@ import { FormModal } from '../../../shared/form-modal';
 import { formatDateTime } from '../../../shared/format';
 import { AdminPagedGrid, pagedSource } from '../../../shared/grid';
 import { StatusPill } from '../../../shared/status-pill';
+import { useAdminWrite } from '../../../shared/use-admin-write';
 import { AdminLink } from '../../../shell/admin-link';
 import { CapabilityGate } from '../../../shell/capability-gate';
 import { cancelSubscription, listPayments, listSubscriptions } from '../api/admin';
-import { useTenancyWrite } from './use-tenancy-write';
 
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type {
@@ -106,11 +106,12 @@ type BillingGridProps<Params> = {
 
 export function SubscriptionsGrid({ params, acrossOwners }: BillingGridProps<SubscriptionFilters>) {
   const [cancelling, setCancelling] = useState<AdminSubscription | null>(null);
-  const write = useTenancyWrite({
+  const write = useAdminWrite({
     write: ({ id, reason }: { id: string; reason: string }) => cancelSubscription(id, reason),
     done: 'Subscription set to cancel at the end of its period. It still shows as active here.',
     failed: "Couldn't cancel the subscription",
     onSuccess: () => setCancelling(null),
+    refreshes: adminQueryKeys.subscriptions(),
   });
 
   const columns: Array<ISimpleColumn<AdminSubscription>> = [

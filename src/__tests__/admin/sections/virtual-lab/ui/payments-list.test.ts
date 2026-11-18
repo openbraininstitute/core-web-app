@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { paymentFilters } from '@/admin/sections/virtual-lab/ui/payments-list';
 
@@ -12,18 +12,23 @@ describe('paymentFilters', () => {
     });
   });
 
-  it('sends whole days as naive UTC, without an offset', () => {
-    const { start_date: start, end_date: end } = paymentFilters({
-      type: 'subscription',
-      from: '2026-06-10',
-      to: '2026-06-11',
+  describe('in a zone ahead of UTC', () => {
+    const tz = process.env.TZ;
+    beforeAll(() => {
+      process.env.TZ = 'Europe/Zurich';
+    });
+    afterAll(() => {
+      process.env.TZ = tz;
     });
 
-    expect(start).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}$/);
-    expect(end).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}$/);
-    expect(new Date(`${end}Z`).getTime() - new Date(`${start}Z`).getTime()).toBe(
-      2 * 24 * 3600 * 1000 - 1
-    );
+    it('sends the picked local days as naive UTC, without an offset', () => {
+      expect(
+        paymentFilters({ type: 'subscription', from: '2026-06-10', to: '2026-06-11' })
+      ).toMatchObject({
+        start_date: '2026-06-09T22:00:00.000',
+        end_date: '2026-06-11T21:59:59.999',
+      });
+    });
   });
 
   it('ignores a mangled date from the URL', () => {

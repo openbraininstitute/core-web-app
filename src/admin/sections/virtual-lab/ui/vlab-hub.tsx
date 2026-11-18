@@ -14,6 +14,7 @@ import { DESCRIPTION_FIELD, FormModal, NAME_FIELD } from '../../../shared/form-m
 import { formatDateTime } from '../../../shared/format';
 import { Loaded } from '../../../shared/load-state';
 import { PageHeader } from '../../../shared/page-header';
+import { useAdminWrite } from '../../../shared/use-admin-write';
 import { AdminLink } from '../../../shell/admin-link';
 import { CapabilityGate } from '../../../shell/capability-gate';
 import { deleteLab, getLab, updateComputeCell, updateLab } from '../api/admin';
@@ -65,11 +66,12 @@ function LabActions({ lab }: { lab: AdminLab }) {
     failed: "Couldn't update the lab",
     onSuccess: close,
   });
-  const cellWrite = useTenancyWrite({
+  const cellWrite = useAdminWrite({
     write: (cell: ComputeCell) => updateComputeCell(lab.id, cell),
     done: 'Compute cell changed',
     failed: "Couldn't change the compute cell",
     onSuccess: close,
+    refreshes: adminQueryKeys.lab(lab.id),
   });
   const deleteWrite = useTenancyWrite({
     write: () => deleteLab(lab.id),

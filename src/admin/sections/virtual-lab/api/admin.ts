@@ -132,12 +132,14 @@ export async function listPayments(params: PageParams & PaymentFilters, signal?:
   return { data: payments, pagination: { total } };
 }
 
-export const listPlans = () => getJson<AdminPlan[]>('/plans');
+export const listPlans = (signal?: AbortSignal) =>
+  getJson<AdminPlan[]>('/plans', undefined, signal);
 
 export const updatePlan = (planId: string, update: AdminPlanUpdate) =>
   patchJson(at`/plans/${planId}`, update);
 
-export const listCreditRates = () => getJson<AdminCreditRate[]>('/credit-rates');
+export const listCreditRates = (signal?: AbortSignal) =>
+  getJson<AdminCreditRate[]>('/credit-rates', undefined, signal);
 
 export const updateCreditRate = (rateId: string, update: AdminCreditRateUpdate) =>
   patchJson(at`/credit-rates/${rateId}`, update);

@@ -28,7 +28,8 @@ function parseDay(value: string) {
   return day.isValid() && day.format(DATE_FORMAT) === value ? day : null;
 }
 
-// The payment date column has no time zone, and the API fails on a date with an offset.
+// The payment date column is naive UTC, and the API fails on a date with an offset. A picked
+// local day goes out as its UTC bounds, the same day the grid shows in local time.
 const naiveUtc = (date: Dayjs) => date.toISOString().slice(0, -1);
 
 export function paymentFilters({

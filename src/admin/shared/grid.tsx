@@ -121,9 +121,9 @@ export function AdminQueryGrid<Row>({
   columns: Array<ISimpleColumn<Row>>;
   getRowId: (row: Row) => string;
   queryKey: QueryKey;
-  queryFn: () => Promise<Row[]>;
+  queryFn: (signal: AbortSignal) => Promise<Row[]>;
 }) {
-  const query = useQuery({ queryKey, queryFn });
+  const query = useQuery({ queryKey, queryFn: ({ signal }) => queryFn(signal) });
 
   return (
     <Loaded query={query} what={grid.what}>
