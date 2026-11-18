@@ -81,7 +81,7 @@ export function InstitutionsList() {
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<AdminInstitution | null>(null);
   const { params, controls } = useListFilters({ placeholder: 'Search by name' });
-  const query = params.query ?? '';
+  const { query = '' } = params;
 
   const columns: Array<ISimpleColumn<AdminInstitution>> = [
     {
@@ -127,7 +127,7 @@ export function InstitutionsList() {
         // The Edit cell keeps the row it was drawn with, so a changed row is a new one.
         getRowId={({ id, name, contact_email: email }) => `${id}:${name}:${email}`}
         queryKey={adminQueryKeys.institutions(query)}
-        queryFn={(signal) => searchInstitutions(query || undefined, signal)}
+        queryFn={(signal) => searchInstitutions(query, signal)}
       />
       {creating && <InstitutionCreate onClose={() => setCreating(false)} />}
       {editing && <InstitutionEdit institution={editing} onClose={() => setEditing(null)} />}

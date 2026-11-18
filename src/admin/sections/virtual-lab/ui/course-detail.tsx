@@ -9,7 +9,7 @@ import { Button } from '@/ui/molecules/button';
 import { adminQueryKeys } from '../../../query-keys';
 import { ADMIN_ROOT } from '../../../routes';
 import { Detail, DetailId, DetailList } from '../../../shared/detail-list';
-import { FormModal, typedNameField } from '../../../shared/form-modal';
+import { FormModal, REQUIRED, typedNameField } from '../../../shared/form-modal';
 import { formatDateTime } from '../../../shared/format';
 import { AdminQueryGrid } from '../../../shared/grid';
 import { Loaded } from '../../../shared/load-state';
@@ -168,7 +168,7 @@ function CourseActions({ course }: { course: AdminCourse }) {
               name: 'target',
               label: 'Target course ID',
               rules: [
-                { required: true, message: 'Required' },
+                REQUIRED,
                 UUID_RULE,
                 {
                   validator: async (_, value) => {

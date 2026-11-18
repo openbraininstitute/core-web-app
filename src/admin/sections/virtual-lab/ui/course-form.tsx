@@ -3,21 +3,23 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 
+import { isUuid } from '@/features/data-grid/react/filters/id-tokens';
+
 import { adminQueryKeys } from '../../../query-keys';
 import { saveChanges } from '../../../shared/changed-fields';
-import { afterDate, FormModal } from '../../../shared/form-modal';
+import { afterDate, FormModal, REQUIRED } from '../../../shared/form-modal';
 import { adminHref } from '../../../shell/admin-link';
 import { createCourse, searchInstitutions, updateCourse } from '../api/education';
 import { useTenancyWrite } from './use-tenancy-write';
 
+import type { RuleObject } from 'antd/es/form';
 import type { FormModalField } from '../../../shared/form-modal';
 import type { AdminCourse, AdminCourseCreate, AdminCourseUpdate } from '../api/admin-types';
 
-const REQUIRED = { required: true, message: 'Required' };
-
-export const UUID_RULE = {
-  pattern: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
-  message: 'Enter a full ID',
+export const UUID_RULE: RuleObject = {
+  validator: async (_, value?: string) => {
+    if (value && !isUuid(value)) throw new Error('Enter a full ID');
+  },
 };
 
 const DATE_FIELDS: FormModalField[] = [

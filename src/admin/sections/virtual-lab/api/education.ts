@@ -1,8 +1,5 @@
-import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
-import { compactRecord } from '@/utils/dictionary';
-
 import { isNotFound } from '../../../shared/errors';
-import { ACCEPT_HEADERS, at, JSON_HEADERS } from './admin';
+import { at, rootDelete, rootGet, rootSend } from './admin';
 
 import type { VlmResponse } from '@/types/virtual-lab/common';
 import type {
@@ -16,29 +13,15 @@ import type {
 
 // Service-admin routes outside /admin, which has nothing for courses. The course seat and
 // enrolment routes stay out: they accept a lab's admins but refuse service admins.
-async function read<T>(path: string, params?: Record<string, unknown>, signal?: AbortSignal) {
-  const api = await virtualLabRootApi();
-  return api.get<T>(path, {
-    headers: ACCEPT_HEADERS,
-    signal,
-    ...(params && { queryParams: compactRecord(params) }),
-  });
-}
-
-async function send(method: 'post' | 'patch', path: string, body?: Record<string, unknown>) {
-  const api = await virtualLabRootApi();
-  return api[method]<VlmResponse<{ id: string }>>(path, {
-    headers: JSON_HEADERS,
-    ...(body && { body }),
-  });
-}
+const send = (method: 'post' | 'patch', path: string, body?: Record<string, unknown>) =>
+  rootSend<VlmResponse<{ id: string }>>(method, path, body);
 
 // There is no way to list every course: a search needs part of a lab's name.
 export const searchCourses = async (labName: string, signal?: AbortSignal) =>
-  (await read<VlmResponse<AdminCourse[]>>('/courses', { vlab_name: labName }, signal)).data;
+  (await rootGet<VlmResponse<AdminCourse[]>>('/courses', { vlab_name: labName }, signal)).data;
 
 export const getCourse = async (courseId: string, signal?: AbortSignal) =>
-  (await read<VlmResponse<AdminCourse>>(at`/courses/${courseId}`, undefined, signal)).data;
+  (await rootGet<VlmResponse<AdminCourse>>(at`/courses/${courseId}`, undefined, signal)).data;
 
 export const createCourse = async (course: AdminCourseCreate) =>
   (await send('post', '/courses', course)).data;
@@ -50,13 +33,11 @@ export const activateCourse = (courseId: string) => send('post', at`/courses/${c
 
 export const voidCourse = (courseId: string) => send('post', at`/courses/${courseId}/void`);
 
-export async function deleteCourse(courseId: string) {
-  const api = await virtualLabRootApi();
-  await api.delete(at`/courses/${courseId}`, { headers: ACCEPT_HEADERS });
-}
+export const deleteCourse = (courseId: string) => rootDelete(at`/courses/${courseId}`);
 
 export const searchInstitutions = async (query?: string, signal?: AbortSignal) =>
-  (await read<VlmResponse<AdminInstitution[]>>('/institutions/_search', { q: query }, signal)).data;
+  (await rootGet<VlmResponse<AdminInstitution[]>>('/institutions/_search', { q: query }, signal))
+    .data;
 
 export const createInstitution = (institution: Omit<AdminInstitution, 'id'>) =>
   send('post', '/institutions', institution);
@@ -68,7 +49,7 @@ export const updateInstitution = (institutionId: string, update: AdminInstitutio
 // A course with no seats is a 404 here.
 export async function getCourseSeatBatches(courseId: string, signal?: AbortSignal) {
   try {
-    const { batches } = await read<{ batches: AdminSeatBatch[] }>(
+    const { batches } = await rootGet<{ batches: AdminSeatBatch[] }>(
       '/seats/batches',
       { course_id: courseId },
       signal

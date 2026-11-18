@@ -87,19 +87,21 @@ export function AdminPagedGrid<Row>({
   );
 }
 
+type RowsGridProps<Row> = {
+  what: string;
+  columns: Array<ISimpleColumn<Row>>;
+  rows: Row[];
+  getRowId: (row: Row) => string;
+  onRowClick?: (row: Row) => void;
+};
+
 export function AdminRowsGrid<Row>({
   what,
   columns,
   rows,
   getRowId,
   onRowClick,
-}: {
-  what: string;
-  columns: Array<ISimpleColumn<Row>>;
-  rows: Row[];
-  getRowId: (row: Row) => string;
-  onRowClick?: (row: Row) => void;
-}) {
+}: RowsGridProps<Row>) {
   return (
     <div className="border-neutral-2 rounded-lg border bg-white">
       <SimpleGrid<Row>
@@ -119,13 +121,9 @@ export function AdminQueryGrid<Row>({
   queryKey,
   queryFn,
   ...grid
-}: {
-  what: string;
-  columns: Array<ISimpleColumn<Row>>;
-  getRowId: (row: Row) => string;
+}: Omit<RowsGridProps<Row>, 'rows'> & {
   queryKey: QueryKey;
   queryFn: (signal: AbortSignal) => Promise<Row[]>;
-  onRowClick?: (row: Row) => void;
 }) {
   const query = useQuery({ queryKey, queryFn: ({ signal }) => queryFn(signal) });
 

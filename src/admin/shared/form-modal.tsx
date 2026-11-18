@@ -46,6 +46,8 @@ function fieldControl({ kind, min, max, options, placeholder }: FormModalField) 
   }
 }
 
+export const REQUIRED = { required: true, message: 'Required' };
+
 export const NAME_FIELD: FormModalField = {
   name: 'name',
   label: 'Name',
