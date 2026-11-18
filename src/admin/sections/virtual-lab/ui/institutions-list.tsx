@@ -71,7 +71,10 @@ function InstitutionEdit({
       initialValues={institution}
       okText="Save"
       pending={write.isPending}
-      onSubmit={(values) => saveChanges(values, institution, write.mutate, onClose)}
+      // Unlike create, the API's update doesn't trim the name.
+      onSubmit={(values) =>
+        saveChanges({ ...values, name: values.name.trim() }, institution, write.mutate, onClose)
+      }
       onClose={onClose}
     />
   );

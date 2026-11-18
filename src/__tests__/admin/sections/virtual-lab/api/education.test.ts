@@ -23,11 +23,7 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-function apiError(status: number) {
-  const error = new ApiError('failed');
-  error.cause = { status } as ApiError['cause'];
-  return error;
-}
+const apiError = (status: number, code?: string) => new ApiError('failed', { status, code });
 
 describe('education client', () => {
   it('searches courses by lab name, outside /admin, and unwraps them', async () => {
@@ -79,13 +75,15 @@ describe('education client', () => {
     );
   });
 
-  it('treats a 404 as a course with no batches', async () => {
-    api.get.mockRejectedValueOnce(apiError(404));
+  it("treats the API's not-found as a course with no batches", async () => {
+    api.get.mockRejectedValueOnce(apiError(404, 'ENTITY_NOT_FOUND'));
     await expect(getCourseSeatBatches('c')).resolves.toEqual([]);
   });
 
-  it('keeps any other batch failure', async () => {
-    const error = apiError(500);
+  it.each([
+    ['a 404 without the code', apiError(404)],
+    ['any other failure', apiError(500)],
+  ])('keeps %s', async (_name, error) => {
     api.get.mockRejectedValueOnce(error);
     await expect(getCourseSeatBatches('c')).rejects.toBe(error);
   });

@@ -298,5 +298,5 @@ export type AdminSeatBatch = {
   created_at: string;
   expiry_date: string;
   number_of_seats: number;
-  seats: { is_consumed: boolean; credit_value: number }[];
+  seats: { is_consumed: boolean; enrolment_id: string | null; credit_value: number }[];
 };

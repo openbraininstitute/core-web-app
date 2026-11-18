@@ -43,10 +43,11 @@ const DATE_FIELDS: FormModalField[] = [
   },
 ];
 
-function useInstitutionField(): FormModalField {
+function useInstitutionField(enabled = true): FormModalField {
   const { data, error, isPending } = useQuery({
     queryKey: adminQueryKeys.institutions(''),
     queryFn: ({ signal }) => searchInstitutions(undefined, signal),
+    enabled,
   });
 
   let extra: string | undefined;
@@ -97,9 +98,9 @@ export function CourseCreate({ onClose }: { onClose: () => void }) {
 }
 
 export function CourseEdit({ course, onClose }: { course: AdminCourse; onClose: () => void }) {
-  const institutionField = useInstitutionField();
   // Seats keep the institution they were provisioned under, so only a draft can safely change it.
   const isDraft = course.status === 'draft';
+  const institutionField = useInstitutionField(isDraft);
   const write = useTenancyWrite({
     write: (update: AdminCourseUpdate) => updateCourse(course.id, update),
     done: 'Course updated',

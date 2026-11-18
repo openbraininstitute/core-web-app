@@ -1,4 +1,5 @@
-import { isNotFound } from '../../../shared/errors';
+import { ApiError } from '@/api/error';
+
 import { at, rootDelete, rootGet, rootSend } from './admin';
 
 import type { VlmResponse } from '@/types/virtual-lab/common';
@@ -46,7 +47,7 @@ export const updateInstitution = (institutionId: string, update: AdminInstitutio
   send('patch', at`/institutions/${institutionId}`, update);
 
 // Asked for one course on purpose: a wider search labels every batch with the first seat's course.
-// A course with no seats is a 404 here.
+// A course with no seats is a 404 with this code, unlike a missing route.
 export async function getCourseSeatBatches(courseId: string, signal?: AbortSignal) {
   try {
     const { batches } = await rootGet<{ batches: AdminSeatBatch[] }>(
@@ -57,7 +58,7 @@ export async function getCourseSeatBatches(courseId: string, signal?: AbortSigna
     // The API orders them by their random ID.
     return [...batches].sort((a, b) => b.created_at.localeCompare(a.created_at));
   } catch (error) {
-    if (isNotFound(error)) return [];
+    if (error instanceof ApiError && error.cause?.code === 'ENTITY_NOT_FOUND') return [];
     throw error;
   }
 }

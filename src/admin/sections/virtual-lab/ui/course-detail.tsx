@@ -56,7 +56,8 @@ const BATCH_COLUMNS: Array<ISimpleColumn<AdminSeatBatch>> = [
     id: 'used',
     header: 'Used',
     width: { width: 100 },
-    getValue: (batch) => batch.seats.filter((seat) => seat.is_consumed).length,
+    // A seat held by a student has an enrolment. `is_consumed` is set only by a late drop.
+    getValue: (batch) => batch.seats.filter((seat) => seat.is_consumed || seat.enrolment_id).length,
   },
   {
     id: 'credits',
@@ -172,7 +173,9 @@ function CourseActions({ course }: { course: AdminCourse }) {
                 UUID_RULE,
                 {
                   validator: async (_, value) => {
-                    if (value === course.id) throw new Error("That's this course");
+                    if (value?.toLowerCase() === course.id.toLowerCase()) {
+                      throw new Error("That's this course");
+                    }
                   },
                 },
               ],
@@ -264,7 +267,7 @@ export function CourseDetail({ courseId }: { courseId: string }) {
           </>
         )}
       </Loaded>
-      {!query.error && (
+      {(query.data !== undefined || !query.error) && (
         <>
           <h2 className="text-primary-9 font-semibold">Seat batches</h2>
           <AdminQueryGrid<AdminSeatBatch>
