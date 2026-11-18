@@ -1,6 +1,19 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { paymentFilters } from '@/admin/sections/virtual-lab/ui/payments-list';
+import { isCardSearchable, paymentFilters } from '@/admin/sections/virtual-lab/ui/payments-list';
+
+describe('isCardSearchable', () => {
+  it('searches with no card or exactly 4 digits', () => {
+    expect(isCardSearchable(undefined)).toBe(true);
+    expect(isCardSearchable('4242')).toBe(true);
+  });
+
+  it("skips what the API can't match", () => {
+    expect(isCardSearchable('42')).toBe(false);
+    expect(isCardSearchable('42424')).toBe(false);
+    expect(isCardSearchable('visa')).toBe(false);
+  });
+});
 
 describe('paymentFilters', () => {
   it('sends no filters for an unfiltered page', () => {

@@ -53,6 +53,9 @@ export function paymentFilters({
   };
 }
 
+// The API matches the last 4 digits exactly, so anything shorter or not digits can't match.
+export const isCardSearchable = (card?: string) => !card || /^\d{4}$/.test(card);
+
 export function PaymentsList() {
   const [type, setType] = useQueryState(
     'type',
@@ -80,7 +83,16 @@ export function PaymentsList() {
           }}
         />
       </div>
-      <PaymentsGrid acrossOwners params={paymentFilters({ card: params.query, type, from, to })} />
+      {isCardSearchable(params.query) ? (
+        <PaymentsGrid
+          acrossOwners
+          params={paymentFilters({ card: params.query, type, from, to })}
+        />
+      ) : (
+        <p className="border-neutral-2 text-neutral-4 rounded-lg border bg-white p-5">
+          Enter the last 4 digits of the card.
+        </p>
+      )}
     </div>
   );
 }
