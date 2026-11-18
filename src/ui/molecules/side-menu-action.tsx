@@ -55,10 +55,10 @@ export function Action(props: Props) {
   const className = cn(
     // overrides the Button base class's `whitespace-nowrap`, so a long label wraps instead of
     // overflowing past the pill's edge
-    'group border flex w-full items-center justify-between gap-3 pl-4 pr-2! py-3! rounded-full whitespace-normal',
+    'group border flex w-full items-center justify-between gap-3 pl-4 pr-2! py-1! rounded-full whitespace-normal',
     // the Button size variant's `h-10`/`xl:h-12` is a fixed height (a different property than
     // `min-h-*`, so it doesn't get deduped away): override it so the pill can grow for a wrapped
-    // two-line label instead of clipping it.
+    // two-line label instead of clipping it. Sized to match DetailMenu's Tab pills (40/48px).
     'h-auto min-h-10 gap-1.5 text-md py-3 px-4 has-[>svg]:px-3 xl:h-auto xl:min-h-12 xl:py-3 xl:px-6 xl:text-lg xl:has-[>svg]:px-4',
     !disabled && 'cursor-pointer',
     disabled &&
@@ -82,10 +82,13 @@ export function Action(props: Props) {
 
   const content = (
     <>
-      <div className="min-w-0 flex-1 wrap-break-word">{children}</div>
+      {/* its own py-1: without it, a wrapped label only gets the icon's extra height as
+          breathing room, which a single-line label gets for free since the icon is taller than
+          one line of text, but a wrapped label (taller than the icon) doesn't */}
+      <div className="min-w-0 flex-1 wrap-break-word py-1">{children}</div>
       <div
         className={cn(
-          'ml-auto flex size-8! min-h-8! min-w-8! shrink-0 p-0.5 items-center justify-center rounded-full border',
+          'ml-auto flex size-7! min-h-7! min-w-7! shrink-0 p-0.5 items-center justify-center rounded-full border',
           !destructive &&
             !prominent &&
             !disabled && {

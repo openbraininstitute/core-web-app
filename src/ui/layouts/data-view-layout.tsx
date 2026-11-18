@@ -159,7 +159,7 @@ export async function DataViewLayout({
     return (
       <DataViewFrame topBar={topBar} className="rounded-md">
         <div className="flex min-h-0 flex-1 overflow-hidden pt-3">
-          <div className="w-1/5 pl-5">
+          <div className="primary-scrollbar h-full w-1/5 overflow-y-auto pl-5">
             <div className="flex flex-col gap-3">
               <DetailMenu sections={entityType.detailViewSections} variant={chromeVariant} />
             </div>
