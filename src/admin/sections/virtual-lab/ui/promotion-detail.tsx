@@ -18,7 +18,7 @@ import { useAdminWrite } from '../../../shared/use-admin-write';
 import { AdminLink } from '../../../shell/admin-link';
 import { deactivatePromotion, getPromotion, getPromotionUsage } from '../api/admin';
 import { PromotionEdit } from './promotion-form';
-import { PromotionStatus, promotionUses } from './promotions-list';
+import { PromotionStatus, promotionUses } from './promotion-status';
 
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { AdminPromotion, AdminPromotionRedemption } from '../api/admin-types';

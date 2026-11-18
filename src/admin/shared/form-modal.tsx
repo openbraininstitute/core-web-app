@@ -17,6 +17,8 @@ type FormModalField = {
   placeholder?: string;
   extra?: ReactNode;
   rules?: Rule[];
+  // Fields whose value a rule here reads, so a change there checks this one again.
+  dependencies?: string[];
 };
 
 function fieldControl({ kind, min, max, options, placeholder }: FormModalField) {
@@ -116,6 +118,7 @@ export function FormModal<Values extends Record<string, unknown>>({
               name={field.name}
               label={field.label}
               rules={field.rules}
+              dependencies={field.dependencies}
               valuePropName={field.kind === 'switch' ? 'checked' : 'value'}
               // A date is held as the API's ISO string, so an untouched one compares equal.
               {...(field.kind === 'datetime' && {

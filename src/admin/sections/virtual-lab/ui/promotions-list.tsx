@@ -9,14 +9,15 @@ import { useState } from 'react';
 import { Button } from '@/ui/molecules/button';
 
 import { adminQueryKeys } from '../../../query-keys';
+import { errorReason } from '../../../shared/errors';
 import { formatDateTime } from '../../../shared/format';
 import { AdminPagedGrid, pagedSource } from '../../../shared/grid';
 import { PageHeader } from '../../../shared/page-header';
-import { StatusPill } from '../../../shared/status-pill';
 import { adminHref } from '../../../shell/admin-link';
 import { getPromotionAnalytics, listPromotions } from '../api/admin';
 import { shallow, useListFilters } from './list-filters';
 import { PromotionCreate } from './promotion-form';
+import { PromotionStatus, promotionUses } from './promotion-status';
 
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { AdminPromotion } from '../api/admin-types';
@@ -29,23 +30,6 @@ const STATUS_OPTIONS = [
 ];
 
 const PROMOTIONS_SOURCE = pagedSource(listPromotions);
-
-// The API's `active` only says it wasn't switched off: the code may be outside its dates.
-export function PromotionStatus({ promotion }: { promotion: AdminPromotion }) {
-  const now = new Date();
-
-  if (!promotion.active) return <StatusPill tone="neutral">Switched off</StatusPill>;
-  if (new Date(promotion.valid_until) < now) {
-    return <StatusPill tone="warn">Expired</StatusPill>;
-  }
-  if (new Date(promotion.valid_from) > now) {
-    return <StatusPill tone="neutral">Scheduled</StatusPill>;
-  }
-  return <StatusPill tone="good">Active</StatusPill>;
-}
-
-export const promotionUses = ({ current_total_uses: used, max_total_uses: max }: AdminPromotion) =>
-  max === null ? `${used}, no limit` : `${used} of ${max}`;
 
 const COLUMNS: Array<ISimpleColumn<AdminPromotion>> = [
   {
@@ -90,7 +74,7 @@ export function PromotionsList() {
     'status',
     parseAsStringLiteral(STATUSES).withDefault('any').withOptions(shallow)
   );
-  const { data: analytics } = useQuery({
+  const { data: analytics, error: analyticsError } = useQuery({
     queryKey: adminQueryKeys.promotionAnalytics(),
     queryFn: ({ signal }) => getPromotionAnalytics(signal),
   });
@@ -105,8 +89,9 @@ export function PromotionsList() {
           </Button>
         }
       >
-        {analytics &&
-          `Codes: ${analytics.total_promotions}, of which expired: ${analytics.expired_promotions}. Redemptions: ${analytics.total_redemptions}. Credits given: ${analytics.total_credits_distributed}.`}
+        {analytics
+          ? `Codes: ${analytics.total_promotions}, of which expired: ${analytics.expired_promotions}. Redemptions: ${analytics.total_redemptions}. Credits given: ${analytics.total_credits_distributed}.`
+          : analyticsError && `Couldn't load the totals. ${errorReason(analyticsError)}`}
       </PageHeader>
       <div className="flex flex-wrap items-center gap-3">
         {controls}
