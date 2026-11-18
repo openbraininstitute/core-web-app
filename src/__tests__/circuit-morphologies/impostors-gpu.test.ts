@@ -93,6 +93,13 @@ describe('the somas of the morphologies on WebGPU', () => {
     expect(ball.parameters.round).toBe(u.ballFrom);
   });
 
+  it('leaves a soma out of the draw of the other kind', () => {
+    for (const material of materials.soma)
+      expect(somaQuadOf(material).functionNode.code).toMatch(
+        /if \(\(r \/ um >= round\) != \(ball > 0\.5\)\) \{ return none; \}/
+      );
+  });
+
   it("stands a disc at the sphere's nearest point, where its fragments write no depth of their own", () => {
     const [disc, ball] = materials.soma;
     expect(somaQuadOf(disc).functionNode.code).toMatch(/if \(ball < 0\.5\)\s*\{\s*p = lifted\(/);

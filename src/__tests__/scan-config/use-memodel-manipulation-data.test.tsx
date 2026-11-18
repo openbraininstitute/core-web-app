@@ -3,11 +3,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ApiError } from '@/api/error';
 
-import type { MechanismVariablesRoot } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
+import type { TNeuronalManipulationProperties } from '@/features/scan-config/components/hooks/use-neuronal-manipulation-properties';
 
 const queryResult = vi.hoisted(() => ({
   value: {
-    data: undefined as MechanismVariablesRoot | undefined,
+    data: undefined as TNeuronalManipulationProperties | undefined,
     isLoading: false,
     isError: false,
     error: undefined as unknown,
@@ -76,7 +76,12 @@ describe('useMeModelManipulationData', () => {
   });
 
   it('shows the empty-state note when the endpoint returns no variables', () => {
-    queryResult.value = { data: {}, isLoading: false, isError: false, error: undefined };
+    queryResult.value = {
+      data: { variables: {}, warnings: [] },
+      isLoading: false,
+      isError: false,
+      error: undefined,
+    };
     render(<Harness />);
 
     expect(
@@ -86,7 +91,10 @@ describe('useMeModelManipulationData', () => {
 
   it('exposes data and no reason once variables resolve', () => {
     queryResult.value = {
-      data: { NaTg: { section_lists: ['somatic'], entity_id: 'ic', variables: {} } },
+      data: {
+        variables: { NaTg: { section_lists: ['somatic'], entity_id: 'ic', variables: {} } },
+        warnings: [],
+      },
       isLoading: false,
       isError: false,
       error: undefined,

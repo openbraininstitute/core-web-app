@@ -1,5 +1,6 @@
 const SERVICES = ['admin', 'services'] as const;
 const TENANCY = ['admin', 'tenancy'] as const;
+const BILLING = ['admin', 'billing'] as const;
 
 export const adminQueryKeys = {
   services: () => SERVICES,
@@ -18,4 +19,7 @@ export const adminQueryKeys = {
   subscriptions: () => [...TENANCY, 'subscriptions'] as const,
   payments: () => [...TENANCY, 'payments'] as const,
   search: (query: string) => [...TENANCY, 'search', query] as const,
+  billing: () => BILLING,
+  plans: () => [...BILLING, 'plans'] as const,
+  creditRates: () => [...BILLING, 'credit-rates'] as const,
 };
