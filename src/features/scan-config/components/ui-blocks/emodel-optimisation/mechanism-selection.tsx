@@ -82,6 +82,7 @@ export function MechanismSelection({ rootSchema, value, onChange, disabled }: Pr
         // standalone in this tab: show many rows before scrolling instead of the compact default
         visibleItemCount={12}
         // not a scan: the models are picked for optimisation
+        isScan={false}
         addLabel="Add ion channel model"
       />
     </div>

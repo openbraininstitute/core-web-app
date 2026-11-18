@@ -4,20 +4,26 @@ import { compactRecord } from '@/utils/dictionary';
 import type { TUserRole } from '@/api/virtual-lab-svc/validation';
 import type { VlmResponse } from '@/types/virtual-lab/common';
 import type {
+  AdminCreditRate,
+  AdminCreditRateUpdate,
   AdminLab,
   AdminLabInvite,
   AdminLabUpdate,
   AdminMember,
   AdminPaymentsPage,
+  AdminPlan,
+  AdminPlanUpdate,
   AdminProject,
   AdminProjectUpdate,
   AdminSubscription,
   AdminUser,
   AdminUserDetails,
-  BillingOwner,
+  ComputeCell,
   DeletedScope,
   Paged,
   PageParams,
+  PaymentFilters,
+  SubscriptionFilters,
 } from './admin-types';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json', accept: 'application/json' };
@@ -110,18 +116,39 @@ export const searchUsers = (params: PageParams & { query?: string }, signal?: Ab
 
 export const getUser = (userId: string) => getJson<AdminUserDetails>(at`/users/${userId}`);
 
-export const listSubscriptions = (params: PageParams & BillingOwner, signal?: AbortSignal) =>
+export const listSubscriptions = (params: PageParams & SubscriptionFilters, signal?: AbortSignal) =>
   getJson<Paged<AdminSubscription>>('/subscriptions', params, signal);
 
 export const cancelSubscription = (subscriptionId: string, reason: string) =>
   postJson(at`/subscriptions/${subscriptionId}/cancel`, { reason });
 
 // The one list without the usual `{ data, pagination }` shape.
-export async function listPayments(params: PageParams & BillingOwner, signal?: AbortSignal) {
+export async function listPayments(params: PageParams & PaymentFilters, signal?: AbortSignal) {
   const { payments, total_count: total } = await getJson<AdminPaymentsPage>(
     '/payments',
     params,
     signal
   );
   return { data: payments, pagination: { total } };
+}
+
+export const listPlans = (signal?: AbortSignal) =>
+  getJson<AdminPlan[]>('/plans', undefined, signal);
+
+export const updatePlan = (planId: string, update: AdminPlanUpdate) =>
+  patchJson(at`/plans/${planId}`, update);
+
+export const listCreditRates = (signal?: AbortSignal) =>
+  getJson<AdminCreditRate[]>('/credit-rates', undefined, signal);
+
+export const updateCreditRate = (rateId: string, update: AdminCreditRateUpdate) =>
+  patchJson(at`/credit-rates/${rateId}`, update);
+
+// The one write outside /admin: the admin API has no compute-cell route.
+export async function updateComputeCell(vlabId: string, computeCell: ComputeCell) {
+  const api = await virtualLabRootApi();
+  await api.patch(at`/virtual-labs/${vlabId}/compute-cell`, {
+    headers: JSON_HEADERS,
+    body: { compute_cell: computeCell },
+  });
 }

@@ -12,6 +12,10 @@ import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
 import { getSelfVirtualLab, listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { UserFilled } from '@/components/icons/buttons';
 import { SignOutFill } from '@/components/icons/EditorIcons';
+import {
+  DISMISSABLE_ATTRIBUTE,
+  useDismissOnOutsideInteraction,
+} from '@/hooks/use-dismiss-on-outside-interaction';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { useOnClickOutside } from '@/hooks/useOnClickOutside';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
@@ -70,7 +74,6 @@ export function SpaceSwitcher({ className }: Props) {
     projectId: string | null;
   } | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const { status: userStatus, data: sessionData } = useSession();
   const [, copyAccessToken, , copying] = useCopyToClipboard();
 
@@ -307,6 +310,12 @@ export function SpaceSwitcher({ className }: Props) {
     }
   }, [pathname, collapsePanel]);
 
+  // Without a content modal, Esc goes through the shared handler so it closes one panel per press.
+  const dropdownRef = useDismissOnOutsideInteraction<HTMLDivElement>({
+    enabled: isExpanded && !boardModalOpen,
+    onEscape: collapsePanel,
+  });
+
   // Auto-collapse the panel when the user clicks outside of it. When a content
   // modal is open, a single outside click closes both the modal and the panel.
   // Clicks inside the modal *dialog* (#modal-dialog), or in a popup one of its
@@ -325,13 +334,13 @@ export function SpaceSwitcher({ className }: Props) {
 
   // Escape closes both the open content modal and the panel in one press.
   useEffect(() => {
-    if (!isExpanded && !boardModalOpen) return;
+    if (!boardModalOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') collapsePanel();
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [isExpanded, boardModalOpen, collapsePanel]);
+  }, [boardModalOpen, collapsePanel]);
 
   return (
     <div
@@ -339,7 +348,12 @@ export function SpaceSwitcher({ className }: Props) {
         'z-1001': boardModalOpen,
       })}
     >
-      <div id="workspace-switcher" className={cn('relative', className)} ref={dropdownRef}>
+      <div
+        id="workspace-switcher"
+        className={cn('relative', className)}
+        ref={dropdownRef}
+        {...{ [DISMISSABLE_ATTRIBUTE]: '' }}
+      >
         <div
           id="virtual-lab-menu-banner"
           role="menubar"

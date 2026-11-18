@@ -10,6 +10,7 @@ import { Button } from 'antd';
 import { AnimatePresence, motion } from 'motion/react';
 import React from 'react';
 
+import { useDismissOnOutsideInteraction } from '@/hooks/use-dismiss-on-outside-interaction';
 import { useAiAssistant } from '@/services/ai-agent/assistant';
 import { classNames } from '@/util/utils';
 
@@ -84,6 +85,15 @@ export default function AiAssistant({
     setTab((current) => (current === next ? 'chat' : next));
   };
 
+  // Esc only steps back (inner view, then fullscreen); collapsing is left to the collapse button
+  const panelRef = useDismissOnOutsideInteraction<HTMLDivElement>({
+    enabled: tab !== 'chat' || (fullscreen && Boolean(onFullscreenToggle)),
+    onEscape: () => {
+      if (tab !== 'chat') setTab('chat');
+      else onFullscreenToggle?.();
+    },
+  });
+
   const animationProps = {
     position: fullscreen ? 'fixed' : 'absolute',
     height: fullscreen ? 'calc(100vh - 1rem)' : '100%',
@@ -98,6 +108,7 @@ export default function AiAssistant({
         className={classNames(className, styles.aiAssistant, 'rounded-xl! border-0!')}
       >
         <motion.div
+          ref={panelRef}
           className={classNames(styles.overlay, panelWidth > MINIMAL_PANEL_SIZE && styles.shadow)}
           initial={{ opacity: 0, width: 0, ...animationProps }}
           animate={{

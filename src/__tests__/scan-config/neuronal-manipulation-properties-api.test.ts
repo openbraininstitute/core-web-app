@@ -61,6 +61,29 @@ describe('fetchNeuronalManipulationProperties', () => {
     );
   });
 
+  it('sends neuron_sets with a combined neuron set, and leaves them out when empty', async () => {
+    const neuronSet = {
+      type: 'BiophysicalCombinedNeuronSet',
+      base_neuron_set: { block_name: 'first', block_dict_name: 'neuron_sets' },
+    };
+    const neuronSets = { first: { type: 'AllBiophysicalNeurons' } };
+    const params = {
+      ctx: { virtualLabId: 'vl-1', projectId: 'pj-1' },
+      endpoint: '/circuit-neuronal-manipulation-properties-by-neuron-set',
+      entityId: 'circuit-1',
+      neuronSet,
+      includeNeuronSet: true,
+    };
+
+    await fetchNeuronalManipulationProperties({ ...params, neuronSets });
+    await fetchNeuronalManipulationProperties({ ...params, neuronSets: {} });
+
+    expect(post.mock.calls.map(([, options]) => options.body)).toEqual([
+      { entity_id: 'circuit-1', neuron_set: neuronSet, neuron_sets: neuronSets },
+      { entity_id: 'circuit-1', neuron_set: neuronSet },
+    ]);
+  });
+
   it('sends neuron_set null for the Circuit default-target fast path', async () => {
     await fetchNeuronalManipulationProperties({
       ctx: { virtualLabId: 'vl-1', projectId: 'pj-1' },
