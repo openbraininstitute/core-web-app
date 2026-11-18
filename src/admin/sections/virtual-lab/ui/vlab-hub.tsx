@@ -14,17 +14,23 @@ import { DESCRIPTION_FIELD, FormModal, NAME_FIELD } from '../../../shared/form-m
 import { formatDateTime } from '../../../shared/format';
 import { Loaded } from '../../../shared/load-state';
 import { PageHeader } from '../../../shared/page-header';
+import { useAdminWrite } from '../../../shared/use-admin-write';
 import { AdminLink } from '../../../shell/admin-link';
 import { CapabilityGate } from '../../../shell/capability-gate';
-import { deleteLab, getLab, updateLab } from '../api/admin';
+import { deleteLab, getLab, updateComputeCell, updateLab } from '../api/admin';
 import { Billing } from './billing';
 import { LabMembers } from './lab-members';
 import { ProjectsGrid } from './projects-grid';
 import { useTenancyWrite } from './use-tenancy-write';
 
-import type { AdminLab, AdminLabUpdate } from '../api/admin-types';
+import type { AdminLab, AdminLabUpdate, ComputeCell } from '../api/admin-types';
 
 const LABS_HREF = `${ADMIN_ROOT}/virtual-labs`;
+
+const COMPUTE_CELLS: { value: ComputeCell; label: string }[] = [
+  { value: 'cell_a', label: 'Cell A' },
+  { value: 'cell_b', label: 'Cell B' },
+];
 
 function LabOverview({ lab }: { lab: AdminLab }) {
   return (
@@ -51,7 +57,7 @@ function LabOverview({ lab }: { lab: AdminLab }) {
 
 function LabActions({ lab }: { lab: AdminLab }) {
   const router = useRouter();
-  const [open, setOpen] = useState<'edit' | 'delete' | null>(null);
+  const [open, setOpen] = useState<'edit' | 'cell' | 'delete' | null>(null);
   const close = () => setOpen(null);
 
   const editWrite = useTenancyWrite({
@@ -59,6 +65,13 @@ function LabActions({ lab }: { lab: AdminLab }) {
     done: 'Lab updated',
     failed: "Couldn't update the lab",
     onSuccess: close,
+  });
+  const cellWrite = useAdminWrite({
+    write: (cell: ComputeCell) => updateComputeCell(lab.id, cell),
+    done: 'Compute cell changed',
+    failed: "Couldn't change the compute cell",
+    onSuccess: close,
+    refreshes: adminQueryKeys.lab(lab.id),
   });
   const deleteWrite = useTenancyWrite({
     write: () => deleteLab(lab.id),
@@ -71,6 +84,9 @@ function LabActions({ lab }: { lab: AdminLab }) {
     <CapabilityGate need="virtualLab.admin">
       <Button rounded variant="outline" size="sm" onClick={() => setOpen('edit')}>
         Edit
+      </Button>
+      <Button rounded variant="outline" size="sm" onClick={() => setOpen('cell')}>
+        Change compute cell
       </Button>
       <Button rounded variant="outline" size="sm" onClick={() => setOpen('delete')}>
         Delete
@@ -108,6 +124,22 @@ function LabActions({ lab }: { lab: AdminLab }) {
           // The API validates the email, so a blank one has to go as null, which clears it.
           onSubmit={({ reference_email: email, ...update }) =>
             editWrite.mutate({ ...update, reference_email: email || null })
+          }
+          onClose={close}
+        />
+      )}
+      {open === 'cell' && (
+        <FormModal<{ compute_cell: ComputeCell }>
+          title="Change compute cell"
+          description="Decides where this lab's jobs start from now on. Jobs already running stay where they are."
+          fields={[
+            { name: 'compute_cell', label: 'Compute cell', kind: 'select', options: COMPUTE_CELLS },
+          ]}
+          initialValues={{ compute_cell: lab.compute_cell }}
+          okText="Change"
+          pending={cellWrite.isPending}
+          onSubmit={({ compute_cell: cell }) =>
+            cell === lab.compute_cell ? close() : cellWrite.mutate(cell)
           }
           onClose={close}
         />
@@ -179,8 +211,8 @@ function LabPage({ lab }: { lab: AdminLab }) {
             content: <ProjectsGrid params={{ virtual_lab_id: lab.id, include_deleted: true }} />,
           },
           {
-            key: 'subscriptions',
-            label: 'Subscriptions',
+            key: 'billing',
+            label: 'Billing',
             content: <Billing owner={{ virtual_lab_id: lab.id }} />,
           },
         ]}

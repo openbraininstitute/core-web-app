@@ -13,9 +13,8 @@ const SCOPES: Record<(typeof SCOPE_KEYS)[number], { label: string; params: Delet
 };
 const SCOPE_OPTIONS = SCOPE_KEYS.map((value) => ({ value, label: SCOPES[value].label }));
 
-const shallow = { shallow: true };
+export const shallow = { shallow: true };
 
-// `gridKey` goes on the grid, so a changed filter returns to page 1.
 export function useListFilters({ scoped, placeholder }: { scoped?: boolean; placeholder: string }) {
   const [query, setQuery] = useQueryState('q', parseAsString.withDefault('').withOptions(shallow));
   const [scope, setScope] = useQueryState(
@@ -25,16 +24,15 @@ export function useListFilters({ scoped, placeholder }: { scoped?: boolean; plac
 
   return {
     params: { query: query || undefined, ...(scoped ? SCOPES[scope].params : {}) },
-    gridKey: `${query}:${scope}`,
     controls: (
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <Input.Search
           key={query}
           allowClear
           defaultValue={query}
           placeholder={placeholder}
           onSearch={(value) => setQuery(value.trim())}
-          className="max-w-96"
+          className="w-96! max-w-full"
         />
         {scoped && (
           <Segmented

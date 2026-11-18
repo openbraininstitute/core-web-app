@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { FormModal } from '@/admin/shared/form-modal';
@@ -33,5 +33,23 @@ describe('FormModal', () => {
     expect(screen.getByRole('button', { name: 'Cancel' }).hasAttribute('disabled')).toBe(true);
     fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape', keyCode: 27 });
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('submits a switch as the boolean it shows', async () => {
+    const onSubmit = vi.fn();
+    render(
+      <FormModal<{ active: boolean }>
+        title="Edit plan"
+        fields={[{ name: 'active', label: 'Active', kind: 'switch' }]}
+        initialValues={{ active: true }}
+        okText="Save"
+        pending={false}
+        onSubmit={onSubmit}
+        onClose={vi.fn()}
+      />
+    );
+    fireEvent.click(screen.getByRole('switch'));
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith({ active: false }));
   });
 });
