@@ -13,6 +13,12 @@ export function PromotionStatus({ promotion }: { promotion: AdminPromotion }) {
   if (new Date(promotion.valid_from) > now) {
     return <StatusPill tone="neutral">Scheduled</StatusPill>;
   }
+  if (
+    promotion.max_total_uses !== null &&
+    promotion.current_total_uses >= promotion.max_total_uses
+  ) {
+    return <StatusPill tone="warn">Used up</StatusPill>;
+  }
   return <StatusPill tone="good">Active</StatusPill>;
 }
 

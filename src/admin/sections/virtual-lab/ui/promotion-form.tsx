@@ -19,9 +19,10 @@ const REQUIRED = [{ required: true, message: 'Required' }];
 
 const DESCRIPTION = { ...DESCRIPTION_FIELD, rules: [{ max: 1000 }] };
 
-const atLeast = (min: number, message: string): RuleObject => ({
+// A stored value is let through: the API doesn't check these, and saving skips it.
+const atLeast = (min: number, message: string, stored?: number | null): RuleObject => ({
   validator: async (_, value?: number) => {
-    if (value && value < min) throw new Error(message);
+    if (value && value !== stored && value < min) throw new Error(message);
   },
 });
 
@@ -77,14 +78,15 @@ export function PromotionCreate({ onClose }: { onClose: () => void }) {
           label: 'Period in days',
           kind: 'integer',
           min: 1,
-          extra: 'The limit per user counts over this period.',
+          extra: "Stored with the code, but the API doesn't use it.",
           rules: REQUIRED,
         },
         {
           name: 'max_uses_per_user_per_period',
-          label: 'Uses per user per period',
+          label: 'Uses per user and lab',
           kind: 'integer',
           min: 1,
+          extra: "Counted in each of the user's labs, over the code's dates.",
           rules: REQUIRED,
         },
         {
@@ -164,10 +166,11 @@ export function PromotionEdit({
             : 'Once set, this can be changed but not removed.',
           rules: [
             ...(hasLimit ? [{ required: true, message: 'Give a limit' }] : []),
-            atLeast(promotion.max_uses_per_user_per_period, PER_USER),
+            atLeast(promotion.max_uses_per_user_per_period, PER_USER, promotion.max_total_uses),
             atLeast(
               promotion.current_total_uses,
-              `Already used ${promotion.current_total_uses} times`
+              `Already used ${promotion.current_total_uses} times`,
+              promotion.max_total_uses
             ),
           ],
         },

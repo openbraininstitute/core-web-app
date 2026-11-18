@@ -69,7 +69,7 @@ const COLUMNS: Array<ISimpleColumn<AdminPromotion>> = [
 export function PromotionsList() {
   const router = useRouter();
   const [creating, setCreating] = useState(false);
-  const { params, controls } = useListFilters({ placeholder: 'Search by code or description' });
+  const { params, controls } = useListFilters({ placeholder: 'Search by code' });
   const [status, setStatus] = useQueryState(
     'status',
     parseAsStringLiteral(STATUSES).withDefault('any').withOptions(shallow)
@@ -90,7 +90,7 @@ export function PromotionsList() {
         }
       >
         {analytics
-          ? `Codes: ${analytics.total_promotions}, of which expired: ${analytics.expired_promotions}. Redemptions: ${analytics.total_redemptions}. Credits given: ${analytics.total_credits_distributed}.`
+          ? `Codes: ${analytics.total_promotions}, of which past their end date: ${analytics.expired_promotions}. Redemptions: ${analytics.total_redemptions}. Credits given: ${analytics.total_credits_distributed}.`
           : analyticsError && `Couldn't load the totals. ${errorReason(analyticsError)}`}
       </PageHeader>
       <div className="flex flex-wrap items-center gap-3">

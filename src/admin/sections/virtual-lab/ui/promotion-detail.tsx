@@ -93,7 +93,11 @@ function PromotionUsage({ promotionId }: { promotionId: string }) {
             <Detail label="Users">{stats.unique_users}</Detail>
             <Detail label="Virtual labs">{stats.unique_virtual_labs}</Detail>
           </DetailList>
-          <h2 className="text-primary-9 font-semibold">Latest redemptions</h2>
+          <h2 className="text-primary-9 font-semibold">
+            {redemptions.length < stats.total_redemptions
+              ? `Latest ${redemptions.length} of ${stats.total_redemptions} redemptions`
+              : 'Redemptions'}
+          </h2>
           <AdminRowsGrid<AdminPromotionRedemption>
             what="redemptions"
             columns={REDEMPTION_COLUMNS}
@@ -170,8 +174,8 @@ export function PromotionDetail({ promotionId }: { promotionId: string }) {
                 <DetailId>{promotion.id}</DetailId>
               </Detail>
               <Detail label="Credits granted">{promotion.credits_amount}</Detail>
-              <Detail label="Period">{`${promotion.validity_period_days} days`}</Detail>
-              <Detail label="Uses per user per period">
+              <Detail label="Period">{`${promotion.validity_period_days} days, not used by the API`}</Detail>
+              <Detail label="Uses per user and lab">
                 {promotion.max_uses_per_user_per_period}
               </Detail>
               <Detail label="Uses in total">{promotionUses(promotion)}</Detail>
