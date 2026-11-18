@@ -1,10 +1,8 @@
 'use client';
 
-import dayjs from 'dayjs';
-
 import { adminQueryKeys } from '../../../query-keys';
 import { saveChanges } from '../../../shared/changed-fields';
-import { DESCRIPTION_FIELD, FormModal } from '../../../shared/form-modal';
+import { afterDate, DESCRIPTION_FIELD, FormModal } from '../../../shared/form-modal';
 import { useAdminWrite } from '../../../shared/use-admin-write';
 import { createPromotion, updatePromotion } from '../api/admin';
 
@@ -56,14 +54,6 @@ export function promotionCreateBody({
 }
 
 const PER_USER = "Can't be below the uses per user";
-
-const after = (start: string | undefined): RuleObject => ({
-  validator: async (_, value?: string) => {
-    if (value && start && !dayjs(value).isAfter(start)) {
-      throw new Error('Has to be after the start');
-    }
-  },
-});
 
 export function PromotionCreate({ onClose }: { onClose: () => void }) {
   const write = useAdminWrite({
@@ -130,7 +120,10 @@ export function PromotionCreate({ onClose }: { onClose: () => void }) {
           label: 'Valid until',
           kind: 'datetime',
           dependencies: ['valid_from'],
-          rules: [...REQUIRED, ({ getFieldValue }) => after(getFieldValue('valid_from'))],
+          rules: [
+            ...REQUIRED,
+            ({ getFieldValue }) => afterDate(getFieldValue('valid_from'), 'start'),
+          ],
         },
         { name: 'active', label: 'Active', kind: 'switch' },
       ]}
@@ -169,7 +162,7 @@ export function PromotionEdit({
           name: 'valid_until',
           label: 'Valid until',
           kind: 'datetime',
-          rules: [...REQUIRED, after(promotion.valid_from)],
+          rules: [...REQUIRED, afterDate(promotion.valid_from, 'start')],
         },
         {
           name: 'max_total_uses',

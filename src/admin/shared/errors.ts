@@ -4,6 +4,10 @@ export function isForbidden(error: unknown): boolean {
   return error instanceof ApiError && error.cause?.status === 403;
 }
 
+export function isNotFound(error: unknown): boolean {
+  return error instanceof ApiError && error.cause?.status === 404;
+}
+
 // With no ApiError there was no readable response: a service error without CORS headers
 // reaches the browser as a network failure, whatever really went wrong.
 export function errorReason(error: unknown) {

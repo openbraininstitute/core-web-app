@@ -33,11 +33,11 @@ import type {
   SubscriptionFilters,
 } from './admin-types';
 
-const JSON_HEADERS = { 'Content-Type': 'application/json', accept: 'application/json' };
-const ACCEPT_HEADERS = { accept: 'application/json' };
+export const JSON_HEADERS = { 'Content-Type': 'application/json', accept: 'application/json' };
+export const ACCEPT_HEADERS = { accept: 'application/json' };
 
 // Ids come from the page URL, so each one is encoded as a single path segment.
-const at = (strings: TemplateStringsArray, ...ids: string[]) =>
+export const at = (strings: TemplateStringsArray, ...ids: string[]) =>
   String.raw({ raw: strings }, ...ids.map(encodeURIComponent));
 
 async function getJson<T>(path: string, params?: Record<string, unknown>, signal?: AbortSignal) {

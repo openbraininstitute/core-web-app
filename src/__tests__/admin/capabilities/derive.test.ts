@@ -18,6 +18,7 @@ const ALL_FALSE: OperatorCapabilities = {
   entitycore: { admin: false, assetWrite: false },
   virtualLab: { read: false, admin: false },
   promotions: { admin: false },
+  education: { admin: false },
   accounting: { admin: false },
   simulator: { admin: false },
   launchSystem: { admin: false },
@@ -43,7 +44,11 @@ describe('deriveCapabilities', () => {
     [
       'vlab admin',
       VLAB_ADMIN_GROUP,
-      { virtualLab: { read: true, admin: true }, promotions: { admin: true } },
+      {
+        virtualLab: { read: true, admin: true },
+        promotions: { admin: true },
+        education: { admin: true },
+      },
     ],
     ['accounting admin', ACCOUNTING_ADMIN_GROUP, { accounting: { admin: true } }],
     ['simulator admin', SIMULATOR_ADMIN_GROUP, { simulator: { admin: true } }],
