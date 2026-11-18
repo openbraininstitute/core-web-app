@@ -27,5 +27,6 @@ export const adminQueryKeys = {
   promotionList: () => [...PROMOTIONS, 'list'] as const,
   promotionAnalytics: () => [...PROMOTIONS, 'analytics'] as const,
   promotion: (promotionId: string) => [...PROMOTIONS, 'code', promotionId] as const,
-  promotionUsage: (promotionId: string) => [...PROMOTIONS, 'code', promotionId, 'usage'] as const,
+  // Outside `promotions()`: no promotion write changes the redemptions.
+  promotionUsage: (promotionId: string) => [...BILLING, 'promotion-usage', promotionId] as const,
 };

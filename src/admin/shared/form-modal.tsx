@@ -1,8 +1,10 @@
 'use client';
 
 import { DatePicker, Form, Input, InputNumber, Modal, Select, Switch } from 'antd';
+import dayjs from 'dayjs';
 
 import type { Rule } from 'antd/es/form';
+import type { Dayjs } from 'dayjs';
 import type { ReactNode } from 'react';
 
 type FormModalField = {
@@ -115,6 +117,11 @@ export function FormModal<Values extends Record<string, unknown>>({
               label={field.label}
               rules={field.rules}
               valuePropName={field.kind === 'switch' ? 'checked' : 'value'}
+              // A date is held as the API's ISO string, so an untouched one compares equal.
+              {...(field.kind === 'datetime' && {
+                getValueProps: (value?: string) => ({ value: value ? dayjs(value) : undefined }),
+                normalize: (date?: Dayjs | null) => date?.toISOString(),
+              })}
               style={{ marginBottom: 0 }}
             >
               {fieldControl(field)}

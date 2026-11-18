@@ -170,8 +170,11 @@ export async function updateComputeCell(vlabId: string, computeCell: ComputeCell
 }
 
 // Unlike the rest of /admin, promotions page by limit and offset, and update with PUT.
-export async function listPromotions(params: PageParams & PromotionFilters, signal?: AbortSignal) {
-  const { page = 1, page_size: pageSize = 20, active, search } = params;
+export async function listPromotions(
+  params: Required<Pick<PageParams, 'page' | 'page_size'>> & PromotionFilters,
+  signal?: AbortSignal
+) {
+  const { page, page_size: pageSize, active, search } = params;
   const { promotions, pagination } = await getEnveloped<AdminPromotionsPage>(
     '/promotions',
     { active, search, limit: pageSize, offset: (page - 1) * pageSize },
@@ -180,11 +183,11 @@ export async function listPromotions(params: PageParams & PromotionFilters, sign
   return { data: promotions, pagination };
 }
 
-export const getPromotion = (promotionId: string) =>
-  getEnveloped<AdminPromotion>(at`/promotions/${promotionId}`);
+export const getPromotion = (promotionId: string, signal?: AbortSignal) =>
+  getEnveloped<AdminPromotion>(at`/promotions/${promotionId}`, undefined, signal);
 
-export const getPromotionUsage = (promotionId: string) =>
-  getEnveloped<AdminPromotionUsage>(at`/promotions/${promotionId}/usage`);
+export const getPromotionUsage = (promotionId: string, signal?: AbortSignal) =>
+  getEnveloped<AdminPromotionUsage>(at`/promotions/${promotionId}/usage`, undefined, signal);
 
 export const getPromotionAnalytics = (signal?: AbortSignal) =>
   getEnveloped<AdminPromotionAnalytics>('/promotions/analytics/system', undefined, signal);

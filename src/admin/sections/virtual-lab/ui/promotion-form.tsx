@@ -4,15 +4,40 @@ import dayjs from 'dayjs';
 
 import { adminQueryKeys } from '../../../query-keys';
 import { saveChanges } from '../../../shared/changed-fields';
-import { FormModal } from '../../../shared/form-modal';
-import { asUtc } from '../../../shared/format';
+import { DESCRIPTION_FIELD, FormModal } from '../../../shared/form-modal';
 import { useAdminWrite } from '../../../shared/use-admin-write';
 import { createPromotion, updatePromotion } from '../api/admin';
 
-import type { Dayjs } from 'dayjs';
-import type { AdminPromotion, AdminPromotionUpdate } from '../api/admin-types';
+import type { Rule } from 'antd/es/form';
+import type {
+  AdminPromotion,
+  AdminPromotionCreate,
+  AdminPromotionUpdate,
+} from '../api/admin-types';
 
 const REQUIRED = [{ required: true, message: 'Required' }];
+
+const DESCRIPTION = { ...DESCRIPTION_FIELD, rules: [{ max: 1000 }] };
+
+const atLeastPerUser =
+  (perUser: (field: (name: string) => unknown) => unknown): Rule =>
+  ({ getFieldValue }) => ({
+    validator: async (_, value?: number) => {
+      if (value && value < Number(perUser(getFieldValue)))
+        throw new Error("Can't be below the uses per user");
+    },
+  });
+
+const afterStart =
+  (start: (field: (name: string) => unknown) => unknown): Rule =>
+  ({ getFieldValue }) => ({
+    validator: async (_, value?: string) => {
+      const from = start(getFieldValue) as string | undefined;
+      if (value && from && !dayjs(value).isAfter(from)) {
+        throw new Error('Has to be after the start');
+      }
+    },
+  });
 
 export function PromotionCreate({ onClose }: { onClose: () => void }) {
   const write = useAdminWrite({
@@ -24,17 +49,7 @@ export function PromotionCreate({ onClose }: { onClose: () => void }) {
   });
 
   return (
-    <FormModal<{
-      code: string;
-      description?: string;
-      credits_amount: number;
-      validity_period_days: number;
-      max_uses_per_user_per_period: number;
-      max_total_uses?: number | null;
-      active: boolean;
-      valid_from: Dayjs;
-      valid_until: Dayjs;
-    }>
+    <FormModal<Omit<AdminPromotionCreate, 'max_total_uses'> & { max_total_uses?: number | null }>
       title="Create a promotion code"
       description="Once active, anyone with the code can redeem it for credits inside its dates."
       fields={[
@@ -44,7 +59,7 @@ export function PromotionCreate({ onClose }: { onClose: () => void }) {
           extra: 'Stored in capitals. The same code can be reused with different dates.',
           rules: [...REQUIRED, { min: 3, max: 50, message: 'Between 3 and 50 characters' }],
         },
-        { name: 'description', label: 'Description', kind: 'multiline', rules: [{ max: 1000 }] },
+        DESCRIPTION,
         {
           name: 'credits_amount',
           label: 'Credits granted',
@@ -74,51 +89,25 @@ export function PromotionCreate({ onClose }: { onClose: () => void }) {
           min: 1,
           placeholder: 'No limit',
           extra: "Once set, this can be changed but not removed. Can't be below the uses per user.",
-          rules: [
-            ({ getFieldValue }) => ({
-              validator: async (_, value) => {
-                if (value && value < getFieldValue('max_uses_per_user_per_period')) {
-                  throw new Error("Can't be below the uses per user");
-                }
-              },
-            }),
-          ],
+          rules: [atLeastPerUser((field) => field('max_uses_per_user_per_period'))],
         },
         { name: 'valid_from', label: 'Valid from', kind: 'datetime', rules: REQUIRED },
         {
           name: 'valid_until',
           label: 'Valid until',
           kind: 'datetime',
-          rules: [
-            ...REQUIRED,
-            ({ getFieldValue }) => ({
-              validator: async (_, value?: Dayjs) => {
-                const from: Dayjs | undefined = getFieldValue('valid_from');
-                if (value && from && !value.isAfter(from)) {
-                  throw new Error('Has to be after the start');
-                }
-              },
-            }),
-          ],
+          rules: [...REQUIRED, afterStart((field) => field('valid_from'))],
         },
         { name: 'active', label: 'Active', kind: 'switch' },
       ]}
       initialValues={{ active: true, max_uses_per_user_per_period: 1 }}
       okText="Create"
       pending={write.isPending}
-      onSubmit={({
-        description,
-        max_total_uses: maxTotal,
-        valid_from: from,
-        valid_until: until,
-        ...rest
-      }) =>
+      onSubmit={({ description, max_total_uses: maxTotal, ...rest }) =>
         write.mutate({
           ...rest,
           description: description || undefined,
           max_total_uses: maxTotal ?? undefined,
-          valid_from: from.toISOString(),
-          valid_until: until.toISOString(),
         })
       }
       onClose={onClose}
@@ -134,40 +123,25 @@ export function PromotionEdit({
   onClose: () => void;
 }) {
   const write = useAdminWrite({
-    write: (update: Partial<AdminPromotionUpdate>) => updatePromotion(promotion.id, update),
+    write: (update: AdminPromotionUpdate) => updatePromotion(promotion.id, update),
     done: 'Promotion updated',
     failed: "Couldn't update the promotion",
     onSuccess: onClose,
     refreshes: adminQueryKeys.promotions(),
   });
-  const validUntil = dayjs(asUtc(promotion.valid_until));
   const hasLimit = promotion.max_total_uses !== null;
 
   return (
-    <FormModal<{
-      description: string | null;
-      active: boolean;
-      valid_until: Dayjs;
-      max_total_uses: number | null;
-    }>
+    <FormModal<Pick<AdminPromotion, 'description' | 'active' | 'valid_until' | 'max_total_uses'>>
       title={`Edit ${promotion.code}`}
       description="The code, its credits, its period and its start can't be changed after creation."
       fields={[
-        { name: 'description', label: 'Description', kind: 'multiline', rules: [{ max: 1000 }] },
+        DESCRIPTION,
         {
           name: 'valid_until',
           label: 'Valid until',
           kind: 'datetime',
-          rules: [
-            ...REQUIRED,
-            {
-              validator: async (_, value?: Dayjs) => {
-                if (value && !value.isAfter(dayjs(asUtc(promotion.valid_from)))) {
-                  throw new Error('Has to be after the start');
-                }
-              },
-            },
-          ],
+          rules: [...REQUIRED, afterStart(() => promotion.valid_from)],
         },
         {
           name: 'max_total_uses',
@@ -178,34 +152,17 @@ export function PromotionEdit({
           extra: hasLimit ? 'This can be changed, but the API has no way to remove it.' : undefined,
           rules: [
             ...(hasLimit ? [{ required: true, message: 'Give a limit' }] : []),
-            {
-              validator: async (_, value) => {
-                if (value && value < promotion.max_uses_per_user_per_period) {
-                  throw new Error("Can't be below the uses per user");
-                }
-              },
-            },
+            atLeastPerUser(() => promotion.max_uses_per_user_per_period),
           ],
         },
         { name: 'active', label: 'Active', kind: 'switch' },
       ]}
-      initialValues={{
-        description: promotion.description,
-        valid_until: validUntil,
-        max_total_uses: promotion.max_total_uses,
-        active: promotion.active,
-      }}
+      initialValues={promotion}
       okText="Save"
       pending={write.isPending}
-      onSubmit={({ description, valid_until: until, max_total_uses: maxTotal, active }) =>
+      onSubmit={({ description, max_total_uses: maxTotal, ...rest }) =>
         saveChanges<AdminPromotionUpdate>(
-          {
-            description: description ?? undefined,
-            active,
-            // An untouched date keeps the stored string, so it doesn't count as a change.
-            valid_until: until.isSame(validUntil) ? promotion.valid_until : until.toISOString(),
-            max_total_uses: maxTotal ?? undefined,
-          },
+          { ...rest, description: description ?? undefined, max_total_uses: maxTotal ?? undefined },
           promotion,
           write.mutate,
           onClose

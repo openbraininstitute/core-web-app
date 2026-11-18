@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Button } from '@/ui/molecules/button';
 
 import { adminQueryKeys } from '../../../query-keys';
+import { ADMIN_ROOT } from '../../../routes';
 import { Detail, DetailId, DetailList } from '../../../shared/detail-list';
 import { FormModal } from '../../../shared/form-modal';
 import { formatDateTime } from '../../../shared/format';
@@ -17,7 +18,7 @@ import { useAdminWrite } from '../../../shared/use-admin-write';
 import { AdminLink } from '../../../shell/admin-link';
 import { deactivatePromotion, getPromotion, getPromotionUsage } from '../api/admin';
 import { PromotionEdit } from './promotion-form';
-import { PROMOTIONS_HREF, PromotionStatus, promotionUses } from './promotions-list';
+import { PromotionStatus, promotionUses } from './promotions-list';
 
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { AdminPromotion, AdminPromotionRedemption } from '../api/admin-types';
@@ -77,7 +78,7 @@ const REDEMPTION_COLUMNS: Array<ISimpleColumn<AdminPromotionRedemption>> = [
 function PromotionUsage({ promotionId }: { promotionId: string }) {
   const query = useQuery({
     queryKey: adminQueryKeys.promotionUsage(promotionId),
-    queryFn: () => getPromotionUsage(promotionId),
+    queryFn: ({ signal }) => getPromotionUsage(promotionId, signal),
   });
 
   return (
@@ -146,44 +147,47 @@ function PromotionActions({ promotion }: { promotion: AdminPromotion }) {
 export function PromotionDetail({ promotionId }: { promotionId: string }) {
   const query = useQuery({
     queryKey: adminQueryKeys.promotion(promotionId),
-    queryFn: () => getPromotion(promotionId),
+    queryFn: ({ signal }) => getPromotion(promotionId, signal),
   });
 
+  // The usage sits outside `Loaded`, so its request starts with the promotion's.
   return (
-    <Loaded query={query} what="this promotion">
-      {(promotion) => (
-        <div className="flex flex-col gap-4">
-          <PageHeader
-            title={promotion.code}
-            parent={{ label: 'Promotions', href: PROMOTIONS_HREF }}
-            actions={<PromotionActions promotion={promotion} />}
-          />
-          <DetailList>
-            <Detail label="Status">
-              <PromotionStatus promotion={promotion} />
-            </Detail>
-            <Detail label="Description">{promotion.description}</Detail>
-            <Detail label="Promotion ID">
-              <DetailId>{promotion.id}</DetailId>
-            </Detail>
-            <Detail label="Credits granted">{promotion.credits_amount}</Detail>
-            <Detail label="Period">{`${promotion.validity_period_days} days`}</Detail>
-            <Detail label="Uses per user per period">
-              {promotion.max_uses_per_user_per_period}
-            </Detail>
-            <Detail label="Uses in total">{promotionUses(promotion)}</Detail>
-            <Detail label="Valid from">{formatDateTime(promotion.valid_from)}</Detail>
-            <Detail label="Valid until">{formatDateTime(promotion.valid_until)}</Detail>
-            <Detail label="Created by">
-              <AdminLink kind="user" id={promotion.created_by} />
-            </Detail>
-            <Detail label="Created">{formatDateTime(promotion.created_at)}</Detail>
-            <Detail label="Updated">{formatDateTime(promotion.updated_at)}</Detail>
-          </DetailList>
-          <h2 className="text-primary-9 font-semibold">Usage</h2>
-          <PromotionUsage promotionId={promotionId} />
-        </div>
-      )}
-    </Loaded>
+    <div className="flex flex-col gap-4">
+      <Loaded query={query} what="this promotion">
+        {(promotion) => (
+          <>
+            <PageHeader
+              title={promotion.code}
+              parent={{ label: 'Promotions', href: `${ADMIN_ROOT}/promotions` }}
+              actions={<PromotionActions promotion={promotion} />}
+            />
+            <DetailList>
+              <Detail label="Status">
+                <PromotionStatus promotion={promotion} />
+              </Detail>
+              <Detail label="Description">{promotion.description}</Detail>
+              <Detail label="Promotion ID">
+                <DetailId>{promotion.id}</DetailId>
+              </Detail>
+              <Detail label="Credits granted">{promotion.credits_amount}</Detail>
+              <Detail label="Period">{`${promotion.validity_period_days} days`}</Detail>
+              <Detail label="Uses per user per period">
+                {promotion.max_uses_per_user_per_period}
+              </Detail>
+              <Detail label="Uses in total">{promotionUses(promotion)}</Detail>
+              <Detail label="Valid from">{formatDateTime(promotion.valid_from)}</Detail>
+              <Detail label="Valid until">{formatDateTime(promotion.valid_until)}</Detail>
+              <Detail label="Created by">
+                <AdminLink kind="user" id={promotion.created_by} />
+              </Detail>
+              <Detail label="Created">{formatDateTime(promotion.created_at)}</Detail>
+              <Detail label="Updated">{formatDateTime(promotion.updated_at)}</Detail>
+            </DetailList>
+          </>
+        )}
+      </Loaded>
+      <h2 className="text-primary-9 font-semibold">Usage</h2>
+      <PromotionUsage promotionId={promotionId} />
+    </div>
   );
 }

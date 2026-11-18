@@ -9,8 +9,7 @@ import { useState } from 'react';
 import { Button } from '@/ui/molecules/button';
 
 import { adminQueryKeys } from '../../../query-keys';
-import { ADMIN_ROOT } from '../../../routes';
-import { asUtc, formatDateTime } from '../../../shared/format';
+import { formatDateTime } from '../../../shared/format';
 import { AdminPagedGrid, pagedSource } from '../../../shared/grid';
 import { PageHeader } from '../../../shared/page-header';
 import { StatusPill } from '../../../shared/status-pill';
@@ -21,8 +20,6 @@ import { PromotionCreate } from './promotion-form';
 
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { AdminPromotion } from '../api/admin-types';
-
-export const PROMOTIONS_HREF = `${ADMIN_ROOT}/promotions`;
 
 const STATUSES = ['any', 'active', 'inactive'] as const;
 const STATUS_OPTIONS = [
@@ -38,10 +35,10 @@ export function PromotionStatus({ promotion }: { promotion: AdminPromotion }) {
   const now = new Date();
 
   if (!promotion.active) return <StatusPill tone="neutral">Switched off</StatusPill>;
-  if (new Date(asUtc(promotion.valid_until)) < now) {
+  if (new Date(promotion.valid_until) < now) {
     return <StatusPill tone="warn">Expired</StatusPill>;
   }
-  if (new Date(asUtc(promotion.valid_from)) > now) {
+  if (new Date(promotion.valid_from) > now) {
     return <StatusPill tone="neutral">Scheduled</StatusPill>;
   }
   return <StatusPill tone="good">Active</StatusPill>;
@@ -123,7 +120,6 @@ export function PromotionsList() {
         fill
         what="promotions"
         columns={COLUMNS}
-        // `status` is a rendered cell, so a row whose state changed has to be a new row.
         getRowId={({ id, updated_at: updatedAt }) => `${id}:${updatedAt}`}
         dataSource={PROMOTIONS_SOURCE}
         queryKey={adminQueryKeys.promotionList()}
