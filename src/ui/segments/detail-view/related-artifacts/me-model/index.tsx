@@ -33,6 +33,7 @@ function CalibrationResult({ memodel, variant }: { memodel: IMEModel; variant: T
   const details = [
     { label: 'Holding current', value: calibration.holding_current, unit: 'nA' },
     { label: 'Threshold current', value: calibration.threshold_current, unit: 'nA' },
+    { label: 'Input resistance', value: calibration.rin, unit: 'MΩ' },
   ];
 
   return (

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { compileConfigValidator } from '@/features/scan-config/components/hooks';
-import { toScanConfigForm } from '@/features/scan-config/view/workflow-config-view';
+import { toScanConfigForm } from '@/features/scan-config/helpers';
 
 import type { ConfigSchema } from '@/features/scan-config/types';
 

@@ -21,9 +21,6 @@ import type { TScanConfigRegistryConfig } from '@/ui/segments/workflows/config/s
 
 import styles from './workflow-config-view.module.css';
 
-// re-exported so existing consumers of this module keep their import path
-export { toScanConfigForm };
-
 type Props = {
   scanConfig: TScanConfigRegistryConfig;
   activity: TScanConfigActivity;

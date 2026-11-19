@@ -3,7 +3,7 @@ import { cache } from 'react';
 import { getTaskActivities } from '@/api/entitycore/queries/task';
 import { getTaskConfig } from '@/api/entitycore/queries/task/task-config';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
-import { Task } from '@/entity-configuration/domain/task-functions';
+import { usedTaskConfigId } from '@/entity-configuration/domain/task-functions';
 import { resolveWorkflowTaskTypeBindings } from '@/features/scan-config/workflow/types';
 import { ActivityRegistry } from '@/ui/segments/workflows/config/activities';
 
@@ -47,17 +47,13 @@ export const resolveGeneratingWorkflow = cache(
       .at(0);
     if (!match) return null;
 
-    const campaignId = await Task.campaignIdFromConfigId({
-      configId,
-      configGenerationType: match.bindings.configGeneration,
-      context,
-    });
+    const coordinateConfig = await getTaskConfig({ id: configId, context });
+    const campaignId =
+      coordinateConfig.task_config_generator_id ??
+      (await usedTaskConfigId(configId, match.bindings.configGeneration, context));
     if (!campaignId) return null;
 
-    const [campaign, coordinateConfig] = await Promise.all([
-      getTaskConfig({ id: campaignId, context }),
-      getTaskConfig({ id: configId, context }),
-    ]);
+    const campaign = await getTaskConfig({ id: campaignId, context });
 
     return {
       activity,

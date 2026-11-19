@@ -64,9 +64,9 @@ export interface IMEModel
   morphology: ICellMorphology;
   emodel: IEModel;
   calibration_result?: {
-    rin: number;
-    holding_current?: number | null;
-    threshold_current?: number | null;
+    holding_current: number;
+    threshold_current: number;
+    rin?: number | null;
   } | null;
 }
 

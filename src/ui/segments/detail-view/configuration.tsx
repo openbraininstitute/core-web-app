@@ -148,15 +148,19 @@ export default async function Configuration({
       label: AssetLabel.task_config,
     }).getOneOrNull();
     // the download redirects to S3, which serves it as binary/octet-stream, so parse it here
-    const config: Record<string, Json> | null = asset
-      ? await downloadAsset({
+    const { data: config, error: configError } = await tryCatch<Record<string, Json> | null>(
+      async () => {
+        if (!asset) return null;
+        const response = await downloadAsset({
           ctx: context,
           entityType: EntityTypeDict.TaskConfig,
           entityId: workflow.coordinateConfig.id,
           id: asset.id,
           asRawResponse: true,
-        }).then((response) => response.json() as Promise<Record<string, Json>>)
-      : null;
+        });
+        return (await response.json()) as Record<string, Json>;
+      }
+    );
     const { scanConfig } = workflow.workflow;
     const links = (
       // pinned to the detail panel (DetailViewBody), level with the entity name above
@@ -188,7 +192,9 @@ export default async function Configuration({
           <JsonView value={config} variant={fieldVariant} />
         ) : (
           <div className="flex items-center justify-center py-20">
-            The configuration file of this {entityType.title.toLowerCase()} is missing.
+            {configError
+              ? `Couldn't load the configuration file of this ${entityType.title.toLowerCase()}.`
+              : `The configuration file of this ${entityType.title.toLowerCase()} is missing.`}
           </div>
         )}
       </div>
