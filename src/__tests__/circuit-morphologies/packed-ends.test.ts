@@ -2,6 +2,10 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  PACKED_FAR_WGSL,
+  PACKED_NEAR_WGSL,
+} from '@/features/circuit-viewer/morphologies/engine/webgpu/packed-ends-wgsl';
+import {
   endSums,
   floatsOf,
   MOST_STEP,
@@ -52,6 +56,24 @@ describe('packed ends', () => {
     expect(coarsest.clamped).toBe(false);
     expect(coarsest.words[3] >>> 30).toBe(3);
     expect(coarsest.far.map(Math.round)).toEqual([0, -64 * MOST_STEP, 640]);
+  });
+
+  it('round a longer segment by half a coarser step on an axis at the most', () => {
+    const steps = [MOST_STEP + 3, 4098, -6];
+    const { clamped, words, far } = packed(steps);
+    expect(clamped).toBe(false);
+    expect(words[3] >>> 30).toBe(1);
+    expect(far.map((to, k) => Math.round(to) - steps[k])).toEqual([2, 2, 2]);
+  });
+
+  it('unpack in the shaders with the shifts the page reads them by', () => {
+    expect(PACKED_FAR_WGSL).toContain(
+      'bitcast<i32>(d << 17u) >> 17u, bitcast<i32>(d << 2u) >> 17u'
+    );
+    expect(PACKED_FAR_WGSL).toContain('bitcast<i32>(e << 17u) >> 17u');
+    expect(PACKED_FAR_WGSL).toContain('f32(1u << (2u * (d >> 30u)))');
+    expect(PACKED_FAR_WGSL).toContain('packedRadius(e >> 24u');
+    expect(PACKED_NEAR_WGSL).toContain('packedRadius(e >> 16u');
   });
 
   it('cut a segment past the coarsest steps short along its line, and say so', () => {

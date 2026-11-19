@@ -8,8 +8,9 @@
  *
  * A step is the pack's grid times 4 to the scale. The scale is 0, and the far end exact, unless the segment is longer
  * than `MOST_STEP` grid steps on an axis (409 µm on a 25 nm grid); a longer one is rounded to the coarser steps, off by
- * under a ten-thousandth of its length. What still does not fit is clamped: a segment past 64 times that reach is cut
- * short along its line, and a radius step is held within a byte. The shaders unpack them (`packed-ends-wgsl.ts`).
+ * half of one on an axis at most, under an eight-thousandth of its longest axis. What still does not fit is clamped:
+ * a segment past 64 times that reach is cut short along its line, and a radius step is held within a byte. The shaders
+ * unpack them (`packed-ends-wgsl.ts`).
  */
 import type { Packing } from '../types';
 

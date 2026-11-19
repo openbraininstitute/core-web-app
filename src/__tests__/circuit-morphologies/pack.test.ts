@@ -399,7 +399,7 @@ describe('openPack', () => {
         if (longest > 64 * MOST_STEP) continue;
         if (longest > MOST_STEP) rounded++;
         const off = [4, 5, 6].map((k) => Math.abs(unpacked[o + k] - floats[o + k]));
-        expect(Math.max(...off)).toBeLessThan(0.001 + 1e-4 * longest * gridUm);
+        expect(Math.max(...off)).toBeLessThan(0.001 + (2 / MOST_STEP) * longest * gridUm);
       }
     }
     expect(clamped).toBe(2);
