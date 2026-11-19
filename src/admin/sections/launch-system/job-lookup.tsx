@@ -1,28 +1,40 @@
+import { match } from 'ts-pattern';
+
 import { PageHeader } from '../../shared/page-header';
+import { JobOutcome } from './job';
 import { JobDetail } from './job-detail';
 import { JobIdSearch } from './job-id-search';
 
-import type { JobLookup } from './job';
+import type { TJobLookup } from './job';
 
-function lookupMessage(lookup: Exclude<JobLookup, { outcome: 'found' }>) {
-  switch (lookup.outcome) {
-    case 'invalid-id':
-      return 'Enter a full job ID.';
-    case 'not-found':
-      return 'Launch system on cell A has no job with this ID. Jobs on cell B can’t be looked up.';
-    case 'denied':
-      return 'Launch system refused your account. A new group can take 5 minutes to reach it.';
-    case 'no-answer':
-      return 'Launch system didn’t answer. Try again in a moment.';
-    case 'not-reachable':
-      return `Launch system isn’t reachable from this server (${lookup.status}). It answers only the deployed web app.`;
-    case 'failed':
-      return `Launch system answered ${lookup.status}. ${lookup.message ?? ''}`;
-  }
+function lookupMessage(lookup: Exclude<TJobLookup, { outcome: typeof JobOutcome.Found }>) {
+  return match(lookup)
+    .with({ outcome: JobOutcome.InvalidId }, () => 'Enter a full job ID.')
+    .with(
+      { outcome: JobOutcome.NotFound },
+      () => 'Launch system on cell A has no job with this ID. Jobs on cell B can’t be looked up.'
+    )
+    .with(
+      { outcome: JobOutcome.Denied },
+      () => 'Launch system refused your account. A new group can take 5 minutes to reach it.'
+    )
+    .with(
+      { outcome: JobOutcome.NoAnswer },
+      () => 'Launch system didn’t answer. Try again in a moment.'
+    )
+    .with(
+      { outcome: JobOutcome.NotReachable },
+      ({ status }) =>
+        `Launch system isn’t reachable from this server (${status}). It answers only the deployed web app.`
+    )
+    .with(
+      { outcome: JobOutcome.Failed },
+      ({ status, message }) => `Launch system answered ${status}. ${message ?? ''}`
+    )
+    .exhaustive();
 }
 
-// `null` until an id is entered.
-export function JobLookupView({ lookup }: { lookup: JobLookup | null }) {
+export function JobLookupView({ lookup }: { lookup: TJobLookup | null }) {
   return (
     <div className="flex flex-col gap-4">
       <PageHeader title="Job lookup">
@@ -30,7 +42,7 @@ export function JobLookupView({ lookup }: { lookup: JobLookup | null }) {
         an operator to cancel a job.
       </PageHeader>
       <JobIdSearch />
-      {lookup?.outcome === 'found' ? (
+      {lookup?.outcome === JobOutcome.Found ? (
         <JobDetail job={lookup.job} />
       ) : (
         <p className="text-neutral-4">

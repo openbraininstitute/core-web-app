@@ -13,14 +13,14 @@ import { clearSimulatorCache, SIMULATOR_CACHES, SimulatorCache } from './cache';
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { TSimulatorCache } from './cache';
 
-type CacheRow = { cache: TSimulatorCache; label: string; holds: string };
+type TCacheRow = { cache: TSimulatorCache; label: string; holds: string };
 
-const ROWS: CacheRow[] = Object.values(SimulatorCache).map((cache) => ({
+const ROWS: TCacheRow[] = Object.values(SimulatorCache).map((cache) => ({
   cache,
   ...SIMULATOR_CACHES[cache],
 }));
 
-function ClearCache({ row }: { row: CacheRow }) {
+function ClearCache({ row }: { row: TCacheRow }) {
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
   const write = useAdminWrite({
@@ -51,7 +51,7 @@ function ClearCache({ row }: { row: CacheRow }) {
   );
 }
 
-const COLUMNS: Array<ISimpleColumn<CacheRow>> = [
+const COLUMNS: Array<ISimpleColumn<TCacheRow>> = [
   {
     id: 'cache',
     header: 'Cache',
@@ -86,7 +86,7 @@ export function SimulatorCaches() {
         service gives no progress for that deletion.
       </PageHeader>
       <div className="border-neutral-2 rounded-lg border bg-white">
-        <SimpleGrid<CacheRow>
+        <SimpleGrid<TCacheRow>
           columns={COLUMNS}
           rows={ROWS}
           getRowId={({ cache }) => cache}

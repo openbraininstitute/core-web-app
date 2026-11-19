@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { SERVICE_CATALOG, serviceBaseUrl } from '@/admin/sections/services/service-catalog';
+import {
+  ProbedFrom,
+  SERVICE_CATALOG,
+  serviceBaseUrl,
+} from '@/admin/sections/services/service-catalog';
 
 describe('serviceBaseUrl', () => {
   it('probes auth-manager at the root, not under /v1', () => {
@@ -31,7 +35,7 @@ describe('SERVICE_CATALOG', () => {
     'grading',
   ])('probes %s from the server, not the browser', (key) => {
     const service = SERVICE_CATALOG.find((candidate) => candidate.key === key);
-    expect(service?.probedFrom).toBe('server');
+    expect(service?.probedFrom).toBe(ProbedFrom.Server);
   });
 
   it('gives each service its own key', () => {

@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest';
 const PAGES = globSync('src/app/app/admin/**/page.tsx').filter((file) =>
   file.includes('/(protected)/')
 );
+const ROUTES = globSync('src/app/api/admin/**/route.ts');
 
 describe('admin pages', () => {
   it('finds the protected pages', () => {
@@ -15,5 +16,15 @@ describe('admin pages', () => {
 
   it.each(PAGES)('%s calls requireCapability', (file) => {
     expect(readFileSync(file, 'utf8')).toMatch(/await requireCapability\(/);
+  });
+});
+
+describe('admin route handlers', () => {
+  it('finds the route handlers', () => {
+    expect(ROUTES.length).toBeGreaterThan(0);
+  });
+
+  it.each(ROUTES)('%s calls capabilityDenial', (file) => {
+    expect(readFileSync(file, 'utf8')).toMatch(/await capabilityDenial\(/);
   });
 });

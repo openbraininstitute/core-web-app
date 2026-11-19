@@ -1,6 +1,6 @@
 import { smallScaleSimulatorApi } from '@/api/small-scale-simulator/utils';
 
-// Bluenaas app/infrastructure/storage/epoch.py, CacheKind
+/** Bluenaas `CacheKind`. */
 export const SimulatorCache = {
   Circuit: 'circuit',
   SingleNeuron: 'single-neuron',
@@ -38,12 +38,11 @@ export const SIMULATOR_CACHES: Record<TSimulatorCache, { label: string; holds: s
   },
 };
 
-// 202: the clear starts a new, empty cache and queues the old one for deletion.
-type CacheClearStarted = { message: string; job_id: string };
+type TCacheClearStarted = { message: string; job_id: string };
 
 export async function clearSimulatorCache(cache: TSimulatorCache) {
   const api = await smallScaleSimulatorApi();
-  return api.delete<CacheClearStarted>(`/admin/cache/${cache}`, {
+  return api.delete<TCacheClearStarted>(`/admin/cache/${cache}`, {
     headers: { accept: 'application/json' },
   });
 }

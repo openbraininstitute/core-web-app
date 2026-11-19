@@ -1,34 +1,42 @@
 import { serviceBaseUrl } from './service-catalog';
 
-import type { ServiceDescriptor } from './service-catalog';
+import type { TServiceDescriptor } from './service-catalog';
 
-// Health and version routes need no auth, so the operator's token stays out of these calls.
+export const ServiceStatus = {
+  Up: 'up',
+  Down: 'down',
+  Unreachable: 'unreachable',
+  Blocked: 'blocked',
+  NotConfigured: 'not-configured',
+} as const;
 
-export type ServiceHealth = {
-  status: 'up' | 'down' | 'unreachable' | 'blocked' | 'not-configured';
+export type TServiceStatus = (typeof ServiceStatus)[keyof typeof ServiceStatus];
+
+export type TServiceHealth = {
+  status: TServiceStatus;
   httpStatus?: number;
   latencyMs?: number;
 };
 
-export type ServiceProbe = { health: ServiceHealth; version: string | null; path: string | null };
+export type TServiceProbe = { health: TServiceHealth; version: string | null; path: string | null };
 
-export type ProbeMode = {
+export type TProbeMode = {
   redirect: RequestRedirect;
-  readStatus: (res: Response) => ServiceHealth['status'];
+  readStatus: (res: Response) => TServiceStatus;
 };
 
-export const BROWSER_PROBE: ProbeMode = {
+export const BROWSER_PROBE: TProbeMode = {
   redirect: 'follow',
-  readStatus: ({ ok }) => (ok ? 'up' : 'down'),
+  readStatus: ({ ok }) => (ok ? ServiceStatus.Up : ServiceStatus.Down),
 };
 
 const PROBE_TIMEOUT_MS = 8000;
 
-function probe(url: string, { redirect }: ProbeMode) {
+function probe(url: string, { redirect }: TProbeMode) {
   return fetch(url, { cache: 'no-store', redirect, signal: AbortSignal.timeout(PROBE_TIMEOUT_MS) });
 }
 
-async function fetchVersion(url: string, inData: boolean, mode: ProbeMode) {
+async function fetchVersion(url: string, inData: boolean, mode: TProbeMode) {
   try {
     const res = await probe(url, mode);
     if (!res.ok) {
@@ -44,20 +52,20 @@ async function fetchVersion(url: string, inData: boolean, mode: ProbeMode) {
   }
 }
 
-async function probeHealth(url: string, mode: ProbeMode): Promise<ServiceHealth> {
+async function probeHealth(url: string, mode: TProbeMode): Promise<TServiceHealth> {
   const started = performance.now();
   const res = await probe(url, mode).catch(() => null);
   const latencyMs = Math.round(performance.now() - started);
-  if (!res) return { status: 'unreachable', latencyMs };
+  if (!res) return { status: ServiceStatus.Unreachable, latencyMs };
   await res.body?.cancel();
   return { status: mode.readStatus(res), httpStatus: res.status, latencyMs };
 }
 
 export async function probeService(
-  service: ServiceDescriptor,
+  service: TServiceDescriptor,
   configuredUrl: string,
-  mode: ProbeMode
-): Promise<ServiceProbe> {
+  mode: TProbeMode
+): Promise<TServiceProbe> {
   const baseUrl = serviceBaseUrl(service, configuredUrl);
   const healthUrl = `${baseUrl}${service.healthPath}`;
   const [health, version] = await Promise.all([

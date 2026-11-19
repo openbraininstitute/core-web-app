@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { JobOutcome } from '@/admin/sections/launch-system/job';
 import { fetchAdminJob, lookupJob } from '@/admin/server/launch-system';
 
 const { authMock } = vi.hoisted(() => ({ authMock: vi.fn() }));
@@ -29,7 +30,10 @@ describe('fetchAdminJob', () => {
     const job = { id: JOB_ID, status: 'done' };
     fetchMock.mockResolvedValueOnce(Response.json(job));
 
-    await expect(fetchAdminJob(BASE, JOB_ID, 'tok')).resolves.toEqual({ outcome: 'found', job });
+    await expect(fetchAdminJob(BASE, JOB_ID, 'tok')).resolves.toEqual({
+      outcome: JobOutcome.Found,
+      job,
+    });
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toBe(`https://cell-a/api/launch-system/admin/job/${JOB_ID}`);
     expect(init.headers.authorization).toBe('Bearer tok');
@@ -40,32 +44,37 @@ describe('fetchAdminJob', () => {
     [
       'a JSON 404',
       Response.json({ error_code: 'NOT_FOUND' }, { status: 404 }),
-      { outcome: 'not-found' },
+      { outcome: JobOutcome.NotFound },
     ],
     [
       'a JSON 403',
       Response.json({ error_code: 'NOT_AUTHORIZED' }, { status: 403 }),
-      { outcome: 'denied' },
+      { outcome: JobOutcome.Denied },
+    ],
+    [
+      "the gateway's JSON 403",
+      Response.json({ detail: 'Forbidden' }, { status: 403 }),
+      { outcome: JobOutcome.NotReachable, status: 403 },
     ],
     [
       "the gateway's redirect",
       new Response(null, { status: 302 }),
-      { outcome: 'not-reachable', status: 302 },
+      { outcome: JobOutcome.NotReachable, status: 302 },
     ],
     [
       "the web app's HTML 404",
       new Response('<html>', { status: 404 }),
-      { outcome: 'not-reachable', status: 404 },
+      { outcome: JobOutcome.NotReachable, status: 404 },
     ],
     [
       "the gateway's HTML 502 for a dead service",
       new Response('<html>', { status: 502 }),
-      { outcome: 'failed', status: 502, message: null },
+      { outcome: JobOutcome.Failed, status: 502, message: null },
     ],
     [
       'a JSON 500',
       Response.json({ message: 'Boom' }, { status: 500 }),
-      { outcome: 'failed', status: 500, message: 'Boom' },
+      { outcome: JobOutcome.Failed, status: 500, message: 'Boom' },
     ],
   ])('reads %s', async (_name, reply, lookup) => {
     fetchMock.mockResolvedValueOnce(reply);
@@ -76,13 +85,15 @@ describe('fetchAdminJob', () => {
   it('reads a network failure or timeout as no answer instead of throwing', async () => {
     fetchMock.mockRejectedValueOnce(new TypeError('fetch failed'));
 
-    await expect(fetchAdminJob(BASE, JOB_ID, 'tok')).resolves.toEqual({ outcome: 'no-answer' });
+    await expect(fetchAdminJob(BASE, JOB_ID, 'tok')).resolves.toEqual({
+      outcome: JobOutcome.NoAnswer,
+    });
   });
 });
 
 describe('lookupJob', () => {
   it('asks nothing for an id that is not a UUID', async () => {
-    await expect(lookupJob('../health')).resolves.toEqual({ outcome: 'invalid-id' });
+    await expect(lookupJob('../health')).resolves.toEqual({ outcome: JobOutcome.InvalidId });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -96,7 +107,7 @@ describe('lookupJob', () => {
   it('asks nothing without a session token', async () => {
     authMock.mockResolvedValueOnce(null);
 
-    await expect(lookupJob(JOB_ID)).resolves.toEqual({ outcome: 'denied' });
+    await expect(lookupJob(JOB_ID)).resolves.toEqual({ outcome: JobOutcome.Denied });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

@@ -10,7 +10,7 @@ import { AdminLink } from '../../shell/admin-link';
 
 import type { TJobStatus } from '@/features/task-logs-stream/types';
 import type { TStatusTone } from '../../shared/status-pill';
-import type { LaunchSystemJob } from './job';
+import type { TLaunchSystemJob } from './job';
 
 const STATUS_TONES: Record<TJobStatus, TStatusTone> = {
   [JobStatusDict.Created]: 'neutral',
@@ -23,7 +23,7 @@ const STATUS_TONES: Record<TJobStatus, TStatusTone> = {
 
 const when = (iso: string | null) => iso && formatDateTime(iso);
 
-export function JobDetail({ job }: { job: LaunchSystemJob }) {
+export function JobDetail({ job }: { job: TLaunchSystemJob }) {
   const { code, resources, meta, logs } = job;
 
   return (

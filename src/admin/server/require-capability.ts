@@ -24,8 +24,7 @@ const currentCapabilities = cache(async (): Promise<OperatorCapabilities | null>
   return deriveCapabilities(groups);
 });
 
-// For route handlers, where a redirect would hand the caller an HTML page. `null` lets the
-// request through.
+/** A 401 or 403 JSON reply for a route handler, or `null` to let the request through. */
 export async function capabilityDenial(need: CapabilityPath): Promise<Response | null> {
   const capabilities = await currentCapabilities().catch(() => null);
   if (!capabilities) return Response.json({ message: 'Sign in again' }, { status: 401 });

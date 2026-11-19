@@ -10,36 +10,36 @@ import { Button } from '@/ui/molecules/button';
 
 import { adminQueryKeys } from '../../query-keys';
 import { StatusPill } from '../../shared/status-pill';
-import { BROWSER_PROBE, probeService } from './health';
-import { SERVICE_CATALOG } from './service-catalog';
+import { BROWSER_PROBE, probeService, ServiceStatus } from './health';
+import { ProbedFrom, SERVICE_CATALOG } from './service-catalog';
 
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { TStatusTone } from '../../shared/status-pill';
-import type { ServiceHealth, ServiceProbe } from './health';
-import type { ServiceDescriptor } from './service-catalog';
+import type { TServiceProbe, TServiceStatus } from './health';
+import type { TServiceDescriptor } from './service-catalog';
 
 const STATUS_REFRESH_MS = 60_000;
 const STATUS_STALE_MS = 30_000;
 
-const SERVICE_STATUS: Record<ServiceHealth['status'], { label: string; tone: TStatusTone }> = {
-  up: { label: 'Operational', tone: 'good' },
-  down: { label: 'Down', tone: 'bad' },
-  unreachable: { label: 'Unreachable', tone: 'bad' },
-  blocked: { label: 'Not reachable from here', tone: 'neutral' },
-  'not-configured': { label: 'Not configured', tone: 'neutral' },
+const SERVICE_STATUS: Record<TServiceStatus, { label: string; tone: TStatusTone }> = {
+  [ServiceStatus.Up]: { label: 'Operational', tone: 'good' },
+  [ServiceStatus.Down]: { label: 'Down', tone: 'bad' },
+  [ServiceStatus.Unreachable]: { label: 'Unreachable', tone: 'bad' },
+  [ServiceStatus.Blocked]: { label: 'Not reachable from here', tone: 'neutral' },
+  [ServiceStatus.NotConfigured]: { label: 'Not configured', tone: 'neutral' },
 };
 
-async function fetchServerProbe(key: string): Promise<ServiceProbe> {
+async function fetchServerProbe(key: string): Promise<TServiceProbe> {
   const res = await fetch(`/api/admin/services/${encodeURIComponent(key)}`, { cache: 'no-store' });
   if (!res.ok) throw new Error(`The web app answered ${res.status}`);
   return res.json();
 }
 
-function useServiceProbe(service: ServiceDescriptor) {
+function useServiceProbe(service: TServiceDescriptor) {
   return useQuery({
     queryKey: adminQueryKeys.serviceHealth(service.key),
     queryFn: () =>
-      service.probedFrom === 'browser'
+      service.probedFrom === ProbedFrom.Browser
         ? probeService(service, config[service.configKey], BROWSER_PROBE)
         : fetchServerProbe(service.key),
     refetchInterval: STATUS_REFRESH_MS,
@@ -47,10 +47,9 @@ function useServiceProbe(service: ServiceDescriptor) {
   });
 }
 
-function StatusCell({ service }: { service: ServiceDescriptor }) {
+function StatusCell({ service }: { service: TServiceDescriptor }) {
   const { data, error } = useServiceProbe(service);
 
-  // A failed refetch keeps the last data, which would read as current.
   if (error || !data) {
     return <span className="text-neutral-4">{error ? "Couldn't check" : 'Checking'}</span>;
   }
@@ -59,25 +58,26 @@ function StatusCell({ service }: { service: ServiceDescriptor }) {
   return (
     <StatusPill tone={SERVICE_STATUS[status].tone}>
       {SERVICE_STATUS[status].label}
-      {httpStatus && status !== 'up' && ` (${httpStatus})`}
+      {httpStatus && status !== ServiceStatus.Up && ` (${httpStatus})`}
     </StatusPill>
   );
 }
 
-function LatencyCell({ service }: { service: ServiceDescriptor }) {
+function LatencyCell({ service }: { service: TServiceDescriptor }) {
   const latencyMs = useServiceProbe(service).data?.health.latencyMs;
   return latencyMs === undefined ? null : <span>{latencyMs} ms</span>;
 }
 
-function VersionCell({ service }: { service: ServiceDescriptor }) {
+function VersionCell({ service }: { service: TServiceDescriptor }) {
   const version = useServiceProbe(service).data?.version;
   return version ? <span className="font-mono text-sm">{version}</span> : null;
 }
 
-function HealthPathCell({ service }: { service: ServiceDescriptor }) {
+function HealthPathCell({ service }: { service: TServiceDescriptor }) {
   const probedPath = useServiceProbe(service).data?.path;
   if (!probedPath) return null;
-  const path = service.probedFrom === 'server' ? `${probedPath}, from the server` : probedPath;
+  const path =
+    service.probedFrom === ProbedFrom.Server ? `${probedPath}, from the server` : probedPath;
 
   return (
     <code title={path} className="text-neutral-4 truncate text-sm">
@@ -86,7 +86,7 @@ function HealthPathCell({ service }: { service: ServiceDescriptor }) {
   );
 }
 
-const COLUMNS: Array<ISimpleColumn<ServiceDescriptor>> = [
+const COLUMNS: Array<ISimpleColumn<TServiceDescriptor>> = [
   {
     id: 'service',
     header: 'Service',
@@ -157,7 +157,7 @@ export function ServicesBoard() {
       </div>
 
       <div className="border-neutral-2 rounded-lg border bg-white">
-        <SimpleGrid<ServiceDescriptor>
+        <SimpleGrid<TServiceDescriptor>
           columns={COLUMNS}
           rows={SERVICE_CATALOG}
           getRowId={(service) => service.key}

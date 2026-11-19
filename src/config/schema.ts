@@ -21,7 +21,6 @@ const configFields = {
   AUTH_PROXY_URL: { schema: z.url().optional(), public: true },
 
   GRADING_WEB_LAUNCH_HMAC_SECRET: { schema: z.string().optional(), public: false },
-  // Server only: accounting allows the web app by source IP, and grading sends no CORS header.
   ACCOUNTING_URL: { schema: z.url().optional(), public: false },
   GRADING_SERVICE_URL: { schema: z.url().optional(), public: false },
 

@@ -1,18 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { BROWSER_PROBE, probeService } from '@/admin/sections/services/health';
+import { ProbedFrom } from '@/admin/sections/services/service-catalog';
 
-import type { ServiceDescriptor } from '@/admin/sections/services/service-catalog';
+import type { TServiceDescriptor } from '@/admin/sections/services/service-catalog';
 
 const fetchMock = vi.fn();
 
 const BASE = 'https://host/api/svc';
 
-const SERVICE: ServiceDescriptor = {
+const SERVICE: TServiceDescriptor = {
   key: 'svc',
   label: 'Service',
   description: '',
-  probedFrom: 'browser',
+  probedFrom: ProbedFrom.Browser,
   configKey: 'ENTITY_CORE_URL',
   healthPath: '/health',
   versionPath: '/version',

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { ServiceStatus } from '@/admin/sections/services/health';
 import { probeFromServer } from '@/admin/server/service-probe';
 
 const { serverConfig } = vi.hoisted(() => ({
@@ -33,7 +34,7 @@ describe('probeFromServer', () => {
 
   it('says when the URL is not configured, without probing', async () => {
     await expect(probeFromServer('grading')).resolves.toEqual({
-      health: { status: 'not-configured' },
+      health: { status: ServiceStatus.NotConfigured },
       version: null,
       path: null,
     });
@@ -46,7 +47,7 @@ describe('probeFromServer', () => {
     );
 
     await expect(probeFromServer('accounting')).resolves.toMatchObject({
-      health: { status: 'up', httpStatus: 200 },
+      health: { status: ServiceStatus.Up, httpStatus: 200 },
       version: '2026.11.3',
       path: '/api/accounting/health',
     });
@@ -64,20 +65,24 @@ describe('probeFromServer', () => {
   });
 
   it.each([
-    ['a JSON 200', () => Response.json({ status: 'OK' }), 'up'],
-    ['a JSON 503', () => Response.json({}, { status: 503 }), 'down'],
-    ["the gateway's redirect", () => new Response(null, { status: 302 }), 'blocked'],
+    ['a JSON 200', () => Response.json({ status: 'OK' }), ServiceStatus.Up],
+    ['a JSON 503', () => Response.json({}, { status: 503 }), ServiceStatus.Down],
+    ["the gateway's redirect", () => new Response(null, { status: 302 }), ServiceStatus.Blocked],
     [
       "the gateway's JSON 403",
       () => Response.json({ detail: 'Forbidden' }, { status: 403 }),
-      'blocked',
+      ServiceStatus.Blocked,
     ],
-    ["the web app's HTML 404", () => new Response('<html>', { status: 404 }), 'blocked'],
-    ['an HTML 200', () => new Response('<html>', { status: 200 }), 'blocked'],
+    [
+      "the web app's HTML 404",
+      () => new Response('<html>', { status: 404 }),
+      ServiceStatus.Blocked,
+    ],
+    ['an HTML 200', () => new Response('<html>', { status: 200 }), ServiceStatus.Blocked],
     [
       "the gateway's HTML 502 for a dead service",
       () => new Response('<html>', { status: 502 }),
-      'down',
+      ServiceStatus.Down,
     ],
   ])('reads %s as %s', async (_name, reply, status) => {
     fetchMock.mockImplementation(async () => reply());
