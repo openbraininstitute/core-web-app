@@ -10,7 +10,9 @@ const TONES = {
   neutral: 'border-neutral-2 text-neutral-4 bg-white',
 };
 
-export function StatusPill({ tone, children }: { tone: keyof typeof TONES; children: ReactNode }) {
+export type TStatusTone = keyof typeof TONES;
+
+export function StatusPill({ tone, children }: { tone: TStatusTone; children: ReactNode }) {
   return (
     <Badge rounded variant="outline" className={cn(STATUS_PILL_CLASS, TONES[tone])}>
       {children}

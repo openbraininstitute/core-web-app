@@ -1,8 +1,7 @@
 'use client';
 
 import { ReloadOutlined } from '@ant-design/icons';
-import { skipToken, useIsFetching, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useMemo } from 'react';
+import { useIsFetching, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { config } from '@/config';
 import { Align } from '@/features/data-grid/core';
@@ -11,56 +10,44 @@ import { Button } from '@/ui/molecules/button';
 
 import { adminQueryKeys } from '../../query-keys';
 import { StatusPill } from '../../shared/status-pill';
-import { fetchServiceVersion, probeServiceHealth } from './health';
-import { SERVER_SERVICE_CATALOG, SERVICE_CATALOG, serviceBaseUrl } from './service-catalog';
+import { BROWSER_PROBE, probeService } from './health';
+import { SERVICE_CATALOG } from './service-catalog';
 
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
+import type { TStatusTone } from '../../shared/status-pill';
 import type { ServiceHealth, ServiceProbe } from './health';
 import type { ServiceDescriptor } from './service-catalog';
 
 const STATUS_REFRESH_MS = 60_000;
-const VERSION_STALE_MS = 5 * 60_000;
+const STATUS_STALE_MS = 30_000;
 
-// Rows probed from the server have no URLs here: the server's config holds them.
-type ServiceRow = Pick<ServiceDescriptor, 'key' | 'label' | 'description' | 'versionInData'> & {
-  healthUrl?: string;
-  versionUrl?: string;
+const SERVICE_STATUS: Record<ServiceHealth['status'], { label: string; tone: TStatusTone }> = {
+  up: { label: 'Operational', tone: 'good' },
+  down: { label: 'Down', tone: 'bad' },
+  unreachable: { label: 'Unreachable', tone: 'bad' },
+  blocked: { label: 'Not reachable from here', tone: 'neutral' },
+  'not-configured': { label: 'Not configured', tone: 'neutral' },
 };
 
-const STATUS_LABEL: Record<ServiceHealth['status'], string> = {
-  up: 'Operational',
-  down: 'Down',
-  unreachable: 'Unreachable',
-  blocked: 'Not reachable from here',
-  'not-configured': 'Not configured',
-};
-
-const STATUS_TONE: Record<ServiceHealth['status'], 'good' | 'bad' | 'neutral'> = {
-  up: 'good',
-  down: 'bad',
-  unreachable: 'bad',
-  blocked: 'neutral',
-  'not-configured': 'neutral',
-};
-
-async function probeFromServer(key: string): Promise<ServiceProbe> {
+async function fetchServerProbe(key: string): Promise<ServiceProbe> {
   const res = await fetch(`/api/admin/services/${encodeURIComponent(key)}`, { cache: 'no-store' });
   if (!res.ok) throw new Error(`The web app answered ${res.status}`);
   return res.json();
 }
 
-function useServiceProbe({ key, healthUrl }: ServiceRow) {
+function useServiceProbe(service: ServiceDescriptor) {
   return useQuery({
-    queryKey: adminQueryKeys.serviceHealth(key),
-    queryFn: async (): Promise<ServiceProbe> =>
-      healthUrl
-        ? { health: await probeServiceHealth(healthUrl), version: null, path: null }
-        : probeFromServer(key),
+    queryKey: adminQueryKeys.serviceHealth(service.key),
+    queryFn: () =>
+      service.probedFrom === 'browser'
+        ? probeService(service, config[service.configKey], BROWSER_PROBE)
+        : fetchServerProbe(service.key),
     refetchInterval: STATUS_REFRESH_MS,
+    staleTime: STATUS_STALE_MS,
   });
 }
 
-function StatusCell({ service }: { service: ServiceRow }) {
+function StatusCell({ service }: { service: ServiceDescriptor }) {
   const { data, error } = useServiceProbe(service);
 
   if (!data) {
@@ -69,38 +56,27 @@ function StatusCell({ service }: { service: ServiceRow }) {
 
   const { status, httpStatus } = data.health;
   return (
-    <StatusPill tone={STATUS_TONE[status]}>
-      {STATUS_LABEL[status]}
+    <StatusPill tone={SERVICE_STATUS[status].tone}>
+      {SERVICE_STATUS[status].label}
       {httpStatus && status !== 'up' && ` (${httpStatus})`}
     </StatusPill>
   );
 }
 
-function LatencyCell({ service }: { service: ServiceRow }) {
+function LatencyCell({ service }: { service: ServiceDescriptor }) {
   const latencyMs = useServiceProbe(service).data?.health.latencyMs;
   return latencyMs === undefined ? null : <span>{latencyMs} ms</span>;
 }
 
-function VersionCell({ service }: { service: ServiceRow }) {
-  const { key, versionUrl, versionInData } = service;
-  const fromServer = useServiceProbe(service).data?.version;
-  const { data: fromBrowser } = useQuery({
-    queryKey: adminQueryKeys.serviceVersion(key),
-    queryFn: versionUrl
-      ? () => fetchServiceVersion(versionUrl, { inData: versionInData })
-      : skipToken,
-    staleTime: VERSION_STALE_MS,
-  });
-  const version = fromBrowser ?? fromServer;
+function VersionCell({ service }: { service: ServiceDescriptor }) {
+  const version = useServiceProbe(service).data?.version;
   return version ? <span className="font-mono text-sm">{version}</span> : null;
 }
 
-function HealthPathCell({ service }: { service: ServiceRow }) {
-  const fromServer = useServiceProbe(service).data?.path;
-  const path = service.healthUrl
-    ? new URL(service.healthUrl, 'http://localhost').pathname
-    : fromServer && `${fromServer}, from the server`;
-  if (!path) return null;
+function HealthPathCell({ service }: { service: ServiceDescriptor }) {
+  const probedPath = useServiceProbe(service).data?.path;
+  if (!probedPath) return null;
+  const path = service.probedFrom === 'server' ? `${probedPath}, from the server` : probedPath;
 
   return (
     <code title={path} className="text-neutral-4 truncate text-sm">
@@ -109,7 +85,7 @@ function HealthPathCell({ service }: { service: ServiceRow }) {
   );
 }
 
-const COLUMNS: Array<ISimpleColumn<ServiceRow>> = [
+const COLUMNS: Array<ISimpleColumn<ServiceDescriptor>> = [
   {
     id: 'service',
     header: 'Service',
@@ -167,22 +143,6 @@ function RefreshButton() {
 }
 
 export function ServicesBoard() {
-  // Not at module scope: the config is read lazily, and is empty while Next builds.
-  const services = useMemo<ServiceRow[]>(
-    () => [
-      ...SERVICE_CATALOG.map((descriptor) => {
-        const baseUrl = serviceBaseUrl(descriptor, config[descriptor.configKey]);
-        return {
-          ...descriptor,
-          healthUrl: `${baseUrl}${descriptor.healthPath}`,
-          versionUrl: descriptor.versionPath && `${baseUrl}${descriptor.versionPath}`,
-        };
-      }),
-      ...SERVER_SERVICE_CATALOG,
-    ],
-    []
-  );
-
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-4">
@@ -196,9 +156,9 @@ export function ServicesBoard() {
       </div>
 
       <div className="border-neutral-2 rounded-lg border bg-white">
-        <SimpleGrid<ServiceRow>
+        <SimpleGrid<ServiceDescriptor>
           columns={COLUMNS}
-          rows={services}
+          rows={SERVICE_CATALOG}
           getRowId={(service) => service.key}
           rowHeight={56}
           loadingLabel="services"

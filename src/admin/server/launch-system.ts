@@ -4,6 +4,8 @@ import { auth } from '@/auth';
 import { serverConfig } from '@/config/server';
 import { isUuid } from '@/features/data-grid/react/filters/id-tokens';
 
+import { isGatewayReply } from './service-probe';
+
 import type { JobLookup } from '../sections/launch-system/job';
 
 const LOOKUP_TIMEOUT_MS = 15_000;
@@ -23,11 +25,7 @@ export async function fetchAdminJob(
   }).catch(() => null);
   if (!res) return { outcome: 'not-reachable' };
 
-  // Launch-system always answers JSON, so another body came from the gateway or the web app.
-  const isJson = res.headers.get('content-type')?.includes('json');
-  if (!isJson || (res.status >= 300 && res.status < 400)) {
-    return { outcome: 'not-reachable', status: res.status };
-  }
+  if (isGatewayReply(res)) return { outcome: 'not-reachable', status: res.status };
 
   const body = await res.json().catch(() => null);
   if (res.ok) return { outcome: 'found', job: body };

@@ -8,16 +8,16 @@ import { Button } from '@/ui/molecules/button';
 import { FormModal } from '../../shared/form-modal';
 import { PageHeader } from '../../shared/page-header';
 import { useAdminWrite } from '../../shared/use-admin-write';
-import { clearSimulatorCache, SIMULATOR_CACHES } from './cache';
+import { clearSimulatorCache, SIMULATOR_CACHES, SimulatorCache } from './cache';
 
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { TSimulatorCache } from './cache';
 
 type CacheRow = { cache: TSimulatorCache; label: string; holds: string };
 
-const ROWS: CacheRow[] = Object.entries(SIMULATOR_CACHES).map(([cache, about]) => ({
-  cache: cache as TSimulatorCache,
-  ...about,
+const ROWS: CacheRow[] = Object.values(SimulatorCache).map((cache) => ({
+  cache,
+  ...SIMULATOR_CACHES[cache],
 }));
 
 function ClearCache({ row }: { row: CacheRow }) {

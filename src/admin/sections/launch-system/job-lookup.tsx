@@ -1,20 +1,24 @@
+import { JobStatusDict } from '@/features/task-logs-stream/types';
+import { CodeBlock, CodeBlockCopyButton } from '@/ui/molecules/code-blocks';
+
 import { Detail, DetailId, DetailList } from '../../shared/detail-list';
 import { formatDateTime } from '../../shared/format';
 import { PageHeader } from '../../shared/page-header';
 import { StatusPill } from '../../shared/status-pill';
 import { AdminLink } from '../../shell/admin-link';
-import { JobStatus } from './job';
 import { JobIdSearch } from './job-id-search';
 
-import type { JobLookup, LaunchSystemJob, TJobStatus } from './job';
+import type { TJobStatus } from '@/features/task-logs-stream/types';
+import type { TStatusTone } from '../../shared/status-pill';
+import type { JobLookup, LaunchSystemJob } from './job';
 
-const STATUS_TONES: Record<TJobStatus, 'good' | 'bad' | 'warn' | 'neutral'> = {
-  [JobStatus.Created]: 'neutral',
-  [JobStatus.Pending]: 'neutral',
-  [JobStatus.Running]: 'warn',
-  [JobStatus.Done]: 'good',
-  [JobStatus.Error]: 'bad',
-  [JobStatus.Cancelled]: 'neutral',
+const STATUS_TONES: Record<TJobStatus, TStatusTone> = {
+  [JobStatusDict.Created]: 'neutral',
+  [JobStatusDict.Pending]: 'neutral',
+  [JobStatusDict.Running]: 'warn',
+  [JobStatusDict.Done]: 'good',
+  [JobStatusDict.Error]: 'bad',
+  [JobStatusDict.Cancelled]: 'neutral',
 };
 
 const when = (iso: string | null) => iso && formatDateTime(iso);
@@ -61,9 +65,14 @@ function JobDetail({ job }: { job: LaunchSystemJob }) {
         </Detail>
       </DetailList>
       <h2 className="text-primary-9 font-semibold">Code, resources, task and logs</h2>
-      <pre className="border-neutral-2 overflow-auto rounded-lg border bg-white p-5 text-sm">
-        {JSON.stringify({ code, resources, meta, logs }, null, 2)}
-      </pre>
+      <CodeBlock
+        language="json"
+        code={JSON.stringify({ code, resources, meta, logs }, null, 2)}
+        scrollableX
+        className="border-neutral-2 rounded-lg border"
+      >
+        <CodeBlockCopyButton aria-label="Copy" className="absolute top-2 right-2 z-10" />
+      </CodeBlock>
     </>
   );
 }

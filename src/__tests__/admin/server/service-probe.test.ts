@@ -23,8 +23,11 @@ afterEach(() => {
 });
 
 describe('probeFromServer', () => {
-  it('probes only services from the catalog', async () => {
-    await expect(probeFromServer('https://elsewhere')).resolves.toBeNull();
+  it.each([
+    'https://elsewhere',
+    'entitycore',
+  ])('probes only services the catalog sends to the server, not %s', async (key) => {
+    await expect(probeFromServer(key)).resolves.toBeNull();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -51,5 +54,32 @@ describe('probeFromServer', () => {
       'https://cell-a/api/accounting/health',
       'https://cell-a/api/accounting/version',
     ]);
+  });
+
+  it("doesn't follow a redirect", async () => {
+    fetchMock.mockImplementation(async () => Response.json({ status: 'OK' }));
+
+    await probeFromServer('accounting');
+    expect(fetchMock.mock.calls.map(([, init]) => init.redirect)).toEqual(['manual', 'manual']);
+  });
+
+  it.each([
+    ['a JSON 200', () => Response.json({ status: 'OK' }), 'up'],
+    ['a JSON 503', () => Response.json({}, { status: 503 }), 'down'],
+    ["the gateway's redirect", () => new Response(null, { status: 302 }), 'blocked'],
+    [
+      "the gateway's JSON 403",
+      () => Response.json({ detail: 'Forbidden' }, { status: 403 }),
+      'blocked',
+    ],
+    ["the web app's HTML 404", () => new Response('<html>', { status: 404 }), 'blocked'],
+    ['an HTML 200', () => new Response('<html>', { status: 200 }), 'blocked'],
+  ])('reads %s as %s', async (_name, reply, status) => {
+    fetchMock.mockImplementation(async () => reply());
+
+    await expect(probeFromServer('accounting')).resolves.toMatchObject({
+      health: { status },
+      version: null,
+    });
   });
 });

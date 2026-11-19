@@ -1,3 +1,7 @@
+import { serviceBaseUrl } from './service-catalog';
+
+import type { ServiceDescriptor } from './service-catalog';
+
 // Health and version routes need no auth, so the operator's token stays out of these calls.
 
 export type ServiceHealth = {
@@ -8,33 +12,29 @@ export type ServiceHealth = {
 
 export type ServiceProbe = { health: ServiceHealth; version: string | null; path: string | null };
 
+export type ProbeMode = {
+  redirect: RequestRedirect;
+  readStatus: (res: Response) => ServiceHealth['status'];
+};
+
+export const BROWSER_PROBE: ProbeMode = {
+  redirect: 'follow',
+  readStatus: ({ ok }) => (ok ? 'up' : 'down'),
+};
+
 const PROBE_TIMEOUT_MS = 8000;
 
-// From the server a redirect isn't followed: the gateway answers a source it refuses with one to
-// the main site, which would read as healthy.
-function probe(url: string, fromServer: boolean) {
-  return fetch(url, {
-    cache: 'no-store',
-    redirect: fromServer ? 'manual' : 'follow',
-    signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
-  });
+function probe(url: string, { redirect }: ProbeMode) {
+  return fetch(url, { cache: 'no-store', redirect, signal: AbortSignal.timeout(PROBE_TIMEOUT_MS) });
 }
 
-// The services probed from the server answer health with JSON and need no auth on it, so a
-// redirect, a 403 or another body came from the gateway or the web app, not the service.
-export function serverReplyStatus({ ok, status, headers }: Response): ServiceHealth['status'] {
-  const isJson = headers.get('content-type')?.includes('json');
-  if ((status >= 300 && status < 400) || status === 403 || !isJson) return 'blocked';
-  return ok ? 'up' : 'down';
-}
-
-export async function fetchServiceVersion(
-  url: string,
-  { inData = false, fromServer = false } = {}
-): Promise<string | null> {
+async function fetchVersion(url: string, inData: boolean, mode: ProbeMode) {
   try {
-    const res = await probe(url, fromServer);
-    if (!res.ok) return null;
+    const res = await probe(url, mode);
+    if (!res.ok) {
+      await res.body?.cancel();
+      return null;
+    }
     const body = (await res.json()) as Record<string, unknown>;
     const source = (inData ? body.data : body) as Record<string, unknown> | undefined;
     const version = source?.app_version ?? source?.version;
@@ -44,11 +44,27 @@ export async function fetchServiceVersion(
   }
 }
 
-export async function probeServiceHealth(url: string, fromServer = false): Promise<ServiceHealth> {
+async function probeHealth(url: string, mode: ProbeMode): Promise<ServiceHealth> {
   const started = performance.now();
-  const res = await probe(url, fromServer).catch(() => null);
+  const res = await probe(url, mode).catch(() => null);
   const latencyMs = Math.round(performance.now() - started);
   if (!res) return { status: 'unreachable', latencyMs };
-  if (fromServer) return { status: serverReplyStatus(res), httpStatus: res.status, latencyMs };
-  return { status: res.ok ? 'up' : 'down', httpStatus: res.status, latencyMs };
+  await res.body?.cancel();
+  return { status: mode.readStatus(res), httpStatus: res.status, latencyMs };
+}
+
+export async function probeService(
+  service: ServiceDescriptor,
+  configuredUrl: string,
+  mode: ProbeMode
+): Promise<ServiceProbe> {
+  const baseUrl = serviceBaseUrl(service, configuredUrl);
+  const healthUrl = `${baseUrl}${service.healthPath}`;
+  const [health, version] = await Promise.all([
+    probeHealth(healthUrl, mode),
+    service.versionPath
+      ? fetchVersion(`${baseUrl}${service.versionPath}`, !!service.versionInData, mode)
+      : null,
+  ]);
+  return { health, version, path: new URL(healthUrl, 'http://localhost').pathname };
 }

@@ -1,27 +1,37 @@
 import 'server-only';
 
-import { fetchServiceVersion, probeServiceHealth } from '@/admin/sections/services/health';
-import { SERVER_SERVICE_CATALOG, serviceBaseUrl } from '@/admin/sections/services/service-catalog';
+import { probeService } from '@/admin/sections/services/health';
+import { SERVICE_CATALOG } from '@/admin/sections/services/service-catalog';
 import { serverConfig } from '@/config/server';
 
-import type { ServiceProbe } from '@/admin/sections/services/health';
+import type { ProbeMode, ServiceProbe } from '@/admin/sections/services/health';
+
+// The gateway answers a source it refuses with a redirect to the main site, and these services
+// always answer JSON, so a redirect or another body came from the gateway or the web app.
+export function isGatewayReply({ status, headers }: Response) {
+  const isJson = headers.get('content-type')?.includes('json');
+  return (status >= 300 && status < 400) || !isJson;
+}
+
+// A redirect isn't followed, so it can't read as healthy. Health needs no auth, so a 403 is the
+// gateway's too.
+const SERVER_PROBE: ProbeMode = {
+  redirect: 'manual',
+  readStatus: (res) => {
+    if (isGatewayReply(res) || res.status === 403) return 'blocked';
+    return res.ok ? 'up' : 'down';
+  },
+};
 
 // Only services from the catalog, so a caller can't point the server at a URL of its choice.
 export async function probeFromServer(key: string): Promise<ServiceProbe | null> {
-  const service = SERVER_SERVICE_CATALOG.find((candidate) => candidate.key === key);
+  const service = SERVICE_CATALOG.find(
+    (candidate) => candidate.key === key && candidate.probedFrom === 'server'
+  );
   if (!service) return null;
 
   const configured = serverConfig[service.configKey];
   if (!configured) return { health: { status: 'not-configured' }, version: null, path: null };
 
-  const baseUrl = serviceBaseUrl(service, configured);
-  const healthUrl = `${baseUrl}${service.healthPath}`;
-  const [health, version] = await Promise.all([
-    probeServiceHealth(healthUrl, true),
-    service.versionPath
-      ? fetchServiceVersion(`${baseUrl}${service.versionPath}`, { fromServer: true })
-      : null,
-  ]);
-
-  return { health, version, path: new URL(healthUrl).pathname };
+  return probeService(service, configured, SERVER_PROBE);
 }
