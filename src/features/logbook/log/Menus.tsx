@@ -6,7 +6,6 @@ import { useDeferredValue, useRef, useState } from 'react';
 import { entitySearchQuery } from '@/features/logbook/api/entities';
 import { UPLOAD_ACCEPT } from '@/features/logbook/api/log-files';
 import { EntityType, entityLookOf, entityLooks } from '@/features/logbook/blocks/kinds';
-import { insertAfterBlock } from '@/features/logbook/editor/insert';
 import { useLogContext } from '@/features/logbook/log/context';
 import { ToastSource } from '@/features/logbook/log/notify-settings';
 import { uploadFiles } from '@/features/logbook/log/uploads';
@@ -16,7 +15,9 @@ import { cn } from '@/utils/css-class';
 import type { Editor } from '@tiptap/react';
 import type { CSSProperties } from 'react';
 import type { TEntityType } from '@/features/logbook/blocks/kinds';
+import type { IPickedEntity } from '@/features/logbook/log/context';
 import type { IPopAt } from '@/features/logbook/log/EditorCard';
+import type { INotice } from '@/features/logbook/log/notice';
 import type { INotifySettings, TToastSource } from '@/features/logbook/log/notify-settings';
 import type { TIconName } from '@/features/logbook/ui/icons';
 
@@ -28,7 +29,6 @@ const TILE = 'grid size-[30px] flex-none place-items-center rounded-[9px] text-[
 const TEXT = 'flex min-w-0 flex-1 flex-col';
 const TITLE = 'truncate text-[14px] font-semibold';
 const SUB = 'text-[12px] text-neutral-4';
-const NOTE = 'mx-2.5 my-2 text-[13px] leading-normal text-neutral-4';
 const HEAD = 'flex items-center justify-between';
 
 export interface IInsertMenuProps {
@@ -36,7 +36,7 @@ export interface IInsertMenuProps {
   readonly at: IPopAt;
   readonly onClose: () => void;
   readonly onPicker: () => void;
-  readonly onNotice: (text: string) => void;
+  readonly onNotice: (notice: INotice) => void;
 }
 
 export function InsertMenu({ editor, at, onClose, onPicker, onNotice }: IInsertMenuProps) {
@@ -88,130 +88,6 @@ export function InsertMenu({ editor, at, onClose, onPicker, onNotice }: IInsertM
           <span className={SUB}>Picture, data, notebook, PDF, model, archive</span>
         </span>
       </button>
-    </div>
-  );
-}
-
-const PICKER_TYPES: readonly TEntityType[] = [
-  EntityType.Circuit,
-  EntityType.Morphology,
-  EntityType.Emodel,
-  EntityType.Simulation,
-  EntityType.IonChannelModel,
-  EntityType.Trace,
-];
-
-export function EntityPicker({
-  editor,
-  onClose,
-}: {
-  readonly editor: Editor;
-  readonly onClose: () => void;
-}) {
-  const { project } = useLogContext();
-  const [search, setSearch] = useState('');
-  const [type, setType] = useState<TEntityType | null>(null);
-  const query = useDeferredValue(search);
-  const types = isNil(type) ? PICKER_TYPES : [type];
-  const results = useQueries({
-    queries: types.map((t) => entitySearchQuery(t, query, project)),
-    combine: (all) => ({
-      pending: all.some((r) => r.isPending),
-      entities: all.flatMap((r) => r.data ?? []),
-    }),
-  });
-  return (
-    <div
-      className="pop absolute top-16 left-1/2 z-41 flex max-h-[calc(100%-96px)] w-[min(580px,calc(100%-32px))] -translate-x-1/2 flex-col overflow-hidden"
-      role="dialog"
-      aria-label="Link an entity"
-    >
-      <div className={`${HEAD} px-[18px] pt-4 pb-2.5 text-[16px]`}>
-        <strong>Link an entity</strong>
-        <button type="button" className="modal-close" aria-label="Close" onClick={onClose}>
-          <Icon name="close" size={14} stroke={2.4} />
-        </button>
-      </div>
-      <label className="mx-[18px] flex h-10 flex-none items-center gap-2 rounded-full bg-neutral-1 px-4 text-neutral-4">
-        <Icon name="search" size={16} />
-        <span className="sr-only">Search entities</span>
-        <input
-          // biome-ignore lint/a11y/noAutofocus: opened by this click, so it takes focus
-          autoFocus
-          className="min-w-0 flex-1 bg-transparent text-[14px] text-primary-9 outline-none"
-          value={search}
-          placeholder="Search this project's entities..."
-          onChange={(event) => setSearch(event.target.value)}
-        />
-      </label>
-      <div className="flex flex-wrap gap-1.5 px-[18px] pt-3 pb-2">
-        <button
-          type="button"
-          className="h-7 rounded-full bg-fill-2 px-3 text-[12px] font-semibold text-primary-9 aria-pressed:bg-primary-9 aria-pressed:text-white"
-          aria-pressed={isNil(type)}
-          onClick={() => setType(null)}
-        >
-          All
-        </button>
-        {PICKER_TYPES.map((t) => (
-          <button
-            key={t}
-            type="button"
-            className="h-7 rounded-full bg-fill-2 px-3 text-[12px] font-semibold text-primary-9 aria-pressed:bg-primary-9 aria-pressed:text-white"
-            aria-pressed={type === t}
-            onClick={() => setType(t)}
-          >
-            {entityLooks[t].label}
-          </button>
-        ))}
-      </div>
-      <div className="scroll-thin flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2.5 pt-1 pb-2">
-        {results.entities.map((entity) => {
-          const look = entityLookOf(entity.type);
-          return (
-            <button
-              key={`${entity.type}:${entity.id}`}
-              type="button"
-              className={`${ITEM} flex items-center gap-3 rounded-[12px] px-2.5 py-2`}
-              onClick={() => {
-                insertAfterBlock(editor, {
-                  type: 'entity',
-                  attrs: { label: entity.name, type: entity.type, entityId: entity.id },
-                });
-                onClose();
-              }}
-            >
-              <span
-                className="grid size-9 flex-none place-items-center rounded-[10px]"
-                style={{ background: look.tint, color: look.colour }}
-              >
-                <Icon name={entity.type} size={18} stroke={1.8} />
-              </span>
-              <span className={TEXT}>
-                <span className={TITLE}>{entity.name}</span>
-                <span className={SUB}>
-                  {[entity.brain_region?.name, entity.created_by?.pref_label]
-                    .filter(Boolean)
-                    .join(' · ')}
-                </span>
-              </span>
-              <span
-                className="inline-flex h-5 items-center rounded-full px-2 text-[11px] font-bold tracking-[0.04em] whitespace-nowrap uppercase"
-                style={{ background: look.tint, color: look.colour }}
-              >
-                {look.label}
-              </span>
-            </button>
-          );
-        })}
-        {results.pending ? <p className={NOTE}>Searching…</p> : null}
-        {!results.pending && results.entities.length === 0 ? (
-          <p className={NOTE}>No entity matches.</p>
-        ) : null}
-      </div>
-      <div className="border-t border-rule-soft px-[18px] pt-2.5 pb-3.5 text-[12px] text-neutral-4">
-        Each type gets its own card in the log. A type without one yet uses the generic card.
-      </div>
     </div>
   );
 }

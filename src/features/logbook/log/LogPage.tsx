@@ -12,12 +12,14 @@ import { personActor, resolveActor } from '@/features/logbook/collaboration/acto
 import { usePauseWhenHidden } from '@/features/logbook/collaboration/idle';
 import { useRejoin } from '@/features/logbook/collaboration/rejoin';
 import { editorExtensions } from '@/features/logbook/editor/extensions';
+import { insertAfterBlock } from '@/features/logbook/editor/insert';
+import { EntityPickerContext } from '@/features/logbook/log/context';
 import { EditorCard } from '@/features/logbook/log/EditorCard';
-import { EntityPicker } from '@/features/logbook/log/Menus';
+import { EntityGridPicker } from '@/features/logbook/log/EntityGridPicker';
 import { useNotifySettings } from '@/features/logbook/log/notify-settings';
 import { ReadCard } from '@/features/logbook/log/ReadCard';
 import { SidePane } from '@/features/logbook/log/SidePane';
-import { AgentToast, Notice } from '@/features/logbook/log/Toasts';
+import { AgentToast, NoticeToast, ToastStack } from '@/features/logbook/log/Toasts';
 import { CARD_MENUS, Menu, MobileTab, RightTab, takeSeed } from '@/features/logbook/log/ui-state';
 import { ViewMode } from '@/features/logbook/log/view-mode';
 import { dragHandle } from '@/features/logbook/ui/drag';
@@ -29,14 +31,15 @@ import type { TReadOnlyReason, TValueOf } from '@/api/logbook/types';
 import type { ChangeFeed } from '@/features/logbook/collaboration/changes';
 import type { LocalCopy } from '@/features/logbook/collaboration/local-copy';
 import type { CollaborationNotices } from '@/features/logbook/collaboration/notices';
+import type { IPickedEntity, TOpenEntityPicker } from '@/features/logbook/log/context';
 import type { IPageViewProps } from '@/features/logbook/log/LogView';
+import type { INotice } from '@/features/logbook/log/notice';
 import type { INotifySettings } from '@/features/logbook/log/notify-settings';
 import type { ISelection, TMenu, TMobileTab, TRightTab } from '@/features/logbook/log/ui-state';
 import type { IActor } from '@/features/logbook/ui/Avatar';
 
 const PANE_FLOOR = 300;
 const PANE_SHUT_BELOW = 150;
-const NOTICE_MS = 3500;
 
 export interface ILogPageProps extends IPageViewProps {
   readonly notices: CollaborationNotices;
@@ -183,19 +186,45 @@ export function LogPage(props: ILogPageProps) {
   // Read-only until rejoined: the server resets a socket after 1000 messages sent before join.
   useRejoin(provider, notices);
   const rejoinAt = useSyncExternalStore(notices.subscribe, () => notices.snapshot().rejoinAt);
+  const canEdit = mode === ViewMode.Edit && isNil(readOnly) && isNil(rejoinAt) && !props.deleted;
   useEffect(() => {
-    editor.setEditable(
-      mode === ViewMode.Edit && isNil(readOnly) && isNil(rejoinAt) && !props.deleted
-    );
-  }, [editor, mode, readOnly, rejoinAt, props.deleted]);
+    editor.setEditable(canEdit);
+  }, [editor, canEdit]);
 
   const [menu, setMenu] = useState<TMenu>(Menu.None);
+  // Set when a card replaces its entity; otherwise a pick inserts a new card.
+  const [pickTarget, setPickTarget] = useState<((entity: IPickedEntity) => void) | null>(null);
+  const openEntityPicker = useCallback<TOpenEntityPicker>((onPick) => {
+    setPickTarget(() => onPick);
+    setMenu(Menu.Picker);
+  }, []);
+  // Any other menu change drops a pending replace, so a later plain link never replaces a card.
+  const changeMenu = useCallback((next: TMenu): void => {
+    setPickTarget(null);
+    setMenu(next);
+  }, []);
+  // All picks go in with one edit, in the order picked.
+  const insertEntities = (entities: readonly IPickedEntity[]): void => {
+    insertAfterBlock(
+      editor,
+      entities.map((entity) => ({
+        type: 'entity',
+        attrs: { label: entity.name, type: entity.type, entityId: entity.id },
+      }))
+    );
+  };
   const [split, setSplit] = useState(0.5);
   const [splitShut, setSplitShut] = useState<TSplitShut>(SplitShut.None);
   const [rightTab, setRightTab] = useState<TRightTab>(RightTab.Preview);
   const [mTab, setMTab] = useState<TMobileTab>(MobileTab.Write);
   const [selection, setSelection] = useState<ISelection | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  // Each notice gets its own id, so a new one restarts the timer even with the same words.
+  const [notice, setShownNotice] = useState<(INotice & { readonly id: number }) | null>(null);
+  const noticeId = useRef(0);
+  const setNotice = useCallback((next: INotice | null): void => {
+    noticeId.current += 1;
+    setShownNotice(next && { ...next, id: noticeId.current });
+  }, []);
   const splitRef = useRef<HTMLDivElement>(null);
   // Open artifact tabs in the order opened, and the one shown (null: the log). Keyed per log.
   const [openTabs, setOpenTabs] = useState<readonly string[]>([]);
@@ -213,12 +242,6 @@ export function LogPage(props: ILogPageProps) {
     setOpenTabs(rest);
     if (activeTab === id) setActiveTab(rest[at] ?? rest[at - 1] ?? null);
   };
-
-  useEffect(() => {
-    if (isNil(notice)) return;
-    const timer = setTimeout(() => setNotice(null), NOTICE_MS);
-    return () => clearTimeout(timer);
-  }, [notice]);
 
   // For History: set on a real selection, cleared when it collapses.
   useEffect(() => {
@@ -243,7 +266,7 @@ export function LogPage(props: ILogPageProps) {
   // "Show" from the toast or the activity.
   const flash = useCallback(
     (from: number, to: number): void => {
-      setMenu(Menu.None);
+      changeMenu(Menu.None);
       const size = editor.state.doc.content.size;
       editor
         .chain()
@@ -252,7 +275,7 @@ export function LogPage(props: ILogPageProps) {
         .focus()
         .run();
     },
-    [editor]
+    [changeMenu, editor]
   );
 
   const dragSplit = (event: ReactPointerEvent<HTMLButtonElement>): void =>
@@ -278,7 +301,7 @@ export function LogPage(props: ILogPageProps) {
     resolve,
     settings,
     menu,
-    setMenu,
+    setMenu: changeMenu,
     selection,
     setSelection,
     showHistory,
@@ -304,20 +327,31 @@ export function LogPage(props: ILogPageProps) {
             CARD_MENUS.has(menu) ? 'z-1' : 'z-40'
           )}
           aria-label="Close menu"
-          onClick={() => setMenu(Menu.None)}
+          onClick={() => changeMenu(Menu.None)}
         />
       )}
       {menu === Menu.Picker ? (
-        <EntityPicker editor={editor} onClose={() => setMenu(Menu.None)} />
+        <EntityGridPicker
+          multiple={isNil(pickTarget)}
+          onPick={(entities) => {
+            const [first] = entities;
+            if (isNil(pickTarget)) insertEntities(entities);
+            else if (isNotNil(first)) pickTarget(first);
+          }}
+          onClose={() => changeMenu(Menu.None)}
+        />
       ) : null}
-      <AgentToast
-        feed={feed}
-        settings={settings}
-        me={me}
-        narrow={narrow}
-        onShow={(change) => flash(change.from, change.to)}
-      />
-      {isNil(notice) ? null : <Notice text={notice} narrow={narrow} />}
+      <ToastStack narrow={narrow}>
+        <AgentToast
+          feed={feed}
+          settings={settings}
+          me={me}
+          onShow={(change) => flash(change.from, change.to)}
+        />
+        {isNil(notice) ? null : (
+          <NoticeToast key={notice.id} notice={notice} onClose={() => setNotice(null)} />
+        )}
+      </ToastStack>
     </>
   );
 
@@ -335,7 +369,7 @@ export function LogPage(props: ILogPageProps) {
   const bothOpen = !editorShut && !sideShut && !narrow;
 
   return (
-    <>
+    <EntityPickerContext.Provider value={canEdit ? openEntityPicker : null}>
       <div
         ref={splitRef}
         className="flex min-w-0 flex-1 flex-row gap-0 data-[narrow=true]:flex-col data-[narrow=true]:gap-2"
@@ -404,7 +438,7 @@ export function LogPage(props: ILogPageProps) {
         ) : null}
       </div>
       {overlays}
-    </>
+    </EntityPickerContext.Provider>
   );
 }
 
@@ -419,7 +453,7 @@ export interface ILogShared extends ILogPageProps {
   readonly setSelection: (selection: ISelection | null) => void;
   readonly showHistory: (range: ISelection | null) => void;
   readonly flash: (from: number, to: number) => void;
-  readonly setNotice: (text: string | null) => void;
+  readonly setNotice: (notice: INotice | null) => void;
   readonly openTabs: readonly string[];
   readonly activeTab: string | null;
   readonly openArtifact: (id: string) => void;

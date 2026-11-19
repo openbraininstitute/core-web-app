@@ -9,6 +9,7 @@ import {
   uploadLogFile,
 } from '@/features/logbook/api/log-files';
 import { insertAfterBlock } from '@/features/logbook/editor/insert';
+import { NoticeKind, reasonOf } from '@/features/logbook/log/notice';
 import { settings } from '@/features/logbook/settings';
 import { IMAGE } from '@/features/logbook/shared/files';
 
@@ -16,6 +17,7 @@ import type { QueryClient } from '@tanstack/react-query';
 import type { Node as PmNode } from '@tiptap/pm/model';
 import type { Editor } from '@tiptap/react';
 import type { IProject } from '@/features/logbook/auth/session';
+import type { INotice } from '@/features/logbook/log/notice';
 
 // Saved names uploading from this tab; blocks subscribe to one name.
 const uploading = new Set<string>();
@@ -63,14 +65,18 @@ export interface IUploadTarget {
   readonly logId: string;
   readonly project: IProject;
   readonly client: QueryClient;
-  readonly notify: (text: string) => void;
+  readonly notify: (notice: INotice) => void;
 }
 
 export async function uploadIntoPage(target: IUploadTarget, file: File): Promise<void> {
   const { editor, logId, project, client, notify } = target;
   // Checked on file.size before reading, so a refused file never hits memory.
   if (isTooLarge(file.size)) {
-    notify(`${file.name} was not uploaded: it is larger than ${settings.upload.maxMb} MB`);
+    notify({
+      kind: NoticeKind.Warning,
+      title: `${file.name} is too large`,
+      description: `Files can be up to ${settings.upload.maxMb} MB.`,
+    });
     return;
   }
   let planned;
@@ -78,7 +84,11 @@ export async function uploadIntoPage(target: IUploadTarget, file: File): Promise
     planned = await planFile(file);
   } catch (error) {
     // Unreadable or out of memory: nothing inserted yet.
-    notify(`${file.name} was not uploaded: ${error instanceof Error ? error.message : 'error'}`);
+    notify({
+      kind: NoticeKind.Error,
+      title: `${file.name} can't be read`,
+      description: reasonOf(error),
+    });
     return;
   }
   const { path } = planned;
@@ -95,10 +105,14 @@ export async function uploadIntoPage(target: IUploadTarget, file: File): Promise
   try {
     await uploadLogFile(logId, project, file, planned);
     await client.invalidateQueries({ queryKey: logFilesQuery(logId, project).queryKey });
-    notify(`${file.name} uploaded`);
+    notify({ kind: NoticeKind.Success, title: 'File uploaded', description: file.name });
   } catch (error) {
     if (isNotNil(inserted)) removeBlock(editor, inserted);
-    notify(`${file.name} was not uploaded: ${error instanceof Error ? error.message : 'error'}`);
+    notify({
+      kind: NoticeKind.Error,
+      title: `${file.name} was not uploaded`,
+      description: reasonOf(error),
+    });
   } finally {
     uploading.delete(path);
     changed();

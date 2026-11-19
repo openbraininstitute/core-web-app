@@ -1,16 +1,26 @@
 import { useQuery } from '@tanstack/react-query';
 import { NodeViewWrapper } from '@tiptap/react';
 import { isNil, isNotNil } from 'es-toolkit';
-import { lazy, Suspense, useState } from 'react';
+import { Suspense, useState } from 'react';
 
-import { entityQuery, routeOfType } from '@/features/logbook/api/entities';
-import { EntityType, entityLookOf } from '@/features/logbook/blocks/kinds';
-import { useLogContext } from '@/features/logbook/log/context';
+import {
+  coreTypeOf,
+  entityConfigOf,
+  entityQuery,
+  routeOfType,
+} from '@/features/logbook/api/entities';
+import { EntityType } from '@/features/logbook/blocks/kinds';
+import { lookOfType } from '@/features/logbook/editor/blocks/entity-look';
+import { ViewerMessage } from '@/features/logbook/editor/blocks/viewer-3d/frame';
+import { viewer3dOf } from '@/features/logbook/editor/blocks/viewers-3d';
+import { useEntityDetail, useEntityPicker, useLogContext } from '@/features/logbook/log/context';
 import { Icon } from '@/features/logbook/ui/icons';
+import { cn } from '@/utils/css-class';
 
 import type { NodeViewProps } from '@tiptap/react';
 
-const CircuitView = lazy(() => import('@/features/logbook/editor/blocks/CircuitView'));
+const ACTION =
+  'grid size-8 flex-none place-items-center rounded-full border-0 bg-white shadow-block-btn transition-[box-shadow,translate] duration-150 hover:-translate-y-px hover:shadow-pop';
 
 const dateOf = (iso: string | undefined): string | null =>
   isNil(iso)
@@ -21,13 +31,21 @@ const dateOf = (iso: string | undefined): string | null =>
         year: 'numeric',
       });
 
-export function EntityView({ node, selected }: NodeViewProps) {
+export function EntityView({
+  node,
+  selected,
+  editor,
+  updateAttributes,
+  deleteNode,
+}: NodeViewProps) {
   const { project } = useLogContext();
+  const openPicker = useEntityPicker();
+  const canEdit = isNotNil(openPicker) && editor.isEditable;
   const type = String(node.attrs['type']);
   const entityId = String(node.attrs['entityId']);
   const label = String(node.attrs['label']);
-  const look = entityLookOf(type);
-  const known = isNotNil(routeOfType(type));
+  const look = lookOfType(type);
+  const known = isNotNil(entityConfigOf(type)) || isNotNil(routeOfType(type));
   const entity = useQuery(entityQuery(type, entityId, project));
   const [open3d, setOpen3d] = useState(false);
 
@@ -36,10 +54,13 @@ export function EntityView({ node, selected }: NodeViewProps) {
   const by = entity.data?.created_by?.pref_label;
   const date = dateOf(entity.data?.creation_date);
   const missing = entity.isError || !known;
+  const Viewer3d = viewer3dOf(type);
+  const openDetail = useEntityDetail();
+  const hasDetail = isNotNil(openDetail) && isNotNil(coreTypeOf(type)) && !entity.isError;
 
   return (
     <NodeViewWrapper
-      className="mx-0 mt-[10px] mb-[14px] overflow-hidden rounded-2xl border border-block-border bg-white text-primary-9"
+      className="group/entity mx-0 mt-[10px] mb-[14px] overflow-hidden rounded-2xl border border-block-border bg-white text-primary-9"
       data-selected={selected}
       contentEditable={false}
     >
@@ -75,8 +96,57 @@ export function EntityView({ node, selected }: NodeViewProps) {
                 : `Created by ${by ?? 'unknown'}${isNil(date) ? '' : ` · ${date}`}`}
           </div>
         </div>
-        <div className="flex gap-2">
-          {type === EntityType.Circuit ? (
+        <div className="flex items-center gap-2">
+          <div
+            className={cn(
+              'flex gap-1.5 opacity-0 transition-opacity duration-150 group-focus-within/entity:opacity-100 group-hover/entity:opacity-100 pointer-coarse:opacity-100',
+              selected && 'opacity-100'
+            )}
+          >
+            {hasDetail ? (
+              <button
+                type="button"
+                className={cn(ACTION, 'text-primary-6')}
+                aria-label={`Show details of ${label}`}
+                title="Show details"
+                onClick={() => openDetail?.({ type, entityId })}
+              >
+                <Icon name="arrowUpRight" size={15} stroke={2.2} />
+              </button>
+            ) : null}
+            {canEdit ? (
+              <>
+                <button
+                  type="button"
+                  className={ACTION}
+                  style={{ color: look.colour }}
+                  aria-label={`Replace ${label}`}
+                  title="Replace"
+                  onClick={() =>
+                    openPicker((picked) =>
+                      updateAttributes({
+                        type: picked.type,
+                        entityId: picked.id,
+                        label: picked.name,
+                      })
+                    )
+                  }
+                >
+                  <Icon name="replace" size={15} stroke={2.2} />
+                </button>
+                <button
+                  type="button"
+                  className={cn(ACTION, 'text-destructive')}
+                  aria-label={`Remove ${label} from the page`}
+                  title="Remove"
+                  onClick={() => deleteNode()}
+                >
+                  <Icon name="trash" size={15} stroke={2} />
+                </button>
+              </>
+            ) : null}
+          </div>
+          {isNotNil(Viewer3d) && !entity.isError ? (
             <button
               type="button"
               className="inline-flex h-[34px] items-center gap-1.5 rounded-full border-0 px-[14px] text-[13px] font-bold text-white"
@@ -90,15 +160,9 @@ export function EntityView({ node, selected }: NodeViewProps) {
           ) : null}
         </div>
       </div>
-      {open3d ? (
-        <Suspense
-          fallback={
-            <div className="relative bg-[#0b1220] p-6 text-[13px] text-[#d9e2ef]">
-              Loading the 3D view…
-            </div>
-          }
-        >
-          <CircuitView name={entity.data?.name ?? label} />
+      {open3d && isNotNil(Viewer3d) ? (
+        <Suspense fallback={<ViewerMessage text="Loading the 3D view…" />}>
+          <Viewer3d entityId={entityId} project={project} />
         </Suspense>
       ) : null}
     </NodeViewWrapper>

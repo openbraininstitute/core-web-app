@@ -42,13 +42,12 @@
   --shadow-seg-on: rgba(0, 39, 102, 0.12) 0 1px 3px;
   --shadow-block-btn: 0 1px 4px rgba(0, 39, 102, 0.18);
 
-  /* pop keeps the toast's -50% centring. */
-  --animate-pop: pop 0.25s ease-out;
   --animate-up: up 0.25s ease-out;
-  @keyframes pop {
-    from {
-      opacity: 0;
-      transform: translate(-50%, 8px);
+  /* A toast's time bar; the duration is set per toast. */
+  --animate-drain: drain linear forwards;
+  @keyframes drain {
+    to {
+      transform: scaleX(0);
     }
   }
   @keyframes up {

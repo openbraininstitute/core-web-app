@@ -46,7 +46,16 @@ const paths = {
   arrowLeft: <path d="M19 12H5M11 18l-6-6 6-6" />,
   arrowUpRight: <path d="M7 17 17 7M8 7h9v9" />,
   check: <path d="m5 12 5 5L20 7" />,
+  warning: <path d="M12 4 2.8 19.5h18.4L12 4ZM12 10v4M12 17h.01" />,
+  error: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m9 9 6 6M15 9l-6 6" />
+    </>
+  ),
   sort: <path d="M7 4v16M3 8l4-4 4 4M17 20V4M13 16l4 4 4-4" />,
+  replace: <path d="M4 8h13l-3-3M20 16H7l3 3" />,
+  layers: <path d="m12 3 9 5-9 5-9-5 9-5ZM3 13l9 5 9-5" />,
   arrowUp: <path d="M12 19V5M6 11l6-6 6 6" />,
   arrowDown: <path d="M12 5v14M6 13l6 6 6-6" />,
   calendar: (
@@ -57,6 +66,7 @@ const paths = {
   ),
   letters: <path d="M3 18 7.5 6h1L13 18M4.6 14h6.8M15 11h5l-5 7h5" />,
   chevronDown: <path d="m6 9 6 6 6-6" />,
+  chevronRight: <path d="m9 6 6 6-6 6" />,
   upload: <path d="M12 15V4M7 9l5-5 5 5M5 20h14" />,
   download: <path d="M12 4v11M7 10l5 5 5-5M5 20h14" />,
   link: (

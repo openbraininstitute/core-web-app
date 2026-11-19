@@ -15,6 +15,7 @@ import { ArtifactBar, ArtifactView } from '@/features/logbook/log/ArtifactView';
 import { CONTROL } from '@/features/logbook/log/controls';
 import { EditorTabs } from '@/features/logbook/log/EditorTabs';
 import { InsertMenu } from '@/features/logbook/log/Menus';
+import { NoticeKind, reasonOf } from '@/features/logbook/log/notice';
 import { HereNow, PresenceButton } from '@/features/logbook/log/Presence';
 import { SaveStatus } from '@/features/logbook/log/SaveStatus';
 import { CARD_MENUS, Menu, MobileTab, RightTab } from '@/features/logbook/log/ui-state';
@@ -176,7 +177,7 @@ export function EditorCard(props: IEditorCardProps) {
       aria-label={narrow ? 'Log toolbar and editor' : 'Editor'}
     >
       {/* Row 1: tabs */}
-      <div className="flex items-end gap-1 bg-soft pt-2 pr-2 pl-2">
+      <div className="flex items-end gap-1 rounded-t-[24px] bg-soft pt-2 pr-2 pl-2">
         {narrow ? (
           <button
             type="button"
@@ -195,9 +196,11 @@ export function EditorCard(props: IEditorCardProps) {
           canRename={isNotNil(log) && props.readOnly !== ReadOnlyReason.ReadAccess}
           onRename={(name) =>
             update.mutateAsync({ id: props.logId, name }).catch((error: unknown) => {
-              props.setNotice(
-                `The name was not saved: ${error instanceof Error ? error.message : 'error'}`
-              );
+              props.setNotice({
+                kind: NoticeKind.Error,
+                title: 'The new name was not saved',
+                description: reasonOf(error),
+              });
               throw error;
             })
           }
