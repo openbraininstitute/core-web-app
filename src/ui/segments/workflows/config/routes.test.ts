@@ -5,7 +5,6 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import {
   emodelValidationFlag,
   extracellularRecordingArrayBuildFlag,
-  extractionActivityFlag,
 } from '@/features/feature-flags/flags';
 import {
   readWorkflowSessionSelection,
@@ -147,7 +146,6 @@ describe('listLaunchActionsFromDataViewEntity', () => {
   });
 
   const flagsOn = {
-    [extractionActivityFlag.key]: true,
     [extracellularRecordingArrayBuildFlag.key]: true,
   } as never;
   const all = [
@@ -188,7 +186,7 @@ describe('listLaunchActionsFromDataViewEntity', () => {
         },
         {} as never
       )
-    ).toEqual(['Simulate circuit', 'Parameterize synapse physiology']);
+    ).toEqual(['Simulate circuit', 'Parameterize synapse physiology', 'Extract circuit']);
   });
 
   it('omits the recording array for circuits over its neuron limit', () => {
