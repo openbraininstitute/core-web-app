@@ -132,8 +132,13 @@ class ApiClient {
         if (!options.body) {
           return undefined;
         }
-        if (options.body instanceof FormData) {
-          return options.body;
+        if (
+          options.body instanceof FormData ||
+          options.body instanceof Blob ||
+          options.body instanceof ArrayBuffer ||
+          ArrayBuffer.isView(options.body)
+        ) {
+          return options.body as BodyInit;
         }
         return JSON.stringify(options.body);
       })(),

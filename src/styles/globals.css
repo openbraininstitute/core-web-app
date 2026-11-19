@@ -11,6 +11,7 @@
 
 @import "tailwindcss/theme.css";
 @import "tailwindcss/utilities.css";
+@import "../features/logbook/logbook.css";
 
 @source "../../node_modules/streamdown/dist/*.js";
 

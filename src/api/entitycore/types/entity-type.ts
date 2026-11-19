@@ -43,6 +43,7 @@ export const EntityTypeDict = {
   EmSynapseMappingConfig: 'em_synapse_mapping_config',
   SimulatableExtracellularRecordingArray: 'simulatable_extracellular_recording_array',
   TaskConfig: 'task_config',
+  ResearchLog: 'research_log',
 } as const;
 
 export const EntityTypeWithBrainRegionDict = {
