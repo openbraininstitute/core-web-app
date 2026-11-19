@@ -1,6 +1,6 @@
 import { logError } from '@/utils/logger';
 
-import { MIN_RADIUS, quadGeometry } from '../impostors';
+import { GLOW_WIDTH, MIN_RADIUS, quadGeometry } from '../impostors';
 import { BLOCK } from '../segment-arena';
 import { ARGS, BLOCKS, CLAMP, MOST_SEEN, SEGMENTS } from './culling-wgsl';
 import { bindGroup, computePipeline, DepthPyramid, type Levels, LIBRARY } from './depth-pyramid';
@@ -13,8 +13,6 @@ import type * as THREE from 'three/webgpu';
 import type { CullRead } from '../../types';
 import type { ArenaBuffers, ArenaStorage } from './arena-gpu';
 
-/** How many times the least radius a fully glowing cell is drawn at (`impostorOf`). */
-const GLOW_WIDTH = 2;
 /**
  * How many frames' counts may be on their way back at once. Every frame's counts are read; past this many, the last
  * frame tested is read once a buffer is free, so the last frame before the view rests is always read.

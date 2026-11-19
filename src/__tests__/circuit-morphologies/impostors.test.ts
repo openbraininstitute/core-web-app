@@ -47,7 +47,7 @@ describe('impostors on the Studio look', () => {
     );
     // Glowing in full, at twice the least width.
     expect(vertexShader).toContain(
-      'bool cornerOn = impostorCorner( position, cell.a, MIN_RADIUS * ( 1.0 + vGlow ), cornerView );'
+      'bool cornerOn = impostorCorner( position, cell.a, MIN_RADIUS * ( 1.0 + 1.000000 * vGlow ), cornerView );'
     );
     expect(vertexShader).toContain(
       'vec3 transformed = cornerOn ? viewToWorld( cornerView ) : vec3( 0.0 );'
