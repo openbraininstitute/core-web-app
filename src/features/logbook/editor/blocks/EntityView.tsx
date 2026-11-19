@@ -9,7 +9,6 @@ import {
   entityQuery,
   routeOfType,
 } from '@/features/logbook/api/entities';
-import { EntityType } from '@/features/logbook/blocks/kinds';
 import { lookOfType } from '@/features/logbook/editor/blocks/entity-look';
 import { ViewerMessage } from '@/features/logbook/editor/blocks/viewer-3d/frame';
 import { viewer3dOf } from '@/features/logbook/editor/blocks/viewers-3d';

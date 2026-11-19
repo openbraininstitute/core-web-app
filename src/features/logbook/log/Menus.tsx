@@ -1,11 +1,8 @@
 // Every insert lands after the block the caret is in.
-import { useQueries, useQueryClient } from '@tanstack/react-query';
-import { isNil } from 'es-toolkit';
-import { useDeferredValue, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useRef } from 'react';
 
-import { entitySearchQuery } from '@/features/logbook/api/entities';
 import { UPLOAD_ACCEPT } from '@/features/logbook/api/log-files';
-import { EntityType, entityLookOf, entityLooks } from '@/features/logbook/blocks/kinds';
 import { useLogContext } from '@/features/logbook/log/context';
 import { ToastSource } from '@/features/logbook/log/notify-settings';
 import { uploadFiles } from '@/features/logbook/log/uploads';
@@ -14,8 +11,6 @@ import { cn } from '@/utils/css-class';
 
 import type { Editor } from '@tiptap/react';
 import type { CSSProperties } from 'react';
-import type { TEntityType } from '@/features/logbook/blocks/kinds';
-import type { IPickedEntity } from '@/features/logbook/log/context';
 import type { IPopAt } from '@/features/logbook/log/EditorCard';
 import type { INotice } from '@/features/logbook/log/notice';
 import type { INotifySettings, TToastSource } from '@/features/logbook/log/notify-settings';
