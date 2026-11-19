@@ -154,7 +154,7 @@ export interface DetailRules {
  * The occlusion's wide term on WebGPU, which shades the circuit's shape where the fine term shades a soma against its
  * neighbours. Set from the Debug menu while it is tried out.
  */
-export interface WideOcclusion {
+export interface IWideOcclusion {
   /** The power what it multiplies the picture by is raised to; 0 for none. */
   strength: number;
   /** How far it reaches, as a share of the view's height. */
@@ -312,8 +312,8 @@ export interface CircuitMorphologyView extends ViewControls {
   setDetailRules(rules: Partial<DetailRules>): void;
   /** Told what is drawn of morphologies read a box at a time whenever it changes, and null where there are none. */
   onDetail(listener: (detail: DetailStats | null) => void): () => void;
-  readonly wideOcclusion: WideOcclusion;
-  setWideOcclusion(wide: Partial<WideOcclusion>): void;
+  readonly wideOcclusion: IWideOcclusion;
+  setWideOcclusion(wide: Partial<IWideOcclusion>): void;
   /**
    * Show these somas, each a sphere as the somas view drew them, in `colors` where given; null shows none. The view is
    * framed on them unless the populations on show before, or these, take in the others. The positions are kept, not

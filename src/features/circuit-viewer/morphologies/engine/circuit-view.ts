@@ -67,6 +67,7 @@ import type {
   DetailStats,
   ElectrodeGroup,
   ElectrodeHit,
+  IWideOcclusion,
   LocationMarker,
   MarkerOnScreen,
   Population,
@@ -74,7 +75,6 @@ import type {
   SectionSpot,
   SynapseGroup,
   Vec3,
-  WideOcclusion,
 } from '../types';
 import type { UploadsOf } from './segment-arena';
 
@@ -109,7 +109,7 @@ const CLAMPED_FRAMES = 30;
 /** How long after such a frame the next one no longer counts as following it, ms. */
 const CLAMPED_APART_MS = 1000;
 /** The occlusion's wide term as a view starts with it. */
-const WIDE_OCCLUSION: WideOcclusion = { strength: 1, reach: 0.6 };
+const WIDE_OCCLUSION: IWideOcclusion = { strength: 1, reach: 0.6 };
 /**
  * Moving frames over the somas alone are cut down as in the EM mesh viewer, but a step down in resolution is kept only
  * where it saves a tenth: drawn front first, many somas cost more in corners than in pixels.
@@ -820,7 +820,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     return true;
   }
 
-  setWideOcclusion(wide: Partial<WideOcclusion>): void {
+  setWideOcclusion(wide: Partial<IWideOcclusion>): void {
     this.wideOcclusion = { ...this.wideOcclusion, ...wide };
     this.invalidate();
   }

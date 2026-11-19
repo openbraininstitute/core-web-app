@@ -39,7 +39,7 @@ Once drawing, a WebGPU view can give out:
 | The arena's buffers are out of memory | The arena is made again without its base, on the same device. Where there was no base to drop, or that fails too, the view and every one after are drawn with WebGL 2. |
 | The culling cannot run | Every box in view counts as seen, and every segment is drawn |
 | The somas' culling cannot run | The cloud is drawn by pieces, as on WebGL 2 |
-| The ambient occlusion cannot run | Frames are drawn without it; where only the glow failed, without the glow |
+| The ambient occlusion cannot run | Frames are drawn without it; where only the glow failed, without the glow; where only the occlusion's wide term failed, without that term |
 
 A WebGL 2 view whose context the browser takes back, most often the oldest where a page asks for more than it allows, tells `onLost` too, and is made again on WebGL 2, the cells it was given handed to the new one. After three lost graphics a view is not made again: `CircuitCells` says the graphics were reset and offers to reload the page.
 

@@ -23,7 +23,7 @@ import { HelpRow, ICON, SectionTitle, ToggleRow } from './menu-rows';
 
 import type { ViewerTheme } from '@/features/scan-config/components/color-by/contrast';
 import type { CreatedView, Tier, TierChoice } from '../engine/create-view';
-import type { CircuitMorphologyView, DetailStats, WideOcclusion } from '../types';
+import type { CircuitMorphologyView, DetailStats, IWideOcclusion } from '../types';
 
 const BUDGETS: Record<Tier, number[]> = {
   webgl: [SEGMENT_BUDGET.webgl, 1_000_000, 500_000, 200_000, 100_000],
@@ -104,7 +104,7 @@ function DetailRows({
 function WideRows({ view }: { view: CircuitMorphologyView }) {
   const [wide, setWide] = useState(view.wideOcclusion);
   useEffect(() => setWide(view.wideOcclusion), [view]);
-  const set = (next: Partial<WideOcclusion>) => {
+  const set = (next: Partial<IWideOcclusion>) => {
     view.setWideOcclusion(next);
     setWide((was) => ({ ...was, ...next }));
   };

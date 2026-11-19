@@ -48,6 +48,8 @@ import {
 } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
+import { logError } from '@/utils/logger';
+
 import { typed } from './cells-wgsl';
 import { GTAO_PARTS } from './three-hooks';
 
@@ -72,10 +74,9 @@ const MEAN_COVER = 1 / 1024;
 export const AO_COVER = 0.5;
 /**
  * The occlusion's wide term: the same occlusion at this share of the resolution, reaching a share of the view's height
- * (`WideOcclusion`), on the mean surface of each block of the fine term's pixels, taken as facing the eye. Where the
+ * (`IWideOcclusion`), on the mean surface of each block of the fine term's pixels, taken as facing the eye. Where the
  * fine term shades a soma against its neighbours, this one shades the circuit's shape. Its occlusion is not tied to the
- * screen (`SurfaceGTAONode.steady`): tied so, the same surface got another shade a pixel on, and the term flickered as
- * the view moved. Its smoothing still is: three's `denoise` turns its taps by a noise over the screen.
+ * screen (`SurfaceGTAONode.steady`); its smoothing still is (three's `denoise`).
  */
 const WIDE_SCALE = 0.125;
 const WIDE_BLOCK = AO_SCALE / WIDE_SCALE;
@@ -330,7 +331,7 @@ function inside(pixel: Node<'ivec2'>, texture: TextureNode): Node<'ivec2'> {
 }
 
 /** One of the occlusion's terms: three's GTAO on surfaces drawn at its size, and what smooths it. */
-interface Term {
+interface ITerm {
   occlusion: SurfaceGTAONode;
   smooth: ReturnType<typeof denoise>;
 }
@@ -342,7 +343,7 @@ function termOf(
   scale: number,
   samples: number,
   steady = false
-): Term {
+): ITerm {
   const occlusion = new SurfaceGTAONode(depth, normals, camera, steady);
   occlusion.resolutionScale = scale;
   occlusion.samples.value = samples;
@@ -354,7 +355,7 @@ function termOf(
   return { occlusion, smooth };
 }
 
-function reachOf({ occlusion, smooth }: Term, reach: number): void {
+function reachOf({ occlusion, smooth }: ITerm, reach: number): void {
   occlusion.radius.value = reach;
   occlusion.thickness.value = reach;
   smooth.depthPhi.value = reach / 4;
@@ -411,9 +412,10 @@ export class Occlusion {
   readonly background = uniform(new THREE.Color());
   private pipeline: THREE.RenderPipeline;
   private moving: THREE.RenderPipeline | null = null;
-  private fine: Term;
-  private wide: Term;
+  private fine: ITerm;
+  private wide: ITerm;
   private wideStrength = uniform(0);
+  private wideWorks = true;
   private sums: ReturnType<typeof rtt>;
   /** The last level of the mipmaps of `sums`. */
   private sumsLevel = uniform(0);
@@ -626,29 +628,31 @@ export class Occlusion {
     this.moving.outputNode = drawnOver(glowOver(picture, glow, this.background), over);
   }
 
-  /** Whether three's occlusion failed, rather than what glows. */
+  /** Whether three's occlusion failed in the fine term, rather than what glows. */
   get occlusionFailed(): boolean {
-    return this.failed !== null;
-  }
-
-  private get failed(): unknown {
-    return this.fine.occlusion.failed ?? this.wide.occlusion.failed;
+    return this.fine.occlusion.failed !== null;
   }
 
   /**
    * Draws a frame with the occlusion reaching `reach` µm: in an orthographic view, the same on screen at any zoom. Its
-   * wide term reaches `wideReach` µm and is raised to the power `wideStrength`; at 0 it shades nothing.
+   * wide term reaches `wideReach` µm and is raised to the power `wideStrength`; at 0 it shades nothing. Returns false
+   * where three's occlusion failed in this frame for the wide term alone, which the frames after are drawn without.
    */
-  render(reach: number, wideReach: number, wideStrength: number): void {
+  render(reach: number, wideReach: number, wideStrength: number): boolean {
     reachOf(this.fine, reach);
     reachOf(this.wide, wideReach);
-    this.wideStrength.value = wideStrength;
+    this.wideStrength.value = this.wideWorks ? wideStrength : 0;
     const { x, y } = this.renderer.getDrawingBufferSize(this.drawing);
     const [width, height] = [meanSide(x), meanSide(y)];
     this.sums.setSize(width, height);
     this.sumsLevel.value = Math.log2(Math.max(width, height));
     this.pipeline.render();
-    if (this.failed) throw this.failed;
+    const { fine, wide } = this;
+    if (fine.occlusion.failed) throw fine.occlusion.failed;
+    if (!this.wideWorks || wide.occlusion.failed === null) return true;
+    this.wideWorks = false;
+    logError("Drawn without the occlusion's wide term", wide.occlusion.failed);
+    return false;
   }
 
   /** Draws a frame while the view moves, with the glow and without the occlusion; only when made to glow. */
