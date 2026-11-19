@@ -50,7 +50,8 @@ function useServiceProbe(service: ServiceDescriptor) {
 function StatusCell({ service }: { service: ServiceDescriptor }) {
   const { data, error } = useServiceProbe(service);
 
-  if (!data) {
+  // A failed refetch keeps the last data, which would read as current.
+  if (error || !data) {
     return <span className="text-neutral-4">{error ? "Couldn't check" : 'Checking'}</span>;
   }
 

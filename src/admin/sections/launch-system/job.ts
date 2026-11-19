@@ -14,5 +14,6 @@ export type JobLookup =
   | { outcome: 'invalid-id' }
   | { outcome: 'not-found' }
   | { outcome: 'denied' }
-  | { outcome: 'not-reachable'; status?: number }
+  | { outcome: 'no-answer' }
+  | { outcome: 'not-reachable'; status: number }
   | { outcome: 'failed'; status: number; message: string | null };

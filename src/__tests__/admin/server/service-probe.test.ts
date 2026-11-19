@@ -74,6 +74,11 @@ describe('probeFromServer', () => {
     ],
     ["the web app's HTML 404", () => new Response('<html>', { status: 404 }), 'blocked'],
     ['an HTML 200', () => new Response('<html>', { status: 200 }), 'blocked'],
+    [
+      "the gateway's HTML 502 for a dead service",
+      () => new Response('<html>', { status: 502 }),
+      'down',
+    ],
   ])('reads %s as %s', async (_name, reply, status) => {
     fetchMock.mockImplementation(async () => reply());
 

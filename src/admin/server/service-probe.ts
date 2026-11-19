@@ -7,10 +7,11 @@ import { serverConfig } from '@/config/server';
 import type { ProbeMode, ServiceProbe } from '@/admin/sections/services/health';
 
 // The gateway answers a source it refuses with a redirect to the main site, and these services
-// always answer JSON, so a redirect or another body came from the gateway or the web app.
+// always answer JSON, so a redirect or another body came from the gateway or the web app. A 5xx
+// page is the gateway saying the service is down, though.
 export function isGatewayReply({ status, headers }: Response) {
   const isJson = headers.get('content-type')?.includes('json');
-  return (status >= 300 && status < 400) || !isJson;
+  return (status >= 300 && status < 400) || (!isJson && status < 500);
 }
 
 // A redirect isn't followed, so it can't read as healthy. Health needs no auth, so a 403 is the

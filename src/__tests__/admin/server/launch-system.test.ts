@@ -58,6 +58,11 @@ describe('fetchAdminJob', () => {
       { outcome: 'not-reachable', status: 404 },
     ],
     [
+      "the gateway's HTML 502 for a dead service",
+      new Response('<html>', { status: 502 }),
+      { outcome: 'failed', status: 502, message: null },
+    ],
+    [
       'a JSON 500',
       Response.json({ message: 'Boom' }, { status: 500 }),
       { outcome: 'failed', status: 500, message: 'Boom' },
@@ -68,12 +73,10 @@ describe('fetchAdminJob', () => {
     await expect(fetchAdminJob(BASE, JOB_ID, 'tok')).resolves.toEqual(lookup);
   });
 
-  it('reads a network failure as not reachable instead of throwing', async () => {
+  it('reads a network failure or timeout as no answer instead of throwing', async () => {
     fetchMock.mockRejectedValueOnce(new TypeError('fetch failed'));
 
-    await expect(fetchAdminJob(BASE, JOB_ID, 'tok')).resolves.toEqual({
-      outcome: 'not-reachable',
-    });
+    await expect(fetchAdminJob(BASE, JOB_ID, 'tok')).resolves.toEqual({ outcome: 'no-answer' });
   });
 });
 

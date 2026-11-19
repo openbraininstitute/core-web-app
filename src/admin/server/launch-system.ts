@@ -23,7 +23,7 @@ export async function fetchAdminJob(
     redirect: 'manual',
     signal: AbortSignal.timeout(LOOKUP_TIMEOUT_MS),
   }).catch(() => null);
-  if (!res) return { outcome: 'not-reachable' };
+  if (!res) return { outcome: 'no-answer' };
 
   if (isGatewayReply(res)) return { outcome: 'not-reachable', status: res.status };
 
