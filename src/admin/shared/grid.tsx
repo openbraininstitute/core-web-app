@@ -87,17 +87,21 @@ export function AdminPagedGrid<Row>({
   );
 }
 
+type RowsGridProps<Row> = {
+  what: string;
+  columns: Array<ISimpleColumn<Row>>;
+  rows: Row[];
+  getRowId: (row: Row) => string;
+  onRowClick?: (row: Row) => void;
+};
+
 export function AdminRowsGrid<Row>({
   what,
   columns,
   rows,
   getRowId,
-}: {
-  what: string;
-  columns: Array<ISimpleColumn<Row>>;
-  rows: Row[];
-  getRowId: (row: Row) => string;
-}) {
+  onRowClick,
+}: RowsGridProps<Row>) {
   return (
     <div className="border-neutral-2 rounded-lg border bg-white">
       <SimpleGrid<Row>
@@ -106,6 +110,7 @@ export function AdminRowsGrid<Row>({
         getRowId={getRowId}
         rowHeight={ROW_HEIGHT}
         noRowsText={`No ${what}`}
+        onRowClick={onRowClick}
       />
     </div>
   );
@@ -116,10 +121,7 @@ export function AdminQueryGrid<Row>({
   queryKey,
   queryFn,
   ...grid
-}: {
-  what: string;
-  columns: Array<ISimpleColumn<Row>>;
-  getRowId: (row: Row) => string;
+}: Omit<RowsGridProps<Row>, 'rows'> & {
   queryKey: QueryKey;
   queryFn: (signal: AbortSignal) => Promise<Row[]>;
 }) {
