@@ -5,3 +5,10 @@ pre-commit:
       glob: "*.{css,js,ts,cjs,mjs,jsx,tsx,json,jsonc}"
       run: pnpm exec biome check --formatter-enabled=true --write {staged_files}
       stage_fixed: true
+
+pre-push:
+  commands:
+    react-doctor:
+      glob: "*.{js,jsx,ts,tsx}"
+      # Pinned so every push runs the same rules; --scope changed reports only issues new versus main.
+      run: npx -y react-doctor@0.9.23 . --scope changed --no-supply-chain --no-score --blocking error
