@@ -279,9 +279,11 @@ export function buildMEModelConfigureBinding(): TScanConfigConfigureBinding {
   return {
     browseType: ExtendedEntitiesTypeDict.Memodel,
     scanConfigEntityType: ExtendedEntitiesTypeDict.Memodel,
-    // the e-model is picked in the editor; this only lets a detail page's Build action seed it
+    // the e-model/morphology are picked in the editor; this only lets a detail page's Build action seed them
     fromIdTypeByBrowseType: {
       [ExtendedEntitiesTypeDict.Emodel]: ScanConfigFromIdType.EModelFromID,
+      [ExtendedEntitiesTypeDict.SynthesizedCellMorphology]:
+        ScanConfigFromIdType.CellMorphologyFromID,
     },
     generatedApiPath: ScanConfigGeneratedApiPath.MEModelBuild,
   };

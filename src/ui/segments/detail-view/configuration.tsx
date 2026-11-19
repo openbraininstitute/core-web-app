@@ -57,6 +57,7 @@ const workflowConfigTypes: TExtendedEntitiesTypeDict[] = [
   ExtendedEntitiesTypeDict.IonChannelModel,
   ExtendedEntitiesTypeDict.SingleNeuronCircuit,
   ExtendedEntitiesTypeDict.EFeatureExtractionResult,
+  ExtendedEntitiesTypeDict.SynthesizedCellMorphology,
   ...circuitTypes,
 ];
 

@@ -141,8 +141,8 @@ describe('listLaunchActionsFromDataViewEntity', () => {
     }
   });
 
-  it('lists no workflows for synthesized morphologies', () => {
-    expect(labels(ExtendedEntitiesTypeDict.SynthesizedCellMorphology)).toEqual([]);
+  it('lists Build ME-model for synthesized morphologies', () => {
+    expect(labels(ExtendedEntitiesTypeDict.SynthesizedCellMorphology)).toEqual(['Build ME-model']);
   });
 
   const flagsOn = {

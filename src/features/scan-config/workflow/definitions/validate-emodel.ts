@@ -1,5 +1,6 @@
 import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
 import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ObiOneTaskTypeDict } from '@/api/one/types/task';
 import { EModelValidationCampaign } from '@/entity-configuration/domain/validation/emodel-validation-campaign';
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
@@ -23,7 +24,7 @@ export const validateEModelWorkflow = defineScanConfigWorkflow({
       return await EModelValidationCampaign.api.query.resolve!({ id, context });
     },
   },
-  seed: new BlockSingleFieldSeed('emodel', 'emodel'),
+  seed: new BlockSingleFieldSeed('emodel', { [ExtendedEntitiesTypeDict.Emodel]: 'emodel' }),
   editor: {
     className: 'px-4',
     campaignOriginAction: ScanConfigCampaignOriginActionDict.Task,

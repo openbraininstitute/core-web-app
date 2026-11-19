@@ -1,5 +1,6 @@
 import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
 import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ObiOneTaskTypeDict } from '@/api/one/types/task';
 import { MEModelBuildCampaign } from '@/entity-configuration/domain/model/memodel-build-campaign';
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
@@ -23,7 +24,10 @@ export const buildMEModelWorkflow = defineScanConfigWorkflow({
       return await MEModelBuildCampaign.api.query.resolve!({ id, context });
     },
   },
-  seed: new BlockSingleFieldSeed('initialize', 'emodel'),
+  seed: new BlockSingleFieldSeed('initialize', {
+    [ExtendedEntitiesTypeDict.Emodel]: 'emodel',
+    [ExtendedEntitiesTypeDict.SynthesizedCellMorphology]: 'morphology',
+  }),
   taskTypeBindings: {
     obiOne: ObiOneTaskTypeDict.MEModelBuild,
     configGeneration: TaskActivityType.MEModelBuildConfigGeneration,

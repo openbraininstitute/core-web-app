@@ -229,8 +229,11 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
       schemaName: SchemaNameDict.MEModelBuildScanConfig,
       configureBinding: buildMEModelConfigureBinding(),
     },
-    // the e-model is picked in the editor, listed so its detail page can offer this build
-    configurationInputs: [{ type: ExtendedEntitiesTypeDict.Emodel }],
+    // the e-model/morphology is picked in the editor, listed so their detail pages can offer this build
+    configurationInputs: [
+      { type: ExtendedEntitiesTypeDict.Emodel },
+      { type: ExtendedEntitiesTypeDict.SynthesizedCellMorphology },
+    ],
     order: 2,
     disabled: false,
   },

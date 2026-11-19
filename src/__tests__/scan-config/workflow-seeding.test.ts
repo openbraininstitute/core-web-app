@@ -443,8 +443,10 @@ describe('BlockSingleFieldSeed', () => {
     } as const,
   });
 
+  const emodelFieldByType = { [ExtendedEntitiesTypeDict.Emodel]: 'emodel' };
+
   it('writes the selected entity into the field of the block', () => {
-    const seeded = new BlockSingleFieldSeed('emodel', 'emodel').applyTo(
+    const seeded = new BlockSingleFieldSeed('emodel', emodelFieldByType).applyTo(
       seedArgs(emodelValidationConfig)
     );
 
@@ -459,10 +461,16 @@ describe('BlockSingleFieldSeed', () => {
     const args = seedArgs(emodelValidationConfig);
 
     expect(
-      new BlockSingleFieldSeed('emodel', 'emodel').applyTo({
+      new BlockSingleFieldSeed('emodel', emodelFieldByType).applyTo({
         ...args,
         resolveFromIdType: () => undefined,
       })
     ).toBe(emodelValidationConfig);
+  });
+
+  it('leaves the config alone when the selected type has no field mapped', () => {
+    const args = seedArgs(emodelValidationConfig);
+
+    expect(new BlockSingleFieldSeed('emodel', {}).applyTo(args)).toBe(emodelValidationConfig);
   });
 });

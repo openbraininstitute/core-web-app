@@ -47,6 +47,14 @@ export default async function AnalysisSection({
       />
     );
   }
+  if (extendedType === ExtendedEntitiesTypeDict.SynthesizedCellMorphology) {
+    // no analysis is produced for a morphology yet
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        No analysis available for this {entityType.title.toLowerCase()}.
+      </div>
+    );
+  }
 
   return notFound();
 }
