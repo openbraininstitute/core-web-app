@@ -20,11 +20,40 @@ const REQUIRED = [{ required: true, message: 'Required' }];
 const DESCRIPTION = { ...DESCRIPTION_FIELD, rules: [{ max: 1000 }] };
 
 // A stored value is let through: the API doesn't check these, and saving skips it.
-const atLeast = (min: number, message: string, stored?: number | null): RuleObject => ({
-  validator: async (_, value?: number) => {
-    if (value && value !== stored && value < min) throw new Error(message);
+export const atLeast = (
+  min: number | null | undefined,
+  message: string,
+  stored?: number | null
+): RuleObject => ({
+  validator: async (_, value?: number | null) => {
+    if (value == null || min == null || value === stored) return;
+    if (value < min) throw new Error(message);
   },
 });
+
+export const POSITIVE: RuleObject = { type: 'number', min: 1, message: 'Has to be at least 1' };
+
+type PromotionCreateValues = Omit<
+  AdminPromotionCreate,
+  'max_total_uses' | 'validity_period_days'
+> & { max_total_uses?: number | null };
+
+// The API requires a period but never reads it, so it gets the code's dates.
+export function promotionCreateBody({
+  code,
+  description,
+  max_total_uses: maxTotal,
+  ...rest
+}: PromotionCreateValues): AdminPromotionCreate {
+  const days = Math.ceil(dayjs(rest.valid_until).diff(rest.valid_from, 'day', true));
+  return {
+    ...rest,
+    code: code.trim(),
+    description: description || undefined,
+    max_total_uses: maxTotal ?? undefined,
+    validity_period_days: Math.max(1, days),
+  };
+}
 
 const PER_USER = "Can't be below the uses per user";
 
@@ -46,14 +75,15 @@ export function PromotionCreate({ onClose }: { onClose: () => void }) {
   });
 
   return (
-    <FormModal<Omit<AdminPromotionCreate, 'max_total_uses'> & { max_total_uses?: number | null }>
+    <FormModal<PromotionCreateValues>
       title="Create a promotion code"
       description="Once active, anyone with the code can redeem it for credits inside its dates."
       fields={[
         {
           name: 'code',
           label: 'Code',
-          extra: 'Stored in capitals. The same code can be reused with different dates.',
+          extra:
+            'Stored in capitals. An existing code can be used again, but if two active promotions with it overlap, the one that started first pays, with its credits.',
           // The API trims the code only after checking its length.
           rules: [
             { required: true, whitespace: true, message: 'Required' },
@@ -71,15 +101,7 @@ export function PromotionCreate({ onClose }: { onClose: () => void }) {
           label: 'Credits granted',
           kind: 'integer',
           min: 1,
-          rules: REQUIRED,
-        },
-        {
-          name: 'validity_period_days',
-          label: 'Period in days',
-          kind: 'integer',
-          min: 1,
-          extra: "Stored with the code, but the API doesn't use it.",
-          rules: REQUIRED,
+          rules: [...REQUIRED, POSITIVE],
         },
         {
           name: 'max_uses_per_user_per_period',
@@ -87,7 +109,7 @@ export function PromotionCreate({ onClose }: { onClose: () => void }) {
           kind: 'integer',
           min: 1,
           extra: "Counted in each of the user's labs, over the code's dates.",
-          rules: REQUIRED,
+          rules: [...REQUIRED, POSITIVE],
         },
         {
           name: 'max_total_uses',
@@ -98,6 +120,7 @@ export function PromotionCreate({ onClose }: { onClose: () => void }) {
           extra: "Once set, this can be changed but not removed. Can't be below the uses per user.",
           dependencies: ['max_uses_per_user_per_period'],
           rules: [
+            POSITIVE,
             ({ getFieldValue }) => atLeast(getFieldValue('max_uses_per_user_per_period'), PER_USER),
           ],
         },
@@ -114,14 +137,7 @@ export function PromotionCreate({ onClose }: { onClose: () => void }) {
       initialValues={{ active: true, max_uses_per_user_per_period: 1 }}
       okText="Create"
       pending={write.isPending}
-      onSubmit={({ code, description, max_total_uses: maxTotal, ...rest }) =>
-        write.mutate({
-          ...rest,
-          code: code.trim(),
-          description: description || undefined,
-          max_total_uses: maxTotal ?? undefined,
-        })
-      }
+      onSubmit={(values) => write.mutate(promotionCreateBody(values))}
       onClose={onClose}
     />
   );
@@ -146,7 +162,7 @@ export function PromotionEdit({
   return (
     <FormModal<Pick<AdminPromotion, 'description' | 'active' | 'valid_until' | 'max_total_uses'>>
       title={`Edit ${promotion.code}`}
-      description="The code, its credits, its period and its start can't be changed after creation."
+      description="The code, its credits, its start and its uses per user can't be changed after creation."
       fields={[
         DESCRIPTION,
         {
@@ -166,6 +182,7 @@ export function PromotionEdit({
             : 'Once set, this can be changed but not removed.',
           rules: [
             ...(hasLimit ? [{ required: true, message: 'Give a limit' }] : []),
+            POSITIVE,
             atLeast(promotion.max_uses_per_user_per_period, PER_USER, promotion.max_total_uses),
             atLeast(
               promotion.current_total_uses,
@@ -174,7 +191,12 @@ export function PromotionEdit({
             ),
           ],
         },
-        { name: 'active', label: 'Active', kind: 'switch' },
+        {
+          name: 'active',
+          label: 'Active',
+          kind: 'switch',
+          extra: `Off, redeeming ${promotion.code} skips this promotion. Other active promotions with the code still pay.`,
+        },
       ]}
       initialValues={promotion}
       okText="Save"

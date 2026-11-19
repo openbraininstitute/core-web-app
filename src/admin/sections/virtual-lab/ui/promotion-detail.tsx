@@ -134,8 +134,8 @@ function PromotionActions({ promotion }: { promotion: AdminPromotion }) {
       {open === 'edit' && <PromotionEdit promotion={promotion} onClose={close} />}
       {open === 'deactivate' && (
         <FormModal
-          title={`Deactivate ${promotion.code}?`}
-          description="Nobody can redeem it after this. Credits already given stay. You can turn it back on with Edit."
+          title="Deactivate this promotion?"
+          description={`Redeeming ${promotion.code} skips this promotion after this. Other active promotions with the code still pay. Credits already given stay. You can turn it back on with Edit.`}
           fields={[]}
           okText="Deactivate"
           danger
@@ -174,7 +174,6 @@ export function PromotionDetail({ promotionId }: { promotionId: string }) {
                 <DetailId>{promotion.id}</DetailId>
               </Detail>
               <Detail label="Credits granted">{promotion.credits_amount}</Detail>
-              <Detail label="Period">{`${promotion.validity_period_days} days, not used by the API`}</Detail>
               <Detail label="Uses per user and lab">
                 {promotion.max_uses_per_user_per_period}
               </Detail>

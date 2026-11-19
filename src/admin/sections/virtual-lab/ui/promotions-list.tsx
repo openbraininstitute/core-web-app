@@ -90,7 +90,7 @@ export function PromotionsList() {
         }
       >
         {analytics
-          ? `Codes: ${analytics.total_promotions}, of which past their end date: ${analytics.expired_promotions}. Redemptions: ${analytics.total_redemptions}. Credits given: ${analytics.total_credits_distributed}.`
+          ? `Codes: ${analytics.total_promotions}, of which past their end date: ${analytics.expired_promotions}. Completed redemptions: ${analytics.total_redemptions}. Credits given: ${analytics.total_credits_distributed}.`
           : analyticsError && `Couldn't load the totals. ${errorReason(analyticsError)}`}
       </PageHeader>
       <div className="flex flex-wrap items-center gap-3">
@@ -100,6 +100,11 @@ export function PromotionsList() {
           options={STATUS_OPTIONS}
           onChange={(value) => setStatus(value as (typeof STATUSES)[number])}
         />
+        {status === 'active' && (
+          <span className="text-neutral-6 text-sm">
+            Includes codes outside their dates or used up.
+          </span>
+        )}
       </div>
       <AdminPagedGrid<AdminPromotion>
         fill
