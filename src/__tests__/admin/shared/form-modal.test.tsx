@@ -52,4 +52,22 @@ describe('FormModal', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledWith({ active: false }));
   });
+
+  it('submits an untouched date as the string it was given', async () => {
+    const onSubmit = vi.fn();
+    const until = '2025-11-15T13:39:27.123000+00:00';
+    render(
+      <FormModal<{ valid_until: string }>
+        title="Edit promotion"
+        fields={[{ name: 'valid_until', label: 'Valid until', kind: 'datetime' }]}
+        initialValues={{ valid_until: until }}
+        okText="Save"
+        pending={false}
+        onSubmit={onSubmit}
+        onClose={vi.fn()}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith({ valid_until: until }));
+  });
 });
