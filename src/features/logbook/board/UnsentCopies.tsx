@@ -1,6 +1,8 @@
 // On app start, send local page copies the server may lack; the sync code loads only here.
 import { useQuery } from '@tanstack/react-query';
 
+import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
+
 // `failed` retries next start; `lost` were refused (404/403) and stay on the device.
 interface IUnsent {
   readonly failed: number;
@@ -26,7 +28,7 @@ export interface IUnsentCopiesProps {
 
 export function UnsentCopies({ userId, enabled }: IUnsentCopiesProps) {
   const unsent = useQuery({
-    queryKey: ['unsent-copies', userId],
+    queryKey: keyBuilderLogbook.unsentCopies(userId),
     queryFn: () => syncAtStart(userId),
     enabled,
     // Once per app start; "Try again" runs it again.

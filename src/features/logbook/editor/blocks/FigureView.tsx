@@ -11,6 +11,7 @@ import {
 import { useLogContext } from '@/features/logbook/log/context';
 import { useUploading } from '@/features/logbook/log/uploads';
 import { Icon } from '@/features/logbook/ui/icons';
+import { useObjectUrl } from '@/hooks/use-object-url';
 
 import type { NodeViewProps } from '@tiptap/react';
 import type { ILogFile } from '@/features/logbook/api/log-files';
@@ -28,8 +29,9 @@ function Picture({
 }) {
   const { project, logId } = useLogContext();
   const image = useQuery(fileBlobQuery(logId, folderId, file.path, project));
-  if (isNil(image.data)) return null;
-  return <img className={IMG} src={image.data} alt={alt} loading="lazy" />;
+  const src = useObjectUrl(image.data);
+  if (isNil(src)) return null;
+  return <img className={IMG} src={src} alt={alt} loading="lazy" />;
 }
 
 export function FigureView({ node, selected }: NodeViewProps) {

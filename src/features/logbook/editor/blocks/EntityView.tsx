@@ -12,6 +12,7 @@ import {
 import { lookOfType } from '@/features/logbook/editor/blocks/entity-look';
 import { ViewerMessage } from '@/features/logbook/editor/blocks/viewer-3d/frame';
 import { viewer3dOf } from '@/features/logbook/editor/blocks/viewers-3d';
+import { Bone } from '@/features/logbook/elements/skeletons';
 import { useEntityDetail, useEntityPicker, useLogContext } from '@/features/logbook/log/context';
 import { Icon } from '@/features/logbook/ui/icons';
 import { cn } from '@/utils/css-class';
@@ -86,13 +87,17 @@ export function EntityView({
           </div>
           <div className="text-[16px] leading-[1.3] font-bold">{entity.data?.name ?? label}</div>
           <div className="text-[12px] leading-[1.4] text-neutral-4">
-            {missing
-              ? entity.isError
-                ? 'Not found in this project, or no access'
-                : 'Shown with the generic card'
-              : entity.isPending
-                ? 'Loading…'
-                : `Created by ${by ?? 'unknown'}${isNil(date) ? '' : ` · ${date}`}`}
+            {missing ? (
+              entity.isError ? (
+                'Not found in this project, or no access'
+              ) : (
+                'Shown with the generic card'
+              )
+            ) : entity.isPending ? (
+              <Bone className="my-[4px] h-2.5 w-40 animate-pulse" />
+            ) : (
+              `Created by ${by ?? 'unknown'}${isNil(date) ? '' : ` · ${date}`}`
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2">

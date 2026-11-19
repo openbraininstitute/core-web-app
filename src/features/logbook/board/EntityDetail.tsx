@@ -3,6 +3,7 @@ import { isNil } from 'es-toolkit';
 
 import { WorkspaceSection } from '@/constants';
 import { coreTypeOf, entityQuery } from '@/features/logbook/api/entities';
+import { PanelSkeleton } from '@/features/logbook/elements/skeletons';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
@@ -55,9 +56,11 @@ export function EntityDetail({ target, project, narrow, onClose }: IEntityDetail
       className="flex min-h-0 w-[clamp(320px,30%,420px)] flex-none flex-col"
       aria-label="Entity details"
     >
-      {record.isError || record.isPending ? (
+      {record.isPending ? (
+        <PanelSkeleton />
+      ) : record.isError ? (
         <p className="logbook-card grid h-full place-items-center p-6 text-center text-[13px] text-neutral-4">
-          {record.isError ? "This entity can't be shown here." : 'Loading the details…'}
+          This entity can't be shown here.
         </p>
       ) : (
         panel

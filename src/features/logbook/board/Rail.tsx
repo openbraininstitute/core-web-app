@@ -6,6 +6,7 @@ import { useContributors } from '@/features/logbook/api/contributors';
 import { colourOf } from '@/features/logbook/blocks/colour';
 import { OrderButton } from '@/features/logbook/board/LogOrder';
 import { AvatarGroup } from '@/features/logbook/elements/motion/avatar-group';
+import { PillSkeletons } from '@/features/logbook/elements/skeletons';
 import { DeleteLogDialog } from '@/features/logbook/log/DeleteLogDialog';
 import { NotifyPopover } from '@/features/logbook/log/Menus';
 import { useNotifySettings } from '@/features/logbook/log/notify-settings';
@@ -177,38 +178,6 @@ export function LoadMore({
     </>
   );
 }
-
-const BONE = 'block rounded-full bg-neutral-2/70';
-
-// Same box and rows as the pill, so nothing shifts when logs load.
-export function LogPillSkeleton() {
-  return (
-    <div
-      className="flex animate-pulse flex-col gap-1 rounded-[12px] bg-neutral-1 p-[12px_14px_12px_16px]"
-      aria-hidden="true"
-    >
-      <span className="flex h-[22px] items-center">
-        <span className={cn(BONE, 'h-3.5 w-3/5')} />
-      </span>
-      <span className="flex h-[18px] items-center">
-        <span className={cn(BONE, 'h-2.5 w-full')} />
-      </span>
-      <span className="flex h-[18px] items-center">
-        <span className={cn(BONE, 'h-2.5 w-4/5')} />
-      </span>
-      <span className="mt-1 flex items-center gap-2">
-        <span className="flex">
-          <span className={cn(BONE, 'size-7 ring-2 ring-neutral-1')} />
-          <span className={cn(BONE, '-ml-2 size-7 ring-2 ring-neutral-1')} />
-        </span>
-        <span className={cn(BONE, 'ml-auto h-2.5 w-12')} />
-      </span>
-    </div>
-  );
-}
-
-export const PILL_SKELETONS = (count: number) =>
-  Array.from({ length: count }, (_, n) => <LogPillSkeleton key={n} />);
 
 // Public and project scope switches; both on shows all.
 export function ScopeFilter({
@@ -588,7 +557,7 @@ export function Rail(props: IRailProps) {
         aria-busy={props.loading || props.more.loading}
       >
         {props.error ? <p className={LIST_EMPTY}>{props.error}</p> : null}
-        {props.loading ? PILL_SKELETONS(6) : null}
+        {props.loading ? <PillSkeletons count={6} /> : null}
         {!props.loading && !props.error && shown.length === 0 ? (
           <LogsEmpty query={props.search} scope={scope} compact />
         ) : null}
@@ -672,7 +641,7 @@ export function Rail(props: IRailProps) {
             {log.id === activeId ? props.outline : null}
           </Fragment>
         ))}
-        <LoadMore more={props.more} skeleton={PILL_SKELETONS(2)} />
+        <LoadMore more={props.more} skeleton={<PillSkeletons count={2} />} />
       </nav>
       {isNil(deleting) ? null : (
         <DeleteLogDialog

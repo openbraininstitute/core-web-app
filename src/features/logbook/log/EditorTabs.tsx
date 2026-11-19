@@ -32,7 +32,12 @@ function TitleField({
   readonly onRename: (name: string) => Promise<unknown>;
 }) {
   const [value, setValue] = useState(title);
-  useEffect(() => setValue(title), [title]);
+  // A rename from elsewhere replaces the draft, during render rather than in an effect.
+  const [seen, setSeen] = useState(title);
+  if (seen !== title) {
+    setSeen(title);
+    setValue(title);
+  }
   const save = (): void => {
     const name = value.trim();
     if (name.length === 0 || name === title) {

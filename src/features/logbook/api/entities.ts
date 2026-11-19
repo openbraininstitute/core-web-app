@@ -5,6 +5,7 @@ import { getEntitiesByRoute, getEntityByRoute } from '@/api/entitycore/queries/g
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { EntityType } from '@/features/logbook/blocks/kinds';
+import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { IProject } from '@/features/logbook/auth/session';
@@ -70,7 +71,7 @@ export const entityQuery = (type: string, id: string, project: IProject) => {
   const config = entityConfigOf(type);
   const route = routeOfType(type);
   return queryOptions({
-    queryKey: ['entity', type, id],
+    queryKey: keyBuilderLogbook.entity(type, id),
     enabled: (isNotNil(config) || isNotNil(route)) && id.length > 0,
     queryFn: async ({ signal }): Promise<IEntity> =>
       isNotNil(config)
@@ -85,7 +86,7 @@ export const entityQuery = (type: string, id: string, project: IProject) => {
 /** Name search for the types core has no grid for. */
 export const entitySearchQuery = (type: TEntityType, search: string, project: IProject) =>
   queryOptions({
-    queryKey: ['entity-search', type, search, project.projectId],
+    queryKey: keyBuilderLogbook.entitySearch(type, search, project.projectId),
     enabled: isNotNil(routeOfType(type)),
     queryFn: ({ signal }) => {
       const queryParams: Record<string, string> = {

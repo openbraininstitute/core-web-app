@@ -15,10 +15,12 @@ import {
 import { agoOf } from '@/features/logbook/board/Rail';
 import { CodeView, CsvTable, sizeOf } from '@/features/logbook/editor/blocks/FileView';
 import { withViews } from '@/features/logbook/editor/extensions';
+import { LinesSkeleton } from '@/features/logbook/elements/skeletons';
 import { ArtifactIcon } from '@/features/logbook/log/ArtifactIcon';
 import { useLogContext } from '@/features/logbook/log/context';
 import { CONTROL } from '@/features/logbook/log/controls';
 import { Icon } from '@/features/logbook/ui/icons';
+import { useObjectUrl } from '@/hooks/use-object-url';
 
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import type { IArtifact } from '@/features/logbook/api/log-files';
@@ -198,11 +200,14 @@ function Details({ artifact }: { readonly artifact: IArtifact }) {
   );
 }
 
-function save(url: string, name: string): void {
+function save(blob: Blob, name: string): void {
+  const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
   link.download = name;
   link.click();
+  // After the click has handed the file to the browser.
+  setTimeout(() => URL.revokeObjectURL(url));
 }
 
 function useSource(artifact: IArtifact) {
@@ -231,10 +236,7 @@ export function ArtifactBar({
   const download = async (): Promise<void> => {
     if (isNotNil(artifact.assetId)) {
       const text = await client.fetchQuery(documentTextQuery(logId, artifact.assetId, project));
-      return save(
-        URL.createObjectURL(new Blob([text], { type: 'text/markdown' })),
-        `${artifact.name}.md`
-      );
+      return save(new Blob([text], { type: 'text/markdown' }), `${artifact.name}.md`);
     }
     if (isFile)
       save(await client.fetchQuery(fileBlobQuery(logId, folderId, path, project)), artifact.name);
@@ -293,15 +295,26 @@ export function ArtifactView({ artifact }: { readonly artifact: IArtifact }) {
     enabled: isNotNil(artifact.assetId),
   });
   const text = isNotNil(artifact.assetId) ? docText : fileText;
+  // A PDF frame only ever gets a PDF: a blob URL runs with this app's origin.
+  const blobUrl = useObjectUrl(
+    blob.data,
+    artifact.kind === ArtifactKind.Pdf ? 'application/pdf' : undefined
+  );
 
   if (artifact.kind === ArtifactKind.Other) return <Details artifact={artifact} />;
   const loading = binary ? blob : text;
-  if (loading.isPending) return <p className={NOTE}>Opening {artifact.name}…</p>;
+  // The bytes may be in before their URL is.
+  if (loading.isPending || (binary && blob.isSuccess && isNil(blobUrl)))
+    return (
+      <div className={NOTE} role="status" aria-label={`Opening ${artifact.name}`}>
+        <LinesSkeleton count={5} />
+      </div>
+    );
   if (loading.isError) return <p className={NOTE}>{artifact.name} could not be read.</p>;
-  if (artifact.kind === ArtifactKind.Image && isNotNil(blob.data))
-    return <ImageViewer src={blob.data} alt={artifact.name} />;
-  if (artifact.kind === ArtifactKind.Pdf && isNotNil(blob.data))
-    return <iframe className="min-h-0 flex-1 border-0" src={blob.data} title={artifact.name} />;
+  if (artifact.kind === ArtifactKind.Image && isNotNil(blobUrl))
+    return <ImageViewer src={blobUrl} alt={artifact.name} />;
+  if (artifact.kind === ArtifactKind.Pdf && isNotNil(blobUrl))
+    return <iframe className="min-h-0 flex-1 border-0" src={blobUrl} title={artifact.name} />;
   const content = text.data ?? '';
   const scroll = 'scroll-thin min-h-0 flex-1 overflow-auto';
   if (artifact.kind === ArtifactKind.Markdown)

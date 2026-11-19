@@ -6,6 +6,7 @@ import { useDeferredValue, useMemo, useState } from 'react';
 import { artifactsOf, logFilesQuery, searchArtifacts } from '@/features/logbook/api/log-files';
 import { agoOf, SearchField } from '@/features/logbook/board/Rail';
 import { sizeOf } from '@/features/logbook/editor/blocks/FileView';
+import { RowsSkeleton } from '@/features/logbook/elements/skeletons';
 import { ArtifactIcon } from '@/features/logbook/log/ArtifactIcon';
 import { savedOf } from '@/features/logbook/log/ArtifactView';
 import { useLogContext } from '@/features/logbook/log/context';
@@ -90,7 +91,7 @@ export function ArtifactsTab({
       </div>
       <div className="scroll-thin min-h-0 flex-1 overflow-y-auto px-5 pb-10">
         {listing.isPending ? (
-          <p className={NOTE}>Loading the log's artifacts…</p>
+          <RowsSkeleton count={5} />
         ) : listing.isError ? (
           <p className={NOTE}>The artifacts could not be listed: {listing.error.message}</p>
         ) : all.length === 0 ? (

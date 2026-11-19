@@ -1,6 +1,6 @@
 import { HocuspocusProviderWebsocketComponent, HocuspocusRoom } from '@hocuspocus/provider-react';
 import { isNil, isNotNil } from 'es-toolkit';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { PageKind } from '@/api/logbook/types';
 import { collaborationUrl } from '@/api/logbook/utils';
@@ -10,6 +10,7 @@ import { ChangeFeed } from '@/features/logbook/collaboration/changes';
 import { acquireCopy, releaseCopy } from '@/features/logbook/collaboration/local-copy';
 import { CollaborationNotices } from '@/features/logbook/collaboration/notices';
 import { RetryableRefusal } from '@/features/logbook/collaboration/rejoin';
+import { PageSkeleton } from '@/features/logbook/elements/skeletons';
 import { LogContext } from '@/features/logbook/log/context';
 import { LogPage } from '@/features/logbook/log/LogPage';
 import { navigate, pathOf } from '@/features/logbook/router';
@@ -60,26 +61,18 @@ export function LogView(props: ILogViewProps) {
   const pages = usePages(logId, project);
   const list = useMemo(() => pages.data ?? [], [pages.data]);
   // A page deleted while shown stays, read-only, instead of the main page swapping in.
-  const lastShown = useRef<IPage | null>(null);
-  const last = lastShown.current;
+  const [last, setLast] = useState<IPage | null>(null);
   const deleted =
     isNotNil(last) &&
     last.id === props.pageId &&
     pages.isSuccess &&
     !list.some((page) => page.id === last.id);
   const page = deleted ? last : pageToShow(list, props.pageId);
-  useEffect(() => {
-    if (!deleted && isNotNil(page)) lastShown.current = page;
-  }, [deleted, page]);
+  if (!deleted && isNotNil(page) && page !== last) setLast(page);
   const openPage = (target: IPage): void =>
     navigate(pathOf(project, logId, target.kind === PageKind.Main ? null : target.id));
 
-  if (pages.isPending)
-    return (
-      <section className={OPENING}>
-        <p className="max-w-[380px] text-[15px] leading-normal text-neutral-4">Opening the log…</p>
-      </section>
-    );
+  if (pages.isPending) return <PageSkeleton />;
   if (pages.isError)
     return (
       <section className={OPENING}>
@@ -145,12 +138,7 @@ function PageView(props: IPageViewProps) {
         </button>
       </section>
     );
-  if (isNil(copy) || copy.document.isDestroyed)
-    return (
-      <section className={OPENING}>
-        <p className="max-w-[380px] text-[15px] leading-normal text-neutral-4">Opening the log…</p>
-      </section>
-    );
+  if (isNil(copy) || copy.document.isDestroyed) return <PageSkeleton />;
 
   return (
     <LogContext.Provider value={context}>

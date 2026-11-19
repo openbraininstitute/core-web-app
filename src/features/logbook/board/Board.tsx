@@ -19,6 +19,7 @@ import { Layout, useLayout } from '@/features/logbook/board/layout';
 import { PageOutline } from '@/features/logbook/board/PageOutline';
 import { Rail, RailHeading } from '@/features/logbook/board/Rail';
 import { UnsentCopies } from '@/features/logbook/board/UnsentCopies';
+import { PageSkeleton } from '@/features/logbook/elements/skeletons';
 import { EntityDetailContext } from '@/features/logbook/log/context';
 import { markSeed } from '@/features/logbook/log/ui-state';
 import { ViewMode } from '@/features/logbook/log/view-mode';
@@ -46,7 +47,6 @@ const RAIL_SHUT_BELOW = 110;
 
 // Container query: the rail header follows the rail's dragged width, not the window.
 const RAIL = '@container/rail flex min-h-0 flex-none flex-col gap-3 overflow-hidden p-3';
-const EMPTY = 'logbook-card flex flex-1 flex-col items-center justify-center gap-2 p-8 text-center';
 
 export interface IBoardProps {
   readonly me: IMe;
@@ -108,7 +108,7 @@ export function Board({ me, project, logId, pageId }: IBoardProps) {
   const active = inList ?? opened.data ?? null;
 
   const [railW, setRailW] = useState(RAIL_MAX);
-  const [railShut, setRailShut] = useState(false);
+  const [railShut, setRailShut] = useState(() => layout === Layout.Compact);
   // The entity open in the detail panel, tied to its log so switching logs closes it.
   const [detail, setDetail] = useState<(IEntityTarget & { readonly logId: string }) | null>(null);
   const [railHeldOpen, setRailHeldOpen] = useState(false);
@@ -116,10 +116,12 @@ export function Board({ me, project, logId, pageId }: IBoardProps) {
   const [mode, setMode] = useState<TViewMode>(ViewMode.Read);
 
   // Fold the rail in compact; close the drawer when the phone layout comes or goes.
-  useEffect(() => {
+  const [seenLayout, setSeenLayout] = useState(layout);
+  if (seenLayout !== layout) {
+    setSeenLayout(layout);
     setRailShut(layout === Layout.Compact);
     setDrawerOpen(false);
-  }, [layout]);
+  }
 
   const pick = (id: string): void => {
     if (id !== logId) setMode(ViewMode.Read);
@@ -300,7 +302,7 @@ export function Board({ me, project, logId, pageId }: IBoardProps) {
                     <span className="h-11 w-[5px] rounded-full bg-neutral-2 transition-[background-color,height] duration-150 ease-[ease] group-hover:h-16 group-hover:bg-primary-4" />
                   </button>
                 ) : null}
-                <Suspense fallback={<section className={EMPTY} />}>
+                <Suspense fallback={<PageSkeleton />}>
                   {/* The key matters: a new log needs a new LogView to get its own socket. */}
                   <LogView
                     key={logId}

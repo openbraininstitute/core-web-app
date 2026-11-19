@@ -15,6 +15,7 @@ import {
 } from '@/api/entitycore/queries/general/research-log';
 import { deleteResearch } from '@/api/logbook/queries/research';
 import { pagesQuery } from '@/features/logbook/api/pages';
+import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
 
 import type { InfiniteData } from '@tanstack/react-query';
 import type { IResearchLog, IResearchLogDraft } from '@/api/entitycore/types/entities/research-log';
@@ -70,8 +71,6 @@ export function listParamsOf(project: IProject, filter: ILogFilter): URLSearchPa
   return params;
 }
 
-const listsKey = (project: IProject) => ['research-logs', project.projectId] as const;
-
 export const nextPageOf = ({ pagination }: EntityCoreResponse<unknown>): number | undefined =>
   pagination.page * pagination.page_size < pagination.total_items ? pagination.page + 1 : undefined;
 
@@ -84,7 +83,10 @@ export const logsOf = (pages: readonly EntityCoreResponse<IResearchLog>[]): IRes
 
 export const researchLogsQuery = (project: IProject, filter: ILogFilter) =>
   infiniteQueryOptions({
-    queryKey: [...listsKey(project), listParamsOf(project, filter).toString()],
+    queryKey: keyBuilderLogbook.logsPage(
+      project.projectId,
+      listParamsOf(project, filter).toString()
+    ),
     queryFn: ({ signal, pageParam }) => {
       const params = listParamsOf(project, filter);
       params.set('page', String(pageParam));
@@ -108,7 +110,7 @@ const eachPage =
 // For an open log the list doesn't hold (hidden by a search or filter).
 export const researchLogQuery = (project: IProject, id: string) =>
   queryOptions({
-    queryKey: ['research-log', project.projectId, id],
+    queryKey: keyBuilderLogbook.log(project.projectId, id),
     queryFn: ({ signal }) => getResearchLog({ id, context: project, signal }),
     staleTime: 30_000,
   });
@@ -119,7 +121,7 @@ export function useCreateLog(project: IProject) {
     mutationFn: (draft: IResearchLogDraft) => createResearchLog({ context: project, draft }),
     onSuccess: (created) => {
       client.setQueryData(researchLogQuery(project, created.id).queryKey, created);
-      return client.invalidateQueries({ queryKey: listsKey(project) });
+      return client.invalidateQueries({ queryKey: keyBuilderLogbook.logs(project.projectId) });
     },
   });
 }
@@ -132,7 +134,7 @@ export function useUpdateLog(project: IProject) {
     onSuccess: (updated) => {
       client.setQueryData(researchLogQuery(project, updated.id).queryKey, updated);
       client.setQueriesData<TLogPages>(
-        { queryKey: listsKey(project) },
+        { queryKey: keyBuilderLogbook.logs(project.projectId) },
         eachPage((logs) => logs.map((log) => (log.id === updated.id ? updated : log)))
       );
     },
@@ -148,10 +150,10 @@ export function useDeleteLog(project: IProject) {
       client.removeQueries({ queryKey: researchLogQuery(project, id).queryKey });
       // Refetch too: offset paging shifts every later page by one.
       client.setQueriesData<TLogPages>(
-        { queryKey: listsKey(project) },
+        { queryKey: keyBuilderLogbook.logs(project.projectId) },
         eachPage((logs) => logs.filter((log) => log.id !== id))
       );
-      return client.invalidateQueries({ queryKey: listsKey(project) });
+      return client.invalidateQueries({ queryKey: keyBuilderLogbook.logs(project.projectId) });
     },
     // Also on failure: the delete may have gone through with the answer lost.
     onSettled: (_answer, _error, id) =>

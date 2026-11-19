@@ -3,6 +3,7 @@ import { infiniteQueryOptions } from '@tanstack/react-query';
 import { isNotNil } from 'es-toolkit';
 
 import { getResearchActivity } from '@/api/logbook/queries/research';
+import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
 
 import type { IActivityEntry } from '@/api/logbook/types';
 import type { IProject } from '@/features/logbook/auth/session';
@@ -81,7 +82,7 @@ export function summaryOf(run: Pick<IActivityRun, 'inserted' | 'deleted'>): stri
 // Limit: the opening minute may overlap the live feed. Upgrade: per-second rows.
 export const activityQuery = (project: IProject, logId: string, openedAt: string) =>
   infiniteQueryOptions({
-    queryKey: ['activity', logId, openedAt],
+    queryKey: keyBuilderLogbook.activity(logId, openedAt),
     queryFn: ({ signal, pageParam }) =>
       getResearchActivity({
         id: logId,

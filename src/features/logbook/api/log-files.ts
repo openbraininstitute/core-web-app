@@ -8,6 +8,7 @@ import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { createResearchUpload } from '@/api/logbook/queries/research';
 import { settings } from '@/features/logbook/settings';
 import { IMAGE, savedNameOf } from '@/features/logbook/shared/files';
+import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
 
 import type { IResearchLogAsset } from '@/api/entitycore/types/entities/research-log';
 import type { DirectoryListContent } from '@/api/entitycore/types/shared/global';
@@ -194,7 +195,7 @@ async function readLogFiles(
 
 export const logFilesQuery = (logId: string, project: IProject) =>
   queryOptions({
-    queryKey: ['log-files', logId],
+    queryKey: keyBuilderLogbook.files(logId),
     queryFn: ({ signal }) => readLogFiles(logId, project, signal),
     staleTime: 30_000,
   });
@@ -219,7 +220,7 @@ const downloadLogAsset = (
 // Files are add-only, so read once per tab.
 export const fileTextQuery = (logId: string, folderId: string, path: string, project: IProject) =>
   queryOptions({
-    queryKey: ['file-text', logId, path],
+    queryKey: keyBuilderLogbook.fileText(logId, path),
     queryFn: async ({ signal }) =>
       (await downloadLogAsset(logId, folderId, project, signal, path)).text(),
     staleTime: Number.POSITIVE_INFINITY,
@@ -228,18 +229,16 @@ export const fileTextQuery = (logId: string, folderId: string, path: string, pro
 // Publish replaces the document in place, so always read it fresh.
 export const documentTextQuery = (logId: string, assetId: string, project: IProject) =>
   queryOptions({
-    queryKey: ['document-text', logId, assetId],
+    queryKey: keyBuilderLogbook.documentText(logId, assetId),
     queryFn: async ({ signal }) => (await downloadLogAsset(logId, assetId, project, signal)).text(),
   });
 
-// <img src> can't send the token. Limit: URL never revoked. Upgrade: revoke on gc.
+// The bytes, not a URL: whoever shows them makes the URL and revokes it (useObjectUrl).
 export const fileBlobQuery = (logId: string, folderId: string, path: string, project: IProject) =>
   queryOptions({
-    queryKey: ['file-blob', logId, path],
+    queryKey: keyBuilderLogbook.fileBlob(logId, path),
     queryFn: async ({ signal }) =>
-      URL.createObjectURL(
-        await (await downloadLogAsset(logId, folderId, project, signal, path)).blob()
-      ),
+      (await downloadLogAsset(logId, folderId, project, signal, path)).blob(),
     staleTime: Number.POSITIVE_INFINITY,
     gcTime: 5 * 60_000,
   });

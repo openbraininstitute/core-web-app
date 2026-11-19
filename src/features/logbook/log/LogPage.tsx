@@ -3,7 +3,15 @@ import { useHocuspocusProvider } from '@hocuspocus/provider-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEditor } from '@tiptap/react';
 import { clamp, isNil, isNotNil } from 'es-toolkit';
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 
 import { PageKind } from '@/api/logbook/types';
 import { actorOfWriter, writersQuery } from '@/features/logbook/api/writers';
@@ -88,8 +96,11 @@ export function LogPage(props: ILogPageProps) {
   const narrow = layout === Layout.Narrow;
   const meActor = useMemo(() => personActor(me.userId, me.name), [me.userId, me.name]);
   const [settings] = useNotifySettings();
+  // The editor reads the latest settings through this; written after render, never during.
   const settingsRef = useRef(settings);
-  settingsRef.current = settings;
+  useLayoutEffect(() => {
+    settingsRef.current = settings;
+  });
 
   // Awareness maps a Yjs client to a user id; the server's list names the user.
   const { awareness } = provider;

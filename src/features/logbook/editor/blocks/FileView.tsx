@@ -11,6 +11,7 @@ import {
 } from '@/features/logbook/api/log-files';
 import { FileLang, fileLangOf, fileLooks } from '@/features/logbook/blocks/kinds';
 import { highlightLines } from '@/features/logbook/editor/shiki';
+import { LinesSkeleton } from '@/features/logbook/elements/skeletons';
 import { useLogContext } from '@/features/logbook/log/context';
 import { useUploading } from '@/features/logbook/log/uploads';
 
@@ -35,17 +36,24 @@ const LINE_NUMBER = 'w-12 flex-none pr-4 text-right text-line-num select-none';
 
 // Plain until Shiki's grammar loads (or for types without one).
 export function CodeView({ text, name }: { readonly text: string; readonly name: string }) {
-  const [tokens, setTokens] = useState<readonly (readonly IToken[])[] | null>(null);
+  const [highlighted, setHighlighted] = useState<{
+    readonly text: string;
+    readonly name: string;
+    readonly lines: readonly (readonly IToken[])[];
+  } | null>(null);
   useEffect(() => {
     let shown = true;
-    setTokens(null);
     highlightLines(text, name)
-      .then((lines) => shown && setTokens(lines))
+      .then((lines) => {
+        if (shown && isNotNil(lines)) setHighlighted({ text, name, lines });
+      })
       .catch(() => undefined); // plain text is the fallback
     return () => {
       shown = false;
     };
   }, [text, name]);
+  // Colours for older text are dropped at once, not after an effect.
+  const tokens = highlighted?.text === text && highlighted.name === name ? highlighted.lines : null;
   const lines: readonly (readonly IToken[])[] =
     tokens ?? text.split('\n').map((line) => [{ content: line }]);
   return (
@@ -121,7 +129,12 @@ export function FileBody({
   readonly csv: boolean;
 }) {
   const text = useQuery(fileTextQuery(logId, folderId, path, project));
-  if (text.isPending) return <div className={NOTE}>Loading…</div>;
+  if (text.isPending)
+    return (
+      <div className={NOTE}>
+        <LinesSkeleton />
+      </div>
+    );
   if (text.isError) return <div className={NOTE}>The file could not be read.</div>;
   return csv ? <CsvTable text={text.data} /> : <CodeView text={text.data} name={path} />;
 }

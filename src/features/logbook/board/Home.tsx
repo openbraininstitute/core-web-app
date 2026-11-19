@@ -11,9 +11,9 @@ import {
   SearchField,
   SettingsButton,
 } from '@/features/logbook/board/Rail';
+import { CardSkeletons } from '@/features/logbook/elements/skeletons';
 import { Icon } from '@/features/logbook/ui/icons';
 import { PopoverAlign } from '@/features/logbook/ui/popover';
-import { cn } from '@/utils/css-class';
 
 import type { IResearchLog } from '@/api/entitycore/types/entities/research-log';
 import type { ILogOrder } from '@/features/logbook/api/research-logs';
@@ -125,38 +125,6 @@ function LogCard({
   );
 }
 
-// Same box and rows as LogCard, so nothing shifts when logs load.
-function LogCardSkeleton() {
-  return (
-    <div
-      className="flex min-h-[188px] animate-pulse flex-col gap-2 rounded-2xl bg-white p-5 shadow-card"
-      aria-hidden="true"
-    >
-      <span className="flex h-[23px] items-center">
-        <span className={cn(BONE, 'h-4 w-2/3')} />
-      </span>
-      <span className="flex flex-col gap-[9px] pt-1">
-        <span className={cn(BONE, 'h-3 w-full')} />
-        <span className={cn(BONE, 'h-3 w-11/12')} />
-        <span className={cn(BONE, 'h-3 w-3/5')} />
-      </span>
-      <span className="mt-auto flex items-center gap-3 border-t border-rule-soft pt-3">
-        <span className="flex">
-          <span className={cn(BONE, 'size-7 ring-2 ring-white')} />
-          <span className={cn(BONE, '-ml-2 size-7 ring-2 ring-white')} />
-        </span>
-        <span className={cn(BONE, 'h-2.5 w-20')} />
-        <span className={cn(BONE, 'ml-auto h-2.5 w-12')} />
-      </span>
-    </div>
-  );
-}
-
-const BONE = 'block rounded-full bg-neutral-2/60';
-
-const CARD_SKELETONS = (count: number) =>
-  Array.from({ length: count }, (_, n) => <LogCardSkeleton key={n} />);
-
 const STATE = 'flex flex-1 flex-col items-center justify-center gap-3 px-6 py-12 text-center';
 
 export function Home(props: IHomeProps) {
@@ -206,7 +174,7 @@ export function Home(props: IHomeProps) {
           </div>
         ) : props.loading ? (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4" aria-busy>
-            {CARD_SKELETONS(6)}
+            <CardSkeletons count={6} />
           </div>
         ) : noLogs ? (
           <div className={STATE}>
@@ -234,7 +202,7 @@ export function Home(props: IHomeProps) {
             {logs.map((log) => (
               <LogCard key={log.id} project={props.project} log={log} onPick={props.onPick} />
             ))}
-            <LoadMore more={props.more} skeleton={CARD_SKELETONS(3)} />
+            <LoadMore more={props.more} skeleton={<CardSkeletons count={3} />} />
           </div>
         )}
       </div>

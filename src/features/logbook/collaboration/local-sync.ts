@@ -179,11 +179,12 @@ export async function clearSyncedCopies(
   // A database can't be deleted while this tab holds it open.
   await closeAllCopies();
   const reports = await syncCopies(docs, userId, { ...options, skip: new Set() });
-  for (const report of reports.filter(isSafe)) await clearDocument(report.name);
+  // Each copy is its own database, so they clear side by side.
+  await Promise.all(reports.filter(isSafe).map((report) => clearDocument(report.name)));
   return reports.filter((report) => !isSafe(report));
 }
 
 // The user chose to sign out anyway; unsent edits are lost.
 export async function discardCopies(reports: readonly ICopyReport[]): Promise<void> {
-  for (const report of reports) await clearDocument(report.name);
+  await Promise.all(reports.map((report) => clearDocument(report.name)));
 }

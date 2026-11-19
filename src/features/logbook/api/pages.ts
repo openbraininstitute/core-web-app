@@ -6,6 +6,7 @@ import { ApiError } from '@/api/error';
 import { createPage, deletePage, renamePage } from '@/api/logbook/queries/page';
 import { getResearch } from '@/api/logbook/queries/research';
 import { PageKind } from '@/api/logbook/types';
+import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
 
 import type { IPage } from '@/api/logbook/types';
 import type { IProject } from '@/features/logbook/auth/session';
@@ -28,11 +29,9 @@ async function pagesOf(researchId: string, project: IProject): Promise<IPage[]> 
 // Re-read every 30 s so sections others add show up. Upgrade: a server `pages` notice.
 export const PAGES_REFRESH_MS = 30_000;
 
-const pagesKey = (researchId: string) => ['pages', researchId] as const;
-
 export const pagesQuery = (researchId: string, project: IProject) =>
   queryOptions({
-    queryKey: pagesKey(researchId),
+    queryKey: keyBuilderLogbook.pages(researchId),
     queryFn: () => pagesOf(researchId, project),
     refetchInterval: PAGES_REFRESH_MS,
     retry: (count, error) =>
@@ -60,7 +59,7 @@ export function useCreateSection(researchId: string, project: IProject) {
         idempotencyKey: key,
       }),
     onSuccess: (page) =>
-      queries.setQueryData<IPage[]>(pagesKey(researchId), (pages) =>
+      queries.setQueryData<IPage[]>(keyBuilderLogbook.pages(researchId), (pages) =>
         inOrder([...(pages ?? []).filter((p) => p.id !== page.id), page])
       ),
   });
@@ -73,10 +72,10 @@ export function useRenamePage(researchId: string, project: IProject) {
     mutationFn: ({ page, title }: { readonly page: IPage; readonly title: string }) =>
       renamePage({ pageId: page.id, context: project, version: page.version, title }),
     onSuccess: (page) =>
-      queries.setQueryData<IPage[]>(pagesKey(researchId), (pages) =>
+      queries.setQueryData<IPage[]>(keyBuilderLogbook.pages(researchId), (pages) =>
         isNil(pages) ? pages : pages.map((p) => (p.id === page.id ? page : p))
       ),
-    onError: () => queries.invalidateQueries({ queryKey: pagesKey(researchId) }),
+    onError: () => queries.invalidateQueries({ queryKey: keyBuilderLogbook.pages(researchId) }),
   });
 }
 
@@ -86,7 +85,7 @@ export function useDeleteSection(researchId: string, project: IProject) {
   return useMutation({
     mutationFn: (pageId: string) => deletePage({ pageId, context: project }),
     onSuccess: (_answer, pageId) =>
-      queries.setQueryData<IPage[]>(pagesKey(researchId), (pages) =>
+      queries.setQueryData<IPage[]>(keyBuilderLogbook.pages(researchId), (pages) =>
         isNil(pages) ? pages : pages.filter((p) => p.id !== pageId)
       ),
   });

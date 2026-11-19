@@ -4,6 +4,7 @@ import { queryOptions } from '@tanstack/react-query';
 import { getPageAuthorship } from '@/api/logbook/queries/page';
 import { ActorVia } from '@/api/logbook/types';
 import { agentActor, personActor } from '@/features/logbook/collaboration/actors';
+import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
 
 import type { IWriter } from '@/api/logbook/types';
 import type { IProject } from '@/features/logbook/auth/session';
@@ -18,7 +19,7 @@ export const actorOfWriter = (writer: Pick<IWriter, 'userId' | 'label' | 'via'>)
 
 export const writersQuery = (project: IProject, pageId: string, clientIds: readonly number[]) =>
   queryOptions({
-    queryKey: ['writers', pageId, clientIds],
+    queryKey: keyBuilderLogbook.writers(pageId, clientIds),
     queryFn: async ({ signal }) => {
       const answer = await getPageAuthorship({
         pageId,

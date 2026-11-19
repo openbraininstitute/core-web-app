@@ -99,6 +99,7 @@ const SECTIONS: readonly INavSection[] = [
 const sectionOf = (key: string | undefined) =>
   SECTIONS.find((s) => s.items.some((i) => i.key === key));
 const FIRST = SECTIONS[1]?.items.find((i) => i.key === 'circuit') ?? SECTIONS[0]?.items[0];
+const FIRST_SECTION = sectionOf(FIRST?.key)?.id ?? null;
 
 const SCOPES: readonly {
   readonly value: TWorkspaceScope;
@@ -133,7 +134,7 @@ export interface IEntityGridPickerProps {
 export function EntityGridPicker({ multiple, onPick, onClose }: IEntityGridPickerProps) {
   const gridId = useId();
   const [active, setActive] = useState<TNavItem | undefined>(FIRST);
-  const [openSection, setOpenSection] = useState<string | null>(sectionOf(FIRST?.key)?.id ?? null);
+  const [openSection, setOpenSection] = useState<string | null>(FIRST_SECTION);
   const [scope, setScope] = useState<TWorkspaceScope>(WorkspaceScope.Combined);
   const [hierarchyId, setHierarchyId] = useState<string>(ALL_SPECIES);
   const [region, setRegion] = useState<{ readonly id: string; readonly label: string } | null>(

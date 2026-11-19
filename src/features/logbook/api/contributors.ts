@@ -1,12 +1,13 @@
 import { queryOptions, useQuery } from '@tanstack/react-query';
 
 import { getResearchContributors } from '@/api/logbook/queries/research';
+import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
 
 import type { IProject } from '@/features/logbook/auth/session';
 
 export const contributorsQuery = (project: IProject, logId: string) =>
   queryOptions({
-    queryKey: ['contributors', project.projectId, logId],
+    queryKey: keyBuilderLogbook.contributors(project.projectId, logId),
     queryFn: async ({ signal }) => {
       const answer = await getResearchContributors({ ids: [logId], context: project, signal });
       return answer.items[0]?.contributors ?? [];

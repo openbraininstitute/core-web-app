@@ -5,7 +5,9 @@ import { useEffect, useRef } from 'react';
 
 import { accessToken, meOf, signIn } from '@/features/logbook/auth/session';
 import { Board } from '@/features/logbook/board/Board';
+import { BoardSkeleton } from '@/features/logbook/elements/skeletons';
 import { navigate, pathOf, useRoute } from '@/features/logbook/router';
+import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
 
 import type { ReactNode } from 'react';
 
@@ -28,7 +30,7 @@ export function LogbookRoot() {
   const sessionError = session.data?.error ?? null;
   // Who this is, from the Keycloak access token.
   const me = useQuery({
-    queryKey: ['me', session.data?.user?.email ?? null],
+    queryKey: keyBuilderLogbook.me(session.data?.user?.email ?? null),
     enabled: signedIn,
     queryFn: async () => meOf(await accessToken()),
     staleTime: Number.POSITIVE_INFINITY,
@@ -59,12 +61,7 @@ export function LogbookRoot() {
         </button>
       </Centered>
     );
-  if (isNil(me.data))
-    return (
-      <Centered>
-        <p className="max-w-[380px] text-[15px] leading-normal text-neutral-4">Signing in…</p>
-      </Centered>
-    );
+  if (isNil(me.data)) return <BoardSkeleton withLog={isNotNil(route.logId)} />;
   if (isNil(route.project))
     return (
       <Centered>
