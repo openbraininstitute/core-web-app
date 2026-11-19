@@ -24,12 +24,14 @@ import {
   transferSeats,
   voidCourse,
 } from '../api/education';
+import { courseActions } from '../helpers';
 import { CourseEdit, UUID_RULE } from './course-form';
 import { CourseStatusPill } from './courses-list';
 import { useTenancyWrite } from './use-tenancy-write';
 
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { AdminCourse, AdminSeatBatch } from '../api/admin-types';
+import type { CourseAction } from '../helpers';
 
 const COURSES_HREF = `${ADMIN_ROOT}/courses`;
 
@@ -73,7 +75,14 @@ const BATCH_COLUMNS: Array<ISimpleColumn<AdminSeatBatch>> = [
   },
 ];
 
-type CourseAction = 'edit' | 'activate' | 'provision' | 'transfer' | 'void' | 'delete';
+const ACTION_LABELS: Record<CourseAction, string> = {
+  edit: 'Edit',
+  activate: 'Activate',
+  provision: 'Provision seats',
+  transfer: 'Transfer seats',
+  void: 'Void',
+  delete: 'Delete',
+};
 
 function CourseActions({ course }: { course: AdminCourse }) {
   const router = useRouter();
@@ -112,21 +121,13 @@ function CourseActions({ course }: { course: AdminCourse }) {
     onSuccess: () => router.push(COURSES_HREF),
   });
 
-  const pastLastDrop = new Date(course.last_drop_date) < new Date();
-  const button = (action: CourseAction, label: string) => (
-    <Button rounded variant="outline" size="sm" onClick={() => setOpen(action)}>
-      {label}
-    </Button>
-  );
-
   return (
     <>
-      {course.status !== 'voided' && button('edit', 'Edit')}
-      {course.status === 'draft' && button('activate', 'Activate')}
-      {course.status === 'active' && button('provision', 'Provision seats')}
-      {course.status === 'active' && pastLastDrop && button('transfer', 'Transfer seats')}
-      {course.status !== 'voided' && button('void', 'Void')}
-      {course.status !== 'active' && button('delete', 'Delete')}
+      {courseActions(course, new Date()).map((action) => (
+        <Button key={action} rounded variant="outline" size="sm" onClick={() => setOpen(action)}>
+          {ACTION_LABELS[action]}
+        </Button>
+      ))}
 
       {open === 'edit' && <CourseEdit course={course} onClose={close} />}
       {open === 'activate' && (

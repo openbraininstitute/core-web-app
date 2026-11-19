@@ -46,8 +46,7 @@ export const createInstitution = (institution: Omit<AdminInstitution, 'id'>) =>
 export const updateInstitution = (institutionId: string, update: AdminInstitutionUpdate) =>
   send('patch', at`/institutions/${institutionId}`, update);
 
-// Asked for one course on purpose: a wider search labels every batch with the first seat's course.
-// A course with no seats is a 404 with this code, unlike a missing route.
+// A course with no seats is a 404 ENTITY_NOT_FOUND, unlike a missing route.
 export async function getCourseSeatBatches(courseId: string, signal?: AbortSignal) {
   try {
     const { batches } = await rootGet<{ batches: AdminSeatBatch[] }>(

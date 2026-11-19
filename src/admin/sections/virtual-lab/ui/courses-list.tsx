@@ -11,16 +11,21 @@ import { AdminQueryGrid } from '../../../shared/grid';
 import { PageHeader } from '../../../shared/page-header';
 import { StatusPill } from '../../../shared/status-pill';
 import { adminHref } from '../../../shell/admin-link';
+import { CourseStatus } from '../api/admin-types';
 import { searchCourses } from '../api/education';
 import { CourseCreate } from './course-form';
 import { useListFilters } from './list-filters';
 
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
-import type { AdminCourse, CourseStatus } from '../api/admin-types';
+import type { AdminCourse, TCourseStatus } from '../api/admin-types';
 
-const STATUS_TONES = { draft: 'neutral', active: 'good', voided: 'bad' } as const;
+const STATUS_TONES = {
+  [CourseStatus.Draft]: 'neutral',
+  [CourseStatus.Active]: 'good',
+  [CourseStatus.Voided]: 'bad',
+} as const;
 
-export function CourseStatusPill({ status }: { status: CourseStatus }) {
+export function CourseStatusPill({ status }: { status: TCourseStatus }) {
   return <StatusPill tone={STATUS_TONES[status]}>{status}</StatusPill>;
 }
 

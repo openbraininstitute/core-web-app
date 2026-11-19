@@ -9,6 +9,7 @@ import { adminQueryKeys } from '../../../query-keys';
 import { saveChanges } from '../../../shared/changed-fields';
 import { afterDate, FormModal, REQUIRED } from '../../../shared/form-modal';
 import { adminHref } from '../../../shell/admin-link';
+import { CourseStatus } from '../api/admin-types';
 import { createCourse, searchInstitutions, updateCourse } from '../api/education';
 import { useTenancyWrite } from './use-tenancy-write';
 
@@ -99,7 +100,7 @@ export function CourseCreate({ onClose }: { onClose: () => void }) {
 
 export function CourseEdit({ course, onClose }: { course: AdminCourse; onClose: () => void }) {
   // Seats keep the institution they were provisioned under, so only a draft can safely change it.
-  const isDraft = course.status === 'draft';
+  const isDraft = course.status === CourseStatus.Draft;
   const institutionField = useInstitutionField(isDraft);
   const write = useTenancyWrite({
     write: (update: AdminCourseUpdate) => updateCourse(course.id, update),

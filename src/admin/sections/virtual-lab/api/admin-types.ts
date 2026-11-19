@@ -266,7 +266,9 @@ export type AdminPromotionAnalytics = {
   total_credits_distributed: number;
 };
 
-export type CourseStatus = 'draft' | 'active' | 'voided';
+export const CourseStatus = { Draft: 'draft', Active: 'active', Voided: 'voided' } as const;
+
+export type TCourseStatus = (typeof CourseStatus)[keyof typeof CourseStatus];
 
 export type AdminCourse = {
   id: string;
@@ -275,7 +277,7 @@ export type AdminCourse = {
   institution_id: string;
   institution_name: string;
   template_project_id: string;
-  status: CourseStatus;
+  status: TCourseStatus;
   start_date: string;
   last_drop_date: string;
   end_date: string;
