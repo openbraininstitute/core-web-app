@@ -221,7 +221,6 @@ personal
 # AI coding agent and LLM related files
 PR.md
 AGENTS.md
-CLAUDE.md
 .claude
 .mcp.json
 .kiro
