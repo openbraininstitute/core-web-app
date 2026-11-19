@@ -1,8 +1,10 @@
 'use client';
 
 import {
+  RiContrastDrop2Line,
   RiCpuLine,
   RiDashboard3Line,
+  RiExpandDiagonalLine,
   RiEyeOffLine,
   RiPieChart2Line,
   RiRulerLine,
@@ -21,7 +23,7 @@ import { HelpRow, ICON, SectionTitle, ToggleRow } from './menu-rows';
 
 import type { ViewerTheme } from '@/features/scan-config/components/color-by/contrast';
 import type { CreatedView, Tier, TierChoice } from '../engine/create-view';
-import type { CircuitMorphologyView, DetailStats } from '../types';
+import type { CircuitMorphologyView, DetailStats, IWideOcclusion } from '../types';
 
 const BUDGETS: Record<Tier, number[]> = {
   webgl: [SEGMENT_BUDGET.webgl, 1_000_000, 500_000, 200_000, 100_000],
@@ -30,6 +32,8 @@ const BUDGETS: Record<Tier, number[]> = {
   webgpu: [8_000_000, SEGMENT_BUDGET.webgpu, 2_000_000],
 };
 const PIXELS = [1, DETAIL_PIXELS, 4, 8];
+const WIDE_STRENGTHS = [0, 1, 2, 3];
+const WIDE_REACHES = [0.15, 0.3, 0.6, 1.2];
 
 /** Told about every frame while the culling counts: only what shows the numbers listens. */
 function useDetail(view: CircuitMorphologyView | undefined): DetailStats | null {
@@ -97,6 +101,54 @@ function DetailRows({
   );
 }
 
+function WideRows({ view }: { view: CircuitMorphologyView }) {
+  const [wide, setWide] = useState(view.wideOcclusion);
+  useEffect(() => setWide(view.wideOcclusion), [view]);
+  const set = (next: Partial<IWideOcclusion>) => {
+    view.setWideOcclusion(next);
+    setWide((was) => ({ ...was, ...next }));
+  };
+  const off = wide.strength === 0;
+  return (
+    <>
+      <HelpRow
+        title="Wide occlusion"
+        topic="wide"
+        icon={<RiContrastDrop2Line className={ICON} />}
+        className="flex-wrap"
+      >
+        <SegmentedToggle<string>
+          value={String(wide.strength)}
+          onChange={(strength) => set({ strength: Number(strength) })}
+          options={WIDE_STRENGTHS.map((value) => ({
+            value: String(value),
+            label: value ? `The wide occlusion at strength ${value}` : 'No wide occlusion',
+            text: value ? String(value) : 'Off',
+          }))}
+        />
+      </HelpRow>
+      <HelpRow
+        title="Wide reach"
+        topic="wideReach"
+        icon={<RiExpandDiagonalLine className={ICON} />}
+        disabled={off}
+        className="flex-wrap"
+      >
+        <SegmentedToggle<string>
+          value={String(wide.reach)}
+          disabled={off}
+          onChange={(reach) => set({ reach: Number(reach) })}
+          options={WIDE_REACHES.map((value) => ({
+            value: String(value),
+            label: `The wide occlusion reaching ${Math.round(value * 100)}% of the view's height`,
+            text: `${Math.round(value * 100)}%`,
+          }))}
+        />
+      </HelpRow>
+    </>
+  );
+}
+
 interface CircuitDebugProps {
   /** Where the menu goes, among the chrome's controls. */
   target: HTMLElement;
@@ -155,6 +207,7 @@ function MenuBody({
         {detail && created && (
           <DetailRows detail={detail} view={created.view} tier={created.tier} />
         )}
+        {created?.tier === 'webgpu' && <WideRows view={created.view} />}
         <ToggleRow
           title="Readout"
           topic="readout"
@@ -185,7 +238,8 @@ function Readout({ created, theme }: Pick<CircuitDebugProps, 'created' | 'theme'
 
 /**
  * The circuit viewer's Debug menu: what draws the view, how the morphologies are coming in and what is drawn of them,
- * with the budget, the tolerance, the culling and the renderer to set; and the numbers it can keep over the view.
+ * with the budget, the tolerance, the culling, the occlusion's wide term and the renderer to set; and the numbers it
+ * can keep over the view.
  */
 export function CircuitDebug({ target, created, theme, ...menu }: CircuitDebugProps) {
   const [readout, setReadout] = useState(false);

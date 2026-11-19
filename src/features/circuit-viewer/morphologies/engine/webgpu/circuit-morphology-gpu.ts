@@ -300,7 +300,11 @@ export class CircuitMorphologyGPU extends CircuitView {
         const umPerPx = this.umPerCssPx();
         this.gpu.throughUm.value = Math.min(THROUGH_CSS_PX * umPerPx, KEEP_UM);
         if (!occluded) occlusion.renderMoving();
-        else occlusion.render(AO_RADIUS_CSS * umPerPx);
+        else {
+          const { strength, reach } = this.wideOcclusion;
+          const wide = reach * this.height * umPerPx;
+          if (!occlusion.render(AO_RADIUS_CSS * umPerPx, wide, strength)) this.invalidate();
+        }
         return;
       } catch (e) {
         // The occlusion builds its passes at its first frame, which throws if parts of three it reads are missing.
