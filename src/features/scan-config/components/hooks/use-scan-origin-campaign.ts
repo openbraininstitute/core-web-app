@@ -10,7 +10,6 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { useMemo } from 'react';
 
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { keyBuilder } from '@/ui/use-query-keys/data';
@@ -34,23 +33,6 @@ function formOf(config: unknown): Config | undefined {
   if (!isPlainObject(config)) return undefined;
   const { form } = config;
   return (isPlainObject(form) ? form : config) as Config;
-}
-
-/**
- * The stored config, with its campaign's name and description as the entity has them now:
- * a rename changes the entity, not the config it was generated from.
- */
-export function withCurrentCampaignInfo(form: Config | undefined, campaign: unknown) {
-  const info = form?.info;
-  if (!form || !info || typeof info !== 'object' || Array.isArray(info)) return form;
-  if (!campaign || typeof campaign !== 'object') return form;
-  const { name, description } = campaign as { name?: unknown; description?: unknown };
-  const current: Record<string, string> = {};
-  if ('campaign_name' in info && typeof name === 'string' && name) current.campaign_name = name;
-  if ('campaign_description' in info && typeof description === 'string') {
-    current.campaign_description = description;
-  }
-  return Object.keys(current).length > 0 ? { ...form, info: { ...info, ...current } } : form;
 }
 
 export type UseScanConfigOriginCampaignParams<T extends CampaignWithFormConfig> = {
@@ -89,12 +71,10 @@ export function useScanConfigOriginCampaign<T extends CampaignWithFormConfig>({
 
   const form = formOf(data?.config);
   const shouldRenderScanConfig = !origin || (Boolean(origin) && !isLoading && Boolean(form));
-  const campaign = data && 'campaign' in data ? data.campaign : undefined;
-  const initialConfig = useMemo(() => withCurrentCampaignInfo(form, campaign), [form, campaign]);
 
   return {
     campaignData: data,
-    initialConfig,
+    initialConfig: form,
     error,
     isLoading,
     shouldRenderScanConfig,
