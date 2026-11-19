@@ -4,7 +4,7 @@ import dayjs from 'dayjs';
 
 import { adminQueryKeys } from '../../../query-keys';
 import { saveChanges } from '../../../shared/changed-fields';
-import { DESCRIPTION_FIELD, FormModal } from '../../../shared/form-modal';
+import { afterDate, DESCRIPTION_FIELD, FormModal, REQUIRED } from '../../../shared/form-modal';
 import { useAdminWrite } from '../../../shared/use-admin-write';
 import { createPromotion, updatePromotion } from '../api/admin';
 
@@ -14,8 +14,6 @@ import type {
   AdminPromotionCreate,
   AdminPromotionUpdate,
 } from '../api/admin-types';
-
-const REQUIRED = [{ required: true, message: 'Required' }];
 
 const DESCRIPTION = { ...DESCRIPTION_FIELD, rules: [{ max: 1000 }] };
 
@@ -57,14 +55,6 @@ export function promotionCreateBody({
 
 const PER_USER = "Can't be below the uses per user";
 
-const after = (start: string | undefined): RuleObject => ({
-  validator: async (_, value?: string) => {
-    if (value && start && !dayjs(value).isAfter(start)) {
-      throw new Error('Has to be after the start');
-    }
-  },
-});
-
 export function PromotionCreate({ onClose }: { onClose: () => void }) {
   const write = useAdminWrite({
     write: createPromotion,
@@ -101,7 +91,7 @@ export function PromotionCreate({ onClose }: { onClose: () => void }) {
           label: 'Credits granted',
           kind: 'integer',
           min: 1,
-          rules: [...REQUIRED, POSITIVE],
+          rules: [REQUIRED, POSITIVE],
         },
         {
           name: 'max_uses_per_user_per_period',
@@ -109,7 +99,7 @@ export function PromotionCreate({ onClose }: { onClose: () => void }) {
           kind: 'integer',
           min: 1,
           extra: "Counted in each of the user's labs, over the code's dates.",
-          rules: [...REQUIRED, POSITIVE],
+          rules: [REQUIRED, POSITIVE],
         },
         {
           name: 'max_total_uses',
@@ -124,13 +114,13 @@ export function PromotionCreate({ onClose }: { onClose: () => void }) {
             ({ getFieldValue }) => atLeast(getFieldValue('max_uses_per_user_per_period'), PER_USER),
           ],
         },
-        { name: 'valid_from', label: 'Valid from', kind: 'datetime', rules: REQUIRED },
+        { name: 'valid_from', label: 'Valid from', kind: 'datetime', rules: [REQUIRED] },
         {
           name: 'valid_until',
           label: 'Valid until',
           kind: 'datetime',
           dependencies: ['valid_from'],
-          rules: [...REQUIRED, ({ getFieldValue }) => after(getFieldValue('valid_from'))],
+          rules: [REQUIRED, ({ getFieldValue }) => afterDate(getFieldValue('valid_from'), 'start')],
         },
         { name: 'active', label: 'Active', kind: 'switch' },
       ]}
@@ -169,7 +159,7 @@ export function PromotionEdit({
           name: 'valid_until',
           label: 'Valid until',
           kind: 'datetime',
-          rules: [...REQUIRED, after(promotion.valid_from)],
+          rules: [REQUIRED, afterDate(promotion.valid_from, 'start')],
         },
         {
           name: 'max_total_uses',

@@ -3,11 +3,11 @@
 import { DatePicker, Form, Input, InputNumber, Modal, Select, Switch } from 'antd';
 import dayjs from 'dayjs';
 
-import type { Rule } from 'antd/es/form';
+import type { Rule, RuleObject } from 'antd/es/form';
 import type { Dayjs } from 'dayjs';
 import type { ReactNode } from 'react';
 
-type FormModalField = {
+export type FormModalField = {
   name: string;
   label: string;
   kind?: 'multiline' | 'integer' | 'switch' | 'select' | 'datetime';
@@ -38,13 +38,15 @@ function fieldControl({ kind, min, max, options, placeholder }: FormModalField) 
     case 'switch':
       return <Switch />;
     case 'select':
-      return <Select options={options} />;
+      return <Select showSearch optionFilterProp="label" options={options} />;
     case 'datetime':
       return <DatePicker showTime className="w-full" />;
     default:
       return <Input />;
   }
 }
+
+export const REQUIRED = { required: true, message: 'Required' };
 
 export const NAME_FIELD: FormModalField = {
   name: 'name',
@@ -57,6 +59,27 @@ export const DESCRIPTION_FIELD: FormModalField = {
   label: 'Description',
   kind: 'multiline',
 };
+
+export const typedNameField = (name: string, what: string): FormModalField => ({
+  name: 'name',
+  label: `Type the ${what}'s name to confirm`,
+  rules: [
+    {
+      validator: async (_, value) => {
+        if (value !== name) throw new Error(`That isn't the ${what}'s name`);
+      },
+    },
+  ],
+});
+
+// Dates are the API's ISO strings, as the datetime field holds them.
+export const afterDate = (earlier: string | undefined, label: string): RuleObject => ({
+  validator: async (_, value?: string) => {
+    if (value && earlier && !dayjs(value).isAfter(earlier)) {
+      throw new Error(`Has to be after the ${label}`);
+    }
+  },
+});
 
 // Edits, reasons and typed confirmations are all a short form in a modal. It stays mounted
 // only while open, so `initialValues` are always the current ones.

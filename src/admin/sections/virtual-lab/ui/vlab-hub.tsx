@@ -10,7 +10,12 @@ import { adminQueryKeys } from '../../../query-keys';
 import { ADMIN_ROOT } from '../../../routes';
 import { AdminTabs } from '../../../shared/admin-tabs';
 import { Detail, DetailId, DetailList } from '../../../shared/detail-list';
-import { DESCRIPTION_FIELD, FormModal, NAME_FIELD } from '../../../shared/form-modal';
+import {
+  DESCRIPTION_FIELD,
+  FormModal,
+  NAME_FIELD,
+  typedNameField,
+} from '../../../shared/form-modal';
 import { formatDateTime } from '../../../shared/format';
 import { Loaded } from '../../../shared/load-state';
 import { PageHeader } from '../../../shared/page-header';
@@ -48,6 +53,13 @@ function LabOverview({ lab }: { lab: AdminLab }) {
           `${lab.reference_email} (${lab.email_verified ? 'verified' : 'unverified'})`}
       </Detail>
       <Detail label="Compute cell">{lab.compute_cell}</Detail>
+      {lab.course && (
+        <CapabilityGate need="education.admin">
+          <Detail label="Course">
+            <AdminLink kind="course" id={lab.course.id} />
+          </Detail>
+        </CapabilityGate>
+      )}
       <Detail label="Projects">{lab.projects_count}</Detail>
       <Detail label="Created">{formatDateTime(lab.created_at)}</Detail>
       <Detail label="Updated">{lab.updated_at && formatDateTime(lab.updated_at)}</Detail>
@@ -148,19 +160,7 @@ function LabActions({ lab }: { lab: AdminLab }) {
         <FormModal<{ name: string }>
           title={`Delete ${lab.name}?`}
           description="Its members lose access. The API has no way to restore a lab, so only a database change can undo this."
-          fields={[
-            {
-              name: 'name',
-              label: "Type the lab's name to confirm",
-              rules: [
-                {
-                  validator: async (_, value) => {
-                    if (value !== lab.name) throw new Error("That isn't the lab's name");
-                  },
-                },
-              ],
-            },
-          ]}
+          fields={[typedNameField(lab.name, 'lab')]}
           okText="Delete lab"
           danger
           pending={deleteWrite.isPending}

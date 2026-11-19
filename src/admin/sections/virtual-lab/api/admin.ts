@@ -37,17 +37,39 @@ const JSON_HEADERS = { 'Content-Type': 'application/json', accept: 'application/
 const ACCEPT_HEADERS = { accept: 'application/json' };
 
 // Ids come from the page URL, so each one is encoded as a single path segment.
-const at = (strings: TemplateStringsArray, ...ids: string[]) =>
+export const at = (strings: TemplateStringsArray, ...ids: string[]) =>
   String.raw({ raw: strings }, ...ids.map(encodeURIComponent));
 
-async function getJson<T>(path: string, params?: Record<string, unknown>, signal?: AbortSignal) {
+// Paths from the service root. Most of these routes sit under /admin, so the helpers below add it.
+export async function rootGet<T>(
+  path: string,
+  params?: Record<string, unknown>,
+  signal?: AbortSignal
+) {
   const api = await virtualLabRootApi();
-  return api.get<T>(`/admin${path}`, {
+  return api.get<T>(path, {
     headers: ACCEPT_HEADERS,
     signal,
     ...(params && { queryParams: compactRecord(params) }),
   });
 }
+
+export async function rootSend<T = unknown>(
+  method: 'post' | 'patch' | 'put',
+  path: string,
+  body?: Record<string, unknown>
+) {
+  const api = await virtualLabRootApi();
+  return api[method]<T>(path, { headers: JSON_HEADERS, ...(body && { body }) });
+}
+
+export async function rootDelete(path: string) {
+  const api = await virtualLabRootApi();
+  await api.delete(path, { headers: ACCEPT_HEADERS });
+}
+
+const getJson = <T>(path: string, params?: Record<string, unknown>, signal?: AbortSignal) =>
+  rootGet<T>(`/admin${path}`, params, signal);
 
 async function getEnveloped<T>(
   path: string,
@@ -58,23 +80,17 @@ async function getEnveloped<T>(
 }
 
 async function patchJson(path: string, body: Record<string, unknown>) {
-  const api = await virtualLabRootApi();
-  await api.patch(`/admin${path}`, { headers: JSON_HEADERS, body });
+  await rootSend('patch', `/admin${path}`, body);
 }
 
 async function putJson(path: string, body: Record<string, unknown>) {
-  const api = await virtualLabRootApi();
-  await api.put(`/admin${path}`, { headers: JSON_HEADERS, body });
+  await rootSend('put', `/admin${path}`, body);
 }
 
-async function deleteAt(path: string) {
-  const api = await virtualLabRootApi();
-  await api.delete(`/admin${path}`, { headers: ACCEPT_HEADERS });
-}
+const deleteAt = (path: string) => rootDelete(`/admin${path}`);
 
 async function postJson(path: string, body?: Record<string, unknown>) {
-  const api = await virtualLabRootApi();
-  await api.post(`/admin${path}`, { headers: JSON_HEADERS, ...(body && { body }) });
+  await rootSend('post', `/admin${path}`, body);
 }
 
 export const listLabs = (
@@ -160,13 +176,9 @@ export const listCreditRates = (signal?: AbortSignal) =>
 export const updateCreditRate = (rateId: string, update: AdminCreditRateUpdate) =>
   patchJson(at`/credit-rates/${rateId}`, update);
 
-// The one write outside /admin: the admin API has no compute-cell route.
+// Outside /admin: the admin API has no compute-cell route.
 export async function updateComputeCell(vlabId: string, computeCell: ComputeCell) {
-  const api = await virtualLabRootApi();
-  await api.patch(at`/virtual-labs/${vlabId}/compute-cell`, {
-    headers: JSON_HEADERS,
-    body: { compute_cell: computeCell },
-  });
+  await rootSend('patch', at`/virtual-labs/${vlabId}/compute-cell`, { compute_cell: computeCell });
 }
 
 // Unlike the rest of /admin, promotions page by limit and offset, and update with PUT.
