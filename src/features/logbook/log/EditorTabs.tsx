@@ -1,7 +1,3 @@
-// The editor card's tabs, browser style: the log first, its title edited in place, then each
-// artifact opened from the Artifacts pane, read-only, with its close button. The selected tab is
-// white and joins the content below; the others sit on the strip. Tabs shrink to a floor, then
-// the strip scrolls sideways (wheel too), and a button lists every open tab.
 import { isNil, isNotNil } from 'es-toolkit';
 import { Fragment, useEffect, useRef, useState } from 'react';
 
@@ -18,8 +14,8 @@ const CLOSE =
 
 export interface IEditorTabsProps {
   readonly title: string;
-  readonly pageTitle: string | null; // the section shown, after the log's name; null: the main page
-  readonly status: ReactNode; // the page's save status, at the end of its tab (SaveStatus)
+  readonly pageTitle: string | null; // null: the main page
+  readonly status: ReactNode;
   readonly canRename: boolean;
   readonly onRename: (name: string) => Promise<unknown>;
   readonly artifacts: readonly IArtifact[];
@@ -28,7 +24,6 @@ export interface IEditorTabsProps {
   readonly onClose: (id: string) => void;
 }
 
-// The title as a field: Enter or leaving it saves, Escape undoes.
 function TitleField({
   title,
   onRename,
@@ -73,7 +68,6 @@ interface ITab {
   readonly icon: ReactNode;
 }
 
-// Every open tab in a list, for when they do not all fit.
 function TabList({
   tabs,
   active,
@@ -136,7 +130,7 @@ function TabList({
   );
 }
 
-// A vertical wheel scrolls the strip sideways, as browser tab strips do.
+// Vertical wheel scrolls the strip sideways, like browser tabs.
 const wheel = (event: WheelEvent<HTMLDivElement>): void => {
   if (Math.abs(event.deltaY) > Math.abs(event.deltaX))
     event.currentTarget.scrollLeft += event.deltaY;
@@ -156,8 +150,7 @@ export function EditorTabs(props: IEditorTabsProps) {
   const [overflow, setOverflow] = useState(false);
   const [listOpen, setListOpen] = useState(false);
 
-  // Whether the tabs fit: on a resize of the strip (ResizeObserver) and when tabs open or close.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: runs again on purpose when tabs open or close
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-run when tabs open or close
   useEffect(() => {
     const el = strip.current;
     if (isNil(el)) return;
@@ -167,8 +160,8 @@ export function EditorTabs(props: IEditorTabsProps) {
     observer.observe(el);
     return () => observer.disconnect();
   }, [tabs.length]);
-  // The selected tab always shows.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: runs again on purpose when the selected tab or the tabs change
+  // Keep the selected tab in view.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-run when the selected tab or the tabs change
   useEffect(() => {
     strip.current
       ?.querySelector('[aria-selected="true"]')

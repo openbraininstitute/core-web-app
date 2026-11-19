@@ -1,7 +1,4 @@
-// The formatting commands of the editor, defined once and used by the toolbar (FormatBar) and the
-// selection menu (SelectionMenu): command pattern, one table. Markdown holds every format here but
-// alignment: an aligned block reads to agents as plain text (the alignment stays in the page; see
-// TextAlign in @logbook/blocks). No colour or underline: markdown has no syntax for them either.
+// One table of format commands for the toolbar and the selection menu.
 import { isNil } from 'es-toolkit';
 
 import type { Editor } from '@tiptap/react';
@@ -21,7 +18,6 @@ export const Format = {
 } as const;
 export type TFormat = TValueOf<typeof Format>;
 
-// The Tiptap mark or node behind each format: what `editor.isActive` takes.
 const TIPTAP_NAMES: Readonly<Record<TFormat, string>> = {
   [Format.Bold]: 'bold',
   [Format.Italic]: 'italic',
@@ -40,7 +36,7 @@ export interface IFormat {
   readonly key: TFormat;
   readonly label: string;
   readonly icon: TIconName;
-  // The keyboard shortcut, as `Mod-b` (Tiptap's own); shown in the button's title.
+  // Tiptap shortcut like `Mod-b`.
   readonly keys: string | null;
   readonly run: (editor: Editor) => void;
 }
@@ -54,8 +50,7 @@ export const keysOf = (keys: string): string =>
 export const titleOf = (format: { label: string; keys: string | null }): string =>
   isNil(format.keys) ? format.label : `${format.label} (${keysOf(format.keys)})`;
 
-// A link on the selection: asks for the address; an empty one removes the link. The Link
-// extension refuses unsafe addresses (javascript: and the like) by itself.
+// An empty address removes the link; the Link extension rejects unsafe ones.
 function editLink(editor: Editor): void {
   const current: unknown = editor.getAttributes(TIPTAP_NAMES[Format.Link])['href'];
   const href = window.prompt('Link address', typeof current === 'string' ? current : 'https://');
@@ -128,7 +123,6 @@ export const BLOCK_FORMATS: readonly IFormat[] = [
   },
 ];
 
-// The text style of the block the selection starts in: a paragraph or a heading level.
 export const TextStyle = {
   Paragraph: 'paragraph',
   Heading1: 'h1',
@@ -163,7 +157,7 @@ export function setTextStyle(editor: Editor, style: TTextStyle): void {
   else chain.setHeading({ level: LEVELS[style] }).run();
 }
 
-// Alignment of paragraphs and headings. Left is the default: choosing it removes the attribute.
+// Left is the default: choosing it removes the attribute.
 export const Align = {
   Left: 'left',
   Center: 'center',
@@ -197,13 +191,12 @@ export function setAlign(editor: Editor, align: TAlign): void {
   else chain.setTextAlign(align).run();
 }
 
-// What the buttons show, read once per editor change (useEditorState compares it, so a change
-// that alters none of it renders nothing).
+// useEditorState compares this, so changes that alter none of it render nothing.
 export interface IFormatState {
   readonly active: Readonly<Record<TFormat, boolean>>;
   readonly style: TTextStyle;
   readonly align: TAlign;
-  // False in a block that cannot be aligned (a list item's paragraph can; a code block cannot).
+  // A list item's paragraph can align; a code block can't.
   readonly canAlign: boolean;
   readonly canUndo: boolean;
   readonly canRedo: boolean;
@@ -211,7 +204,7 @@ export interface IFormatState {
   readonly canOutdent: boolean;
 }
 
-// Which formats the selection has: what the selection menu needs (no dry-run commands).
+// For the selection menu (no dry-run commands).
 export const activeOf = (editor: Editor): Readonly<Record<TFormat, boolean>> => ({
   [Format.Bold]: isFormatActive(editor, Format.Bold),
   [Format.Italic]: isFormatActive(editor, Format.Italic),

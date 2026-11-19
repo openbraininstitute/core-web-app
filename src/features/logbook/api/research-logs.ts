@@ -1,7 +1,4 @@
-// Research logs are EntityCore records: EntityCore owns the list, the name, the
-// description, who may read and write. EntityCore also filters, searches and orders the list (its
-// list endpoint, over its indexes), so the browser never filters it. React Query caches one list
-// per project, scope and search, read 10 logs at a time as the list scrolls (infinite query).
+// EntityCore filters, searches and orders the list; the browser never does.
 import {
   infiniteQueryOptions,
   queryOptions,
@@ -25,10 +22,8 @@ import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response'
 import type { TValueOf } from '@/api/logbook/types';
 import type { IProject } from '@/features/logbook/auth/session';
 
-// One page: what a screen shows, so the first answer is small and quick; more as the list scrolls.
 export const PAGE_SIZE = 10;
 
-// The fields EntityCore can order research logs by (ResearchLogFilter.ordering_model_fields).
 export const LogOrderField = {
   Name: 'name',
   Created: 'creation_date',
@@ -49,12 +44,10 @@ export const DEFAULT_ORDER: ILogOrder = {
   direction: OrderDirection.Descending,
 };
 
-// EntityCore's order_by: the field, with a leading minus for descending.
 export const orderByOf = (order: ILogOrder): string =>
   `${order.direction === OrderDirection.Descending ? '-' : ''}${order.field}`;
 
-// What the list shows: Public (public logs of any project) and Project (this project's, public
-// or not); both on is everything the project headers list. `search` matches name or description.
+// Public: public logs of any project. Project: this project's. Both on: everything.
 export interface ILogFilter {
   readonly public: boolean;
   readonly project: boolean;
@@ -64,9 +57,7 @@ export interface ILogFilter {
 
 export const noFilterOf = (filter: ILogFilter): boolean => !filter.public && !filter.project;
 
-// The EntityCore list query for a filter: its own filters (authorized_public,
-// authorized_project_id), its search (ilike_search on name and description: `*` is its "any
-// characters", added on both sides for a "contains" match) and its order. Without the page.
+// `*` is EntityCore's wildcard, so `*x*` means "contains".
 export function listParamsOf(project: IProject, filter: ILogFilter): URLSearchParams {
   const params = new URLSearchParams({
     page_size: String(PAGE_SIZE),
@@ -79,16 +70,12 @@ export function listParamsOf(project: IProject, filter: ILogFilter): URLSearchPa
   return params;
 }
 
-// Every list of the project, whatever its filter: the key the writes below update.
 const listsKey = (project: IProject) => ['research-logs', project.projectId] as const;
 
-// The next page number, or undefined after the last (React Query then stops asking).
 export const nextPageOf = ({ pagination }: EntityCoreResponse<unknown>): number | undefined =>
   pagination.page * pagination.page_size < pagination.total_items ? pagination.page + 1 : undefined;
 
-// The loaded pages as one list. Limit: EntityCore pages by number (offset), not by cursor, so a log
-// made or moved to the top between two pages shifts the next page by one: the same log can come
-// twice (dropped here by id). Upgrade: a keyset cursor in EntityCore.
+// Limit: offset paging can repeat a log, so dedupe by id. Upgrade: a keyset cursor in EntityCore.
 export const logsOf = (pages: readonly EntityCoreResponse<IResearchLog>[]): IResearchLog[] =>
   uniqBy(
     pages.flatMap((page) => page.data),
@@ -105,14 +92,12 @@ export const researchLogsQuery = (project: IProject, filter: ILogFilter) =>
     },
     initialPageParam: 1,
     getNextPageParam: nextPageOf,
-    // Both filters off lists nothing: no call (the screen says why).
     enabled: !noFilterOf(filter),
     staleTime: 30_000,
   });
 
 type TLogPages = InfiniteData<EntityCoreResponse<IResearchLog>, number>;
 
-// Every loaded page of every list, each page's logs changed by `change`.
 const eachPage =
   (change: (logs: readonly IResearchLog[]) => readonly IResearchLog[]) =>
   (lists: TLogPages | undefined): TLogPages | undefined =>
@@ -120,7 +105,7 @@ const eachPage =
       ? lists
       : { ...lists, pages: lists.pages.map((page) => ({ ...page, data: [...change(page.data)] })) };
 
-// One log, for the open one when the list does not hold it (a search or a filter hides it).
+// For an open log the list doesn't hold (hidden by a search or filter).
 export const researchLogQuery = (project: IProject, id: string) =>
   queryOptions({
     queryKey: ['research-log', project.projectId, id],
@@ -132,8 +117,6 @@ export function useCreateLog(project: IProject) {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (draft: IResearchLogDraft) => createResearchLog({ context: project, draft }),
-    // The new log is listed again by EntityCore (it fits some filters, not others); the open log
-    // reads it from its own query at once.
     onSuccess: (created) => {
       client.setQueryData(researchLogQuery(project, created.id).queryKey, created);
       return client.invalidateQueries({ queryKey: listsKey(project) });
@@ -159,22 +142,18 @@ export function useUpdateLog(project: IProject) {
 export function useDeleteLog(project: IProject) {
   const client = useQueryClient();
   return useMutation({
-    // One call, to the logbook server: it deletes the EntityCore record (as this person), then
-    // its own pages, text and history. Never EntityCore directly: the server would keep its part.
-    // A failure (503) is safe to send again.
+    // Via the logbook server, not EntityCore, or its pages stay behind. Safe to retry.
     mutationFn: (id: string) => deleteResearch({ id, context: project }),
     onSuccess: (_answer, id) => {
       client.removeQueries({ queryKey: researchLogQuery(project, id).queryKey });
-      // Gone from the screen at once; then the lists read again, since every page after it now
-      // starts one log later (pages by number).
+      // Refetch too: offset paging shifts every later page by one.
       client.setQueriesData<TLogPages>(
         { queryKey: listsKey(project) },
         eachPage((logs) => logs.filter((log) => log.id !== id))
       );
       return client.invalidateQueries({ queryKey: listsKey(project) });
     },
-    // Also after a failure: the log may be deleted already (an answer that got lost), and its
-    // cached pages must not open again.
+    // Also on failure: the delete may have gone through with the answer lost.
     onSettled: (_answer, _error, id) =>
       client.removeQueries({ queryKey: pagesQuery(id, project).queryKey }),
   });

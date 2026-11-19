@@ -1,12 +1,5 @@
-/* Editor content: what ProseMirror renders (headings, lists, tables, code, carets, change tints).
-   Utility classes cannot reach that DOM, so its rules live here, on the theme variables.
-   `.rl-editor` is the EditorContent element (the editor card, the Preview tab, the read card);
-   `.rl-editor-read` marks a read-only one. The caret and tint classes are built in
-   editor/extensions.ts and collaboration/changes.ts.
-
-   In the components layer: above Tailwind's reset (which this restores where the look relied on
-   browser defaults: list markers, heading weight, link underline, rules), below the utilities of
-   the React node views, so a node view's own classes win where both set a property. */
+/* ProseMirror renders this DOM, so utility classes can't reach it.
+   Components layer: above Tailwind's reset, below node view utilities. */
 @layer components {
   .rl-editor .ProseMirror {
     min-height: 100%;
@@ -136,15 +129,14 @@
   .rl-editor td p {
     margin: 0;
   }
-  /* One outline per selected block: on the card itself (rounded, data-selected) for a block with
-     a card view, else on the node; never both, which drew a square box around the rounded one. */
+  /* One outline per selected block: on the card if it has one, else on the node. */
   .rl-editor .ProseMirror-selectednode:not(:has([data-selected])),
   .rl-editor [data-selected="true"] {
     outline: 2px solid var(--color-primary-4);
     outline-offset: 2px;
   }
 
-  /* Syntax highlight tokens: code blocks (extensions.ts) and file code (FileView). */
+  /* Syntax highlight tokens */
   [data-tok="comment"] {
     color: var(--color-label);
     font-style: italic;
@@ -160,7 +152,7 @@
     font-weight: 700;
   }
 
-  /* Fresh text from others: tinted in their colour, fading out */
+  /* Fresh text from others, fading out */
   .rl-hl {
     border-radius: 2px;
     animation: rl-hl-fade 5.2s linear forwards;

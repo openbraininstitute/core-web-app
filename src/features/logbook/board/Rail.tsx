@@ -1,13 +1,11 @@
 import { isNil, uniqBy } from 'es-toolkit';
-// The list of research logs: scope filters, New, search, one pill per log.
 import { Fragment, useEffect, useRef, useState } from 'react';
 
 import { ActorVia } from '@/api/logbook/types';
 import { useContributors } from '@/features/logbook/api/contributors';
-import { OrderButton } from '@/features/logbook/app/LogOrder';
 import { colourOf } from '@/features/logbook/blocks/colour';
+import { OrderButton } from '@/features/logbook/board/LogOrder';
 import { AvatarGroup } from '@/features/logbook/elements/motion/avatar-group';
-import { cn } from '@/features/logbook/lib/utils';
 import { DeleteLogDialog } from '@/features/logbook/log/DeleteLogDialog';
 import { NotifyPopover } from '@/features/logbook/log/Menus';
 import { useNotifySettings } from '@/features/logbook/log/notify-settings';
@@ -19,6 +17,7 @@ import {
   useAnchoredPopover,
 } from '@/features/logbook/ui/popover';
 import { useInView } from '@/features/logbook/ui/useInView';
+import { cn } from '@/utils/css-class';
 
 import type { ReactNode, RefObject } from 'react';
 import type { IResearchLog } from '@/api/entitycore/types/entities/research-log';
@@ -28,7 +27,7 @@ import type { IProject } from '@/features/logbook/auth/session';
 import type { AvatarGroupMember } from '@/features/logbook/elements/motion/avatar-group';
 import type { TPopoverAlign, TPopoverSide } from '@/features/logbook/ui/popover';
 
-// The heading row: none in a wide rail, a title and X in the phone's drawer.
+// No heading in a wide rail; a title and X in the phone drawer.
 export const RailHeading = { None: 'none', Drawer: 'drawer' } as const;
 export type TRailHeading = TValueOf<typeof RailHeading>;
 
@@ -37,7 +36,6 @@ export interface IScope {
   readonly project: boolean;
 }
 
-// The next page of the list: whether there is one, its state, and the call that reads it.
 export interface IMore {
   readonly has: boolean;
   readonly loading: boolean;
@@ -46,7 +44,7 @@ export interface IMore {
 }
 
 export interface IRailProps {
-  // The logs EntityCore listed for the scope and search, in its order: the pages read so far.
+  // The pages read so far.
   readonly logs: readonly IResearchLog[];
   readonly more: IMore;
   readonly loading: boolean;
@@ -63,10 +61,10 @@ export interface IRailProps {
   readonly onSearch: (search: string) => void;
   readonly onPick: (id: string) => void;
   readonly onNew: () => void;
-  // Shown under the open log's card: its pages (PageOutline), drawn by the Board.
+  // The open log's pages, shown under its card.
   readonly outline?: ReactNode;
   readonly onClose: () => void;
-  // EntityCore writes; each rejects with the reason shown on the card.
+  // Each rejects with the reason shown on the card.
   readonly onRename: (id: string, name: string) => Promise<unknown>;
   readonly onDelete: (id: string) => Promise<unknown>;
 }
@@ -78,7 +76,7 @@ const LIST_EMPTY = 'px-3 text-[14px] text-neutral-4';
 const dateOf = (iso: string): string =>
   new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 
-// "5 min ago", "3 h ago", "yesterday" for the last week, then the date. One formatter for the list.
+// "5 min ago", "yesterday" within a week, then the date.
 const relative = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto', style: 'short' });
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
@@ -92,14 +90,12 @@ export function agoOf(iso: string, now = Date.now()): string {
   return dateOf(iso);
 }
 
-// The creator, then the writers, newest first. Each in the colour of their user id (colourOf, the
-// same on every screen); the creator's own writing row is the creator, not a second avatar.
+// Creator first, then writers newest first; the creator isn't shown twice.
 export const membersOf = (
   log: IResearchLog,
   contributors: readonly IContributor[]
 ): AvatarGroupMember[] => {
-  // Limit: the list's nested creator has no sub_id; its person id equals the Keycloak sub on the
-  // local platform only. Upgrade: EntityCore adds sub_id to NestedPersonRead, to match everywhere.
+  // Limit: no sub_id here; person id equals the Keycloak sub only locally. Upgrade: add sub_id.
   const sub = log.created_by.sub_id ?? log.created_by.id ?? null;
   const creator: AvatarGroupMember = {
     id: `creator:${log.id}`,
@@ -117,8 +113,7 @@ export const membersOf = (
   return uniqBy([creator, ...writers], (member) => member.name);
 };
 
-// The writers of one log, on its card: asked for once the card comes near the screen (200px
-// ahead, so they are there when it scrolls in), never for cards nobody sees.
+// Writers load once the card nears the screen, never for unseen cards.
 export function LogWriters({
   project,
   log,
@@ -136,15 +131,16 @@ export function LogWriters({
         max={3}
         size="sm"
         label={`Writers of ${log.name}`}
-        labels={{ showMore: 'Show {count} more writers', showFewer: 'Show fewer writers' }}
+        labels={{
+          showMore: (count) => `Show ${count} more writers`,
+          showFewer: 'Show fewer writers',
+        }}
       />
     </span>
   );
 }
 
-// The end of a list of logs: when it comes near the screen (400px ahead) the next page is read,
-// so scrolling rarely waits; meanwhile `skeleton` stands where the next logs will be. A failed
-// page shows a retry; the pages already shown stay.
+// Reads the next page as the end nears the screen; a failed page shows a retry.
 export function LoadMore({
   more,
   skeleton,
@@ -155,12 +151,11 @@ export function LoadMore({
   const end = useRef<HTMLDivElement>(null);
   const near = useInView(end, { margin: '400px' });
   const { has, loading, failed, onMore } = more;
-  // Again after each page while the end stays in view (a tall screen holds more than 10 logs).
+  // Keep going while the end stays in view; a tall screen holds more than one page.
   useEffect(() => {
     if (near && has && !loading && !failed) onMore();
   }, [near, has, loading, failed, onMore]);
-  // The marker stays in the page even with no next page: useInView watches this one element, and
-  // a new one (after the list reloads) would never be watched.
+  // Always render the marker: useInView watches this one element, a new one wouldn't be.
   return (
     <>
       {has && loading ? skeleton : null}
@@ -183,12 +178,9 @@ export function LoadMore({
   );
 }
 
-// A grey block standing for text or an avatar while logs load. On the pill's grey (the rail) a
-// darker grey, on the card's white the light one.
 const BONE = 'block rounded-full bg-neutral-2/70';
 
-// A rail pill while it loads: the same box, padding and rows as the pill (name, two lines of
-// description, writers and time), so nothing moves when the logs come.
+// Same box and rows as the pill, so nothing shifts when logs load.
 export function LogPillSkeleton() {
   return (
     <div
@@ -215,11 +207,10 @@ export function LogPillSkeleton() {
   );
 }
 
-// Pills standing in while the first page loads, or the next.
 export const PILL_SKELETONS = (count: number) =>
   Array.from({ length: count }, (_, n) => <LogPillSkeleton key={n} />);
 
-// The two scope switches: Public logs, and the project's own. Both on shows all.
+// Public and project scope switches; both on shows all.
 export function ScopeFilter({
   scope,
   onScope,
@@ -265,8 +256,7 @@ export function NewButton({
   readonly creating: boolean;
   readonly onNew: () => void;
 }) {
-  // In a narrow rail (under 280px of the rail container) it folds to a round plus: the label
-  // stays for screen readers, the title for the pointer. Outside a rail (home) it never folds.
+  // Folds to a round plus in a rail under 280px; never outside a rail.
   return (
     <button
       type="button"
@@ -281,13 +271,9 @@ export function NewButton({
   );
 }
 
-// The notification settings of every log (notify-settings.ts), next to New: the same popover as
-// an agent message's bell, under the button (ui/popover.tsx).
 const POPOVER_WIDTH = 340;
 
-// `align`: which edge of the bell the popover lines up with. In the rail (left side of the
-// screen) its left edge; in the home header (right side) its right edge.
-// The bell of the rail, the home header and the agent toast: the settings open from the button.
+// `align`: which bell edge the popover lines up with (left in the rail, right on home).
 export function SettingsButton({
   align = PopoverAlign.Start,
   side = PopoverSide.Below,
@@ -300,9 +286,9 @@ export function SettingsButton({
   readonly side?: TPopoverSide;
   readonly className?: string;
   readonly iconSize?: number;
-  // What the panel lines up with, when not the bell itself (the toast: the whole toast).
+  // What the panel lines up with, if not the bell (e.g. the whole toast).
   readonly anchor?: RefObject<Element | null>;
-  // Told when the settings open or close (the toast stays up while they are open).
+  // Lets the toast stay up while the settings are open.
   readonly onOpenChange?: (open: boolean) => void;
 }) {
   const { at, open, toggle, close } = useAnchoredPopover(POPOVER_WIDTH, align, side);
@@ -336,8 +322,7 @@ export function SettingsButton({
   );
 }
 
-// A search box with a clear button once it holds text (Escape clears too). The log lists (rail,
-// home) and the Artifacts tab use it; className restyles it (twMerge keeps the last class).
+// Search box with a clear button; Escape clears too.
 export function SearchField({
   value,
   onSearch,
@@ -351,7 +336,7 @@ export function SearchField({
   readonly label?: string;
   readonly placeholder?: string;
   readonly className?: string;
-  // Buttons at the end of the box, after the clear button (the list order).
+  // Extra buttons at the end of the box, after clear.
   readonly children?: ReactNode;
 }) {
   const input = useRef<HTMLInputElement>(null);
@@ -397,8 +382,7 @@ export function SearchField({
   );
 }
 
-// Why the list is empty, and what to do: both filters off, a search with no match, or no log in
-// the chosen scope. The home grid and the rail say it the same way (compact in the rail).
+// Why the list is empty and what to do; home and the rail share it.
 export function LogsEmpty({
   query,
   scope,
@@ -458,8 +442,7 @@ export function LogsEmpty({
 const MENU_ITEM =
   'flex w-full items-center gap-2.5 rounded-[9px] px-2.5 py-2 text-left text-[14px] font-semibold text-primary-9 transition-colors hover:bg-fill-item-hover';
 
-// The card's actions (the dots button): Rename edits the title in the card, Delete asks first.
-// A log's card and a section's row (PageOutline) use it.
+// The dots menu: Rename edits in place, Delete asks first.
 export function CardMenu({
   name,
   deleteLabel = 'Delete',
@@ -506,8 +489,7 @@ export function CardMenu({
   );
 }
 
-// The title as a field while renaming: Enter or leaving it saves, Escape keeps the old name.
-// A log's card and a section's row (PageOutline) use it.
+// Enter or blur saves, Escape keeps the old name.
 export function RenameField({
   name,
   label = 'Name of the log',
@@ -567,7 +549,6 @@ export function Rail(props: IRailProps) {
     setRenaming(null);
     run(id, props.onRename(id, name));
   };
-  // The log whose delete is being confirmed (DeleteLogDialog), or none.
   const [deleting, setDeleting] = useState<IResearchLog | null>(null);
   const remove = (log: IResearchLog): void => {
     setMenuFor(null);
@@ -601,8 +582,7 @@ export function Rail(props: IRailProps) {
         <OrderButton order={props.order} onOrder={props.onOrder} />
       </SearchField>
       <nav
-        // The scrollbar sits in the rail's own padding, 16px clear of the pills (-mr-2 pr-4), and
-        // its room is kept whether it shows or not, so the pills never shift (scrollbar-gutter).
+        // Scrollbar sits in the rail's padding with its room always kept, so pills never shift.
         className="scroll-thin -mr-2 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-4 pb-2 [scrollbar-gutter:stable]"
         aria-label="Research logs"
         aria-busy={props.loading || props.more.loading}
@@ -614,8 +594,7 @@ export function Rail(props: IRailProps) {
         ) : null}
         {shown.map((log) => (
           <Fragment key={log.id}>
-            {/* The card is the row; the button that opens the log covers it (stretched-button
-              pattern), so the avatar group's own +N button sits beside it, never inside it. */}
+            {/* A stretched button covers the card, so the +N button sits beside it, not inside. */}
             <div
               className="group relative rounded-[12px] bg-neutral-1 transition-[background-color] duration-150 ease-[ease] hover:bg-fill-pill-hover data-[on=true]:bg-primary-9"
               data-on={log.id === activeId}

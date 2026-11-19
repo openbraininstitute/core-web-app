@@ -1,6 +1,4 @@
-// Who wrote the selected text, read from the Yjs document itself: every run of
-// characters is an Yjs item that carries the client id of the screen or agent that typed it. The
-// walk only touches the items of the selected blocks, so a long page costs nothing extra.
+// Each Yjs item carries the client id that typed it; only the selected blocks are walked.
 import { Node as PmNode } from '@tiptap/pm/model';
 import { ySyncPluginKey } from '@tiptap/y-tiptap';
 import { isNil, isNotNil } from 'es-toolkit';
@@ -26,7 +24,6 @@ interface IRun {
   readonly text: string;
 }
 
-// How a card shows in History: its file name, its caption, else its kind.
 export const cardLabelOf = (node: PmNode): string => {
   const label: unknown = node.attrs['name'] ?? node.attrs['alt'] ?? node.attrs['src'];
   return typeof label === 'string' && label.length > 0 ? label : node.type.name;
@@ -37,10 +34,10 @@ function runsOfBlock(element: Y.XmlElement, from: number, to: number): IRun[] {
   let offset = 0;
   for (const child of element.toArray()) {
     if (!(child instanceof Y.XmlText)) {
-      offset += 1; // an inline node (a hard break): one position
+      offset += 1; // inline node (hard break): one position
       continue;
     }
-    // Yjs has no public walk of a text's items with their client ids; _start is its documented head.
+    // Yjs has no public item walk; _start is its documented head.
     // oxlint-disable-next-line eslint/no-underscore-dangle
     let item = child._start;
     while (isNotNil(item)) {
@@ -75,7 +72,7 @@ export function piecesOf(
   });
   const runs: IRun[] = [];
   state.doc.nodesBetween(from, to, (node, pos) => {
-    // A card (figure, file, entity) has no text: its writer is whoever added its element.
+    // A card has no text: its writer is whoever added its element.
     if (node.isBlock && node.isAtom) {
       // oxlint-disable-next-line eslint/no-underscore-dangle
       const client = elements.get(node)?._item?.id.client;
@@ -96,7 +93,7 @@ export function piecesOf(
     }
     return false;
   });
-  // Consecutive runs of one author make one piece.
+  // Merge consecutive runs by the same author.
   const pieces: { actor: IActor; text: string }[] = [];
   for (const run of runs) {
     const actor = resolve(run.client);

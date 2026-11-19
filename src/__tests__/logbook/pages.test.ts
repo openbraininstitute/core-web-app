@@ -1,5 +1,3 @@
-// A log's pages: which page shows for an address, and the address of each page (the main page keeps
-// the log's own address, the one agents link to).
 import { expect, test } from 'vitest';
 
 import { PageKind } from '@/api/logbook/types';

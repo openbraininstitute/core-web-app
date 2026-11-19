@@ -1,5 +1,3 @@
-// Platform entities, from EntityCore. Each is read once and cached: a page
-// with ten cards of the same circuit makes one call.
 import { queryOptions } from '@tanstack/react-query';
 import { isNotNil } from 'es-toolkit';
 
@@ -9,7 +7,6 @@ import { EntityType } from '@/features/logbook/blocks/kinds';
 import type { IProject } from '@/features/logbook/auth/session';
 import type { TEntityType } from '@/features/logbook/blocks/kinds';
 
-// The EntityCore route of each type the log can link.
 const routes: Readonly<Record<TEntityType, string>> = {
   [EntityType.Circuit]: 'circuit',
   [EntityType.Morphology]: 'cell-morphology',

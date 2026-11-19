@@ -1,6 +1,4 @@
-// The name and description of a log, in a modal. The native <dialog> with showModal(): the
-// browser gives the backdrop, the focus trap, Escape and the top layer, so no portal and no
-// focus code here.
+// Native <dialog> + showModal() gives backdrop, focus trap, Escape and top layer for free.
 import { isNil } from 'es-toolkit';
 import { useEffect, useRef, useState } from 'react';
 
@@ -27,7 +25,7 @@ export function LogDetailsDialog(props: ILogDetailsDialogProps) {
   const [description, setDescription] = useState(props.description);
   const [failed, setFailed] = useState<string | null>(null);
 
-  // Each opening starts from the saved values.
+  // Reset to the saved values on each open.
   useEffect(() => {
     const el = dialog.current;
     if (isNil(el)) return;
@@ -52,7 +50,7 @@ export function LogDetailsDialog(props: ILogDetailsDialogProps) {
   };
 
   return (
-    // biome-ignore lint/a11y/useKeyWithClickEvents: a click on the backdrop closes; Escape is the dialog's own key
+    // biome-ignore lint/a11y/useKeyWithClickEvents: backdrop click closes; Escape is the dialog's own
     <dialog
       ref={dialog}
       className="scroll-thin m-auto max-h-[calc(100dvh-24px)] w-[min(480px,calc(100vw-32px))] overflow-y-auto rounded-[20px] border-0 bg-white p-0 text-primary-9 shadow-pop backdrop:bg-[rgba(4,21,48,0.35)]"

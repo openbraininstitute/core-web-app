@@ -1,8 +1,5 @@
-// People are circles with initials; agents are rounded squares with the initials of the person
-// they work for and a sparkle badge on the top corner. One who is writing now
-// has the turning ring (styles.css, writing-ring).
-import { cn } from '@/features/logbook/lib/utils';
 import { Icon } from '@/features/logbook/ui/icons';
+import { cn } from '@/utils/css-class';
 
 import type { CSSProperties } from 'react';
 
@@ -18,14 +15,13 @@ export interface IAvatarProps {
   readonly actor: IActor;
   readonly size?: number;
   readonly title?: string;
-  // Writing now: the turning ring in the actor's colour.
+  // Writing now: the turning ring.
   readonly ring?: boolean;
   readonly stacked?: boolean;
 }
 
 export const agentRadiusOf = (size: number): number => (size <= 26 ? 8 : 9);
 
-// The mark of an agent, on the top right corner of its avatar (this one and the avatar group's).
 export function AgentBadge({ size, colour }: { readonly size: number; readonly colour: string }) {
   const badge = Math.max(12, Math.round(size * 0.42));
   return (

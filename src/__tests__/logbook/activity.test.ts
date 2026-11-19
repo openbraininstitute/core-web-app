@@ -26,7 +26,7 @@ test('rows of one writer at most 5 minutes apart merge; another writer or a gap 
   const runs = runsOf([
     entry('30', 'alice', 10),
     entry('28', 'alice', 5, 2),
-    entry('24', 'alice', 1), // 4 min before the run's oldest: same run
+    entry('24', 'alice', 1), // 4 min gap: same run
     entry('23', 'bob', 7),
     entry('10', 'bob', 3), // 13 min gap: new run
   ]);

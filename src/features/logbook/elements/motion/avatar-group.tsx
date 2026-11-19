@@ -7,23 +7,22 @@ import { type ComponentPropsWithRef, type MouseEvent, type PointerEvent, useStat
 
 import { Tooltip, TooltipProvider } from '@/features/logbook/elements/motion/tooltip';
 import { EASE_OUT, SPRING_LAYOUT, SPRING_PRESS } from '@/features/logbook/lib/ease';
-import { useHoverCapable } from '@/features/logbook/lib/hooks/use-hover-capable';
-import { formatNumber, useLocale, useMessages } from '@/features/logbook/lib/i18n';
-import { cn } from '@/features/logbook/lib/utils';
 import { AgentBadge, agentRadiusOf } from '@/features/logbook/ui/Avatar';
+import { useHoverCapable } from '@/hooks/use-hover-capable';
+import { cn } from '@/utils/css-class';
 
 export interface AvatarGroupMember {
   id: string;
   name: string;
-  /** Image URL. Without one, or if it fails to load, initials show. */
+  /** Without one, or if it fails, initials show. */
   src?: string;
-  /** Logbook addition: the user's colour (white initials on it), the same on every screen. */
+  /** Background for white initials. */
   colour?: string;
-  /** Logbook addition: initials when the name is a longer label ("Ana Lee (you) · editing"). */
+  /** Initials when the name is a longer label. */
   initials?: string;
-  /** Logbook addition: an agent, drawn as the app's Avatar draws one (rounded square, badge). */
+  /** Drawn as a rounded square with a badge. */
   agent?: boolean;
-  /** Logbook addition: writing now, the turning ring (styles.css, writing-ring). */
+  /** Writing now: shows the turning ring. */
   active?: boolean;
 }
 
@@ -35,14 +34,13 @@ const SIZES = {
 
 type AvatarSize = keyof typeof SIZES;
 
-/** English defaults. Override per instance with `labels`, or app-wide with `LocaleProvider`. */
-export const avatarGroupMessages = {
-  label: 'Members',
-  showFewer: 'Show fewer members',
-  showMore: 'Show {count} more members',
-};
+/** +N button labels, worded by each caller. */
+export interface IAvatarGroupLabels {
+  readonly showFewer?: string;
+  readonly showMore?: (count: number) => string;
+}
 
-export type AvatarGroupMessages = typeof avatarGroupMessages;
+const showMoreMembers = (count: number): string => `Show ${count} more members`;
 
 function initials(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -55,12 +53,10 @@ export interface AvatarProps extends Omit<ComponentPropsWithRef<'span'>, 'childr
   name: string;
   src?: string | undefined;
   size?: AvatarSize;
-  /** Logbook addition: see AvatarGroupMember. */
   colour?: string | undefined;
   initials?: string | undefined;
 }
 
-/** One avatar: the image, or initials when there is no image or it fails. */
 export function Avatar({
   name,
   src,
@@ -85,7 +81,7 @@ export function Avatar({
       style={colour ? { ...style, background: colour } : style}
     >
       {showImage ? (
-        // biome-ignore lint/performance/noImgElement: a portable component; avatars come from any host and fall back to initials on error
+        // biome-ignore lint/performance/noImgElement: avatars come from any host and fall back to initials
         <img
           src={src}
           alt={name}
@@ -105,27 +101,23 @@ export function Avatar({
 
 export interface AvatarGroupProps extends Omit<ComponentPropsWithRef<'div'>, 'children'> {
   members: AvatarGroupMember[];
-  /** Avatars shown before the rest collapse into a +N count. */
+  /** Shown before the rest collapse into +N. */
   max?: number;
   size?: AvatarSize;
-  /** Whether every member is shown. Pair with `onExpandedChange`. */
+  /** Pair with `onExpandedChange`. */
   expanded?: boolean;
   defaultExpanded?: boolean;
   onExpandedChange?: (expanded: boolean) => void;
-  /** Accessible name for the list, such as "Project members". */
+  /** Accessible name for the list. */
   label?: string;
-  /** Override any built-in string. `{count}` fills `showMore`. */
-  labels?: Partial<AvatarGroupMessages>;
-  /** Logbook addition: the +N button calls this (to open a full list elsewhere) instead of expanding. */
+  labels?: IAvatarGroupLabels;
+  /** +N calls this instead of expanding. */
   onMore?: ((event: MouseEvent<HTMLButtonElement>) => void) | undefined;
-  /** Logbook addition: whether what `onMore` opened is open (aria-expanded of the +N button). */
+  /** aria-expanded of the +N button. */
   moreOpen?: boolean | undefined;
 }
 
-/**
- * Overlapping avatars that fan apart on hover, lift the one under the pointer
- * with its name, and expand from a +N count to show everyone.
- */
+/** Overlapping avatars that fan apart on hover and expand from +N. */
 export function AvatarGroup({
   members,
   max = 4,
@@ -140,23 +132,20 @@ export function AvatarGroup({
   className,
   ...props
 }: AvatarGroupProps) {
-  const t = useMessages('avatarGroup', avatarGroupMessages, labels);
-  const { locale } = useLocale();
+  const showFewer = labels?.showFewer ?? 'Show fewer members';
+  const showMore = labels?.showMore ?? showMoreMembers;
   const reduce = useReducedMotion();
   const canHover = useHoverCapable();
   const [internalExpanded, setInternalExpanded] = useState(defaultExpanded);
   const isExpanded = onMore ? false : (expanded ?? internalExpanded);
-  // Index of the avatar under a mouse pointer; the +N button counts as the
-  // last slot.
+  // Avatar under the mouse; +N counts as the last slot.
   const [hovered, setHovered] = useState<number | null>(null);
 
   const limit = Math.max(1, max);
   const overflow = Math.max(0, members.length - limit);
   const visible = isExpanded ? members : members.slice(0, limit);
   const px = SIZES[size].px;
-  // Avatars overlap by a third of their width. Hovering one parts the row
-  // around it: everything before slides back, everything after slides on,
-  // so the hovered avatar shows in full while the group stays in place.
+  // Hovering one parts the row around it so it shows in full.
   const overlap = Math.round(px / 3);
   const push = Math.round(overlap * 0.75);
   const parting = !reduce && canHover && hovered !== null;
@@ -184,7 +173,7 @@ export function AvatarGroup({
         }}
         className={cn('inline-flex items-center', className)}
       >
-        <ul aria-label={label ?? t('label')} className="relative flex items-center">
+        <ul aria-label={label ?? 'Members'} className="relative flex items-center">
           <AnimatePresence initial={false} mode="popLayout">
             {visible.map((member, index) => (
               <motion.li
@@ -258,7 +247,7 @@ export function AvatarGroup({
                     type="button"
                     aria-expanded={onMore ? (moreOpen ?? false) : isExpanded}
                     aria-haspopup={onMore ? 'dialog' : undefined}
-                    aria-label={isExpanded ? t('showFewer') : t('showMore', { count: overflow })}
+                    aria-label={isExpanded ? showFewer : showMore(overflow)}
                     onClick={onMore ?? toggle}
                     {...(reduce ? {} : { whileTap: { scale: 0.92 } })}
                     transition={SPRING_PRESS}
@@ -276,7 +265,7 @@ export function AvatarGroup({
                         exit={{ opacity: 0, y: reduce ? 0 : isExpanded ? -8 : 8 }}
                         transition={{ duration: 0.16, ease: EASE_OUT }}
                       >
-                        {isExpanded ? '−' : `+${formatNumber(overflow, locale)}`}
+                        {isExpanded ? '−' : `+${overflow}`}
                       </motion.span>
                     </AnimatePresence>
                   </motion.button>

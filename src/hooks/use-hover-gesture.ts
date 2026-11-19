@@ -2,7 +2,7 @@
 
 import { useMemo, useRef } from 'react';
 
-import { isHoveringPointer } from '@/features/logbook/lib/touch';
+import { isHoveringPointer } from '@/ui/molecules/slider/touch';
 
 interface BoundaryEvent {
   pointerId: number;

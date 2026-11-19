@@ -1,7 +1,4 @@
-// Notification settings, per viewer, for every log. Set from the list's
-// settings button or from an agent message; both read this one store (observer pattern), so a
-// change shows at once in the open log. A convenience kept in this browser only: every read and
-// write is guarded, the defaults stand when storage is blocked.
+// Kept in this browser only; storage access is guarded and the defaults stand when blocked.
 import { isNil, isNotNil } from 'es-toolkit';
 import { useSyncExternalStore } from 'react';
 

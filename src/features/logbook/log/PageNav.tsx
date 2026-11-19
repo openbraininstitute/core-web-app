@@ -1,21 +1,17 @@
-// Moving between the pages of a log inside the page itself (read mode), like chapters of a book:
-// "Page 3 of 12" above the page, and the previous and next pages as two cards at its end, so a
-// log reads straight through. Jumping anywhere is the left menu's job (PageOutline, the whole
-// tree); both read the same pages list, so nothing here makes a request.
+// Reads the same pages list as the outline, so nothing here makes a request.
 import { isNil } from 'es-toolkit';
 
-import { cn } from '@/features/logbook/lib/utils';
 import { Icon } from '@/features/logbook/ui/icons';
+import { cn } from '@/utils/css-class';
 
 import type { IPage } from '@/api/logbook/types';
 
 export interface INeighbours {
-  readonly index: number; // the page's place in the list; -1 when it is not there (deleted)
+  readonly index: number; // -1 when deleted
   readonly previous: IPage | null;
   readonly next: IPage | null;
 }
 
-// The page before and after `pageId`, in the log's order.
 export function neighboursOf(pages: readonly IPage[], pageId: string): INeighbours {
   const index = pages.findIndex((page) => page.id === pageId);
   if (index < 0) return { index, previous: null, next: null };
@@ -24,12 +20,11 @@ export function neighboursOf(pages: readonly IPage[], pageId: string): INeighbou
 
 export interface IPageNavProps {
   readonly pages: readonly IPage[];
-  readonly page: IPage; // the page shown (it may have left the list: deleted)
+  readonly page: IPage; // may be deleted (not in the list)
   readonly onOpen: (page: IPage) => void;
 }
 
-// Above the page: where it sits in the log ("Page 3 of 12 · its title"). Nothing for a log of
-// one page, or for a page no longer in the list.
+// Nothing for a one-page log or a deleted page.
 export function PagePlace({ pages, page }: Omit<IPageNavProps, 'onOpen'>) {
   const { index } = neighboursOf(pages, page.id);
   if (pages.length <= 1 || index < 0) return null;
@@ -41,7 +36,6 @@ export function PagePlace({ pages, page }: Omit<IPageNavProps, 'onOpen'>) {
   );
 }
 
-// The end of the page: the previous and next pages, as two cards.
 export function PageSteps({ pages, page, onOpen }: IPageNavProps) {
   const { previous, next } = neighboursOf(pages, page.id);
   if (isNil(previous) && isNil(next)) return null;

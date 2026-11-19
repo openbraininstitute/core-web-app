@@ -1,7 +1,4 @@
-// Sending what only this device has, without opening the pages: at app start
-// for every copy of the signed-in person that may hold edits the server lacks, and at sign-out
-// before a copy is deleted. A clean copy, the common case, costs no request: only a dirty one is
-// read (a page can be 8 MB), compared and sent.
+// Push edits only this device has, at app start and before sign-out; clean copies cost no request.
 import { isNil, noop } from 'es-toolkit';
 import { clearDocument, IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
@@ -19,21 +16,20 @@ import {
 
 import type { TValueOf } from '@/api/logbook/types';
 
-// The server side of a page's text: the port this file talks to (api/page-docs.ts in the app, a
-// fake in the tests). Both throw an ApiError (its cause has the HTTP status and problem type) when refused.
+// Both throw an ApiError when refused.
 export interface IPageDocs {
   readonly read: (pageId: string) => Promise<Uint8Array>;
   readonly send: (pageId: string, update: Uint8Array) => Promise<void>;
 }
 
 export const CopySync = {
-  Clean: 'clean', // the flag says the server has it all: no request
+  Clean: 'clean',
   Sent: 'sent',
   NothingToSend: 'nothing-to-send',
-  Open: 'open', // open in this tab: its provider sends it
-  Gone: 'gone', // 404: the page is gone, or this person cannot see it any more
-  Refused: 'refused', // 403: read-only for this person now
-  Failed: 'failed', // the server could not be reached: kept, tried again at the next start
+  Open: 'open', // its provider sends it
+  Gone: 'gone', // 404
+  Refused: 'refused', // 403
+  Failed: 'failed', // kept, retried at the next start
 } as const;
 export type TCopySync = TValueOf<typeof CopySync>;
 
@@ -43,7 +39,6 @@ export interface ICopyReport {
   readonly result: TCopySync;
 }
 
-// Results after which the copy holds nothing the server lacks.
 const SAFE: ReadonlySet<TCopySync> = new Set([
   CopySync.Clean,
   CopySync.Sent,
@@ -56,8 +51,7 @@ const statusOf = (error: unknown): number | null =>
 const typeOf = (error: unknown): string | null =>
   error instanceof ApiError ? (error.cause?.type ?? null) : null;
 
-// The copies of `userId` on this device. `indexedDB.databases()` is missing in old browsers:
-// then none are listed, and each copy is still sent when its page is opened.
+// Old browsers lack `indexedDB.databases()`; copies then sync when their page opens.
 export async function localCopies(userId: string): Promise<{ name: string; pageId: string }[]> {
   if (typeof indexedDB === 'undefined' || typeof indexedDB.databases !== 'function') return [];
   const suffix = `:${userId}`;
@@ -68,8 +62,7 @@ export async function localCopies(userId: string): Promise<{ name: string; pageI
     .map((name) => ({ name, pageId: name.slice(COPY_PREFIX.length, -suffix.length) }));
 }
 
-// Same bytes again after a lost answer or a 5xx: a repeated Yjs change changes nothing. A few
-// tries with a growing pause; after that the copy stays dirty for the next start.
+// Resending a Yjs update is harmless; after the last try the copy stays dirty for next start.
 const TRIES = 3;
 const PAUSE_MS = 1000;
 const transient = (error: unknown): boolean => {
@@ -89,7 +82,6 @@ async function withRetry<T>(call: () => Promise<T>, pauseMs: number): Promise<T>
   }
 }
 
-// What the server lacks of `local`: the difference to its state, or null when there is none.
 async function missingOnServer(
   docs: IPageDocs,
   pageId: string,
@@ -107,8 +99,7 @@ async function missingOnServer(
   }
 }
 
-// Read the page, send what it lacks of `local`. On 409 change-needs-missing-content the page
-// changed under the difference (a restore, a merge): read it again and send the new difference.
+// On 409 change-needs-missing-content the page changed under us: re-read and resend the diff.
 async function sendMissing(
   docs: IPageDocs,
   pageId: string,
@@ -131,7 +122,6 @@ async function sendMissing(
   return CopySync.Sent;
 }
 
-// One copy: clean → nothing; dirty (or no flag) → read the page, send the difference, then clean.
 async function syncCopy(
   docs: IPageDocs,
   name: string,
@@ -159,13 +149,11 @@ async function syncCopy(
 }
 
 export interface ISyncOptions {
-  // The copies to leave alone: open in this tab, their provider sends them.
   readonly skip?: ReadonlySet<string>;
   readonly pauseMs?: number;
 }
 
-// Every copy of `userId`, one after another: a dirty copy holds up to two page documents in
-// memory while it is compared, so one at a time bounds the memory. Never throws.
+// One at a time to bound memory (two page docs per dirty copy). Never throws.
 export async function syncCopies(
   docs: IPageDocs,
   userId: string,
@@ -182,22 +170,20 @@ export async function syncCopies(
   return reports;
 }
 
-// Sign-out: send first, then delete. A copy is deleted only once the server has everything in it;
-// the others are kept and returned, so the screen can name them and ask whether to sign out
-// anyway (then `discardCopies`). A copy whose changes the server lacks is never deleted unasked.
+// Delete only copies the server fully has; return the rest so the user decides.
 export async function clearSyncedCopies(
   docs: IPageDocs,
   userId: string,
   options: Omit<ISyncOptions, 'skip'> = {}
 ): Promise<ICopyReport[]> {
-  // Open copies first: a database cannot be deleted while this tab holds it open.
+  // A database can't be deleted while this tab holds it open.
   await closeAllCopies();
   const reports = await syncCopies(docs, userId, { ...options, skip: new Set() });
   for (const report of reports.filter(isSafe)) await clearDocument(report.name);
   return reports.filter((report) => !isSafe(report));
 }
 
-// The person chose to sign out anyway: these copies go with what only they held.
+// The user chose to sign out anyway; unsent edits are lost.
 export async function discardCopies(reports: readonly ICopyReport[]): Promise<void> {
   for (const report of reports) await clearDocument(report.name);
 }

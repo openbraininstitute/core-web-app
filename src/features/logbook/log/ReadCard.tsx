@@ -1,11 +1,9 @@
-// Read mode: title, Edit and Delete, the description and byline, where the page sits in the log,
-// the page through the same editor (not editable), then the previous and next pages (PageNav).
 import { EditorContent } from '@tiptap/react';
 import { isNil, isNotNil } from 'es-toolkit';
 import { useState } from 'react';
 
 import { useDeleteLog, useUpdateLog } from '@/features/logbook/api/research-logs';
-import { Layout } from '@/features/logbook/app/layout';
+import { Layout } from '@/features/logbook/board/layout';
 import { DeleteLogDialog } from '@/features/logbook/log/DeleteLogDialog';
 import { LogDetailsDialog } from '@/features/logbook/log/LogDetailsDialog';
 import { PagePlace, PageSteps } from '@/features/logbook/log/PageNav';
@@ -25,7 +23,7 @@ export function ReadCard(props: ILogShared) {
   const update = useUpdateLog(project);
   const [editingName, setEditingName] = useState(false);
   const title = log?.name ?? 'Research log';
-  // A log is a record other people and agents use: its delete asks first (DeleteLogDialog).
+  // Others rely on a log, so delete asks first.
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const deleteLog = (): void => {
     if (isNotNil(log)) setConfirmingDelete(true);

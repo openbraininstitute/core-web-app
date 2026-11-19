@@ -1,7 +1,4 @@
-// The editor card: its tabs (the log, then the artifacts opened from the side
-// pane), toolbar, the Tiptap editor, the history clock of the block under the pointer and "Who
-// wrote this?" for a selection. An artifact tab shows its viewer in place of the editor, which
-// stays mounted (hidden), so the page keeps its caret, history and collaboration state.
+// The editor stays mounted (hidden) under artifact tabs, so caret, history and sync survive.
 import { useQuery } from '@tanstack/react-query';
 import { EditorContent } from '@tiptap/react';
 import { isNil, isNotNil } from 'es-toolkit';
@@ -10,7 +7,7 @@ import { useMemo, useRef, useState } from 'react';
 import { PageKind, ReadOnlyReason } from '@/api/logbook/types';
 import { artifactsOf, logFilesQuery } from '@/features/logbook/api/log-files';
 import { useUpdateLog } from '@/features/logbook/api/research-logs';
-import { Layout } from '@/features/logbook/app/layout';
+import { Layout } from '@/features/logbook/board/layout';
 import { useCollaboration } from '@/features/logbook/collaboration/notices';
 import { FormatBar } from '@/features/logbook/editor/FormatBar';
 import { SelectionMenu } from '@/features/logbook/editor/SelectionMenu';
@@ -38,7 +35,7 @@ const WIDTHS: Readonly<Partial<Record<TMenu, number>>> = {
   [Menu.Who]: 320,
 };
 
-// Inside the card, under the button, kept within the card.
+// Under the button, clamped inside the card.
 export function popAtOf(button: HTMLElement, card: HTMLElement, width: number): IPopAt {
   const b = button.getBoundingClientRect();
   const c = card.getBoundingClientRect();
@@ -93,7 +90,7 @@ export function EditorCard(props: IEditorCardProps) {
   const body = useRef<HTMLDivElement>(null);
   const [popAt, setPopAt] = useState<IPopAt>({ top: 52, left: 8 });
   const [clock, setClock] = useState<IClock | null>(null);
-  // Set while the busy server's refusal of this page is tried again (rejoin.ts).
+  // Set while a busy-server refusal is being retried.
   const rejoinAt = useCollaboration(props.notices, (state) => state.rejoinAt);
   const update = useUpdateLog(props.project);
   const listing = useQuery(logFilesQuery(props.logId, props.project));
@@ -110,11 +107,9 @@ export function EditorCard(props: IEditorCardProps) {
     setMenu(which);
   };
 
-  // The page's top-level block offsets, rebuilt only when the document changes (memo per doc).
+  // Rebuilt only when the document changes.
   const offsets = useRef<{ doc: unknown; list: number[] }>({ doc: null, list: [] });
-  // The top-level block at a height: blocks stack top to bottom, so a binary search over them
-  // (log n reads of one rect). By height only: the pointer can travel sideways to the clock
-  // without the clock moving to another block. In the gap between two blocks: the one above.
+  // By height only, so moving sideways onto the clock keeps the same block.
   const blockAt = (y: number): number | null => {
     const doc = editor.state.doc;
     if (offsets.current.doc !== doc) {
@@ -137,7 +132,7 @@ export function EditorCard(props: IEditorCardProps) {
     return list[hi] ?? null;
   };
 
-  // One clock button for the block under the pointer (not one per block).
+  // One clock for the hovered block, not one per block.
   const track = (event: ReactMouseEvent<HTMLDivElement>): void => {
     // On the clock itself: keep it where it is.
     if (event.target instanceof Element && isNotNil(event.target.closest('[data-clock]'))) return;
@@ -158,7 +153,6 @@ export function EditorCard(props: IEditorCardProps) {
 
   const writeTab = !narrow || props.mTab === MobileTab.Write;
   const onLog = isNil(artifact);
-  // A synced copy's live page, when the log still has it.
   const copied = props.pages.find((page) => page.id === artifact?.pageId);
   const openCopiedPage = isNil(copied)
     ? null
@@ -181,7 +175,7 @@ export function EditorCard(props: IEditorCardProps) {
       style={props.style}
       aria-label={narrow ? 'Log toolbar and editor' : 'Editor'}
     >
-      {/* Row 1: the tab strip, one surface across the card (browser tabs). */}
+      {/* Row 1: tabs */}
       <div className="flex items-end gap-1 bg-soft pt-2 pr-2 pl-2">
         {narrow ? (
           <button
@@ -224,7 +218,7 @@ export function EditorCard(props: IEditorCardProps) {
           </button>
         ) : null}
       </div>
-      {/* Row 2: the actions, every control 36 px high. On an artifact: its details instead. */}
+      {/* Row 2: actions, or the artifact's details */}
       <header
         className="flex min-h-14 flex-wrap items-center gap-2 px-4 py-2.5 data-[rule=true]:border-b data-[rule=true]:border-rule max-md:px-2.5"
         data-rule={writeTab}

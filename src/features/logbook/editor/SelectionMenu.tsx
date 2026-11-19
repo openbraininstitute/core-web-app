@@ -1,5 +1,3 @@
-// The menu over selected text (Tiptap's BubbleMenu, placed by Floating UI): the inline formats and
-// a heading toggle, where the pointer already is.
 import { TextSelection } from '@tiptap/pm/state';
 import { useEditorState } from '@tiptap/react';
 import { BubbleMenu } from '@tiptap/react/menus';
@@ -20,8 +18,7 @@ import type { Editor } from '@tiptap/react';
 
 const OPTIONS = { placement: 'top', offset: 8 } as const;
 
-// Text with characters in it, in an editable editor, outside code: not a caret, not a selected
-// block (an entity or a figure), not a code block.
+// Real text selected in an editable editor: not a caret, a selected block or code.
 const shows = ({ editor, state }: { readonly editor: Editor; readonly state: EditorState }) => {
   const { selection, doc } = state;
   return (

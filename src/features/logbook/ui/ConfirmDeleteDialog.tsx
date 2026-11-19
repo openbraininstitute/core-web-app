@@ -1,17 +1,10 @@
-// Deleting something for good: a modal that shows what is about to go (a ticket the caller draws),
-// what goes with it, and asks for the word DELETE typed out (any case) before the red button wakes
-// up (the GitHub-style typed confirmation, for an action nothing can undo). A wrong letter shakes
-// the field and a check shows once the word is right, so the state reads at a glance. Used for a
-// log (DeleteLogDialog) and for a section (DeletePageDialog): one pattern for both.
-//
-// The native <dialog> with showModal(): the browser gives the backdrop, the focus trap, Escape
-// and the top layer. Mounted only while asked for; Escape and the backdrop do nothing while the
-// delete runs, so a half-done delete is never hidden.
+// Typed DELETE confirmation for things nothing can undo (logs, sections).
+// Escape and the backdrop do nothing while the delete runs, so a half-done delete is never hidden.
 import { isNil } from 'es-toolkit';
 import { useEffect, useId, useRef, useState } from 'react';
 
-import { cn } from '@/features/logbook/lib/utils';
 import { Icon } from '@/features/logbook/ui/icons';
+import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
 import type { TIconName } from '@/features/logbook/ui/icons';
@@ -23,20 +16,20 @@ export interface IGoesWith {
   readonly text: string;
 }
 
-// How many letters of the word are typed right, from the start; -1 once a letter is wrong.
+// Letters typed right from the start; -1 once one is wrong.
 export function typedOf(value: string): number {
   const typed = value.trim().toLowerCase();
   return WORD.startsWith(typed) ? typed.length : -1;
 }
 
 export interface IConfirmDeleteDialogProps {
-  readonly title: string; // "Delete this research log?"
-  readonly lead: string; // one sentence under the title
-  readonly ticket: ReactNode; // what is about to go, drawn by the caller
+  readonly title: string;
+  readonly lead: string;
+  readonly ticket: ReactNode;
   readonly goes: readonly IGoesWith[];
-  readonly button: string; // the red button's word
+  readonly button: string;
   readonly failedText: string; // shown when the error has no message
-  // Deletes; rejects with the reason, shown in the dialog (a 503 is safe to send again).
+  // Rejects with the reason (a 503 is safe to retry).
   readonly onDelete: () => Promise<unknown>;
   readonly onClose: () => void;
 }
@@ -49,14 +42,12 @@ export function ConfirmDeleteDialog(props: IConfirmDeleteDialogProps) {
   const [value, setValue] = useState('');
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
-  // On while the field shakes (a wrong letter); off when the animation ends. A class, not a new
-  // key: a key would rebuild the field and drop its focus.
+  // A class, not a key: a new key would rebuild the field and drop focus.
   const [shaking, setShaking] = useState(false);
   const typed = typedOf(value);
   const ready = typed === WORD.length;
 
-  // showModal() focuses the first button it finds (React's autoFocus runs before it): the field
-  // gets the focus after, so the word can be typed at once.
+  // showModal() focuses the first button; move focus to the field after.
   useEffect(() => {
     dialog.current?.showModal();
     field.current?.focus();
@@ -94,7 +85,7 @@ export function ConfirmDeleteDialog(props: IConfirmDeleteDialogProps) {
       }}
       onClick={(event) => event.target === event.currentTarget && close()}
     >
-      {/* The frame clips to its round corners; the form scrolls inside it on a short window. */}
+      {/* Clips to round corners; the form scrolls inside on short windows. */}
       <form
         className="scroll-thin max-h-[calc(100dvh-24px)] overflow-y-auto"
         onSubmit={(event) => {
@@ -102,7 +93,6 @@ export function ConfirmDeleteDialog(props: IConfirmDeleteDialogProps) {
           remove();
         }}
       >
-        {/* The warning: plain white, the title and one sentence. */}
         <div className="relative px-6 pt-6 pb-5">
           <button
             type="button"
@@ -142,7 +132,6 @@ export function ConfirmDeleteDialog(props: IConfirmDeleteDialogProps) {
             </ul>
           </div>
 
-          {/* The typed confirmation. */}
           <div className="flex flex-col gap-2">
             <label htmlFor={`${ids}-word`} className="text-[13px] font-bold text-neutral-10">
               Type DELETE to confirm

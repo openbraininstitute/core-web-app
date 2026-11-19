@@ -3,7 +3,7 @@
 import { motion, useReducedMotion } from 'motion/react';
 
 import { EASE_OUT } from '@/features/logbook/lib/ease';
-import { cn } from '@/features/logbook/lib/utils';
+import { cn } from '@/utils/css-class';
 
 import type { ComponentProps, ReactNode, Ref } from 'react';
 
@@ -17,7 +17,7 @@ export function TooltipSurface({
   ...props
 }: Omit<ComponentProps<typeof motion.span>, 'children'> & {
   children?: ReactNode;
-  /** Start the entrance only after the positioning layer has been measured. */
+  /** Start the entrance once positioning is measured. */
   ready?: boolean;
   ref?: Ref<HTMLSpanElement>;
 }) {

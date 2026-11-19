@@ -1,5 +1,3 @@
-// The tile of an artifact: a picture icon, or the badge of its type (PY, CSV, MD, PDF...), else
-// its extension. The same tile in the Artifacts list and on its editor tab.
 import { ArtifactKind } from '@/features/logbook/api/log-files';
 import { FileLang, fileLangOf, fileLooks } from '@/features/logbook/blocks/kinds';
 import { extensionOf } from '@/features/logbook/editor/shiki';

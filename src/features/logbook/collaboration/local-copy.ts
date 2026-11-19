@@ -1,36 +1,29 @@
-// The copy of a page on this device: its Yjs document in IndexedDB
-// (y-indexeddb), one database per page and user. The editor and the Hocuspocus provider run on
-// this document, so edits that no task has saved yet survive a closed tab, a crash or a long time
-// offline, and the next tab (or the next app start, local-sync.ts) sends them.
+// The page's Yjs doc in IndexedDB, so unsaved edits survive a closed tab, a crash or going offline.
 import { isNil, isNotNil, noop } from 'es-toolkit';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
 
-// `logbook:<pageId>:<userId>`: two people on one machine never share a copy.
+// Per user, so two people on one machine never share a copy.
 export const COPY_PREFIX = 'logbook:';
 export const copyName = (pageId: string, userId: string): string =>
   `${COPY_PREFIX}${pageId}:${userId}`;
 
-// The key in a copy's `custom` store that says it may hold edits the server lacks. A number, as
-// the store keeps no booleans; a copy without the key counts as dirty (one full sync, then clean).
+// Set when the copy may hold edits the server lacks. A number: the store keeps no booleans.
 export const DIRTY_KEY = 'dirty';
 export const Dirty = { Yes: 1, No: 0 } as const;
 
-// What `markClean` needs to know of the provider.
 export interface IEntityCoreSyncState {
   readonly isSynced: boolean;
   readonly hasUnsyncedChanges: boolean;
 }
 
-// A copy read into its document. `_db` is y-indexeddb's only sign that the database could not
-// open (blocked, quota, a private window): it rejects, where `whenSynced` would wait forever.
+// `_db` rejects when IndexedDB can't open; `whenSynced` would just hang.
 export async function whenLoaded(persistence: IndexeddbPersistence): Promise<void> {
-  // oxlint-disable-next-line eslint/no-underscore-dangle -- see above: y-indexeddb's open promise
+  // oxlint-disable-next-line eslint/no-underscore-dangle -- y-indexeddb's open promise
   await persistence._db;
   await persistence.whenSynced;
 }
 
-/** What LocalCopy takes, by name. */
 export interface ILocalCopyDeps {
   document: Y.Doc;
   persistence: IndexeddbPersistence | null;
@@ -39,15 +32,13 @@ export interface ILocalCopyDeps {
 
 export class LocalCopy {
   readonly document: Y.Doc;
-  // True when the copy held text when it was loaded: "Saving…" until the provider is synced.
+  // Held text on load, so show "Saving…" until synced.
   readonly restored: boolean;
-  // Null when this browser gives no IndexedDB (a private window may refuse it): the page then
-  // works online only, as it would without this file.
+  // Null without IndexedDB (e.g. private window): online only.
   readonly #persistence: IndexeddbPersistence | null;
-  // The flag as stored, kept here so a keystroke writes it only when it changes (clean → dirty),
-  // not on every change: y-indexeddb already writes one row per change.
+  // Cached so the flag is written only on clean → dirty, not every keystroke.
   #dirty: boolean;
-  // The last flag write: close() waits for it, so a closed tab keeps the flag.
+  // close() waits for this so a closed tab keeps the flag.
   #written: Promise<unknown> = Promise.resolve();
 
   private constructor({ document, persistence, dirty }: ILocalCopyDeps) {
@@ -58,8 +49,7 @@ export class LocalCopy {
     document.on('update', this.#onUpdate);
   }
 
-  // The copy, loaded (`whenSynced`) before anything uses it: the editor never starts on an empty
-  // document, and the provider's first sync carries what only this device has. Never throws.
+  // Load before use, so the first sync carries what only this device has. Never throws.
   static async open(pageId: string, userId: string): Promise<LocalCopy> {
     const document = new Y.Doc();
     if (typeof indexedDB === 'undefined')
@@ -68,8 +58,7 @@ export class LocalCopy {
     try {
       await whenLoaded(persistence);
       const flag: unknown = await persistence.get(DIRTY_KEY);
-      // A new copy holds nothing yet, so nothing the server lacks: clean from the start. Else a
-      // page only read here would stay unflagged and be read again at every app start.
+      // An empty new copy starts clean, or a read-only page gets re-synced at every app start.
       if (isNil(flag) && document.store.clients.size === 0) {
         await persistence.set(DIRTY_KEY, Dirty.No);
         return new LocalCopy({ document, persistence, dirty: false });
@@ -86,18 +75,14 @@ export class LocalCopy {
     return this.#dirty;
   }
 
-  // A change typed here: a local transaction. The provider and y-indexeddb apply theirs with
-  // Y.applyUpdate, which is never local. The flag is written inside this handler, so a tab closed
-  // right after the change still has it.
+  // Only local edits mark dirty; written right here so a tab closed straight after keeps it.
   readonly #onUpdate = (_update: Uint8Array, _origin: unknown, _doc: Y.Doc, tr: Y.Transaction) => {
     if (!tr.local || this.#dirty || isNil(this.#persistence)) return;
     this.#dirty = true;
     this.#written = this.#persistence.set(DIRTY_KEY, Dirty.Yes);
   };
 
-  // A `saved` notice came: when the provider is synced with nothing unsent, the server has had
-  // every change of this copy before the notice, so the copy is clean. A change after this sets
-  // the flag again; IndexedDB runs the two writes in order.
+  // Clean only if synced with nothing unsent when the `saved` notice lands.
   markClean(provider: IEntityCoreSyncState): void {
     if (!this.#dirty || isNil(this.#persistence)) return;
     if (!provider.isSynced || provider.hasUnsyncedChanges) return;
@@ -105,8 +90,7 @@ export class LocalCopy {
     this.#written = this.#persistence.set(DIRTY_KEY, Dirty.No);
   }
 
-  // The page closes: the copy stays on the device (it makes reopening fast and holds what a crash
-  // would lose); only the open handle and the document go.
+  // The copy stays on the device; only the handle and doc go.
   async close(): Promise<void> {
     this.document.off('update', this.#onUpdate);
     await this.#written.catch(noop);
@@ -115,9 +99,7 @@ export class LocalCopy {
   }
 }
 
-// The copies open in this tab, shared by whoever opens the same page, closed when the last one
-// lets go. Closing waits a tick, like HocuspocusRoom's provider: React's development double mount
-// takes the copy again at once and never reloads it.
+// Shared per tab; close waits a tick so React's dev double mount reuses the copy.
 interface IHeld {
   readonly copy: Promise<LocalCopy>;
   users: number;
@@ -151,10 +133,10 @@ export function releaseCopy(pageId: string, userId: string): void {
   }, 0);
 }
 
-// The database names open in this tab: the sync at app start leaves them to their provider.
+// App-start sync skips these; their provider sends them.
 export const openCopies = (): ReadonlySet<string> => new Set(held.keys());
 
-// Sign-out: every copy open in this tab closes now (its flag written), so it can be deleted.
+// Sign-out: close every copy (flag written) so it can be deleted.
 export async function closeAllCopies(): Promise<void> {
   const all = [...held.values()];
   held.clear();

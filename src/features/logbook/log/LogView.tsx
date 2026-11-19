@@ -1,11 +1,3 @@
-// An open research log: its pages from the logbook server, and the one shown (the main page, or a
-// section the address names). That page is loaded first from its copy on this device
-// (local-copy.ts), then joined live as a Hocuspocus room on that same document, over the page's
-// own socket (page affinity). Notices and changes of the page live in two small stores.
-// - PageView is keyed by the page id: another page mounts a new view, so its socket, copy,
-//   notices and feed start clean (one socket per page: page affinity).
-// - A page deleted while it is open stays shown, read-only, until the person leaves it: what it
-//   held is never pulled from under them (they are told why it no longer saves).
 import { HocuspocusProviderWebsocketComponent, HocuspocusRoom } from '@hocuspocus/provider-react';
 import { isNil, isNotNil } from 'es-toolkit';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -24,8 +16,8 @@ import { navigate, pathOf } from '@/features/logbook/router';
 
 import type { IResearchLog } from '@/api/entitycore/types/entities/research-log';
 import type { IPage } from '@/api/logbook/types';
-import type { TLayout } from '@/features/logbook/app/layout';
 import type { IMe, IProject } from '@/features/logbook/auth/session';
+import type { TLayout } from '@/features/logbook/board/layout';
 import type { LocalCopy } from '@/features/logbook/collaboration/local-copy';
 import type { TViewMode } from '@/features/logbook/log/view-mode';
 
@@ -33,7 +25,7 @@ export interface ILogViewProps {
   readonly me: IMe;
   readonly project: IProject;
   readonly logId: string;
-  readonly pageId: string | null; // the section the address names; null: the main page
+  readonly pageId: string | null; // null: the main page
   readonly log: IResearchLog | null;
   readonly layout: TLayout;
   readonly mode: TViewMode;
@@ -42,7 +34,7 @@ export interface ILogViewProps {
   readonly onOpenList: () => void;
 }
 
-// The page's copy on this device, loaded; null while it loads. Held while this view shows the page.
+// Local copy of the page; null while it loads.
 function useLocalCopy(pageId: string | undefined, userId: string): LocalCopy | null {
   const [copy, setCopy] = useState<LocalCopy | null>(null);
   useEffect(() => {
@@ -67,8 +59,7 @@ export function LogView(props: ILogViewProps) {
   const { project, logId } = props;
   const pages = usePages(logId, project);
   const list = useMemo(() => pages.data ?? [], [pages.data]);
-  // The last page shown: when it leaves the list (deleted) while the address still names it, it
-  // stays shown, read-only, rather than the main page taking its place under the person's eyes.
+  // A page deleted while shown stays, read-only, instead of the main page swapping in.
   const lastShown = useRef<IPage | null>(null);
   const last = lastShown.current;
   const deleted =
@@ -101,7 +92,7 @@ export function LogView(props: ILogViewProps) {
         </button>
       </section>
     );
-  // A reader opening a log no writer opened yet: it has no page.
+  // A reader opening a log nobody has written in yet: no page.
   if (isNil(page))
     return (
       <section className={OPENING}>
@@ -129,18 +120,17 @@ export function LogView(props: ILogViewProps) {
 export interface IPageViewProps extends ILogViewProps {
   readonly page: IPage;
   readonly pages: readonly IPage[];
-  // The page left the log while open: shown from this device, read-only.
+  // Deleted while open: shown read-only from the local copy.
   readonly deleted: boolean;
   readonly onOpenPage: (page: IPage) => void;
 }
 
-// One page of the log, live. Mounted per page id (the key above).
 function PageView(props: IPageViewProps) {
   const { project, logId, page } = props;
   const copy = useLocalCopy(page.id, props.me.userId);
   const [notices] = useState(() => new CollaborationNotices());
   const [feed] = useState(() => new ChangeFeed());
-  // When this visit began, as the feed starts: History lists the saved activity up to here.
+  // When this visit began: History lists the saved activity up to here.
   const [openedAt] = useState(() => new Date().toISOString());
   const [authFailed, setAuthFailed] = useState<string | null>(null);
   const context = useMemo(() => ({ project, logId }), [project, logId]);
@@ -164,38 +154,18 @@ function PageView(props: IPageViewProps) {
 
   return (
     <LogContext.Provider value={context}>
-      {/*
-        One socket per page, on the page's path (page affinity): the router in
-        front of the server sends every person of a page to the same task.
-        - The library component makes the socket once per mount and destroys it a tick after the
-          unmount, so React's dev double mount keeps one socket.
-        - It ignores a later change of `url`: PageView is keyed by page id (and LogView by log
-          id), so another page mounts a new view and a new socket. A tab shows one page, so it
-          is still one socket.
-        - A switch closes the old socket: the provider sends what is pending first, and what is
-          not sent stays in the copy on this device (local-sync.ts sends it at the next open).
-      */}
+      {/* One socket per page; the component ignores later `url` changes, hence PageView's key. */}
       <HocuspocusProviderWebsocketComponent url={collaborationUrl(page.id)}>
-        {/*
-          No flushDelay here, on purpose: this tab sends each change and caret at once.
-          - The server already batches what it sends on (COLLABORATION_BROADCAST_DELAY_MS): at most one
-            caret per person per window reaches the other tabs, however fast a drag or a held
-            key fires.
-          - A window here would save only this tab's inbound frame and Redis publish per caret:
-            under 1 % of task CPU in the load model.
-          - Its price: up to the window more on every change, every ack and every "unsaved" in
-            SaveStatus, because the provider batches changes and carets in one window.
-        */}
+        {/* No flushDelay on purpose: the server already batches, and a delay would slow every ack. */}
         <HocuspocusRoom
           name={page.id}
           document={copy.document}
           token={accessToken}
           onStateless={({ payload }) => notices.receive(payload)}
           onConnect={() => notices.connected()}
-          // A refusal of the server's own (busy, unavailable) is tried again (rejoin.ts, in
-          // LogPage); only the client's own (not found, no access, bad sign-in) is final.
+          // Server-side refusals (busy, unavailable) are retried in LogPage; client ones are final.
           onAuthenticationFailed={({ reason }) => {
-            // A deleted page refuses a new join (not found): it stays shown, read-only.
+            // A deleted page refuses a new join; it stays shown, read-only.
             if (!RetryableRefusal.has(reason) && !props.deleted)
               setAuthFailed(`The live page refused this sign-in (${reason}).`);
           }}

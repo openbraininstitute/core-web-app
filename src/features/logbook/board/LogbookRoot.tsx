@@ -1,11 +1,10 @@
-// Sign-in gate, then the project from the address (or the person's first project), then the board.
 import { useQuery } from '@tanstack/react-query';
 import { isNil, isNotNil } from 'es-toolkit';
 import { useSession } from 'next-auth/react';
 import { useEffect, useRef } from 'react';
 
-import { Board } from '@/features/logbook/app/Board';
 import { accessToken, meOf, signIn } from '@/features/logbook/auth/session';
+import { Board } from '@/features/logbook/board/Board';
 import { navigate, pathOf, useRoute } from '@/features/logbook/router';
 
 import type { ReactNode } from 'react';
@@ -20,14 +19,14 @@ function Centered({ children }: { readonly children: ReactNode }) {
   );
 }
 
-export function App() {
+export function LogbookRoot() {
   const session = useSession();
   const route = useRoute();
   const signedIn = session.status === 'authenticated';
   const pending = session.status === 'loading';
   // next-auth marks a failed token refresh on the session.
   const sessionError = session.data?.error ?? null;
-  // Who this is, from the Keycloak access token Better Auth hands out (cached in memory).
+  // Who this is, from the Keycloak access token.
   const me = useQuery({
     queryKey: ['me', session.data?.user?.email ?? null],
     enabled: signedIn,
@@ -35,7 +34,7 @@ export function App() {
     staleTime: Number.POSITIVE_INFINITY,
   });
 
-  // No session: go to Keycloak once, and come back to this address.
+  // No session: go to Keycloak once and come back here.
   const redirected = useRef(false);
   useEffect(() => {
     if (pending || signedIn || isNotNil(sessionError) || redirected.current) return;
@@ -43,7 +42,7 @@ export function App() {
     void signIn();
   }, [pending, signedIn, sessionError]);
 
-  // /: the person's first project.
+  // At /, use the person's first project.
   const fallback = me.data?.projects[0] ?? null;
   useEffect(() => {
     if (isNil(route.project) && isNotNil(fallback)) navigate(pathOf(fallback), true);

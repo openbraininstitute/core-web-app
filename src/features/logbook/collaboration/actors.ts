@@ -1,6 +1,4 @@
-// Who a Yjs client is. Names and colours come from the server (the `peers` notice, the user id),
-// never from what a browser writes in its awareness state: awareness only links a client id
-// to a user id, which must be one the server lists on this page.
+// Names come from the server's peer list; awareness only maps a client id to a user id.
 import { isNotNil } from 'es-toolkit';
 
 import { ActorVia } from '@/api/logbook/types';
@@ -21,8 +19,7 @@ export const UNKNOWN_ACTOR: IActor = {
   agent: false,
 };
 
-// An agent's label is "<user name>-<agent>" (the server's labelOf): its avatar shows the first two
-// letters of the person it works for, as the log list does ("bob-claude" → "BO").
+// Labels are "<user>-<agent>", so "bob-claude" shows "BO".
 export const agentInitialsOf = (label: string): string =>
   (label.split('-')[0] ?? '').slice(0, 2).toUpperCase();
 
@@ -34,7 +31,7 @@ export const personActor = (userId: string, name: string, agent = false): IActor
   agent,
 });
 
-// An agent known only by its label (the `present` notice carries no user id yet).
+// The `present` notice has no user id yet, only the label.
 export const agentActor = (label: string): IActor => ({
   key: `agent:${label}`,
   name: label,
@@ -54,7 +51,7 @@ export interface IActorSources {
   readonly awareness: TAwareness;
   readonly peers: () => readonly IPeer[];
   readonly agents: () => readonly { readonly label: string }[];
-  // Writers the server named from stored text (api/writers.ts): for clients no longer online.
+  // For clients no longer online.
   readonly written: (clientId: number) => IActor | undefined;
 }
 
@@ -66,7 +63,7 @@ export function resolveActor(clientId: number, sources: IActorSources): IActor {
   }
   const stored = sources.written(clientId);
   if (isNotNil(stored)) return stored;
-  // A client with no collaboration socket wrote over HTTPS: an agent. One agent at work: it is that one.
+  // No socket means an HTTPS write, i.e. an agent; if only one is working, it's that one.
   const agents = sources.agents();
   const [only] = agents;
   if (agents.length === 1 && isNotNil(only)) return agentActor(only.label);

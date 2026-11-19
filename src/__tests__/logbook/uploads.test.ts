@@ -18,10 +18,9 @@ const page = schema.nodeFromJSON({
 
 test('the block an upload inserted is found by the id it got, the same file elsewhere is not', () => {
   const oldSize = page.child(0).nodeSize;
-  const at = oldSize + page.child(1).nodeSize; // where the second figure went in
+  const at = oldSize + page.child(1).nodeSize;
   expect(insertedBlockId(page, at, PATH)).toBe('new');
   expect(blockRange(page, 'new')).toEqual({ from: at, to: at + page.child(2).nodeSize });
-  // The first figure of the same file keeps its own range: removing 'new' leaves it.
   expect(blockRange(page, 'old')).toEqual({ from: 0, to: oldSize });
 });
 

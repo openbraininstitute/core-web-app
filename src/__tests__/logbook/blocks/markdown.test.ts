@@ -12,7 +12,6 @@ import {
   writeMarkdown,
 } from '@/features/logbook/blocks/markdown';
 
-// The design's seed log, in the markdown agents write.
 const LOG = [
   '# HCN block in CA1',
   '## Methods',
@@ -61,7 +60,6 @@ describe('markdown and the page', () => {
       'Each cell received a **500 ms** current step, repeated with ten seeds.',
     ])
       expect(once).toContain(line);
-    // Stable: a second trip changes nothing.
     const again = new Y.Doc();
     writeMarkdown(again, once);
     expect(docToMarkdown(again)).toBe(once);
@@ -70,7 +68,6 @@ describe('markdown and the page', () => {
   test("an agent's append is a small change that keeps the existing blocks", () => {
     const doc = new Y.Doc();
     writeMarkdown(doc, LOG);
-    // Another screen holding the page as it was.
     const other = new Y.Doc();
     Y.applyUpdate(other, Y.encodeStateAsUpdate(doc));
     const before = docToJson(doc).content ?? [];
@@ -79,15 +76,13 @@ describe('markdown and the page', () => {
     expect(after.slice(0, before.length)).toEqual(before);
     expect(after.length).toBe(before.length + 2);
     expect(change.length).toBeLessThan(Y.encodeStateAsUpdate(doc).length / 2);
-    // The change alone brings the other screen to the same page.
     Y.applyUpdate(other, change);
     expect(docToMarkdown(other)).toBe(docToMarkdown(doc));
   });
 });
 
 describe('alignment', () => {
-  // A person centres a paragraph; an agent then adds a block. The headless schema knows
-  // `textAlign`, so the agent's write keeps it; markdown has no syntax for it and shows none.
+  // Markdown can't show textAlign, but an agent's write must keep it.
   test('an aligned block keeps its alignment through an agent write, and markdown does not show it', () => {
     const doc = new Y.Doc();
     writeMarkdown(doc, '# Title\n\nCentred text.');

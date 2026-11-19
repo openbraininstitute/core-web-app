@@ -1,5 +1,3 @@
-// Who is on the page and what they do: people from the server's `peers` list,
-// agents from their `present` notices and their changes, statuses from the last change seen.
 import { uniqBy } from 'es-toolkit';
 
 import { ActorVia } from '@/api/logbook/types';

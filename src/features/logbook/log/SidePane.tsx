@@ -1,6 +1,3 @@
-// The side pane: the page as readers see it (Preview), its history (who wrote
-// the selected text, the activity of this visit and the saved activity before it), or the log's
-// files.
 import { useHocuspocusProvider } from '@hocuspocus/provider-react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { EditorContent, useEditor } from '@tiptap/react';
@@ -9,7 +6,7 @@ import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } fro
 
 import { ActorVia } from '@/api/logbook/types';
 import { activityQuery, runsOf, summaryOf } from '@/features/logbook/api/activity';
-import { Layout } from '@/features/logbook/app/layout';
+import { Layout } from '@/features/logbook/board/layout';
 import { personActor } from '@/features/logbook/collaboration/actors';
 import { previewExtensions } from '@/features/logbook/editor/extensions';
 import { ArtifactsTab } from '@/features/logbook/log/ArtifactsTab';
@@ -31,8 +28,7 @@ const PIECE = 'flex items-start gap-[10px]';
 const SEGMENT =
   'relative h-[30px] rounded-full bg-transparent px-[14px] text-[12px] font-bold tracking-[0.06em] text-neutral-4 uppercase aria-pressed:bg-white aria-pressed:text-primary-9 aria-pressed:shadow-seg-on';
 
-// The final version, as readers see it when nobody edits: a second, read-only editor on the same
-// Yjs document. Mounted only while the tab shows, so a shut pane costs nothing.
+// A second read-only editor on the same Yjs doc, mounted only while its tab shows.
 function PreviewTab() {
   const { document } = useHocuspocusProvider();
   const preview = useEditor({ extensions: previewExtensions(document), editable: false }, [
@@ -85,8 +81,7 @@ function ActivityRow({
   );
 }
 
-// A saved line (before this visit): who and how much, no text and no Show, since the server
-// keeps counts only.
+// The server keeps counts only for saved lines, so no text and no Show.
 function SavedRow({
   run,
   me,
@@ -113,7 +108,7 @@ function SavedRow({
           {agoOf(run.to, now)}
         </div>
         {removed.length > 0 ? (
-          // Opens by its height (grid rows 0fr to 1fr): no measuring, no JavaScript animation.
+          // Animates grid rows 0fr to 1fr: no measuring, no JS.
           <div
             id={box}
             className="grid grid-rows-[0fr] transition-[grid-template-rows] duration-200 ease-out motion-reduce:transition-none data-[open=true]:grid-rows-[1fr]"
@@ -128,8 +123,7 @@ function SavedRow({
           </div>
         ) : null}
       </div>
-      {/* What was removed, folded away until asked for (the server keeps it, read before Yjs
-          drops it). Older rows have none: no button. */}
+      {/* Removed text, folded until asked for. Older rows have none. */}
       {removed.length > 0 ? (
         <button
           type="button"
@@ -153,11 +147,10 @@ function HistoryTab(props: ILogShared) {
   const { editor, selection, resolve, feed } = props;
   const now = useNow(1000);
   const changes = useSyncExternalStore(feed.subscribe, feed.snapshot);
-  // Mounted only while History shows, so the first page is read when it opens, not with the log.
+  // Mounted only while History shows, so the first page loads when it opens.
   const saved = useInfiniteQuery(activityQuery(props.project, props.logId, props.openedAt));
-  // The log's activity, this page's rows only (History is about the page shown).
-  // Limit: a page with little activity may need several pages of the log's list to fill.
-  // Upgrade: a page filter on the server's activity list (an index on page and minute).
+  // Only this page's rows of the log's activity.
+  // Limit: a quiet page may need several list pages to fill. Upgrade: a server-side page filter.
   const earlier = useMemo(
     () =>
       runsOf(
@@ -167,16 +160,14 @@ function HistoryTab(props: ILogShared) {
       ),
     [saved.data, props.page.id]
   );
-  // The end of the list: when it comes near, the next page is read (one at a time).
+  // Near the end, read the next page (one at a time).
   const end = useRef<HTMLDivElement>(null);
   const atEnd = useInView(end, { margin: '300px' });
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = saved;
   useEffect(() => {
     if (atEnd && hasNextPage && !isFetchingNextPage) void fetchNextPage();
   }, [atEnd, hasNextPage, isFetchingNextPage, fetchNextPage]);
-  // The clients of the selection, as History meets them: each is asked of the server once per view
-  // (learnWriters; one batched call, live ones too, cheaper than tracking which awareness names),
-  // and the pieces follow once it answers (resolve changes).
+  // Each client is asked of the server once per view, in one batched call.
   const { pieces, clients } = useMemo(() => {
     const seen = new Set<number>();
     const found = isNil(selection)

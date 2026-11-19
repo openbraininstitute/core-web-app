@@ -4,7 +4,6 @@ import { markdownToJson, schema } from '@/features/logbook/blocks/markdown';
 import { diffOf, summaryOf } from '@/features/logbook/collaboration/changes';
 
 const docOf = (markdown: string) => schema.nodeFromJSON(markdownToJson(markdown));
-// The same ids on both sides, as the Yjs binding keeps them.
 const withIdsOf = (from: ReturnType<typeof docOf>, markdown: string) => {
   const json = markdownToJson(markdown);
   json.content = (json.content ?? []).map((block, i) => ({

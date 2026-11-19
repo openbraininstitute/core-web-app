@@ -1,4 +1,4 @@
-// The design's icon set, paths verbatim. One component, the path by name.
+// The design's icon set, paths verbatim.
 import type { ReactNode } from 'react';
 
 const paths = {
@@ -46,7 +46,6 @@ const paths = {
   arrowLeft: <path d="M19 12H5M11 18l-6-6 6-6" />,
   arrowUpRight: <path d="M7 17 17 7M8 7h9v9" />,
   check: <path d="m5 12 5 5L20 7" />,
-  // The list order (the search box's button), and its choices.
   sort: <path d="M7 4v16M3 8l4-4 4 4M17 20V4M13 16l4 4 4-4" />,
   arrowUp: <path d="M12 19V5M6 11l6-6 6 6" />,
   arrowDown: <path d="M12 5v14M6 13l6 6 6-6" />,
@@ -113,7 +112,7 @@ const paths = {
   brain_region: (
     <path d="M8 5a4 4 0 0 0-4 4c0 2 1 3 1 5a4 4 0 0 0 7 2.5A4 4 0 0 0 19 14c0-2 1-3 1-5a4 4 0 0 0-8-1.5A4 4 0 0 0 8 5z" />
   ),
-  // Text formatting (the editor's toolbar and selection menu); not in the design's set.
+  // Text formatting; not in the design's set.
   bold: <path d="M7 5h6a3.5 3.5 0 0 1 0 7H7zM7 12h7a3.5 3.5 0 0 1 0 7H7z" />,
   italic: <path d="M10 5h8M6 19h8M14 5l-4 14" />,
   strike: (
@@ -152,7 +151,7 @@ export interface IIconProps {
   readonly stroke?: number;
 }
 
-// An unknown name (an entity type without its own icon) draws the generic cube.
+// Unknown names draw the generic cube.
 export function Icon({ name, size = 16, stroke = 2 }: IIconProps) {
   return (
     <svg

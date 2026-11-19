@@ -1,5 +1,4 @@
-// A drag on a resize handle: pointer capture, so the moves keep coming when the
-// pointer leaves the handle; one place for the rail and the split.
+// Pointer capture keeps moves coming when the pointer leaves the handle.
 import type { PointerEvent as ReactPointerEvent } from 'react';
 
 export function dragHandle(

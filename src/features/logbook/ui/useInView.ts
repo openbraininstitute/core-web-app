@@ -1,7 +1,4 @@
-// Whether an element is on screen. One IntersectionObserver per margin for the whole page, not
-// one per element (observer pattern, shared subject): the browser works out every watched element
-// in one pass, and a list of 100 cards costs one observer. The viewport is the root, so a card
-// scrolled out of its own list (the rail, the grid) counts as hidden too.
+// One shared IntersectionObserver per margin, not one per element; the viewport is the root.
 import { isNil } from 'es-toolkit';
 import { useEffect, useState } from 'react';
 
@@ -39,9 +36,9 @@ function watch(element: Element, margin: string, listener: TListener): () => voi
 }
 
 export interface IInViewOptions {
-  // How far outside the screen an element already counts as on it ("200px": fetch a bit ahead).
+  // e.g. "200px" to fetch a bit ahead.
   readonly margin?: string;
-  // Stay true once seen: for a fetch that should happen once, not on every scroll past.
+  // Stay true once seen.
   readonly once?: boolean;
 }
 
@@ -53,7 +50,7 @@ export function useInView(
   useEffect(() => {
     const element = ref.current;
     if (isNil(element)) return;
-    // No observer (an old browser, a test): treat as shown, so nothing stays unloaded.
+    // No observer (old browser, test): treat as shown.
     if (typeof IntersectionObserver === 'undefined') return setInView(true);
     const stop = watch(element, margin, (visible) => {
       setInView((was) => (once && was) || visible);

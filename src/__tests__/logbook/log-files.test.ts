@@ -1,5 +1,3 @@
-// The log's saved files: names with and without the
-// content hash, and which file a page path points at.
 import { expect, test } from 'vitest';
 
 import {
@@ -28,7 +26,7 @@ test('the hash is the full SHA-256; the PUT sends the signed headers but Content
     'Content-Length': '12',
     'x-amz-checksum-sha256': 'Qmu43bglKFgHkuSdp8Dsnph/vEbMTeSaEn3z/IeGPUE=',
   };
-  // The browser sets Content-Length itself, from the body.
+  // The browser sets Content-Length itself.
   expect(putHeadersOf(signed)).toEqual({
     'If-None-Match': '*',
     'x-amz-checksum-sha256': 'Qmu43bglKFgHkuSdp8Dsnph/vEbMTeSaEn3z/IeGPUE=',
@@ -126,7 +124,7 @@ test('artifacts: the published document first, then the files newest first, with
     ['plots/rate.3fa9c1d2e4b7.png', 'rate.png', 'plots', ArtifactKind.Image],
   ]);
   expect(searchArtifacts(artifacts, ' RATE ').map((a) => a.name)).toEqual(['rate.png']);
-  // The folder is not shown in the list, so it is not searched either.
+  // The folder isn't shown, so it isn't searched.
   expect(searchArtifacts(artifacts, 'plots')).toEqual([]);
   expect(searchArtifacts(artifacts, '')).toHaveLength(3);
 });

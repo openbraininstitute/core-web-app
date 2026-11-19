@@ -1,4 +1,4 @@
-// One upload: one call to the logbook server, then the bytes straight to S3, with no token.
+// One call to the logbook server, then the bytes straight to S3 with no token.
 import { afterEach, expect, test, vi } from 'vitest';
 
 vi.mock('@/auth-fetch', () => ({ getSession: () => Promise.resolve({ accessToken: 'token' }) }));
@@ -19,11 +19,9 @@ interface ISent {
   readonly body: string;
 }
 
-// The logbook server answers `answer`; S3 answers `putStatus`. Every request is kept.
 function serve(answer: (path: string) => unknown, putStatus = 200): ISent[] {
   const sent: ISent[] = [];
   globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
-    // The API client sends a Request; the S3 PUT sends a URL and its init.
     const request = input instanceof Request ? input : null;
     const url = request?.url ?? input.toString();
     const headers = request?.headers ?? new Headers(init?.headers);
@@ -37,14 +35,12 @@ function serve(answer: (path: string) => unknown, putStatus = 200): ISent[] {
   return sent;
 }
 
-// The message a promise fails with ('' when it does not fail).
 const failureOf = (promise: Promise<unknown>): Promise<string> =>
   promise.then(
     () => '',
     (error: unknown) => (error instanceof Error ? error.message : 'not an Error')
   );
 
-// An answer with a PUT to send and no signed header.
 const target = (path: string) => ({ path, upload: { url: 'https://s3.test/put', headers: {} } });
 
 const file = new File(['rate plot v1'], 'rate.png');

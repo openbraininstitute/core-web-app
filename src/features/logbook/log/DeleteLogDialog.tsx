@@ -1,6 +1,4 @@
-// Deleting a research log: the confirm-delete dialog with the log as a ticket (name, description,
-// when it was made and by whom, who wrote in it) and what the server removes with it.
-import { agoOf, LogWriters } from '@/features/logbook/app/Rail';
+import { agoOf, LogWriters } from '@/features/logbook/board/Rail';
 import { ConfirmDeleteDialog } from '@/features/logbook/ui/ConfirmDeleteDialog';
 import { Icon } from '@/features/logbook/ui/icons';
 
@@ -8,7 +6,6 @@ import type { IResearchLog } from '@/api/entitycore/types/entities/research-log'
 import type { IProject } from '@/features/logbook/auth/session';
 import type { IGoesWith } from '@/features/logbook/ui/ConfirmDeleteDialog';
 
-// What the server removes with the record (DELETE /v1/researches/:id, the logbook server).
 const GOES: readonly IGoesWith[] = [
   { icon: 'notebook', text: 'Its pages, with all their text and history' },
   { icon: 'clock', text: 'Its activity and the list of who wrote in it' },
@@ -21,7 +18,7 @@ const dateOf = (iso: string): string =>
 export interface IDeleteLogDialogProps {
   readonly log: IResearchLog;
   readonly project: IProject;
-  // Deletes the log; rejects with the reason, shown in the dialog (a 503 is safe to send again).
+  // Rejects with a reason the dialog shows; a 503 is safe to retry.
   readonly onDelete: () => Promise<unknown>;
   readonly onClose: () => void;
 }
@@ -36,7 +33,6 @@ export function DeleteLogDialog({ log, project, onDelete, onClose }: IDeleteLogD
       failedText="The log was not deleted."
       onDelete={onDelete}
       onClose={onClose}
-      // The log, as a ticket: what is about to go, checked before it goes.
       ticket={
         <article className="relative overflow-hidden rounded-2xl border border-rule-soft bg-soft">
           <div className="flex flex-col gap-2 px-5 pt-4 pb-3.5">

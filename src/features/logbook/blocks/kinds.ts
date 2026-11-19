@@ -1,5 +1,3 @@
-// The value sets of the blocks a research log holds, and how each one looks.
-// One place for the web app, the agents and the server, so a block reads the same everywhere.
 import type { TValueOf } from '@/api/logbook/types';
 
 export const EntityType = {
@@ -31,7 +29,7 @@ export const entityLooks: Readonly<Record<TEntityType, ILook>> = {
 
 const isEntityType = (type: string): type is TEntityType => Object.hasOwn(entityLooks, type);
 
-// An unknown type keeps its key as the label ("dataset"), drawn with the generic card.
+// Unknown types use their key as the label and the generic card.
 export const entityLookOf = (type: string): ILook =>
   isEntityType(type)
     ? entityLooks[type]

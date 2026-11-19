@@ -1,5 +1,4 @@
-// The popovers of an open log: Insert, the entity picker and the
-// notification settings. Every insert lands after the block the caret is in.
+// Every insert lands after the block the caret is in.
 import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { isNil } from 'es-toolkit';
 import { useDeferredValue, useRef, useState } from 'react';
@@ -8,11 +7,11 @@ import { entitySearchQuery } from '@/features/logbook/api/entities';
 import { UPLOAD_ACCEPT } from '@/features/logbook/api/log-files';
 import { EntityType, entityLookOf, entityLooks } from '@/features/logbook/blocks/kinds';
 import { insertAfterBlock } from '@/features/logbook/editor/insert';
-import { cn } from '@/features/logbook/lib/utils';
 import { useLogContext } from '@/features/logbook/log/context';
 import { ToastSource } from '@/features/logbook/log/notify-settings';
 import { uploadFiles } from '@/features/logbook/log/uploads';
 import { Icon } from '@/features/logbook/ui/icons';
+import { cn } from '@/utils/css-class';
 
 import type { Editor } from '@tiptap/react';
 import type { CSSProperties } from 'react';
@@ -21,7 +20,6 @@ import type { IPopAt } from '@/features/logbook/log/EditorCard';
 import type { INotifySettings, TToastSource } from '@/features/logbook/log/notify-settings';
 import type { TIconName } from '@/features/logbook/ui/icons';
 
-// Class lists the popovers repeat.
 const ITEM = 'rounded-[10px] text-left text-primary-9 transition-colors hover:bg-fill-item-hover';
 const MENU_ITEM = `${ITEM} flex items-center gap-2.5 px-2.5 py-2`;
 const MENU = 'pop absolute z-41 flex max-w-[calc(100%-16px)] flex-col p-1.5';
@@ -45,7 +43,7 @@ export function InsertMenu({ editor, at, onClose, onPicker, onNotice }: IInsertM
   const { project, logId } = useLogContext();
   const client = useQueryClient();
   const input = useRef<HTMLInputElement>(null);
-  // The upload outlives the menu (it closes at once); uploads.ts owns it from here.
+  // The upload outlives the menu, which closes at once.
   const upload = (list: FileList | null): void => {
     onClose();
     void uploadFiles({ editor, logId, project, client, notify: onNotice }, list);
@@ -138,7 +136,7 @@ export function EntityPicker({
         <Icon name="search" size={16} />
         <span className="sr-only">Search entities</span>
         <input
-          // biome-ignore lint/a11y/noAutofocus: the menu or field this click opened takes focus
+          // biome-ignore lint/a11y/noAutofocus: opened by this click, so it takes focus
           autoFocus
           className="min-w-0 flex-1 bg-transparent text-[14px] text-primary-9 outline-none"
           value={search}
@@ -219,7 +217,6 @@ export function EntityPicker({
 }
 
 export interface INotifyPopoverProps {
-  // Where it shows: under the list's settings button, or at the top right of an open log.
   readonly className: string;
   readonly style?: CSSProperties;
   readonly settings: INotifySettings;
@@ -227,7 +224,7 @@ export interface INotifyPopoverProps {
   readonly onClose: () => void;
 }
 
-// One setting: the whole row is the label, so it highlights and toggles anywhere on it.
+// The whole row is the label, so it toggles anywhere on it.
 function Switch({
   title,
   sub,
@@ -257,7 +254,6 @@ function Switch({
   );
 }
 
-// Whose agents send messages: two option cards (a radio group), each saying what it means.
 const SOURCES: readonly {
   readonly source: TToastSource;
   readonly icon: TIconName;

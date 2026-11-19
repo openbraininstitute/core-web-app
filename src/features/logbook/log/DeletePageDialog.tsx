@@ -1,5 +1,3 @@
-// Deleting a section: the confirm-delete dialog with the section as a ticket and what the server
-// removes with it (DELETE /v1/page/:pageId). The rest of the log stays.
 import { ConfirmDeleteDialog } from '@/features/logbook/ui/ConfirmDeleteDialog';
 import { Icon } from '@/features/logbook/ui/icons';
 
@@ -29,7 +27,6 @@ export function DeletePageDialog({ page, logName, onDelete, onClose }: IDeletePa
       failedText="The section was not deleted."
       onDelete={onDelete}
       onClose={onClose}
-      // The section, as a ticket: what is about to go.
       ticket={
         <article className="flex items-center gap-3 rounded-2xl border border-rule-soft bg-soft px-5 py-4">
           <span className="grid size-9 flex-none place-items-center rounded-[10px] bg-white text-primary-9 shadow-block-btn">

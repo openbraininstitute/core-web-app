@@ -1,7 +1,4 @@
-// What the logbook server tells the screens of a page (Hocuspocus stateless messages):
-// who is here, what is saved, which agent works on which blocks, when the page turns read-only.
-// One small external store per open page (observer pattern): a component subscribes to the one
-// field it shows, so a notice re-renders that field only, never the editor.
+// An external store, so a notice re-renders only its field, never the editor.
 import { isNil, isNotNil } from 'es-toolkit';
 import { useSyncExternalStore } from 'react';
 import { match } from 'ts-pattern';
@@ -23,7 +20,7 @@ export type TNotice =
       readonly seq: number;
       readonly peers: readonly IPeer[];
     }
-  // own: this connection's changes are in that save (only then may its device copy be marked clean).
+  // own: this connection's changes are in that save; only then may the device copy go clean.
   | { readonly type: typeof CollaborationNotice.Saved; readonly own: boolean }
   | {
       readonly type: typeof CollaborationNotice.Present;
@@ -39,14 +36,13 @@ export type TNotice =
   | { readonly type: typeof CollaborationNotice.ReadOnly; readonly reason: TReadOnlyReason }
   | { readonly type: typeof CollaborationNotice.Closing };
 
-// Who wrote an HTTPS change (the `writer` notice): the same fields as the writers API.
 export interface IWriterActor {
   readonly userId: string;
   readonly label: string;
   readonly via: string;
 }
 
-// Type guards, not TypeBox: the browser bundle stays small (settings.ts says by how much).
+// Hand-written guards, not TypeBox, to keep the bundle small.
 type TRecord = Readonly<Record<string, unknown>>;
 const isRecord = (value: unknown): value is TRecord => typeof value === 'object' && isNotNil(value);
 const isString = (value: unknown): value is string => typeof value === 'string';
@@ -113,7 +109,7 @@ function toNotice(value: unknown): TNotice | null {
         type: CollaborationNotice.ReadOnly,
         reason: isReason(value['reason']) ? value['reason'] : ReadOnlyReason.ReadAccess,
       }))
-      // An older server sent `saved` only to the writers it covered, without the field: own.
+      // Older servers omit `own` and only sent `saved` to covered writers.
       .with(CollaborationNotice.Saved, () => ({
         type: CollaborationNotice.Saved,
         own: value['own'] !== false,
@@ -123,7 +119,7 @@ function toNotice(value: unknown): TNotice | null {
   );
 }
 
-// A payload that is not JSON or not a known notice is dropped (null): a newer server may add one.
+// Unknown notices are dropped: a newer server may add some.
 export function noticeOf(payload: string): TNotice | null {
   try {
     return toNotice(JSON.parse(payload));
@@ -141,18 +137,15 @@ export interface IPresentAgent {
 export interface ICollaborationSnapshot {
   readonly peersSeq: number;
   readonly peers: readonly IPeer[];
-  readonly savedAt: number | null; // the last save of this connection's changes (ms)
-  readonly pageSavedAt: number | null; // the last save of the page, anyone's changes (ms)
+  readonly savedAt: number | null; // this connection's changes
+  readonly pageSavedAt: number | null; // anyone's changes
   readonly agents: readonly IPresentAgent[];
   readonly readOnly: TReadOnlyReason | null;
-  // When the join refused while the server is busy is tried again (ms); null: joined or never
-  // refused (rejoin.ts). The editor is read-only meanwhile.
+  // When a refused join is retried; the editor is read-only until then.
   readonly rejoinAt: number | null;
 }
 
-// Writers named by `writer` notices, newest kept: an agent may use a new Yjs client per call, so
-// a long open page would otherwise grow this without end. A client pushed out is still named by
-// the writers API (History asks it), so nothing is lost but a request.
+// Capped: agents may use a new Yjs client per call; the writers API still names evicted ones.
 const MAX_WRITERS = 1000;
 
 const EMPTY: ICollaborationSnapshot = {
@@ -168,7 +161,7 @@ const EMPTY: ICollaborationSnapshot = {
 export class CollaborationNotices {
   #state: ICollaborationSnapshot = EMPTY;
   readonly #listeners = new Set<() => void>();
-  // Not in the snapshot: nothing renders from it, the actor resolver reads it when a change lands.
+  // Kept out of the snapshot: nothing renders from it.
   readonly #writers = new Map<number, IWriterActor>();
 
   readonly writerOf = (clientId: number): IWriterActor | undefined => this.#writers.get(clientId);
@@ -185,22 +178,19 @@ export class CollaborationNotices {
     for (const listener of this.#listeners) listener();
   }
 
-  // A new join starts writable; the server says again if it is not (read-only is per join).
+  // Read-only is per join; the server resends it if still true.
   connected(): void {
     if (isNotNil(this.#state.readOnly)) this.#set({ readOnly: null });
   }
 
-  // The server refused the join for its own reason; it is tried again at `at` (rejoin.ts).
   refused(at: number): void {
     this.#set({ rejoinAt: at });
   }
 
-  // The join was accepted.
   joined(): void {
     if (isNotNil(this.#state.rejoinAt)) this.#set({ rejoinAt: null });
   }
 
-  // Agents whose notice ran out leave the list (called by the 400 ms UI clock).
   expire(now: number): void {
     if (this.#state.agents.some((agent) => agent.until <= now))
       this.#set({ agents: this.#state.agents.filter((agent) => agent.until > now) });
@@ -211,7 +201,7 @@ export class CollaborationNotices {
     if (isNil(notice)) return null;
     match(notice)
       .with({ type: CollaborationNotice.Peers }, ({ seq, peers }) => {
-        // Every task numbers the list: a browser keeps the newest (collaboration-state.ts).
+        // Several server tasks send lists; keep the newest.
         if (seq > this.#state.peersSeq) this.#set({ peersSeq: seq, peers });
       })
       .with({ type: CollaborationNotice.Saved }, ({ own }) => {
@@ -224,7 +214,7 @@ export class CollaborationNotices {
       })
       .with({ type: CollaborationNotice.Writer }, ({ clientIds, actor }) => {
         for (const clientId of clientIds) {
-          this.#writers.delete(clientId); // re-inserted as the newest
+          this.#writers.delete(clientId); // re-insert as newest
           this.#writers.set(clientId, actor);
         }
         for (const oldest of this.#writers.keys()) {

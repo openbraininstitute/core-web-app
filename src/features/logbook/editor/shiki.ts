@@ -1,7 +1,5 @@
-// Code highlighting for saved files (artifact tabs and file cards): Shiki, the VS Code grammars.
-// Loaded on first use (dynamic import: nothing in the main bundle), with Shiki's JavaScript regex
-// engine (no 470 KB WASM), one theme, and only the grammar the file needs. The editor's own code
-// blocks keep the small synchronous tokenizer (highlight.ts): ProseMirror decorations cannot wait.
+// Shiki for saved files, loaded on first use with the JS regex engine (no WASM).
+// Editor code blocks use highlight.ts instead: decorations can't wait.
 import { isNil } from 'es-toolkit';
 
 import type { HighlighterCore, LanguageInput, ThemedToken } from 'shiki/core';
@@ -18,7 +16,7 @@ const yaml: IGrammar = { id: 'yaml', load: () => import('shiki/langs/yaml.mjs') 
 const javascript: IGrammar = { id: 'javascript', load: () => import('shiki/langs/javascript.mjs') };
 const typescript: IGrammar = { id: 'typescript', load: () => import('shiki/langs/typescript.mjs') };
 
-// By extension. A new language is one line here.
+// By file extension.
 const GRAMMARS: Readonly<Record<string, IGrammar>> = {
   py: python,
   sh: shell,
@@ -37,8 +35,7 @@ const GRAMMARS: Readonly<Record<string, IGrammar>> = {
 };
 
 export const THEME = 'github-light';
-// Past this size the text shows plain: TextMate grammars cost about linear time per character,
-// and a data dump that large is not read as code.
+// Past this size, show plain: grammars cost linear time and nobody reads that as code.
 export const HIGHLIGHT_MAX_CHARS = 200_000;
 
 export const extensionOf = (name: string): string =>
@@ -64,7 +61,7 @@ function highlighter(): Promise<HighlighterCore> {
   return core;
 }
 
-// The tokens of each line, or null when the file shows plain (no grammar, or too large).
+// null: show plain (no grammar, or too large).
 export async function highlightLines(text: string, name: string): Promise<ThemedToken[][] | null> {
   const grammar = GRAMMARS[extensionOf(name)];
   if (isNil(grammar) || text.length > HIGHLIGHT_MAX_CHARS) return null;

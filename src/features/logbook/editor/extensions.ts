@@ -1,6 +1,4 @@
 import { Extension } from '@tiptap/core';
-// The editor of a page: the shared block schema (@logbook/blocks) with React views on top, bound
-// to the page's Yjs document, carets from awareness, fresh-text tints, markdown in and out.
 import { Collaboration, isChangeOrigin } from '@tiptap/extension-collaboration';
 import { CollaborationCaret } from '@tiptap/extension-collaboration-caret';
 import { UniqueID } from '@tiptap/extension-unique-id';
@@ -33,7 +31,6 @@ const views: Readonly<Record<string, ComponentType<ReactNodeViewProps>>> = {
   callout: CalloutView,
 };
 
-// The shared nodes, each with its React view; everything else as the blocks package defines it.
 export const withViews = (): AnyExtension[] =>
   contentExtensions.map((extension) => {
     const view = views[extension.name];
@@ -42,7 +39,7 @@ export const withViews = (): AnyExtension[] =>
       : extension.extend({ addNodeView: () => ReactNodeViewRenderer(view) });
   });
 
-// Code blocks coloured by the design's highlighter; recomputed only when the text changes.
+// Code block colours; recomputed only when the text changes.
 function codeDecorations(doc: PmNode): DecorationSet {
   const decorations: Decoration[] = [];
   doc.descendants((node, pos) => {
@@ -89,7 +86,7 @@ export interface IEditorOptions {
   readonly me: IActor;
   readonly feed: ChangeFeed;
   readonly resolve: (clientId: number) => IActor;
-  // The name a caret shows: the server's label for that user id, never the awareness text.
+  // The server's label for the user id, never the awareness text.
   readonly caretName: (user: Record<string, unknown>) => string;
   readonly highlights: () => boolean;
   readonly ready: () => boolean;
@@ -111,7 +108,7 @@ export function editorExtensions(options: IEditorOptions): AnyExtension[] {
   const { provider, me } = options;
   return [
     ...withViews(),
-    // Remote changes keep the ids they carry; only this screen's own edits stamp new ones.
+    // Remote changes keep their ids; only our own edits stamp new ones.
     UniqueID.configure({
       types: [...BLOCK_TYPES],
       filterTransaction: (transaction) => !isChangeOrigin(transaction),
@@ -141,9 +138,7 @@ export function editorExtensions(options: IEditorOptions): AnyExtension[] {
   ];
 }
 
-// The Preview tab: the same blocks and views, bound read-only to the same Yjs
-// document, so it follows every change incrementally (y-prosemirror redraws only what changed,
-// never the whole page) and shows the final version: no carets, tints or block ids.
+// Read-only on the same Yjs doc: follows changes, no carets, tints or block ids.
 export const previewExtensions = (document: HocuspocusProvider['document']): AnyExtension[] => [
   ...withViews(),
   Collaboration.configure({ document, field: FRAGMENT }),

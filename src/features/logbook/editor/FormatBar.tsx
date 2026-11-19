@@ -1,6 +1,4 @@
-// The editor's formatting toolbar: undo and redo, the text style, inline formats, lists and blocks,
-// alignment, list indent. It reads the editor through useEditorState with a selector, so a keystroke that
-// changes no button state renders nothing here (the editor itself never re-renders for it).
+// useEditorState with a selector, so keystrokes that change no button render nothing.
 import { useEditorState } from '@tiptap/react';
 
 import {
@@ -13,8 +11,8 @@ import {
   TEXT_STYLES,
   titleOf,
 } from '@/features/logbook/editor/formats';
-import { cn } from '@/features/logbook/lib/utils';
 import { Icon } from '@/features/logbook/ui/icons';
+import { cn } from '@/utils/css-class';
 
 import type { Editor } from '@tiptap/react';
 import type { IFormat, IFormatState, TTextStyle } from '@/features/logbook/editor/formats';
@@ -36,10 +34,9 @@ const FOCUS =
   'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary-9';
 const FADE = 'transition-[background-color,color] duration-[120ms] ease-[ease]';
 
-// The thin divider between groups of tools.
 export const TOOL_RULE = 'mx-1.5 h-5 w-px bg-rule';
 
-// One button. The mouse down keeps the editor's selection; the command then focuses the editor.
+// Mouse down keeps the editor's selection.
 export function Tool({ label, keys = null, icon, pressed, disabled, onRun }: IToolProps) {
   return (
     <button

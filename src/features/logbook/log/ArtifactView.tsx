@@ -1,7 +1,4 @@
-// An artifact open in its editor tab, read-only: a picture to zoom and move, a markdown page with
-// the log's own blocks, highlighted code, a table, a PDF in the browser's viewer, or its details
-// when the type has no viewer. Its bytes are read when the tab opens (a saved file never
-// changes, so once per tab), never for the list.
+// Bytes are read once when the tab opens (a saved file never changes), never for the list.
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Markdown } from '@tiptap/markdown';
 import { EditorContent, useEditor } from '@tiptap/react';
@@ -15,7 +12,7 @@ import {
   fileTextQuery,
   logFilesQuery,
 } from '@/features/logbook/api/log-files';
-import { agoOf } from '@/features/logbook/app/Rail';
+import { agoOf } from '@/features/logbook/board/Rail';
 import { CodeView, CsvTable, sizeOf } from '@/features/logbook/editor/blocks/FileView';
 import { withViews } from '@/features/logbook/editor/extensions';
 import { ArtifactIcon } from '@/features/logbook/log/ArtifactIcon';
@@ -39,7 +36,6 @@ export const savedOf = (iso: string): string =>
     minute: '2-digit',
   });
 
-// A markdown page, read-only, with the same blocks and views as the log.
 function PageReader({ text }: { readonly text: string }) {
   const reader = useEditor({ extensions: [...withViews(), Markdown], editable: false });
   useEffect(() => {
@@ -58,19 +54,18 @@ const ZOOM_STEP = 1.25;
 
 interface IView {
   readonly scale: number;
-  readonly x: number; // offset of the picture's centre from the box's centre, in pixels
+  readonly x: number; // offset from the box's centre, px
   readonly y: number;
 }
 
-// Zoom about a point (relative to the box's centre): that point of the picture stays under it.
+// Zoom so the point under the pointer stays put.
 const zoomAt = (view: IView, factor: number, px: number, py: number): IView => {
   const scale = clamp(view.scale * factor, ZOOM_MIN, ZOOM_MAX);
   const k = scale / view.scale;
   return { scale, x: px - (px - view.x) * k, y: py - (py - view.y) * k };
 };
 
-// A picture to look at: the wheel zooms about the pointer, a drag moves it, a double click fits
-// it or shows it at 100%. A CSS transform only: the browser composites it, no re-layout.
+// CSS transform only: the browser composites it, no re-layout.
 function ImageViewer({ src, alt }: { readonly src: string; readonly alt: string }) {
   const box = useRef<HTMLDivElement>(null);
   const drag = useRef<{ readonly x: number; readonly y: number } | null>(null);
@@ -85,7 +80,7 @@ function ImageViewer({ src, alt }: { readonly src: string; readonly alt: string 
   const fit = useCallback(() => setView({ scale: fitScale(), x: 0, y: 0 }), [fitScale]);
   useEffect(fit, [fit]);
 
-  // Non-passive, so the page does not scroll while the picture zooms.
+  // Non-passive so the page doesn't scroll while zooming.
   useEffect(() => {
     const el = box.current;
     if (isNil(el)) return;
@@ -120,7 +115,7 @@ function ImageViewer({ src, alt }: { readonly src: string; readonly alt: string 
         className="absolute inset-0 cursor-grab touch-none overflow-hidden bg-soft outline-none select-none active:cursor-grabbing"
         role="img"
         aria-label={alt}
-        // biome-ignore lint/a11y/noNoninteractiveTabindex: the image takes focus for its keyboard zoom and pan
+        // biome-ignore lint/a11y/noNoninteractiveTabindex: focusable for keyboard zoom and pan
         tabIndex={0}
         onPointerDown={down}
         onPointerMove={move}
@@ -210,7 +205,6 @@ function save(url: string, name: string): void {
   link.click();
 }
 
-// Where the artifact's bytes come from: a file of the log's folder, or a page's synced copy.
 function useSource(artifact: IArtifact) {
   const { project, logId } = useLogContext();
   const listing = useQuery(logFilesQuery(logId, project));
@@ -225,8 +219,6 @@ function useSource(artifact: IArtifact) {
   };
 }
 
-// The editor's action row on an artifact tab: where it is, its size and age, Download, and for a
-// page's synced copy, Open the page (the live page, where it is edited).
 export function ArtifactBar({
   artifact,
   onOpenPage,

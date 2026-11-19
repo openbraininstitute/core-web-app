@@ -1,5 +1,3 @@
-// A figure: the image from the log's files, or the striped placeholder while it
-// is missing, with its caption and path below.
 import { useQuery } from '@tanstack/react-query';
 import { NodeViewWrapper } from '@tiptap/react';
 import { isNil, isNotNil } from 'es-toolkit';

@@ -1,6 +1,4 @@
-// The open log: one Tiptap editor on the page's Yjs document, shown in the
-// edit split or the read card. The editor never re-renders React on a keystroke
-// (shouldRerenderOnTransaction off); toolbars subscribe to the one store field they show.
+// The editor never re-renders React on a keystroke; toolbars subscribe to the one field they show.
 import { useHocuspocusProvider } from '@hocuspocus/provider-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEditor } from '@tiptap/react';
@@ -9,12 +7,11 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 
 import { PageKind } from '@/api/logbook/types';
 import { actorOfWriter, writersQuery } from '@/features/logbook/api/writers';
-import { Layout } from '@/features/logbook/app/layout';
+import { Layout } from '@/features/logbook/board/layout';
 import { personActor, resolveActor } from '@/features/logbook/collaboration/actors';
 import { usePauseWhenHidden } from '@/features/logbook/collaboration/idle';
 import { useRejoin } from '@/features/logbook/collaboration/rejoin';
 import { editorExtensions } from '@/features/logbook/editor/extensions';
-import { cn } from '@/features/logbook/lib/utils';
 import { EditorCard } from '@/features/logbook/log/EditorCard';
 import { EntityPicker } from '@/features/logbook/log/Menus';
 import { useNotifySettings } from '@/features/logbook/log/notify-settings';
@@ -24,6 +21,7 @@ import { AgentToast, Notice } from '@/features/logbook/log/Toasts';
 import { CARD_MENUS, Menu, MobileTab, RightTab, takeSeed } from '@/features/logbook/log/ui-state';
 import { ViewMode } from '@/features/logbook/log/view-mode';
 import { dragHandle } from '@/features/logbook/ui/drag';
+import { cn } from '@/utils/css-class';
 
 import type { Editor } from '@tiptap/react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
@@ -43,18 +41,16 @@ const NOTICE_MS = 3500;
 export interface ILogPageProps extends IPageViewProps {
   readonly notices: CollaborationNotices;
   readonly feed: ChangeFeed;
-  // The page's copy on this device; the provider runs on its document.
   readonly copy: LocalCopy;
-  // When this visit of the log began (ISO): where the saved activity ends and the live feed starts.
+  // When this visit began (ISO): saved activity ends here, the live feed starts.
   readonly openedAt: string;
 }
 
-// A shut pane: a narrow card with its name written down the side.
 const SHUT =
   'logbook-card flex w-[42px] flex-none justify-center border-0 px-0 py-5 transition-[background] duration-150 ease-[ease] hover:bg-soft';
 const SHUT_LABEL = 'label-caps [writing-mode:vertical-rl]';
 
-// The phone's Write tab shows no side pane; the others show the side pane's tab of the same name.
+// The phone's Write tab has no side pane; other tabs map to the pane tab of the same name.
 const RIGHT_TAB_OF_MOBILE: Readonly<Record<TMobileTab, TRightTab>> = {
   [MobileTab.Write]: RightTab.Preview,
   [MobileTab.Preview]: RightTab.Preview,
@@ -73,10 +69,10 @@ type TSplitShut = TValueOf<typeof SplitShut>;
 export function LogPage(props: ILogPageProps) {
   const { me, log, layout, mode, notices, feed, logId, copy } = props;
   const provider = useHocuspocusProvider();
-  // A tab hidden for a while lets go of its socket, so the server can unload the page (idle.ts).
+  // A tab hidden for a while drops its socket so the server can unload the page.
   usePauseWhenHidden(provider);
 
-  // A `saved` notice: the copy on this device is clean once the provider has nothing unsent.
+  // On `saved`, the local copy is clean once the provider has nothing unsent.
   useEffect(() => {
     let last = notices.snapshot().savedAt;
     return notices.subscribe(() => {
@@ -92,12 +88,10 @@ export function LogPage(props: ILogPageProps) {
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
 
-  // Who a Yjs client is: awareness links it to a user id, the server's list names that user.
-  // Hocuspocus always shares awareness unless told not to; this app never does.
+  // Awareness maps a Yjs client to a user id; the server's list names the user.
   const { awareness } = provider;
   if (isNil(awareness)) throw new Error('The live page has no awareness');
-  // Writers the server named for clients nobody here can name (History asks, learnWriters).
-  // Each client is asked once per view; a failed ask is forgotten, so the next one retries.
+  // Writers the server named for unknown clients; asked once per view, a failed ask retries.
   const queries = useQueryClient();
   const [written, setWritten] = useState<ReadonlyMap<number, IActor>>(() => new Map());
   const asked = useRef(new Set<number>());
@@ -138,7 +132,7 @@ export function LogPage(props: ILogPageProps) {
             awareness,
             peers: () => notices.snapshot().peers,
             agents: () => notices.snapshot().agents,
-            // The server's `writer` notice names a change as it lands; the writers API, later.
+            // `writer` notices name changes as they land; the writers API fills in the rest later.
             written: (id) => {
               const announced = notices.writerOf(id);
               return isNil(announced) ? written.get(id) : actorOfWriter(announced);
@@ -168,7 +162,7 @@ export function LogPage(props: ILogPageProps) {
     [provider]
   );
 
-  // A log this tab just created starts with its title as the first heading, on its main page only.
+  // A new log starts with its title as the first heading, main page only.
   const isMain = props.page.kind === PageKind.Main;
   useEffect(() => {
     const seed = (): void => {
@@ -186,10 +180,7 @@ export function LogPage(props: ILogPageProps) {
   }, [provider, editor, logId, log?.name, isMain]);
 
   const readOnly = useSyncExternalStore(notices.subscribe, () => notices.snapshot().readOnly);
-  // A join the busy server refused is tried again later (rejoin.ts). Meanwhile the editor is
-  // read-only: the provider would still send each change, the server holds at most 1000 messages
-  // of a socket not joined, and past that it resets the page's socket. The page stays shown from
-  // the copy on this device.
+  // Read-only until rejoined: the server resets a socket after 1000 messages sent before join.
   useRejoin(provider, notices);
   const rejoinAt = useSyncExternalStore(notices.subscribe, () => notices.snapshot().rejoinAt);
   useEffect(() => {
@@ -198,7 +189,6 @@ export function LogPage(props: ILogPageProps) {
     );
   }, [editor, mode, readOnly, rejoinAt, props.deleted]);
 
-  // --- view state ---
   const [menu, setMenu] = useState<TMenu>(Menu.None);
   const [split, setSplit] = useState(0.5);
   const [splitShut, setSplitShut] = useState<TSplitShut>(SplitShut.None);
@@ -207,8 +197,7 @@ export function LogPage(props: ILogPageProps) {
   const [selection, setSelection] = useState<ISelection | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const splitRef = useRef<HTMLDivElement>(null);
-  // The editor card's artifact tabs: the ids open, in the order opened, and the one shown (null:
-  // the log). Per open log: the view is keyed by log id.
+  // Open artifact tabs in the order opened, and the one shown (null: the log). Keyed per log.
   const [openTabs, setOpenTabs] = useState<readonly string[]>([]);
   const [activeTab, setActiveTab] = useState<string | null>(null);
   const openArtifact = useCallback((id: string): void => {
@@ -217,7 +206,7 @@ export function LogPage(props: ILogPageProps) {
     setMTab(MobileTab.Write);
     setSplitShut((shut) => (shut === SplitShut.Editor ? SplitShut.None : shut));
   }, []);
-  // The tab to its right takes its place, else the one to its left, else the log.
+  // The right neighbour takes its place, else the left, else the log.
   const closeArtifact = (id: string): void => {
     const at = openTabs.indexOf(id);
     const rest = openTabs.filter((tab) => tab !== id);
@@ -231,7 +220,7 @@ export function LogPage(props: ILogPageProps) {
     return () => clearTimeout(timer);
   }, [notice]);
 
-  // The selection, for History: set on a real selection, cleared when it collapses.
+  // For History: set on a real selection, cleared when it collapses.
   useEffect(() => {
     const onSelection = (): void => {
       const { from, to } = editor.state.selection;
@@ -251,7 +240,7 @@ export function LogPage(props: ILogPageProps) {
     setSplitShut(SplitShut.None);
   }, []);
 
-  // "Show" in the toast or the activity: tint the range now and put the caret there.
+  // "Show" from the toast or the activity.
   const flash = useCallback(
     (from: number, to: number): void => {
       setMenu(Menu.None);
@@ -382,11 +371,11 @@ export function LogPage(props: ILogPageProps) {
           />
         )}
         {bothOpen ? (
-          // biome-ignore lint/a11y/useSemanticElements: a pointer-dragged resize handle; <hr> takes no pointer events
+          // biome-ignore lint/a11y/useSemanticElements: resize handle; <hr> takes no pointer events
           <button
             type="button"
             className="group relative flex w-4 flex-none cursor-col-resize touch-none items-center justify-center border-0 bg-transparent p-0"
-            // biome-ignore lint/a11y/useAriaPropsForRole: pointer-only resize handle, it has no value to announce
+            // biome-ignore lint/a11y/useAriaPropsForRole: pointer-only handle, no value to announce
             role="separator"
             aria-label="Resize the editor and the side pane"
             onPointerDown={dragSplit}
@@ -419,7 +408,6 @@ export function LogPage(props: ILogPageProps) {
   );
 }
 
-// The props every card of the open log receives (EditorCard, SidePane, ReadCard).
 export interface ILogShared extends ILogPageProps {
   readonly editor: Editor;
   readonly meActor: IActor;

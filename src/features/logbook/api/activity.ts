@@ -1,8 +1,4 @@
-// The saved activity of a log (GET /v1/research/:id/activity): what each writer wrote and
-// removed, per page and minute, newest first, one page of 50 at a time. Read only while History
-// shows, and the next page only when its end scrolls in (infinite query, keyset cursor). Rows up
-// to the moment the log opened: what happens after comes from the live change feed (changes.ts),
-// so the two lists meet at the open.
+// Saved activity up to when the log opened; anything after comes from the live change feed.
 import { infiniteQueryOptions } from '@tanstack/react-query';
 import { isNotNil } from 'es-toolkit';
 
@@ -11,26 +7,24 @@ import { getResearchActivity } from '@/api/logbook/queries/research';
 import type { IActivityEntry } from '@/api/logbook/types';
 import type { IProject } from '@/features/logbook/auth/session';
 
-// Rows of one writer on one page, merged while they are at most GAP_MS apart: an hour of typing
-// is one line, not sixty.
+// One writer's rows on one page, merged while at most GAP_MS apart.
 export interface IActivityRun {
   readonly key: string;
   readonly pageId: string;
   readonly userId: string;
   readonly label: string;
   readonly via: string;
-  readonly from: number; // ms, the oldest minute
-  readonly to: number; // ms, the newest minute
+  readonly from: number;
+  readonly to: number;
   readonly inserted: number;
   readonly deleted: number;
-  readonly removed: string; // its rows' removed text, oldest first
+  readonly removed: string;
 }
 
 const GAP_MS = 5 * 60_000;
-// A run of many rows shows at most this much removed text: a glance, not the whole record.
 const RUN_REMOVED_MAX = 1000;
 
-// Older text first (runs are built newest first), a space between pieces.
+// Runs are built newest first, so older text goes in front.
 const joinRemoved = (older: string, newer: string): string =>
   (older.length === 0 || newer.length === 0 ? older + newer : `${older} ${newer}`).slice(
     0,
@@ -77,17 +71,14 @@ export function runsOf(entries: readonly IActivityEntry[]): IActivityRun[] {
 
 const n = (count: number): string => `${count} ${count === 1 ? 'character' : 'characters'}`;
 
-// "wrote 120 characters and removed 8": Yjs clocks, so a block or picture counts as one.
+// Counts are Yjs clocks, so a block or picture counts as one.
 export function summaryOf(run: Pick<IActivityRun, 'inserted' | 'deleted'>): string {
   if (run.deleted === 0) return `wrote ${n(run.inserted)}`;
   if (run.inserted === 0) return `removed ${n(run.deleted)}`;
   return `wrote ${n(run.inserted)} and removed ${run.deleted}`;
 }
 
-// `openedAt`: when this visit of the log began (ISO). A new visit is a new key, so it reads
-// again; within a visit the pages stay (closing and opening History fetches nothing).
-// Limit: rows of the minute the log opened may hold a few changes the live feed shows too (the
-// server counts per minute). Upgrade: finer rows, for a per-second boundary.
+// Limit: the opening minute may overlap the live feed. Upgrade: per-second rows.
 export const activityQuery = (project: IProject, logId: string, openedAt: string) =>
   infiniteQueryOptions({
     queryKey: ['activity', logId, openedAt],

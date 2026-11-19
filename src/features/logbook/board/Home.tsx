@@ -1,9 +1,6 @@
-// The first screen of a project: every research log as a card in a grid, with the same scope
-// filters, search and New as the rail. Opening a card shows the rail and the log. With no log yet
-// it shows what a research log is and how to start one.
 import { isNil, isNotNil } from 'es-toolkit';
 
-import { OrderButton } from '@/features/logbook/app/LogOrder';
+import { OrderButton } from '@/features/logbook/board/LogOrder';
 import {
   agoOf,
   LoadMore,
@@ -13,20 +10,19 @@ import {
   ScopeFilter,
   SearchField,
   SettingsButton,
-} from '@/features/logbook/app/Rail';
-import { cn } from '@/features/logbook/lib/utils';
+} from '@/features/logbook/board/Rail';
 import { Icon } from '@/features/logbook/ui/icons';
 import { PopoverAlign } from '@/features/logbook/ui/popover';
+import { cn } from '@/utils/css-class';
 
 import type { IResearchLog } from '@/api/entitycore/types/entities/research-log';
 import type { ILogOrder } from '@/features/logbook/api/research-logs';
-import type { IMore, IScope } from '@/features/logbook/app/Rail';
 import type { IProject } from '@/features/logbook/auth/session';
+import type { IMore, IScope } from '@/features/logbook/board/Rail';
 
 export interface IHomeProps {
-  // The logs EntityCore listed for the scope and search, in its order.
   readonly logs: readonly IResearchLog[];
-  // All the logs that match, loaded or not (EntityCore's total).
+  // All matches, loaded or not.
   readonly total: number;
   readonly more: IMore;
   readonly loading: boolean;
@@ -43,8 +39,6 @@ export interface IHomeProps {
   readonly onNew: () => void;
 }
 
-// A notebook with a recorded trace on its page and a spark beside it: a log that people and agents
-// write together. Drawn in the design's colours, so it follows the theme tokens.
 function LogbookArt() {
   return (
     <svg width="168" height="132" viewBox="0 0 168 132" fill="none" aria-hidden="true">
@@ -95,8 +89,7 @@ function LogCard({
   readonly onPick: (id: string) => void;
 }) {
   return (
-    // The card is the cell; the button that opens the log covers it (stretched-button pattern),
-    // so the avatar group's own +N button sits beside it, never inside it.
+    // A stretched button covers the card, so the +N button sits beside it, not inside.
     <article className="group relative flex min-h-[188px] flex-col rounded-2xl bg-white p-5 shadow-card transition-[box-shadow,translate] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-pop focus-within:shadow-pop">
       <button
         type="button"
@@ -132,8 +125,7 @@ function LogCard({
   );
 }
 
-// A card while it loads: the same box, padding and rows as LogCard (title, three lines of
-// description, then writers, creator and time over the rule), so nothing moves when logs come.
+// Same box and rows as LogCard, so nothing shifts when logs load.
 function LogCardSkeleton() {
   return (
     <div
@@ -169,7 +161,7 @@ const STATE = 'flex flex-1 flex-col items-center justify-center gap-3 px-6 py-12
 
 export function Home(props: IHomeProps) {
   const { logs, scope } = props;
-  // No log in the project at all (not a filter or a search with no match): the first-log screen.
+  // No logs at all, not just no match for a filter or search.
   const noLogs =
     !props.loading &&
     isNil(props.error) &&

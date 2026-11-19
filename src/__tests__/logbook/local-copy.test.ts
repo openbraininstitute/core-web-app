@@ -1,6 +1,3 @@
-// The page copy on this device and its sync, on fake-indexeddb, with the
-// server as an in-memory Yjs document per page behind the IPageDocs port. The same rules against
-// real tasks: apps/server/test/client/offline.test.ts.
 import 'fake-indexeddb/auto';
 
 import { isNil } from 'es-toolkit';
@@ -36,7 +33,6 @@ const textOf = (document: Y.Doc): string =>
     .map((node) => (node instanceof Y.XmlElement ? node.toArray().map(String).join('') : ''))
     .join('|');
 
-// A paragraph typed here: a local transaction, as Tiptap's edits are.
 function type(document: Y.Doc, s: string): void {
   document.transact(() => {
     const paragraph = new Y.XmlElement('paragraph');
@@ -53,7 +49,6 @@ const flagOf = async (userId: string, pageId = PAGE): Promise<unknown> => {
   return flag;
 };
 
-// A copy with `s` typed into it, closed (the tab is gone).
 async function typedCopy(userId: string, s: string, pageId = PAGE): Promise<void> {
   const copy = await LocalCopy.open(pageId, userId);
   type(copy.document, s);
@@ -62,7 +57,6 @@ async function typedCopy(userId: string, s: string, pageId = PAGE): Promise<void
 
 const SYNCED = { isSynced: true, hasUnsyncedChanges: false };
 
-// The server: one Yjs document per page; an unknown page is a 404.
 function fakeServer(pages: readonly string[] = [PAGE]) {
   const docs = new Map(pages.map((id) => [id, new Y.Doc()]));
   const sent: Uint8Array[] = [];
@@ -92,7 +86,7 @@ test('a local change marks the copy dirty; a change applied from elsewhere does 
   type(other, 'from the server');
   Y.applyUpdate(copy.document, Y.encodeStateAsUpdate(other));
   await copy.close();
-  expect(await flagOf(user)).toBe(0); // a new copy starts clean
+  expect(await flagOf(user)).toBe(0);
 
   await typedCopy(user, 'typed here');
   expect(await flagOf(user)).toBe(1);
@@ -164,7 +158,6 @@ test('a copy the server already has is read once and nothing is sent', async () 
   const server = fakeServer();
   const [result] = await syncCopies(server.port, user, { skip: new Set() });
   expect(result?.result).toBe(CopySync.Sent);
-  // Dirty again with nothing new: the flag only.
   const persistence = new IndexeddbPersistence(copyName(PAGE, user), new Y.Doc());
   await persistence.whenSynced;
   await persistence.set(DIRTY_KEY, 1);

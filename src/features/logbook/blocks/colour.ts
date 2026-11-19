@@ -1,5 +1,4 @@
-// A user always has the same colour on every screen: FNV-1a (32 bit) of the user id picks one of
-// the design's actor colours. All of them carry white initials and white text (WCAG AA on 14px).
+// Same colour for a user on every screen: FNV-1a of the user id picks one.
 const PALETTE = [
   '#1677c9',
   '#0f766e',

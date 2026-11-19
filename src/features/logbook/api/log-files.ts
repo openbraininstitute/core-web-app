@@ -1,9 +1,4 @@
-// The files of a research log, from EntityCore. Saved
-// files are objects inside one folder asset (label `research_log_files`), not asset rows: one read
-// of the log finds the folder, one listing names every file in it. Both are cached per log, so a
-// page with ten figures makes two calls, not ten. Uploads add to that folder and never replace a
-// file (EntityCore answers 409 for a name that exists): a page that points at a saved plot always
-// shows the same plot (provenance).
+// Log files live in one EntityCore folder asset; uploads only add, so a saved plot never changes.
 import { queryOptions } from '@tanstack/react-query';
 import { isNil, isNotNil, omit } from 'es-toolkit';
 
@@ -20,20 +15,19 @@ import type { TValueOf } from '@/api/logbook/types';
 import type { IProject } from '@/features/logbook/auth/session';
 
 export interface ILogFile {
-  readonly path: string; // the saved name, as EntityCore lists it
-  readonly localPath: string; // the saved name without its hash part
-  readonly name: string; // the last segment of localPath
+  readonly path: string;
+  readonly localPath: string; // saved name without the hash part
+  readonly name: string;
   readonly size: number;
   readonly lastModified: string;
 }
 
-// The markdown copy of one page, written by the logbook server's EntityCore sync (an asset row,
-// not a file of the folder). Read-only here: the page itself is where it is edited.
+// A page's markdown copy written by the server's EntityCore sync; read-only here.
 export interface ILogDocument {
   readonly assetId: string;
   readonly path: string;
-  readonly title: string; // the page's title when the sync last wrote it, else the file name
-  readonly pageId: string | null; // the page it copies, from the sync's meta
+  readonly title: string;
+  readonly pageId: string | null;
   readonly size: number;
 }
 
@@ -45,15 +39,11 @@ export interface ILogFiles {
 
 const FILES_LABEL = 'research_log_files';
 const DOCUMENT_LABEL = 'research_log_document';
-// The keys of a document's `meta` that hold its page's title and id (set by the sync).
 const PAGE_TITLE = 'logbook_page_title';
 const PAGE_ID = 'logbook_page_id';
 
 export const MARKDOWN = /\.(md|markdown)$/i;
 
-// What EntityCore stores with a content type of its own (entitycore app/db/types.py,
-// CONTENT_TYPE_TO_SUFFIX), for the file chooser. The folder itself takes any file.
-// What an artifact opens as in its tab.
 export const ArtifactKind = {
   Image: 'image',
   Markdown: 'markdown',
@@ -64,8 +54,6 @@ export const ArtifactKind = {
 } as const;
 export type TArtifactKind = TValueOf<typeof ArtifactKind>;
 
-// Read as text (code or plain): scripts, notebooks, configs and the text formats of neuroscience
-// (NEURON .mod and .hoc, SWC and ASC morphologies).
 const TEXT =
   /\.(py|sh|bash|json|ipynb|ya?ml|toml|js|mjs|ts|r|jl|m|txt|log|mod|hoc|swc|asc|cfg|ini|xml)$/i;
 
@@ -82,23 +70,20 @@ export const kindOf = (name: string): TArtifactKind =>
             ? ArtifactKind.Code
             : ArtifactKind.Other;
 
-// One thing the log keeps in EntityCore: a file of its folder, or its published document. Listed
-// from the folder's listing (names, sizes, times), never downloaded until its tab opens.
 export interface IArtifact {
-  readonly id: string; // the saved path, or `document:<asset id>`
+  readonly id: string;
   readonly name: string;
-  readonly where: string; // the folder ('plots'), or 'synced' for a page's copy
+  readonly where: string; // folder, or 'synced' for a page's copy
   readonly size: number;
-  readonly savedAt: string | null; // when EntityCore stored it (files are add-only: created)
+  readonly savedAt: string | null;
   readonly kind: TArtifactKind;
-  readonly path: string | null; // a file of the folder
-  readonly assetId: string | null; // a page's synced copy
-  readonly pageId: string | null; // the page a synced copy copies
+  readonly path: string | null;
+  readonly assetId: string | null;
+  readonly pageId: string | null;
 }
 
 const folderOf = (localPath: string): string => localPath.split('/').slice(0, -1).join('/');
 
-// The pages' synced copies first, then the files, newest first.
 export function artifactsOf(data: ILogFiles): IArtifact[] {
   const documents = data.documents.map((document) => ({
     id: `document:${document.assetId}`,
@@ -127,20 +112,17 @@ export function artifactsOf(data: ILogFiles): IArtifact[] {
   return [...documents, ...files];
 }
 
-// The search of the Artifacts tab, on the listing already in memory: no request per keystroke.
-// By name only: the list shows no folder, so a match must be on what people can see.
+// Name only: the list shows no folder, so match only what people can see.
 export function searchArtifacts(artifacts: readonly IArtifact[], query: string): IArtifact[] {
   const needle = query.trim().toLowerCase();
   if (needle.length === 0) return [...artifacts];
   return artifacts.filter((a) => a.name.toLowerCase().includes(needle));
 }
 
-// One chooser for pictures and files: a picture becomes a figure, any other file a file card.
 export const UPLOAD_ACCEPT =
   '.png,.jpg,.jpeg,.webp,.gif,.svg,.json,.swc,.nrrd,.obj,.hoc,.asc,.abf,.nwb,.h5,.txt,.mod,.pdf,.glb,.gz,.gzip,.tgz,.ipynb,.zip,.md,.markdown,.csv,.py,.sh';
 
-// `<stem>.<first 12 hex of the SHA-256>.<extension>`. A name
-// saved before that rule has no hash part and is its own local name.
+// `<stem>.<first 12 hex of the SHA-256>.<ext>`; older names have no hash part.
 const HASHED = /^(.+)\.[0-9a-f]{12}(\.[^./]+)?$/;
 
 export function shortPathOf(path: string): string {
@@ -161,7 +143,7 @@ export const toLogFiles = (listing: DirectoryListContent): ILogFile[] =>
     };
   });
 
-// The file a page points at: the exact saved name, else the newest file with that local name.
+// Exact saved name, else the newest file with that local name.
 export function findLogFile(files: readonly ILogFile[], src: string): ILogFile | null {
   const exact = files.find((file) => file.path === src);
   if (isNotNil(exact)) return exact;
@@ -173,7 +155,6 @@ export function findLogFile(files: readonly ILogFile[], src: string): ILogFile |
   );
 }
 
-// The pages' synced copies among a log's assets, named by their page's title.
 export const documentsOf = (assets: readonly IResearchLogAsset[]): ILogDocument[] =>
   assets
     .filter((a) => a.label === DOCUMENT_LABEL && !a.is_directory)
@@ -218,7 +199,6 @@ export const logFilesQuery = (logId: string, project: IProject) =>
     staleTime: 30_000,
   });
 
-// One asset of the log, as the raw answer: a file inside the folder (`path`), or a whole asset.
 const downloadLogAsset = (
   logId: string,
   assetId: string,
@@ -236,7 +216,7 @@ const downloadLogAsset = (
     signal,
   });
 
-// A saved file never changes (add-only), so its bytes are read once per tab.
+// Files are add-only, so read once per tab.
 export const fileTextQuery = (logId: string, folderId: string, path: string, project: IProject) =>
   queryOptions({
     queryKey: ['file-text', logId, path],
@@ -245,16 +225,14 @@ export const fileTextQuery = (logId: string, folderId: string, path: string, pro
     staleTime: Number.POSITIVE_INFINITY,
   });
 
-// The published document is replaced in place at each Publish: read it fresh each time it shows.
+// Publish replaces the document in place, so always read it fresh.
 export const documentTextQuery = (logId: string, assetId: string, project: IProject) =>
   queryOptions({
     queryKey: ['document-text', logId, assetId],
     queryFn: async ({ signal }) => (await downloadLogAsset(logId, assetId, project, signal)).text(),
   });
 
-// An image as an object URL: the download needs the bearer token, an <img src> cannot send it.
-// Limit: the URL is never revoked (a few images per log, freed with the tab). Upgrade: revoke it
-// on gc, if logs ever hold hundreds of figures.
+// <img src> can't send the token. Limit: URL never revoked. Upgrade: revoke on gc.
 export const fileBlobQuery = (logId: string, folderId: string, path: string, project: IProject) =>
   queryOptions({
     queryKey: ['file-blob', logId, path],
@@ -266,8 +244,7 @@ export const fileBlobQuery = (logId: string, folderId: string, path: string, pro
     gcTime: 5 * 60_000,
   });
 
-// The headers a browser may set on the PUT. Content-Length is a forbidden header in fetch: the
-// browser sends it itself, from the body, so it is left out here.
+// fetch forbids setting Content-Length; the browser adds it.
 export const putHeadersOf = (
   signed: Readonly<Record<string, string>>
 ): Readonly<Record<string, string>> => omit(signed, ['Content-Length']);
@@ -277,8 +254,7 @@ export async function sha256Hex(bytes: ArrayBuffer): Promise<string> {
   return [...digest].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-// The largest upload (VITE_UPLOAD_MAX_MB). The whole file is read into memory once to hash it
-// (crypto.subtle has no streaming digest), so the limit is checked on file.size, before reading.
+// The whole file is hashed in memory (no streaming digest), so check size before reading.
 export const UPLOAD_MAX_BYTES = Number(settings.upload.maxMb) * 1024 * 1024;
 
 export const isTooLarge = (size: number, max = UPLOAD_MAX_BYTES): boolean => size > max;
@@ -289,19 +265,13 @@ export interface IPlannedFile {
   readonly sha256: string;
 }
 
-// The saved name a file will get: known before the upload, so the block that shows it can go into
-// the page at once and show "uploading" until the file is listed. The file is read and hashed once
-// here; the upload sends the same hash, so the name and S3's checksum always agree, even if the
-// file changes on disk after this read (S3 then refuses the new bytes with BadDigest).
+// Hash once here and reuse it for the upload, so the name and S3's checksum always match.
 export async function planFile(file: File): Promise<IPlannedFile> {
   const sha256 = await sha256Hex(await file.arrayBuffer());
   return { path: savedNameOf(file.name, sha256), size: file.size, sha256 };
 }
 
-// Upload one file to the log (planFile first). The logbook server finds or makes the log's files
-// folder and signs a PUT for these bytes under their name; the bytes go straight to S3, with no
-// token. Idempotent: the name carries the content hash, so a file saved already (upload null, or a
-// 412 from S3 when it was saved in between) is done. Safe to call again after any failure.
+// Idempotent: the name carries the hash, so null upload or a 412 means it's already saved.
 export async function uploadLogFile(
   logId: string,
   project: IProject,
@@ -313,8 +283,7 @@ export async function uploadLogFile(
     context: project,
     file: { name: file.name, size: planned.size, sha256: planned.sha256 },
   });
-  // The server and planFile share one naming rule (savedNameOf): a different name means the two
-  // are out of step, and the block in the page would point at a file that never arrives.
+  // A different name means server and client naming drifted; the block would never resolve.
   if (answer.path !== planned.path)
     throw new Error(`The server saved ${file.name} as ${answer.path}, not ${planned.path}`);
   if (isNil(answer.upload)) return;

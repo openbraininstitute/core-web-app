@@ -1,14 +1,10 @@
-// The Artifacts tab of the side pane: everything the log keeps in EntityCore (its folder's files
-// and its pages' synced copies) as one list of cards, newest first, with a search on top. It reads
-// the listing only (names, sizes, times), shared with the page's figures and file cards
-// (logFilesQuery): no file is downloaded until its tab opens in the editor, and the search filters
-// that listing in memory.
+// Reads the listing only: nothing downloads until its tab opens, and search filters in memory.
 import { useQuery } from '@tanstack/react-query';
 import { isNil } from 'es-toolkit';
 import { useDeferredValue, useMemo, useState } from 'react';
 
 import { artifactsOf, logFilesQuery, searchArtifacts } from '@/features/logbook/api/log-files';
-import { agoOf, SearchField } from '@/features/logbook/app/Rail';
+import { agoOf, SearchField } from '@/features/logbook/board/Rail';
 import { sizeOf } from '@/features/logbook/editor/blocks/FileView';
 import { ArtifactIcon } from '@/features/logbook/log/ArtifactIcon';
 import { savedOf } from '@/features/logbook/log/ArtifactView';
@@ -40,7 +36,6 @@ function ArtifactCard({
         <ArtifactIcon artifact={artifact} size={40} />
         <span className="flex min-w-0 flex-1 flex-col gap-1">
           <span className="truncate text-[14px] font-semibold text-primary-9">{artifact.name}</span>
-          {/* The name, the size and when it was saved: nothing else (owner, 2026-11-15). */}
           <span className="flex min-w-0 items-center gap-2 text-[12px] text-neutral-4">
             <span className="flex-none tabular-nums">{sizeOf(artifact.size)}</span>
             {isNil(artifact.savedAt) ? null : (
@@ -54,7 +49,6 @@ function ArtifactCard({
             )}
           </span>
         </span>
-        {/* The card is the button; this round mark shows it opens, and fills on hover. */}
         <span
           className="grid size-8 flex-none place-items-center rounded-full bg-soft text-primary-9 transition-[background-color,color] duration-150 ease-[ease] group-hover:bg-primary-9 group-hover:text-white group-aria-[current=true]:bg-primary-9 group-aria-[current=true]:text-white"
           aria-hidden="true"

@@ -25,7 +25,7 @@ const ORIGIN: Record<TooltipSide, string> = {
   right: 'left center',
 };
 
-/** Position is geometry, not animation. One write per frame, never a spring chasing a pointer. */
+/** One write per frame, never a spring chasing the pointer. */
 export function useTooltipPosition({
   open,
   anchor,
@@ -80,7 +80,7 @@ export function useTooltipPosition({
   const pointX = anchorPoint?.x;
   const pointY = anchorPoint?.y;
 
-  // Latest committed inputs are read without recreating observers for every period/content update.
+  // Read the latest inputs without recreating observers.
   useLayoutEffect(() => {
     update.current = () => {
       const floating = floatingRef.current;
@@ -108,14 +108,12 @@ export function useTooltipPosition({
           flip({ padding: 8 }),
           shift({ padding: 8 }),
           ...(arrowElement ? [arrowMiddleware({ element: arrowElement, padding: 10 })] : []),
-          // A label left floating over whatever scrolled into its trigger's place
-          // describes nothing there. Points inside a chart move with the chart.
+          // Hide once the trigger scrolls away; chart points move with the chart.
           ...(virtual ? [] : [hide({ strategy: 'referenceHidden' })]),
         ],
       }).then(({ x, y, placement, middlewareData }) => {
         if (version.current !== revision || !floating.isConnected) return;
-        // Hold the chosen side for this hover session. Crossing a flip threshold
-        // repeatedly must not bounce the surface above and below the pointer.
+        // Keep the side for this hover so it doesn't bounce across the flip line.
         if (currentCursor) cursorSide.current = placement;
         else cursorSide.current = null;
         const placedSide = placement.split('-')[0] as TooltipSide;
@@ -134,8 +132,7 @@ export function useTooltipPosition({
           const { x: ax, y: ay } = middlewareData.arrow ?? {};
           if (ax != null) arrowElement.style.left = `${ax - surface.clientLeft}px`;
           if (ay != null) arrowElement.style.top = `${ay - surface.clientTop}px`;
-          // Paint with whatever the surface resolved to, so a restyled tooltip
-          // keeps a matching arrow without a second set of classes.
+          // Copy the surface's resolved colours so a restyled tooltip keeps a matching arrow.
           const style = getComputedStyle(surface);
           arrowElement.style.setProperty('--tooltip-arrow-fill', style.backgroundColor);
           arrowElement.style.setProperty('--tooltip-arrow-stroke', style.borderTopColor);
@@ -164,7 +161,7 @@ export function useTooltipPosition({
     if (!open || !anchor || !floating) return;
     const stop = autoUpdate(anchor, floating, schedule);
     const onScroll = () => {
-      // A stationary pointer no longer describes the same chart point after scrolling.
+      // After a scroll, a still pointer no longer points at the same chart spot.
       if (followCursor && cursor.current) onDismiss();
     };
     window.addEventListener('scroll', onScroll, true);

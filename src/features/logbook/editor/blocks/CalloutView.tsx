@@ -1,4 +1,3 @@
-// A note, tip or caveat: icon and label, the editable text below.
 import { NodeViewContent, NodeViewWrapper } from '@tiptap/react';
 
 import { calloutKindOf, calloutLooks } from '@/features/logbook/blocks/kinds';

@@ -1,22 +1,12 @@
-// The order of the list of logs: a button in the search box, and a small menu to pick the field
-// (last updated, date created, name: the ones EntityCore orders research logs by) and the
-// direction. EntityCore orders; the browser only says how (order_by).
-//
-// The menu: one row per field, its icon in a round white chip. The chosen row is lit (a soft
-// highlight that slides to it: motion layoutId, shared element transition), its chip turns navy,
-// it says the direction in words, and only it carries the direction switch (two arrows). One
-// glance answers "sorted by what, which way". Radios underneath, so the keyboard and screen
-// readers get two plain radio groups.
-
 import { isNil } from 'es-toolkit';
 import { motion, useReducedMotion } from 'motion/react';
 import { useId } from 'react';
 
 import { DEFAULT_ORDER, LogOrderField, OrderDirection } from '@/features/logbook/api/research-logs';
 import { EASE_OUT, SPRING_LAYOUT } from '@/features/logbook/lib/ease';
-import { cn } from '@/features/logbook/lib/utils';
 import { Icon } from '@/features/logbook/ui/icons';
 import { PopoverAlign, PopoverLayer, useAnchoredPopover } from '@/features/logbook/ui/popover';
+import { cn } from '@/utils/css-class';
 
 import type {
   ILogOrder,
@@ -42,7 +32,7 @@ const DIRECTIONS: readonly { readonly direction: TOrderDirection; readonly icon:
   { direction: OrderDirection.Descending, icon: 'arrowDown' },
 ];
 
-// What a direction means for a field, in words: "A to Z" for a name, "Newest first" for a date.
+// "A to Z" for a name, "Newest first" for a date.
 export function directionLabelOf(field: TLogOrderField, direction: TOrderDirection): string {
   const up = direction === OrderDirection.Ascending;
   if (field === LogOrderField.Name) return up ? 'A to Z' : 'Z to A';
@@ -55,7 +45,7 @@ const fieldLabelOf = (field: TLogOrderField): string =>
 const isDefault = (order: ILogOrder): boolean =>
   order.field === DEFAULT_ORDER.field && order.direction === DEFAULT_ORDER.direction;
 
-// The two arrows of the chosen row: which way it sorts. The lit arrow sits on a white dot.
+// The chosen row's direction arrows; the lit one sits on a white dot.
 function DirectionSwitch({
   order,
   name,
@@ -106,7 +96,6 @@ export function OrderButton({
 }) {
   const { at, open, toggle, close } = useAnchoredPopover(WIDTH, PopoverAlign.End);
   const reduce = useReducedMotion();
-  // One name per menu for the radio groups and the sliding highlight.
   const id = useId();
   const summary = `${fieldLabelOf(order.field)}, ${directionLabelOf(order.field, order.direction).toLowerCase()}`;
   return (
@@ -118,11 +107,11 @@ export function OrderButton({
         title={`Sorted by ${summary}`}
         aria-haspopup="dialog"
         aria-expanded={open}
-        // Lined up with the right edge of the whole search box, not the small button.
+        // Line up with the whole search box, not the small button.
         onClick={(event) => toggle(event, event.currentTarget.closest('label'))}
       >
         <Icon name="sort" size={15} stroke={2} />
-        {/* Not the usual order: a dot says so, as on a filter that is on. */}
+        {/* A dot marks a non-default order. */}
         {isDefault(order) ? null : (
           <span className="absolute top-0.5 right-0.5 size-2 rounded-full bg-primary-6 ring-2 ring-neutral-1" />
         )}

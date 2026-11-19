@@ -1,6 +1,4 @@
-// The custom blocks of a research log, as Tiptap nodes with their markdown form.
-// Headless: no React, no DOM. The web app adds its node views on top (Node.extend), so agents,
-// the server and the browser parse and write exactly the same markdown.
+// Headless (no React, no DOM) so agents, server and browser write the same markdown.
 import { Node } from '@tiptap/core';
 import { isNil } from 'es-toolkit';
 import get from 'es-toolkit/compat/get';
@@ -25,7 +23,7 @@ const startOf =
   (src: string): number =>
     src.indexOf(marker);
 
-// One whole line, `::name[label]{attributes}` (the leaf-directive form agents already write).
+// One whole line: `::name[label]{attributes}`.
 function directiveTokenizer(name: string): MarkdownTokenizer {
   const line = new RegExp(`^::${name}\\[([^\\]\\n]*)\\]\\{([^}\\n]*)\\}[ \\t]*(?:\\n|$)`);
   return {
@@ -160,7 +158,7 @@ export const Figure = Node.create({
   renderMarkdown: (node) => `![${node.attrs?.['alt'] ?? ''}](${node.attrs?.['src'] ?? ''})`,
 });
 
-// A callout: `> [!NOTE] text`, `[!TIP]`, `[!WARNING]` (GitHub's alert form, one line).
+// A callout: `> [!NOTE] text` (GitHub alert form, one line).
 const CALLOUT_LINE = /^>[ \t]*\[!(\w+)\][ \t]*([^\n]*)(?:\n|$)/;
 export const Callout = Node.create({
   name: 'callout',

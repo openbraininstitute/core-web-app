@@ -1,8 +1,4 @@
-// A file from this computer into the open page (Insert, "From your computer"). The saved name is
-// known before the upload (it carries the content hash), so the figure or file card goes into the
-// page at once (this tab shows "Uploading…", other screens the placeholder) and fills in when the
-// file is listed. A failed upload takes its own block out again and says why: no block it made
-// points at a file that never arrived.
+// The block goes in before the upload (the name is the content hash); a failure removes it.
 import { isNil, isNotNil } from 'es-toolkit';
 import { useSyncExternalStore } from 'react';
 
@@ -21,7 +17,7 @@ import type { Node as PmNode } from '@tiptap/pm/model';
 import type { Editor } from '@tiptap/react';
 import type { IProject } from '@/features/logbook/auth/session';
 
-// The saved names uploading from this tab (observer pattern: blocks subscribe to one name).
+// Saved names uploading from this tab; blocks subscribe to one name.
 const uploading = new Set<string>();
 const listeners = new Set<() => void>();
 const changed = (): void => {
@@ -38,16 +34,13 @@ export const useUploading = (path: string): boolean =>
 const pointsAt = (node: PmNode, path: string): boolean =>
   node.attrs['src'] === path || node.attrs['path'] === path;
 
-// The id of the block an upload just put at `pos`, as UniqueID stamped it in the same dispatch
-// (it may move a given id to a neighbour, so the id is read back, never chosen). Null when the
-// block there is not the upload's: nothing is ever removed then.
+// UniqueID may move ids, so read it back; null means not ours, so nothing gets removed.
 export function insertedBlockId(doc: PmNode, pos: number, path: string): string | null {
   const node = doc.nodeAt(pos);
   const id: unknown = node?.attrs['id'];
   return isNotNil(node) && pointsAt(node, path) && typeof id === 'string' ? id : null;
 }
 
-// Where the top-level block with this id is now; null when it is gone (removed or never there).
 export function blockRange(doc: PmNode, id: string): { from: number; to: number } | null {
   let found: { from: number; to: number } | null = null;
   doc.forEach((node, offset) => {
@@ -57,8 +50,7 @@ export function blockRange(doc: PmNode, id: string): { from: number; to: number 
   return found;
 }
 
-// The block this upload inserted, and only it: the same file elsewhere in the page (same bytes,
-// same saved name) stays.
+// Only the block this upload inserted; the same file elsewhere stays.
 function removeBlock(editor: Editor, id: string): void {
   if (editor.isDestroyed) return;
   const range = blockRange(editor.state.doc, id);
@@ -76,7 +68,7 @@ export interface IUploadTarget {
 
 export async function uploadIntoPage(target: IUploadTarget, file: File): Promise<void> {
   const { editor, logId, project, client, notify } = target;
-  // Checked on file.size, before the file is read: a refused file never goes into memory.
+  // Checked on file.size before reading, so a refused file never hits memory.
   if (isTooLarge(file.size)) {
     notify(`${file.name} was not uploaded: it is larger than ${settings.upload.maxMb} MB`);
     return;
@@ -85,7 +77,7 @@ export async function uploadIntoPage(target: IUploadTarget, file: File): Promise
   try {
     planned = await planFile(file);
   } catch (error) {
-    // Unreadable file (moved, no permission) or out of memory: nothing was inserted yet.
+    // Unreadable or out of memory: nothing inserted yet.
     notify(`${file.name} was not uploaded: ${error instanceof Error ? error.message : 'error'}`);
     return;
   }
@@ -113,7 +105,7 @@ export async function uploadIntoPage(target: IUploadTarget, file: File): Promise
   }
 }
 
-// Limit: one file at a time, in order. Upgrade: parallel uploads, if people drop many at once.
+// Limit: one file at a time. Upgrade: parallel uploads.
 export async function uploadFiles(target: IUploadTarget, files: FileList | null): Promise<void> {
   if (isNil(files)) return;
   for (const file of files) await uploadIntoPage(target, file);

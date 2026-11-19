@@ -1,13 +1,12 @@
-// The agent toast and the notice.
 import { isNil } from 'es-toolkit';
 import { useRef, useState, useSyncExternalStore } from 'react';
 
-import { SettingsButton } from '@/features/logbook/app/Rail';
-import { cn } from '@/features/logbook/lib/utils';
+import { SettingsButton } from '@/features/logbook/board/Rail';
 import { ToastSource } from '@/features/logbook/log/notify-settings';
 import { Icon } from '@/features/logbook/ui/icons';
 import { PopoverAlign, PopoverSide } from '@/features/logbook/ui/popover';
 import { useNow } from '@/features/logbook/ui/useNow';
+import { cn } from '@/utils/css-class';
 
 import type { IMe } from '@/features/logbook/auth/session';
 import type { ChangeFeed, IChange } from '@/features/logbook/collaboration/changes';
@@ -15,11 +14,8 @@ import type { INotifySettings } from '@/features/logbook/log/notify-settings';
 
 const TOAST_MS = 7000;
 
-// Both float centred above the bottom edge; a narrow screen only shrinks them.
-// - The agent toast has one width (TOAST_WIDTH), so it does not jump as each change replaces the
-//   last; inside it only the summary is cut: who, when and the buttons always show.
-// - The notice is as wide as its words.
-// The keyframes move `transform`, so the centring is a transform too, not Tailwind's `translate`.
+// Fixed toast width so it doesn't jump between changes; the notice fits its words.
+// The keyframes move `transform`, so centring is a transform too, not Tailwind's `translate`.
 const FLOATING =
   'absolute bottom-5 left-1/2 flex max-w-[min(640px,calc(100%-32px))] animate-pop items-center rounded-full text-[14px] text-white [transform:translateX(-50%)] data-[narrow=true]:bottom-3 data-[narrow=true]:max-w-[min(640px,calc(100%-16px))]';
 const TOAST_WIDTH = 'w-[560px]';
@@ -35,14 +31,13 @@ export interface IAgentToastProps {
 export function AgentToast({ feed, settings, me, narrow, onShow }: IAgentToastProps) {
   const toast = useSyncExternalStore(feed.subscribe, () => feed.snapshot().toast);
   const now = useNow();
-  // Its settings open from its bell, anchored to it: while they are open the toast stays, even
-  // past its time or when they turn its messages off, so the panel never loses its anchor.
+  // While its settings are open the toast stays, so the panel keeps its anchor.
   const [settingsOpen, setSettingsOpen] = useState(false);
   const bar = useRef<HTMLDivElement>(null);
   if (isNil(toast)) return null;
   if (!settingsOpen) {
     if (!settings.toasts || now - toast.at > TOAST_MS) return null;
-    // "Only my agents": an agent signed in as this person (its user id is theirs).
+    // "Only my agents": an agent signed in as this person.
     if (settings.from === ToastSource.Mine && toast.actor.key !== me.userId) return null;
   }
   const ago = now - toast.at < 5000 ? 'just now' : `${Math.round((now - toast.at) / 1000)}s ago`;

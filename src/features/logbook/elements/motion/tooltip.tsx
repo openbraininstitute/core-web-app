@@ -23,10 +23,10 @@ import {
 import { createPortal } from 'react-dom';
 
 import { TooltipSurface } from '@/features/logbook/elements/motion/tooltip-surface';
-import { useDismiss } from '@/features/logbook/lib/hooks/use-dismiss';
-import { useHoverGesture } from '@/features/logbook/lib/hooks/use-hover-gesture';
-import { useTapGesture } from '@/features/logbook/lib/hooks/use-tap-gesture';
-import { cn } from '@/features/logbook/lib/utils';
+import { useDismiss } from '@/hooks/use-dismiss';
+import { useHoverGesture } from '@/hooks/use-hover-gesture';
+import { useTapGesture } from '@/hooks/use-tap-gesture';
+import { cn } from '@/utils/css-class';
 
 import { focusFromKeyboard, graceArea, inBox, inPolygon, watchModality } from './tooltip/grace';
 import { TooltipArrow, TooltipPositioner } from './tooltip/positioner';
@@ -40,16 +40,10 @@ import {
 
 export type { TooltipAlign, TooltipSide };
 
-/* -------------------------------------------------------------------------- */
-/* Provider                                                                   */
-/* -------------------------------------------------------------------------- */
-
 interface TooltipTiming {
-  /** Delay before a hover opens a tooltip (ms). */
   delay: number;
-  /** Delay before a tooltip closes once the pointer has left it (ms). */
   closeDelay: number;
-  /** After one tooltip closes, others open instantly for this long (ms). */
+  /** After one closes, others open instantly for this long (ms). */
   skipDelay: number;
 }
 
@@ -59,7 +53,7 @@ export interface TooltipProviderProps extends Partial<TooltipTiming> {
   children: ReactNode;
 }
 
-/** Shared timing for every tooltip inside it. Optional: tooltips work without one. */
+/** Shared timing for tooltips inside it; optional. */
 export function TooltipProvider({ children, ...timing }: TooltipProviderProps) {
   const parent = useContext(TimingContext);
   const {
@@ -71,13 +65,7 @@ export function TooltipProvider({ children, ...timing }: TooltipProviderProps) {
   return <TimingContext.Provider value={value}>{children}</TimingContext.Provider>;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Root                                                                       */
-/* -------------------------------------------------------------------------- */
-
-// Moving along a toolbar should feel instant after the first label, and only
-// one label may show at a time: a keyboard-focused control and a hovered one
-// would otherwise both claim the screen.
+// One label at a time; after one closes, the next opens instantly.
 let lastClosedAt = 0;
 let current: { close: () => void } | null = null;
 
@@ -93,7 +81,7 @@ interface TooltipContextValue {
   empty: boolean;
   followCursor: boolean;
   anchor: TooltipAnchor | null;
-  /** True when a TooltipTrigger owns the anchor; false for an external `anchorRef`. */
+  /** False when the anchor is an external `anchorRef`. */
   triggered: boolean;
   floatingRef: RefObject<HTMLSpanElement | null>;
   pointer: ReturnType<typeof useTooltipPointer>;
@@ -117,22 +105,17 @@ export interface TooltipRootProps {
   open?: boolean;
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
-  /** Delay before showing on hover (ms). Keyboard focus shows immediately. */
+  /** Hover delay (ms); keyboard focus shows at once. */
   delay?: number;
-  /** Delay before hiding once the pointer has left (ms). */
   closeDelay?: number;
-  /** Never show, e.g. while the label it carries is already visible. */
   disabled?: boolean;
-  /**
-   * Use the tooltip as the trigger's accessible name rather than its
-   * description. For icon-only controls whose only label is the tooltip.
-   */
+  /** Name the trigger instead of describing it, for icon-only controls. */
   asLabel?: boolean;
-  /** Follow real pointer coordinates; keyboard focus still uses the anchor. */
+  /** Keyboard focus still uses the anchor. */
   followCursor?: boolean;
-  /** Existing anchor for controlled integrations such as chart cells. */
+  /** External anchor, e.g. chart cells. */
   anchorRef?: RefObject<TooltipAnchor | null>;
-  /** Id of the tooltip surface, for anchors that reference it themselves. */
+  /** Surface id, for anchors that point at it themselves. */
   id?: string;
 }
 
@@ -166,14 +149,14 @@ function TooltipRoot({
   const anchorObject = useRef<TooltipAnchor | null>(null);
   const pointer = useTooltipPointer(anchor, followCursor);
 
-  // An external ref can attach after this component renders; read it once it has.
+  // An external ref can attach after render; pick it up once it has.
   useLayoutEffect(() => {
     if (!anchorRef) return;
     const element = anchorRef.current ?? null;
     if (element !== external) setExternal(element);
   });
 
-  // Everything the event listeners read, current without re-binding them.
+  // Read by listeners without re-binding them.
   const latest = useRef({
     open,
     delay,
@@ -213,8 +196,7 @@ function TooltipRoot({
     grace.current = null;
   }, []);
 
-  // Only a real change reaches the consumer: a pointer leaving a closed
-  // tooltip is not news.
+  // Only a real change reaches the consumer.
   const commit = useCallback((next: boolean) => {
     if (latest.current.open === next) return;
     if (!latest.current.controlled) setUncontrolledOpen(next);
@@ -278,14 +260,11 @@ function TooltipRoot({
   const hover = useHoverGesture();
   const tap = useTapGesture<boolean>();
 
-  // Listeners go on the trigger itself rather than on cloned props, so a
-  // component that owns its own handlers keeps them, and no wrapper element
-  // sits between the control and its layout.
+  // Listen on the trigger itself so its own handlers stay and no wrapper is added.
   useEffect(() => {
     if (anchorRef || !trigger) return;
     watchModality();
-    // A mouse press dismisses the label and keeps it away until the pointer
-    // leaves; hovering a control you just clicked should not bring it back.
+    // A mouse press hides the label until the pointer leaves.
     let suppressed = false;
     // Focus that came from the keyboard holds the label open on its own.
     let keyboardFocus = false;
@@ -315,10 +294,7 @@ function TooltipRoot({
         close();
       }
     };
-    // A finger never hovers, and Safari does not focus a button on tap either,
-    // so the label is only reachable if the tap itself toggles it. The click
-    // carries no pointerType; the pointerdown before it says whether it was a
-    // tap, and keyboard activation has none at all.
+    // Touch never hovers and Safari won't focus on tap, so a tap toggles the label.
     const onClick = () => {
       const gesture = tap.take();
       if (!gesture || gesture.pointerType === 'mouse') return;
@@ -337,7 +313,6 @@ function TooltipRoot({
       close();
     };
 
-    // Both element kinds dispatch the same events; one type keeps the listeners typed.
     const el = trigger as HTMLElement;
     el.addEventListener('pointerenter', onEnter);
     el.addEventListener('pointerleave', onLeave);
@@ -372,8 +347,7 @@ function TooltipRoot({
     startGrace,
   ]);
 
-  // While open, a trigger that turns disabled loses focus without a blur event,
-  // and a window that loses focus never reports the pointer leaving.
+  // A trigger turning disabled never blurs, and a blurred window never reports leave.
   useEffect(() => {
     if (!open || anchorRef || !trigger) return;
     const observer = new MutationObserver(() => {
@@ -387,8 +361,7 @@ function TooltipRoot({
     };
   }, [open, anchorRef, trigger, close]);
 
-  // A chart drives its own open state and swaps content as it goes; only a
-  // trigger-owned label closes itself for having nothing to say.
+  // Charts swap content while open, so only trigger-owned labels close when empty.
   useEffect(() => {
     if (disabled || (empty && !anchorRef)) close();
   }, [disabled, empty, anchorRef, close]);
@@ -406,8 +379,7 @@ function TooltipRoot({
     (target: Element) => Boolean(floatingRef.current?.contains(target)),
     []
   );
-  // ...and closed by the next tap that lands somewhere else, or Escape. The
-  // label covers nothing interactive, so that tap passes through to what it hit.
+  // Close on a tap elsewhere or Escape; the tap still reaches what it hit.
   useDismiss(open, close, anchorObject, { ignore: insideTooltip });
 
   const onContentEnter = useCallback(() => {
@@ -420,7 +392,7 @@ function TooltipRoot({
       const floating = floatingRef.current;
       if (!floating) return;
       if (anchorRef) {
-        // Bridge the small gap back onto a chart; it reopens on its own terms.
+        // Bridge the small gap back onto a chart.
         clearTimers();
         closeTimer.current = setTimeout(close, 100);
         return;
@@ -466,10 +438,6 @@ function TooltipRoot({
 
   return <TooltipContext.Provider value={value}>{children}</TooltipContext.Provider>;
 }
-
-/* -------------------------------------------------------------------------- */
-/* Trigger                                                                    */
-/* -------------------------------------------------------------------------- */
 
 function mergeIds(...ids: unknown[]) {
   return ids.filter((value) => typeof value === 'string' && value).join(' ') || undefined;
@@ -539,19 +507,14 @@ export function TooltipTrigger({ asChild = false, children, ref, ...props }: Too
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/* Content                                                                    */
-/* -------------------------------------------------------------------------- */
-
 export interface TooltipContentProps {
   children?: ReactNode;
   side?: TooltipSide | undefined;
   align?: TooltipAlign | undefined;
-  /** Gap between anchor and tooltip (px). */
+  /** Gap to the anchor (px). */
   sideOffset?: number | undefined;
-  /** Draw an arrow pointing at the anchor. */
   arrow?: boolean | undefined;
-  /** Point within the anchor, as fractions of its rendered width and height. */
+  /** Point in the anchor, as fractions of its width and height. */
   anchorPoint?: TooltipPoint | undefined;
   className?: string | undefined;
 }
@@ -590,7 +553,7 @@ export function TooltipContent({
 
   return createPortal(
     <>
-      {/* The name has to exist while the label is closed, so it lives apart from the surface. */}
+      {/* Apart from the surface so the name exists while closed. */}
       {asLabel && !empty ? (
         <span id={labelId} hidden>
           {children}
@@ -637,19 +600,12 @@ export function TooltipContent({
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/* Tooltip (root, or one-line shorthand when given `content`)                 */
-/* -------------------------------------------------------------------------- */
-
 export interface TooltipProps
   extends TooltipRootProps,
     Omit<TooltipContentProps, 'children' | 'className'> {
-  /**
-   * Shorthand: the tooltip's content. With it, `children` is the trigger
-   * element; without it, compose `TooltipTrigger` and `TooltipContent`.
-   */
+  /** Shorthand: with it, `children` is the trigger. */
   content?: ReactNode;
-  /** Shorthand only: classes for the tooltip surface. */
+  /** Shorthand only: surface classes. */
   className?: string;
 }
 

@@ -1,5 +1,3 @@
-// Presence: the avatars (the same animated group as the log cards) or the
-// count chip, and the "Here now" roster with a jump to each cursor known from awareness.
 import { relativePositionToAbsolutePosition, ySyncPluginKey } from '@tiptap/y-tiptap';
 import { isNil, isNotNil } from 'es-toolkit';
 import { useEffect, useMemo, useSyncExternalStore } from 'react';
@@ -24,7 +22,7 @@ import type { IPopAt } from '@/features/logbook/log/EditorCard';
 import type { ILogShared } from '@/features/logbook/log/LogPage';
 import type { IPresent } from '@/features/logbook/log/presence-state';
 
-// Two faces, then +N: the +N opens "Here now" with everyone.
+// Two faces, then +N, which opens the full roster.
 const STACK = 2;
 
 export function usePresent(props: ILogShared): IPresent[] {
@@ -32,7 +30,7 @@ export function usePresent(props: ILogShared): IPresent[] {
   const live = useSyncExternalStore(props.notices.subscribe, props.notices.snapshot);
   const changes = useSyncExternalStore(props.feed.subscribe, props.feed.snapshot);
   const { notices } = props;
-  // Agents whose notice ran out leave the list, once per tick (never during a render).
+  // Expire agents on a tick, never during a render.
   useEffect(() => notices.expire(now), [notices, now]);
   return useMemo(
     () => presentList(props.meActor, props.mode, live, changes, now),
@@ -63,7 +61,7 @@ export function PresenceButton(props: IPresenceButtonProps) {
       max={STACK}
       size="md"
       label="Here now"
-      labels={{ showMore: 'Show all {count} more here now' }}
+      labels={{ showMore: (count) => `Show all ${count} more here now` }}
       onMore={props.onToggle}
       moreOpen={props.expanded}
     />
@@ -74,7 +72,7 @@ export function PresenceButton(props: IPresenceButtonProps) {
         {stacked.length > STACK ? (
           group
         ) : (
-          // Nobody hidden, so no +N: the faces themselves open the roster.
+          // No +N, so the faces open the roster.
           <button
             type="button"
             className="inline-flex items-center rounded-full"
@@ -100,7 +98,7 @@ export function PresenceButton(props: IPresenceButtonProps) {
   );
 }
 
-// The caret of an actor, from awareness (cursor.head is a Yjs relative position).
+// cursor.head is a Yjs relative position.
 function cursorOf(
   editor: Editor,
   userId: string,
@@ -159,7 +157,7 @@ export function HereNow(props: IHereNowProps) {
       <div className="scroll-thin flex max-h-[232px] flex-col gap-0.5 overflow-y-auto">
         {present.map((p) => {
           const look = statusLooks[p.status];
-          // Only someone with a caret on the page (an editor, not a reader) can be jumped to.
+          // Only someone with a caret (an editor, not a reader) can be jumped to.
           const jumpable =
             !p.you && !p.actor.agent && isNotNil(cursorOf(editor, p.actor.key, states));
           return (

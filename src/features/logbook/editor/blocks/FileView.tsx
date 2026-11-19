@@ -1,5 +1,3 @@
-// A file of the log: its badge, size and path from the log's EntityCore files;
-// a script opens as numbered, highlighted code (Shiki), a CSV as a table. The text is fetched on "View".
 import { useQuery } from '@tanstack/react-query';
 import { NodeViewWrapper } from '@tiptap/react';
 import { isNil, isNotNil } from 'es-toolkit';
@@ -28,7 +26,6 @@ export const sizeOf = (bytes: number): string =>
       ? `${(bytes / 1024).toFixed(1)} KB`
       : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 
-// A run of code and its colour (a Shiki token, or a plain line before or without one).
 interface IToken {
   readonly content: string;
   readonly color?: string | undefined;
@@ -36,8 +33,7 @@ interface IToken {
 
 const LINE_NUMBER = 'w-12 flex-none pr-4 text-right text-line-num select-none';
 
-// Numbered lines, coloured by Shiki once its grammar is in (plain until then, or for a type
-// without one). The tokens carry the theme's colours, so no class per token kind.
+// Plain until Shiki's grammar loads (or for types without one).
 export function CodeView({ text, name }: { readonly text: string; readonly name: string }) {
   const [tokens, setTokens] = useState<readonly (readonly IToken[])[] | null>(null);
   useEffect(() => {

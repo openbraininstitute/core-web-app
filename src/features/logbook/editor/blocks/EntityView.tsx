@@ -1,5 +1,3 @@
-// An entity card: the type's colours and icon, its name, region and author from
-// EntityCore. A circuit opens a 3D view, loaded only when asked for.
 import { useQuery } from '@tanstack/react-query';
 import { NodeViewWrapper } from '@tiptap/react';
 import { isNil, isNotNil } from 'es-toolkit';

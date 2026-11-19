@@ -1,10 +1,4 @@
-// Every change to the open page, with its author: tints for fresh text, agent
-// toasts (4.13), the activity list (4.9) and who is writing now (4.8).
-//
-// The author of a remote change is read from Yjs itself: the clients whose clock a transaction
-// moved (its state vectors before and after; a delete moves none, so its delete set). Yjs calls
-// `beforeObserverCalls` before the Tiptap binding turns the change into a ProseMirror transaction,
-// so the plugin below knows the author of the transaction it sees. No extra message, no scan.
+// Author = clients whose clock moved (or the delete set); Yjs fires this before the PM transaction.
 import { Extension } from '@tiptap/core';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
@@ -19,8 +13,8 @@ import type { Node as PmNode } from '@tiptap/pm/model';
 import type * as Y from 'yjs';
 import type { IActor } from '@/features/logbook/ui/Avatar';
 
-export const HL_MS = 5200; // how long fresh text stays tinted
-const COALESCE_MS = 8000; // one activity line per writer and block while they keep typing
+export const HL_MS = 5200;
+const COALESCE_MS = 8000;
 const MAX_EVENTS = 30;
 
 export interface IChange {
@@ -37,12 +31,10 @@ export interface IChange {
 
 export interface IChangeSnapshot {
   readonly events: readonly IChange[]; // newest first
-  readonly toast: IChange | null; // the latest agent change
+  readonly toast: IChange | null;
   readonly seen: Readonly<Record<string, number>>; // actor key → last change time
 }
 
-// The page's change feed (observer pattern, like CollaborationNotices): React reads it through
-// useSyncExternalStore, so a change re-renders the activity list and toast only.
 export class ChangeFeed {
   #state: IChangeSnapshot = { events: [], toast: null, seen: {} };
   readonly #listeners = new Set<() => void>();
@@ -69,7 +61,7 @@ export class ChangeFeed {
           id: last.id,
           from: Math.min(last.from, change.from),
           to: Math.max(last.to, change.to),
-          // The first words of a run say best what it was ("added Interpretation").
+          // Keep the run's first summary; it says best what it was.
           summary: last.summary,
         }
       : change;
@@ -87,8 +79,6 @@ export class ChangeFeed {
     for (const listener of this.#listeners) listener();
   }
 }
-
-// --- What a change did, in the design's words -------------------------------------------------
 
 const textOf = (node: PmNode): string => node.textContent.replace(/\s+/g, ' ').trim();
 
@@ -110,7 +100,6 @@ export function summaryOf(doc: PmNode, from: number, to: number, removed: string
     if (offset >= from && offset + block.nodeSize <= to) added.push(block);
   });
   const first = added[0];
-  // A block of a known kind names the change; any other block falls through to the text rules.
   const named = isNil(first)
     ? null
     : match<string, string | null>(first.type.name)
@@ -131,15 +120,13 @@ export function summaryOf(doc: PmNode, from: number, to: number, removed: string
   return isNil(section) ? 'edited the text' : `edited ${section}`;
 }
 
-// --- The plugin ----------------------------------------------------------------------------------
-
 interface IHighlight {
   readonly at: number;
 }
 
 interface IPluginState {
   readonly decorations: DecorationSet;
-  readonly change: IChange | null; // the change made by the last transaction, published by view()
+  readonly change: IChange | null;
 }
 
 const key = new PluginKey<IPluginState>('collaborationChanges');
@@ -151,15 +138,13 @@ export interface ICollaborationChangesOptions {
   readonly me: IActor;
   readonly resolve: (clientId: number) => IActor;
   readonly highlights: () => boolean;
-  readonly ready: () => boolean; // false until the first sync: the loaded page is not "new"
+  readonly ready: () => boolean; // false until first sync, so the loaded page isn't "new"
 }
 
-// What a transaction really changed: the first and last positions where the old and new documents
-// differ. The Yjs binding replaces a whole paragraph for one typed letter, so its steps cannot say;
-// the diff can, and it is cheap: unchanged blocks are the same objects and are skipped by identity.
+// Diff the docs: the Yjs binding replaces a whole paragraph per keystroke, so steps can't tell.
 interface IDiff {
   readonly from: number;
-  readonly to: number; // end of the new content, in the new document
+  readonly to: number; // in the new document
   readonly removed: string;
 }
 
@@ -168,7 +153,7 @@ export function diffOf(before: PmNode, after: PmNode): IDiff | null {
   if (isNil(start)) return null;
   const end = before.content.findDiffEnd(after.content);
   if (isNil(end)) return null;
-  // When the change repeats nearby text the two ends can cross: move both back over the overlap.
+  // Repeated nearby text can make the ends cross; back both off by the overlap.
   const overlap = start - Math.min(end.a, end.b);
   const endA = overlap > 0 ? end.a + overlap : end.a;
   const endB = overlap > 0 ? end.b + overlap : end.b;
@@ -232,12 +217,11 @@ export const CollaborationChanges = Extension.create<ICollaborationChangesOption
             if (!tr.docChanged) return { decorations, change: null };
             const sync: unknown = tr.getMeta(ySyncPluginKey);
             const remote = isNotNil(sync) && Boolean(Reflect.get(Object(sync), 'isChangeOrigin'));
-            // Content edits only: UniqueID's id stamps change attributes, no text.
             const diff = diffOf(before.doc, tr.doc);
             const added = isNil(diff)
               ? ''
               : tr.doc.textBetween(diff.from, diff.to, ' ', ' ').trim();
-            // Same size, same text: only attributes moved (an id stamp, a heading level kept).
+            // Attribute-only change (e.g. UniqueID stamps): not a content edit.
             if (
               isNil(diff) ||
               (tr.doc.content.size === before.doc.content.size && added === diff.removed)

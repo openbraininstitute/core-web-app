@@ -5,8 +5,8 @@ import { agentActor, resolveActor, UNKNOWN_ACTOR } from '@/features/logbook/coll
 
 import type { IActorSources } from '@/features/logbook/collaboration/actors';
 
-const LIVE = 1; // a client of a peer on the page now
-const GONE = 2; // a client whose writer left; the server named it
+const LIVE = 1; // a peer on the page now
+const GONE = 2; // writer left; the server named it
 const NOBODY = 3;
 
 const sources = (agents: readonly { readonly label: string }[]): IActorSources => ({
@@ -32,6 +32,6 @@ test('a stored agent writer is an agent', () => {
     via: 'agent',
   });
   expect(agent).toMatchObject({ name: 'u-claude', agent: true, initials: 'U' });
-  // The person it works for, two letters, as the log list shows.
+  // Initials of the person it works for.
   expect(agentActor('bob-claude').initials).toBe('BO');
 });

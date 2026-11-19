@@ -35,8 +35,7 @@ export function TooltipPositioner({
   );
 }
 
-// Each arrow is a 12px box whose base sits on the surface's inner border edge,
-// so its fill covers the border beneath it and only the two outer edges stroke.
+// The arrow base sits on the inner border edge, so only its two outer edges stroke.
 const ARROW: Record<TooltipSide, { path: string; style: CSSProperties }> = {
   top: { path: 'M0 6L6 12L12 6', style: { top: 'calc(100% - 6px)' } },
   bottom: { path: 'M0 6L6 0L12 6', style: { bottom: 'calc(100% - 6px)' } },

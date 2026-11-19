@@ -1,6 +1,4 @@
-// The pages of a research log, from the logbook server: the main page first, then the sections in
-// order. A writer's open makes the log's anchor and its main page on the server, so the browser
-// never creates the main page itself; it adds, renames and deletes sections.
+// The server makes the main page when a writer opens the log; the browser only manages sections.
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { isNil } from 'es-toolkit';
 
@@ -12,14 +10,13 @@ import { PageKind } from '@/api/logbook/types';
 import type { IPage } from '@/api/logbook/types';
 import type { IProject } from '@/features/logbook/auth/session';
 
-// The page to show: the one asked for when the log has it, else the main page; null when the log
-// has no page yet (only a reader sees that: a log no writer opened).
+// Null only for a log no writer has opened yet.
 export const pageToShow = (pages: readonly IPage[], wanted: string | null): IPage | null =>
   pages.find((page) => page.id === wanted) ??
   pages.find((page) => page.kind === PageKind.Main) ??
   null;
 
-// The server lists them in order already; sorted again so a list patched here keeps the order.
+// Re-sort so locally patched lists keep their order.
 const inOrder = (pages: readonly IPage[]): IPage[] =>
   pages.toSorted((a, b) => a.position - b.position);
 
@@ -28,9 +25,7 @@ async function pagesOf(researchId: string, project: IProject): Promise<IPage[]> 
   return inOrder(research.pages);
 }
 
-// Read again every 30 s while the log is open (and when the tab comes back): a section an agent
-// or a colleague adds shows within that. One small read per open log per 30 s.
-// Limit: up to 30 s late. Upgrade: a `pages` notice from the server to every room of the log.
+// Re-read every 30 s so sections others add show up. Upgrade: a server `pages` notice.
 export const PAGES_REFRESH_MS = 30_000;
 
 const pagesKey = (researchId: string) => ['pages', researchId] as const;
@@ -47,7 +42,7 @@ export const pagesQuery = (researchId: string, project: IProject) =>
 export const usePages = (researchId: string, project: IProject, enabled = true) =>
   useQuery({ ...pagesQuery(researchId, project), enabled });
 
-// A new section. The key is made once per add, so a retry of the same add never makes two.
+// The key is made once per add, so a retry never makes two sections.
 export interface INewSection {
   readonly title: string;
   readonly key: string;
@@ -71,8 +66,7 @@ export function useCreateSection(researchId: string, project: IProject) {
   });
 }
 
-// A rename sends the version last read (If-Match): a page renamed in the meantime is refused (412)
-// and the list is read again, so the next try starts from the newest title.
+// If-Match: a stale rename gets a 412, so re-read the list for the next try.
 export function useRenamePage(researchId: string, project: IProject) {
   const queries = useQueryClient();
   return useMutation({
@@ -86,8 +80,7 @@ export function useRenamePage(researchId: string, project: IProject) {
   });
 }
 
-// Deletes a section for good (its text, history and its copy in EntityCore). A delete that does not
-// answer is safe to send again: the server finishes what the first one began.
+// Permanent; safe to resend if it didn't answer.
 export function useDeleteSection(researchId: string, project: IProject) {
   const queries = useQueryClient();
   return useMutation({

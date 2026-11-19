@@ -1,5 +1,3 @@
-// The rejoin after a busy server's refusal (collaboration/rejoin.ts): the backoff, and one retry
-// per refusal on the same provider, with a fake provider and Bun's fake timers.
 import { WebSocketStatus } from '@hocuspocus/provider';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
@@ -25,7 +23,6 @@ test('the wait: full jitter under a cap that doubles from 2 s to 30 s, never und
   }
 });
 
-// A provider that records its calls; `emit` plays an event of the server.
 function fakeProvider(status = WebSocketStatus.Connected) {
   const listeners = new Map<string, Set<(data: never) => void>>();
   const calls: string[] = [];
@@ -69,12 +66,10 @@ test('an overloaded refusal joins again once, after the wait, and shows when', a
   vi.advanceTimersByTime(1);
   await settle();
   expect(calls).toEqual(['sendToken', 'startSync']);
-  // Refused again: the cap doubles.
   emit('authenticationFailed', { reason: ProblemType.Overloaded });
   expect(Notices.snapshot().rejoinAt).toBe(20_000);
   emit('authenticated', { scope: 'read-write' });
   expect(Notices.snapshot().rejoinAt).toBeNull();
-  // After a join the count starts again.
   emit('authenticationFailed', { reason: ProblemType.Unavailable });
   expect(Notices.snapshot().rejoinAt).toBe(10_000);
 });

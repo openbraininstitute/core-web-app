@@ -1,4 +1,4 @@
-// A clock for the parts that show time ("just now", who is writing): only they re-render on it.
+// A clock for time labels; only they re-render on it.
 import { useEffect, useState } from 'react';
 
 export const CLOCK_MS = 400;

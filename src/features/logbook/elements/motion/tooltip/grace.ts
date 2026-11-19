@@ -1,16 +1,9 @@
 type Point = { x: number; y: number };
 type Box = { left: number; top: number; right: number; bottom: number };
 
-/**
- * The corridor a pointer may cross between the trigger and the open tooltip
- * without closing it: the convex hull of where it left and the box it is
- * heading for. A fixed timeout either cuts a slow diagonal move short or keeps
- * the label alive after the pointer has plainly gone elsewhere; this follows
- * the path itself.
- */
+/** Hull of the exit point and target box; the pointer can cross it without closing. */
 export function graceArea(exit: Point, target: Box): Point[] {
-  // A few pixels either side of the exit point give the corridor some width at
-  // its narrow end, so a hand that drifts sideways while it moves stays inside.
+  // Pad the narrow end so a slight sideways drift stays inside.
   const pad = 5;
   return hull([
     { x: exit.x - pad, y: exit.y - pad },
@@ -68,12 +61,7 @@ function hull(points: Point[]) {
   return lower.concat(upper);
 }
 
-/**
- * How the user last reached for the page. A focus that a mouse press caused is
- * not a request to read the label: the pointer is already on the control and
- * hovering showed it. A focus that followed a key — Tab, or a roving arrow key
- * moving focus in script — is the only way a keyboard user sees it at all.
- */
+// Only keyboard focus opens the label; a mouse press already showed it on hover.
 let modality: 'keyboard' | 'pointer' = 'keyboard';
 let listening = false;
 

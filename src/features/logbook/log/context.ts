@@ -1,5 +1,4 @@
-// What the blocks of an open log need from around them: the project and log of their EntityCore
-// calls. Node views render in the editor's React tree (portals), so they read it from context.
+// Node views render through portals, so they read the project and log from context.
 import { isNil } from 'es-toolkit';
 import { createContext, useContext } from 'react';
 

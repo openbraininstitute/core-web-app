@@ -1,4 +1,4 @@
-// The design's one-regex highlighter, Python-ish, for every language.
+// One regex highlighter, Python-ish, for every language.
 import type { TValueOf } from '@/api/logbook/types';
 
 export const TokenKind = {

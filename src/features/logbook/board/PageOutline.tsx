@@ -1,14 +1,5 @@
-// The open log's pages, under its card in the rail: the main page, then the sections in order.
-// Each opens in the editor at its own address (and its own socket, LogView.tsx). A section can be
-// renamed or deleted, and a new one is added at the end.
-// - The list is the pages query (pages.ts), the same one the open log reads: one read serves both.
-// - Writes go to the server as the person; a reader's write is refused there and the reason shows
-//   under the list. Limit: the actions show to readers too. Upgrade: hide them when the server
-//   says the person can only read.
-// - No Move up or down: the server sets one page's position without renumbering the others, so a
-//   move would be two calls that can half land and leave two sections on one position.
-//   Limit: sections stay in the order they were added. Upgrade: a server move that renumbers the
-//   sections in one transaction.
+// Limit: readers see the actions too; the server refuses them. Upgrade: hide them for readers.
+// Limit: no reordering, a move can't renumber atomically. Upgrade: a server move that renumbers.
 import { isNil, isNotNil } from 'es-toolkit';
 import { useEffect, useRef, useState } from 'react';
 
@@ -20,18 +11,14 @@ import {
   usePages,
   useRenamePage,
 } from '@/features/logbook/api/pages';
-import { CardMenu, RenameField } from '@/features/logbook/app/Rail';
+import { CardMenu, RenameField } from '@/features/logbook/board/Rail';
 import { DeletePageDialog } from '@/features/logbook/log/DeletePageDialog';
 import { Icon } from '@/features/logbook/ui/icons';
 
 import type { IPage } from '@/api/logbook/types';
 import type { IProject } from '@/features/logbook/auth/session';
 
-// The outline is a tree: a trunk comes down from the log's card, and each page (and the add
-// button) hangs on it by a curved branch. Plain CSS borders on ::before (the branch: a left and a
-// bottom border with a rounded corner, to the middle of the 36 px row) and ::after (the trunk on to
-// the next item; the last item has none). No SVG, no measuring: the lines follow the rows.
-// The first item sits 8 px lower, clear of the card; its branch is 8 px longer to reach it.
+// Tree lines are CSS borders: ::before is the branch, ::after the trunk, so they follow the rows.
 const BRANCH =
   "group relative pb-1 pl-5 first:pt-2 first:before:h-[26px] before:pointer-events-none before:absolute before:top-0 before:left-0 before:h-[18px] before:w-4 before:rounded-bl-[12px] before:border-b-2 before:border-l-2 before:border-[#cfd8e3] before:content-[''] after:pointer-events-none after:absolute after:top-0 after:bottom-0 after:left-0 after:border-l-2 after:border-[#cfd8e3] after:content-[''] last:after:hidden";
 const ROW =
@@ -47,7 +34,7 @@ export interface IPageOutlineProps {
   readonly logId: string;
   readonly logName: string;
   readonly pageId: string | null; // the page the address names; null: the main page
-  // Opens a page; `edit` opens it in the editor (a section just added).
+  // `edit` opens it in the editor.
   readonly onOpen: (page: IPage, edit?: boolean) => void;
 }
 
@@ -59,15 +46,12 @@ export function PageOutline(props: IPageOutlineProps) {
   const remove = useDeleteSection(logId, project);
   const [menuFor, setMenuFor] = useState<string | null>(null);
   const [renaming, setRenaming] = useState<string | null>(null);
-  // The add in progress: its idempotency key is made once, so trying the same add again after an
-  // answer that got lost never makes two sections.
+  // One idempotency key per add, so a retry never makes two sections.
   const [adding, setAdding] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<IPage | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
   const list = pages.data ?? [];
-  // The outline opens under the log's card, often past the bottom of a short rail (its scrollbar
-  // only shows while scrolling on macOS): it scrolls itself into view once its pages are known,
-  // and again when the log changes, so the pages show without a scroll.
+  // It often opens below a short rail, so scroll it into view on load and log change.
   const outline = useRef<HTMLDivElement>(null);
   const shown = list.length > 0;
   // biome-ignore lint/correctness/useExhaustiveDependencies: runs again on purpose when the log changes
@@ -96,7 +80,7 @@ export function PageOutline(props: IPageOutlineProps) {
   };
   const removeSection = (page: IPage): Promise<unknown> =>
     remove.mutateAsync(page.id).then(() => {
-      // The person who deleted it goes to the main page; others on it keep it, read-only.
+      // The deleter goes to the main page; others on it keep it, read-only.
       const main = list.find((p) => p.kind === PageKind.Main);
       if (current?.id === page.id && isNotNil(main)) props.onOpen(main);
     });

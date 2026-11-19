@@ -1,6 +1,4 @@
-// The circuit's 3D view: 240 points from a seeded generator in four layers,
-// turned by dragging, spinning by itself otherwise. A design stand-in until the platform's
-// circuit viewer can be embedded; its own chunk, loaded on "View in 3D" only.
+// Design stand-in until the platform's circuit viewer can be embedded.
 import { isNil, range } from 'es-toolkit';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -32,7 +30,7 @@ interface IPoint {
   readonly mtype: string;
 }
 
-// Lehmer generator, seed 1234567 (the design's): the same cloud on every screen.
+// Seeded, so the same cloud on every screen.
 function cloud(): IPoint[] {
   let seed = 1_234_567;
   const next = (): number => {
@@ -126,7 +124,7 @@ export default function CircuitView({ name }: { readonly name: string }) {
           />
         ))}
       </svg>
-      {/* Margin and left padding come from the editor's list rule (content.css), as before. */}
+      {/* Margin and padding come from the editor's list rule (content.css). */}
       <ul className="absolute top-3 left-[14px] list-none text-[11px]">
         {legend.map((item) => (
           <li key={item.name} className="flex items-center gap-1.5">

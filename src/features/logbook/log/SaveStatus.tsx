@@ -1,11 +1,4 @@
-// The save status, in the page's tab (EditorTabs), from the provider and the server:
-// - Offline: the socket has not been connected for about 2 s (a deploy or a crash is a gap of
-//   about 1 s, which shows as "Saving…"). The edits are kept on this device (local-copy.ts).
-// - Saving…: changes the server has not acknowledged, a change of this tab after its last
-//   `saved` notice, a change from someone else (another tab, a colleague, an agent) after the
-//   page's last save, or text restored from this device that the provider has not synced yet.
-// - Saved: a check; its title gives the time of the last `saved` notice.
-// On a phone only the icon shows (the words stay for screen readers).
+// Offline after ~2 s down; a deploy blip (~1 s) just shows as Saving…
 import { WebSocketStatus } from '@hocuspocus/provider';
 import { useHocuspocusProvider } from '@hocuspocus/provider-react';
 import { isNil, isNotNil } from 'es-toolkit';
@@ -32,7 +25,6 @@ const timeOf = (at: number): string =>
 const connected = (provider: HocuspocusProvider): boolean =>
   provider.configuration.websocketProvider.status === WebSocketStatus.Connected;
 
-// True once the socket has been down for OFFLINE_AFTER_MS; false as soon as it is back.
 function useOffline(provider: HocuspocusProvider): boolean {
   const [offline, setOffline] = useState(false);
   useEffect(() => {
@@ -57,8 +49,7 @@ function useOffline(provider: HocuspocusProvider): boolean {
   return offline;
 }
 
-// Unacknowledged changes, or restored text not synced yet: one boolean, so a keystroke that
-// changes nothing here renders nothing.
+// One boolean, so a keystroke that changes nothing here renders nothing.
 function useUnsent(provider: HocuspocusProvider, copy: LocalCopy): boolean {
   const subscribe = useCallback(
     (listener: () => void) => {
@@ -77,10 +68,7 @@ function useUnsent(provider: HocuspocusProvider, copy: LocalCopy): boolean {
   );
 }
 
-// A change of this tab newer than the last `saved` notice. Only local transactions count (the
-// same test as local-copy.ts): another tab, device or agent of the same person gets its own
-// `saved` notice, never this one, so counting its changes left this tab on "Saving…" for good.
-// One boolean: a keystroke re-renders nothing unless it turns "saving" on.
+// Local changes only: other tabs and devices get their own `saved` notice, not this one.
 function useUnsaved(provider: HocuspocusProvider, notices: CollaborationNotices): boolean {
   const lastLocal = useRef<number | null>(null);
   const subscribe = useCallback(
@@ -106,13 +94,8 @@ function useUnsaved(provider: HocuspocusProvider, notices: CollaborationNotices)
   });
 }
 
-// A change from another connection newer than the page's last save: someone else's text is on its
-// way to Postgres. The server sends `saved` to everyone on the page after each save (`own` false
-// here). Only the provider's changes after its first sync count: the page's text as loaded on
-// join (or on a rejoin) is already stored.
-// Limit: the notice carries no clock, so a save that began just before such a change arrived
-// can show "Saved" up to one flush early (STORE_FLUSH_INTERVAL_MS, 1 s). Upgrade: a change
-// counter in `saved`.
+// Remote changes after first sync: someone else's text is still on its way to Postgres.
+// Limit: `saved` has no clock, so Saved can show ~1 s early. Upgrade: a counter in `saved`.
 function useOthersUnsaved(provider: HocuspocusProvider, notices: CollaborationNotices): boolean {
   const lastRemote = useRef<number | null>(null);
   const subscribe = useCallback(

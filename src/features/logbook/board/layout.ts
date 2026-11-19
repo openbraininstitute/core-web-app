@@ -14,7 +14,7 @@ const COMPACT_MIN = 820;
 export const layoutOf = (width: number): TLayout =>
   width >= WIDE_MIN ? Layout.Wide : width >= COMPACT_MIN ? Layout.Compact : Layout.Narrow;
 
-// One ResizeObserver; a state change only when the layout band changes, not on every pixel.
+// Re-render only when the layout band changes, not on every pixel.
 export function useLayout(ref: RefObject<HTMLElement | null>): TLayout {
   const [layout, setLayout] = useState<TLayout>(() => layoutOf(innerWidth));
   useLayoutEffect(() => {

@@ -60,7 +60,7 @@ test('saved: own moves both times, a save of others only the page time, no field
   expect(Notices.snapshot()).toMatchObject({ savedAt: null, pageSavedAt: 1000 });
   Notices.receive(JSON.stringify({ type: 'saved', own: true }), 2000);
   expect(Notices.snapshot()).toMatchObject({ savedAt: 2000, pageSavedAt: 2000 });
-  // An older server sent `saved` only to the writers it covered, with no field.
+  // Older servers sent `saved` with no field.
   Notices.receive(JSON.stringify({ type: 'saved' }), 3000);
   expect(Notices.snapshot()).toMatchObject({ savedAt: 3000, pageSavedAt: 3000 });
 });

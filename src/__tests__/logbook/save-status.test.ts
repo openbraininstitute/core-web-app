@@ -1,6 +1,4 @@
-// The save status counts only this tab's own changes: Yjs marks them local, and marks every change
-// that arrives from elsewhere (the provider, the copy on this device) as not local. Another tab,
-// device or agent of the same person sends its own changes and gets its own `saved` notice.
+// Only this tab's own (local) changes count toward the save status.
 import { expect, test } from 'vitest';
 import * as Y from 'yjs';
 

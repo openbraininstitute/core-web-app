@@ -1,15 +1,11 @@
-/* Only what the logbook adds to the app's theme (src/styles/globals.css, which imports this file):
-   its own colours, shadows, animations and recipes, and link and focus styles inside
-   .logbook-root. Fonts, the page background, the label grey and the button and input reset come
-   from the app. Editor content, which ProseMirror renders, is styled in editor/content.css. */
+/* Only what the logbook adds to the app's theme; editor content is in editor/content.css. */
 @import "./editor/content.css";
 
 @theme {
-  /* This design's own colours. */
   --color-line-num: #a3acb9;
   --color-fill-2: #f0f2f5;
   --color-fill-pill-hover: #eceff3;
-  --color-fill-item-hover: #edf1f6; /* #f5f7fa did not show on a white popover */
+  --color-fill-item-hover: #edf1f6;
   --color-soft: #f5f8fc;
   --color-soft-2: #f7f9fc;
   --color-code-bg: #f8fafc;
@@ -46,7 +42,7 @@
   --shadow-seg-on: rgba(0, 39, 102, 0.12) 0 1px 3px;
   --shadow-block-btn: 0 1px 4px rgba(0, 39, 102, 0.18);
 
-  /* The toast rises in from below its centred spot; the notice rises from below. */
+  /* pop keeps the toast's -50% centring. */
   --animate-pop: pop 0.25s ease-out;
   --animate-up: up 0.25s ease-out;
   @keyframes pop {
@@ -61,7 +57,7 @@
       transform: translateY(8px);
     }
   }
-  /* A wrong letter in the delete confirmation: a short shake (motion-safe only). */
+  /* A wrong letter in the delete confirmation. */
   --animate-shake: shake 0.32s ease-in-out;
   @keyframes shake {
     20%,
@@ -75,7 +71,6 @@
   }
 }
 
-/* Recipes repeated across screens; anything used once stays in the markup. */
 @utility logbook-card {
   background-color: var(--color-white);
   border-radius: 24px;
@@ -86,15 +81,12 @@
   border-radius: 16px;
   box-shadow: var(--shadow-pop);
 }
-/* Every scroll box. Positioned, so it is the containing block of what is absolutely placed in it
-   (an sr-only label, a stretched button): such an element then scrolls and clips with the box.
-   Without it, one far down a long list sits outside the box and makes the whole page scroll. */
+/* Positioned, so absolutely placed children (sr-only labels) scroll with the box, not the page. */
 @utility scroll-thin {
   position: relative;
   scrollbar-width: thin;
   scrollbar-color: var(--color-neutral-2) transparent;
 }
-/* A round icon button: grey, darker on hover. Size comes from the markup. */
 @utility icon-btn {
   display: inline-flex;
   align-items: center;
@@ -113,8 +105,7 @@
     color: var(--color-primary-9);
   }
 }
-/* The close button of every modal (dialogs and popovers): visible on any background, white with a
-   hairline border and a soft shadow; grey on hover. One recipe, so every modal closes the same. */
+/* Every modal's close button: visible on any background. */
 @utility modal-close {
   display: grid;
   place-items: center;
@@ -153,9 +144,7 @@
   font-weight: 700;
   box-shadow: var(--shadow-navy-btn);
 }
-/* "Writing now" (presence.ts `active`): a thin arc in the writer's colour (--ring) runs round the
-   avatar, 1px off its edge. The turn is a registered custom property, so the conic gradient
-   turns and the shape (a circle, or an agent's rounded square) stays put. */
+/* A registered property turns the gradient while the shape stays put. */
 @property --ring-turn {
   syntax: "<angle>";
   inherits: false;
@@ -182,7 +171,6 @@
     pointer-events: none;
   }
 }
-/* The small uppercase caption above a group ("EDITOR", "WHO IS HERE"). */
 @utility label-caps {
   font-size: 12px;
   font-weight: 700;

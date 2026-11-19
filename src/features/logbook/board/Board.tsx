@@ -1,6 +1,3 @@
-// The screen: with no log open, every log as a card grid (Home); with one open, the rail of logs and
-// the log. Wide keeps the rail open, compact folds it to a bar, the phone shows the
-// rail as a drawer.
 import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { clamp, isNil, isNotNil } from 'es-toolkit';
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
@@ -16,38 +13,35 @@ import {
   useDeleteLog,
   useUpdateLog,
 } from '@/features/logbook/api/research-logs';
-import { Home } from '@/features/logbook/app/Home';
-import { Layout, useLayout } from '@/features/logbook/app/layout';
-import { PageOutline } from '@/features/logbook/app/PageOutline';
-import { Rail, RailHeading } from '@/features/logbook/app/Rail';
-import { UnsentCopies } from '@/features/logbook/app/UnsentCopies';
-import { cn } from '@/features/logbook/lib/utils';
+import { Home } from '@/features/logbook/board/Home';
+import { Layout, useLayout } from '@/features/logbook/board/layout';
+import { PageOutline } from '@/features/logbook/board/PageOutline';
+import { Rail, RailHeading } from '@/features/logbook/board/Rail';
+import { UnsentCopies } from '@/features/logbook/board/UnsentCopies';
 import { markSeed } from '@/features/logbook/log/ui-state';
 import { ViewMode } from '@/features/logbook/log/view-mode';
 import { navigate, pathOf } from '@/features/logbook/router';
 import { dragHandle } from '@/features/logbook/ui/drag';
+import { cn } from '@/utils/css-class';
 
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import type { IPage } from '@/api/logbook/types';
 import type { ILogOrder } from '@/features/logbook/api/research-logs';
-import type { IMore, IScope } from '@/features/logbook/app/Rail';
 import type { IMe, IProject } from '@/features/logbook/auth/session';
+import type { IMore, IScope } from '@/features/logbook/board/Rail';
 import type { TViewMode } from '@/features/logbook/log/view-mode';
 
-// The editor (Tiptap, ProseMirror, Yjs: most of the code) loads when a log opens, so sign-in and
-// the list come first; the chunk is fetched as soon as the list shows, before anyone clicks.
+// The editor is most of the code: load it lazily, prefetched once the list shows.
 const loadLogView = () => import('@/features/logbook/log/LogView');
 const LogView = lazy(() => loadLogView().then((m) => ({ default: m.LogView })));
 
-// The list asks EntityCore again once typing pauses this long, not on every key.
 const SEARCH_WAIT_MS = 250;
 
 const RAIL_MAX = 364;
 const RAIL_FLOOR = 220;
 const RAIL_SHUT_BELOW = 110;
 
-// A size container (@container/rail): the rail's header adapts to the rail's own width, which the
-// person drags (220 to 364px), not to the window's.
+// Container query: the rail header follows the rail's dragged width, not the window.
 const RAIL = '@container/rail flex min-h-0 flex-none flex-col gap-3 overflow-hidden p-3';
 const EMPTY = 'logbook-card flex flex-1 flex-col items-center justify-center gap-2 p-8 text-center';
 
@@ -75,17 +69,15 @@ export function Board({ me, project, logId, pageId }: IBoardProps) {
   // A cleared search applies at once; only typing waits.
   const filter = { ...scope, order, search: search.trim() === '' ? '' : searched };
   const off = noFilterOf(filter);
-  // A new search keeps the last list on screen until its answer comes: no flash of "Loading".
+  // Keep the last list on screen while a new search loads.
   const logs = useInfiniteQuery({
     ...researchLogsQuery(project, filter),
     placeholderData: keepPreviousData,
   });
   const listed = useMemo(() => (off ? [] : logsOf(logs.data?.pages ?? [])), [off, logs.data]);
   const total = off ? 0 : (logs.data?.pages[0]?.pagination.total_items ?? 0);
-  // The end of the list came near: the next 10, one page at a time.
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = logs;
-  // Not while the list itself loads (a new search, filter or order shows the old list until its
-  // first page comes): a next page asked then would be dropped, or be the old list's.
+  // No next page while the list itself reloads; it would be dropped or stale.
   const listLoading = logs.isFetching && !isFetchingNextPage;
   const more: IMore = {
     has: !off && hasNextPage && !listLoading,
@@ -96,7 +88,7 @@ export function Board({ me, project, logId, pageId }: IBoardProps) {
     },
   };
   const loading = !off && logs.isPending;
-  // A failed next page keeps the pages shown (LoadMore offers to try again).
+  // A failed next page keeps the pages already shown.
   const error = !off && logs.isError && isNil(logs.data) ? logs.error.message : null;
   useEffect(() => {
     if (logs.isSuccess) void loadLogView();
@@ -104,7 +96,7 @@ export function Board({ me, project, logId, pageId }: IBoardProps) {
   const create = useCreateLog(project);
   const update = useUpdateLog(project);
   const remove = useDeleteLog(project);
-  // The open log: from the list when it shows it, else read on its own (a search hides it).
+  // Read the open log on its own when a search hides it from the list.
   const inList = listed.find((log) => log.id === logId);
   const opened = useQuery({
     ...researchLogQuery(project, logId ?? ''),
@@ -117,8 +109,7 @@ export function Board({ me, project, logId, pageId }: IBoardProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [mode, setMode] = useState<TViewMode>(ViewMode.Read);
 
-  // Entering compact folds the rail; leaving it unfolds it. Entering or leaving the phone layout
-  // closes the drawer.
+  // Fold the rail in compact; close the drawer when the phone layout comes or goes.
   useEffect(() => {
     setRailShut(layout === Layout.Compact);
     setDrawerOpen(false);
@@ -130,8 +121,7 @@ export function Board({ me, project, logId, pageId }: IBoardProps) {
     navigate(pathOf(project, id));
   };
 
-  // A page of the open log: its own address (the main page keeps the log's). A section just added
-  // opens in the editor.
+  // Each section gets its own address; a just-added one opens in the editor.
   const openPage = (page: IPage, edit = false): void => {
     if (edit) setMode(ViewMode.Edit);
     setDrawerOpen(false);
@@ -152,7 +142,6 @@ export function Board({ me, project, logId, pageId }: IBoardProps) {
       }
     );
 
-  // Rail resize.
   const dragRail = (event: ReactPointerEvent<HTMLButtonElement>): void =>
     dragHandle(event, (move) => {
       const left = grid.current?.getBoundingClientRect().left ?? 0;
@@ -209,7 +198,7 @@ export function Board({ me, project, logId, pageId }: IBoardProps) {
   return (
     <div
       ref={root}
-      className="relative flex h-full flex-col overflow-hidden bg-background py-4 pr-4 pl-5 text-primary-9 data-[layout=narrow]:p-2"
+      className="relative flex h-full flex-col overflow-x-clip bg-background py-px pr-1 pl-3 text-primary-9 data-[layout=narrow]:p-2"
       data-layout={layout}
     >
       <UnsentCopies userId={me.userId} enabled={logs.isSuccess} />
@@ -293,10 +282,7 @@ export function Board({ me, project, logId, pageId }: IBoardProps) {
                 </button>
               ) : null}
               <Suspense fallback={<section className={EMPTY} />}>
-                {/*
-                  The key is load-bearing: another log mounts a new LogView, so its page gets its
-                  own collaboration socket (page affinity). The socket component ignores a new url.
-                */}
+                {/* The key matters: a new log needs a new LogView to get its own socket. */}
                 <LogView
                   key={logId}
                   me={me}
