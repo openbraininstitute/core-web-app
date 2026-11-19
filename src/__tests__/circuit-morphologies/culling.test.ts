@@ -2,10 +2,11 @@
 import * as THREE from 'three/webgpu';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { HOLE } from '@/features/circuit-viewer/morphologies/engine/impostors';
+import { HOLE, MIN_RADIUS } from '@/features/circuit-viewer/morphologies/engine/impostors';
 import { arenaStorage } from '@/features/circuit-viewer/morphologies/engine/webgpu/arena-gpu';
 import { Culling, DRAWS } from '@/features/circuit-viewer/morphologies/engine/webgpu/culling';
 import { MOST_SEEN } from '@/features/circuit-viewer/morphologies/engine/webgpu/culling-wgsl';
+import { DepthPyramid } from '@/features/circuit-viewer/morphologies/engine/webgpu/depth-pyramid';
 
 import { fakeGpu } from './fake-gpu';
 
@@ -49,8 +50,8 @@ function cullingOn(options?: Parameters<typeof fakeGpu>[0]) {
   const culling = new Culling(renderer, device, arenaStorage(), counted);
   culling.setArena(ARENA);
   culling.targetOf(16, 8);
-  const run = (rest = 1, hiding = false, readBack = true) =>
-    culling.run(camera, shift, 12, HOLE, 100, rest, cells, hiding, readBack);
+  const run = (rest = 1, hiding = false, readBack = true, { replaying = false } = {}) =>
+    culling.run(camera, shift, 12, replaying, HOLE, 100, rest, cells, hiding, readBack);
   /** The next read mapped, finding `counts`, the blocks `marked` and `seen` segments seen. */
   const map = async (counts: CullTally, marked?: number[], seen?: number) => {
     gpu.found = wordsOf(counts, marked, seen);
@@ -85,6 +86,16 @@ describe("the culling's counts and its failures", () => {
     culling.setArena(null);
     await map(B);
     expect(counted).toHaveBeenCalledOnce();
+  });
+
+  it('tests a segment at the least radius it is drawn with, and at twice that while a replay is loaded', () => {
+    const build = vi.spyOn(DepthPyramid.prototype, 'build');
+    const { run } = cullingOn();
+    run();
+    expect(build.mock.lastCall?.[3][1]).toBe(MIN_RADIUS);
+    run(1, false, true, { replaying: true });
+    expect(build.mock.lastCall?.[3][1]).toBe(2 * MIN_RADIUS);
+    build.mockRestore();
   });
 
   it('draws each list from a buffer of its own', () => {
