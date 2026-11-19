@@ -92,7 +92,10 @@ export interface BoxRead {
 
 /** A pack's segments, read a box at a time as the view wants them. */
 export interface MorphologyChunks extends PackBoxes {
-  /** The segments of each box asked for, at its level, in that order, their cells numbered as the data's. */
+  /**
+   * The segments of each box asked for, at its level, in that order, their cells numbered as the data's. The arrays
+   * are the caller's from then on: the stream detaches them once it is done with them.
+   */
   read(wanted: BoxRead[]): Promise<MorphologySegments[]>;
   /** Where the pack is still coming in: a box is read at a level once its bytes are in. None, and the whole is. */
   arrival?: PackArrival;
@@ -148,6 +151,8 @@ export interface CullCounts extends CullTally {
 export interface CullRead extends CullTally {
   marked: Uint32Array;
   rest: number;
+  /** Whether more segments were seen than a frame may draw, so that the frame drew part of them. */
+  clamped: boolean;
 }
 
 /** What a view draws of morphologies read a box at a time. */

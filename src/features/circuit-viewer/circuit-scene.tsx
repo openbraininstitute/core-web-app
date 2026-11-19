@@ -16,7 +16,7 @@ import {
 } from '@/features/circuit-viewer/morphologies/use-morphology-pack-status';
 import { pathwayNodeColors } from '@/features/circuit-viewer/pathway-colors';
 import { PathwayKey } from '@/features/circuit-viewer/pathway-key';
-import { circuitMorphologiesFlag, debugFlag, useFlag } from '@/features/feature-flags';
+import { debugFlag, useFlag } from '@/features/feature-flags';
 import {
   CircuitVisualization,
   MemodelVisualization,
@@ -301,12 +301,8 @@ export function CircuitScene({
   const enableCellHover = Boolean(circuit) && (features?.cellHover ?? true);
   const enableNodesTable = Boolean(circuit) && (features?.nodesTable ?? true);
 
-  const morphologiesFlag = !!useFlag(circuitMorphologiesFlag.key);
   const smallForThePack =
-    morphologiesFlag &&
-    drawnLarge &&
-    circuit !== undefined &&
-    circuitSmallForThePack(circuit.scale);
+    drawnLarge && circuit !== undefined && circuitSmallForThePack(circuit.scale);
   // Asked again while it builds where the cells are drawn as somas until it is ready.
   const packStatus = useMorphologyPackStatus(drawnLarge ? circuit : undefined, {
     poll: !smallForThePack,
@@ -445,7 +441,7 @@ export function CircuitScene({
     hostPopulationName === undefined ? setTablePopulationName : undefined;
 
   // Drawn as somas, the cells can be switched to their morphologies where the circuit has its pack.
-  const supportsMorphologies = morphologiesFlag && largeCircuit && pack !== null;
+  const supportsMorphologies = largeCircuit && pack !== null;
   // Else why not, where it is coming or never will.
   const morphologiesNote =
     largeCircuit && !smallForThePack ? morphologyPackNote(packStatus) : undefined;

@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { CircuitScene } from '@/features/circuit-viewer/circuit-scene';
-import { circuitMorphologiesFlag } from '@/features/feature-flags/flags';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { MorphologyPackStatus } from '@/api/small-scale-simulator/circuit/morphology-pack';
@@ -46,7 +45,7 @@ vi.mock(
 
 vi.mock('@/features/feature-flags', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/features/feature-flags')>()),
-  useFlag: (key: string) => key === circuitMorphologiesFlag.key,
+  useFlag: () => false,
 }));
 
 vi.mock('@/features/scan-config/components/model-preview/large-circuit-preview', () => ({

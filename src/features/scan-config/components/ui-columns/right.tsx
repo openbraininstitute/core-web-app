@@ -155,6 +155,7 @@ export function EntityPreviewPane({
           // leaving the page would lose the config being viewed or edited
           openDetailsInNewTab
           interactive
+          dismissOnOutsideInteraction={!pinned}
           onClose={pinned ? undefined : () => setEntityPreview(null)}
         />
       ) : (
