@@ -12,14 +12,6 @@ export const aiPanelStateFlag = defineFlag<PanelState>({
   visible: false,
 });
 
-export const extractionActivityFlag = defineFlag<boolean>({
-  key: ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
-  defaultValue: false,
-  values: [true, false],
-  description: 'Full extraction workflow',
-  visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
-});
-
 export const brainRegionSimulationFlag = defineFlag<boolean>({
   key: 'brain-region-simulation',
   defaultValue: false,
@@ -111,7 +103,6 @@ export const emodelValidationFlag = defineFlag<boolean>({
 
 export const flags = [
   aiPanelStateFlag,
-  extractionActivityFlag,
   brainRegionSimulationFlag,
   extracellularRecordingArrayBuildFlag,
   electrodeOverlaysFlag,
