@@ -7,7 +7,7 @@ import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { withErrorConfig } from '@/components/GenericErrorFallback';
 import { WorkspaceSection } from '@/constants';
 import { resolveViewerFeaturesForEntityType } from '@/entity-configuration/domain/helpers';
-import { CircuitImage } from '@/features/scan-config/components/model-preview/circuit-preview';
+import { Visualization } from '@/ui/segments/explore/circuit/elements/visualization';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -50,11 +50,7 @@ export function CircuitDetailViewer({
         <ErrorBoundary
           // The circuit's still image, where it has one, in place of the viewer that failed.
           fallbackRender={(props) =>
-            hasImage ? (
-              <CircuitImage circuit={circuit} label={AssetLabel.circuit_visualization} />
-            ) : (
-              <ViewerError {...props} />
-            )
+            hasImage ? <Visualization circuit={circuit} /> : <ViewerError {...props} />
           }
         >
           <ModelPreview model={circuit} viewerFeatures={features} />
