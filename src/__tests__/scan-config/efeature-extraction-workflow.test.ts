@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { extractionActivityFlag, flags } from '@/features/feature-flags/flags';
+import { flags } from '@/features/feature-flags/flags';
 import { ScanConfigUIElementDict, SchemaNameDict } from '@/features/scan-config/types';
 import { extractEFeaturesWorkflow } from '@/features/scan-config/workflow/definitions/extract-efeatures';
 import { ScanConfigEntitySourceMode } from '@/features/scan-config/workflow/types';
@@ -29,7 +29,6 @@ import {
 import type { FeatureFlags } from '@/features/feature-flags/flags';
 
 const noFlags = {} as FeatureFlags;
-const circuitOnly = { [extractionActivityFlag.key]: true } as unknown as FeatureFlags;
 
 function extractionActivityVisible(flags: FeatureFlags) {
   return listActivities(flags).some((activity) => activity.value === 'extract');
@@ -92,14 +91,13 @@ describe('intracellular efeatures workflow registration', () => {
     expect(workflow?.disabled).toBe(false);
   });
 
-  it('leaves circuit extraction behind its flag', () => {
-    const find = (flags: FeatureFlags) =>
-      listWorkflows({ activity: 'extract', flags }).find(
-        (entry) => entry.targetType === ExtendedEntitiesTypeDict.CircuitExtractionCampaign
-      );
+  it('lists circuit extraction with no flags on', () => {
+    const workflow = listWorkflows({ activity: 'extract', flags: noFlags }).find(
+      (entry) => entry.targetType === ExtendedEntitiesTypeDict.CircuitExtractionCampaign
+    );
 
-    expect(find(noFlags)?.disabled ?? true).toBe(true);
-    expect(find(circuitOnly)?.disabled).toBe(false);
+    expect(workflow).toBeDefined();
+    expect(workflow?.disabled).toBe(false);
   });
 
   it('resolves its scan-config binding by target type', () => {

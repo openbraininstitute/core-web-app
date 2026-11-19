@@ -135,8 +135,16 @@ describe('the two kinds of the segments on WebGPU', () => {
     }
   });
 
+  const shown = (list: THREE.Material[]) => list.map((material) => material.visible);
+
+  it('starts with the kind for no replay, so that a frame the switch missed draws no segment twice', () => {
+    for (const kinds of [impostorMaterials(u, look), arenaMaterials(u, look, arenaStorage())]) {
+      expect(shown(kinds.segment)).toEqual([true, true]);
+      expect(shown(kinds.spikingSegment)).toEqual([false, false]);
+    }
+  });
+
   it('draws with the lit kind while a replay is loaded, and with the other while none is', () => {
-    const shown = (list: THREE.Material[]) => list.map((material) => material.visible);
     for (const kinds of [materials, arena]) {
       drawBySpikes(kinds, true);
       expect(shown(kinds.segment)).toEqual([false, false]);

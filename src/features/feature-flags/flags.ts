@@ -12,14 +12,6 @@ export const aiPanelStateFlag = defineFlag<PanelState>({
   visible: false,
 });
 
-export const extractionActivityFlag = defineFlag<boolean>({
-  key: ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
-  defaultValue: false,
-  values: [true, false],
-  description: 'Full extraction workflow',
-  visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
-});
-
 export const brainRegionSimulationFlag = defineFlag<boolean>({
   key: 'brain-region-simulation',
   defaultValue: false,
@@ -33,14 +25,6 @@ export const extracellularRecordingArrayBuildFlag = defineFlag<boolean>({
   defaultValue: false,
   values: [true, false],
   description: 'Extracellular recording array build',
-  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
-});
-
-export const memodelBuildViaLaunchSystemFlag = defineFlag<boolean>({
-  key: 'memodel-build-via-launch-system',
-  defaultValue: false,
-  values: [true, false],
-  description: 'Launch single neuron (ME-model) builds via the launch system',
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
@@ -119,10 +103,8 @@ export const emodelValidationFlag = defineFlag<boolean>({
 
 export const flags = [
   aiPanelStateFlag,
-  extractionActivityFlag,
   brainRegionSimulationFlag,
   extracellularRecordingArrayBuildFlag,
-  memodelBuildViaLaunchSystemFlag,
   electrodeOverlaysFlag,
   debugFlag,
   learnFlag,

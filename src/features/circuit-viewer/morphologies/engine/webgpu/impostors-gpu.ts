@@ -751,10 +751,10 @@ const somas = <M extends THREE.Material>(of: (kind: 'disc' | 'soma') => M) => [
  * what covers them. Each set draws the segments in two draws, the flat ones and the tubes. The look and the picks draw
  * the somas in two as well, the discs and the balls, so that a pick finds the cell the look shows. Lit through what
  * covers it, every soma is a ball: that draw tests no depth. The segments' look comes in two kinds (`drawBySpikes`);
- * the somas' is always the lit one: the other drew them no faster.
+ * the somas' is always the lit one.
  */
 export function impostorMaterials(u: GpuUniforms, look: Look) {
-  return {
+  const materials = {
     segment: segments((kind) => lookMaterial(kind, u, look, false)),
     spikingSegment: segments((kind) => lookMaterial(kind, u, look, true)),
     soma: somas((kind) => lookMaterial(kind, u, look, true)),
@@ -771,6 +771,8 @@ export function impostorMaterials(u: GpuUniforms, look: Look) {
       soma: throughMaterial('soma', u, { ...fromAttributes(), round: float(0) }),
     },
   };
+  drawBySpikes(materials, false);
+  return materials;
 }
 
 /**
@@ -782,7 +784,7 @@ export function arenaMaterials(u: GpuUniforms, look: Look, arena: ArenaStorage) 
     segments((kind) =>
       lookMaterial(kind, u, look, spikes, fromArena(u, arena, kind, 'seen'), arena)
     );
-  return {
+  const materials = {
     segment: drawn(false),
     spikingSegment: drawn(true),
     ids: segments((kind) => idMaterial(kind, u, false, fromArena(u, arena, kind, 'seen'))),
@@ -790,6 +792,8 @@ export function arenaMaterials(u: GpuUniforms, look: Look, arena: ArenaStorage) 
     seenDepth: segments((kind) => depthMaterial(kind, u, fromArena(u, arena, kind, 'seen'))),
     through: segments((kind) => throughMaterial(kind, u, fromArena(u, arena, kind, 'kept'))),
   };
+  drawBySpikes(materials, false);
+  return materials;
 }
 
 /** The segments' look in its two kinds: one that reads nothing of the spikes, and the same lit by them. */
@@ -801,7 +805,7 @@ export interface SegmentKinds {
 /**
  * Has frames drawn with the segments lit by the spikes while a replay is loaded, and otherwise with those that read
  * nothing of them, which draw the same picture for less. Both kinds are on the same quads, and three leaves out a mesh
- * whose material is not visible.
+ * whose material is not visible. The materials are made as with no replay loaded.
  */
 export function drawBySpikes({ segment, spikingSegment }: SegmentKinds, replaying: boolean): void {
   for (const material of segment) material.visible = !replaying;

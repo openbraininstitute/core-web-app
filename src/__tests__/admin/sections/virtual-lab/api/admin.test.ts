@@ -5,15 +5,19 @@ import {
   getLab,
   getLabMembers,
   getProjectMembers,
+  getPromotion,
   listLabs,
+  listPromotions,
   restoreProject,
   updateComputeCell,
   updateCreditRate,
+  updatePromotion,
 } from '@/admin/sections/virtual-lab/api/admin';
 
 const api = vi.hoisted(() => ({
   get: vi.fn(),
   post: vi.fn(),
+  put: vi.fn(),
   patch: vi.fn(),
   delete: vi.fn(),
 }));
@@ -83,6 +87,37 @@ describe('virtual-lab admin client', () => {
     expect(api.patch).toHaveBeenCalledWith(
       '/virtual-labs/lab%2F1/compute-cell',
       expect.objectContaining({ body: { compute_cell: 'cell_b' } })
+    );
+  });
+
+  it('pages promotions by limit and offset and unwraps them', async () => {
+    const promotions = [{ id: 'p' }];
+    api.get.mockResolvedValueOnce({
+      message: 'ok',
+      data: { promotions, pagination: { total: 41 } },
+    });
+
+    await expect(listPromotions({ page: 3, page_size: 20, active: false })).resolves.toEqual({
+      data: promotions,
+      pagination: { total: 41 },
+    });
+    expect(api.get).toHaveBeenCalledWith(
+      '/admin/promotions',
+      expect.objectContaining({ queryParams: { active: false, limit: 20, offset: 40 } })
+    );
+  });
+
+  it('unwraps a single promotion', async () => {
+    api.get.mockResolvedValueOnce({ message: 'ok', data: { id: 'p' } });
+    await expect(getPromotion('p')).resolves.toEqual({ id: 'p' });
+  });
+
+  it('updates a promotion with PUT', async () => {
+    await updatePromotion('p', { active: true });
+
+    expect(api.put).toHaveBeenCalledWith(
+      '/admin/promotions/p',
+      expect.objectContaining({ body: { active: true } })
     );
   });
 
