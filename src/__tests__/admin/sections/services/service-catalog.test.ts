@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { SERVICE_CATALOG, serviceBaseUrl } from '@/admin/sections/services/service-catalog';
+import {
+  SERVER_SERVICE_CATALOG,
+  SERVICE_CATALOG,
+  serviceBaseUrl,
+} from '@/admin/sections/services/service-catalog';
 
 describe('serviceBaseUrl', () => {
   it('probes auth-manager at the root, not under /v1', () => {
@@ -29,7 +33,13 @@ describe('SERVICE_CATALOG', () => {
     'cell-api',
     'accounting',
     'grading',
-  ])('has no browser probe for %s', (key) => {
+  ])('probes %s from the server, not the browser', (key) => {
     expect(SERVICE_CATALOG.some((service) => service.key === key)).toBe(false);
+    expect(SERVER_SERVICE_CATALOG.some((service) => service.key === key)).toBe(true);
+  });
+
+  it('gives each service its own key', () => {
+    const keys = [...SERVICE_CATALOG, ...SERVER_SERVICE_CATALOG].map(({ key }) => key);
+    expect(new Set(keys).size).toBe(keys.length);
   });
 });

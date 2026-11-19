@@ -1,14 +1,12 @@
-import type { PlatformApiUrlField } from '@/config/schema';
+import type { PlatformApiUrlField, ServerConfig } from '@/config/schema';
 
-// Services a browser can probe through the public gateway. Accounting and launch-system are
-// blocked by source IP, and grading and cell-api send no CORS header, so those need a
-// server-side probe.
+type ServiceUrlField = Extract<keyof ServerConfig, `${string}_URL`>;
 
-export type ServiceDescriptor = {
+export type ServiceDescriptor<ConfigKey extends ServiceUrlField = PlatformApiUrlField> = {
   key: string;
   label: string;
   description: string;
-  configKey: PlatformApiUrlField;
+  configKey: ConfigKey;
   healthPath: string;
   versionPath?: string;
   // auth-manager wraps its reply in `data`.
@@ -17,6 +15,7 @@ export type ServiceDescriptor = {
   stripFromUrl?: string;
 };
 
+// Probed from the browser, through the public gateway.
 export const SERVICE_CATALOG: ServiceDescriptor[] = [
   {
     key: 'entitycore',
@@ -79,6 +78,42 @@ export const SERVICE_CATALOG: ServiceDescriptor[] = [
     versionPath: '/version',
     versionInData: true,
     stripFromUrl: '/v1',
+  },
+];
+
+// Probed from the web app's server: accounting and launch-system allow it by source IP, and
+// grading and cell-api send no CORS header.
+export const SERVER_SERVICE_CATALOG: ServiceDescriptor<ServiceUrlField>[] = [
+  {
+    key: 'accounting',
+    label: 'Accounting',
+    description: 'Credits, jobs and prices',
+    configKey: 'ACCOUNTING_URL',
+    healthPath: '/health',
+    versionPath: '/version',
+  },
+  {
+    key: 'launch-system',
+    label: 'Launch System',
+    description: 'Jobs on cell A',
+    configKey: 'LAUNCH_SYSTEM_URL',
+    healthPath: '/health',
+    versionPath: '/version',
+  },
+  {
+    key: 'grading',
+    label: 'Grading',
+    description: 'Course assignment grading',
+    configKey: 'GRADING_SERVICE_URL',
+    healthPath: '/health',
+  },
+  {
+    key: 'cell-api',
+    label: 'Cell API',
+    description: 'Circuit cell positions',
+    configKey: 'CELL_API_URL',
+    healthPath: '/health',
+    versionPath: '/version',
   },
 ];
 

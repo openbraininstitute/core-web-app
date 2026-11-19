@@ -24,6 +24,17 @@ const currentCapabilities = cache(async (): Promise<OperatorCapabilities | null>
   return deriveCapabilities(groups);
 });
 
+// For route handlers, where a redirect would hand the caller an HTML page. `null` lets the
+// request through.
+export async function capabilityDenial(need: CapabilityPath): Promise<Response | null> {
+  const capabilities = await currentCapabilities().catch(() => null);
+  if (!capabilities) return Response.json({ message: 'Sign in again' }, { status: 401 });
+  if (!hasCapability(capabilities, need)) {
+    return Response.json({ message: "Your account isn't allowed to do this" }, { status: 403 });
+  }
+  return null;
+}
+
 export async function requireCapability(need: CapabilityPath): Promise<OperatorCapabilities> {
   const capabilities = await currentCapabilities();
   if (!capabilities) redirect(`/app/log-in?callbackUrl=${encodeURIComponent(ADMIN_ROOT)}`);

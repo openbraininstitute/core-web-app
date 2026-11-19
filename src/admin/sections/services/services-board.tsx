@@ -12,57 +12,101 @@ import { Button } from '@/ui/molecules/button';
 import { adminQueryKeys } from '../../query-keys';
 import { StatusPill } from '../../shared/status-pill';
 import { fetchServiceVersion, probeServiceHealth } from './health';
-import { SERVICE_CATALOG, serviceBaseUrl } from './service-catalog';
+import { SERVER_SERVICE_CATALOG, SERVICE_CATALOG, serviceBaseUrl } from './service-catalog';
 
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
-import type { ServiceHealth } from './health';
+import type { ServiceHealth, ServiceProbe } from './health';
 import type { ServiceDescriptor } from './service-catalog';
 
 const STATUS_REFRESH_MS = 60_000;
 const VERSION_STALE_MS = 5 * 60_000;
 
-type ServiceRow = ServiceDescriptor & { healthUrl: string; versionUrl?: string };
+// Rows probed from the server have no URLs here: the server's config holds them.
+type ServiceRow = Pick<ServiceDescriptor, 'key' | 'label' | 'description' | 'versionInData'> & {
+  healthUrl?: string;
+  versionUrl?: string;
+};
 
 const STATUS_LABEL: Record<ServiceHealth['status'], string> = {
   up: 'Operational',
   down: 'Down',
   unreachable: 'Unreachable',
+  blocked: 'Not reachable from here',
+  'not-configured': 'Not configured',
 };
 
-function useServiceHealth(service: ServiceRow) {
+const STATUS_TONE: Record<ServiceHealth['status'], 'good' | 'bad' | 'neutral'> = {
+  up: 'good',
+  down: 'bad',
+  unreachable: 'bad',
+  blocked: 'neutral',
+  'not-configured': 'neutral',
+};
+
+async function probeFromServer(key: string): Promise<ServiceProbe> {
+  const res = await fetch(`/api/admin/services/${encodeURIComponent(key)}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`The web app answered ${res.status}`);
+  return res.json();
+}
+
+function useServiceProbe({ key, healthUrl }: ServiceRow) {
   return useQuery({
-    queryKey: adminQueryKeys.serviceHealth(service.key),
-    queryFn: () => probeServiceHealth(service.healthUrl),
+    queryKey: adminQueryKeys.serviceHealth(key),
+    queryFn: async (): Promise<ServiceProbe> =>
+      healthUrl
+        ? { health: await probeServiceHealth(healthUrl), version: null, path: null }
+        : probeFromServer(key),
     refetchInterval: STATUS_REFRESH_MS,
   });
 }
 
 function StatusCell({ service }: { service: ServiceRow }) {
-  const { data: health } = useServiceHealth(service);
+  const { data, error } = useServiceProbe(service);
 
-  if (!health) return <span className="text-neutral-4">Checking</span>;
+  if (!data) {
+    return <span className="text-neutral-4">{error ? "Couldn't check" : 'Checking'}</span>;
+  }
 
+  const { status, httpStatus } = data.health;
   return (
-    <StatusPill tone={health.status === 'up' ? 'good' : 'bad'}>
-      {STATUS_LABEL[health.status]}
-      {health.status === 'down' && ` (${health.httpStatus})`}
+    <StatusPill tone={STATUS_TONE[status]}>
+      {STATUS_LABEL[status]}
+      {httpStatus && status !== 'up' && ` (${httpStatus})`}
     </StatusPill>
   );
 }
 
 function LatencyCell({ service }: { service: ServiceRow }) {
-  const { data: health } = useServiceHealth(service);
-  return health ? <span>{health.latencyMs} ms</span> : null;
+  const latencyMs = useServiceProbe(service).data?.health.latencyMs;
+  return latencyMs === undefined ? null : <span>{latencyMs} ms</span>;
 }
 
 function VersionCell({ service }: { service: ServiceRow }) {
-  const { versionUrl, versionInData } = service;
-  const { data: version } = useQuery({
-    queryKey: adminQueryKeys.serviceVersion(service.key),
-    queryFn: versionUrl ? () => fetchServiceVersion(versionUrl, versionInData) : skipToken,
+  const { key, versionUrl, versionInData } = service;
+  const fromServer = useServiceProbe(service).data?.version;
+  const { data: fromBrowser } = useQuery({
+    queryKey: adminQueryKeys.serviceVersion(key),
+    queryFn: versionUrl
+      ? () => fetchServiceVersion(versionUrl, { inData: versionInData })
+      : skipToken,
     staleTime: VERSION_STALE_MS,
   });
+  const version = fromBrowser ?? fromServer;
   return version ? <span className="font-mono text-sm">{version}</span> : null;
+}
+
+function HealthPathCell({ service }: { service: ServiceRow }) {
+  const fromServer = useServiceProbe(service).data?.path;
+  const path = service.healthUrl
+    ? new URL(service.healthUrl, 'http://localhost').pathname
+    : fromServer && `${fromServer}, from the server`;
+  if (!path) return null;
+
+  return (
+    <code title={path} className="text-neutral-4 truncate text-sm">
+      {path}
+    </code>
+  );
 }
 
 const COLUMNS: Array<ISimpleColumn<ServiceRow>> = [
@@ -80,7 +124,7 @@ const COLUMNS: Array<ISimpleColumn<ServiceRow>> = [
   {
     id: 'status',
     header: 'Status',
-    width: { flex: 1, minWidth: 170 },
+    width: { flex: 1, minWidth: 230 },
     renderCell: (service) => <StatusCell service={service} />,
   },
   {
@@ -100,11 +144,7 @@ const COLUMNS: Array<ISimpleColumn<ServiceRow>> = [
     id: 'url',
     header: 'Health check',
     width: { flex: 2, minWidth: 260 },
-    renderCell: ({ healthUrl }) => (
-      <code title={healthUrl} className="text-neutral-4 truncate text-sm">
-        {new URL(healthUrl, 'http://localhost').pathname}
-      </code>
-    ),
+    renderCell: (service) => <HealthPathCell service={service} />,
   },
 ];
 
@@ -128,9 +168,9 @@ function RefreshButton() {
 
 export function ServicesBoard() {
   // Not at module scope: the config is read lazily, and is empty while Next builds.
-  const services = useMemo(
-    () =>
-      SERVICE_CATALOG.map((descriptor) => {
+  const services = useMemo<ServiceRow[]>(
+    () => [
+      ...SERVICE_CATALOG.map((descriptor) => {
         const baseUrl = serviceBaseUrl(descriptor, config[descriptor.configKey]);
         return {
           ...descriptor,
@@ -138,6 +178,8 @@ export function ServicesBoard() {
           versionUrl: descriptor.versionPath && `${baseUrl}${descriptor.versionPath}`,
         };
       }),
+      ...SERVER_SERVICE_CATALOG,
+    ],
     []
   );
 
@@ -164,8 +206,9 @@ export function ServicesBoard() {
       </div>
 
       <p className="text-neutral-4 text-sm">
-        Accounting, launch system, grading and cell API don&apos;t accept browser requests, so they
-        aren&apos;t checked here.
+        Accounting, launch system, grading and cell API don&apos;t accept browser requests, so the
+        web app&apos;s server checks them. Accounting and launch system answer only the deployed web
+        app, so a local or preview server can&apos;t reach them.
       </p>
     </div>
   );

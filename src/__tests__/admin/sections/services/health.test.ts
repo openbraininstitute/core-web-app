@@ -50,7 +50,36 @@ describe('probeServiceHealth', () => {
   });
 });
 
+describe('probeServiceHealth from the server', () => {
+  it("doesn't follow a redirect", async () => {
+    fetchMock.mockResolvedValueOnce(Response.json({ status: 'OK' }));
+
+    await probeServiceHealth(`${BASE}/health`, true);
+    expect(fetchMock.mock.calls[0][1].redirect).toBe('manual');
+  });
+
+  it.each([
+    ['a JSON 200', Response.json({ status: 'OK' }), 'up'],
+    ['a JSON 503', Response.json({}, { status: 503 }), 'down'],
+    ["the gateway's redirect", new Response(null, { status: 302 }), 'blocked'],
+    ["the gateway's JSON 403", Response.json({ detail: 'Forbidden' }, { status: 403 }), 'blocked'],
+    ["the web app's HTML 404", new Response('<html>', { status: 404 }), 'blocked'],
+    ['an HTML 200', new Response('<html>', { status: 200 }), 'blocked'],
+  ])('reads %s as %s', async (_name, reply, status) => {
+    fetchMock.mockResolvedValueOnce(reply);
+
+    await expect(probeServiceHealth(`${BASE}/health`, true)).resolves.toMatchObject({ status });
+  });
+});
+
 describe('fetchServiceVersion', () => {
+  it("doesn't follow a redirect from the server", async () => {
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 302 }));
+
+    await expect(fetchServiceVersion(`${BASE}/version`, { fromServer: true })).resolves.toBeNull();
+    expect(fetchMock.mock.calls[0][1].redirect).toBe('manual');
+  });
+
   it.each([
     ['app_version', { app_version: '1.2.3' }],
     ['version', { version: '1.2.3' }],
@@ -66,7 +95,7 @@ describe('fetchServiceVersion', () => {
       json({ version: 'v1', data: { app_version: '2.0.0' } })
     );
 
-    await expect(fetchServiceVersion(`${BASE}/version`, true)).resolves.toBe('2.0.0');
+    await expect(fetchServiceVersion(`${BASE}/version`, { inData: true })).resolves.toBe('2.0.0');
     await expect(fetchServiceVersion(`${BASE}/version`)).resolves.toBe('v1');
   });
 

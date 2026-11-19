@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { requireCapability } from '@/admin/server/require-capability';
+import { capabilityDenial, requireCapability } from '@/admin/server/require-capability';
 
 const { authMock, getKeycloakGroupsMock, redirectMock } = vi.hoisted(() => ({
   authMock: vi.fn(),
@@ -72,5 +72,32 @@ describe('requireCapability', () => {
       entitycore: { admin: true },
       admin: { access: true },
     });
+  });
+});
+
+describe('capabilityDenial', () => {
+  it('answers a signed-out caller with 401 instead of a redirect', async () => {
+    authMock.mockResolvedValueOnce(null);
+
+    expect((await capabilityDenial('admin.access'))?.status).toBe(401);
+    expect(redirectMock).not.toHaveBeenCalled();
+  });
+
+  it('answers a token Keycloak rejects with 401', async () => {
+    getKeycloakGroupsMock.mockResolvedValueOnce(null);
+
+    expect((await capabilityDenial('admin.access'))?.status).toBe(401);
+  });
+
+  it('answers a caller without the capability with 403', async () => {
+    getKeycloakGroupsMock.mockResolvedValueOnce(['/service/entitycore/admin']);
+
+    expect((await capabilityDenial('launchSystem.admin'))?.status).toBe(403);
+  });
+
+  it('lets a caller with the capability through', async () => {
+    getKeycloakGroupsMock.mockResolvedValueOnce(['/service/launch-system/admin']);
+
+    await expect(capabilityDenial('launchSystem.admin')).resolves.toBeNull();
   });
 });
