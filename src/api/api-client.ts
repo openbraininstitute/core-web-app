@@ -104,7 +104,8 @@ class ApiClient {
       return response as unknown as T;
     }
     const contentType = response.headers.get('Content-Type') || '';
-    if (contentType.includes('application/json')) {
+    // `+json` too: RFC 9457 errors come as application/problem+json.
+    if (/application\/([\w.-]+\+)?json/.test(contentType)) {
       return response.json();
     }
     if (contentType.includes('text')) {
@@ -132,8 +133,13 @@ class ApiClient {
         if (!options.body) {
           return undefined;
         }
-        if (options.body instanceof FormData) {
-          return options.body;
+        if (
+          options.body instanceof FormData ||
+          options.body instanceof Blob ||
+          options.body instanceof ArrayBuffer ||
+          ArrayBuffer.isView(options.body)
+        ) {
+          return options.body as BodyInit;
         }
         return JSON.stringify(options.body);
       })(),

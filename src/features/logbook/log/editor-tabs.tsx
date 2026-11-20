@@ -1,0 +1,269 @@
+import { isNil } from 'es-toolkit';
+import { Fragment, useEffect, useRef, useState } from 'react';
+
+import { tabKey } from '@/features/logbook/log/open-tabs';
+import { Icon } from '@/features/logbook/ui/icons';
+
+import type { KeyboardEvent as ReactKeyboardEvent, ReactNode, WheelEvent } from 'react';
+import type { ITabRef } from '@/features/logbook/log/open-tabs';
+
+const TAB =
+  'group relative flex h-10 cursor-pointer items-center gap-2 rounded-t-[12px] border border-b-0 border-transparent pr-1.5 pl-3 text-[13px] font-semibold text-neutral-4 outline-none transition-colors duration-150 ease-[ease] hover:bg-white/70 hover:text-primary-9 focus-visible:ring-2 focus-visible:ring-primary-4 focus-visible:ring-inset aria-selected:z-1 aria-selected:border-rule aria-selected:bg-white aria-selected:text-primary-9';
+const CLOSE =
+  'grid size-6 flex-none place-items-center rounded-full text-neutral-4 hover:bg-fill-2 hover:text-primary-9';
+
+export interface IEditorTab {
+  readonly tab: ITabRef;
+  readonly label: string;
+  readonly hint: string;
+  readonly icon: ReactNode;
+  readonly pinned: boolean; // the main page: named after the log, never closed
+}
+
+export interface IEditorTabsProps {
+  readonly tabs: readonly IEditorTab[];
+  readonly active: ITabRef;
+  readonly page: ITabRef; // the page behind the editor: its tab shows the save status
+  readonly status: ReactNode;
+  readonly canRename: boolean;
+  readonly onRename: (name: string) => Promise<unknown>;
+  readonly onSelect: (tab: ITabRef) => void;
+  readonly onClose: (tab: ITabRef) => void;
+}
+
+function TitleField({
+  title,
+  onRename,
+}: {
+  readonly title: string;
+  readonly onRename: (name: string) => Promise<unknown>;
+}) {
+  const [value, setValue] = useState(title);
+  // A rename from elsewhere replaces the draft, during render rather than in an effect.
+  const [seen, setSeen] = useState(title);
+  if (seen !== title) {
+    setSeen(title);
+    setValue(title);
+  }
+  const save = (): void => {
+    const name = value.trim();
+    if (name.length === 0 || name === title) {
+      setValue(title);
+      return;
+    }
+    onRename(name).catch(() => setValue(title));
+  };
+  return (
+    <input
+      className="w-full min-w-0 truncate rounded-[6px] border-0 bg-transparent p-0 text-[13px] font-bold text-primary-9 outline-none focus:bg-soft"
+      aria-label="Name of the log"
+      title="Rename the log"
+      value={value}
+      maxLength={300}
+      onChange={(event) => setValue(event.target.value)}
+      onBlur={save}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter') event.currentTarget.blur();
+        if (event.key === 'Escape') {
+          const field = event.currentTarget;
+          setValue(title);
+          requestAnimationFrame(() => field.blur());
+        }
+      }}
+    />
+  );
+}
+
+function TabList({
+  tabs,
+  active,
+  onSelect,
+  onClose,
+  onDone,
+}: {
+  readonly tabs: readonly IEditorTab[];
+  readonly active: string;
+  readonly onSelect: (tab: ITabRef) => void;
+  readonly onClose: (tab: ITabRef) => void;
+  readonly onDone: () => void;
+}) {
+  return (
+    <>
+      <button
+        type="button"
+        className="fixed inset-0 z-40 cursor-default border-0 bg-transparent"
+        aria-label="Close the list of tabs"
+        onClick={onDone}
+      />
+      <div
+        className="pop absolute top-11 right-0 z-41 flex max-h-[min(420px,70vh)] w-[280px] flex-col overflow-y-auto p-1.5"
+        role="menu"
+        aria-label="Open tabs"
+        onKeyDown={(event) => event.key === 'Escape' && onDone()}
+      >
+        {tabs.map((item) => (
+          <div
+            key={tabKey(item.tab)}
+            className="flex items-center gap-1 rounded-[10px] pr-1 hover:bg-fill-item-hover data-[on=true]:bg-fill-2"
+            data-on={tabKey(item.tab) === active}
+          >
+            <button
+              type="button"
+              role="menuitem"
+              className="flex min-w-0 flex-1 items-center gap-2.5 px-2.5 py-2 text-left text-[13px] font-semibold text-primary-9"
+              onClick={() => {
+                onSelect(item.tab);
+                onDone();
+              }}
+            >
+              <span className="flex flex-none">{item.icon}</span>
+              <span className="truncate">{item.label}</span>
+            </button>
+            {item.pinned ? null : (
+              <button
+                type="button"
+                className={CLOSE}
+                aria-label={`Close ${item.label}`}
+                onClick={() => onClose(item.tab)}
+              >
+                <Icon name="close" size={11} stroke={2.6} />
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+// Vertical wheel scrolls the strip sideways, like browser tabs.
+const wheel = (event: WheelEvent<HTMLDivElement>): void => {
+  if (Math.abs(event.deltaY) > Math.abs(event.deltaX))
+    event.currentTarget.scrollLeft += event.deltaY;
+};
+
+export function EditorTabs(props: IEditorTabsProps) {
+  const { tabs } = props;
+  const active = tabKey(props.active);
+  const page = tabKey(props.page);
+  const activeAt = tabs.findIndex((item) => tabKey(item.tab) === active);
+  const strip = useRef<HTMLDivElement>(null);
+  const [overflow, setOverflow] = useState(false);
+  const [listOpen, setListOpen] = useState(false);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-run when tabs open or close
+  useEffect(() => {
+    const el = strip.current;
+    if (isNil(el)) return;
+    const check = (): void => setOverflow(el.scrollWidth > el.clientWidth + 1);
+    check();
+    const observer = new ResizeObserver(check);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [tabs.length]);
+  // Keep the selected tab in view.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-run when the selected tab or the tabs change
+  useEffect(() => {
+    strip.current
+      ?.querySelector('[aria-selected="true"]')
+      ?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }, [active, tabs.length]);
+
+  const keys = (item: IEditorTab) => (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget) return;
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      props.onSelect(item.tab);
+    }
+    if ((event.key === 'Delete' || event.key === 'Backspace') && !item.pinned)
+      props.onClose(item.tab);
+  };
+
+  return (
+    <div className="relative flex min-w-0 flex-1 items-end gap-1">
+      <div
+        ref={strip}
+        className="flex min-w-0 flex-1 items-end overflow-x-auto overflow-y-hidden [scrollbar-width:none]"
+        role="tablist"
+        aria-label="Open in the editor"
+        onWheel={wheel}
+      >
+        {tabs.map((item, index) => {
+          const key = tabKey(item.tab);
+          const selected = index === activeAt;
+          return (
+            <Fragment key={key}>
+              {index > 0 ? (
+                <span
+                  className="mb-3 h-4 w-px flex-none bg-neutral-3 data-[hidden=true]:bg-transparent"
+                  data-hidden={selected || index - 1 === activeAt}
+                  aria-hidden="true"
+                />
+              ) : null}
+              <div
+                role="tab"
+                aria-selected={selected}
+                tabIndex={selected ? 0 : -1}
+                className={`${TAB} ${item.pinned ? 'min-w-[150px] flex-[0_1_280px]' : 'min-w-[124px] flex-[0_1_200px]'}`}
+                title={item.hint}
+                data-testid="logbook-tab"
+                onClick={() => props.onSelect(item.tab)}
+                onKeyDown={keys(item)}
+              >
+                <span className="flex flex-none">{item.icon}</span>
+                <span className="flex min-w-0 flex-1">
+                  {item.pinned && selected && props.canRename ? (
+                    <TitleField title={item.label} onRename={props.onRename} />
+                  ) : (
+                    <span className="truncate">{item.label}</span>
+                  )}
+                </span>
+                {key === page ? (
+                  <span className="flex flex-none pr-1.5 pl-1">{props.status}</span>
+                ) : null}
+                {item.pinned ? null : (
+                  <button
+                    type="button"
+                    className={`${CLOSE} opacity-0 transition-opacity group-hover:opacity-100 group-aria-selected:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100`}
+                    aria-label={`Close ${item.label}`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      props.onClose(item.tab);
+                    }}
+                  >
+                    <Icon name="close" size={11} stroke={2.6} />
+                  </button>
+                )}
+              </div>
+            </Fragment>
+          );
+        })}
+      </div>
+      {overflow ? (
+        <div className="relative mb-1.5 flex-none">
+          <button
+            type="button"
+            className="inline-flex h-9 items-center gap-1 rounded-full px-2.5 text-[12px] font-bold text-primary-9 hover:bg-white aria-expanded:bg-white"
+            aria-label={`All ${tabs.length} open tabs`}
+            aria-haspopup="menu"
+            aria-expanded={listOpen}
+            title="All open tabs"
+            onClick={() => setListOpen((open) => !open)}
+          >
+            {tabs.length}
+            <Icon name="chevronDown" size={14} stroke={2.4} />
+          </button>
+          {listOpen ? (
+            <TabList
+              tabs={tabs}
+              active={active}
+              onSelect={props.onSelect}
+              onClose={props.onClose}
+              onDone={() => setListOpen(false)}
+            />
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}

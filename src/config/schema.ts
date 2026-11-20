@@ -55,6 +55,12 @@ const configFields = {
   THUMBNAIL_API_URL: { schema: z.url().optional(), public: true },
   VIRTUAL_LAB_API_URL: { schema: z.url().optional(), public: true },
   LAUNCH_SYSTEM_URL: { schema: z.url().optional(), public: true },
+  LOGBOOK_URL: { schema: z.url().optional(), public: true },
+  LOGBOOK_COLLABORATION_HIDDEN_PAUSE_S: {
+    schema: z.coerce.number().int().min(0).default(300),
+    public: true,
+  },
+  LOGBOOK_UPLOAD_MAX_MB: { schema: z.coerce.number().int().min(1).default(100), public: true },
   ROOT_ROUTE: { schema: z.string(), public: true },
 
   SENTRY_DSN: {
@@ -132,6 +138,7 @@ const platformApiUrlFields = {
   THUMBNAIL_API_URL: '/thumbnail-generation',
   VIRTUAL_LAB_API_URL: '/virtual-lab-manager',
   LAUNCH_SYSTEM_URL: '/launch-system',
+  LOGBOOK_URL: '/logbook',
 } as const satisfies Partial<Record<keyof typeof configFields, string>>;
 
 export type PlatformApiUrlField = keyof typeof platformApiUrlFields;
