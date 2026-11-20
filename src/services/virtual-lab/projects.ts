@@ -1,5 +1,5 @@
-import authFetch, { authFetchWithoutRetry } from '@/auth-fetch';
 import { config } from '@/config';
+import authFetch, { authFetchWithoutRetry } from '@/features/auth/auth-fetch';
 
 import type {
   ProjectBalance,

@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { requestDownloadTicket } from '@/api/entity-download';
 import { POST } from '@/app/api/entity-download/[entityType]/ticket/route';
 
-vi.mock('@/auth', () => ({ auth: vi.fn(async () => ({ user: {} })) }));
+vi.mock('@/features/auth/server', () => ({ auth: vi.fn(async () => ({ user: {} })) }));
 vi.mock('@/utils/logger', () => ({ logError: vi.fn(), logInfo: vi.fn() }));
 
 function answer(status: number, body: unknown) {

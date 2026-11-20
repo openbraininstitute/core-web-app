@@ -3,9 +3,9 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
-import { authFetch } from '@/auth-fetch';
 import { ErrorComponent } from '@/components/GenericErrorFallback';
 import { useConfig } from '@/config';
+import { authFetch } from '@/features/auth/auth-fetch';
 import { Button } from '@/ui/molecules/button';
 
 import type { ClaimResponse } from '@/api/virtual-lab-svc/queries/course';

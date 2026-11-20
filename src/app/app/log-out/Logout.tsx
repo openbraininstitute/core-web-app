@@ -1,8 +1,8 @@
 'use client';
 
-import { signOut } from 'next-auth/react';
 import { useEffect } from 'react';
 
+import { signOut } from '@/features/auth/client';
 import { CONNECTIVITY_H5_CACHE } from '@/features/circuit-nodes/connectivity/cache-name';
 import { CIRCUIT_H5_CACHE } from '@/features/circuit-nodes/types';
 import { NWB_H5_CACHE } from '@/features/ephys-viewer/constants';

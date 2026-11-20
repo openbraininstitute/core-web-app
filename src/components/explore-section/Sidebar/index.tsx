@@ -1,7 +1,6 @@
 import { ArrowRightOutlined } from '@ant-design/icons';
 import { atom, useAtomValue } from 'jotai';
 import { usePathname } from 'next/navigation';
-import { useSession } from 'next-auth/react';
 
 import ApplicationSidebar, {
   NavigationItem,
@@ -9,6 +8,8 @@ import ApplicationSidebar, {
 } from '@/components/ApplicationSidebar';
 import Link from '@/components/Link';
 import { MainNavigation } from '@/components/main';
+import { useAuthSession } from '@/features/auth/client';
+import { AuthStatus } from '@/features/auth/constants';
 import { classNames } from '@/util/utils';
 
 const EXPLORE_NAVIGATION_LIST: Array<NavigationItemProps> = [
@@ -70,8 +71,8 @@ function ExploreSideBarHeader() {
 }
 
 export default function ExploreSidebar() {
-  const { status } = useSession();
-  const Control = status === 'unauthenticated' ? MainNavigation : ExploreNavigation;
+  const { status } = useAuthSession();
+  const Control = status === AuthStatus.Unauthenticated ? MainNavigation : ExploreNavigation;
 
   return (
     <ApplicationSidebar title={ExploreSideBarHeader}>

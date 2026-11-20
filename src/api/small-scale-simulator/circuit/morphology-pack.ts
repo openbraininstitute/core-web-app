@@ -1,7 +1,7 @@
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { smallScaleSimulatorApi } from '@/api/small-scale-simulator/utils';
-import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
+import { getSession } from '@/features/auth/auth-fetch';
 
 import type { WorkspaceContext } from '@/types/common';
 

@@ -3,7 +3,7 @@
 import React from 'react';
 
 import { useSnapshot } from '@/features/ai-assistant/chat/suggested-questions/snapshot';
-import { useAccessToken } from '@/hooks/useAccessToken';
+import { useAccessToken } from '@/features/auth/client/use-access-token';
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
 
 import { serviceAiAgentSuggestionFromUserJourney } from '../api/suggestion';

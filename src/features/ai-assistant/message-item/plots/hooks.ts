@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { useAccessToken } from '@/hooks/useAccessToken';
+import { useAccessToken } from '@/features/auth/client/use-access-token';
 import { serviceAiAgentStorageGetFileContent } from '@/services/ai-agent/api/storage';
 
 export function usePlotFile(fileIdentifier: string) {

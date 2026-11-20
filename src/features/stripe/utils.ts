@@ -1,6 +1,6 @@
 import type { StripeAddressElementChangeEvent } from '@stripe/stripe-js';
-import type { User } from 'next-auth';
 import type { TBillingAddress } from '@/api/virtual-lab-svc/queries/types';
+import type { TUser } from '@/features/auth/types';
 
 export function makeBillingAddressFromStripeEvent(
   event: StripeAddressElementChangeEvent
@@ -20,7 +20,7 @@ export function makeBillingAddressFromStripeEvent(
   };
 }
 
-export function makeStripeBilling(address: TBillingAddress, user: User) {
+export function makeStripeBilling(address: TBillingAddress, user: TUser) {
   return {
     email: user.email,
     name: address.name || user.name,

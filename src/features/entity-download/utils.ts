@@ -10,7 +10,7 @@ import template from 'es-toolkit/compat/template';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import ApiError from '@/api/error';
-import { getSession } from '@/auth-fetch';
+import { getSession } from '@/features/auth/auth-fetch';
 import { logError } from '@/utils/logger';
 
 import type { ReadableStream as NodeReadableStream } from 'node:stream/web';

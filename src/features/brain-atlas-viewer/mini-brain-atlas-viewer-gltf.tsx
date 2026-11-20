@@ -2,12 +2,12 @@
 
 import { useEffect, useMemo, useRef } from 'react';
 
+import { useAccessToken } from '@/features/auth/client/use-access-token';
 import {
   makeColor,
   usePainter,
   usePainterLoadingListener,
 } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/hooks';
-import { useAccessToken } from '@/hooks/useAccessToken';
 import { classNames } from '@/util/utils';
 
 import type { VisibleRegion } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/types';

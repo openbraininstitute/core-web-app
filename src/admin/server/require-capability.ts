@@ -3,7 +3,7 @@ import 'server-only';
 import { redirect } from 'next/navigation';
 import { cache } from 'react';
 
-import { auth } from '@/auth';
+import { auth } from '@/features/auth/server';
 
 import { deriveCapabilities } from '../capabilities/derive';
 import { hasCapability } from '../capabilities/has-capability';

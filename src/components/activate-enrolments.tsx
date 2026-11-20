@@ -4,8 +4,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { authFetch } from '@/auth-fetch';
 import { useConfig } from '@/config';
+import { authFetch } from '@/features/auth/auth-fetch';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder, prefix } from '@/ui/use-query-keys/workspace';
 

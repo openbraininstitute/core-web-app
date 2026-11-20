@@ -1,12 +1,16 @@
 'use server';
 
-import { getSession } from '@/auth-fetch';
 import { serverConfig as config } from '@/config/server';
+import { getSession } from '@/features/auth/auth-fetch';
 
+/**
+ * Ends the Keycloak SSO session. Without an id token (a session whose token refresh failed)
+ * there is nothing to end at Keycloak; the local sign-out in `<Logout />` must still run.
+ */
 export async function keycloakLogout() {
   const session = await getSession();
   const idToken = session?.idToken;
-  if (!idToken) throw new Error("Couldn't locate id token");
+  if (!idToken) return;
 
   const params = new URLSearchParams({
     client_id: config.KEYCLOAK_CLIENT_ID,

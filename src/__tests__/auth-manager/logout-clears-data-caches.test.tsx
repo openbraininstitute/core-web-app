@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import Logout from '@/app/app/log-out/Logout';
 
 const signOut = vi.hoisted(() => vi.fn());
-vi.mock('next-auth/react', () => ({ signOut }));
+vi.mock('@/features/auth/client', () => ({ signOut }));
 
 afterEach(() => {
   vi.unstubAllGlobals();

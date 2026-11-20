@@ -4,7 +4,7 @@ import { getPreviewBlob, isTransientThumbnailError, ThumbnailError } from '@/api
 
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 
-vi.mock('@/auth-fetch', () => ({
+vi.mock('@/features/auth/auth-fetch', () => ({
   getSession: vi.fn().mockResolvedValue({ accessToken: 'token' }),
 }));
 

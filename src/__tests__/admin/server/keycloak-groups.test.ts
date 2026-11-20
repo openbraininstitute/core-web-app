@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { BoundedCache } from '@/admin/server/keycloak-groups';
 
-import type { Session } from 'next-auth';
+import type { ISession } from '@/features/auth/types';
 
 vi.mock('@/config/server', () => ({
   serverConfig: { KEYCLOAK_ISSUER: 'https://keycloak.test/realms/obp' },
@@ -12,7 +12,7 @@ vi.mock('@/utils/logger', () => ({ log: vi.fn() }));
 const SESSION = {
   user: { id: 'sub-1' },
   accessToken: 'access-token-1',
-} as unknown as Session;
+} as unknown as ISession;
 
 const fetchMock = vi.fn();
 
@@ -136,7 +136,7 @@ describe('getKeycloakGroups', () => {
   });
 
   it('answers null without calling Keycloak when there is no access token', async () => {
-    const noToken = { user: { id: 'sub-2' } } as unknown as Session;
+    const noToken = { user: { id: 'sub-2' } } as unknown as ISession;
 
     await expect(getKeycloakGroups(noToken)).resolves.toBeNull();
     expect(fetchMock).not.toHaveBeenCalled();
