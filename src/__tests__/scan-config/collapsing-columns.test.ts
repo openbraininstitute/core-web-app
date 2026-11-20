@@ -49,4 +49,15 @@ describe('columnsTemplate', () => {
     );
     expect(columnsTemplate({ left: 0, middle: 0, shut: 'both' })).toBe(`${bar} minmax(0,1fr)`);
   });
+
+  it('leaves the middle column shut alone no bar where it is opened again another way', () => {
+    const bar = `${SHUT_BAR_SIZE}px`;
+    expect(columnsTemplate({ left: 400, middle: 0, shut: 'middle' }, false)).toBe(
+      '400px 0px minmax(0,1fr)'
+    );
+    // with the left one shut too, the bar is the one way back
+    expect(columnsTemplate({ left: 0, middle: 0, shut: 'both' }, false)).toBe(
+      `${bar} minmax(0,1fr)`
+    );
+  });
 });

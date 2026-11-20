@@ -7,6 +7,7 @@ import { diffBarDataAtom } from '@/features/ai-assistant/chat/use-last-message-d
 import { showRestoreAtom } from '@/features/ai-assistant/message-item/collapsible-message/collapsible-message';
 import { useScanConfigWorkflowEditorField } from '@/features/scan-config/bridge/editor-context';
 import { useSetScanConfigEntityPreview } from '@/features/scan-config/bridge/entity-preview';
+import { withoutInfoErrors } from '@/features/scan-config/components/campaign-info/info-block';
 import {
   nextEntryName,
   useEntries,
@@ -98,7 +99,10 @@ export function useScanConfigTemplate({
   });
   useDefaultValidationTargets({ schemaName, config, setConfig });
   const allEntries = useEntries({ config, schema });
-  const errors = useValidateSchema({ initialConfig, config, schema });
+  const schemaErrors = useValidateSchema({ initialConfig, config, schema });
+  // The campaign's name and description (obi-one's `block_info`) are asked for as it is generated,
+  // so their being empty is no error of the config: no warning by the block, no Generate held back.
+  const errors = useMemo(() => withoutInfoErrors(schemaErrors, schema), [schemaErrors, schema]);
   const editingLocked = useScanConfigEditingLocked({
     campaignId,
     loading,

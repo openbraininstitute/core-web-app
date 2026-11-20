@@ -18,6 +18,7 @@ import {
   type Config,
   type ConfigSchema,
   type ConfigValue,
+  isSingleBlockElement,
   isType,
   ScanConfigUIElementDict,
   type SchemaName,
@@ -187,10 +188,7 @@ export function useDefaultConfig(schemaName: SchemaName) {
 }
 
 export function isRootBlock(schema: ConfigSchema, key: string) {
-  return (
-    schema.properties?.[key] &&
-    schema.properties[key].ui_element === ScanConfigUIElementDict.BlockSingle
-  );
+  return schema.properties?.[key] && isSingleBlockElement(schema.properties[key]);
 }
 
 export function isRootBlockSingle(schema: ConfigSchema, key: string) {
@@ -271,7 +269,7 @@ function buildInitialConfigState(
 
     if (!isPlainObject(initialConfigforKey)) return;
 
-    if (v.ui_element === ScanConfigUIElementDict.BlockSingle) {
+    if (isSingleBlockElement(v)) {
       Object.entries(v.properties).forEach(([subkey, subValue]) => {
         if (subkey in initialConfigforKey) return;
 

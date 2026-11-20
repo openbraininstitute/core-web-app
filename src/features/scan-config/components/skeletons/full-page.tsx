@@ -54,34 +54,6 @@ function LeftColumnSkeleton() {
   );
 }
 
-function MiddleColumnSkeleton() {
-  return (
-    <div
-      className={cn(
-        styles.scrollable,
-        'h-full overflow-y-auto no-scrollbar border-l border-gray-200 px-3'
-      )}
-    >
-      <div className="space-y-4 flex flex-col gap-4">
-        <div className="space-y-2 mb-10">
-          <Skeleton className="h-3 w-48 rounded-full" />
-          <Skeleton className="h-3 w-full rounded-full" />
-          <Skeleton className="h-3 w-full rounded-full" />
-          <Skeleton className="h-3 w-3/4 rounded-full" />
-        </div>
-        <div className="space-y-2 h-14!">
-          <Skeleton className="h-3 w-28 rounded-full" />
-          <Skeleton className="h-12! w-full rounded-full" />
-        </div>
-        <div className="space-y-2 h-14!">
-          <Skeleton className="h-3 w-32 rounded-full" />
-          <Skeleton className="h-12! w-full rounded-full" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function ModelPreviewSkeleton() {
   return <div className="h-full rounded-lg bg-gray-100 animate-pulse mr-3" />;
 }
@@ -127,10 +99,10 @@ export function ScanConfigSkeleton({
         disableConfigurationTab={false}
         results={null}
         configuration={
-          // As the configuration lays out: the blocks and their form in one window, the preview
-          // beside it, edge to edge with the toolbar's ends.
+          // As the configuration first lays out: the blocks' list alone in a slim window, the form
+          // folded away, and the preview over the rest, edge to edge with the toolbar's ends.
           <div className="flex min-h-0 flex-1 flex-col pt-2 pb-2">
-            <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-1.25 overflow-hidden *:min-w-0">
+            <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_minmax(0,0fr)_minmax(0,3fr)] gap-1.25 overflow-hidden *:min-w-0">
               <div
                 className={cn(
                   BOX_CLASS,
@@ -138,7 +110,6 @@ export function ScanConfigSkeleton({
                 )}
               >
                 <LeftColumnSkeleton />
-                <MiddleColumnSkeleton />
               </div>
               {activity === ScanConfigActivity.Simulate ? (
                 <BoxedPreviewSkeleton />

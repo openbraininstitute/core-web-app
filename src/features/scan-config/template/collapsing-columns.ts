@@ -34,11 +34,15 @@ export function columnsAt(x: number, width: number, left: number): IColumnsLayou
   return { left: 0, middle: 0, shut: 'both' };
 }
 
-/** The grid's columns for a layout: the open ones, the bar for those shut, and the preview. */
-export function columnsTemplate({ left, middle, shut }: IColumnsLayout): string {
+/**
+ * The grid's columns for a layout: the open ones, the bar for those shut, and the preview. With
+ * `middleBar` off, the middle one shut alone leaves no bar, only a track of nothing: it is opened
+ * again another way.
+ */
+export function columnsTemplate({ left, middle, shut }: IColumnsLayout, middleBar = true): string {
   const bar = `${SHUT_BAR_SIZE}px`;
   if (shut === 'both') return `${bar} minmax(0,1fr)`;
-  if (shut === 'middle') return `${left}px ${bar} minmax(0,1fr)`;
+  if (shut === 'middle') return `${left}px ${middleBar ? bar : '0px'} minmax(0,1fr)`;
   return `${left}px ${middle}px minmax(0,1fr)`;
 }
 
@@ -47,7 +51,7 @@ export function columnsTemplate({ left, middle, shut }: IColumnsLayout): string 
  * the grid's width, the edge dragged to (null where it was never dragged, the `1fr 1fr 2fr` the
  * layout began with), and the way back to that.
  */
-export function useCollapsingColumns() {
+export function useCollapsingColumns({ middleBar = true }: { middleBar?: boolean } = {}) {
   const gridRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
   const [edge, setEdge] = useState<number | null>(null);
@@ -66,7 +70,7 @@ export function useCollapsingColumns() {
   return {
     gridRef,
     /** Null until dragged: the layout's own fractions. */
-    template: layout ? columnsTemplate(layout) : null,
+    template: layout ? columnsTemplate(layout, middleBar) : null,
     shut: layout?.shut ?? 'none',
     onEdgeDrag: setEdge,
     reset,
