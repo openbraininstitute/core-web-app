@@ -8,7 +8,7 @@ export function ViewerFrame({ children }: { readonly children: ReactNode }) {
 export function ViewerMessage({ text }: { readonly text: string }) {
   return (
     <ViewerFrame>
-      <p className="grid h-full place-items-center text-[13px] text-neutral-4">{text}</p>
+      <p className="m-0 grid h-full place-items-center text-[13px] text-neutral-4">{text}</p>
     </ViewerFrame>
   );
 }

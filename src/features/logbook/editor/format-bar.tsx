@@ -82,6 +82,39 @@ export function FormatTools({
   ));
 }
 
+// Plain text or one of the three headings, for the block the caret is in.
+export function TextStyleSelect({
+  editor,
+  style,
+  disabled,
+}: {
+  readonly editor: Editor;
+  readonly style: TTextStyle;
+  readonly disabled: boolean;
+}) {
+  return (
+    <select
+      className={cn(
+        'h-8 cursor-pointer rounded-lg border-0 bg-transparent px-2 text-[13px] font-semibold text-neutral-4 enabled:hover:bg-fill-2',
+        FOCUS,
+        FADE
+      )}
+      aria-label="Text style"
+      value={style}
+      disabled={disabled}
+      onChange={(event) => {
+        if (isTextStyle(event.target.value)) setTextStyle(editor, event.target.value);
+      }}
+    >
+      {TEXT_STYLES.map(({ style: option, label }) => (
+        <option key={option} value={option}>
+          {label}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 export function FormatBar({
   editor,
   disabled,
@@ -111,25 +144,7 @@ export function FormatBar({
         onRun={() => editor.chain().focus().redo().run()}
       />
       <span className={TOOL_RULE} />
-      <select
-        className={cn(
-          'h-8 cursor-pointer rounded-lg border-0 bg-transparent px-2 text-[13px] font-semibold text-neutral-4 enabled:hover:bg-fill-2',
-          FOCUS,
-          FADE
-        )}
-        aria-label="Text style"
-        value={state.style}
-        disabled={disabled}
-        onChange={(event) => {
-          if (isTextStyle(event.target.value)) setTextStyle(editor, event.target.value);
-        }}
-      >
-        {TEXT_STYLES.map(({ style, label }) => (
-          <option key={style} value={style}>
-            {label}
-          </option>
-        ))}
-      </select>
+      <TextStyleSelect editor={editor} style={state.style} disabled={disabled} />
       <span className={TOOL_RULE} />
       <FormatTools
         editor={editor}

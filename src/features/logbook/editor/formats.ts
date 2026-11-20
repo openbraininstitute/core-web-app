@@ -8,6 +8,7 @@ import type { TIconName } from '@/features/logbook/ui/icons';
 export const Format = {
   Bold: 'bold',
   Italic: 'italic',
+  Underline: 'underline',
   Strike: 'strike',
   Code: 'code',
   Link: 'link',
@@ -21,6 +22,7 @@ export type TFormat = TValueOf<typeof Format>;
 const TIPTAP_NAMES: Readonly<Record<TFormat, string>> = {
   [Format.Bold]: 'bold',
   [Format.Italic]: 'italic',
+  [Format.Underline]: 'underline',
   [Format.Strike]: 'strike',
   [Format.Code]: 'code',
   [Format.Link]: 'link',
@@ -74,6 +76,13 @@ export const INLINE_FORMATS: readonly IFormat[] = [
     icon: 'italic',
     keys: 'Mod-i',
     run: (e) => e.chain().focus().toggleItalic().run(),
+  },
+  {
+    key: Format.Underline,
+    label: 'Underline',
+    icon: 'underline',
+    keys: 'Mod-u',
+    run: (e) => e.chain().focus().toggleUnderline().run(),
   },
   {
     key: Format.Strike,
@@ -208,6 +217,7 @@ export interface IFormatState {
 export const activeOf = (editor: Editor): Readonly<Record<TFormat, boolean>> => ({
   [Format.Bold]: isFormatActive(editor, Format.Bold),
   [Format.Italic]: isFormatActive(editor, Format.Italic),
+  [Format.Underline]: isFormatActive(editor, Format.Underline),
   [Format.Strike]: isFormatActive(editor, Format.Strike),
   [Format.Code]: isFormatActive(editor, Format.Code),
   [Format.Link]: isFormatActive(editor, Format.Link),

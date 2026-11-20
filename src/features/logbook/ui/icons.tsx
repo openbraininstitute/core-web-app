@@ -125,6 +125,7 @@ const paths = {
   // Text formatting; not in the design's set.
   bold: <path d="M7 5h6a3.5 3.5 0 0 1 0 7H7zM7 12h7a3.5 3.5 0 0 1 0 7H7z" />,
   italic: <path d="M10 5h8M6 19h8M14 5l-4 14" />,
+  underline: <path d="M7 5v6a5 5 0 0 0 10 0V5M5 20h14" />,
   strike: (
     <path d="M5 12h14M16 7.5C15.4 6 13.9 5 12 5c-2.5 0-4 1.3-4 3 0 4 8 2.5 8 7 0 1.8-1.7 3-4 3-2 0-3.6-1-4.2-2.5" />
   ),

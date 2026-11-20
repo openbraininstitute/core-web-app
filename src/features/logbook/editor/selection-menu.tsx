@@ -2,14 +2,13 @@ import { TextSelection } from '@tiptap/pm/state';
 import { useEditorState } from '@tiptap/react';
 import { BubbleMenu } from '@tiptap/react/menus';
 
-import { FormatTools, TOOL_RULE, Tool } from '@/features/logbook/editor/format-bar';
+import { FormatTools, TextStyleSelect, TOOL_RULE } from '@/features/logbook/editor/format-bar';
 import {
   activeOf,
+  BLOCK_FORMATS,
   Format,
   INLINE_FORMATS,
   isFormatActive,
-  setTextStyle,
-  TextStyle,
   textStyleOf,
 } from '@/features/logbook/editor/formats';
 
@@ -39,10 +38,12 @@ export function SelectionMenu({ editor }: { readonly editor: Editor }) {
       editor={editor}
       options={OPTIONS}
       shouldShow={shows}
-      className="z-30 flex items-center gap-0.5 rounded-xl bg-white p-1 shadow-[0_6px_24px_rgba(0,39,102,0.16),0_0_0_1px_rgba(0,39,102,0.06)]"
+      className="z-30 flex max-w-[calc(100vw-16px)] items-center gap-0.5 overflow-x-auto rounded-xl bg-white p-1 shadow-[0_6px_24px_rgba(0,39,102,0.16),0_0_0_1px_rgba(0,39,102,0.06)]"
       role="toolbar"
       aria-label="Format the selection"
     >
+      <TextStyleSelect editor={editor} style={state.style} disabled={false} />
+      <span className={TOOL_RULE} />
       <FormatTools
         editor={editor}
         formats={INLINE_FORMATS}
@@ -50,18 +51,7 @@ export function SelectionMenu({ editor }: { readonly editor: Editor }) {
         disabled={false}
       />
       <span className={TOOL_RULE} />
-      <Tool
-        label="Heading"
-        icon="heading"
-        pressed={state.style !== TextStyle.Paragraph}
-        disabled={false}
-        onRun={() =>
-          setTextStyle(
-            editor,
-            state.style === TextStyle.Paragraph ? TextStyle.Heading2 : TextStyle.Paragraph
-          )
-        }
-      />
+      <FormatTools editor={editor} formats={BLOCK_FORMATS} active={state.active} disabled={false} />
     </BubbleMenu>
   );
 }
