@@ -1,6 +1,6 @@
 import { logError } from '@/utils/logger';
 
-import { MIN_RADIUS, quadGeometry } from '../impostors';
+import { GLOW_WIDTH, MIN_RADIUS, quadGeometry } from '../impostors';
 import { BLOCK } from '../segment-arena';
 import { ARGS, BLOCKS, CLAMP, MOST_SEEN, SEGMENTS } from './culling-wgsl';
 import { bindGroup, computePipeline, DepthPyramid, type Levels, LIBRARY } from './depth-pyramid';
@@ -13,8 +13,6 @@ import type * as THREE from 'three/webgpu';
 import type { CullRead } from '../../types';
 import type { ArenaBuffers, ArenaStorage } from './arena-gpu';
 
-/** The smallest radius a segment is tested at, px: a fully glowing cell is drawn at twice the smallest radius. */
-const LEAST_PX = 2 * MIN_RADIUS;
 /**
  * How many frames' counts may be on their way back at once. Every frame's counts are read; past this many, the last
  * frame tested is read once a buffer is free, so the last frame before the view rests is always read.
@@ -140,8 +138,9 @@ export class Culling {
   /**
    * Runs and submits the tests once the kept segments are drawn into the target. The tests fill the lists and the
    * draws for three's draw that follows. `shift`: what the arena's positions are moved by; `tubeFrom`: the least radius
-   * in pixels of a tube; `hidden`: the section type not drawn (`ImpostorUniforms.uHidden`); `end`: where the arena's
-   * segments end; `rest`: what is told of the frame (`DetailStream.frameRest`), handed on with the frame's read; `cells`:
+   * in pixels of a tube; `replaying`: whether a spike replay is loaded, a segment then tested as wide as a glowing one
+   * is drawn; `hidden`: the section type not drawn (`ImpostorUniforms.uHidden`); `end`: where the arena's segments
+   * end; `rest`: what is told of the frame (`DetailStream.frameRest`), handed on with the frame's read; `cells`:
    * the cell table's texture; `hiding`: whether it hides cells, whose segments then go on no list and mark no block,
    * and the kept list is left as it was, to hide those cells' segments once they are back; `readBack`: whether the
    * tests' counts are read back, which those of the first of two tests on a frame are not. Returns false where
@@ -151,6 +150,7 @@ export class Culling {
     camera: THREE.Camera & { near: number; far: number },
     shift: THREE.Vector3,
     tubeFrom: number,
+    replaying: boolean,
     hidden: number,
     end: number,
     rest: number,
@@ -170,8 +170,9 @@ export class Culling {
       pass,
       camera,
       shift,
-      [tubeFrom, LEAST_PX, hiding ? 1 : 0],
-      [blocks, this.storage.capacity.value, hidden]
+      [tubeFrom, MIN_RADIUS * (replaying ? GLOW_WIDTH : 1), hiding ? 1 : 0],
+      [blocks, this.storage.capacity.value, hidden],
+      this.storage.packing.value.toArray()
     );
     // three made it when it drew the kept segments.
     const table = gpuTexture(this.renderer, cells);

@@ -10,8 +10,9 @@
 import * as z from 'zod';
 
 import { Arriving } from './arriving';
+import { floatsOf, PACKED_WORDS, packFar } from './packed-ends';
 
-import type { CircuitMorphologyData, MorphologySegments, PackBoxes, Vec3 } from '../types';
+import type { BoxSegments, CircuitMorphologyData, PackBoxes, Packing, Vec3 } from '../types';
 import type { PackSource } from './pack-source';
 
 const MAGIC = 0x4b43504d;
@@ -496,8 +497,12 @@ class Kept {
 export interface Pack extends PackBoxes {
   /** The somas, the populations, the frame and the bounds, with no segments. The bounds hold the finest level and every placed soma. */
   data: CircuitMorphologyData;
-  /** Reads the segments of box `box` at level `level`, with their cells numbered as the pack numbers them. */
-  readBox(level: number, box: number): Promise<MorphologySegments>;
+  packing: Packing;
+  /**
+   * Reads the segments of box `box` at level `level`, with their cells numbered as the pack numbers them, their ends
+   * `packed` (`packed-ends.ts`) or as floats.
+   */
+  readBox(level: number, box: number, packed?: boolean): Promise<BoxSegments>;
   /**
    * For each level, how many bytes of the file must be in before each box can be read at it: up to the end of its chunk
    * and of its bases' chunks (0 where there are none).
@@ -628,26 +633,46 @@ export async function openPack(bytes: Uint8Array | PackSource): Promise<Pack> {
       ? radii[step + RADIUS_TABLE]
       : 2 ** (step / index.radiusSteps);
 
-  const readBox = async (level: number, b: number): Promise<MorphologySegments> => {
+  const [cx, cy, cz] = centre;
+  const { gridUm } = index;
+  /** The ends packed: the near end in micrometres, the far end and the radii still in the pack's whole steps. */
+  const packedOf = (ends: Int32Array): Pick<BoxSegments, 'segments' | 'clamped'> => {
+    const segments = new Uint32Array((PACKED_WORDS * ends.length) / 8);
+    const near = floatsOf(segments);
+    let clamped = 0;
+    for (let o = 0, p = 0; o < ends.length; o += 8, p += PACKED_WORDS) {
+      near[p] = ends[o] * gridUm - cx;
+      near[p + 1] = ends[o + 1] * gridUm - cy;
+      near[p + 2] = ends[o + 2] * gridUm - cz;
+      const dx = ends[o + 4] - ends[o];
+      const dy = ends[o + 5] - ends[o + 1];
+      const dz = ends[o + 6] - ends[o + 2];
+      if (packFar(segments, p, dx, dy, dz, ends[o + 3], ends[o + 7])) clamped++;
+    }
+    return clamped > 0 ? { segments, clamped } : { segments };
+  };
+
+  const readBox = async (level: number, b: number, packed = false): Promise<BoxSegments> => {
     if (!index.levels[level] || !(b >= 0 && b < count)) {
       throw new RangeError(`morphology pack without a box ${b} at level ${level}`);
     }
     const grid = await gridAt(level, b);
     const { ends } = grid;
-    // A box kept for the finer levels is copied, not handed over, because its cells are renumbered in place. Any other
-    // box's whole numbers become micrometres in the same buffer, each read before it is written over.
+    // A box kept for the finer levels is copied, not handed over, because its cells are renumbered in place.
     const kept = isBase[level];
+    const segmentCells = kept ? grid.cells.slice() : grid.cells;
+    const segmentTypes = kept ? grid.types.slice() : grid.types;
+    if (packed) return { ...packedOf(ends), segmentCells, segmentTypes };
+    // A box not kept has its whole numbers become micrometres in the same buffer, each read before it is written over.
     const segments = kept ? new Float32Array(ends.length) : new Float32Array(ends.buffer);
-    const [cx, cy, cz] = centre;
-    const { gridUm } = index;
     for (let o = 0; o < ends.length; o += 4) {
       segments[o] = ends[o] * gridUm - cx;
       segments[o + 1] = ends[o + 1] * gridUm - cy;
       segments[o + 2] = ends[o + 2] * gridUm - cz;
       segments[o + 3] = radius(ends[o + 3]);
     }
-    if (!kept) return { segments, segmentCells: grid.cells, segmentTypes: grid.types };
-    return { segments, segmentCells: grid.cells.slice(), segmentTypes: grid.types.slice() };
+    return { segments, segmentCells, segmentTypes };
   };
-  return { data, boxes, levels, readBox, readableAt };
+  const packing = { gridUm, radiusSteps: index.radiusSteps };
+  return { data, boxes, levels, packing, readBox, readableAt };
 }

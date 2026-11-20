@@ -6,9 +6,22 @@ import {
   RightOutlined,
 } from '@ant-design/icons';
 import { Button } from 'antd';
-import { useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 
 import { cn } from '@/utils/css-class';
+
+/**
+ * `value` with a line-break opportunity after each `_` and `-`, so a long id wraps between
+ * its parts (`…_cNAC_` / `971114B_…`) rather than inside a number.
+ */
+function wrapBetweenIdParts(value: string): ReactNode[] {
+  return (
+    value
+      .split(/(?<=[_-])/)
+      // biome-ignore lint/suspicious/noArrayIndexKey: parts of a fixed string, never reordered
+      .flatMap((part, i) => (i === 0 ? [part] : [<wbr key={i} />, part]))
+  );
+}
 
 export interface INeuronPropertyFilter {
   filter_dict: Record<string, string[]>;
@@ -52,13 +65,20 @@ export default function NeuronPropertyFilter({
           <div
             // biome-ignore lint/suspicious/noArrayIndexKey: no stable unique key available
             key={i}
-            className="border border-gray-300 rounded-md relative p-3 flex flex-col gap-2 pt-2"
+            className={cn(
+              'relative flex min-w-0 flex-col gap-3 rounded-md border border-gray-300 p-3',
+              value.length > 1 && 'pt-6'
+            )}
           >
             {value.length > 1 && (
-              <DeleteOutlined
-                className="absolute top-1 right-1 text-gray-400 cursor-pointer text-sm"
+              <button
+                type="button"
+                aria-label="Remove filter"
+                className="absolute top-1.5 right-2 flex cursor-pointer items-center text-sm text-gray-400 hover:text-primary-8"
                 onClick={() => onChange(value.filter((_, idx) => idx !== i))}
-              />
+              >
+                <DeleteOutlined />
+              </button>
             )}
             {Object.keys(f.filter_dict).map((p, idx) => (
               <PropertyValueSelector
@@ -74,7 +94,7 @@ export default function NeuronPropertyFilter({
                 }}
               />
             ))}
-            <div className="w-full flex flex-col mt-[10px]">
+            <div className="flex w-full flex-col">
               <DropdownSelect
                 placeholder="Add new property"
                 options={Object.keys(properties)
@@ -188,50 +208,63 @@ function PropertyValueSelector({
   };
 
   return (
-    <div
-      className={cn({
-        'mt-2': index === 1,
-      })}
-    >
-      <div className="flex items-center gap-2 w-full">
-        <DeleteOutlined className="text-gray-400 cursor-pointer text-xs" onClick={onDelete} />
+    <div className="flex min-w-0 flex-col gap-2">
+      <div className="flex w-full items-center gap-2">
         <button
           type="button"
-          className="font-semibold cursor-pointer text-primary-8"
+          aria-label={`Remove ${propertyName}`}
+          className="flex shrink-0 cursor-pointer items-center text-xs text-gray-400 hover:text-primary-8"
+          onClick={onDelete}
+        >
+          <DeleteOutlined />
+        </button>
+        <button
+          type="button"
+          aria-expanded={expanded}
+          className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-left font-semibold text-primary-8"
           onClick={() => setExpanded(!expanded)}
         >
-          <span className="text-gray-300 mr-2">{index}.</span> {propertyName}
+          <span className="shrink-0 text-gray-300">{index}.</span>
+          <span className="truncate">{propertyName}</span>
+          {expanded ? (
+            <DownOutlined className="ml-auto shrink-0 text-xs" />
+          ) : (
+            <RightOutlined className="ml-auto shrink-0 text-xs" />
+          )}
         </button>
-        <div className="flex-1" />
-        {expanded && (
-          <DownOutlined className="relative right-[3px]" onClick={() => setExpanded(!expanded)} />
-        )}
-
-        {!expanded && (
-          <RightOutlined className="relative top-[3px]" onClick={() => setExpanded(!expanded)} />
-        )}
       </div>
       {expanded && (
+        // values are long ids (me_combo reaches ~150 characters, and its end tells clones
+        // apart), so one full-width row each, wrapped rather than cut; the list scrolls
+        // past max-h-64 instead of growing the panel. A ring, unlike a border, does not
+        // change the size when the empty-selection warning colour turns on.
         <div
           className={cn(
-            'flex flex-wrap gap-2 mt-1 text-sm rounded-md p-3 bg-white',
-            selected.length === 0 ? 'border-2 border-yellow-400' : 'border border-gray-300'
+            'flex max-h-64 flex-col gap-1.5 overflow-y-auto rounded-md bg-white p-2 text-sm',
+            selected.length === 0 ? 'ring-2 ring-yellow-400' : 'ring-1 ring-neutral-200'
           )}
         >
-          {displayValues.length === 0 && <span className="text-gray-400">No values available</span>}
+          {displayValues.length === 0 && (
+            <span className="px-1 text-gray-400">No values available</span>
+          )}
           {displayValues.map((val) => {
             const isSelected = selected.includes(val);
             return (
               <button
                 key={val}
                 type="button"
+                aria-pressed={isSelected}
+                title={val}
                 className={cn(
-                  'rounded-full border px-3 py-1 transition-colors border-gray-200 text-primary-8',
-                  isSelected ? 'bg-gray-300 font-semibold' : 'bg-white hover:bg-gray-200'
+                  'w-full cursor-pointer rounded-lg px-3 py-1.5 text-left leading-snug wrap-break-word ring-1 transition-colors',
+                  'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary-8',
+                  isSelected
+                    ? 'bg-primary-8 text-white ring-primary-8'
+                    : 'bg-white text-primary-8 ring-neutral-200 hover:bg-neutral-100'
                 )}
                 onClick={() => toggle(val)}
               >
-                {val}
+                {wrapBetweenIdParts(val)}
               </button>
             );
           })}

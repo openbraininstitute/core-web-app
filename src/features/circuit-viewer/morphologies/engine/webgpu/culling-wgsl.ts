@@ -4,13 +4,15 @@
  * `segmentEnds` places a segment as its draw does.
  */
 
+import { PACKED_WORDS } from '../../load/packed-ends';
 import { CELL_MASK, QUAD_REACH } from '../impostors';
+import { PACKED_FAR_WGSL, PACKED_NEAR_WGSL, PACKED_RADIUS_WGSL } from './packed-ends-wgsl';
 
 /** A segment is taken to be nearer than it is by this many µm plus this share of its distance, to cover rounding. */
 export const NEAR_UM = 0.02;
 export const NEAR_SHARE = 1e-6;
 /** How far behind what hides it a segment may be and still be kept, µm, so that it hides others the next frame. */
-export const KEEP_UM = 10;
+export const KEEP_UM = 3;
 /**
  * A block's box is tested on at most this many texels a side, and a segment is walked pixel by pixel over at most this
  * many rows; past that, the test uses a coarser level of the pyramid. 4 rows was the fastest while the whole brain
@@ -23,6 +25,12 @@ const BLOCK_TEXELS = 8;
  * to 4M as the view turns or under a filter that leaves a sparse part of it on show.
  */
 export const MOST_SEEN = 6_000_000;
+/**
+ * How long the seen list is in an arena of `capacity`: the flat segments from its start and the tubes back from its
+ * end, of which the draws take `MOST_SEEN` each at the most (`CLAMP`), and no more than the arena holds between them.
+ * The segment test (`SEGMENTS`) works out the same.
+ */
+export const seenRoom = (capacity: number) => Math.min(capacity, 2 * MOST_SEEN);
 const ROWS = 4;
 
 const VIEW = /* wgsl */ `
@@ -39,6 +47,8 @@ struct View {
   // x: the pyramid's levels; y: the blocks; z: the arena's capacity; w: the somas, or for the segments the type not
   // drawn, as segmentEnds takes it.
   counts: vec4u,
+  // xy: for the segments, the arena's packing: its grid, µm, and one over its radius steps to a doubling.
+  packing: vec4f,
 }
 @group(0) @binding(0) var<uniform> view: View;
 
@@ -189,9 +199,10 @@ export const ARGS = /* wgsl */ `
  * flat quad nor its tube is nearer than) and as wide as its quad. Segments seen go on the seen list. Segments seen, and
  * those hidden by no more than \`KEEP_UM\`, go on the kept list, which the next frame draws to depth before its tests:
  * when the view moves, what was seen parts in thin cracks, and with nothing behind them every block would show through
- * one. A segment as wide on screen as a tube (\`GpuUniforms.tubeFrom\`) goes in the tubes' part of the lists. Each list
- * is as long as the arena, so no frame can overfill it. A block with a kept segment is marked, a bit a block
- * (\`marked\`), so that the boxes seen can be read back.
+ * one. A segment as wide on screen as a tube (\`GpuUniforms.tubeFrom\`) goes in the tubes' part of the lists. The kept
+ * list is as long as the arena, so no frame can overfill it. The seen list has room for what its draws take
+ * (\`seenRoom\`), and a segment seen past \`MOST_SEEN\` of its kind is counted and not written. A block with a kept
+ * segment is marked, a bit a block (\`marked\`), so that the boxes seen can be read back.
  *
  * While the cell table hides cells, a segment of a hidden cell goes on neither list and marks no block: it draws
  * nothing, so it hides nothing, and with nothing to hide it the test would count it as seen. The kept list is then left
@@ -206,12 +217,13 @@ ${SEGMENT_DRAWS}
 @group(0) @binding(3) var<storage, read> blocks: array<Block>;
 @group(0) @binding(4) var<storage, read> passed: array<u32>;
 @group(0) @binding(5) var<storage, read> counters: array<u32>;
-@group(0) @binding(6) var<storage, read> ends: array<vec4f>;
+@group(0) @binding(6) var<storage, read> ends: array<u32>;
 @group(0) @binding(7) var<storage, read> words: array<u32>;
 @group(0) @binding(8) var<storage, read_write> lists: array<u32>;
 @group(0) @binding(9) var<storage, read_write> draws: Draws;
 @group(0) @binding(10) var<storage, read_write> marked: array<atomic<u32>>;
 @group(0) @binding(11) var cells: texture_2d<f32>;
+${PACKED_RADIUS_WGSL}${PACKED_NEAR_WGSL}${PACKED_FAR_WGSL}
 
 // 0 out of view, 1 hidden as a whole, 2 hidden texel by texel, 3 seen, 4 hidden by little enough to be kept. a, b:
 // its ends on screen, px; r: how far it reaches from the line between them, px; near: its nearest, µm from the eye.
@@ -287,8 +299,9 @@ fn seen(a: vec2f, b: vec2f, r: f32, near: f32) -> u32 {
 
 // Puts segment \`i\` on the lists it belongs on; returns whether it is kept.
 fn listed(i: u32) -> bool {
-  let A = ends[2u * i];
-  let B = ends[2u * i + 1u];
+  let p = ${PACKED_WORDS}u * i;
+  let A = packedNear(ends[p], ends[p + 1u], ends[p + 2u], ends[p + 4u], view.packing.xy);
+  let B = packedFar(A, ends[p + 3u], ends[p + 4u], view.packing.xy);
   let hiding = view.more.w > 0.5;
   var shown = 1.0;
   if (hiding) { shown = textureLoad(cells, cellXY(words[i] & ${CELL_MASK}u), 0).a; }
@@ -310,10 +323,13 @@ fn listed(i: u32) -> bool {
     }
   }
   if (v != 3u) { return !hiding; }
+  let room = min(cap, ${2 * MOST_SEEN}u);
   if (tube) {
-    lists[2u * cap - 1u - atomicAdd(&draws.seenTubes.instances, 1u)] = i;
+    let k = atomicAdd(&draws.seenTubes.instances, 1u);
+    if (k < ${MOST_SEEN}u) { lists[cap + room - 1u - k] = i; }
   } else {
-    lists[cap + atomicAdd(&draws.seenFlat.instances, 1u)] = i;
+    let k = atomicAdd(&draws.seenFlat.instances, 1u);
+    if (k < ${MOST_SEEN}u) { lists[cap + k] = i; }
   }
   return true;
 }

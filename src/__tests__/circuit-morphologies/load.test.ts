@@ -24,6 +24,7 @@ import {
 } from '@/features/circuit-viewer/morphologies/load/worker-api';
 
 import { FakeCacheStorage, fakeServer } from '../utils/fake-caches';
+import { unpackedOf } from './packed';
 import { indexEnd, indexOf, joined, pack } from './packs';
 
 import type { OnProgress } from '@/features/circuit-viewer/morphologies/load/download';
@@ -106,8 +107,8 @@ function inProcess(): TestWorker {
       return opened;
     },
     whole: () => api.whole(),
-    async read(wanted) {
-      const read = await api.read(wanted);
+    async read(wanted, packed) {
+      const read = await api.read(wanted, packed);
       for (const { segments } of read) handedOver.push(segments.buffer);
       return read;
     },
@@ -151,10 +152,10 @@ async function opened(
   populations: Population[] = POPULATIONS,
   downloaded = true
 ) {
-  const { data, boxes, levels, readableAt } = await openPack(bytes);
+  const { data, boxes, levels, packing, readableAt } = await openPack(bytes);
   const page = renumberSomas(data, pageCells(data.populations, populations), populations);
   const arrival = { readableAt, received: expect.any(Function), listen: expect.any(Function) };
-  const chunks = { boxes, levels, read: expect.any(Function) };
+  const chunks = { boxes, levels, packing, read: expect.any(Function) };
   return { ...page, chunks: downloaded ? { ...chunks, arrival } : chunks };
 }
 
@@ -170,17 +171,31 @@ async function asRead(bytes: Uint8Array, level = 0, populations = POPULATIONS) {
   const own = await openPack(bytes);
   const numbers = pageCells(own.data.populations, populations);
   const boxes = Array.from(own.levels[level].segments, (_, box) =>
-    own.readBox(level, box).then((read) => mortonOrder(renumberSegments(read, numbers)))
+    own
+      .readBox(level, box)
+      .then((read) => mortonOrder(renumberSegments(read, numbers), own.packing))
   );
   return joined(await Promise.all(boxes));
 }
 
-/** Every box of a level, read through the load's data. */
-async function readLevel(data: CircuitMorphologyData, level = 0): Promise<MorphologySegments> {
+/** Every box of a level, read through the load's data; with `packed`, read with its ends packed, then unpacked. */
+async function readLevel(
+  data: CircuitMorphologyData,
+  level = 0,
+  packed = false
+): Promise<MorphologySegments> {
   const chunks = data.chunks;
   if (!chunks) throw new Error('no chunks');
   const boxes = Array.from({ length: chunks.boxes.length / 6 }, (_, box) => ({ level, box }));
-  return joined(await chunks.read(boxes));
+  const read = await chunks.read(boxes, packed);
+  return joined(
+    read.map((box) => {
+      expect(box.segments instanceof Uint32Array).toBe(packed);
+      return box.segments instanceof Uint32Array
+        ? { ...box, segments: unpackedOf(box.segments, chunks.packing) }
+        : box;
+    })
+  );
 }
 
 const serve = (bytes: Uint8Array) => {
@@ -223,6 +238,21 @@ describe('loadCircuitMorphologies', () => {
       expect(await readLevel(data, level)).toEqual(await asRead(small(), level));
     }
     expect(workers[0].handedOver.slice(1).every((buffer) => buffer.byteLength === 0)).toBe(true);
+  });
+
+  it("reads the boxes' ends packed where asked, the same segments in the same order, with the pack's packing", async () => {
+    serve(small());
+    const { data } = await load();
+
+    expect(data.chunks?.packing).toEqual((await openPack(small())).packing);
+    for (const level of [0, 1, 2]) {
+      const packed = await readLevel(data, level, true);
+      const floats = await asRead(small(), level);
+      expect(packed.segmentCells).toEqual(floats.segmentCells);
+      expect(packed.segmentTypes).toEqual(floats.segmentTypes);
+      const off = packed.segments.map((value, k) => Math.abs(value - floats.segments[k]));
+      expect(Math.max(0, ...off)).toBeLessThan(0.001);
+    }
   });
 
   it('fails a read of a box that does not read, and reads the others', async () => {

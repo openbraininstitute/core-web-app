@@ -56,12 +56,12 @@ export function useMeModelManipulationData({
         )}
       </div>
     );
-  } else if (!isLoading && data && Object.keys(data).length === 0) {
+  } else if (!isLoading && data && Object.keys(data.variables).length === 0) {
     reason = NO_VARIABLES_MESSAGE;
   }
 
   return {
-    data: data ?? null,
+    data: data?.variables ?? null,
     loading: isLoading,
     reason,
   };

@@ -67,6 +67,7 @@ import type {
   DetailStats,
   ElectrodeGroup,
   ElectrodeHit,
+  IWideOcclusion,
   LocationMarker,
   MarkerOnScreen,
   Population,
@@ -107,6 +108,8 @@ const MORPH_MS = 600;
 const CLAMPED_FRAMES = 30;
 /** How long after such a frame the next one no longer counts as following it, ms. */
 const CLAMPED_APART_MS = 1000;
+/** The occlusion's wide term as a view starts with it. */
+const WIDE_OCCLUSION: IWideOcclusion = { strength: 1, reach: 0.6 };
 /**
  * Moving frames over the somas alone are cut down as in the EM mesh viewer, but a step down in resolution is kept only
  * where it saves a tenth: drawn front first, many somas cost more in corners than in pixels.
@@ -297,16 +300,17 @@ function somasBox(positions: Float32Array, keep?: (cell: number) => boolean): So
  * The materials a tier draws the circuit with, all reading the uniforms of `CircuitView`: the segments and the
  * morphologies' somas in the look; the cloud of somas; the same three in cell numbers for the pick; the segments and
  * somas in segment numbers for the pick of a section; and the dots. The segments are drawn once per material, over the
- * same quads, and each material draws its own share of them.
+ * same quads, and each material draws its own share of them; so are the morphologies' somas in the look and for the
+ * picks.
  */
 export interface CircuitMaterials {
   segment: THREE.Material[];
-  soma: THREE.Material;
+  soma: THREE.Material[];
   cloud: THREE.Material;
   /** The cloud drawn whole, translucent, each soma the cell of its instance. */
   wholeCloud: THREE.Material;
-  ids: { segment: THREE.Material[]; soma: THREE.Material; cloud: THREE.Material };
-  spots: { segment: THREE.Material[]; soma: THREE.Material };
+  ids: { segment: THREE.Material[]; soma: THREE.Material[]; cloud: THREE.Material };
+  spots: { segment: THREE.Material[]; soma: THREE.Material[] };
   /** The lit cells drawn over the frame, through what covers them, where the tier draws them (`throughs`). */
   through?: { segment: THREE.Material[]; soma: THREE.Material };
   electrode: THREE.Material;
@@ -351,6 +355,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     detailed: Detailed | null;
   } | null = null;
   private detailRules: DetailRules;
+  wideOcclusion = WIDE_OCCLUSION;
   private detailListeners = new Set<(detail: DetailStats | null) => void>();
   /** What the listeners were last told. */
   private toldDetail: DetailStats | null = null;
@@ -730,12 +735,13 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
         charts === spheres ? sphereAttribute : new THREE.InstancedBufferAttribute(charts, 4)
       )
       .setAttribute('aCell', new THREE.InstancedBufferAttribute(cells, 1));
-    const somaMesh = quads(somas, materials.soma);
+    const onSomas = (soma: THREE.Material[]) => soma.map((material) => quads(somas, material));
+    const somaMeshes = onSomas(materials.soma);
     // Beside `chunks`, which holds the segments.
-    this.surfaces.add(somaMesh);
+    this.surfaces.add(...somaMeshes);
 
     const segmentIds = onSegments(drawing?.ids ?? materials.ids.segment);
-    const ids = [...segmentIds, quads(somas, materials.ids.soma)];
+    const ids = [...segmentIds, ...onSomas(materials.ids.soma)];
     this.ids.add(...ids);
     let throughSegments: Quads[] = [];
     let through: Quads[] = [];
@@ -752,12 +758,18 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       for (const mesh of [...segmentMeshes, ...segmentIds, ...throughSegments]) mesh.visible = true;
     // Sections and offsets are known only of morphologies read whole.
     const spots = data.trees
-      ? [...onSegments(materials.spots.segment), quads(somas, materials.spots.soma)]
+      ? [...onSegments(materials.spots.segment), ...onSomas(materials.spots.soma)]
       : [];
     if (spots.length > 0) this.spots.add(...spots);
     this.spotUniforms.uSegments.value = data.segmentCells.length;
     const detailed = stream ? { stream, chosenFor: null, seenChanged: false } : null;
-    this.layer = { data, meshes: [...segmentMeshes, somaMesh, ...through], ids, spots, detailed };
+    this.layer = {
+      data,
+      meshes: [...segmentMeshes, ...somaMeshes, ...through],
+      ids,
+      spots,
+      detailed,
+    };
     // Start over: dropping the occlusion for other morphologies says nothing about these.
     this.morphologyMotion?.configure(MORPHOLOGY_MOTION);
     this.compileIds();
@@ -806,6 +818,11 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.tellDetail();
     this.invalidate();
     return true;
+  }
+
+  setWideOcclusion(wide: Partial<IWideOcclusion>): void {
+    this.wideOcclusion = { ...this.wideOcclusion, ...wide };
+    this.invalidate();
   }
 
   onDetail(listener: (detail: DetailStats | null) => void): () => void {

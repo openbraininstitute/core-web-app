@@ -19,7 +19,9 @@ import { dotMaterials } from './dots-gpu';
 import { GpuUniforms } from './gpu-uniforms';
 import {
   arenaMaterials,
+  drawBySpikes,
   impostorMaterials,
+  type SegmentKinds,
   THROUGH_CSS_PX,
   THROUGH_LINE_CSS_PX,
 } from './impostors-gpu';
@@ -66,6 +68,8 @@ export class CircuitMorphologyGPU extends CircuitView {
   private glowWorks = true;
   /** Made for the first pack and kept, with its programs: a later pack's arena only binds its buffers to `storage`. */
   private arena: GpuArena | null = null;
+  /** The segments' look materials in their two kinds (`drawBySpikes`): the view's own, and the arena's once made. */
+  private segmentKinds: SegmentKinds[] = [];
   /**
    * The kept segments' quads, drawn to depth before the culling's tests. While the cell table hides cells, the kept
    * list stays as it was (`Culling.run`), so the segments seen last frame are drawn to depth with them (`seenQuads`):
@@ -157,8 +161,9 @@ export class CircuitMorphologyGPU extends CircuitView {
       whole.id.dispose();
       whole.cloud.transparent = true;
       const impostors = impostorMaterials(this.gpu, this.look);
+      this.segmentKinds.push(impostors);
       this.materials = {
-        segment: impostors.segment,
+        segment: [...impostors.segment, ...impostors.spikingSegment],
         soma: impostors.soma,
         cloud: cloud.cloud,
         wholeCloud: whole.cloud,
@@ -205,7 +210,8 @@ export class CircuitMorphologyGPU extends CircuitView {
     this.idTarget?.dispose();
     this.occlusion?.dispose();
     const { segment = [], ids = [], kept = [], seenDepth = [], through = [] } = this.arena ?? {};
-    for (const material of [...segment, ...ids, ...kept, ...seenDepth, ...through]) {
+    const spiking = this.arena?.spikingSegment ?? [];
+    for (const material of [...segment, ...spiking, ...ids, ...kept, ...seenDepth, ...through]) {
       material.dispose();
     }
     this.arena?.culling.dispose();
@@ -278,6 +284,7 @@ export class CircuitMorphologyGPU extends CircuitView {
 
   private drawFrame(moving: boolean): void {
     this.gpu.sync();
+    for (const kinds of this.segmentKinds) drawBySpikes(kinds, this.spiking.replaying);
     this.cull(this.restOf(moving));
     this.cullSomas();
     const glowing = this.glowing && this.glowWorks;
@@ -293,7 +300,11 @@ export class CircuitMorphologyGPU extends CircuitView {
         const umPerPx = this.umPerCssPx();
         this.gpu.throughUm.value = Math.min(THROUGH_CSS_PX * umPerPx, KEEP_UM);
         if (!occluded) occlusion.renderMoving();
-        else occlusion.render(AO_RADIUS_CSS * umPerPx);
+        else {
+          const { strength, reach } = this.wideOcclusion;
+          const wide = reach * this.height * umPerPx;
+          if (!occlusion.render(AO_RADIUS_CSS * umPerPx, wide, strength)) this.invalidate();
+        }
         return;
       } catch (e) {
         // The occlusion builds its passes at its first frame, which throws if parts of three it reads are missing.
@@ -329,8 +340,9 @@ export class CircuitMorphologyGPU extends CircuitView {
           this.tellCulled(counts)
         ),
       };
+      this.segmentKinds.push(this.arena);
     }
-    const { storage, segment, ids, kept, seenDepth, through, culling } = this.arena;
+    const { storage, segment, spikingSegment, ids, kept, seenDepth, through, culling } = this.arena;
     this.seenQuads = [
       new THREE.Mesh(culling.quads(DRAWS.seenFlat), seenDepth[0]),
       new THREE.Mesh(culling.quads(DRAWS.seenTubes), seenDepth[1]),
@@ -340,6 +352,8 @@ export class CircuitMorphologyGPU extends CircuitView {
       new THREE.Mesh(culling.quads(DRAWS.keptTubes), kept[1]),
       ...this.seenQuads,
     ]);
+    // Both kinds of the look, and the picks, draw the same quads.
+    const seen = [culling.quads(DRAWS.seenFlat), culling.quads(DRAWS.seenTubes)];
     return {
       uploadsOf: (arrays) =>
         arenaOnGpu(
@@ -350,9 +364,9 @@ export class CircuitMorphologyGPU extends CircuitView {
           (buffers) => culling.setArena(buffers),
           () => this.outOfMemory()
         ),
-      segment,
+      segment: [...segment, ...spikingSegment],
       ids,
-      quads: [culling.quads(DRAWS.seenFlat), culling.quads(DRAWS.seenTubes)],
+      quads: [...seen, ...seen],
       through: {
         materials: through,
         quads: [culling.quads(DRAWS.keptFlat), culling.quads(DRAWS.keptTubes)],
@@ -409,6 +423,7 @@ export class CircuitMorphologyGPU extends CircuitView {
           this.camera,
           uShift.value,
           this.gpu.tubeFrom.value,
+          this.spiking.replaying,
           uHidden.value,
           end,
           rest,
