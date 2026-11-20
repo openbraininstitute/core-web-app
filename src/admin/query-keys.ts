@@ -40,5 +40,5 @@ export const adminQueryKeys = {
   accountingJob: (jobId: string) => [...ACCOUNTING, 'job', jobId] as const,
   accountingJournal: () => [...ACCOUNTING, 'journal'] as const,
   accountingReport: (path: string) => [...ACCOUNTING, 'report', path] as const,
-  systemBalance: () => [...ACCOUNTING, 'balance', 'system'] as const,
+  accountingSystemBalance: () => [...ACCOUNTING, 'balance', 'system'] as const,
 };

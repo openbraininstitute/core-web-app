@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { match } from 'ts-pattern';
 
-import { formatBytes } from '@/utils/format';
+import { formatBytes, formatDurationFromSeconds } from '@/utils/format';
 
 import { adminQueryKeys } from '../../../query-keys';
 import { formatDateTime } from '../../../shared/format';
@@ -12,8 +12,7 @@ import { AdminPagedGrid, pagedSource } from '../../../shared/grid';
 import { PageHeader } from '../../../shared/page-header';
 import { AdminLink, adminHref } from '../../../shell/admin-link';
 import { getSystemBalance, listReport, reportPath } from '../api';
-import { formatDuration } from '../helpers';
-import { ChargeType } from '../types';
+import { AccountingFilter, ChargeType } from '../types';
 import { Credits } from './cells';
 import { creditsColumn } from './columns';
 import { useDayRange, useIdFilter } from './filters';
@@ -26,10 +25,10 @@ const REPORT_SOURCE = pagedSource(listReport);
 const usage = (report: TJobReport) =>
   match(report)
     .with({ type: ChargeType.Oneshot }, ({ count }) => `${count} units`)
-    .with({ type: ChargeType.Longrun }, ({ duration }) => formatDuration(duration))
+    .with({ type: ChargeType.Longrun }, ({ duration }) => formatDurationFromSeconds(duration))
     .with(
       { type: ChargeType.Storage },
-      ({ size, duration }) => `${formatBytes(size)} for ${formatDuration(duration)}`
+      ({ size, duration }) => `${formatBytes(size)} for ${formatDurationFromSeconds(duration)}`
     )
     .exhaustive();
 
@@ -73,7 +72,7 @@ const COLUMNS: Array<ISimpleColumn<TJobReport>> = [
 
 function SystemBalance() {
   const { data } = useQuery({
-    queryKey: adminQueryKeys.systemBalance(),
+    queryKey: adminQueryKeys.accountingSystemBalance(),
     queryFn: ({ signal }) => getSystemBalance(signal),
   });
   if (!data) return null;
@@ -87,8 +86,8 @@ function SystemBalance() {
 
 export function Reports() {
   const router = useRouter();
-  const vlab = useIdFilter('vlab', 'Virtual lab');
-  const project = useIdFilter('project', 'Project');
+  const vlab = useIdFilter(AccountingFilter.Vlab, 'Virtual lab');
+  const project = useIdFilter(AccountingFilter.Project, 'Project');
   const range = useDayRange();
   const path = reportPath({ vlabId: vlab.id, projectId: project.id });
 

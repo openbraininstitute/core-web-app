@@ -1,10 +1,10 @@
-import dayjs from 'dayjs';
-
 import { ADMIN_ROOT } from '../../routes';
+import { parseDay } from '../../shared/day';
 import { AccountType, JobPhase, TransactionType } from './types';
 
 import type { TStatusTone } from '../../shared/status-pill';
 import type {
+  TAccountingFilter,
   TAccountingJob,
   TAccountingPage,
   TAccountType,
@@ -13,19 +13,12 @@ import type {
   TTransactionType,
 } from './types';
 
-export function accountingHref(page: TAccountingPage, params?: Record<string, string>) {
+export function accountingHref(
+  page: TAccountingPage,
+  params?: Partial<Record<TAccountingFilter, string>>
+) {
   const search = new URLSearchParams(params);
   return `${ADMIN_ROOT}/accounting/${page}${search.size ? `?${search}` : ''}`;
-}
-
-export const isUuid = (value: string) =>
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-
-export const DAY_FORMAT = 'YYYY-MM-DD';
-
-export function parseDay(value: string) {
-  const day = dayjs(value);
-  return value && day.isValid() && day.format(DAY_FORMAT) === value ? day : null;
 }
 
 /** Local days as accounting's bounds: `after` is inclusive, `before` exclusive. */
@@ -79,14 +72,4 @@ export function splitLedgers(ledgers: TLedgerEntry[]) {
   const debited = ledgers.filter((ledger) => ledger.amount.startsWith('-'));
   const credited = ledgers.filter((ledger) => !ledger.amount.startsWith('-'));
   return { debited, credited };
-}
-
-export function formatDuration(duration: number) {
-  const seconds = Math.round(duration);
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const rest = seconds % 60;
-  if (hours) return `${hours} h ${minutes} min`;
-  if (minutes) return `${minutes} min ${rest} s`;
-  return `${rest} s`;
 }

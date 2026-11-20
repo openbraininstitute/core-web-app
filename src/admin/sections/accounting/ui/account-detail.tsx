@@ -16,58 +16,39 @@ import { AdminLink, adminHref } from '../../../shell/admin-link';
 import { CapabilityGate } from '../../../shell/capability-gate';
 import { getAccount, listProjectAccounts } from '../api';
 import { ACCOUNT_TYPE_LABELS, accountingHref } from '../helpers';
-import { AccountingPage, AccountType } from '../types';
-import { EnabledPill } from './accounts-list';
-import { Credits } from './cells';
-import { creditsColumn } from './columns';
+import { AccountingFilter, AccountingPage, AccountType } from '../types';
+import { Credits, EnabledPill } from './cells';
+import { accountNameColumn, createdColumn, creditsColumn } from './columns';
 
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
-import type { TAccount, TProjectAccount } from '../types';
+import type { TAccount, TAccountingFilter, TAccountType, TProjectAccount } from '../types';
 
 const PROJECTS_SOURCE = pagedSource(listProjectAccounts);
 
+const SCOPE_FILTERS: Partial<Record<TAccountType, TAccountingFilter>> = {
+  [AccountType.VirtualLab]: AccountingFilter.Vlab,
+  [AccountType.Project]: AccountingFilter.Project,
+};
+
 const PROJECT_COLUMNS: Array<ISimpleColumn<TProjectAccount>> = [
-  {
-    id: 'name',
-    header: 'Project',
-    width: { flex: 3, minWidth: 240 },
-    renderCell: (project) => (
-      <span className="flex items-center gap-3">
-        <span className="text-primary-9 truncate font-semibold">{project.name}</span>
-        <EnabledPill enabled={project.enabled} />
-      </span>
-    ),
-  },
+  accountNameColumn('Project'),
   creditsColumn('balance', 'Balance', (project) => project.balance),
   creditsColumn('reservation', 'Reserved', (project) => project.reservation),
-  {
-    id: 'created_at',
-    header: 'Created',
-    width: { flex: 1, minWidth: 180 },
-    getValue: (project) => formatDateTime(project.created_at),
-  },
+  createdColumn(),
 ];
 
 function accountLinks({ id, account_type: type }: TAccount) {
   const journal = {
     label: 'Journal',
-    href: accountingHref(AccountingPage.Journal, { account: id }),
+    href: accountingHref(AccountingPage.Journal, { [AccountingFilter.Account]: id }),
   };
-  if (type === AccountType.VirtualLab) {
-    return [
-      { label: 'Jobs', href: accountingHref(AccountingPage.Jobs, { vlab: id }) },
-      journal,
-      { label: 'Report', href: accountingHref(AccountingPage.Reports, { vlab: id }) },
-    ];
-  }
-  if (type === AccountType.Project) {
-    return [
-      { label: 'Jobs', href: accountingHref(AccountingPage.Jobs, { project: id }) },
-      journal,
-      { label: 'Report', href: accountingHref(AccountingPage.Reports, { project: id }) },
-    ];
-  }
-  return [journal];
+  const scope = SCOPE_FILTERS[type];
+  if (!scope) return [journal];
+  return [
+    { label: 'Jobs', href: accountingHref(AccountingPage.Jobs, { [scope]: id }) },
+    journal,
+    { label: 'Report', href: accountingHref(AccountingPage.Reports, { [scope]: id }) },
+  ];
 }
 
 function AccountView({ account }: { account: TAccount }) {

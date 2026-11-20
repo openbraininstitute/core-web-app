@@ -16,13 +16,11 @@ import { AdminLink } from '../../../shell/admin-link';
 import { CapabilityGate } from '../../../shell/capability-gate';
 import { getJob } from '../api';
 import { accountingHref } from '../helpers';
-import { AccountingPage } from '../types';
+import { AccountingFilter, AccountingPage } from '../types';
 import { Credits, JobPhasePill } from './cells';
 import { JOURNAL_COLUMNS, journalRowId } from './columns';
 
 import type { TAccountingJobDetail } from '../types';
-
-const when = (iso: string | null) => iso && formatDateTime(iso);
 
 function JobView({ job }: { job: TAccountingJobDetail }) {
   return (
@@ -32,7 +30,9 @@ function JobView({ job }: { job: TAccountingJobDetail }) {
         parent={{ label: 'Jobs', href: accountingHref(AccountingPage.Jobs) }}
         actions={
           <Button rounded variant="outline" size="sm" asChild>
-            <Link href={accountingHref(AccountingPage.Journal, { job: job.id })}>Journal</Link>
+            <Link href={accountingHref(AccountingPage.Journal, { [AccountingFilter.Job]: job.id })}>
+              Journal
+            </Link>
           </Button>
         }
       />
@@ -69,13 +69,13 @@ function JobView({ job }: { job: TAccountingJobDetail }) {
         <Detail label="Still reserved">
           <Credits amount={job.remaining_reservation} />
         </Detail>
-        <Detail label="Created">{when(job.created_at)}</Detail>
-        <Detail label="Reserved">{when(job.reserved_at)}</Detail>
-        <Detail label="Started">{when(job.started_at)}</Detail>
-        <Detail label="Last alive">{when(job.last_alive_at)}</Detail>
-        <Detail label="Last charged">{when(job.last_charged_at)}</Detail>
-        <Detail label="Finished">{when(job.finished_at)}</Detail>
-        <Detail label="Cancelled">{when(job.cancelled_at)}</Detail>
+        <Detail label="Created">{formatDateTime(job.created_at)}</Detail>
+        <Detail label="Reserved">{formatDateTime(job.reserved_at)}</Detail>
+        <Detail label="Started">{formatDateTime(job.started_at)}</Detail>
+        <Detail label="Last alive">{formatDateTime(job.last_alive_at)}</Detail>
+        <Detail label="Last charged">{formatDateTime(job.last_charged_at)}</Detail>
+        <Detail label="Finished">{formatDateTime(job.finished_at)}</Detail>
+        <Detail label="Cancelled">{formatDateTime(job.cancelled_at)}</Detail>
       </DetailList>
       <h2 className="text-primary-9 font-semibold">Journal, oldest first</h2>
       <AdminRowsGrid

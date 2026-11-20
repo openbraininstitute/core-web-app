@@ -5,7 +5,7 @@ import { AdminPagedGrid, pagedSource } from '../../../shared/grid';
 import { PageHeader } from '../../../shared/page-header';
 import { listJournal } from '../api';
 import { TRANSACTION_LABELS } from '../helpers';
-import { TransactionType } from '../types';
+import { AccountingFilter, TransactionType } from '../types';
 import { JOURNAL_COLUMNS, journalRowId } from './columns';
 import { useDayRange, useIdFilter, useOptionFilter } from './filters';
 
@@ -19,8 +19,8 @@ const TYPE_OPTIONS = Object.values(TransactionType).map((value: TTransactionType
 }));
 
 export function JournalList() {
-  const account = useIdFilter('account', 'Account');
-  const job = useIdFilter('job', 'Job');
+  const account = useIdFilter(AccountingFilter.Account, 'Account');
+  const job = useIdFilter(AccountingFilter.Job, 'Job');
   const type = useOptionFilter({
     key: 'type',
     placeholder: 'Any transaction',

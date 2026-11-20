@@ -1,4 +1,5 @@
 import { parseApiError } from '@/api/utils';
+import { compactRecord } from '@/utils/dictionary';
 
 import type {
   TAccount,
@@ -19,11 +20,10 @@ import type {
 
 const PROXY_ROOT = '/api/admin/accounting';
 
-export async function accountingGet<T>(path: string, params?: TParams, signal?: AbortSignal) {
-  const search = new URLSearchParams();
-  for (const [key, value] of Object.entries(params ?? {})) {
-    if (value !== undefined && value !== '') search.set(key, String(value));
-  }
+async function accountingGet<T>(path: string, params?: TParams, signal?: AbortSignal) {
+  const search = new URLSearchParams(
+    Object.entries(compactRecord(params)).map(([key, value]) => [key, String(value)])
+  );
   const url = `${PROXY_ROOT}/${path}${search.size ? `?${search}` : ''}`;
   const response = await fetch(url, { headers: { accept: 'application/json' }, signal });
   if (!response.ok) {
@@ -48,7 +48,7 @@ export const listVlabAccounts = (params: TVlabAccountFilters & TPageParams, sign
   paged<TVlabAccount>('admin/account/virtual-lab', params, signal);
 
 export const listProjectAccounts = (
-  { vlabId, ...params }: { vlabId: string; enabled?: boolean } & TPageParams,
+  { vlabId, ...params }: { vlabId: string } & TPageParams,
   signal?: AbortSignal
 ) => paged<TProjectAccount>(`admin/account/virtual-lab/${id(vlabId)}/project`, params, signal);
 

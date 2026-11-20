@@ -4,7 +4,6 @@ import { describe, expect, it } from 'vitest';
 import {
   accountingHref,
   dayBounds,
-  formatDuration,
   jobPhase,
   splitLedgers,
 } from '@/admin/sections/accounting/helpers';
@@ -52,17 +51,6 @@ describe('splitLedgers', () => {
     const { debited, credited } = splitLedgers([ledger(1, '-12.50'), ledger(2, '12.50')]);
     expect(debited.map(({ id }) => id)).toEqual([1]);
     expect(credited.map(({ id }) => id)).toEqual([2]);
-  });
-});
-
-describe('formatDuration', () => {
-  it.each([
-    [42, '42 s'],
-    [125, '2 min 5 s'],
-    [7260, '2 h 1 min'],
-    [75.4321, '1 min 15 s'],
-  ])('%i seconds read %s', (seconds, text) => {
-    expect(formatDuration(seconds)).toBe(text);
   });
 });
 

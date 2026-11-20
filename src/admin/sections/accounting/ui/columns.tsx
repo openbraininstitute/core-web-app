@@ -1,10 +1,10 @@
 import { formatDateTime } from '../../../shared/format';
 import { AdminLink } from '../../../shell/admin-link';
 import { splitLedgers, TRANSACTION_LABELS } from '../helpers';
-import { Credits } from './cells';
+import { Credits, EnabledPill } from './cells';
 
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
-import type { TJournalEntry, TLedgerEntry } from '../types';
+import type { TJournalEntry, TLedgerEntry, TVlabAccount } from '../types';
 
 export function creditsColumn<Row>(
   id: string,
@@ -16,6 +16,29 @@ export function creditsColumn<Row>(
     header,
     width: { width: 140 },
     renderCell: (row) => <Credits amount={amount(row)} />,
+  };
+}
+
+export function accountNameColumn<Row extends TVlabAccount>(header: string): ISimpleColumn<Row> {
+  return {
+    id: 'name',
+    header,
+    width: { flex: 3, minWidth: 240 },
+    renderCell: (account) => (
+      <span className="flex items-center gap-3">
+        <span className="text-primary-9 truncate font-semibold">{account.name}</span>
+        <EnabledPill enabled={account.enabled} />
+      </span>
+    ),
+  };
+}
+
+export function createdColumn<Row extends { created_at: string }>(): ISimpleColumn<Row> {
+  return {
+    id: 'created_at',
+    header: 'Created',
+    width: { flex: 1, minWidth: 180 },
+    getValue: (row) => formatDateTime(row.created_at),
   };
 }
 

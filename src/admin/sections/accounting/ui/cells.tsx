@@ -7,6 +7,10 @@ export function Credits({ amount }: { amount: string | null | undefined }) {
   return <span className="font-mono tabular-nums">{amount ?? '—'}</span>;
 }
 
+export function EnabledPill({ enabled }: { enabled: boolean }) {
+  return enabled ? null : <StatusPill tone="bad">Disabled</StatusPill>;
+}
+
 export function JobPhasePill({ job }: { job: TAccountingJob }) {
   const { label, tone } = JOB_PHASES[jobPhase(job)];
   return <StatusPill tone={tone}>{label}</StatusPill>;

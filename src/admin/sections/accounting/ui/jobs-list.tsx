@@ -4,14 +4,15 @@ import { Input } from 'antd';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { isUuid } from '@/features/data-grid/react/filters/id-tokens';
+
 import { adminQueryKeys } from '../../../query-keys';
 import { formatDateTime } from '../../../shared/format';
 import { AdminPagedGrid, pagedSource } from '../../../shared/grid';
 import { PageHeader } from '../../../shared/page-header';
 import { AdminLink, adminHref } from '../../../shell/admin-link';
 import { listJobs } from '../api';
-import { isUuid } from '../helpers';
-import { AccountingSubtype, ChargeType, JobStatusFilter } from '../types';
+import { AccountingFilter, AccountingSubtype, ChargeType, JobStatusFilter } from '../types';
 import { JobPhasePill } from './cells';
 import { useDayRange, useIdFilter, useOptionFilter } from './filters';
 
@@ -36,8 +37,6 @@ const SUBTYPE_OPTIONS = Object.values(AccountingSubtype).map((value: TAccounting
   value,
   label: value,
 }));
-
-const when = (iso: string | null) => iso && formatDateTime(iso);
 
 const COLUMNS: Array<ISimpleColumn<TAccountingJob>> = [
   {
@@ -67,21 +66,21 @@ const COLUMNS: Array<ISimpleColumn<TAccountingJob>> = [
     id: 'started_at',
     header: 'Started',
     width: { width: 170 },
-    getValue: (job) => when(job.started_at),
+    getValue: (job) => formatDateTime(job.started_at),
   },
   {
     id: 'ended',
     header: 'Ended',
     width: { flex: 1, minWidth: 170 },
-    getValue: (job) => when(job.finished_at ?? job.cancelled_at),
+    getValue: (job) => formatDateTime(job.finished_at ?? job.cancelled_at),
   },
 ];
 
 export function JobsList() {
   const router = useRouter();
   const [badId, setBadId] = useState(false);
-  const vlab = useIdFilter('vlab', 'Virtual lab');
-  const project = useIdFilter('project', 'Project');
+  const vlab = useIdFilter(AccountingFilter.Vlab, 'Virtual lab');
+  const project = useIdFilter(AccountingFilter.Project, 'Project');
   const type = useOptionFilter({
     key: 'type',
     placeholder: 'Any type',

@@ -213,5 +213,13 @@ export const JobPhase = {
 } as const;
 export type TJobPhase = (typeof JobPhase)[keyof typeof JobPhase];
 
+export const AccountingFilter = {
+  Account: 'account',
+  Vlab: 'vlab',
+  Project: 'project',
+  Job: 'job',
+} as const;
+export type TAccountingFilter = (typeof AccountingFilter)[keyof typeof AccountingFilter];
+
 export const EnabledFilter = { Any: 'any', Enabled: 'enabled', Disabled: 'disabled' } as const;
 export type TEnabledFilter = (typeof EnabledFilter)[keyof typeof EnabledFilter];

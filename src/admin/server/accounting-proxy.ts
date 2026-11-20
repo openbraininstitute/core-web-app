@@ -16,7 +16,6 @@ const exact = (path: string) => new RegExp(`^${path}$`);
 type TAccountingRoute = {
   pattern: RegExp;
   query: string[];
-  paged?: boolean;
 };
 
 /** Every accounting route the proxy forwards. Anything else gets a 404. */
@@ -24,12 +23,10 @@ export const ACCOUNTING_ROUTES: TAccountingRoute[] = [
   {
     pattern: exact('admin/account/virtual-lab'),
     query: ['name', 'enabled', ...PAGE_PARAMS],
-    paged: true,
   },
   {
     pattern: exact(`admin/account/virtual-lab/${UUID}/project`),
     query: ['enabled', ...PAGE_PARAMS],
-    paged: true,
   },
   {
     pattern: exact(`admin/account/${UUID}`),
@@ -45,7 +42,6 @@ export const ACCOUNTING_ROUTES: TAccountingRoute[] = [
       'transaction_before',
       ...PAGE_PARAMS,
     ],
-    paged: true,
   },
   {
     pattern: exact('admin/job'),
@@ -59,7 +55,6 @@ export const ACCOUNTING_ROUTES: TAccountingRoute[] = [
       'started_before',
       ...PAGE_PARAMS,
     ],
-    paged: true,
   },
   {
     pattern: exact(`admin/job/${UUID}`),
@@ -72,7 +67,6 @@ export const ACCOUNTING_ROUTES: TAccountingRoute[] = [
   {
     pattern: exact(`report/(system|virtual-lab/${UUID}|project/${UUID})`),
     query: ['started_after', 'started_before', ...PAGE_PARAMS],
-    paged: true,
   },
 ];
 
@@ -111,7 +105,7 @@ export function matchAccountingRoute(
   if (unknown) return { status: 400, message: `Unknown query parameter: ${unknown}` };
   if (new Set(keys).size !== keys.length)
     return { status: 400, message: 'Repeated query parameter' };
-  const problem = route.paged ? pageProblem(search) : null;
+  const problem = route.query.includes('page_size') ? pageProblem(search) : null;
   if (problem) return { status: 400, message: problem };
 
   return { path, search };

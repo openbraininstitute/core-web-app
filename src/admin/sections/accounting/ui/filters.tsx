@@ -1,14 +1,14 @@
 'use client';
 
-import { DatePicker, Input, Segmented, Select, Tag } from 'antd';
+import { DatePicker, Segmented, Select, Tag } from 'antd';
 import { parseAsString, parseAsStringLiteral, useQueryState } from 'nuqs';
 
-import { DAY_FORMAT, dayBounds, parseDay } from '../helpers';
+import { DAY_FORMAT, parseDay } from '../../../shared/day';
+import { shallow } from '../../virtual-lab/ui/list-filters';
+import { dayBounds } from '../helpers';
 import { EnabledFilter } from '../types';
 
-import type { TEnabledFilter } from '../types';
-
-const SHALLOW = { shallow: true };
+import type { TAccountingFilter, TEnabledFilter } from '../types';
 
 const ENABLED_OPTIONS = [
   { value: EnabledFilter.Any, label: 'Any' },
@@ -16,30 +16,12 @@ const ENABLED_OPTIONS = [
   { value: EnabledFilter.Disabled, label: 'Disabled' },
 ];
 
-export function useNameFilter() {
-  const [name, setName] = useQueryState('q', parseAsString.withDefault('').withOptions(SHALLOW));
-
-  return {
-    name: name || undefined,
-    control: (
-      <Input.Search
-        key={name}
-        allowClear
-        defaultValue={name}
-        placeholder="Search by name"
-        onSearch={(value) => setName(value.trim())}
-        className="w-96! max-w-full"
-      />
-    ),
-  };
-}
-
 export function useEnabledFilter() {
   const [enabled, setEnabled] = useQueryState(
     'enabled',
     parseAsStringLiteral(Object.values(EnabledFilter))
       .withDefault(EnabledFilter.Any)
-      .withOptions(SHALLOW)
+      .withOptions(shallow)
   );
 
   return {
@@ -55,8 +37,8 @@ export function useEnabledFilter() {
 }
 
 export function useDayRange() {
-  const [from, setFrom] = useQueryState('from', parseAsString.withDefault('').withOptions(SHALLOW));
-  const [to, setTo] = useQueryState('to', parseAsString.withDefault('').withOptions(SHALLOW));
+  const [from, setFrom] = useQueryState('from', parseAsString.withDefault('').withOptions(shallow));
+  const [to, setTo] = useQueryState('to', parseAsString.withDefault('').withOptions(shallow));
 
   return {
     bounds: dayBounds(from, to),
@@ -73,8 +55,8 @@ export function useDayRange() {
 }
 
 /** An id filter set by a link from another page, shown as a removable tag. */
-export function useIdFilter(key: string, label: string) {
-  const [id, setId] = useQueryState(key, parseAsString.withDefault('').withOptions(SHALLOW));
+export function useIdFilter(key: TAccountingFilter, label: string) {
+  const [id, setId] = useQueryState(key, parseAsString.withDefault('').withOptions(shallow));
 
   return {
     id: id || undefined,
@@ -99,7 +81,7 @@ export function useOptionFilter<T extends string>({
 }) {
   const [value, setValue] = useQueryState(
     key,
-    parseAsStringLiteral(options.map((option) => option.value)).withOptions(SHALLOW)
+    parseAsStringLiteral(options.map((option) => option.value)).withOptions(shallow)
   );
 
   return {
