@@ -30,6 +30,15 @@ export const ADMIN_NAV: { label: string; items: AdminNavItem[] }[] = [
     ],
   },
   {
+    label: 'Accounting',
+    items: [
+      { label: 'Accounts', href: `${ADMIN_ROOT}/accounting/accounts`, need: 'accounting.admin' },
+      { label: 'Jobs', href: `${ADMIN_ROOT}/accounting/jobs`, need: 'accounting.admin' },
+      { label: 'Journal', href: `${ADMIN_ROOT}/accounting/journal`, need: 'accounting.admin' },
+      { label: 'Reports', href: `${ADMIN_ROOT}/accounting/reports`, need: 'accounting.admin' },
+    ],
+  },
+  {
     label: 'Ops',
     items: [
       { label: 'Services', href: `${ADMIN_ROOT}/services`, need: 'admin.access' },
