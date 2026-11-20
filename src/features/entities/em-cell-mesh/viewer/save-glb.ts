@@ -2,7 +2,7 @@ import { saveAs } from 'file-saver';
 import { useState } from 'react';
 
 import { fileName } from '@/features/viewer-3d/chrome/file-name';
-import { readEntry } from '@/features/viewer-3d/load/asset-cache';
+import { readEntry } from '@/utils/asset-cache';
 import { errorMessage } from '@/utils/error';
 import { logError } from '@/utils/logger';
 

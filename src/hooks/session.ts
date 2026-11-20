@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import { useEffect } from 'react';
 
 import sessionAtom from '@/state/session';
+import { claimProjectDataCaches, disownProjectDataCaches } from '@/utils/project-data-caches';
 
 import { usePrevious } from './hooks';
 
@@ -55,6 +56,22 @@ export default function useSessionState() {
   if (currentSession?.status === 'unauthenticated' && previousSession?.status === 'authenticated') {
     window.location.reload();
   }
+
+  const userId =
+    currentSession?.status === 'authenticated' ? currentSession.data.user?.id : undefined;
+  const previousUserId =
+    previousSession?.status === 'authenticated' ? previousSession.data.user?.id : undefined;
+  // Another user signed in from another window. Until now this tab could still write the first
+  // user's files into the caches the second one claimed: forget their owner, so the claim after
+  // the reload deletes them again.
+  if (userId && previousUserId && userId !== previousUserId) {
+    disownProjectDataCaches();
+    window.location.reload();
+  }
+
+  useEffect(() => {
+    if (userId) claimProjectDataCaches(userId).catch(() => {});
+  }, [userId]);
 
   useEffect(() => {
     if (currentSession?.status === 'unauthenticated') {

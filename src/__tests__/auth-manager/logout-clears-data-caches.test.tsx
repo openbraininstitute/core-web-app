@@ -20,20 +20,40 @@ describe('logging out', () => {
         dropped.push(name);
         return true;
       },
+      keys: async () => ['project-data:202611011:cache:circuit-h5', 'unrelated'],
     });
 
     render(<Logout />);
 
     await waitFor(() => expect(signOut).toHaveBeenCalledWith({ callbackUrl: '/' }));
     expect(dropped.sort()).toEqual([
+      'analysis-pdf-cache-v1',
+      'circuit-morphology-mpack',
+      'em-cell-mesh-full',
+      'em-cell-mesh-glb',
+      'em-cell-mesh-stand-in',
+      'ephys-nwb-assets',
       'obi-circuit-h5-v1',
       'obi-connectivity-h5-v1',
       'obi-ephys-nwb-v1',
+      'project-data:202611011:cache:circuit-h5',
+      'project-data:202611201:cache:analysis-assets',
+      'project-data:202611201:cache:circuit-h5',
+      'project-data:202611201:cache:circuit-morphology-pack',
+      'project-data:202611201:cache:connectivity-h5',
+      'project-data:202611201:cache:em-cell-mesh-full',
+      'project-data:202611201:cache:em-cell-mesh-glb',
+      'project-data:202611201:cache:em-cell-mesh-stand-in',
+      'project-data:202611201:cache:ephys-nwb',
+      'project-data:202611201:cache:ephys-nwb-assets',
     ]);
   });
 
   it('signs out all the same where a cache will not be dropped', async () => {
-    vi.stubGlobal('caches', { delete: () => Promise.reject(new Error('blocked')) });
+    vi.stubGlobal('caches', {
+      delete: () => Promise.reject(new Error('blocked')),
+      keys: async () => [],
+    });
 
     render(<Logout />);
 
@@ -43,7 +63,7 @@ describe('logging out', () => {
   it('does not wait more than two seconds for the caches to go', async () => {
     vi.useFakeTimers();
     try {
-      vi.stubGlobal('caches', { delete: () => new Promise(() => {}) });
+      vi.stubGlobal('caches', { delete: () => new Promise(() => {}), keys: async () => [] });
 
       render(<Logout />);
 

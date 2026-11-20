@@ -13,7 +13,7 @@ import {
   storeStandIn,
 } from '@/features/entities/em-cell-mesh/viewer/engine/stand-in-cache';
 
-import { FakeCacheStorage } from '../viewer-3d/fake-caches';
+import { FakeCacheStorage } from '../utils/fake-caches';
 import { torus } from './mesh-fixtures';
 
 import type { StandIn } from '@/features/entities/em-cell-mesh/viewer/engine/types';

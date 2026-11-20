@@ -2,13 +2,7 @@
  * Stand-ins kept between visits, so that a mesh seen before shows in well under a second while its full detail loads.
  * An entry is the packed stand-in: a JSON header, then each chunk's arrays, each on a 4-byte boundary.
  */
-import {
-  packEntry,
-  readEntry,
-  unpackEntry,
-  versionedKey,
-  writeEntry,
-} from '@/features/viewer-3d/load/asset-cache';
+import { packEntry, readEntry, unpackEntry, versionedKey, writeEntry } from '@/utils/asset-cache';
 
 import { STAND_IN_CACHE } from './caches';
 import { chunkArrays } from './chunks';

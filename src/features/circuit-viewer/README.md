@@ -167,7 +167,7 @@ The flag also sends the synapses' diagnostics to the console.
 | Which circuits are drawn how | `circuitDrawsEachCell` in [draws-morphologies.ts](../scan-config/components/circuit-viz/sources/draws-morphologies.ts) |
 | The budgets and the tolerance in pixels | `SEGMENT_BUDGET` and `DETAIL_PIXELS` in [engine/detail.ts](morphologies/engine/detail.ts); the Debug choices in [debug/circuit-debug.tsx](morphologies/debug/circuit-debug.tsx) |
 | When WebGPU is used | [engine/create-view.ts](morphologies/engine/create-view.ts), [engine/probe.ts](morphologies/engine/probe.ts) |
-| The pack's cache | `PACK_CACHE` in [load/worker-api.ts](morphologies/load/worker-api.ts), made by `bucket` in [asset-cache.ts](../viewer-3d/load/asset-cache.ts) |
+| The pack's cache | `PACK_CACHE` in [load/worker-api.ts](morphologies/load/worker-api.ts), made by `bucket` in [asset-cache.ts](../../utils/asset-cache.ts) |
 | Status texts | [load-status.tsx](morphologies/load-status.tsx) |
 | Settings, their defaults and the menu | [use-viewer-config.ts](../scan-config/components/color-by/use-viewer-config.ts), [viewer-controls-menu.tsx](../scan-config/components/color-by/viewer-controls-menu.tsx) |
 | Soma radius by species | `SOMA_RADII` in [hooks.ts](../scan-config/components/model-preview/large-circuit-preview/hooks.ts) |
@@ -186,7 +186,7 @@ The flag also sends the synapses' diagnostics to the console.
   - the WebGL 2 view end to end in jsdom;
   - `CircuitCells`, the pointer and the electrodes.
 - `src/__tests__/scan-config/`: which circuit is drawn how, the large preview's pill and fallbacks, the small and ME-model sources, location picking, the settings menu.
-- `src/__tests__/viewer-3d/`: the scale bar, the status pill and the cache bucket.
+- `src/__tests__/viewer-3d/`: the scale bar and the status pill. `src/__tests__/utils/`: the cache bucket.
 
 ## Glossary
 
