@@ -10,6 +10,7 @@ import type {
   TJournalFilters,
   TPageParams,
   TPaginated,
+  TParams,
   TProjectAccount,
   TReportFilters,
   TVlabAccount,
@@ -17,8 +18,6 @@ import type {
 } from './types';
 
 const PROXY_ROOT = '/api/admin/accounting';
-
-type TParams = Record<string, string | number | boolean | undefined>;
 
 export async function accountingGet<T>(path: string, params?: TParams, signal?: AbortSignal) {
   const search = new URLSearchParams();
@@ -28,7 +27,9 @@ export async function accountingGet<T>(path: string, params?: TParams, signal?: 
   const url = `${PROXY_ROOT}/${path}${search.size ? `?${search}` : ''}`;
   const response = await fetch(url, { headers: { accept: 'application/json' }, signal });
   const body = await response.json().catch(() => null);
-  if (!response.ok) throw await parseApiError(url, response.status, body);
+  if (!response.ok || typeof body !== 'object' || body === null || !('data' in body)) {
+    throw await parseApiError(url, response.status, body);
+  }
 
   return (body as { data: T }).data;
 }

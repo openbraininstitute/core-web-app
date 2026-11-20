@@ -1,11 +1,58 @@
 'use client';
 
-import { DatePicker, Select, Tag } from 'antd';
+import { DatePicker, Input, Segmented, Select, Tag } from 'antd';
 import { parseAsString, parseAsStringLiteral, useQueryState } from 'nuqs';
 
 import { DAY_FORMAT, dayBounds, parseDay } from '../helpers';
+import { EnabledFilter } from '../types';
+
+import type { TEnabledFilter } from '../types';
 
 const SHALLOW = { shallow: true };
+
+const ENABLED_OPTIONS = [
+  { value: EnabledFilter.Any, label: 'Any' },
+  { value: EnabledFilter.Enabled, label: 'Enabled' },
+  { value: EnabledFilter.Disabled, label: 'Disabled' },
+];
+
+export function useNameFilter() {
+  const [name, setName] = useQueryState('q', parseAsString.withDefault('').withOptions(SHALLOW));
+
+  return {
+    name: name || undefined,
+    control: (
+      <Input.Search
+        key={name}
+        allowClear
+        defaultValue={name}
+        placeholder="Search by name"
+        onSearch={(value) => setName(value.trim())}
+        className="w-96! max-w-full"
+      />
+    ),
+  };
+}
+
+export function useEnabledFilter() {
+  const [enabled, setEnabled] = useQueryState(
+    'enabled',
+    parseAsStringLiteral(Object.values(EnabledFilter))
+      .withDefault(EnabledFilter.Any)
+      .withOptions(SHALLOW)
+  );
+
+  return {
+    enabled: enabled === EnabledFilter.Any ? undefined : enabled === EnabledFilter.Enabled,
+    control: (
+      <Segmented
+        value={enabled}
+        options={ENABLED_OPTIONS}
+        onChange={(value) => setEnabled(value as TEnabledFilter)}
+      />
+    ),
+  };
+}
 
 export function useDayRange() {
   const [from, setFrom] = useQueryState('from', parseAsString.withDefault('').withOptions(SHALLOW));

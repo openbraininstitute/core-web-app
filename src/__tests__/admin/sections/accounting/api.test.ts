@@ -57,6 +57,16 @@ describe('accounting client', () => {
     expect(isForbidden(error)).toBe(false);
     expect(error.message).toBe("Accounting isn't reachable from this environment.");
   });
+  it('throws a readable error for a success reply it cannot read', async () => {
+    fetchMock.mockResolvedValue(
+      new Response('{"trunc', { headers: { 'content-type': 'application/json' } })
+    );
+
+    const error = await listJobs({ page: 1, page_size: 20 }).catch((caught) => caught);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error.cause?.status).toBe(200);
+  });
 });
 
 describe('reportPath', () => {

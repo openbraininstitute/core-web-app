@@ -81,7 +81,8 @@ export function splitLedgers(ledgers: TLedgerEntry[]) {
   return { debited, credited };
 }
 
-export function formatDuration(seconds: number) {
+export function formatDuration(duration: number) {
+  const seconds = Math.round(duration);
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const rest = seconds % 60;

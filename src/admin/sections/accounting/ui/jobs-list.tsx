@@ -2,6 +2,7 @@
 
 import { Input } from 'antd';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 import { adminQueryKeys } from '../../../query-keys';
 import { formatDateTime } from '../../../shared/format';
@@ -78,6 +79,7 @@ const COLUMNS: Array<ISimpleColumn<TAccountingJob>> = [
 
 export function JobsList() {
   const router = useRouter();
+  const [badId, setBadId] = useState(false);
   const vlab = useIdFilter('vlab', 'Virtual lab');
   const project = useIdFilter('project', 'Project');
   const type = useOptionFilter({
@@ -106,10 +108,14 @@ export function JobsList() {
         actions={
           <Input.Search
             allowClear
-            placeholder="Open a job by id"
+            placeholder="Open a job by its full id"
+            status={badId ? 'error' : undefined}
+            title={badId ? 'Paste the whole job id' : undefined}
+            onChange={() => setBadId(false)}
             onSearch={(value) => {
               const id = value.trim();
               if (isUuid(id)) router.push(adminHref('accountingJob', id));
+              else setBadId(id !== '');
             }}
             className="w-80!"
           />

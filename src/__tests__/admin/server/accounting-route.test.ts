@@ -47,6 +47,7 @@ describe('accounting proxy route', () => {
     const reply = await call('budget/top-up');
 
     expect(reply.status).toBe(404);
+    expect(reply.headers.get('cache-control')).toBe('private, no-store');
     expect(fetchMock).not.toHaveBeenCalled();
   });
 

@@ -103,8 +103,7 @@ export function Reports() {
         )}
       </PageHeader>
       <div className="flex flex-wrap items-center gap-3">
-        {vlab.control}
-        {project.control}
+        {project.id ? project.control : vlab.control}
         {range.control}
       </div>
       <AdminPagedGrid<TJobReport>

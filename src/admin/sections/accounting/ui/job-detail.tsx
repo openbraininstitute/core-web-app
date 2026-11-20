@@ -13,6 +13,7 @@ import { AdminRowsGrid } from '../../../shared/grid';
 import { Loaded } from '../../../shared/load-state';
 import { PageHeader } from '../../../shared/page-header';
 import { AdminLink } from '../../../shell/admin-link';
+import { CapabilityGate } from '../../../shell/capability-gate';
 import { getJob } from '../api';
 import { accountingHref } from '../helpers';
 import { AccountingPage } from '../types';
@@ -51,7 +52,11 @@ function JobView({ job }: { job: TAccountingJobDetail }) {
           <AdminLink kind="account" id={job.proj_id} />
         </Detail>
         <Detail label="User">
-          <AdminLink kind="user" id={job.user_id} />
+          {job.user_id && (
+            <CapabilityGate need="virtualLab.read" fallback={<DetailId>{job.user_id}</DetailId>}>
+              <AdminLink kind="user" id={job.user_id} />
+            </CapabilityGate>
+          )}
         </Detail>
         <Detail label="Group">{job.group_id && <DetailId>{job.group_id}</DetailId>}</Detail>
         <Detail label="Charged">

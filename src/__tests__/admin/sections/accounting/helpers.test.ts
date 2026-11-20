@@ -60,6 +60,7 @@ describe('formatDuration', () => {
     [42, '42 s'],
     [125, '2 min 5 s'],
     [7260, '2 h 1 min'],
+    [75.4321, '1 min 15 s'],
   ])('%i seconds read %s', (seconds, text) => {
     expect(formatDuration(seconds)).toBe(text);
   });

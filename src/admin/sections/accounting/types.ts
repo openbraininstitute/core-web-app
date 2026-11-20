@@ -80,6 +80,8 @@ export type TPaginated<Row> = {
 
 export type TPageParams = { page: number; page_size: number };
 
+export type TParams = Record<string, string | number | boolean | undefined>;
+
 export type TVlabAccount = {
   id: string;
   name: string;

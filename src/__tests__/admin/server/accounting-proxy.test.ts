@@ -11,8 +11,8 @@ vi.mock('@/config/server', () => ({ serverConfig }));
 const ID = '3fa85f64-5717-4562-b3fc-2c963f66afa6';
 const PAGE = 'page=1&page_size=20';
 
-const match = (path: string, query = '', method = 'GET') =>
-  matchAccountingRoute(method, path.split('/'), new URLSearchParams(query));
+const match = (path: string, query = '') =>
+  matchAccountingRoute(path.split('/'), new URLSearchParams(query));
 
 describe('matchAccountingRoute', () => {
   it.each([
@@ -57,13 +57,9 @@ describe('matchAccountingRoute', () => {
     ['admin', 'job?x=1'],
     [],
   ])('refuses unsafe segments %j', (...segments) => {
-    expect(matchAccountingRoute('GET', segments, new URLSearchParams(PAGE))).toMatchObject({
+    expect(matchAccountingRoute(segments, new URLSearchParams(PAGE))).toMatchObject({
       status: 404,
     });
-  });
-
-  it.each(['POST', 'PATCH', 'PUT', 'DELETE'])('refuses %s on a read route', (method) => {
-    expect(match('admin/job', PAGE, method)).toMatchObject({ status: 405 });
   });
 
   it('refuses a query parameter the route does not take', () => {
@@ -85,6 +81,7 @@ describe('matchAccountingRoute', () => {
     'page_size=1e2',
     'page=0&page_size=20',
     'page=-1&page_size=20',
+    'page=1000001&page_size=20',
   ])('needs a bounded page size on a paged route: %s', (query) => {
     expect(match('admin/journal', query)).toMatchObject({ status: 400 });
   });
@@ -160,6 +157,25 @@ describe('forwardToAccounting', () => {
     const reply = await forwardToAccounting('balance/system', new URLSearchParams());
     expect(reply.status).toBe(502);
     await expect(reply.json()).resolves.toEqual({ message: 'Accounting failed with status 504.' });
+  });
+
+  it('says accounting did not answer when the body never finishes', async () => {
+    const stalled = new Response('{}', { headers: { 'content-type': 'application/json' } });
+    vi.spyOn(stalled, 'text').mockRejectedValue(new DOMException('timed out', 'TimeoutError'));
+    fetchMock.mockResolvedValue(stalled);
+
+    const reply = await forwardToAccounting('balance/system', new URLSearchParams());
+
+    expect(reply.status).toBe(502);
+    await expect(reply.json()).resolves.toEqual({ message: "Accounting didn't answer." });
+  });
+
+  it('passes a reply with no body through', async () => {
+    fetchMock.mockResolvedValue(
+      new Response(null, { status: 204, headers: { 'content-type': 'application/json' } })
+    );
+    const reply = await forwardToAccounting('balance/system', new URLSearchParams());
+    expect(reply.status).toBe(204);
   });
 
   it('says when accounting does not answer', async () => {

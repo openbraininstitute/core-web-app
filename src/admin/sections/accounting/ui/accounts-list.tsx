@@ -1,8 +1,6 @@
 'use client';
 
-import { Input, Segmented } from 'antd';
 import { useRouter } from 'next/navigation';
-import { parseAsString, parseAsStringLiteral, useQueryState } from 'nuqs';
 
 import { adminQueryKeys } from '../../../query-keys';
 import { formatDateTime } from '../../../shared/format';
@@ -11,19 +9,11 @@ import { PageHeader } from '../../../shared/page-header';
 import { StatusPill } from '../../../shared/status-pill';
 import { adminHref } from '../../../shell/admin-link';
 import { listVlabAccounts } from '../api';
-import { EnabledFilter } from '../types';
 import { creditsColumn } from './columns';
+import { useEnabledFilter, useNameFilter } from './filters';
 
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
-import type { TEnabledFilter, TVlabAccount } from '../types';
-
-const SHALLOW = { shallow: true };
-
-const ENABLED_OPTIONS = [
-  { value: EnabledFilter.Any, label: 'Any' },
-  { value: EnabledFilter.Enabled, label: 'Enabled' },
-  { value: EnabledFilter.Disabled, label: 'Disabled' },
-];
+import type { TVlabAccount } from '../types';
 
 const LABS_SOURCE = pagedSource(listVlabAccounts);
 
@@ -54,13 +44,8 @@ const COLUMNS: Array<ISimpleColumn<TVlabAccount>> = [
 
 export function AccountsList() {
   const router = useRouter();
-  const [name, setName] = useQueryState('q', parseAsString.withDefault('').withOptions(SHALLOW));
-  const [enabled, setEnabled] = useQueryState(
-    'enabled',
-    parseAsStringLiteral(Object.values(EnabledFilter))
-      .withDefault(EnabledFilter.Any)
-      .withOptions(SHALLOW)
-  );
+  const name = useNameFilter();
+  const enabled = useEnabledFilter();
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
@@ -68,19 +53,8 @@ export function AccountsList() {
         Virtual lab accounts in accounting. Open one for its projects, jobs and journal.
       </PageHeader>
       <div className="flex flex-wrap items-center gap-3">
-        <Input.Search
-          key={name}
-          allowClear
-          defaultValue={name}
-          placeholder="Search by name"
-          onSearch={(value) => setName(value.trim())}
-          className="w-96! max-w-full"
-        />
-        <Segmented
-          value={enabled}
-          options={ENABLED_OPTIONS}
-          onChange={(value) => setEnabled(value as TEnabledFilter)}
-        />
+        {name.control}
+        {enabled.control}
       </div>
       <AdminPagedGrid<TVlabAccount>
         fill
@@ -92,8 +66,8 @@ export function AccountsList() {
         dataSource={LABS_SOURCE}
         queryKey={adminQueryKeys.accountingLabs()}
         params={{
-          name: name || undefined,
-          enabled: enabled === EnabledFilter.Any ? undefined : enabled === EnabledFilter.Enabled,
+          name: name.name,
+          enabled: enabled.enabled,
         }}
         onRowClick={(account) => router.push(adminHref('account', account.id))}
       />

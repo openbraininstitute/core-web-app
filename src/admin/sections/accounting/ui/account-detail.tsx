@@ -13,6 +13,7 @@ import { AdminPagedGrid, pagedSource } from '../../../shared/grid';
 import { Loaded } from '../../../shared/load-state';
 import { PageHeader } from '../../../shared/page-header';
 import { AdminLink, adminHref } from '../../../shell/admin-link';
+import { CapabilityGate } from '../../../shell/capability-gate';
 import { getAccount, listProjectAccounts } from '../api';
 import { ACCOUNT_TYPE_LABELS, accountingHref } from '../helpers';
 import { AccountingPage, AccountType } from '../types';
@@ -99,9 +100,11 @@ function AccountView({ account }: { account: TAccount }) {
           {account.parent_id && <AdminLink kind="account" id={account.parent_id} />}
         </Detail>
         {(isLab || isProject) && (
-          <Detail label="On the platform">
-            <AdminLink kind={isLab ? 'vlab' : 'project'} id={account.id} />
-          </Detail>
+          <CapabilityGate need="virtualLab.read">
+            <Detail label="On the platform">
+              <AdminLink kind={isLab ? 'vlab' : 'project'} id={account.id} />
+            </Detail>
+          </CapabilityGate>
         )}
         <Detail label="Created">{formatDateTime(account.created_at)}</Detail>
         <Detail label="Updated">{formatDateTime(account.updated_at)}</Detail>
