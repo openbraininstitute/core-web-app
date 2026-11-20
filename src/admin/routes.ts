@@ -31,6 +31,10 @@ export const ADMIN_NAV: { label: string; items: AdminNavItem[] }[] = [
   },
   {
     label: 'Ops',
-    items: [{ label: 'Services', href: `${ADMIN_ROOT}/services`, need: 'admin.access' }],
+    items: [
+      { label: 'Services', href: `${ADMIN_ROOT}/services`, need: 'admin.access' },
+      { label: 'Simulator caches', href: `${ADMIN_ROOT}/simulator`, need: 'simulator.admin' },
+      { label: 'Job lookup', href: `${ADMIN_ROOT}/jobs`, need: 'launchSystem.admin' },
+    ],
   },
 ];

@@ -21,9 +21,10 @@ import { PromotionEdit } from './promotion-form';
 import { PromotionStatus, promotionUses } from './promotion-status';
 
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
+import type { TStatusTone } from '../../../shared/status-pill';
 import type { AdminPromotion, AdminPromotionRedemption } from '../api/admin-types';
 
-const REDEMPTION_TONES: Record<string, 'good' | 'bad' | 'neutral'> = {
+const REDEMPTION_TONES: Record<string, TStatusTone> = {
   completed: 'good',
   failed: 'bad',
 };

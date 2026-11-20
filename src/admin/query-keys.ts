@@ -6,7 +6,6 @@ const PROMOTIONS = [...BILLING, 'promotions'] as const;
 export const adminQueryKeys = {
   services: () => SERVICES,
   serviceHealth: (key: string) => [...SERVICES, 'health', key] as const,
-  serviceVersion: (key: string) => [...SERVICES, 'version', key] as const,
   tenancy: () => TENANCY,
   labs: () => [...TENANCY, 'labs'] as const,
   lab: (vlabId: string) => [...TENANCY, 'lab', vlabId] as const,
