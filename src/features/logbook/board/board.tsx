@@ -293,7 +293,7 @@ export function Board({ me, project, logId, pageId }: IBoardProps) {
                   // biome-ignore lint/a11y/useSemanticElements: a pointer-dragged resize handle; <hr> takes no pointer events
                   <button
                     type="button"
-                    className="group absolute top-0 bottom-0 left-[-16px] z-5 flex w-4 flex-none cursor-col-resize touch-none items-center justify-center border-0 bg-transparent p-0"
+                    className="group absolute top-0 bottom-0 -left-4 z-5 flex w-4 flex-none cursor-col-resize touch-none items-center justify-center border-0 bg-transparent p-0"
                     // biome-ignore lint/a11y/useAriaPropsForRole: pointer-only resize handle, it has no value to announce
                     role="separator"
                     aria-label="Resize the list of logs"
@@ -321,7 +321,6 @@ export function Board({ me, project, logId, pageId }: IBoardProps) {
               </main>
               {isNil(shownDetail) ? null : (
                 <EntityDetail
-                  key={`${shownDetail.type}:${shownDetail.entityId}`}
                   target={shownDetail}
                   project={project}
                   narrow={narrow}

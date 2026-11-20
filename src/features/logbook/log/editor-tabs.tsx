@@ -3,6 +3,7 @@ import { Fragment, useEffect, useRef, useState } from 'react';
 
 import { ArtifactIcon } from '@/features/logbook/log/artifact-icon';
 import { Icon } from '@/features/logbook/ui/icons';
+import { cn } from '@/utils/css-class';
 
 import type { KeyboardEvent as ReactKeyboardEvent, ReactNode, WheelEvent } from 'react';
 import type { IArtifact } from '@/features/logbook/api/log-files';
@@ -48,7 +49,10 @@ function TitleField({
   };
   return (
     <input
-      className="w-full min-w-0 truncate rounded-[6px] border-0 bg-transparent p-0 text-[13px] font-bold text-primary-9 outline-none focus:bg-soft"
+      className="col-start-1 row-start-1 field-sizing-content w-full min-w-0 truncate rounded-[6px] border-0 bg-transparent p-0 text-[13px] font-bold text-primary-9 outline-none focus:bg-soft"
+      // As wide as the name, so the page name sits right after it; size stands in where
+      // field-sizing is not supported (Firefox).
+      size={Math.max(value.length, 1)}
       aria-label="Name of the log"
       title="Rename the log"
       value={value}
@@ -194,6 +198,7 @@ export function EditorTabs(props: IEditorTabsProps) {
         {tabs.map((tab, index) => {
           const selected = index === activeAt;
           const isLog = isNil(tab.id);
+          const renaming = isLog && selected && props.canRename;
           return (
             <Fragment key={tab.id ?? 'log'}>
               {index > 0 ? (
@@ -207,7 +212,7 @@ export function EditorTabs(props: IEditorTabsProps) {
                 role="tab"
                 aria-selected={selected}
                 tabIndex={selected ? 0 : -1}
-                className={`${TAB} ${isLog ? 'min-w-[150px] flex-[0_1_280px]' : 'min-w-[124px] flex-[0_1_200px]'}`}
+                className={`${TAB} ${isLog ? (isNil(props.pageTitle) ? 'min-w-[150px] flex-[0_1_280px]' : 'min-w-[180px] flex-[0_1_400px]') : 'min-w-[124px] flex-[0_1_200px]'}`}
                 title={
                   isLog
                     ? `${props.title}${isNil(props.pageTitle) ? '' : ` / ${props.pageTitle}`}`
@@ -218,13 +223,28 @@ export function EditorTabs(props: IEditorTabsProps) {
               >
                 <span className="flex flex-none">{tab.icon}</span>
                 <span className="flex min-w-0 flex-1">
-                  {isLog && selected && props.canRename ? (
-                    <TitleField title={props.title} onRename={props.onRename} />
-                  ) : (
-                    <span className="truncate">{tab.label}</span>
-                  )}
+                  {/* With a page open, the log name gives up its room first (shrink 4 to 1). The
+                      hidden first 10 letters set how far it can shrink, so a short name stays whole. */}
+                  <span className="grid shrink-[4]">
+                    {isLog && isNotNil(props.pageTitle) ? (
+                      <span
+                        className={cn(
+                          'invisible col-start-1 row-start-1 h-0 whitespace-pre',
+                          renaming && 'font-bold'
+                        )}
+                        aria-hidden="true"
+                      >
+                        {props.title.slice(0, 10)}
+                      </span>
+                    ) : null}
+                    {renaming ? (
+                      <TitleField title={props.title} onRename={props.onRename} />
+                    ) : (
+                      <span className="col-start-1 row-start-1 min-w-0 truncate">{tab.label}</span>
+                    )}
+                  </span>
                   {isLog && isNotNil(props.pageTitle) ? (
-                    <span className="flex min-w-0 flex-[0_1_auto] items-center gap-1 pl-1">
+                    <span className="flex min-w-[6ch] flex-[0_1_auto] items-center gap-1 pl-1">
                       <span className="flex-none font-normal text-neutral-4">/</span>
                       <span className="truncate text-blue">{props.pageTitle}</span>
                     </span>

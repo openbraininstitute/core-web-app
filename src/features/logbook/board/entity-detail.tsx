@@ -1,5 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { isNil } from 'es-toolkit';
+import { useState } from 'react';
 
 import { WorkspaceSection } from '@/constants';
 import { coreTypeOf, entityQuery } from '@/features/logbook/api/entities';
@@ -20,14 +21,21 @@ export interface IEntityDetailProps {
 /** Core's mini detail view, light variant, beside the log (a drawer on narrow screens). */
 export function EntityDetail({ target, project, narrow, onClose }: IEntityDetailProps) {
   const dataType = coreTypeOf(target.type);
-  // Same cache entry as the card, so opening the panel costs no new request.
-  const record = useQuery(entityQuery(target.type, target.entityId, project));
-  if (isNil(dataType)) return null;
+  // Same cache entry as the card, so opening the panel costs no new request. The panel stays
+  // mounted across entities: the last record shows until the next lands, so it never re-enters.
+  const record = useQuery({
+    ...entityQuery(target.type, target.entityId, project),
+    placeholderData: keepPreviousData,
+  });
+  // The type of the record on screen: it moves with the record, not ahead of it.
+  const [shownType, setShownType] = useState(dataType);
+  if (!record.isPlaceholderData && shownType !== dataType) setShownType(dataType);
+  if (isNil(shownType)) return null;
   const panel = (
     <MiniDetailViewRenderer
       section={WorkspaceSection.Data}
       record={(record.data as EntityCoreObjectTypes | undefined) ?? null}
-      dataType={dataType}
+      dataType={shownType}
       theme="light"
       onClose={onClose}
       dismissOnOutsideInteraction

@@ -15,6 +15,7 @@ import { has3dView, Viewer3d } from '@/features/logbook/editor/blocks/viewers-3d
 import { Bone } from '@/features/logbook/elements/skeletons';
 import { useEntityDetail, useEntityPicker, useLogContext } from '@/features/logbook/log/context';
 import { Icon } from '@/features/logbook/ui/icons';
+import { DISMISSABLE_ATTRIBUTE } from '@/hooks/use-dismiss-on-outside-interaction';
 import { cn } from '@/utils/css-class';
 
 import type { NodeViewProps } from '@tiptap/react';
@@ -113,6 +114,8 @@ export function EntityView({
                 className={cn(ACTION, 'text-primary-6')}
                 aria-label={`Show details of ${label}`}
                 title="Show details"
+                // A launcher of the panel: pressing it swaps the entity instead of closing the panel.
+                {...{ [DISMISSABLE_ATTRIBUTE]: '' }}
                 onClick={() => openDetail?.({ type, entityId })}
               >
                 <Icon name="arrowUpRight" size={15} stroke={2.2} />
