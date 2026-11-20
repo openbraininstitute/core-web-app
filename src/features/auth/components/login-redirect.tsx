@@ -60,6 +60,7 @@ export function LoginRedirect() {
   const [failed, setFailed] = useState(false);
 
   const redirectURL = searchParams.get('callbackUrl');
+  const reauth = searchParams.get('reauth') === '1';
 
   useEffect(() => {
     if (hasInitiated.current) return;
@@ -70,7 +71,8 @@ export function LoginRedirect() {
 
     // A 'RefreshAccessTokenError' session decrypts as authenticated but can't
     // mint fresh access tokens — fall through to re-auth instead of bouncing.
-    if (session.status === AuthStatus.Authenticated && !session.data?.error) {
+    // `reauth=1` asks for the same when a service has rejected the token.
+    if (session.status === AuthStatus.Authenticated && !session.data?.error && !reauth) {
       const safeTarget = redirectURL && isSameOriginTarget(redirectURL) ? redirectURL : SYNC_PATH;
       window.location.replace(safeTarget);
       return;
@@ -103,7 +105,7 @@ export function LoginRedirect() {
       // without this the page would sit on "Redirecting" forever.
       if (result?.error) setFailed(true);
     }
-  }, [redirectURL, session.status, session.data?.error]);
+  }, [redirectURL, reauth, session.status, session.data?.error]);
 
   if (failed) {
     return (
