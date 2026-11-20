@@ -4,8 +4,10 @@ import { ySyncPluginKey } from '@tiptap/y-tiptap';
 import { isNil, isNotNil } from 'es-toolkit';
 import * as Y from 'yjs';
 
+import { clip } from '@/features/logbook/helpers';
+
 import type { EditorState } from '@tiptap/pm/state';
-import type { IActor } from '@/features/logbook/ui/Avatar';
+import type { IActor } from '@/features/logbook/ui/avatar';
 
 export interface IPiece {
   readonly actor: IActor;
@@ -13,11 +15,6 @@ export interface IPiece {
 }
 
 const MAX_PIECES = 6;
-
-export const clip = (text: string, length: number): string => {
-  const flat = text.replace(/\s+/g, ' ').trim();
-  return flat.length <= length ? flat : `${flat.slice(0, length - 1)}…`;
-};
 
 interface IRun {
   readonly client: number;

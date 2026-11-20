@@ -2,7 +2,7 @@ import { isNil, isNotNil, uniqBy } from 'es-toolkit';
 import { signIn as nextAuthSignIn } from 'next-auth/react';
 
 import { colourOf } from '@/features/logbook/blocks/colour';
-import { initialsOf } from '@/features/logbook/ui/initials';
+import { initialsOf } from '@/features/logbook/helpers';
 import { getClientSession } from '@/hooks/session';
 
 export const PROVIDER = 'keycloak';

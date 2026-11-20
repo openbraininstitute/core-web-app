@@ -2,7 +2,7 @@
 
 import { motion, useReducedMotion } from 'motion/react';
 
-import { EASE_OUT } from '@/features/logbook/lib/ease';
+import { EASE_OUT } from '@/features/logbook/helpers';
 import { cn } from '@/utils/css-class';
 
 import type { ComponentProps, ReactNode, Ref } from 'react';

@@ -12,11 +12,11 @@ import {
   fileTextQuery,
   logFilesQuery,
 } from '@/features/logbook/api/log-files';
-import { agoOf } from '@/features/logbook/board/Rail';
-import { CodeView, CsvTable, sizeOf } from '@/features/logbook/editor/blocks/FileView';
+import { CodeView, CsvTable } from '@/features/logbook/editor/blocks/file-view';
 import { withViews } from '@/features/logbook/editor/extensions';
 import { LinesSkeleton } from '@/features/logbook/elements/skeletons';
-import { ArtifactIcon } from '@/features/logbook/log/ArtifactIcon';
+import { agoOf, savedOf, sizeOf } from '@/features/logbook/helpers';
+import { ArtifactIcon } from '@/features/logbook/log/artifact-icon';
 import { useLogContext } from '@/features/logbook/log/context';
 import { CONTROL } from '@/features/logbook/log/controls';
 import { Icon } from '@/features/logbook/ui/icons';
@@ -28,15 +28,6 @@ import type { IArtifact } from '@/features/logbook/api/log-files';
 const NOTE = 'p-6 text-[14px] text-neutral-4';
 const TOOL =
   'grid size-8 place-items-center rounded-full text-primary-9 transition-colors hover:bg-fill-2';
-
-export const savedOf = (iso: string): string =>
-  new Date(iso).toLocaleString(undefined, {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 
 function PageReader({ text }: { readonly text: string }) {
   const reader = useEditor({ extensions: [...withViews(), Markdown], editable: false });

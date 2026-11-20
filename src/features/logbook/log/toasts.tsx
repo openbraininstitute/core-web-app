@@ -8,12 +8,12 @@ import {
   useSyncExternalStore,
 } from 'react';
 
-import { SettingsButton } from '@/features/logbook/board/Rail';
+import { SettingsButton } from '@/features/logbook/board/rail';
+import { useNow } from '@/features/logbook/helpers';
 import { NoticeKind } from '@/features/logbook/log/notice';
 import { ToastSource } from '@/features/logbook/log/notify-settings';
 import { Icon } from '@/features/logbook/ui/icons';
 import { PopoverAlign, PopoverSide } from '@/features/logbook/ui/popover';
-import { useNow } from '@/features/logbook/ui/useNow';
 import { cn } from '@/utils/css-class';
 
 import type { IMe } from '@/features/logbook/auth/session';

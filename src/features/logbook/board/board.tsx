@@ -13,30 +13,30 @@ import {
   useDeleteLog,
   useUpdateLog,
 } from '@/features/logbook/api/research-logs';
-import { EntityDetail } from '@/features/logbook/board/EntityDetail';
-import { Home } from '@/features/logbook/board/Home';
+import { EntityDetail } from '@/features/logbook/board/entity-detail';
+import { Home } from '@/features/logbook/board/home';
 import { Layout, useLayout } from '@/features/logbook/board/layout';
-import { PageOutline } from '@/features/logbook/board/PageOutline';
-import { Rail, RailHeading } from '@/features/logbook/board/Rail';
-import { UnsentCopies } from '@/features/logbook/board/UnsentCopies';
+import { PageOutline } from '@/features/logbook/board/page-outline';
+import { Rail, RailHeading } from '@/features/logbook/board/rail';
+import { UnsentCopies } from '@/features/logbook/board/unsent-copies';
 import { PageSkeleton } from '@/features/logbook/elements/skeletons';
+import { dragHandle } from '@/features/logbook/helpers';
 import { EntityDetailContext } from '@/features/logbook/log/context';
 import { markSeed } from '@/features/logbook/log/ui-state';
 import { ViewMode } from '@/features/logbook/log/view-mode';
 import { navigate, pathOf } from '@/features/logbook/router';
-import { dragHandle } from '@/features/logbook/ui/drag';
 import { cn } from '@/utils/css-class';
 
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import type { IPage } from '@/api/logbook/types';
 import type { ILogOrder } from '@/features/logbook/api/research-logs';
 import type { IMe, IProject } from '@/features/logbook/auth/session';
-import type { IMore, IScope } from '@/features/logbook/board/Rail';
+import type { IMore, IScope } from '@/features/logbook/board/rail';
 import type { IEntityTarget } from '@/features/logbook/log/context';
 import type { TViewMode } from '@/features/logbook/log/view-mode';
 
 // The editor is most of the code: load it lazily, prefetched once the list shows.
-const loadLogView = () => import('@/features/logbook/log/LogView');
+const loadLogView = () => import('@/features/logbook/log/log-view');
 const LogView = lazy(() => loadLogView().then((m) => ({ default: m.LogView })));
 
 const SEARCH_WAIT_MS = 250;

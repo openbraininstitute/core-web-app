@@ -9,21 +9,21 @@ import { artifactsOf, logFilesQuery } from '@/features/logbook/api/log-files';
 import { useUpdateLog } from '@/features/logbook/api/research-logs';
 import { Layout } from '@/features/logbook/board/layout';
 import { useCollaboration } from '@/features/logbook/collaboration/notices';
-import { FormatBar } from '@/features/logbook/editor/FormatBar';
-import { SelectionMenu } from '@/features/logbook/editor/SelectionMenu';
-import { ArtifactBar, ArtifactView } from '@/features/logbook/log/ArtifactView';
+import { FormatBar } from '@/features/logbook/editor/format-bar';
+import { SelectionMenu } from '@/features/logbook/editor/selection-menu';
+import { ArtifactBar, ArtifactView } from '@/features/logbook/log/artifact-view';
 import { CONTROL } from '@/features/logbook/log/controls';
-import { EditorTabs } from '@/features/logbook/log/EditorTabs';
-import { InsertMenu } from '@/features/logbook/log/Menus';
+import { EditorTabs } from '@/features/logbook/log/editor-tabs';
+import { InsertMenu } from '@/features/logbook/log/menus';
 import { NoticeKind, reasonOf } from '@/features/logbook/log/notice';
-import { HereNow, PresenceButton } from '@/features/logbook/log/Presence';
-import { SaveStatus } from '@/features/logbook/log/SaveStatus';
+import { HereNow, PresenceButton } from '@/features/logbook/log/presence';
+import { SaveStatus } from '@/features/logbook/log/save-status';
 import { CARD_MENUS, Menu, MobileTab, RightTab } from '@/features/logbook/log/ui-state';
 import { ViewMode } from '@/features/logbook/log/view-mode';
 import { Icon } from '@/features/logbook/ui/icons';
 
 import type { CSSProperties, MouseEvent as ReactMouseEvent } from 'react';
-import type { ILogShared } from '@/features/logbook/log/LogPage';
+import type { ILogShared } from '@/features/logbook/log/log-page';
 import type { TMenu, TMobileTab, TRightTab } from '@/features/logbook/log/ui-state';
 
 export interface IPopAt {

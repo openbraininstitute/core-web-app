@@ -3,11 +3,11 @@ import { isNotNil } from 'es-toolkit';
 
 import { ActorVia } from '@/api/logbook/types';
 import { colourOf } from '@/features/logbook/blocks/colour';
-import { initialsOf } from '@/features/logbook/ui/initials';
+import { initialsOf } from '@/features/logbook/helpers';
 
 import type { HocuspocusProvider } from '@hocuspocus/provider';
 import type { IPeer } from '@/features/logbook/collaboration/notices';
-import type { IActor } from '@/features/logbook/ui/Avatar';
+import type { IActor } from '@/features/logbook/ui/avatar';
 
 type TAwareness = NonNullable<HocuspocusProvider['awareness']>;
 

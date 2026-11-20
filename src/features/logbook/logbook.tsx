@@ -9,9 +9,8 @@ import { useRoute } from '@/features/logbook/router';
 
 import type { FallbackProps } from 'react-error-boundary';
 
-// The editor, Yjs and IndexedDB are browser-only; the skeleton holds the board's shape meanwhile.
 const LogbookRoot = dynamic(
-  () => import('@/features/logbook/board/LogbookRoot').then((m) => m.LogbookRoot),
+  () => import('@/features/logbook/board/logbook-root').then((m) => m.LogbookRoot),
   { ssr: false, loading: () => <LoadingBoard /> }
 );
 
@@ -42,7 +41,6 @@ export function Logbook() {
   const route = useRoute();
   return (
     <div className="logbook-root h-full w-full overflow-x-clip bg-background text-primary-9">
-      {/* A new address gets a fresh try, so one broken log doesn't lock the others out. */}
       <ErrorBoundary FallbackComponent={LogbookFailed} resetKeys={[route.logId, route.pageId]}>
         <LogbookRoot />
       </ErrorBoundary>

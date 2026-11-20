@@ -2,25 +2,25 @@ import { useHocuspocusProvider } from '@hocuspocus/provider-react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { EditorContent, useEditor } from '@tiptap/react';
 import { isNil, isNotNil } from 'es-toolkit';
-import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useId, useMemo, useState, useSyncExternalStore } from 'react';
+import { useInView } from 'react-intersection-observer';
 
 import { ActorVia } from '@/api/logbook/types';
 import { activityQuery, runsOf, summaryOf } from '@/features/logbook/api/activity';
 import { Layout } from '@/features/logbook/board/layout';
 import { personActor } from '@/features/logbook/collaboration/actors';
 import { previewExtensions } from '@/features/logbook/editor/extensions';
-import { ArtifactsTab } from '@/features/logbook/log/ArtifactsTab';
-import { cardLabelOf, clip, piecesOf } from '@/features/logbook/log/history';
+import { clip, liveAgoOf, useNow } from '@/features/logbook/helpers';
+import { ArtifactsTab } from '@/features/logbook/log/artifacts-tab';
+import { cardLabelOf, piecesOf } from '@/features/logbook/log/history';
 import { RightTab } from '@/features/logbook/log/ui-state';
 import { ViewMode } from '@/features/logbook/log/view-mode';
-import { Avatar } from '@/features/logbook/ui/Avatar';
+import { Avatar } from '@/features/logbook/ui/avatar';
 import { Icon } from '@/features/logbook/ui/icons';
-import { useInView } from '@/features/logbook/ui/useInView';
-import { agoOf, useNow } from '@/features/logbook/ui/useNow';
 
 import type { IActivityRun } from '@/features/logbook/api/activity';
 import type { IChange } from '@/features/logbook/collaboration/changes';
-import type { ILogShared } from '@/features/logbook/log/LogPage';
+import type { ILogShared } from '@/features/logbook/log/log-page';
 import type { TRightTab } from '@/features/logbook/log/ui-state';
 
 const SUB = 'text-[12px] text-neutral-4';
@@ -67,7 +67,7 @@ function ActivityRow({
         ) : null}
         <div className={SUB}>
           {change.actor.agent ? 'Agent · ' : ''}
-          {agoOf(change.at, now)}
+          {liveAgoOf(change.at, now)}
         </div>
       </div>
       <button
@@ -105,7 +105,7 @@ function SavedRow({
         </div>
         <div className={SUB}>
           {agent ? 'Agent · ' : ''}
-          {agoOf(run.to, now)}
+          {liveAgoOf(run.to, now)}
         </div>
         {removed.length > 0 ? (
           // Animates grid rows 0fr to 1fr: no measuring, no JS.
@@ -161,8 +161,7 @@ function HistoryTab(props: ILogShared) {
     [saved.data, props.page.id]
   );
   // Near the end, read the next page (one at a time).
-  const end = useRef<HTMLDivElement>(null);
-  const atEnd = useInView(end, { margin: '300px' });
+  const { ref: end, inView: atEnd } = useInView({ rootMargin: '300px', fallbackInView: true });
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = saved;
   useEffect(() => {
     if (atEnd && hasNextPage && !isFetchingNextPage) void fetchNextPage();
@@ -235,7 +234,7 @@ function HistoryTab(props: ILogShared) {
                     <strong>{change.actor.name}</strong> replaced{' '}
                     <s className="text-[12px] text-removed">“{clip(change.removed, 70)}”</s>
                   </div>
-                  <div className={SUB}>{agoOf(change.at, now)}</div>
+                  <div className={SUB}>{liveAgoOf(change.at, now)}</div>
                 </div>
               </li>
             ))}

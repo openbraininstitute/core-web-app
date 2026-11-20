@@ -11,8 +11,8 @@ import {
   usePages,
   useRenamePage,
 } from '@/features/logbook/api/pages';
-import { CardMenu, RenameField } from '@/features/logbook/board/Rail';
-import { DeletePageDialog } from '@/features/logbook/log/DeletePageDialog';
+import { CardMenu, RenameField } from '@/features/logbook/board/rail';
+import { DeletePageDialog } from '@/features/logbook/log/delete-page-dialog';
 import { Icon } from '@/features/logbook/ui/icons';
 
 import type { IPage } from '@/api/logbook/types';

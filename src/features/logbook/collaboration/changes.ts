@@ -11,7 +11,7 @@ import { UNKNOWN_ACTOR } from '@/features/logbook/collaboration/actors';
 
 import type { Node as PmNode } from '@tiptap/pm/model';
 import type * as Y from 'yjs';
-import type { IActor } from '@/features/logbook/ui/Avatar';
+import type { IActor } from '@/features/logbook/ui/avatar';
 
 export const HL_MS = 5200;
 const COALESCE_MS = 8000;

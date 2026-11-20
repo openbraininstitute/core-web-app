@@ -1,14 +1,16 @@
 import { isNil, uniqBy } from 'es-toolkit';
 import { Fragment, useEffect, useRef, useState } from 'react';
+import { useInView } from 'react-intersection-observer';
 
 import { ActorVia } from '@/api/logbook/types';
 import { useContributors } from '@/features/logbook/api/contributors';
 import { colourOf } from '@/features/logbook/blocks/colour';
-import { OrderButton } from '@/features/logbook/board/LogOrder';
+import { OrderButton } from '@/features/logbook/board/log-order';
 import { AvatarGroup } from '@/features/logbook/elements/motion/avatar-group';
 import { PillSkeletons } from '@/features/logbook/elements/skeletons';
-import { DeleteLogDialog } from '@/features/logbook/log/DeleteLogDialog';
-import { NotifyPopover } from '@/features/logbook/log/Menus';
+import { agoOf, dateOf } from '@/features/logbook/helpers';
+import { DeleteLogDialog } from '@/features/logbook/log/delete-log-dialog';
+import { NotifyPopover } from '@/features/logbook/log/menus';
 import { useNotifySettings } from '@/features/logbook/log/notify-settings';
 import { Icon } from '@/features/logbook/ui/icons';
 import {
@@ -17,7 +19,6 @@ import {
   PopoverSide,
   useAnchoredPopover,
 } from '@/features/logbook/ui/popover';
-import { useInView } from '@/features/logbook/ui/useInView';
 import { cn } from '@/utils/css-class';
 
 import type { ReactNode, RefObject } from 'react';
@@ -74,23 +75,6 @@ const SCOPE_BUTTON =
   'grid size-8 place-items-center rounded-full border-0 bg-transparent text-label transition-[background-color,color] duration-150 ease-[ease] hover:bg-white';
 const LIST_EMPTY = 'px-3 text-[14px] text-neutral-4';
 
-const dateOf = (iso: string): string =>
-  new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
-
-// "5 min ago", "yesterday" within a week, then the date.
-const relative = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto', style: 'short' });
-const MINUTE = 60_000;
-const HOUR = 60 * MINUTE;
-const DAY = 24 * HOUR;
-export function agoOf(iso: string, now = Date.now()): string {
-  const ms = Math.max(0, now - new Date(iso).getTime());
-  if (ms < MINUTE) return 'just now';
-  if (ms < HOUR) return relative.format(-Math.floor(ms / MINUTE), 'minute');
-  if (ms < DAY) return relative.format(-Math.floor(ms / HOUR), 'hour');
-  if (ms < 7 * DAY) return relative.format(-Math.floor(ms / DAY), 'day');
-  return dateOf(iso);
-}
-
 // Creator first, then writers newest first; the creator isn't shown twice.
 export const membersOf = (
   log: IResearchLog,
@@ -122,8 +106,12 @@ export function LogWriters({
   readonly project: IProject;
   readonly log: IResearchLog;
 }) {
-  const box = useRef<HTMLSpanElement>(null);
-  const shown = useInView(box, { margin: '200px', once: true });
+  // Writers load only for cards near the screen; fallbackInView covers browsers without an observer.
+  const { ref: box, inView: shown } = useInView({
+    rootMargin: '200px',
+    triggerOnce: true,
+    fallbackInView: true,
+  });
   const writers = useContributors(project, log.id, shown);
   return (
     <span ref={box} className="pointer-events-auto">
@@ -149,14 +137,12 @@ export function LoadMore({
   readonly more: IMore;
   readonly skeleton: ReactNode;
 }) {
-  const end = useRef<HTMLDivElement>(null);
-  const near = useInView(end, { margin: '400px' });
+  const { ref: end, inView: near } = useInView({ rootMargin: '400px', fallbackInView: true });
   const { has, loading, failed, onMore } = more;
   // Keep going while the end stays in view; a tall screen holds more than one page.
   useEffect(() => {
     if (near && has && !loading && !failed) onMore();
   }, [near, has, loading, failed, onMore]);
-  // Always render the marker: useInView watches this one element, a new one wouldn't be.
   return (
     <>
       {has && loading ? skeleton : null}

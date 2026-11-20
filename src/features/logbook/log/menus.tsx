@@ -11,7 +11,7 @@ import { cn } from '@/utils/css-class';
 
 import type { Editor } from '@tiptap/react';
 import type { CSSProperties } from 'react';
-import type { IPopAt } from '@/features/logbook/log/EditorCard';
+import type { IPopAt } from '@/features/logbook/log/editor-card';
 import type { INotice } from '@/features/logbook/log/notice';
 import type { INotifySettings, TToastSource } from '@/features/logbook/log/notify-settings';
 import type { TIconName } from '@/features/logbook/ui/icons';

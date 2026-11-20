@@ -10,7 +10,8 @@ import {
   OrderDirection,
 } from '@/features/logbook/api/research-logs';
 import { colourOf } from '@/features/logbook/blocks/colour';
-import { agoOf, membersOf } from '@/features/logbook/board/Rail';
+import { membersOf } from '@/features/logbook/board/rail';
+import { agoOf } from '@/features/logbook/helpers';
 
 import type { IResearchLog } from '@/api/entitycore/types/entities/research-log';
 import type { ILogOrder } from '@/features/logbook/api/research-logs';

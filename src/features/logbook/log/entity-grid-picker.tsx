@@ -13,6 +13,7 @@ import { blockTypeOf, entitySearchQuery } from '@/features/logbook/api/entities'
 import { EntityType, entityLooks } from '@/features/logbook/blocks/kinds';
 import { groupLooks } from '@/features/logbook/editor/blocks/entity-look';
 import { BouncyAccordion } from '@/features/logbook/elements/motion/bouncy-accordion';
+import { hexOf } from '@/features/logbook/helpers';
 import { useLogContext } from '@/features/logbook/log/context';
 import { reasonOf } from '@/features/logbook/log/notice';
 import { Icon } from '@/features/logbook/ui/icons';
@@ -536,8 +537,6 @@ function SpeciesFilter({
 }
 
 const REGION_MATCHES = 60;
-const hexOf = (colour: string | undefined) =>
-  isNil(colour) || colour.length === 0 ? '#c4cdd9' : colour.startsWith('#') ? colour : `#${colour}`;
 
 // A searchable brain region list of the chosen species; the first matches only, to stay quick.
 function RegionFilter({

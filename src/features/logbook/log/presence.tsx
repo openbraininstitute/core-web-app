@@ -4,6 +4,7 @@ import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import * as Y from 'yjs';
 
 import { AvatarGroup } from '@/features/logbook/elements/motion/avatar-group';
+import { useNow } from '@/features/logbook/helpers';
 import {
   presentList,
   stackOrder,
@@ -12,14 +13,13 @@ import {
   whoLabelOf,
 } from '@/features/logbook/log/presence-state';
 import { Menu } from '@/features/logbook/log/ui-state';
-import { Avatar } from '@/features/logbook/ui/Avatar';
+import { Avatar } from '@/features/logbook/ui/avatar';
 import { Icon } from '@/features/logbook/ui/icons';
-import { useNow } from '@/features/logbook/ui/useNow';
 
 import type { Editor } from '@tiptap/react';
 import type { MouseEvent as ReactMouseEvent } from 'react';
-import type { IPopAt } from '@/features/logbook/log/EditorCard';
-import type { ILogShared } from '@/features/logbook/log/LogPage';
+import type { IPopAt } from '@/features/logbook/log/editor-card';
+import type { ILogShared } from '@/features/logbook/log/log-page';
 import type { IPresent } from '@/features/logbook/log/presence-state';
 
 // Two faces, then +N, which opens the full roster.

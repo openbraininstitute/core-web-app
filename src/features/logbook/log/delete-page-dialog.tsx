@@ -1,8 +1,8 @@
-import { ConfirmDeleteDialog } from '@/features/logbook/ui/ConfirmDeleteDialog';
+import { ConfirmDeleteDialog } from '@/features/logbook/ui/confirm-delete-dialog';
 import { Icon } from '@/features/logbook/ui/icons';
 
 import type { IPage } from '@/api/logbook/types';
-import type { IGoesWith } from '@/features/logbook/ui/ConfirmDeleteDialog';
+import type { IGoesWith } from '@/features/logbook/ui/confirm-delete-dialog';
 
 const GOES: readonly IGoesWith[] = [
   { icon: 'page', text: 'Its text, its versions and its history' },

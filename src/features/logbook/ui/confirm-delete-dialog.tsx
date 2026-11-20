@@ -1,5 +1,3 @@
-// Typed DELETE confirmation for things nothing can undo (logs, sections).
-// Escape and the backdrop do nothing while the delete runs, so a half-done delete is never hidden.
 import { isNil } from 'es-toolkit';
 import { useEffect, useId, useRef, useState } from 'react';
 

@@ -8,7 +8,7 @@ import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
 
 import type { IWriter } from '@/api/logbook/types';
 import type { IProject } from '@/features/logbook/auth/session';
-import type { IActor } from '@/features/logbook/ui/Avatar';
+import type { IActor } from '@/features/logbook/ui/avatar';
 
 export const WRITERS_MAX_CLIENTS = 100;
 

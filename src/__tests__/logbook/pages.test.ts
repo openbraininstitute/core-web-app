@@ -2,7 +2,7 @@ import { expect, test } from 'vitest';
 
 import { PageKind } from '@/api/logbook/types';
 import { pageToShow } from '@/features/logbook/api/pages';
-import { neighboursOf } from '@/features/logbook/log/PageNav';
+import { neighboursOf } from '@/features/logbook/log/page-nav';
 import { pathOf, routeOf } from '@/features/logbook/router';
 
 import type { IPage } from '@/api/logbook/types';

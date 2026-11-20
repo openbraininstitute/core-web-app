@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useEffect, useRef } from 'react';
 
 import { accessToken, meOf, signIn } from '@/features/logbook/auth/session';
-import { Board } from '@/features/logbook/board/Board';
+import { Board } from '@/features/logbook/board/board';
 import { BoardSkeleton } from '@/features/logbook/elements/skeletons';
 import { navigate, pathOf, useRoute } from '@/features/logbook/router';
 import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';

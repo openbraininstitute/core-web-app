@@ -8,7 +8,7 @@ import type { TValueOf } from '@/api/logbook/types';
 import type { IChangeSnapshot } from '@/features/logbook/collaboration/changes';
 import type { ICollaborationSnapshot } from '@/features/logbook/collaboration/notices';
 import type { TViewMode } from '@/features/logbook/log/view-mode';
-import type { IActor } from '@/features/logbook/ui/Avatar';
+import type { IActor } from '@/features/logbook/ui/avatar';
 
 export const Status = {
   Editing: 'editing',

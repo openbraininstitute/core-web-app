@@ -4,11 +4,10 @@ import { isNil } from 'es-toolkit';
 import { useDeferredValue, useMemo, useState } from 'react';
 
 import { artifactsOf, logFilesQuery, searchArtifacts } from '@/features/logbook/api/log-files';
-import { agoOf, SearchField } from '@/features/logbook/board/Rail';
-import { sizeOf } from '@/features/logbook/editor/blocks/FileView';
+import { SearchField } from '@/features/logbook/board/rail';
 import { RowsSkeleton } from '@/features/logbook/elements/skeletons';
-import { ArtifactIcon } from '@/features/logbook/log/ArtifactIcon';
-import { savedOf } from '@/features/logbook/log/ArtifactView';
+import { agoOf, savedOf, sizeOf } from '@/features/logbook/helpers';
+import { ArtifactIcon } from '@/features/logbook/log/artifact-icon';
 import { useLogContext } from '@/features/logbook/log/context';
 import { Icon } from '@/features/logbook/ui/icons';
 

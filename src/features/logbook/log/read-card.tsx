@@ -4,17 +4,15 @@ import { useState } from 'react';
 
 import { useDeleteLog, useUpdateLog } from '@/features/logbook/api/research-logs';
 import { Layout } from '@/features/logbook/board/layout';
-import { DeleteLogDialog } from '@/features/logbook/log/DeleteLogDialog';
-import { LogDetailsDialog } from '@/features/logbook/log/LogDetailsDialog';
-import { PagePlace, PageSteps } from '@/features/logbook/log/PageNav';
+import { dateOf } from '@/features/logbook/helpers';
+import { DeleteLogDialog } from '@/features/logbook/log/delete-log-dialog';
+import { LogDetailsDialog } from '@/features/logbook/log/log-details-dialog';
+import { PagePlace, PageSteps } from '@/features/logbook/log/page-nav';
 import { ViewMode } from '@/features/logbook/log/view-mode';
 import { navigate, pathOf } from '@/features/logbook/router';
 import { Icon } from '@/features/logbook/ui/icons';
 
-import type { ILogShared } from '@/features/logbook/log/LogPage';
-
-const dateOf = (iso: string): string =>
-  new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+import type { ILogShared } from '@/features/logbook/log/log-page';
 
 export function ReadCard(props: ILogShared) {
   const { log, project, editor } = props;

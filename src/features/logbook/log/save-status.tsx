@@ -4,6 +4,7 @@ import { useHocuspocusProvider } from '@hocuspocus/provider-react';
 import { isNil, isNotNil } from 'es-toolkit';
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 
+import { timeOf } from '@/features/logbook/helpers';
 import { Icon } from '@/features/logbook/ui/icons';
 
 import type { HocuspocusProvider } from '@hocuspocus/provider';
@@ -18,9 +19,6 @@ export interface ISaveStatusProps {
 }
 
 const OFFLINE_AFTER_MS = 2000;
-
-const timeOf = (at: number): string =>
-  new Date(at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
 const connected = (provider: HocuspocusProvider): boolean =>
   provider.configuration.websocketProvider.status === WebSocketStatus.Connected;

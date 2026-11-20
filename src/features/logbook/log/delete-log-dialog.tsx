@@ -1,10 +1,11 @@
-import { agoOf, LogWriters } from '@/features/logbook/board/Rail';
-import { ConfirmDeleteDialog } from '@/features/logbook/ui/ConfirmDeleteDialog';
+import { LogWriters } from '@/features/logbook/board/rail';
+import { agoOf } from '@/features/logbook/helpers';
+import { ConfirmDeleteDialog } from '@/features/logbook/ui/confirm-delete-dialog';
 import { Icon } from '@/features/logbook/ui/icons';
 
 import type { IResearchLog } from '@/api/entitycore/types/entities/research-log';
 import type { IProject } from '@/features/logbook/auth/session';
-import type { IGoesWith } from '@/features/logbook/ui/ConfirmDeleteDialog';
+import type { IGoesWith } from '@/features/logbook/ui/confirm-delete-dialog';
 
 const GOES: readonly IGoesWith[] = [
   { icon: 'notebook', text: 'Its pages, with all their text and history' },

@@ -1,8 +1,7 @@
 import { isNil, isNotNil } from 'es-toolkit';
 
-import { OrderButton } from '@/features/logbook/board/LogOrder';
+import { OrderButton } from '@/features/logbook/board/log-order';
 import {
-  agoOf,
   LoadMore,
   LogsEmpty,
   LogWriters,
@@ -10,15 +9,16 @@ import {
   ScopeFilter,
   SearchField,
   SettingsButton,
-} from '@/features/logbook/board/Rail';
+} from '@/features/logbook/board/rail';
 import { CardSkeletons } from '@/features/logbook/elements/skeletons';
+import { agoOf } from '@/features/logbook/helpers';
 import { Icon } from '@/features/logbook/ui/icons';
 import { PopoverAlign } from '@/features/logbook/ui/popover';
 
 import type { IResearchLog } from '@/api/entitycore/types/entities/research-log';
 import type { ILogOrder } from '@/features/logbook/api/research-logs';
 import type { IProject } from '@/features/logbook/auth/session';
-import type { IMore, IScope } from '@/features/logbook/board/Rail';
+import type { IMore, IScope } from '@/features/logbook/board/rail';
 
 export interface IHomeProps {
   readonly logs: readonly IResearchLog[];

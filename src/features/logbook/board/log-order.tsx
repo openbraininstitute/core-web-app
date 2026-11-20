@@ -3,7 +3,7 @@ import { motion, useReducedMotion } from 'motion/react';
 import { useId } from 'react';
 
 import { DEFAULT_ORDER, LogOrderField, OrderDirection } from '@/features/logbook/api/research-logs';
-import { EASE_OUT, SPRING_LAYOUT } from '@/features/logbook/lib/ease';
+import { EASE_OUT, SPRING_LAYOUT } from '@/features/logbook/helpers';
 import { Icon } from '@/features/logbook/ui/icons';
 import { PopoverAlign, PopoverLayer, useAnchoredPopover } from '@/features/logbook/ui/popover';
 import { cn } from '@/utils/css-class';

@@ -12,7 +12,7 @@ import { CollaborationNotices } from '@/features/logbook/collaboration/notices';
 import { RetryableRefusal } from '@/features/logbook/collaboration/rejoin';
 import { PageSkeleton } from '@/features/logbook/elements/skeletons';
 import { LogContext } from '@/features/logbook/log/context';
-import { LogPage } from '@/features/logbook/log/LogPage';
+import { LogPage } from '@/features/logbook/log/log-page';
 import { navigate, pathOf } from '@/features/logbook/router';
 
 import type { IResearchLog } from '@/api/entitycore/types/entities/research-log';

@@ -2,7 +2,7 @@ import { TextSelection } from '@tiptap/pm/state';
 import { useEditorState } from '@tiptap/react';
 import { BubbleMenu } from '@tiptap/react/menus';
 
-import { FormatTools, TOOL_RULE, Tool } from '@/features/logbook/editor/FormatBar';
+import { FormatTools, TOOL_RULE, Tool } from '@/features/logbook/editor/format-bar';
 import {
   activeOf,
   Format,

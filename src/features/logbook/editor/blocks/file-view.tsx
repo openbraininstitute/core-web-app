@@ -12,6 +12,7 @@ import {
 import { FileLang, fileLangOf, fileLooks } from '@/features/logbook/blocks/kinds';
 import { highlightLines } from '@/features/logbook/editor/shiki';
 import { LinesSkeleton } from '@/features/logbook/elements/skeletons';
+import { sizeOf } from '@/features/logbook/helpers';
 import { useLogContext } from '@/features/logbook/log/context';
 import { useUploading } from '@/features/logbook/log/uploads';
 
@@ -19,13 +20,6 @@ import type { NodeViewProps } from '@tiptap/react';
 import type { IProject } from '@/features/logbook/auth/session';
 
 const NOTE = 'px-[14px] py-[10px] text-[13px] text-neutral-4';
-
-export const sizeOf = (bytes: number): string =>
-  bytes < 1024
-    ? `${bytes} B`
-    : bytes < 1024 * 1024
-      ? `${(bytes / 1024).toFixed(1)} KB`
-      : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 
 interface IToken {
   readonly content: string;

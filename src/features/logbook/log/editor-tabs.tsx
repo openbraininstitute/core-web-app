@@ -1,7 +1,7 @@
 import { isNil, isNotNil } from 'es-toolkit';
 import { Fragment, useEffect, useRef, useState } from 'react';
 
-import { ArtifactIcon } from '@/features/logbook/log/ArtifactIcon';
+import { ArtifactIcon } from '@/features/logbook/log/artifact-icon';
 import { Icon } from '@/features/logbook/ui/icons';
 
 import type { KeyboardEvent as ReactKeyboardEvent, ReactNode, WheelEvent } from 'react';

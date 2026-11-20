@@ -10,10 +10,10 @@ import { isNil } from 'es-toolkit';
 
 import { BLOCK_TYPES, contentExtensions, FRAGMENT } from '@/features/logbook/blocks/extensions';
 import { CollaborationChanges } from '@/features/logbook/collaboration/changes';
-import { CalloutView } from '@/features/logbook/editor/blocks/CalloutView';
-import { EntityView } from '@/features/logbook/editor/blocks/EntityView';
-import { FigureView } from '@/features/logbook/editor/blocks/FigureView';
-import { FileView } from '@/features/logbook/editor/blocks/FileView';
+import { CalloutView } from '@/features/logbook/editor/blocks/callout-view';
+import { EntityView } from '@/features/logbook/editor/blocks/entity-view';
+import { FigureView } from '@/features/logbook/editor/blocks/figure-view';
+import { FileView } from '@/features/logbook/editor/blocks/file-view';
 import { TokenKind, tokenize } from '@/features/logbook/editor/highlight';
 
 import type { HocuspocusProvider } from '@hocuspocus/provider';
@@ -22,7 +22,7 @@ import type { Node as PmNode } from '@tiptap/pm/model';
 import type { ReactNodeViewProps } from '@tiptap/react';
 import type { ComponentType } from 'react';
 import type { ChangeFeed } from '@/features/logbook/collaboration/changes';
-import type { IActor } from '@/features/logbook/ui/Avatar';
+import type { IActor } from '@/features/logbook/ui/avatar';
 
 const views: Readonly<Record<string, ComponentType<ReactNodeViewProps>>> = {
   entity: EntityView,

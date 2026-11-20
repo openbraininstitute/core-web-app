@@ -1,4 +1,3 @@
-// Portal popover for buttons in clipping containers; kept on screen, above the drawer (z-60).
 import { clamp, isNotNil } from 'es-toolkit';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
