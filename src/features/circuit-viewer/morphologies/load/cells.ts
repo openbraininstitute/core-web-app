@@ -1,4 +1,6 @@
-import type { CircuitMorphologyData, MorphologySegments, Population } from '../types';
+import { strideOf } from './packed-ends';
+
+import type { BoxSegments, CircuitMorphologyData, Population } from '../types';
 
 /** The page's number for a pack cell whose population the page does not have. */
 const NONE = 0xffffffff;
@@ -57,22 +59,23 @@ export function renumberSomas(
  * has no number for are left out.
  */
 export function renumberSegments(
-  { segments, segmentCells, segmentTypes }: MorphologySegments,
+  { segments, segmentCells, segmentTypes }: BoxSegments,
   numbers: Uint32Array
-): MorphologySegments {
+): BoxSegments {
+  const stride = strideOf(segments);
   let kept = 0;
   for (let i = 0; i < segmentCells.length; i++) {
     const cell = numbers[segmentCells[i]];
     if (cell === NONE) continue;
     if (kept !== i) {
-      segments.copyWithin(8 * kept, 8 * i, 8 * i + 8);
+      segments.copyWithin(stride * kept, stride * i, stride * (i + 1));
       segmentTypes[kept] = segmentTypes[i];
     }
     segmentCells[kept++] = cell;
   }
   if (kept === segmentCells.length) return { segments, segmentCells, segmentTypes };
   return {
-    segments: segments.slice(0, 8 * kept),
+    segments: segments.slice(0, stride * kept),
     segmentCells: segmentCells.slice(0, kept),
     segmentTypes: segmentTypes.slice(0, kept),
   };

@@ -1,10 +1,11 @@
 import * as THREE from 'three';
 
+import { PACKED_WORDS, unpackerOf } from '../load/packed-ends';
 import { HOLE_WORD, packCellTypes, QUAD_REACH, segmentAttributes } from './impostors';
 
-import type { MorphologySegments } from '../types';
+import type { BoxSegments, Packing } from '../types';
 
-/** The bytes a segment takes on the GPU: its two ends, and its cell and type in a word. */
+/** The bytes a segment counts for where uploads are paced: its two ends as floats, and its cell and type in a word. */
 export const SEGMENT_BYTES = 8 * 4 + 4;
 /** How many segments the culling tests together as a block. It tests the block's box first. */
 export const BLOCK = 64;
@@ -36,23 +37,28 @@ function startsOf(counts: ArrayLike<number>): Uint32Array {
   return starts;
 }
 
+/** Segments' ends as an arena holds them: eight floats each, or packed (`packed-ends.ts`). */
+export type ArenaEnds = Float32Array | Uint32Array;
+
 /**
  * Uploads an arena's segments. It is told which changed, and always uploads the words and the blocks over them from
- * the arena's arrays. `ends` holds their ends (8 floats each) where those changed too, for this call alone: a base's
- * ends are kept nowhere else, so whatever is drawn from must keep them.
+ * the arena's arrays. `ends` holds their ends, as the arena holds them, where those changed too, for this call alone:
+ * a base's ends are kept nowhere else, so whatever is drawn from must keep them.
  */
 export interface ArenaUploads {
-  upload(start: number, count: number, ends: Float32Array | null): void;
+  upload(start: number, count: number, ends: ArenaEnds | null): void;
   dispose(): void;
 }
 
 /**
  * An arena's arrays the uploads read: its segments' cell-and-type words, and its blocks (8 words each: the least x, y
- * and z of the block's box, its first segment, the greatest x, y and z, and its segment count).
+ * and z of the block's box, its first segment, the greatest x, y and z, and its segment count). `packing` is given
+ * where the ends handed to the uploads are packed.
  */
 export interface ArenaArrays {
   words: Uint32Array;
   blocks: Float32Array;
+  packing?: Packing;
 }
 
 export type UploadsOf = (arrays: ArenaArrays) => ArenaUploads;
@@ -73,7 +79,7 @@ function attributesOf(
   // No dendrogram: the ends stand for it, and the morph moves nothing.
   segmentAttributes(geometry, endsBuffer, endsBuffer, cellTypes);
   return {
-    upload(start: number, count: number, changed: Float32Array | null) {
+    upload(start: number, count: number, changed: ArenaEnds | null) {
       if (changed) {
         endsBuffer.addUpdateRange(8 * start, changed.length);
         endsBuffer.needsUpdate = true;
@@ -102,6 +108,8 @@ interface Place {
  * room, and it never moves. A box's base is drawn there (`putBase`) while the box is not put at another level; while
  * it is, the base's room is holes with its blocks emptied. So every draw of the arena draws each box once. The arena
  * keeps the base's words and blocks, and its ends only where three draws from the arena's own array.
+ *
+ * With a `packing`, the segments put are taken with their ends packed, and are held and uploaded so.
  */
 export class SegmentArena {
   readonly geometry: THREE.InstancedBufferGeometry;
@@ -109,8 +117,13 @@ export class SegmentArena {
   /** The room kept for the base, none without one. */
   readonly baseRoom: number;
   /** The ends of the slots from `endsFrom` on: all of them without `uploadsOf`, else those past the base. */
-  private ends: Float32Array;
+  private ends: ArenaEnds;
   private endsFrom: number;
+  /** The words a slot's ends take. */
+  private stride: number;
+  private packing?: Packing;
+  /** Reads a block's ends where they are packed. */
+  private unpack?: ReturnType<typeof unpackerOf>;
   private words: Uint32Array;
   private blocks: Float32Array;
   private uploads: ArenaUploads;
@@ -134,14 +147,17 @@ export class SegmentArena {
   /**
    * `geometry` is the segments' quad, drawn once for each slot up to the end of the last box; `capacity` is rounded
    * up to a whole number of blocks; without `uploadsOf`, the arrays are three's attributes on `geometry`; `base` gives
-   * each box's segments at its base level, which the arena keeps room for.
+   * each box's segments at its base level, which the arena keeps room for; `packing` is that of the packed ends it is
+   * to hold, which only uploads take.
    */
   constructor(
     geometry: THREE.InstancedBufferGeometry,
     capacity: number,
     uploadsOf?: UploadsOf,
-    base?: ArrayLike<number>
+    base?: ArrayLike<number>,
+    packing?: Packing
   ) {
+    if (packing && !uploadsOf) throw new Error("three's attributes take no packed ends");
     this.geometry = geometry;
     this.capacity = roomFor(capacity);
     this.baseAt = base ? startsOf(base) : null;
@@ -150,12 +166,19 @@ export class SegmentArena {
       throw new RangeError(`a base of ${this.baseRoom}, where ${this.capacity} are held`);
     }
     this.endsFrom = uploadsOf ? this.baseRoom : 0;
-    this.ends = new Float32Array(8 * (this.capacity - this.endsFrom));
+    this.stride = packing ? PACKED_WORDS : 8;
+    this.packing = packing;
+    this.unpack = packing && unpackerOf(packing, BLOCK);
+    const held = this.capacity - this.endsFrom;
+    const floats = new Float32Array(packing ? 0 : 8 * held);
+    this.ends = packing ? new Uint32Array(PACKED_WORDS * held) : floats;
     this.words = new Uint32Array(this.capacity);
     this.blocks = new Float32Array(rowOf(this.capacity));
     this.uploadsOf = uploadsOf;
-    const { ends, words, blocks } = this;
-    this.uploads = uploadsOf ? uploadsOf({ words, blocks }) : attributesOf(geometry, ends, words);
+    const { words, blocks } = this;
+    this.uploads = uploadsOf
+      ? uploadsOf({ words, blocks, packing })
+      : attributesOf(geometry, floats, words);
     geometry.instanceCount = 0;
     if (!base) return;
     this.baseCounts = Int32Array.from(base, (n) => (n === 0 ? 0 : -1));
@@ -173,7 +196,12 @@ export class SegmentArena {
     capacity: number,
     base?: ArrayLike<number>
   ): SegmentArena {
-    return new SegmentArena(geometry, capacity, this.uploadsOf, base);
+    return new SegmentArena(geometry, capacity, this.uploadsOf, base, this.packing);
+  }
+
+  /** Whether the segments put are to have their ends packed. */
+  get packed(): boolean {
+    return this.packing !== undefined;
   }
 
   /** Whether it keeps room for a base. */
@@ -244,16 +272,17 @@ export class SegmentArena {
    * Puts `box`'s base in the room kept for it, and draws it unless the box is put. The base must not be put already,
    * and must fit. Returns what was uploaded, in segments.
    */
-  putBase(box: number, { segments, segmentCells, segmentTypes }: MorphologySegments): number {
+  putBase(box: number, { segments, segmentCells, segmentTypes }: BoxSegments): number {
     const { baseAt } = this;
     const n = segmentCells.length;
+    this.check(segments);
     if (!baseAt) throw new Error('no room is kept for a base');
     if (this.hasBase(box)) throw new Error(`box ${box}'s base is drawn already`);
     const start = baseAt[box];
     if (roomFor(n) > baseAt[box + 1] - start) {
       throw new RangeError(`a base of ${n}, where ${baseAt[box + 1] - start} are kept`);
     }
-    if (!this.uploadsOf) this.ends.set(segments, 8 * start);
+    if (!this.uploadsOf) this.ends.set(segments, this.stride * start);
     packCellTypes(segmentCells, segmentTypes, this.baseWords, start);
     this.bound(segments, start, this.baseBlocks);
     this.baseCounts[box] = n;
@@ -307,7 +336,8 @@ export class SegmentArena {
    * Returns what was uploaded, in segments: their room, every box's where the holes had to be closed, and the words of
    * what it had or of its base.
    */
-  replace(box: number, segments: MorphologySegments): number {
+  replace(box: number, segments: BoxSegments): number {
+    this.check(segments.segments);
     const was = this.places.has(box) ? this.unplace(box) : this.hideBase(box);
     return was + this.place(box, segments);
   }
@@ -322,7 +352,7 @@ export class SegmentArena {
   }
 
   /** Draws `box`'s segments, which must fit; returns what was uploaded, in segments. */
-  private place(box: number, { segments, segmentCells, segmentTypes }: MorphologySegments): number {
+  private place(box: number, { segments, segmentCells, segmentTypes }: BoxSegments): number {
     const n = segmentCells.length;
     const room = roomFor(n);
     if (room > this.free) throw new RangeError(`room for ${room}, where ${this.free} are free`);
@@ -387,25 +417,29 @@ export class SegmentArena {
    * reach (`QUAD_REACH`) in each axis. A block keeps its first segment next to its box's least corner, and its segment
    * count next to the greatest.
    */
-  private bound(segments: Float32Array, start: number, blocks = this.blocks): void {
+  private bound(segments: ArenaEnds, start: number, blocks = this.blocks): void {
     const blockWords = new Uint32Array(blocks.buffer);
-    const n = segments.length / 8;
+    const n = segments.length / this.stride;
+    const unpacked = this.unpack && segments instanceof Uint32Array ? this.unpack(segments) : null;
     for (let s = 0, o = rowOf(start); s < n; s += BLOCK, o += 8) {
       const last = Math.min(n, s + BLOCK);
+      const ends = unpacked ? unpacked(s, last - s) : segments;
+      const from = unpacked ? 0 : 8 * s;
+      const to = from + 8 * (last - s);
       let x0 = Infinity;
       let y0 = Infinity;
       let z0 = Infinity;
       let x1 = -Infinity;
       let y1 = -Infinity;
       let z1 = -Infinity;
-      for (let k = 8 * s; k < 8 * last; k += 4) {
-        const reach = QUAD_REACH * segments[k + 3];
-        x0 = Math.min(x0, segments[k] - reach);
-        y0 = Math.min(y0, segments[k + 1] - reach);
-        z0 = Math.min(z0, segments[k + 2] - reach);
-        x1 = Math.max(x1, segments[k] + reach);
-        y1 = Math.max(y1, segments[k + 1] + reach);
-        z1 = Math.max(z1, segments[k + 2] + reach);
+      for (let k = from; k < to; k += 4) {
+        const reach = QUAD_REACH * ends[k + 3];
+        x0 = Math.min(x0, ends[k] - reach);
+        y0 = Math.min(y0, ends[k + 1] - reach);
+        z0 = Math.min(z0, ends[k + 2] - reach);
+        x1 = Math.max(x1, ends[k] + reach);
+        y1 = Math.max(y1, ends[k + 1] + reach);
+        z1 = Math.max(z1, ends[k + 2] + reach);
       }
       blocks[o] = x0;
       blocks[o + 1] = y0;
@@ -463,7 +497,7 @@ export class SegmentArena {
    * uploaded: those from the first hole on.
    */
   private compact(): number {
-    const { ends, endsFrom, words, blocks } = this;
+    const { ends, endsFrom, stride, words, blocks } = this;
     const blockWords = new Uint32Array(blocks.buffer);
     const from = this.holes[0]?.start ?? this.end;
     let at = this.baseRoom;
@@ -471,7 +505,7 @@ export class SegmentArena {
       const room = roomFor(place.count);
       if (place.start !== at) {
         const was = place.start - endsFrom;
-        ends.copyWithin(8 * (at - endsFrom), 8 * was, 8 * (was + room));
+        ends.copyWithin(stride * (at - endsFrom), stride * was, stride * (was + room));
         words.copyWithin(at, place.start, place.start + room);
         blocks.copyWithin(rowOf(at), rowOf(place.start), rowOf(place.start + room));
         place.start = at;
@@ -488,13 +522,20 @@ export class SegmentArena {
   }
 
   /** The ends of the `count` slots from `start`, which the arena must hold. */
-  private endsOf(start: number, count: number): Float32Array {
-    const from = 8 * (start - this.endsFrom);
-    return this.ends.subarray(from, from + 8 * count);
+  private endsOf(start: number, count: number): ArenaEnds {
+    const from = this.stride * (start - this.endsFrom);
+    return this.ends.subarray(from, from + this.stride * count);
+  }
+
+  /** Throws unless `segments` have their ends as the arena holds them. */
+  private check(segments: ArenaEnds): void {
+    if (segments instanceof Uint32Array !== this.packed) {
+      throw new TypeError(`ends ${this.packed ? 'not ' : ''}packed, where the arena's are`);
+    }
   }
 
   /** Uploads the `count` segments from `start`: their words and blocks, and their `ends` where those changed. */
-  private upload(start: number, count: number, ends: Float32Array | null = null): void {
+  private upload(start: number, count: number, ends: ArenaEnds | null = null): void {
     this.geometry.instanceCount = this.end;
     if (count > 0) this.uploads.upload(start, count, ends);
   }

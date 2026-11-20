@@ -15,6 +15,7 @@ import { deflateSync, inflateSync } from 'node:zlib';
 import { openPack } from '@/features/circuit-viewer/morphologies/load/pack';
 
 import type {
+  BoxSegments,
   CircuitMorphologyData,
   MorphologySegments,
 } from '@/features/circuit-viewer/morphologies/types';
@@ -45,8 +46,8 @@ export interface Index {
 export const indexOf = (bytes: Uint8Array): Index =>
   JSON.parse(inflateSync(bytes.subarray(HEADER_BYTES, indexEnd(bytes))).toString());
 
-/** Boxes' segments one after another. */
-export function joined(parts: MorphologySegments[]): MorphologySegments {
+/** Boxes' segments, their ends as floats, one after another. */
+export function joined(parts: BoxSegments[]): MorphologySegments {
   const total = parts.reduce((sum, part) => sum + part.segmentCells.length, 0);
   const all: MorphologySegments = {
     segments: new Float32Array(8 * total),
@@ -68,7 +69,7 @@ export async function readPack(bytes: Uint8Array, levelNumber = 0): Promise<Circ
   const pack = await openPack(bytes);
   const level = pack.levels[levelNumber];
   if (!level) throw new RangeError(`morphology pack without a level ${levelNumber}`);
-  const parts: MorphologySegments[] = [];
+  const parts: BoxSegments[] = [];
   for (let box = 0; box < level.segments.length; box++) {
     parts.push(await pack.readBox(levelNumber, box));
   }

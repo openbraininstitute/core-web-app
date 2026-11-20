@@ -1,5 +1,5 @@
 import { detach } from '@/utils/buffer';
-import { logError } from '@/utils/logger';
+import { logError, logWarn } from '@/utils/logger';
 
 import { chooseDetail, type Detail, type DetailView } from './detail';
 import { roomFor, SEGMENT_BYTES, SegmentArena, type UploadsOf } from './segment-arena';
@@ -7,10 +7,10 @@ import { roomFor, SEGMENT_BYTES, SegmentArena, type UploadsOf } from './segment-
 import type * as THREE from 'three';
 import type {
   BoxRead,
+  BoxSegments,
   DetailRules,
   DetailStats,
   MorphologyChunks,
-  MorphologySegments,
   PackArrival,
 } from '../types';
 
@@ -74,7 +74,7 @@ function mark(marks: Marks, boxes: readonly number[]): void {
  * Lets go of a read box's arrays at once, where the browser can. Left to the collector, the boxes of a whole load
  * stay in the page's memory for some seconds after they are placed.
  */
-function letGoOf({ segments, segmentCells, segmentTypes }: MorphologySegments): void {
+function letGoOf({ segments, segmentCells, segmentTypes }: BoxSegments): void {
   for (const { buffer } of [segments, segmentCells, segmentTypes]) detach(buffer);
 }
 
@@ -164,8 +164,8 @@ export class DetailStream {
     return this.still && drawn >= 0 ? drawn : coarsest;
   };
   /** What has come in and is not placed yet: levels by box, and bases. */
-  private ready = new Map<number, { level: number; segments: MorphologySegments }>();
-  private bases = new Map<number, MorphologySegments>();
+  private ready = new Map<number, { level: number; segments: BoxSegments }>();
+  private bases = new Map<number, BoxSegments>();
   /** Whether no base is left to read: each is placed, has come in, or could not be read. */
   private basesRead: boolean;
   private reading = false;
@@ -173,6 +173,7 @@ export class DetailStream {
   /** The boxes of batches that could not be read, which are not read again, and whether that was logged. */
   private unread = new Set<number>();
   private told = false;
+  private toldClamped = false;
   /**
    * For a pack still coming in: how much is in, and the finest level of each box that is in (the number of levels where
    * none is); whether that lifted the level a box was chosen at since the levels were last chosen; and what stops the
@@ -252,7 +253,8 @@ export class DetailStream {
 
   /**
    * Makes a stream into an arena on `geometry` (the segments' quad), as large as the pack's boxes can need within
-   * `budget` and uploaded through `uploadsOf`. The arena keeps a base if it then holds at most `baseUpTo` segments.
+   * `budget` and uploaded through `uploadsOf`, which takes the segments' ends packed. The arena keeps a base if it then
+   * holds at most `baseUpTo` segments.
    */
   static of(
     chunks: MorphologyChunks,
@@ -263,7 +265,8 @@ export class DetailStream {
     baseUpTo = 0
   ): DetailStream {
     const { capacity, base } = arenaPlan(chunks, budget, baseUpTo);
-    const arena = new SegmentArena(geometry, capacity, uploadsOf, base);
+    const packing = uploadsOf && chunks.packing;
+    const arena = new SegmentArena(geometry, capacity, uploadsOf, base, packing);
     return new DetailStream(chunks, arena, onRead);
   }
 
@@ -289,6 +292,7 @@ export class DetailStream {
     const stream = new DetailStream(this.chunks, arena, this.onRead);
     stream.unread = this.unread;
     stream.told = this.told;
+    stream.toldClamped = this.toldClamped;
     stream.sight = this.sight;
     stream.still = this.still;
     stream.occludersLost = true;
@@ -595,12 +599,19 @@ export class DetailStream {
     if (batch.length === 0) batch = this.basesToRead(null);
     if (batch.length === 0) return;
     this.reading = true;
-    this.chunks.read(batch).then(
+    this.chunks.read(batch, this.arena.packed).then(
       (read) => {
         this.reading = false;
         if (this.stopped) {
           read.forEach(letGoOf);
           return;
+        }
+        const clamped = read.reduce((sum, box) => sum + (box.clamped ?? 0), 0);
+        if (clamped > 0 && !this.toldClamped) {
+          logWarn(
+            `${clamped} segments of one read cut short or given another radius, past what packed ends hold`
+          );
+          this.toldClamped = true;
         }
         batch.forEach(({ level, box }, i) => {
           if (this.isBase(level)) {

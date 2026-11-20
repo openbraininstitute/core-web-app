@@ -171,7 +171,8 @@ export class Culling {
       camera,
       shift,
       [tubeFrom, MIN_RADIUS * (replaying ? GLOW_WIDTH : 1), hiding ? 1 : 0],
-      [blocks, this.storage.capacity.value, hidden]
+      [blocks, this.storage.capacity.value, hidden],
+      this.storage.packing.value.toArray()
     );
     // three made it when it drew the kept segments.
     const table = gpuTexture(this.renderer, cells);

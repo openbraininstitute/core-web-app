@@ -9,8 +9,11 @@ import { COPY_DST, STORAGE_BINDING, TEXTURE_BINDING, UNIFORM } from './usage';
 
 /** The samples per pixel of the depth drawn before the tests, the same as the picture's. */
 const SAMPLES = 4;
-/** The bytes of the view as the passes take it (`culling-wgsl.ts`): two matrices, three vectors and the counts. */
-const VIEW_BYTES = 192;
+/**
+ * The bytes of the view as the passes take it (`culling-wgsl.ts`): two matrices, three vectors, the counts and the
+ * packing.
+ */
+const VIEW_BYTES = 208;
 
 /** What the passes' WGSL calls besides their own. */
 export const LIBRARY = [VIEW_WGSL, CELL_XY_WGSL, IMPOSTORS_WGSL, SEGMENT_ENDS_WGSL].join('\n');
@@ -127,16 +130,17 @@ export class DepthPyramid {
   }
 
   /**
-   * Runs once the depth is drawn into the target. It writes the view for the passes, with `more` after the far plane
-   * and `counts` after the number of the pyramid's levels (`culling-wgsl.ts`), and makes the farthest depth and the
-   * pyramid in `pass`. Returns what the tests bind of them; null where three made no texture of the depth.
+   * Runs once the depth is drawn into the target. It writes the view for the passes, with `more` after the far plane,
+   * `counts` after the number of the pyramid's levels, and `packing` (`culling-wgsl.ts`), and makes the farthest depth
+   * and the pyramid in `pass`. Returns what the tests bind of them; null where three made no texture of the depth.
    */
   build(
     pass: GPUComputePassEncoder,
     camera: THREE.Camera & { near: number; far: number },
     shift: THREE.Vector3,
     more: readonly [number, number, number],
-    counts: readonly [number, number, number]
+    counts: readonly [number, number, number],
+    packing: readonly [number, number]
   ): Levels | null {
     const { target } = this;
     if (!target) return null;
@@ -152,6 +156,7 @@ export class DepthPyramid {
     f.set([0, 0, targets.width, targets.height, shift.x, shift.y, shift.z, camera.near], 32);
     f.set([camera.far, ...more], 40);
     this.viewWords.set([targets.sizes.length, ...counts], 44);
+    f.set(packing, 48);
     this.device.queue.writeBuffer(this.viewBuffer, 0, this.view);
 
     pass.setPipeline(pipelines.resolve);
