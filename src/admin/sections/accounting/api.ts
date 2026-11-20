@@ -26,8 +26,11 @@ export async function accountingGet<T>(path: string, params?: TParams, signal?: 
   }
   const url = `${PROXY_ROOT}/${path}${search.size ? `?${search}` : ''}`;
   const response = await fetch(url, { headers: { accept: 'application/json' }, signal });
+  if (!response.ok) {
+    throw await parseApiError(url, response.status, await response.json().catch(() => null));
+  }
   const body = await response.json().catch(() => null);
-  if (!response.ok || typeof body !== 'object' || body === null || !('data' in body)) {
+  if (typeof body !== 'object' || body === null || !('data' in body)) {
     throw await parseApiError(url, response.status, body);
   }
 

@@ -17,7 +17,8 @@ import { CapabilityGate } from '../../../shell/capability-gate';
 import { getJob } from '../api';
 import { accountingHref } from '../helpers';
 import { AccountingPage } from '../types';
-import { Credits, JOURNAL_COLUMNS, JobPhasePill, journalRowId } from './columns';
+import { Credits, JobPhasePill } from './cells';
+import { JOURNAL_COLUMNS, journalRowId } from './columns';
 
 import type { TAccountingJobDetail } from '../types';
 

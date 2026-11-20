@@ -106,7 +106,8 @@ export function matchAccountingRoute(
   if (!route) return { status: 404, message: 'Not found' };
 
   const keys = [...search.keys()];
-  const unknown = keys.find((key) => !route.query.includes(key));
+  const allowed = new Set(route.query);
+  const unknown = keys.find((key) => !allowed.has(key));
   if (unknown) return { status: 400, message: `Unknown query parameter: ${unknown}` };
   if (new Set(keys).size !== keys.length)
     return { status: 400, message: 'Repeated query parameter' };

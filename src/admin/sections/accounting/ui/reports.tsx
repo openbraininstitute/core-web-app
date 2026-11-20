@@ -14,7 +14,8 @@ import { AdminLink, adminHref } from '../../../shell/admin-link';
 import { getSystemBalance, listReport, reportPath } from '../api';
 import { formatDuration } from '../helpers';
 import { ChargeType } from '../types';
-import { Credits, creditsColumn } from './columns';
+import { Credits } from './cells';
+import { creditsColumn } from './columns';
 import { useDayRange, useIdFilter } from './filters';
 
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';

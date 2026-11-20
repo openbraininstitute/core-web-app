@@ -1,14 +1,10 @@
 import { formatDateTime } from '../../../shared/format';
-import { StatusPill } from '../../../shared/status-pill';
 import { AdminLink } from '../../../shell/admin-link';
-import { JOB_PHASES, jobPhase, splitLedgers, TRANSACTION_LABELS } from '../helpers';
+import { splitLedgers, TRANSACTION_LABELS } from '../helpers';
+import { Credits } from './cells';
 
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
-import type { TAccountingJob, TJournalEntry, TLedgerEntry } from '../types';
-
-export function Credits({ amount }: { amount: string | null | undefined }) {
-  return <span className="font-mono tabular-nums">{amount ?? '—'}</span>;
-}
+import type { TJournalEntry, TLedgerEntry } from '../types';
 
 export function creditsColumn<Row>(
   id: string,
@@ -21,11 +17,6 @@ export function creditsColumn<Row>(
     width: { width: 140 },
     renderCell: (row) => <Credits amount={amount(row)} />,
   };
-}
-
-export function JobPhasePill({ job }: { job: TAccountingJob }) {
-  const { label, tone } = JOB_PHASES[jobPhase(job)];
-  return <StatusPill tone={tone}>{label}</StatusPill>;
 }
 
 function LedgerAccounts({ ledgers }: { ledgers: TLedgerEntry[] }) {

@@ -12,7 +12,7 @@ import { AdminLink, adminHref } from '../../../shell/admin-link';
 import { listJobs } from '../api';
 import { isUuid } from '../helpers';
 import { AccountingSubtype, ChargeType, JobStatusFilter } from '../types';
-import { JobPhasePill } from './columns';
+import { JobPhasePill } from './cells';
 import { useDayRange, useIdFilter, useOptionFilter } from './filters';
 
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';

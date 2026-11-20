@@ -18,7 +18,8 @@ import { getAccount, listProjectAccounts } from '../api';
 import { ACCOUNT_TYPE_LABELS, accountingHref } from '../helpers';
 import { AccountingPage, AccountType } from '../types';
 import { EnabledPill } from './accounts-list';
-import { Credits, creditsColumn } from './columns';
+import { Credits } from './cells';
+import { creditsColumn } from './columns';
 
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { TAccount, TProjectAccount } from '../types';
