@@ -11,6 +11,5 @@ pre-push:
     react-doctor:
       glob: "*.{js,jsx,ts,tsx}"
       # Pinned so every push runs the same rules; --scope changed reports only issues new versus main.
-      # Input closed (< /dev/null): in a terminal the tool ends on a menu and waits for a key, which
-      # lefthook hides behind its spinner, so the push never ended. --yes does not skip that menu.
+      # `< /dev/null`: no input, so its closing menu doesn't wait for a key.
       run: npx -y react-doctor@0.9.23 . --scope changed --no-supply-chain --no-score --blocking error < /dev/null

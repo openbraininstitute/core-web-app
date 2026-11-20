@@ -2,6 +2,8 @@
 import { isNil, isNotNil } from 'es-toolkit';
 import { useSyncExternalStore } from 'react';
 
+import { storageKeyOf } from '@/features/logbook/helpers';
+
 import type { TValueOf } from '@/api/logbook/types';
 
 export const ToastSource = { All: 'all', Mine: 'mine' } as const;
@@ -21,7 +23,7 @@ const DEFAULTS: INotifySettings = {
   flags: true,
 };
 
-const KEY = 'rl-notify';
+const KEY = storageKeyOf('notify', 'settings');
 
 function read(): INotifySettings {
   try {

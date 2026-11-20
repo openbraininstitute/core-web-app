@@ -76,7 +76,7 @@ const n = (count: number): string => `${count} ${count === 1 ? 'character' : 'ch
 export function summaryOf(run: Pick<IActivityRun, 'inserted' | 'deleted'>): string {
   if (run.deleted === 0) return `wrote ${n(run.inserted)}`;
   if (run.inserted === 0) return `removed ${n(run.deleted)}`;
-  return `wrote ${n(run.inserted)} and removed ${run.deleted}`;
+  return `wrote ${n(run.inserted)} and removed ${n(run.deleted)}`;
 }
 
 // Limit: the opening minute may overlap the live feed. Upgrade: per-second rows.

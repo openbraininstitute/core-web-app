@@ -1,11 +1,8 @@
 import { isNil, isNotNil, uniqBy } from 'es-toolkit';
-import { signIn as nextAuthSignIn } from 'next-auth/react';
 
 import { colourOf } from '@/features/logbook/blocks/colour';
 import { initialsOf } from '@/features/logbook/helpers';
 import { getClientSession } from '@/hooks/session';
-
-export const PROVIDER = 'keycloak';
 
 export async function accessToken(): Promise<string> {
   const session = await getClientSession();
@@ -13,9 +10,11 @@ export async function accessToken(): Promise<string> {
   return session.accessToken;
 }
 
-// Off to Keycloak, then back to where the person was.
-export const signIn = (): Promise<unknown> =>
-  nextAuthSignIn(PROVIDER, { callbackUrl: location.href });
+// Through the app's sign-in page, so preview deployments take the proxy detour; then back here.
+export const signIn = (): void => {
+  const back = `${location.pathname}${location.search}`;
+  location.assign(`/app/log-in?callbackUrl=${encodeURIComponent(back)}`);
+};
 
 export interface IProject {
   readonly virtualLabId: string;
@@ -48,7 +47,9 @@ const isClaims = (value: unknown): value is TClaims => typeof value === 'object'
 function claimsOf(token: string): TClaims {
   const payload = (token.split('.')[1] ?? '').replaceAll('-', '+').replaceAll('_', '/');
   try {
-    const json: unknown = JSON.parse(atob(payload));
+    // atob gives one char per byte; the claims are UTF-8.
+    const bytes = Uint8Array.from(atob(payload), (c) => c.charCodeAt(0));
+    const json: unknown = JSON.parse(new TextDecoder().decode(bytes));
     return isClaims(json) ? json : {};
   } catch {
     return {};

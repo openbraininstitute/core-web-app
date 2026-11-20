@@ -6,12 +6,12 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { type ComponentPropsWithRef, type MouseEvent, type PointerEvent, useState } from 'react';
 
 import { EASE_OUT, SPRING_LAYOUT, SPRING_PRESS } from '@/features/logbook/helpers';
+import { useHoverCapable } from '@/features/logbook/hooks/use-hover-capable';
 import { AgentBadge, agentRadiusOf } from '@/features/logbook/ui/avatar';
-import { useHoverCapable } from '@/hooks/use-hover-capable';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
-export interface AvatarGroupMember {
+export interface IAvatarGroupMember {
   id: string;
   name: string;
   /** Without one, or if it fails, initials show. */
@@ -49,7 +49,7 @@ function initials(name: string) {
   return letters.toUpperCase();
 }
 
-export interface AvatarProps extends Omit<ComponentPropsWithRef<'span'>, 'children'> {
+export interface IAvatarProps extends Omit<ComponentPropsWithRef<'span'>, 'children'> {
   name: string;
   src?: string | undefined;
   size?: AvatarSize;
@@ -66,7 +66,7 @@ export function Avatar({
   className,
   style,
   ...props
-}: AvatarProps) {
+}: IAvatarProps) {
   const [failedSrc, setFailedSrc] = useState<string>();
   const showImage = src && failedSrc !== src;
   return (
@@ -99,8 +99,8 @@ export function Avatar({
   );
 }
 
-export interface AvatarGroupProps extends Omit<ComponentPropsWithRef<'div'>, 'children'> {
-  members: AvatarGroupMember[];
+export interface IAvatarGroupProps extends Omit<ComponentPropsWithRef<'div'>, 'children'> {
+  members: IAvatarGroupMember[];
   /** Shown before the rest collapse into +N. */
   max?: number;
   size?: AvatarSize;
@@ -131,7 +131,7 @@ export function AvatarGroup({
   moreOpen,
   className,
   ...props
-}: AvatarGroupProps) {
+}: IAvatarGroupProps) {
   const showFewer = labels?.showFewer ?? 'Show fewer members';
   const showMore = labels?.showMore ?? showMoreMembers;
   const reduce = useReducedMotion();

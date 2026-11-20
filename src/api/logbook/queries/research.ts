@@ -1,3 +1,5 @@
+import { omit } from 'es-toolkit';
+
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { logbookApi } from '@/api/logbook/utils';
 
@@ -7,6 +9,7 @@ import type {
   IResearchContributors,
   IUploadAnswer,
   IUploadRequest,
+  IUploadTarget,
 } from '@/api/logbook/types';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -96,4 +99,22 @@ export async function createResearchUpload({
     headers: { ...JSON_BODY, ...getEntityCoreContext(context).headers },
     body: file,
   });
+}
+
+/** fetch forbids setting Content-Length; the browser adds it. */
+export const putHeadersOf = (
+  signed: Readonly<Record<string, string>>
+): Readonly<Record<string, string>> => omit(signed, ['Content-Length']);
+
+const PRECONDITION_FAILED = 412;
+
+/** PUTs a file's bytes to its signed address; a 412 means the same bytes are saved already. */
+export async function putResearchUpload({ target, file }: { target: IUploadTarget; file: File }) {
+  const put = await fetch(target.url, {
+    method: 'PUT',
+    body: file,
+    headers: putHeadersOf(target.headers),
+  });
+  if (put.status === PRECONDITION_FAILED) return;
+  if (!put.ok) throw new Error(`Uploading ${file.name} failed (HTTP ${put.status})`);
 }

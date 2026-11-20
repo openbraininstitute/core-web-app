@@ -42,7 +42,9 @@ test('rows of one writer at most 5 minutes apart merge; another writer or a gap 
 test('the summary says what was written and removed', () => {
   expect(summaryOf({ inserted: 1, deleted: 0 })).toBe('wrote 1 character');
   expect(summaryOf({ inserted: 0, deleted: 4 })).toBe('removed 4 characters');
-  expect(summaryOf({ inserted: 12, deleted: 3 })).toBe('wrote 12 characters and removed 3');
+  expect(summaryOf({ inserted: 12, deleted: 3 })).toBe(
+    'wrote 12 characters and removed 3 characters'
+  );
 });
 
 test('a run keeps the removed text of its rows, oldest first', () => {

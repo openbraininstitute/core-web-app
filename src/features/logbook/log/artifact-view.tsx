@@ -16,11 +16,11 @@ import { CodeView, CsvTable } from '@/features/logbook/editor/blocks/file-view';
 import { withViews } from '@/features/logbook/editor/extensions';
 import { LinesSkeleton } from '@/features/logbook/elements/skeletons';
 import { agoOf, savedOf, sizeOf } from '@/features/logbook/helpers';
+import { useObjectUrl } from '@/features/logbook/hooks/use-object-url';
 import { ArtifactIcon } from '@/features/logbook/log/artifact-icon';
 import { useLogContext } from '@/features/logbook/log/context';
 import { CONTROL } from '@/features/logbook/log/controls';
 import { Icon } from '@/features/logbook/ui/icons';
-import { useObjectUrl } from '@/hooks/use-object-url';
 
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import type { IArtifact } from '@/features/logbook/api/log-files';

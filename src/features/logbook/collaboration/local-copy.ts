@@ -3,10 +3,35 @@ import { isNil, isNotNil, noop } from 'es-toolkit';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
 
+import { storageKeyOf } from '@/features/logbook/helpers';
+
 // Per user, so two people on one machine never share a copy.
-export const COPY_PREFIX = 'logbook:';
+export const COPY_PREFIX = storageKeyOf('page', '');
 export const copyName = (pageId: string, userId: string): string =>
   `${COPY_PREFIX}${pageId}:${userId}`;
+
+// A Web Lock per copy, across tabs: every tab with the copy open holds it shared, and the
+// start-up sync or sign-out takes it only when free. Without Web Locks, each tab sees its own.
+const locksOf = (): LockManager | null => globalThis.navigator?.locks ?? null;
+
+export function holdCopyLock(name: string): Promise<() => void> {
+  const locks = locksOf();
+  if (isNil(locks)) return Promise.resolve(noop);
+  return new Promise((granted) => {
+    void locks.request(
+      name,
+      { mode: 'shared' },
+      () => new Promise<void>((release) => granted(release))
+    );
+  });
+}
+
+/** Runs `use` while no tab has the copy open; otherwise returns `busy`. */
+export async function whenCopyFree<T>(name: string, use: () => Promise<T>, busy: T): Promise<T> {
+  const locks = locksOf();
+  if (isNil(locks)) return use();
+  return locks.request(name, { ifAvailable: true }, (lock) => (isNil(lock) ? busy : use()));
+}
 
 // Set when the copy may hold edits the server lacks. A number: the store keeps no booleans.
 export const DIRTY_KEY = 'dirty';
@@ -28,6 +53,7 @@ export interface ILocalCopyDeps {
   document: Y.Doc;
   persistence: IndexeddbPersistence | null;
   dirty: boolean;
+  release?: () => void;
 }
 
 export class LocalCopy {
@@ -40,11 +66,13 @@ export class LocalCopy {
   #dirty: boolean;
   // close() waits for this so a closed tab keeps the flag.
   #written: Promise<unknown> = Promise.resolve();
+  readonly #release: () => void;
 
-  private constructor({ document, persistence, dirty }: ILocalCopyDeps) {
+  private constructor({ document, persistence, dirty, release = noop }: ILocalCopyDeps) {
     this.document = document;
     this.#persistence = persistence;
     this.#dirty = dirty;
+    this.#release = release;
     this.restored = document.getXmlFragment('default').length > 0;
     document.on('update', this.#onUpdate);
   }
@@ -54,19 +82,22 @@ export class LocalCopy {
     const document = new Y.Doc();
     if (typeof indexedDB === 'undefined')
       return new LocalCopy({ document, persistence: null, dirty: false });
-    const persistence = new IndexeddbPersistence(copyName(pageId, userId), document);
+    const name = copyName(pageId, userId);
+    const release = await holdCopyLock(name);
+    const persistence = new IndexeddbPersistence(name, document);
     try {
       await whenLoaded(persistence);
       const flag: unknown = await persistence.get(DIRTY_KEY);
       // An empty new copy starts clean, or a read-only page gets re-synced at every app start.
       if (isNil(flag) && document.store.clients.size === 0) {
         await persistence.set(DIRTY_KEY, Dirty.No);
-        return new LocalCopy({ document, persistence, dirty: false });
+        return new LocalCopy({ document, persistence, dirty: false, release });
       }
-      return new LocalCopy({ document, persistence, dirty: flag !== Dirty.No });
+      return new LocalCopy({ document, persistence, dirty: flag !== Dirty.No, release });
     } catch (error) {
       console.warn('This page has no copy on this device:', error);
       void persistence.destroy().catch(noop);
+      release();
       return new LocalCopy({ document, persistence: null, dirty: false });
     }
   }
@@ -95,6 +126,7 @@ export class LocalCopy {
     this.document.off('update', this.#onUpdate);
     await this.#written.catch(noop);
     await this.#persistence?.destroy().catch(noop);
+    this.#release();
     this.document.destroy();
   }
 }

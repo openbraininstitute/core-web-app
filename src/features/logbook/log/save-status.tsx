@@ -1,10 +1,10 @@
 // Offline after ~2 s down; a deploy blip (~1 s) just shows as Saving…
 import { WebSocketStatus } from '@hocuspocus/provider';
-import { useHocuspocusProvider } from '@hocuspocus/provider-react';
 import { isNil, isNotNil } from 'es-toolkit';
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 
 import { timeOf } from '@/features/logbook/helpers';
+import { useLivePage } from '@/features/logbook/log/context';
 import { Icon } from '@/features/logbook/ui/icons';
 
 import type { HocuspocusProvider } from '@hocuspocus/provider';
@@ -137,7 +137,7 @@ function useOthersUnsaved(provider: HocuspocusProvider, notices: CollaborationNo
 }
 
 export function SaveStatus({ notices, copy, iconOnly }: ISaveStatusProps) {
-  const provider = useHocuspocusProvider();
+  const provider = useLivePage();
   const offline = useOffline(provider);
   const unsent = useUnsent(provider, copy);
   const unsaved = useUnsaved(provider, notices);

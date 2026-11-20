@@ -267,14 +267,14 @@ export function Board({ me, project, logId, pageId }: IBoardProps) {
                 <button
                   type="button"
                   className="logbook-card flex w-[42px] flex-none justify-center border-0 px-0 py-5 transition-[background-color] duration-150 ease-[ease] hover:bg-soft"
-                  aria-label="Open Reports"
+                  aria-label="Open the logbook"
                   onClick={() => {
                     setRailShut(false);
                     if (isNotNil(shownDetail)) setRailHeldOpen(true);
                     setRailW((w) => Math.max(w, RAIL_FLOOR));
                   }}
                 >
-                  <span className="label-caps [writing-mode:vertical-rl]">Reports</span>
+                  <span className="label-caps [writing-mode:vertical-rl]">Logbook</span>
                 </button>
               ) : (
                 <aside

@@ -15,13 +15,20 @@ async function clearDataCaches() {
   await Promise.allSettled(DATA_CACHES.map((name) => caches.delete(name)));
 }
 
+/** The logbook pages kept in IndexedDB that the server already has. Loaded only here. */
+async function clearLogbookCopies() {
+  const { dropCleanCopies } = await import('@/features/logbook/collaboration/local-sync');
+  await dropCleanCopies();
+}
+
 /** How long signing out waits for the caches to go: gigabytes of them can take a while. */
 const CLEAR_TIMEOUT_MS = 2000;
 
 export default function Logout() {
   useEffect(() => {
     const timeout = new Promise<void>((resolve) => setTimeout(resolve, CLEAR_TIMEOUT_MS));
-    Promise.race([clearDataCaches(), timeout]).finally(() => signOut({ callbackUrl: '/' }));
+    const cleared = Promise.allSettled([clearDataCaches(), clearLogbookCopies()]);
+    Promise.race([cleared, timeout]).finally(() => signOut({ callbackUrl: '/' }));
   }, []);
 
   return (

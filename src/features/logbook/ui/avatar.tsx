@@ -9,6 +9,8 @@ export interface IActor {
   readonly initials: string;
   readonly colour: string;
   readonly agent: boolean;
+  /** The person this is, or the agent works for; null when only an agent label is known. */
+  readonly ownerId: string | null;
 }
 
 export interface IAvatarProps {

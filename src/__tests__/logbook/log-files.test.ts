@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest';
 
+import { putHeadersOf } from '@/api/logbook/queries/research';
 import {
   ArtifactKind,
   artifactsOf,
@@ -8,7 +9,6 @@ import {
   isTooLarge,
   kindOf,
   planFile,
-  putHeadersOf,
   searchArtifacts,
   sha256Hex,
   shortPathOf,

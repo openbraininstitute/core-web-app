@@ -1,3 +1,5 @@
+import type { AssetStatus } from '@/api/entitycore/types/shared/global';
+
 /** A research log: an EntityCore record that owns the list, name, description and access. */
 export interface IResearchLog {
   readonly id: string;
@@ -23,7 +25,7 @@ export interface IResearchLogAsset {
   readonly path: string;
   readonly label?: string;
   readonly size: number;
-  readonly status?: string;
+  readonly status?: AssetStatus;
   readonly is_directory: boolean;
   readonly meta?: Readonly<Record<string, unknown>> | null;
 }

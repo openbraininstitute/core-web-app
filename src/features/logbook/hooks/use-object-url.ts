@@ -1,10 +1,7 @@
 import { isNil } from 'es-toolkit';
 import { useEffect, useState } from 'react';
 
-/**
- * A URL for a Blob, revoked when the Blob changes or the component goes, so the bytes are freed.
- * `type` overrides what the Blob claims, e.g. to make a frame show a PDF and never a web page.
- */
+/** A URL for a Blob, revoked when the Blob changes or the component goes; `type` overrides the Blob's. */
 export function useObjectUrl(blob: Blob | null | undefined, type?: string): string | null {
   const [url, setUrl] = useState<string | null>(null);
   // An effect, not a memo: StrictMode replays effects, and a memoised URL would be revoked in use.

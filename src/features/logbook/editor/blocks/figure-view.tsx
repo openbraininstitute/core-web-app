@@ -8,10 +8,10 @@ import {
   logFilesQuery,
   shortPathOf,
 } from '@/features/logbook/api/log-files';
+import { useObjectUrl } from '@/features/logbook/hooks/use-object-url';
 import { useLogContext } from '@/features/logbook/log/context';
 import { useUploading } from '@/features/logbook/log/uploads';
 import { Icon } from '@/features/logbook/ui/icons';
-import { useObjectUrl } from '@/hooks/use-object-url';
 
 import type { NodeViewProps } from '@tiptap/react';
 import type { ILogFile } from '@/features/logbook/api/log-files';

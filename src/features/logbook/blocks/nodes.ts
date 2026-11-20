@@ -7,16 +7,26 @@ import { CalloutKind, calloutKindOf } from '@/features/logbook/blocks/kinds';
 
 import type { MarkdownToken, MarkdownTokenizer } from '@tiptap/core';
 
-// `{type=circuit id=c-3f2a}`: space-separated key=value pairs, values without spaces.
+// Backslash escapes: `\]` in a label, `\"` in a quoted value, `\\` for a backslash.
+const unescapeText = (text: string): string => text.replace(/\\(.)/g, '$1');
+const escapeIn = (text: string, special: RegExp): string =>
+  text.replace(special, (char) => `\\${char}`);
+const labelText = (label: unknown): string => escapeIn(String(label ?? ''), /[\\\]]/g);
+
+// `{type=circuit id=c-3f2a path="My data.csv"}`: quoted when a value has a space, `"`, `}` or `\`.
+const PAIR = /([^\s=]+)(?:=(?:"((?:[^"\\]|\\.)*)"|(\S*)))?/g;
 export function parseDirectiveAttributes(raw: string): Record<string, string> {
-  const pairs = raw.trim().split(/\s+/).filter(Boolean);
   return Object.fromEntries(
-    pairs.map((pair) => {
-      const at = pair.indexOf('=');
-      return at < 0 ? [pair, ''] : [pair.slice(0, at), pair.slice(at + 1)];
-    })
+    [...raw.matchAll(PAIR)].map(([, key = '', quoted, bare]) => [
+      key,
+      isNil(quoted) ? (bare ?? '') : unescapeText(quoted),
+    ])
   );
 }
+const valueText = (value: unknown): string => {
+  const text = String(value ?? '');
+  return /[\s"}\\]/.test(text) ? `"${escapeIn(text, /[\\"]/g)}"` : text;
+};
 
 const startOf =
   (marker: string) =>
@@ -25,7 +35,9 @@ const startOf =
 
 // One whole line: `::name[label]{attributes}`.
 function directiveTokenizer(name: string): MarkdownTokenizer {
-  const line = new RegExp(`^::${name}\\[([^\\]\\n]*)\\]\\{([^}\\n]*)\\}[ \\t]*(?:\\n|$)`);
+  const line = new RegExp(
+    `^::${name}\\[((?:[^\\]\\\\\\n]|\\\\.)*)\\]\\{((?:[^}"\\n]|"(?:[^"\\\\\\n]|\\\\.)*")*)\\}[ \\t]*(?:\\n|$)`
+  );
   return {
     name,
     level: 'block',
@@ -36,7 +48,7 @@ function directiveTokenizer(name: string): MarkdownTokenizer {
       return {
         type: name,
         raw: match[0],
-        label: match[1] ?? '',
+        label: unescapeText(match[1] ?? ''),
         attributes: parseDirectiveAttributes(match[2] ?? ''),
       };
     },
@@ -87,7 +99,7 @@ export const Entity = Node.create({
     };
   },
   renderMarkdown: (node) =>
-    `::entity[${node.attrs?.['label'] ?? ''}]{type=${node.attrs?.['type'] ?? 'entity'} id=${node.attrs?.['entityId'] ?? ''}}`,
+    `::entity[${labelText(node.attrs?.['label'])}]{type=${valueText(node.attrs?.['type'] ?? 'entity')} id=${valueText(node.attrs?.['entityId'])}}`,
 });
 
 // A file of the log: `::file[firing_rate.py]{path=code/firing_rate.py}`.
@@ -118,11 +130,17 @@ export const FileBlock = Node.create({
     attrs: { name: labelOf(token), path: attributesOf(token)['path'] ?? labelOf(token) },
   }),
   renderMarkdown: (node) =>
-    `::file[${node.attrs?.['name'] ?? ''}]{path=${node.attrs?.['path'] ?? ''}}`,
+    `::file[${labelText(node.attrs?.['name'])}]{path=${valueText(node.attrs?.['path'])}}`,
 });
 
 // An image on its own line: `![Firing rate](plots/firing-rate.png)`, drawn as a figure.
-const FIGURE_LINE = /^!\[([^\]\n]*)\]\(([^)\s]+)\)[ \t]*(?:\n|$)/;
+// A path with a space, `<`, `>` or a bracket goes in `<...>`, as CommonMark allows.
+const FIGURE_LINE =
+  /^!\[((?:[^\]\\\n]|\\.)*)\]\((?:<((?:[^<>\\\n]|\\.)*)>|([^)\s]+))\)[ \t]*(?:\n|$)/;
+const srcText = (src: unknown): string => {
+  const text = String(src ?? '');
+  return /[\s<>()\\]/.test(text) ? `<${escapeIn(text, /[\\<>]/g)}>` : text;
+};
 export const Figure = Node.create({
   name: 'figure',
   group: 'block',
@@ -148,18 +166,24 @@ export const Figure = Node.create({
     tokenize(src) {
       const match = FIGURE_LINE.exec(src);
       if (isNil(match)) return undefined;
-      return { type: 'figure', raw: match[0], alt: match[1] ?? '', src: match[2] ?? '' };
+      return {
+        type: 'figure',
+        raw: match[0],
+        alt: unescapeText(match[1] ?? ''),
+        src: isNil(match[2]) ? (match[3] ?? '') : unescapeText(match[2]),
+      };
     },
   },
   parseMarkdown: (token) => ({
     type: 'figure',
     attrs: { alt: String(get(token, 'alt') ?? ''), src: String(get(token, 'src') ?? '') },
   }),
-  renderMarkdown: (node) => `![${node.attrs?.['alt'] ?? ''}](${node.attrs?.['src'] ?? ''})`,
+  renderMarkdown: (node) => `![${labelText(node.attrs?.['alt'])}](${srcText(node.attrs?.['src'])})`,
 });
 
-// A callout: `> [!NOTE] text` (GitHub alert form, one line).
-const CALLOUT_LINE = /^>[ \t]*\[!(\w+)\][ \t]*([^\n]*)(?:\n|$)/;
+// A callout: `> [!NOTE] text`, GitHub alert form; a line break goes on to a next `>` line.
+const CALLOUT_LINE = /^>[ \t]*\[!(\w+)\][ \t]*([^\n]*(?:\n>[^\n]*)*)(?:\n|$)/;
+const calloutTextOf = (lines: string): string => lines.replace(/\n>[ \t]?/g, '\n');
 export const Callout = Node.create({
   name: 'callout',
   group: 'block',
@@ -185,7 +209,7 @@ export const Callout = Node.create({
         type: 'callout',
         raw: match[0],
         kind: calloutKindOf(match[1] ?? ''),
-        tokens: lexer.inlineTokens(match[2] ?? ''),
+        tokens: lexer.inlineTokens(calloutTextOf(match[2] ?? '')),
       };
     },
   },
@@ -195,5 +219,7 @@ export const Callout = Node.create({
     content: helpers.parseInline(token.tokens ?? []),
   }),
   renderMarkdown: (node, helpers) =>
-    `> [!${String(node.attrs?.['kind'] ?? CalloutKind.Note).toUpperCase()}] ${helpers.renderChildren(node.content ?? [])}`,
+    `> [!${String(node.attrs?.['kind'] ?? CalloutKind.Note).toUpperCase()}] ${helpers
+      .renderChildren(node.content ?? [])
+      .replaceAll('\n', '\n> ')}`,
 });

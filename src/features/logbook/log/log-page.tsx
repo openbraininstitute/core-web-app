@@ -1,5 +1,4 @@
 // The editor never re-renders React on a keystroke; toolbars subscribe to the one field they show.
-import { useHocuspocusProvider } from '@hocuspocus/provider-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEditor } from '@tiptap/react';
 import { clamp, isNil, isNotNil } from 'es-toolkit';
@@ -22,7 +21,7 @@ import { useRejoin } from '@/features/logbook/collaboration/rejoin';
 import { editorExtensions } from '@/features/logbook/editor/extensions';
 import { insertAfterBlock } from '@/features/logbook/editor/insert';
 import { dragHandle, Latest } from '@/features/logbook/helpers';
-import { EntityPickerContext } from '@/features/logbook/log/context';
+import { EntityPickerContext, useLivePage } from '@/features/logbook/log/context';
 import { EditorCard } from '@/features/logbook/log/editor-card';
 import { EntityGridPicker } from '@/features/logbook/log/entity-grid-picker';
 import { useNotifySettings } from '@/features/logbook/log/notify-settings';
@@ -80,7 +79,7 @@ type TSplitShut = TValueOf<typeof SplitShut>;
 export function LogPage(props: ILogPageProps) {
   const { me, log, layout, mode, notices, feed, logId, copy, shown, keepMs, onCool } = props;
   const pageId = props.page.id;
-  const provider = useHocuspocusProvider();
+  const provider = useLivePage();
   // A tab hidden for a while drops its socket so the server can unload the page.
   usePauseWhenHidden(provider);
   // Off screen, the page lets go of its editor and socket; a change the server can still take waits.
@@ -166,6 +165,9 @@ export function LogPage(props: ILogPageProps) {
           }),
     [provider, awareness, notices, meActor, written]
   );
+  // The editor is built once; it names writers through the newest resolver, as for settings.
+  const [liveResolve] = useState(() => new Latest(resolve));
+  useLayoutEffect(() => liveResolve.set(resolve), [liveResolve, resolve]);
 
   const editor = useEditor(
     {
@@ -173,7 +175,7 @@ export function LogPage(props: ILogPageProps) {
         provider,
         me: meActor,
         feed,
-        resolve,
+        resolve: (clientId) => liveResolve.get()(clientId),
         caretName: (user) => {
           const peer = notices.snapshot().peers.find((p) => p.userId === user['userId']);
           return peer?.label ?? 'Someone';

@@ -104,6 +104,11 @@ export function liveAgoOf(at: number, now: number): string {
 
 // Values.
 
+/** The date and counter of the browser storage format; a new format gets a new one. */
+const STORAGE_VERSION = '202611201';
+export const storageKeyOf = (slice: string, key: string): string =>
+  `logbook:${STORAGE_VERSION}:${slice}:${key}`;
+
 /** The newest value, for callbacks built once (an editor's extensions) that must not go stale. */
 export class Latest<T> {
   #value: T;

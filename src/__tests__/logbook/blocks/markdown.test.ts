@@ -81,6 +81,70 @@ describe('markdown and the page', () => {
   });
 });
 
+describe('awkward names through markdown', () => {
+  const ROUND_TRIP = [
+    { type: 'file', attrs: { name: 'My data.csv', path: 'My data.0123456789ab.csv' } },
+    {
+      type: 'figure',
+      attrs: {
+        alt: 'A screenshot',
+        src: 'Screenshot 2026-11-20 at 10.00.00.0123456789ab.png',
+      },
+    },
+    { type: 'entity', attrs: { label: 'Rates [Hz] at 37 °C', type: 'circuit', entityId: 'c-1' } },
+    { type: 'file', attrs: { name: 'say "hi".txt', path: 'say "hi".0123456789ab.txt' } },
+  ];
+
+  test.each(
+    ROUND_TRIP
+  )('a $type block keeps its names when an agent writes the page back', (block) => {
+    const doc = new Y.Doc();
+    writeJson(doc, { type: 'doc', content: [block] });
+    const again = new Y.Doc();
+    writeMarkdown(again, docToMarkdown(doc));
+    const [read] = docToJson(again).content ?? [];
+    expect(read?.type).toBe(block.type);
+    expect(read?.attrs).toMatchObject(block.attrs);
+  });
+
+  test('a note with a line break stays one note', () => {
+    const doc = new Y.Doc();
+    writeJson(doc, {
+      type: 'doc',
+      content: [
+        {
+          type: 'callout',
+          attrs: { kind: 'warning' },
+          content: [
+            { type: 'text', text: 'first line' },
+            { type: 'hardBreak' },
+            { type: 'text', text: 'second line' },
+          ],
+        },
+      ],
+    });
+    const again = new Y.Doc();
+    writeMarkdown(again, docToMarkdown(doc));
+    const blocks = docToJson(again).content ?? [];
+    expect(blocks.map((b) => b.type)).toEqual(['callout']);
+    expect(blocks[0]?.content?.map((c) => c.type)).toEqual(['text', 'hardBreak', 'text']);
+  });
+
+  test('the old forms agents already wrote still read', () => {
+    const blocks =
+      markdownToJson(
+        '::file[a.csv]{path=data/a.csv}\n\n![plot](plots/a.png)\n\n::entity[CA1]{type=circuit id=c-1}'
+      ).content ?? [];
+    expect(
+      blocks.map((b) => [b.type, b.attrs?.['path'] ?? b.attrs?.['src'] ?? b.attrs?.['entityId']])
+    ).toEqual([
+      ['file', 'data/a.csv'],
+      ['figure', 'plots/a.png'],
+      ['entity', 'c-1'],
+    ]);
+  });
+});
+
 describe('alignment', () => {
   // Markdown can't show textAlign, but an agent's write must keep it.
   test('an aligned block keeps its alignment through an agent write, and markdown does not show it', () => {

@@ -1,11 +1,12 @@
 // Log files live in one EntityCore folder asset; uploads only add, so a saved plot never changes.
 import { queryOptions } from '@tanstack/react-query';
-import { isNil, isNotNil, omit } from 'es-toolkit';
+import { isNil, isNotNil } from 'es-toolkit';
 
 import { downloadAsset, listDirectoryOfAssets } from '@/api/entitycore/queries/assets';
 import { getResearchLog } from '@/api/entitycore/queries/general/research-log';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
-import { createResearchUpload } from '@/api/logbook/queries/research';
+import { AssetStatus } from '@/api/entitycore/types/shared/global';
+import { createResearchUpload, putResearchUpload } from '@/api/logbook/queries/research';
 import { settings } from '@/features/logbook/settings';
 import { IMAGE, savedNameOf } from '@/features/logbook/shared/files';
 import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
@@ -180,7 +181,7 @@ async function readLogFiles(
   const assets = log.assets ?? [];
   const documents = documentsOf(assets);
   const folder = assets.find(
-    (a) => a.label === FILES_LABEL && a.is_directory && a.status === 'created'
+    (a) => a.label === FILES_LABEL && a.is_directory && a.status === AssetStatus.CREATED
   );
   if (isNil(folder)) return { folderId: null, files: [], documents };
   const listing = await listDirectoryOfAssets({
@@ -243,11 +244,6 @@ export const fileBlobQuery = (logId: string, folderId: string, path: string, pro
     gcTime: 5 * 60_000,
   });
 
-// fetch forbids setting Content-Length; the browser adds it.
-export const putHeadersOf = (
-  signed: Readonly<Record<string, string>>
-): Readonly<Record<string, string>> => omit(signed, ['Content-Length']);
-
 export async function sha256Hex(bytes: ArrayBuffer): Promise<string> {
   const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
   return [...digest].map((b) => b.toString(16).padStart(2, '0')).join('');
@@ -286,13 +282,5 @@ export async function uploadLogFile(
   if (answer.path !== planned.path)
     throw new Error(`The server saved ${file.name} as ${answer.path}, not ${planned.path}`);
   if (isNil(answer.upload)) return;
-  const put = await fetch(answer.upload.url, {
-    method: 'PUT',
-    body: file,
-    headers: putHeadersOf(answer.upload.headers),
-  });
-  if (put.status === PRECONDITION_FAILED) return;
-  if (!put.ok) throw new Error(`Uploading ${file.name} failed (HTTP ${put.status})`);
+  await putResearchUpload({ target: answer.upload, file });
 }
-
-const PRECONDITION_FAILED = 412;

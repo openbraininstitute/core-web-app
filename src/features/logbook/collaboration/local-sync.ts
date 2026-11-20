@@ -11,6 +11,7 @@ import {
   DIRTY_KEY,
   Dirty,
   openCopies,
+  whenCopyFree,
   whenLoaded,
 } from '@/features/logbook/collaboration/local-copy';
 
@@ -52,13 +53,18 @@ const typeOf = (error: unknown): string | null =>
   error instanceof ApiError ? (error.cause?.type ?? null) : null;
 
 // Old browsers lack `indexedDB.databases()`; copies then sync when their page opens.
-export async function localCopies(userId: string): Promise<{ name: string; pageId: string }[]> {
+async function copyNames(): Promise<string[]> {
   if (typeof indexedDB === 'undefined' || typeof indexedDB.databases !== 'function') return [];
-  const suffix = `:${userId}`;
   const databases = await indexedDB.databases();
   return databases
     .map((database) => database.name ?? '')
-    .filter((name) => name.startsWith(COPY_PREFIX) && name.endsWith(suffix))
+    .filter((name) => name.startsWith(COPY_PREFIX));
+}
+
+export async function localCopies(userId: string): Promise<{ name: string; pageId: string }[]> {
+  const suffix = `:${userId}`;
+  return (await copyNames())
+    .filter((name) => name.endsWith(suffix))
     .map((name) => ({ name, pageId: name.slice(COPY_PREFIX.length, -suffix.length) }));
 }
 
@@ -162,9 +168,14 @@ export async function syncCopies(
   const skip = options.skip ?? openCopies();
   const reports: ICopyReport[] = [];
   for (const { name, pageId } of await localCopies(userId).catch(() => [])) {
+    // Open in this tab (skip) or in another (its lock): that tab's provider sends it.
     const result = skip.has(name)
       ? CopySync.Open
-      : await syncCopy(docs, name, pageId, options.pauseMs ?? PAUSE_MS);
+      : await whenCopyFree(
+          name,
+          () => syncCopy(docs, name, pageId, options.pauseMs ?? PAUSE_MS),
+          CopySync.Open
+        );
     reports.push({ name, pageId, result });
   }
   return reports;
@@ -182,6 +193,31 @@ export async function clearSyncedCopies(
   // Each copy is its own database, so they clear side by side.
   await Promise.all(reports.filter(isSafe).map((report) => clearDocument(report.name)));
   return reports.filter((report) => !isSafe(report));
+}
+
+async function isClean(name: string): Promise<boolean> {
+  const persistence = new IndexeddbPersistence(name, new Y.Doc());
+  try {
+    await whenLoaded(persistence);
+    return (await persistence.get(DIRTY_KEY)) === Dirty.No;
+  } finally {
+    await persistence.destroy().catch(noop);
+  }
+}
+
+/**
+ * Sign-out: deletes every user's copy that the server already has. A copy with unsent edits
+ * stays (deleting it loses work) and is sent at that user's next start; so does one open in a tab.
+ * One at a time, so at most one page is loaded. Never throws.
+ */
+export async function dropCleanCopies(): Promise<void> {
+  await closeAllCopies().catch(noop);
+  for (const name of await copyNames().catch(() => [])) {
+    const drop = async (): Promise<void> => {
+      if (await isClean(name)) await clearDocument(name);
+    };
+    await whenCopyFree(name, drop, undefined).catch(noop);
+  }
 }
 
 // The user chose to sign out anyway; unsent edits are lost.

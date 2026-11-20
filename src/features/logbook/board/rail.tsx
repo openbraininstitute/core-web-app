@@ -26,7 +26,7 @@ import type { IResearchLog } from '@/api/entitycore/types/entities/research-log'
 import type { IContributor, TValueOf } from '@/api/logbook/types';
 import type { ILogOrder } from '@/features/logbook/api/research-logs';
 import type { IProject } from '@/features/logbook/auth/session';
-import type { AvatarGroupMember } from '@/features/logbook/elements/motion/avatar-group';
+import type { IAvatarGroupMember } from '@/features/logbook/elements/motion/avatar-group';
 import type { TPopoverAlign, TPopoverSide } from '@/features/logbook/ui/popover';
 
 // No heading in a wide rail; a title and X in the phone drawer.
@@ -79,10 +79,10 @@ const LIST_EMPTY = 'px-3 text-[14px] text-neutral-4';
 export const membersOf = (
   log: IResearchLog,
   contributors: readonly IContributor[]
-): AvatarGroupMember[] => {
+): IAvatarGroupMember[] => {
   // Limit: no sub_id here; person id equals the Keycloak sub only locally. Upgrade: add sub_id.
   const sub = log.created_by.sub_id ?? log.created_by.id ?? null;
-  const creator: AvatarGroupMember = {
+  const creator: IAvatarGroupMember = {
     id: `creator:${log.id}`,
     name: log.created_by.pref_label,
     ...(isNil(sub) ? {} : { colour: colourOf(sub) }),
@@ -461,6 +461,13 @@ export function RenameField({
   readonly onCancel: () => void;
 }) {
   const [value, setValue] = useState(name);
+  // Once only: removing a focused field can fire one more blur.
+  const done = useRef(false);
+  const finish = (end: () => void): void => {
+    if (done.current) return;
+    done.current = true;
+    end();
+  };
   const save = (): void => {
     const trimmed = value.trim();
     if (trimmed.length === 0 || trimmed === name) onCancel();
@@ -480,10 +487,11 @@ export function RenameField({
       autoFocus
       onFocus={(event) => event.currentTarget.select()}
       onChange={(event) => setValue(event.target.value)}
-      onBlur={save}
+      onBlur={() => finish(save)}
       onKeyDown={(event) => {
-        if (event.key === 'Enter') save();
-        if (event.key === 'Escape') onCancel();
+        // Enter only blurs: the blur saves, so the field never saves twice.
+        if (event.key === 'Enter') event.currentTarget.blur();
+        if (event.key === 'Escape') finish(onCancel);
       }}
     />
   );

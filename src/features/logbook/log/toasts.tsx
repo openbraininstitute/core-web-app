@@ -9,6 +9,7 @@ import {
 } from 'react';
 
 import { SettingsButton } from '@/features/logbook/board/rail';
+import { worksFor } from '@/features/logbook/collaboration/actors';
 import { useNow } from '@/features/logbook/helpers';
 import { NoticeKind } from '@/features/logbook/log/notice';
 import { ToastSource } from '@/features/logbook/log/notify-settings';
@@ -178,8 +179,8 @@ export function AgentToast({ feed, settings, me, onShow }: IAgentToastProps) {
   if (isNil(toast)) return null;
   if (!settingsOpen) {
     if (!settings.toasts || now - toast.at > AGENT_TOAST_MS) return null;
-    // "Only my agents": an agent signed in as this person.
-    if (settings.from === ToastSource.Mine && toast.actor.key !== me.userId) return null;
+    // "Only my agents": an agent signed in as this person, over a socket or HTTPS.
+    if (settings.from === ToastSource.Mine && !worksFor(toast.actor, me.userId)) return null;
   }
   const ago = now - toast.at < 5000 ? 'just now' : `${Math.round((now - toast.at) / 1000)}s ago`;
   return (

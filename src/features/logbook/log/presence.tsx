@@ -1,3 +1,4 @@
+import { useEditorState } from '@tiptap/react';
 import { relativePositionToAbsolutePosition, ySyncPluginKey } from '@tiptap/y-tiptap';
 import { isNil, isNotNil } from 'es-toolkit';
 import { useEffect, useMemo, useSyncExternalStore } from 'react';
@@ -134,10 +135,20 @@ export interface IHereNowProps extends ILogShared {
 
 export function HereNow(props: IHereNowProps) {
   const present = usePresent(props);
-  const { editor } = props;
-  const states = props.states();
+  const { editor, states } = props;
+  // Rerun per transaction: the caret plugin dispatches one when someone's caret moves.
+  const jumpable = useEditorState({
+    editor,
+    selector: ({ editor: current }) =>
+      present
+        .filter(
+          (p) => !p.you && !p.actor.agent && isNotNil(cursorOf(current, p.actor.key, states()))
+        )
+        .map((p) => p.actor.key)
+        .join('\n'),
+  });
   const jump = (userId: string): void => {
-    const pos = cursorOf(editor, userId, states);
+    const pos = cursorOf(editor, userId, states());
     if (isNil(pos)) return;
     props.setMenu(Menu.None);
     editor.chain().setTextSelection(pos).scrollIntoView().focus().run();
@@ -158,8 +169,7 @@ export function HereNow(props: IHereNowProps) {
         {present.map((p) => {
           const look = statusLooks[p.status];
           // Only someone with a caret (an editor, not a reader) can be jumped to.
-          const jumpable =
-            !p.you && !p.actor.agent && isNotNil(cursorOf(editor, p.actor.key, states));
+          const canJump = jumpable.split('\n').includes(p.actor.key);
           return (
             <div
               key={p.actor.key}
@@ -180,7 +190,7 @@ export function HereNow(props: IHereNowProps) {
                 <span className="size-[7px] rounded-full" style={{ background: look.dot }} />
                 <span className="capitalize">{p.status}</span>
               </span>
-              {jumpable ? (
+              {canJump ? (
                 <button
                   type="button"
                   className="icon-btn size-7"

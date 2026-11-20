@@ -8,7 +8,7 @@ import { EASE_OUT } from '@/features/logbook/helpers';
 import { Icon } from '@/features/logbook/ui/icons';
 import { cn } from '@/utils/css-class';
 
-export type BouncyAccordionItem = {
+export type TBouncyAccordionItem = {
   id: string;
   title: ReactNode;
   description?: ReactNode;
@@ -16,7 +16,7 @@ export type BouncyAccordionItem = {
   disabled?: boolean;
 };
 
-export type BouncyAccordionClassNames = {
+export type TBouncyAccordionClassNames = {
   root?: string;
   item?: string;
   trigger?: string;
@@ -27,14 +27,14 @@ export type BouncyAccordionClassNames = {
   description?: string;
 };
 
-export interface BouncyAccordionProps {
-  items: BouncyAccordionItem[];
+export interface IBouncyAccordionProps {
+  items: TBouncyAccordionItem[];
   value?: string | null;
   defaultValue?: string | null;
   onValueChange?: (value: string | null) => void;
   collapsible?: boolean;
   className?: string;
-  classNames?: BouncyAccordionClassNames;
+  classNames?: TBouncyAccordionClassNames;
 }
 
 // The gap spring must not overshoot, or a row drifts below its rest and overlaps the next one.
@@ -80,7 +80,7 @@ function BouncyAccordionRow({
   classNames,
   onToggle,
 }: {
-  item: BouncyAccordionItem;
+  item: TBouncyAccordionItem;
   open: boolean;
   closing: boolean;
   startsGroup: boolean;
@@ -89,7 +89,7 @@ function BouncyAccordionRow({
   contentId: string;
   triggerId: string;
   reduce: boolean | null;
-  classNames?: BouncyAccordionClassNames;
+  classNames?: TBouncyAccordionClassNames;
   onToggle: () => void;
 }) {
   const contentRef = useRef<HTMLDivElement>(null);
@@ -228,7 +228,7 @@ export function BouncyAccordion({
   collapsible = true,
   className,
   classNames,
-}: BouncyAccordionProps) {
+}: IBouncyAccordionProps) {
   const reduce = useReducedMotion();
   const baseId = useId();
   const [activeValue, setActiveValue] = useControllableAccordionValue({

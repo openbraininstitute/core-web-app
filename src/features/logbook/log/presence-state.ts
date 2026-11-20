@@ -1,7 +1,6 @@
 import { uniqBy } from 'es-toolkit';
 
-import { ActorVia } from '@/api/logbook/types';
-import { agentActor, personActor } from '@/features/logbook/collaboration/actors';
+import { agentActor, peerActor } from '@/features/logbook/collaboration/actors';
 import { ViewMode } from '@/features/logbook/log/view-mode';
 
 import type { TValueOf } from '@/api/logbook/types';
@@ -53,11 +52,11 @@ export function presentList(
     you: true,
     sub: 'This tab',
   };
-  const people = uniqBy(live.peers, (p) => p.userId)
-    .filter((peer) => peer.userId !== me.key)
-    .map((peer): IPresent => {
-      const agent = peer.via === ActorVia.Agent;
-      const actor = personActor(peer.userId, peer.label, agent);
+  // One entry per actor: a person's tabs merge, the agent working as them stays apart.
+  const people = uniqBy(live.peers.map(peerActor), (actor) => actor.key)
+    .filter((actor) => actor.key !== me.key)
+    .map((actor): IPresent => {
+      const { agent } = actor;
       const active = seenWithin(actor.key, ACTIVE_MS);
       return {
         actor,

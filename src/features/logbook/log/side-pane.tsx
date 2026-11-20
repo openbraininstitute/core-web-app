@@ -1,6 +1,5 @@
-import { useHocuspocusProvider } from '@hocuspocus/provider-react';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { EditorContent, useEditor } from '@tiptap/react';
+import { EditorContent, useEditor, useEditorState } from '@tiptap/react';
 import { isNil, isNotNil } from 'es-toolkit';
 import { useEffect, useId, useMemo, useState, useSyncExternalStore } from 'react';
 import { useInView } from 'react-intersection-observer';
@@ -8,10 +7,11 @@ import { useInView } from 'react-intersection-observer';
 import { ActorVia } from '@/api/logbook/types';
 import { activityQuery, runsOf, summaryOf } from '@/features/logbook/api/activity';
 import { Layout } from '@/features/logbook/board/layout';
-import { personActor } from '@/features/logbook/collaboration/actors';
+import { peerActor } from '@/features/logbook/collaboration/actors';
 import { previewExtensions } from '@/features/logbook/editor/extensions';
 import { clip, liveAgoOf, useNow } from '@/features/logbook/helpers';
 import { ArtifactsTab } from '@/features/logbook/log/artifacts-tab';
+import { useLivePage } from '@/features/logbook/log/context';
 import { cardLabelOf, piecesOf } from '@/features/logbook/log/history';
 import { RightTab } from '@/features/logbook/log/ui-state';
 import { ViewMode } from '@/features/logbook/log/view-mode';
@@ -30,7 +30,7 @@ const SEGMENT =
 
 // A second read-only editor on the same Yjs doc, mounted only while its tab shows.
 function PreviewTab() {
-  const { document } = useHocuspocusProvider();
+  const { document } = useLivePage();
   const preview = useEditor({ extensions: previewExtensions(document), editable: false }, [
     document,
   ]);
@@ -98,7 +98,7 @@ function SavedRow({
   return (
     <li className="group relative flex gap-3 pb-4">
       <span className="absolute top-7 bottom-0 left-[13px] w-0.5 bg-rule-softer group-last:hidden" />
-      <Avatar actor={personActor(run.userId, run.label, agent)} size={28} />
+      <Avatar actor={peerActor(run)} size={28} />
       <div className="min-w-0 flex-1 pt-0.5 text-[13px] leading-[1.45]">
         <div>
           <strong>{run.userId === me && !agent ? 'You' : run.label}</strong> {summaryOf(run)}
@@ -166,29 +166,38 @@ function HistoryTab(props: ILogShared) {
   useEffect(() => {
     if (atEnd && hasNextPage && !isFetchingNextPage) void fetchNextPage();
   }, [atEnd, hasNextPage, isFetchingNextPage, fetchNextPage]);
+  // A new state only when the text changes, so a remote rewrite of the selection shows at once.
+  const state = useEditorState({
+    editor,
+    selector: ({ editor: current }) => current.state,
+    equalityFn: (a, b) => a.doc === b?.doc,
+  });
+  // Kept inside the text: a remote delete can shorten it under the selection.
+  const size = state.doc.content.size;
+  const from = isNil(selection) ? null : Math.min(selection.from, size);
+  const to = isNil(selection) ? null : Math.min(selection.to, size);
   // Each client is asked of the server once per view, in one batched call.
   const { pieces, clients } = useMemo(() => {
     const seen = new Set<number>();
-    const found = isNil(selection)
-      ? []
-      : piecesOf(editor.state, selection.from, selection.to, (client) => {
-          seen.add(client);
-          return resolve(client);
-        });
+    const found =
+      isNil(from) || isNil(to)
+        ? []
+        : piecesOf(state, from, to, (client) => {
+            seen.add(client);
+            return resolve(client);
+          });
     return { pieces: found, clients: [...seen] };
-  }, [editor, selection, resolve]);
+  }, [state, from, to, resolve]);
   const { learnWriters } = props;
   useEffect(() => learnWriters(clients), [learnWriters, clients]);
-  const replaced = isNil(selection)
-    ? []
-    : changes.events.filter(
-        (e) => e.removed.length > 0 && e.from < selection.to && e.to >= selection.from
-      );
-  const excerpt = isNil(selection)
-    ? ''
-    : editor.state.doc.textBetween(selection.from, selection.to, ' ', (leaf) =>
-        leaf.isBlock ? cardLabelOf(leaf) : ' '
-      );
+  const replaced =
+    isNil(from) || isNil(to)
+      ? []
+      : changes.events.filter((e) => e.removed.length > 0 && e.from < to && e.to >= from);
+  const excerpt =
+    isNil(from) || isNil(to)
+      ? ''
+      : state.doc.textBetween(from, to, ' ', (leaf) => (leaf.isBlock ? cardLabelOf(leaf) : ' '));
   return (
     <div className="scroll-thin min-h-0 flex-1 overflow-y-auto px-5 pt-4 pb-10">
       {isNil(selection) ? (
@@ -228,7 +237,7 @@ function HistoryTab(props: ILogShared) {
             ))}
             {replaced.map((change) => (
               <li key={`r${change.id}`} className={PIECE}>
-                <Avatar actor={{ ...change.actor, agent: true }} size={26} />
+                <Avatar actor={change.actor} size={26} />
                 <div>
                   <div>
                     <strong>{change.actor.name}</strong> replaced{' '}

@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 
-import { isNil } from 'es-toolkit';
-import { expect, test } from 'vitest';
+import { isNil, isNotNil } from 'es-toolkit';
+import { afterAll, beforeAll, expect, test } from 'vitest';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
 
@@ -16,11 +16,46 @@ import {
 import {
   CopySync,
   clearSyncedCopies,
+  dropCleanCopies,
   localCopies,
   syncCopies,
 } from '@/features/logbook/collaboration/local-sync';
 
 import type { IPageDocs } from '@/features/logbook/collaboration/local-sync';
+
+// jsdom has no Web Locks: a small one, so copies in two "tabs" see each other.
+function fakeLocks(): LockManager {
+  const held = new Map<string, { mode: LockMode; count: number }>();
+  const free = (name: string, mode: LockMode): boolean => {
+    const current = held.get(name);
+    return isNil(current) || (mode === 'shared' && current.mode === 'shared');
+  };
+  const request = async (
+    name: string,
+    options: LockOptions,
+    callback: (lock: Lock | null) => unknown
+  ): Promise<unknown> => {
+    const mode = options.mode ?? 'exclusive';
+    if (!free(name, mode)) {
+      if (options.ifAvailable === true) return callback(null);
+      while (!free(name, mode)) await new Promise((resolve) => setTimeout(resolve, 1));
+    }
+    const current = held.get(name);
+    held.set(name, { mode, count: (current?.count ?? 0) + 1 });
+    try {
+      return await callback({ name, mode });
+    } finally {
+      const after = held.get(name);
+      if (isNotNil(after) && after.count > 1) held.set(name, { mode, count: after.count - 1 });
+      else held.delete(name);
+    }
+  };
+  return { request, query: async () => ({}) } as never;
+}
+beforeAll(() =>
+  Object.defineProperty(navigator, 'locks', { value: fakeLocks(), configurable: true })
+);
+afterAll(() => Reflect.deleteProperty(navigator, 'locks'));
 
 let n = 0;
 const nextUser = () => `user-${++n}`;
@@ -216,6 +251,38 @@ test('a copy open in this tab is left to its provider', async () => {
   const [result] = await syncCopies(server.port, user, { skip: new Set([copyName(PAGE, user)]) });
   expect(result?.result).toBe(CopySync.Open);
   expect(server.reads()).toBe(0);
+});
+
+test('a copy open in another tab is left to that tab, and its later edits still count', async () => {
+  const user = nextUser();
+  // Another tab: open, not in this tab's list of held copies.
+  const other = await LocalCopy.open(PAGE, user);
+  type(other.document, 'typed in the other tab');
+  const server = fakeServer();
+  const [result] = await syncCopies(server.port, user);
+  expect(result?.result).toBe(CopySync.Open);
+  type(other.document, 'typed offline, then the tab crashed');
+  await other.close();
+  expect(await flagOf(user)).toBe(1);
+});
+
+test('sign-out drops every copy the server has, and keeps the ones with unsent edits', async () => {
+  const clean = nextUser();
+  const dirty = nextUser();
+  const open = nextUser();
+  const copy = await LocalCopy.open(PAGE, clean);
+  copy.markClean(SYNCED);
+  await copy.close();
+  await typedCopy(dirty, 'not on the server yet');
+  const held = await LocalCopy.open(PAGE, open);
+  held.markClean(SYNCED);
+
+  await dropCleanCopies();
+
+  expect(await localCopies(clean)).toEqual([]);
+  expect((await localCopies(dirty)).map((c) => c.pageId)).toEqual([PAGE]);
+  expect((await localCopies(open)).map((c) => c.pageId)).toEqual([PAGE]); // another tab has it
+  await held.close();
 });
 
 test('sign-out deletes the copies the server has and keeps the others', async () => {
