@@ -12,32 +12,11 @@ import {
 } from '@/features/logbook/board/rail';
 import { CardSkeletons } from '@/features/logbook/elements/skeletons';
 import { agoOf } from '@/features/logbook/helpers';
-import { Icon } from '@/features/logbook/ui/icons';
-import { PopoverAlign } from '@/features/logbook/ui/popover';
+import { PopoverAlign } from '@/features/logbook/types';
+import { Icon } from '@/ui/molecules/icon';
 
 import type { IResearchLog } from '@/api/entitycore/types/entities/research-log';
-import type { ILogOrder } from '@/features/logbook/api/research-logs';
-import type { IProject } from '@/features/logbook/auth/session';
-import type { IMore, IScope } from '@/features/logbook/board/rail';
-
-export interface IHomeProps {
-  readonly logs: readonly IResearchLog[];
-  // All matches, loaded or not.
-  readonly total: number;
-  readonly more: IMore;
-  readonly loading: boolean;
-  readonly error: string | null;
-  readonly project: IProject;
-  readonly scope: IScope;
-  readonly search: string;
-  readonly order: ILogOrder;
-  readonly onOrder: (order: ILogOrder) => void;
-  readonly creating: boolean;
-  readonly onScope: (scope: IScope) => void;
-  readonly onSearch: (search: string) => void;
-  readonly onPick: (id: string) => void;
-  readonly onNew: () => void;
-}
+import type { IHomeProps, IProject } from '@/features/logbook/types';
 
 function LogbookArt() {
   return (
@@ -62,7 +41,7 @@ function LogbookArt() {
       <rect x="54" y="45" width="56" height="4" rx="2" fill="var(--color-neutral-2)" />
       <path
         d="M54 74h10l5-12 8 26 7-20 5 8h29"
-        stroke="var(--color-green)"
+        stroke="var(--color-green-main)"
         strokeWidth="3"
         strokeLinecap="round"
         strokeLinejoin="round"

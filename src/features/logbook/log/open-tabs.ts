@@ -4,27 +4,10 @@
 import { isNil, isNotNil } from 'es-toolkit';
 
 import { PageKind } from '@/api/logbook/types';
+import { TabKind } from '@/features/logbook/types';
 
-import type { IPage, TValueOf } from '@/api/logbook/types';
-
-export const TabKind = { Page: 'page', Artifact: 'artifact' } as const;
-export type TTabKind = TValueOf<typeof TabKind>;
-
-export interface ITabRef {
-  readonly kind: TTabKind;
-  readonly id: string;
-}
-
-export interface IOpenTabs {
-  /** Tabs in strip order. The main page has no tab: it is always there. */
-  readonly open: readonly ITabRef[];
-  /** Mounted pages, the one on screen first, then the most recently left. */
-  readonly live: readonly string[];
-  /** The file shown over the page on screen, if any. */
-  readonly artifactId: string | null;
-  /** The address last acted on, and whether the log had its page; null before the first one. */
-  readonly followed: { readonly pageId: string | null; readonly found: boolean } | null;
-}
+import type { IPage } from '@/api/logbook/types';
+import type { IOpenTabs, ITabRef } from '@/features/logbook/types';
 
 export const NO_TABS: IOpenTabs = { open: [], live: [], artifactId: null, followed: null };
 

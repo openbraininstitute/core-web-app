@@ -2,20 +2,18 @@ import { expect, test } from 'vitest';
 
 import {
   DEFAULT_ORDER,
-  LogOrderField,
   listParamsOf,
   logsOf,
   nextPageOf,
   noFilterOf,
-  OrderDirection,
 } from '@/features/logbook/api/research-logs';
 import { colourOf } from '@/features/logbook/blocks/colour';
 import { membersOf } from '@/features/logbook/board/rail';
 import { agoOf } from '@/features/logbook/helpers';
+import { LogOrderField, OrderDirection } from '@/features/logbook/types';
 
 import type { IResearchLog } from '@/api/entitycore/types/entities/research-log';
-import type { ILogOrder } from '@/features/logbook/api/research-logs';
-import type { IProject } from '@/features/logbook/auth/session';
+import type { ILogOrder, IProject } from '@/features/logbook/types';
 
 test('the log card says how long ago a log changed, then its date after a week', () => {
   const now = Date.parse('2026-11-14T12:00:00Z');

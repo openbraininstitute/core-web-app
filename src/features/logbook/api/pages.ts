@@ -9,7 +9,7 @@ import { PageKind } from '@/api/logbook/types';
 import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
 
 import type { IPage } from '@/api/logbook/types';
-import type { IProject } from '@/features/logbook/auth/session';
+import type { INewSection, IProject } from '@/features/logbook/types';
 
 // Null only for a log no writer has opened yet.
 export const pageToShow = (pages: readonly IPage[], wanted: string | null): IPage | null =>
@@ -40,12 +40,6 @@ export const pagesQuery = (researchId: string, project: IProject) =>
 
 export const usePages = (researchId: string, project: IProject, enabled = true) =>
   useQuery({ ...pagesQuery(researchId, project), enabled });
-
-// The key is made once per add, so a retry never makes two sections.
-export interface INewSection {
-  readonly title: string;
-  readonly key: string;
-}
 
 export function useCreateSection(researchId: string, project: IProject) {
   const queries = useQueryClient();

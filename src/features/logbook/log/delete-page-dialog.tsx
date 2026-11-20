@@ -1,21 +1,14 @@
-import { ConfirmDeleteDialog } from '@/features/logbook/ui/confirm-delete-dialog';
-import { Icon } from '@/features/logbook/ui/icons';
+import { Icon } from '@/ui/molecules/icon';
+import { ConfirmDeleteDialog } from '@/ui/segments/confirm-delete-dialog';
 
-import type { IPage } from '@/api/logbook/types';
-import type { IGoesWith } from '@/features/logbook/ui/confirm-delete-dialog';
+import type { IDeletePageDialogProps } from '@/features/logbook/types';
+import type { IGoesWith } from '@/ui/segments/confirm-delete-dialog';
 
 const GOES: readonly IGoesWith[] = [
   { icon: 'page', text: 'Its text, its versions and its history' },
   { icon: 'upload', text: 'Its copy in the project (the synced page)' },
   { icon: 'people', text: 'Anyone on it now keeps what they see until they leave' },
 ];
-
-export interface IDeletePageDialogProps {
-  readonly page: IPage;
-  readonly logName: string;
-  readonly onDelete: () => Promise<unknown>;
-  readonly onClose: () => void;
-}
 
 export function DeletePageDialog({ page, logName, onDelete, onClose }: IDeletePageDialogProps) {
   return (

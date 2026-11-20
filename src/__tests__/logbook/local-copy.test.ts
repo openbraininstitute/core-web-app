@@ -14,15 +14,15 @@ import {
   releaseCopy,
 } from '@/features/logbook/collaboration/local-copy';
 import {
-  CopySync,
   dropCleanCopies,
   dropOthersCleanCopies,
   isCopyDirty,
   localCopies,
   syncCopies,
 } from '@/features/logbook/collaboration/local-sync';
+import { CopySync } from '@/features/logbook/types';
 
-import type { IPageDocs } from '@/features/logbook/collaboration/local-sync';
+import type { IPageDocs } from '@/features/logbook/types';
 
 // jsdom has no Web Locks: a small one, so copies in two "tabs" see each other.
 function fakeLocks(): LockManager {

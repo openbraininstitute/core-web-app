@@ -1,37 +1,24 @@
 import { uniqBy } from 'es-toolkit';
 
 import { agentActor, peerActor } from '@/features/logbook/collaboration/actors';
-import { ViewMode } from '@/features/logbook/log/view-mode';
+import { Status, ViewMode } from '@/features/logbook/types';
 
-import type { TValueOf } from '@/api/logbook/types';
-import type { IChangeSnapshot } from '@/features/logbook/collaboration/changes';
-import type { ICollaborationSnapshot } from '@/features/logbook/collaboration/notices';
-import type { TViewMode } from '@/features/logbook/log/view-mode';
-import type { IActor } from '@/features/logbook/ui/avatar';
-
-export const Status = {
-  Editing: 'editing',
-  Writing: 'writing',
-  Reading: 'reading',
-  Idle: 'idle',
-} as const;
-export type TStatus = TValueOf<typeof Status>;
+import type {
+  IActor,
+  IChangeSnapshot,
+  ICollaborationSnapshot,
+  IPresent,
+  TStatus,
+  TViewMode,
+} from '@/features/logbook/types';
 
 export const statusLooks: Readonly<Record<TStatus, { readonly fg: string; readonly dot: string }>> =
   {
-    editing: { fg: '#166534', dot: '#16a34a' },
-    writing: { fg: '#5b21b6', dot: '#7c3aed' },
-    reading: { fg: '#595959', dot: '#bfbfbf' },
-    idle: { fg: '#595959', dot: '#d9d9d9' },
+    editing: { fg: 'var(--color-saved-fg)', dot: 'var(--color-saved-dot)' },
+    writing: { fg: 'var(--color-writing-fg)', dot: 'var(--color-writing-dot)' },
+    reading: { fg: 'var(--color-neutral-4)', dot: 'var(--color-neutral-3)' },
+    idle: { fg: 'var(--color-neutral-4)', dot: 'var(--color-neutral-2)' },
   };
-
-export interface IPresent {
-  readonly actor: IActor;
-  readonly status: TStatus;
-  readonly active: boolean;
-  readonly you: boolean;
-  readonly sub: string;
-}
 
 const ACTIVE_MS = 2500;
 const YOU_ACTIVE_MS = 3000;

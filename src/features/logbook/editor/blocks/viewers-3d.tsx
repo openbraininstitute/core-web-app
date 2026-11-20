@@ -1,14 +1,9 @@
 import { lazy } from 'react';
 import { match } from 'ts-pattern';
 
-import { EntityType } from '@/features/logbook/blocks/kinds';
+import { EntityType } from '@/features/logbook/types';
 
-import type { IProject } from '@/features/logbook/auth/session';
-
-export interface IViewer3dProps {
-  readonly entityId: string;
-  readonly project: IProject;
-}
+import type { IViewer3dProps } from '@/features/logbook/types';
 
 // Each loads on first use, so the editor never pulls in three.js until someone asks.
 const CircuitViewer = lazy(() => import('@/features/logbook/editor/blocks/viewer-3d/circuit'));

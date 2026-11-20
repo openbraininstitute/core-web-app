@@ -5,6 +5,8 @@ import * as Y from 'yjs';
 
 import { storageKeyOf } from '@/features/logbook/helpers';
 
+import type { IEntityCoreSyncState, IHeld, ILocalCopyDeps } from '@/features/logbook/types';
+
 // Per user, so two people on one machine never share a copy.
 export const COPY_PREFIX = storageKeyOf('page', '');
 export const copyName = (pageId: string, userId: string): string =>
@@ -39,22 +41,11 @@ export async function whenCopyFree<T>(name: string, use: () => Promise<T>, busy:
 export const DIRTY_PREFIX = 'dirty:';
 export const DIRTY_YES = 1;
 
-export interface IEntityCoreSyncState {
-  readonly isSynced: boolean;
-  readonly hasUnsyncedChanges: boolean;
-}
-
 // `_db` rejects when IndexedDB can't open; `whenSynced` would just hang.
 export async function whenLoaded(persistence: IndexeddbPersistence): Promise<void> {
   // oxlint-disable-next-line eslint/no-underscore-dangle -- y-indexeddb's open promise
   await persistence._db;
   await persistence.whenSynced;
-}
-
-export interface ILocalCopyDeps {
-  document: Y.Doc;
-  persistence: IndexeddbPersistence | null;
-  release?: () => void;
 }
 
 export class LocalCopy {
@@ -126,12 +117,6 @@ export class LocalCopy {
   }
 }
 
-// Shared per tab; close waits a tick so React's dev double mount reuses the copy.
-interface IHeld {
-  readonly copy: Promise<LocalCopy>;
-  users: number;
-  closing: ReturnType<typeof setTimeout> | null;
-}
 const held = new Map<string, IHeld>();
 
 export function acquireCopy(pageId: string, userId: string): Promise<LocalCopy> {

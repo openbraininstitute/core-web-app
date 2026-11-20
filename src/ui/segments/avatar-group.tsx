@@ -5,9 +5,9 @@
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { type ComponentPropsWithRef, type MouseEvent, type PointerEvent, useState } from 'react';
 
-import { EASE_OUT, SPRING_LAYOUT, SPRING_PRESS } from '@/features/logbook/helpers';
-import { useHoverCapable } from '@/features/logbook/hooks/use-hover-capable';
-import { AgentBadge, agentRadiusOf } from '@/features/logbook/ui/avatar';
+import { EASE_OUT, SPRING_LAYOUT, SPRING_PRESS } from '@/constants/motion';
+import { useHoverCapable } from '@/hooks/use-hover-capable';
+import { AgentBadge, agentRadiusOf } from '@/ui/molecules/avatar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 

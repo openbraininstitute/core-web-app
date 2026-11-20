@@ -4,12 +4,11 @@ import { isNil, isNotNil } from 'es-toolkit';
 import { getEntitiesByRoute, getEntityByRoute } from '@/api/entitycore/queries/general/entity';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { EntityType } from '@/features/logbook/blocks/kinds';
+import { EntityType } from '@/features/logbook/types';
 import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { IProject } from '@/features/logbook/auth/session';
-import type { TEntityType } from '@/features/logbook/blocks/kinds';
+import type { IEntity, IProject, TEntityType } from '@/features/logbook/types';
 
 // EntityCore ids are UUIDs; anything else in a card (page text anyone wrote) never reaches a URL.
 const ENTITY_ID = /^[0-9a-f-]{36}$/;
@@ -52,16 +51,6 @@ export const blockTypeOf = (coreType: TExtendedEntitiesTypeDict): string =>
 export function entityConfigOf(type: string) {
   const coreType = coreTypeOf(type);
   return isNil(coreType) ? null : (getEntityByExtendedType({ type: coreType }) ?? null);
-}
-
-export interface IEntity {
-  readonly id: string;
-  readonly name: string;
-  readonly type?: string;
-  readonly creation_date?: string;
-  readonly created_by?: { readonly pref_label: string };
-  readonly brain_region?: { readonly name: string; readonly acronym?: string } | null;
-  readonly subject?: { readonly species?: { readonly name: string } | null } | null;
 }
 
 const DAY_MS = 86_400_000;

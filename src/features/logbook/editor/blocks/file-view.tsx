@@ -9,22 +9,18 @@ import {
   logFilesQuery,
   shortPathOf,
 } from '@/features/logbook/api/log-files';
-import { FileLang, fileLangOf, fileLooks } from '@/features/logbook/blocks/kinds';
+import { fileLangOf, fileLooks } from '@/features/logbook/blocks/kinds';
 import { highlightLines } from '@/features/logbook/editor/shiki';
 import { LinesSkeleton } from '@/features/logbook/elements/skeletons';
 import { sizeOf } from '@/features/logbook/helpers';
 import { useLogContext } from '@/features/logbook/log/context';
 import { useUploading } from '@/features/logbook/log/uploads';
+import { FileLang } from '@/features/logbook/types';
 
 import type { NodeViewProps } from '@tiptap/react';
-import type { IProject } from '@/features/logbook/auth/session';
+import type { IProject, IShikiToken } from '@/features/logbook/types';
 
 const NOTE = 'px-[14px] py-[10px] text-[13px] text-neutral-4';
-
-interface IToken {
-  readonly content: string;
-  readonly color?: string | undefined;
-}
 
 const LINE_NUMBER = 'w-12 flex-none pr-4 text-right text-line-num select-none';
 
@@ -33,7 +29,7 @@ export function CodeView({ text, name }: { readonly text: string; readonly name:
   const [highlighted, setHighlighted] = useState<{
     readonly text: string;
     readonly name: string;
-    readonly lines: readonly (readonly IToken[])[];
+    readonly lines: readonly (readonly IShikiToken[])[];
   } | null>(null);
   useEffect(() => {
     let shown = true;
@@ -48,7 +44,7 @@ export function CodeView({ text, name }: { readonly text: string; readonly name:
   }, [text, name]);
   // Colours for older text are dropped at once, not after an effect.
   const tokens = highlighted?.text === text && highlighted.name === name ? highlighted.lines : null;
-  const lines: readonly (readonly IToken[])[] =
+  const lines: readonly (readonly IShikiToken[])[] =
     tokens ?? text.split('\n').map((line) => [{ content: line }]);
   return (
     <div className="overflow-x-auto px-0 py-[10px] [font:12.5px/20px_var(--font-mono)] text-neutral-7">

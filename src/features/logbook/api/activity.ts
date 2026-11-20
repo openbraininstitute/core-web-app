@@ -6,21 +6,7 @@ import { getResearchActivity } from '@/api/logbook/queries/research';
 import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
 
 import type { IActivityEntry } from '@/api/logbook/types';
-import type { IProject } from '@/features/logbook/auth/session';
-
-// One writer's rows on one page, merged while at most GAP_MS apart.
-export interface IActivityRun {
-  readonly key: string;
-  readonly pageId: string;
-  readonly userId: string;
-  readonly label: string;
-  readonly via: string;
-  readonly from: number;
-  readonly to: number;
-  readonly inserted: number;
-  readonly deleted: number;
-  readonly removed: string;
-}
+import type { IActivityRun, IProject } from '@/features/logbook/types';
 
 const GAP_MS = 5 * 60_000;
 const RUN_REMOVED_MAX = 1000;

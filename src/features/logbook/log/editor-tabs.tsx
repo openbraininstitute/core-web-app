@@ -3,34 +3,15 @@ import { Fragment, useEffect, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import { tabKey } from '@/features/logbook/log/open-tabs';
-import { Icon } from '@/features/logbook/ui/icons';
+import { Icon } from '@/ui/molecules/icon';
 
-import type { KeyboardEvent as ReactKeyboardEvent, ReactNode, WheelEvent } from 'react';
-import type { ITabRef } from '@/features/logbook/log/open-tabs';
+import type { KeyboardEvent as ReactKeyboardEvent, WheelEvent } from 'react';
+import type { IEditorTab, IEditorTabsProps, ITabRef } from '@/features/logbook/types';
 
 const TAB =
   'group relative flex h-10 cursor-pointer items-center gap-2 rounded-t-[12px] border border-b-0 border-transparent pr-1.5 pl-3 text-[13px] font-semibold text-neutral-4 outline-none transition-colors duration-150 ease-[ease] hover:bg-white/70 hover:text-primary-9 focus-visible:ring-2 focus-visible:ring-primary-4 focus-visible:ring-inset aria-selected:z-1 aria-selected:border-rule aria-selected:bg-white aria-selected:text-primary-9';
 const CLOSE =
   'grid size-6 flex-none place-items-center rounded-full text-neutral-4 hover:bg-fill-2 hover:text-primary-9';
-
-export interface IEditorTab {
-  readonly tab: ITabRef;
-  readonly label: string;
-  readonly hint: string;
-  readonly icon: ReactNode;
-  readonly pinned: boolean; // the main page: named after the log, never closed
-}
-
-export interface IEditorTabsProps {
-  readonly tabs: readonly IEditorTab[];
-  readonly active: ITabRef;
-  readonly page: ITabRef; // the page behind the editor: its tab shows the save status
-  readonly status: ReactNode;
-  readonly canRename: boolean;
-  readonly onRename: (name: string) => Promise<unknown>;
-  readonly onSelect: (tab: ITabRef) => void;
-  readonly onClose: (tab: ITabRef) => void;
-}
 
 function TitleField({
   title,

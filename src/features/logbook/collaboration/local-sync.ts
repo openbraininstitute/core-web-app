@@ -13,31 +13,9 @@ import {
   whenCopyFree,
   whenLoaded,
 } from '@/features/logbook/collaboration/local-copy';
+import { CopySync } from '@/features/logbook/types';
 
-import type { TValueOf } from '@/api/logbook/types';
-
-// Both throw an ApiError when refused.
-export interface IPageDocs {
-  readonly read: (pageId: string) => Promise<Uint8Array>;
-  readonly send: (pageId: string, update: Uint8Array) => Promise<void>;
-}
-
-export const CopySync = {
-  Clean: 'clean',
-  Sent: 'sent',
-  NothingToSend: 'nothing-to-send',
-  Open: 'open', // its provider sends it
-  Gone: 'gone', // 404
-  Refused: 'refused', // 403
-  Failed: 'failed', // kept, retried at the next start
-} as const;
-export type TCopySync = TValueOf<typeof CopySync>;
-
-export interface ICopyReport {
-  readonly name: string;
-  readonly pageId: string;
-  readonly result: TCopySync;
-}
+import type { ICopyReport, IPageDocs, ISyncOptions, TCopySync } from '@/features/logbook/types';
 
 const statusOf = (error: unknown): number | null =>
   error instanceof ApiError ? (error.cause?.status ?? null) : null;
@@ -181,11 +159,6 @@ async function syncCopy(
     await persistence.destroy().catch(noop);
     local.destroy();
   }
-}
-
-export interface ISyncOptions {
-  readonly skip?: ReadonlySet<string>;
-  readonly pauseMs?: number;
 }
 
 // One at a time to bound memory (two page docs per dirty copy). Never throws.

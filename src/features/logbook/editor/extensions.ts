@@ -14,7 +14,8 @@ import { CalloutView } from '@/features/logbook/editor/blocks/callout-view';
 import { EntityView } from '@/features/logbook/editor/blocks/entity-view';
 import { FigureView } from '@/features/logbook/editor/blocks/figure-view';
 import { FileView } from '@/features/logbook/editor/blocks/file-view';
-import { TokenKind, tokenize } from '@/features/logbook/editor/highlight';
+import { tokenize } from '@/features/logbook/editor/highlight';
+import { TokenKind } from '@/features/logbook/types';
 
 import type { HocuspocusProvider } from '@hocuspocus/provider';
 import type { AnyExtension } from '@tiptap/core';
@@ -22,8 +23,7 @@ import type { Node as PmNode } from '@tiptap/pm/model';
 import type { Transaction } from '@tiptap/pm/state';
 import type { ReactNodeViewProps } from '@tiptap/react';
 import type { ComponentType } from 'react';
-import type { ChangeFeed } from '@/features/logbook/collaboration/changes';
-import type { IActor } from '@/features/logbook/ui/avatar';
+import type { ICaretUser, IEditorOptions } from '@/features/logbook/types';
 
 const views: Readonly<Record<string, ComponentType<ReactNodeViewProps>>> = {
   entity: EntityView,
@@ -100,23 +100,6 @@ export const CodeHighlight = Extension.create({
     }),
   ],
 });
-
-export interface ICaretUser {
-  readonly userId: string;
-  readonly name: string;
-  readonly color: string;
-}
-
-export interface IEditorOptions {
-  readonly provider: HocuspocusProvider;
-  readonly me: IActor;
-  readonly feed: ChangeFeed;
-  readonly resolve: (clientId: number) => IActor;
-  // The server's label for the user id, never the awareness text.
-  readonly caretName: (user: Record<string, unknown>) => string;
-  readonly highlights: () => boolean;
-  readonly ready: () => boolean;
-}
 
 /** Another client's colour, from its awareness: anything but a hex colour could inject CSS. */
 export const caretColourOf = (user: Record<string, unknown>): string => {

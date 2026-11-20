@@ -5,7 +5,7 @@ import { entityConfigOf } from '@/features/logbook/api/entities';
 import { entityLookOf, entityLooks } from '@/features/logbook/blocks/kinds';
 
 import type { TEntityTypeGroup } from '@/entity-configuration/domain/group';
-import type { ILook } from '@/features/logbook/blocks/kinds';
+import type { ILook } from '@/features/logbook/types';
 
 // Colours by Data category, for core types the logbook has no look of its own for.
 export const groupLooks: Partial<Record<TEntityTypeGroup, Omit<ILook, 'label'>>> = {

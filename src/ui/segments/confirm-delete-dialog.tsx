@@ -1,11 +1,11 @@
 import { isNil } from 'es-toolkit';
 import { useEffect, useId, useRef, useState } from 'react';
 
-import { Icon } from '@/features/logbook/ui/icons';
+import { Icon } from '@/ui/molecules/icon';
 import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
-import type { TIconName } from '@/features/logbook/ui/icons';
+import type { TIconName } from '@/ui/molecules/icon';
 
 const WORD = 'delete';
 
@@ -121,7 +121,7 @@ export function ConfirmDeleteDialog(props: IConfirmDeleteDialogProps) {
             <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
               {props.goes.map(({ icon, text }) => (
                 <li key={text} className="flex items-center gap-2.5 text-[13px] text-neutral-10">
-                  <span className="grid size-7 flex-none place-items-center rounded-full bg-white text-red shadow-block-btn">
+                  <span className="grid size-7 flex-none place-items-center rounded-full bg-white text-destructive shadow-block-btn">
                     <Icon name={icon} size={13} stroke={2.2} />
                   </span>
                   {text}
@@ -142,9 +142,9 @@ export function ConfirmDeleteDialog(props: IConfirmDeleteDialogProps) {
                 className={cn(
                   'flex h-11 items-center gap-2 rounded-[14px] border bg-white pr-2 pl-3.5 transition-[border-color,box-shadow] duration-150',
                   typed === -1
-                    ? 'border-red/60 ring-3 ring-red/10'
+                    ? 'border-destructive/60 ring-3 ring-destructive/10'
                     : ready
-                      ? 'border-red ring-3 ring-red/15'
+                      ? 'border-destructive ring-3 ring-destructive/15'
                       : 'border-block-border focus-within:border-primary-4 focus-within:ring-3 focus-within:ring-primary-1'
                 )}
               >
@@ -165,7 +165,7 @@ export function ConfirmDeleteDialog(props: IConfirmDeleteDialogProps) {
                   className={cn(
                     'grid size-7 flex-none place-items-center rounded-full transition-[background-color,color,transform] duration-200',
                     ready
-                      ? 'scale-100 bg-red text-white'
+                      ? 'scale-100 bg-destructive text-white'
                       : 'scale-90 bg-transparent text-transparent'
                   )}
                   aria-hidden="true"
@@ -178,7 +178,7 @@ export function ConfirmDeleteDialog(props: IConfirmDeleteDialogProps) {
 
           {isNil(failed) ? null : (
             <p
-              className="flex items-start gap-2 rounded-xl bg-red/8 px-3 py-2.5 text-[13px] font-semibold text-red"
+              className="flex items-start gap-2 rounded-xl bg-destructive/8 px-3 py-2.5 text-[13px] font-semibold text-destructive"
               role="alert"
             >
               <Icon name="info" size={15} stroke={2.2} />
@@ -197,7 +197,7 @@ export function ConfirmDeleteDialog(props: IConfirmDeleteDialogProps) {
             </button>
             <button
               type="submit"
-              className="inline-flex h-11 items-center gap-2 rounded-full bg-red px-5 text-[14px] font-bold text-white shadow-red-btn transition-[opacity,transform,box-shadow] duration-150 enabled:hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-35 disabled:shadow-none"
+              className="inline-flex h-11 items-center gap-2 rounded-full bg-destructive px-5 text-[14px] font-bold text-white shadow-red-btn transition-[opacity,transform,box-shadow] duration-150 enabled:hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-35 disabled:shadow-none"
               disabled={!ready || busy}
             >
               {busy ? (

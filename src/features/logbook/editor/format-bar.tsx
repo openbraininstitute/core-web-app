@@ -11,24 +11,14 @@ import {
   TEXT_STYLES,
   titleOf,
 } from '@/features/logbook/editor/formats';
-import { Icon } from '@/features/logbook/ui/icons';
+import { Icon } from '@/ui/molecules/icon';
 import { cn } from '@/utils/css-class';
 
 import type { Editor } from '@tiptap/react';
-import type { IFormat, IFormatState, TTextStyle } from '@/features/logbook/editor/formats';
-import type { TIconName } from '@/features/logbook/ui/icons';
+import type { IFormat, IFormatState, IToolProps, TTextStyle } from '@/features/logbook/types';
 
 const styles: ReadonlySet<string> = new Set(TEXT_STYLES.map((s) => s.style));
 const isTextStyle = (value: string): value is TTextStyle => styles.has(value);
-
-interface IToolProps {
-  readonly label: string;
-  readonly keys?: string | null;
-  readonly icon: TIconName;
-  readonly pressed?: boolean;
-  readonly disabled: boolean;
-  readonly onRun: () => void;
-}
 
 const FOCUS =
   'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary-9';

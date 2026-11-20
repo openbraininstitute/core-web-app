@@ -4,17 +4,13 @@ import { useRef } from 'react';
 
 import { UPLOAD_ACCEPT } from '@/features/logbook/api/log-files';
 import { useLogContext } from '@/features/logbook/log/context';
-import { ToastSource } from '@/features/logbook/log/notify-settings';
 import { uploadFiles } from '@/features/logbook/log/uploads';
-import { Icon } from '@/features/logbook/ui/icons';
+import { ToastSource } from '@/features/logbook/types';
+import { Icon } from '@/ui/molecules/icon';
 import { cn } from '@/utils/css-class';
 
-import type { Editor } from '@tiptap/react';
-import type { CSSProperties } from 'react';
-import type { IPopAt } from '@/features/logbook/log/editor-card';
-import type { INotice } from '@/features/logbook/log/notice';
-import type { INotifySettings, TToastSource } from '@/features/logbook/log/notify-settings';
-import type { TIconName } from '@/features/logbook/ui/icons';
+import type { IInsertMenuProps, INotifyPopoverProps, TToastSource } from '@/features/logbook/types';
+import type { TIconName } from '@/ui/molecules/icon';
 
 const ITEM = 'rounded-[10px] text-left text-primary-9 transition-colors hover:bg-fill-item-hover';
 const MENU_ITEM = `${ITEM} flex items-center gap-2.5 px-2.5 py-2`;
@@ -25,14 +21,6 @@ const TEXT = 'flex min-w-0 flex-1 flex-col';
 const TITLE = 'truncate text-[14px] font-semibold';
 const SUB = 'text-[12px] text-neutral-4';
 const HEAD = 'flex items-center justify-between';
-
-export interface IInsertMenuProps {
-  readonly editor: Editor;
-  readonly at: IPopAt;
-  readonly onClose: () => void;
-  readonly onPicker: () => void;
-  readonly onNotice: (notice: INotice) => void;
-}
 
 export function InsertMenu({ editor, at, onClose, onPicker, onNotice }: IInsertMenuProps) {
   const { project, logId } = useLogContext();
@@ -52,7 +40,7 @@ export function InsertMenu({ editor, at, onClose, onPicker, onNotice }: IInsertM
     >
       <div className={`${LABEL} pt-2`}>From the platform</div>
       <button type="button" role="menuitem" className={MENU_ITEM} onClick={onPicker}>
-        <span className={`${TILE} bg-blue-tint text-blue`}>
+        <span className={`${TILE} bg-primary-0 text-primary-6`}>
           <Icon name="link" size={16} />
         </span>
         <span className={TEXT}>
@@ -87,14 +75,6 @@ export function InsertMenu({ editor, at, onClose, onPicker, onNotice }: IInsertM
   );
 }
 
-export interface INotifyPopoverProps {
-  readonly className: string;
-  readonly style?: CSSProperties;
-  readonly settings: INotifySettings;
-  readonly onChange: (patch: Partial<INotifySettings>) => void;
-  readonly onClose: () => void;
-}
-
 // The whole row is the label, so it toggles anywhere on it.
 function Switch({
   title,
@@ -117,7 +97,7 @@ function Switch({
         type="checkbox"
         role="switch"
         aria-checked={checked}
-        className="relative m-0 h-5 w-9 flex-none cursor-pointer appearance-none rounded-full bg-neutral-2 transition-colors after:absolute after:top-0.5 after:left-0.5 after:size-4 after:rounded-full after:bg-white after:shadow-[0_1px_2px_rgba(0,0,0,0.25)] after:transition-transform checked:bg-blue checked:after:translate-x-4"
+        className="relative m-0 h-5 w-9 flex-none cursor-pointer appearance-none rounded-full bg-neutral-2 transition-colors after:absolute after:top-0.5 after:left-0.5 after:size-4 after:rounded-full after:bg-white after:shadow-[0_1px_2px_rgba(0,0,0,0.25)] after:transition-transform checked:bg-primary-6 checked:after:translate-x-4"
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
       />
@@ -189,26 +169,9 @@ function SourceChoice({
   );
 }
 
-export function NotifyPopover({
-  className,
-  style,
-  settings,
-  onChange,
-  onClose,
-}: INotifyPopoverProps) {
+export function NotifyPopover({ settings, onChange, onClose }: INotifyPopoverProps) {
   return (
-    <div
-      className={cn(
-        'pop z-41 flex w-[340px] max-w-[calc(100vw-16px)] flex-col gap-3.5 p-[18px]',
-        className
-      )}
-      style={style}
-      role="dialog"
-      aria-label="Notification settings"
-      onKeyDown={(event) => {
-        if (event.key === 'Escape') onClose();
-      }}
-    >
+    <div className="flex w-[340px] max-w-[calc(100vw-16px)] flex-col gap-3.5 p-[18px]">
       <div className={HEAD}>
         <strong className="text-[15px]">Notifications</strong>
         <button

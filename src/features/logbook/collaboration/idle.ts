@@ -5,19 +5,9 @@ import { useEffect } from 'react';
 
 import { settings } from '@/features/logbook/settings';
 
+import type { IPageVisibility, IPausableProvider, IPausableSocket } from '@/features/logbook/types';
+
 export const HIDDEN_PAUSE_MS = Number(settings.collaboration.hiddenPauseS) * 1000;
-
-export interface IPausableSocket {
-  readonly status: WebSocketStatus;
-  connect(): Promise<unknown>;
-  disconnect(): void;
-}
-
-export interface IPageVisibility {
-  readonly visibilityState: DocumentVisibilityState;
-  addEventListener(type: 'visibilitychange', listener: () => void): void;
-  removeEventListener(type: 'visibilitychange', listener: () => void): void;
-}
 
 // Re-check unacked changes this often; the server acks within its 1 s save.
 export const RECHECK_MS = 10_000;
@@ -86,11 +76,6 @@ export const useCoolWhenAcked = (
     () => (isNil(afterMs) ? undefined : coolWhenAcked(unsent, afterMs, cool)),
     [unsent, afterMs, cool]
   );
-
-export interface IPausableProvider {
-  readonly hasUnsyncedChanges: boolean;
-  readonly configuration: { readonly websocketProvider: IPausableSocket };
-}
 
 export const usePauseWhenHidden = (
   provider: IPausableProvider,

@@ -11,10 +11,10 @@ import {
 import { useObjectUrl } from '@/features/logbook/hooks/use-object-url';
 import { useLogContext } from '@/features/logbook/log/context';
 import { useUploading } from '@/features/logbook/log/uploads';
-import { Icon } from '@/features/logbook/ui/icons';
+import { Icon } from '@/ui/molecules/icon';
 
 import type { NodeViewProps } from '@tiptap/react';
-import type { ILogFile } from '@/features/logbook/api/log-files';
+import type { ILogFile } from '@/features/logbook/types';
 
 const IMG = 'mx-auto block max-w-full';
 

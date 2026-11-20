@@ -2,9 +2,9 @@ import { expect, test } from 'vitest';
 
 import { personActor } from '@/features/logbook/collaboration/actors';
 import { presentList } from '@/features/logbook/log/presence-state';
-import { ViewMode } from '@/features/logbook/log/view-mode';
+import { ViewMode } from '@/features/logbook/types';
 
-import type { ICollaborationSnapshot } from '@/features/logbook/collaboration/notices';
+import type { ICollaborationSnapshot } from '@/features/logbook/types';
 
 const live = (peers: ICollaborationSnapshot['peers']): ICollaborationSnapshot => ({
   peersSeq: 1,

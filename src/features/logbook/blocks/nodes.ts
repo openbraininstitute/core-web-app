@@ -3,7 +3,8 @@ import { Node } from '@tiptap/core';
 import { isNil } from 'es-toolkit';
 import get from 'es-toolkit/compat/get';
 
-import { CalloutKind, calloutKindOf } from '@/features/logbook/blocks/kinds';
+import { calloutKindOf } from '@/features/logbook/blocks/kinds';
+import { CalloutKind } from '@/features/logbook/types';
 
 import type { MarkdownToken, MarkdownTokenizer } from '@tiptap/core';
 

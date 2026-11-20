@@ -5,11 +5,7 @@ import { ActorVia } from '@/api/logbook/types';
 import { colourOf } from '@/features/logbook/blocks/colour';
 import { initialsOf } from '@/features/logbook/helpers';
 
-import type { HocuspocusProvider } from '@hocuspocus/provider';
-import type { IPeer } from '@/features/logbook/collaboration/notices';
-import type { IActor } from '@/features/logbook/ui/avatar';
-
-type TAwareness = NonNullable<HocuspocusProvider['awareness']>;
+import type { IActor, IActorSources, IPeer } from '@/features/logbook/types';
 
 export const UNKNOWN_ACTOR: IActor = {
   key: 'unknown',
@@ -57,14 +53,6 @@ const userIdIn = (state: Record<string, unknown> | undefined): string | null => 
     typeof user === 'object' && isNotNil(user) ? Reflect.get(user, 'userId') : null;
   return typeof id === 'string' ? id : null;
 };
-
-export interface IActorSources {
-  readonly awareness: TAwareness;
-  readonly peers: () => readonly IPeer[];
-  readonly agents: () => readonly { readonly label: string }[];
-  // The server's writer of a client: exact, and the only source for clients no longer online.
-  readonly written: (clientId: number) => IActor | undefined;
-}
 
 export function resolveActor(clientId: number, sources: IActorSources): IActor {
   const userId = userIdIn(sources.awareness.getStates().get(clientId));

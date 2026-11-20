@@ -7,19 +7,9 @@ import * as Y from 'yjs';
 import { clip } from '@/features/logbook/helpers';
 
 import type { EditorState } from '@tiptap/pm/state';
-import type { IActor } from '@/features/logbook/ui/avatar';
-
-export interface IPiece {
-  readonly actor: IActor;
-  readonly text: string;
-}
+import type { IActor, IPiece, IRun } from '@/features/logbook/types';
 
 const MAX_PIECES = 6;
-
-interface IRun {
-  readonly client: number;
-  readonly text: string;
-}
 
 export const cardLabelOf = (node: PmNode): string => {
   const label: unknown = node.attrs['name'] ?? node.attrs['alt'] ?? node.attrs['src'];

@@ -14,7 +14,6 @@ import {
 
 import { PageKind, ReadOnlyReason } from '@/api/logbook/types';
 import { writersQuery } from '@/features/logbook/api/writers';
-import { Layout } from '@/features/logbook/board/layout';
 import { peerActor, personActor, resolveActor } from '@/features/logbook/collaboration/actors';
 import { useCoolWhenAcked, usePauseWhenHidden } from '@/features/logbook/collaboration/idle';
 import { useRejoin } from '@/features/logbook/collaboration/rejoin';
@@ -28,33 +27,27 @@ import { useNotifySettings } from '@/features/logbook/log/notify-settings';
 import { ReadCard } from '@/features/logbook/log/read-card';
 import { SidePane } from '@/features/logbook/log/side-pane';
 import { AgentToast, NoticeToast, ToastStack } from '@/features/logbook/log/toasts';
-import { CARD_MENUS, Menu, MobileTab, RightTab, takeSeed } from '@/features/logbook/log/ui-state';
-import { ViewMode } from '@/features/logbook/log/view-mode';
+import { CARD_MENUS, takeSeed } from '@/features/logbook/log/ui-state';
+import { Layout, Menu, MobileTab, RightTab, SplitShut, ViewMode } from '@/features/logbook/types';
 import { cn } from '@/utils/css-class';
 
-import type { Editor } from '@tiptap/react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
-import type { TReadOnlyReason, TValueOf } from '@/api/logbook/types';
-import type { ChangeFeed } from '@/features/logbook/collaboration/changes';
-import type { LocalCopy } from '@/features/logbook/collaboration/local-copy';
-import type { CollaborationNotices } from '@/features/logbook/collaboration/notices';
-import type { IPickedEntity, TOpenEntityPicker } from '@/features/logbook/log/context';
-import type { IPageViewProps } from '@/features/logbook/log/log-view';
-import type { INotice } from '@/features/logbook/log/notice';
-import type { INotifySettings } from '@/features/logbook/log/notify-settings';
-import type { ISelection, TMenu, TMobileTab, TRightTab } from '@/features/logbook/log/ui-state';
-import type { IActor } from '@/features/logbook/ui/avatar';
+import type {
+  IActor,
+  ILogPageProps,
+  ILogShared,
+  INotice,
+  IPickedEntity,
+  ISelection,
+  TMenu,
+  TMobileTab,
+  TOpenEntityPicker,
+  TRightTab,
+  TSplitShut,
+} from '@/features/logbook/types';
 
 const PANE_FLOOR = 300;
 const PANE_SHUT_BELOW = 150;
-
-export interface ILogPageProps extends IPageViewProps {
-  readonly notices: CollaborationNotices;
-  readonly feed: ChangeFeed;
-  readonly copy: LocalCopy;
-  // When this visit began (ISO): saved activity ends here, the live feed starts.
-  readonly openedAt: string;
-}
 
 const SHUT =
   'logbook-card flex w-[42px] flex-none justify-center border-0 px-0 py-5 transition-[background] duration-150 ease-[ease] hover:bg-soft';
@@ -72,9 +65,6 @@ const TAB_NAMES: Readonly<Record<TRightTab, string>> = {
   [RightTab.History]: 'History',
   [RightTab.Artifacts]: 'Artifacts',
 };
-
-const SplitShut = { None: 'none', Editor: 'editor', Side: 'side' } as const;
-type TSplitShut = TValueOf<typeof SplitShut>;
 
 export function LogPage(props: ILogPageProps) {
   const { me, log, layout, mode, notices, feed, logId, copy, shown, keepMs, onCool } = props;
@@ -455,22 +445,4 @@ export function LogPage(props: ILogPageProps) {
       {overlays}
     </EntityPickerContext.Provider>
   );
-}
-
-export interface ILogShared extends ILogPageProps {
-  readonly editor: Editor;
-  readonly meActor: IActor;
-  readonly resolve: (clientId: number) => IActor;
-  readonly settings: INotifySettings;
-  readonly menu: TMenu;
-  readonly setMenu: (menu: TMenu) => void;
-  readonly selection: ISelection | null;
-  readonly setSelection: (selection: ISelection | null) => void;
-  readonly showHistory: (range: ISelection | null) => void;
-  readonly flash: (from: number, to: number) => void;
-  readonly setNotice: (notice: INotice | null) => void;
-  readonly openArtifact: (id: string) => void;
-  readonly readOnly: TReadOnlyReason | null;
-  readonly awarenessStates: () => Map<number, Record<string, unknown>>;
-  readonly learnWriters: (clientIds: readonly number[]) => void;
 }

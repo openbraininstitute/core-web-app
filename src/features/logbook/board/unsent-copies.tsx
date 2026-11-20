@@ -1,16 +1,13 @@
 // On app start, send local page copies the server may lack; the sync code loads only here.
 import { useQuery } from '@tanstack/react-query';
 
+import { CopySync } from '@/features/logbook/types';
 import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
 
-// `failed` retries next start; `lost` were refused (404/403) and stay on the device.
-interface IUnsent {
-  readonly failed: number;
-  readonly lost: number;
-}
+import type { IUnsent, IUnsentCopiesProps } from '@/features/logbook/types';
 
 async function syncAtStart(userId: string): Promise<IUnsent> {
-  const [{ syncCopies, dropOthersCleanCopies, CopySync }, { pageDocs }] = await Promise.all([
+  const [{ syncCopies, dropOthersCleanCopies }, { pageDocs }] = await Promise.all([
     import('@/features/logbook/collaboration/local-sync'),
     import('@/features/logbook/api/page-docs'),
   ]);
@@ -19,12 +16,6 @@ async function syncAtStart(userId: string): Promise<IUnsent> {
   const count = (...results: readonly string[]) =>
     reports.filter((report) => results.includes(report.result)).length;
   return { failed: count(CopySync.Failed), lost: count(CopySync.Gone, CopySync.Refused) };
-}
-
-export interface IUnsentCopiesProps {
-  readonly userId: string;
-  // Starts once the list of logs is on screen.
-  readonly enabled: boolean;
 }
 
 export function UnsentCopies({ userId, enabled }: IUnsentCopiesProps) {

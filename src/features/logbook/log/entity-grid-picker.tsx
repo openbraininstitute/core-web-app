@@ -10,15 +10,16 @@ import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { useBrainRegionRootHierarchyQuery } from '@/features/brain-region-hierarchy/context';
 import { useAvailableHierarchySpeciesQuery } from '@/features/brain-region-hierarchy/hooks';
 import { blockTypeOf, entitySearchQuery } from '@/features/logbook/api/entities';
-import { EntityType, entityLooks } from '@/features/logbook/blocks/kinds';
+import { entityLooks } from '@/features/logbook/blocks/kinds';
 import { groupLooks } from '@/features/logbook/editor/blocks/entity-look';
-import { BouncyAccordion } from '@/features/logbook/elements/motion/bouncy-accordion';
 import { hexOf } from '@/features/logbook/helpers';
 import { useLogContext } from '@/features/logbook/log/context';
 import { reasonOf } from '@/features/logbook/log/notice';
-import { Icon } from '@/features/logbook/ui/icons';
+import { EntityType } from '@/features/logbook/types';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import { DATA_BROWSE_ALLOWED_ENTITIES } from '@/features/views/listing/data-browse-entities';
+import { BouncyAccordion } from '@/ui/molecules/bouncy-accordion';
+import { Icon } from '@/ui/molecules/icon';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import {
   Select,
@@ -42,21 +43,14 @@ import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/
 import type { TWorkspaceScope } from '@/constants';
 import type { TEntityTypeGroup } from '@/entity-configuration/domain/group';
 import type { TBrainRegionHierarchyOption } from '@/features/brain-region-hierarchy/types';
-import type { ILook, TEntityType } from '@/features/logbook/blocks/kinds';
-import type { IPickedEntity } from '@/features/logbook/log/context';
-
-// A type in the left navigator: a Data grid, or the name search for types core has no grid for.
-type TNavItem =
-  | { readonly key: string; readonly label: string; readonly coreType: TExtendedEntitiesTypeDict }
-  | { readonly key: string; readonly label: string; readonly blockType: TEntityType };
-
-interface INavSection {
-  readonly id: string;
-  readonly title: string;
-  readonly icon: string;
-  readonly look: Omit<ILook, 'label'>;
-  readonly items: readonly TNavItem[];
-}
+import type {
+  IEntityGridPickerProps,
+  INavSection,
+  IPickedEntity,
+  TEntityType,
+  TNavItem,
+  TPicks,
+} from '@/features/logbook/types';
 
 const allowed = new Set<string>(DATA_BROWSE_ALLOWED_ENTITIES);
 const gridItems = (configs: Readonly<Record<string, { title: string; extendedType: string }>>) =>
@@ -121,15 +115,6 @@ const FILTER =
 const MENU = 'rounded-2xl border border-rule bg-white p-1.5 text-primary-9 shadow-pop';
 const MENU_ITEM =
   'flex w-full cursor-pointer items-center gap-2.5 rounded-xl py-1.5 pr-8 pl-1.5 text-left text-[13px] text-primary-9 outline-none hover:bg-fill-item-hover focus:bg-fill-item-hover';
-
-type TPicks = Readonly<Record<string, readonly IPickedEntity[]>>;
-
-export interface IEntityGridPickerProps {
-  /** One pick (replacing a card) or many (linking). */
-  readonly multiple: boolean;
-  readonly onPick: (entities: readonly IPickedEntity[]) => void;
-  readonly onClose: () => void;
-}
 
 /** Link entities through the Data page's categories and grids, filtered by species and region. */
 export function EntityGridPicker({ multiple, onPick, onClose }: IEntityGridPickerProps) {

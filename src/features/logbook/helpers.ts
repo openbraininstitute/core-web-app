@@ -1,19 +1,11 @@
-// Small shared helpers for the logbook: motion curves, formatting, a clock and pointer drags.
+// Small shared helpers for the logbook: formatting, a clock and pointer drags.
 import { isNil } from 'es-toolkit';
 import { useEffect, useState } from 'react';
 
 import type { PointerEvent as ReactPointerEvent } from 'react';
 
-// Motion. Easing curves mirror the CSS custom properties in globals.css.
-
-export const EASE_OUT = [0.16, 1, 0.3, 1] as const;
-
-/** Press feedback on tappable surfaces. */
-export const SPRING_PRESS = { type: 'spring', stiffness: 500, damping: 30, mass: 0.6 } as const;
-/** Shared-layout glides between positions. */
-export const SPRING_LAYOUT = { type: 'spring', stiffness: 360, damping: 32, mass: 0.6 } as const;
-/** Sliders: critically damped, follows the pointer and never rebounds. */
-export const SPRING_GLIDE = { stiffness: 700, damping: 50, mass: 0.5 } as const;
+/** The `pop` look, written so it overrides the popover molecule's own box classes. */
+export const POPOVER_PANEL = 'w-auto rounded-2xl border-0 bg-white shadow-(--shadow-pop)';
 
 // Text.
 

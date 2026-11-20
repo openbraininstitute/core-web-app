@@ -1,23 +1,11 @@
 // One table of format commands for the toolbar and the selection menu.
 import { isNil } from 'es-toolkit';
 
-import type { Editor } from '@tiptap/react';
-import type { TValueOf } from '@/api/logbook/types';
-import type { TIconName } from '@/features/logbook/ui/icons';
+import { Align, Format, TextStyle } from '@/features/logbook/types';
 
-export const Format = {
-  Bold: 'bold',
-  Italic: 'italic',
-  Underline: 'underline',
-  Strike: 'strike',
-  Code: 'code',
-  Link: 'link',
-  BulletList: 'bullet-list',
-  OrderedList: 'ordered-list',
-  Quote: 'quote',
-  CodeBlock: 'code-block',
-} as const;
-export type TFormat = TValueOf<typeof Format>;
+import type { Editor } from '@tiptap/react';
+import type { IFormat, IFormatState, TAlign, TFormat, TTextStyle } from '@/features/logbook/types';
+import type { TIconName } from '@/ui/molecules/icon';
 
 const TIPTAP_NAMES: Readonly<Record<TFormat, string>> = {
   [Format.Bold]: 'bold',
@@ -33,15 +21,6 @@ const TIPTAP_NAMES: Readonly<Record<TFormat, string>> = {
 };
 export const isFormatActive = (editor: Editor, format: TFormat): boolean =>
   editor.isActive(TIPTAP_NAMES[format]);
-
-export interface IFormat {
-  readonly key: TFormat;
-  readonly label: string;
-  readonly icon: TIconName;
-  // Tiptap shortcut like `Mod-b`.
-  readonly keys: string | null;
-  readonly run: (editor: Editor) => void;
-}
 
 const mac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent);
 export const keysOf = (keys: string): string =>
@@ -132,14 +111,6 @@ export const BLOCK_FORMATS: readonly IFormat[] = [
   },
 ];
 
-export const TextStyle = {
-  Paragraph: 'paragraph',
-  Heading1: 'h1',
-  Heading2: 'h2',
-  Heading3: 'h3',
-} as const;
-export type TTextStyle = TValueOf<typeof TextStyle>;
-
 export const TEXT_STYLES: readonly { readonly style: TTextStyle; readonly label: string }[] = [
   { style: TextStyle.Paragraph, label: 'Text' },
   { style: TextStyle.Heading1, label: 'Heading 1' },
@@ -166,15 +137,6 @@ export function setTextStyle(editor: Editor, style: TTextStyle): void {
   else chain.setHeading({ level: LEVELS[style] }).run();
 }
 
-// Left is the default: choosing it removes the attribute.
-export const Align = {
-  Left: 'left',
-  Center: 'center',
-  Right: 'right',
-  Justify: 'justify',
-} as const;
-export type TAlign = TValueOf<typeof Align>;
-
 export const ALIGNMENTS: readonly {
   readonly align: TAlign;
   readonly label: string;
@@ -198,19 +160,6 @@ export function setAlign(editor: Editor, align: TAlign): void {
   const chain = editor.chain().focus();
   if (align === Align.Left) chain.unsetTextAlign().run();
   else chain.setTextAlign(align).run();
-}
-
-// useEditorState compares this, so changes that alter none of it render nothing.
-export interface IFormatState {
-  readonly active: Readonly<Record<TFormat, boolean>>;
-  readonly style: TTextStyle;
-  readonly align: TAlign;
-  // A list item's paragraph can align; a code block can't.
-  readonly canAlign: boolean;
-  readonly canUndo: boolean;
-  readonly canRedo: boolean;
-  readonly canIndent: boolean;
-  readonly canOutdent: boolean;
 }
 
 // For the selection menu (no dry-run commands).

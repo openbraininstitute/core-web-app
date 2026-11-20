@@ -1,21 +1,12 @@
-import type { TValueOf } from '@/api/logbook/types';
+import { CalloutKind, FileLang } from '@/features/logbook/types';
 
-export const EntityType = {
-  Circuit: 'circuit',
-  Morphology: 'morphology',
-  Emodel: 'emodel',
-  Simulation: 'simulation',
-  IonChannelModel: 'ion_channel_model',
-  Trace: 'trace',
-  BrainRegion: 'brain_region',
-} as const;
-export type TEntityType = TValueOf<typeof EntityType>;
-
-export interface ILook {
-  readonly label: string;
-  readonly colour: string;
-  readonly tint: string;
-}
+import type {
+  IFileLook,
+  ILook,
+  TCalloutKind,
+  TEntityType,
+  TFileLang,
+} from '@/features/logbook/types';
 
 export const entityLooks: Readonly<Record<TEntityType, ILook>> = {
   circuit: { label: 'Circuit', colour: '#1677c9', tint: '#e8f3fc' },
@@ -34,23 +25,6 @@ export const entityLookOf = (type: string): ILook =>
   isEntityType(type)
     ? entityLooks[type]
     : { label: type.replaceAll('_', ' ') || 'Entity', colour: '#595959', tint: '#f0f2f5' };
-
-export const FileLang = {
-  Python: 'python',
-  Notebook: 'notebook',
-  Csv: 'csv',
-  Json: 'json',
-  Shell: 'shell',
-  File: 'file',
-} as const;
-export type TFileLang = TValueOf<typeof FileLang>;
-
-export interface IFileLook {
-  readonly badge: string;
-  readonly bg: string;
-  readonly fg: string;
-  readonly name: string;
-}
 
 export const fileLooks: Readonly<Record<TFileLang, IFileLook>> = {
   python: { badge: 'PY', bg: '#ffe9a8', fg: '#1e3a5f', name: 'Python' },
@@ -71,9 +45,6 @@ const extensionLangs: Readonly<Record<string, TFileLang>> = {
 
 export const fileLangOf = (name: string): TFileLang =>
   extensionLangs[name.split('.').pop()?.toLowerCase() ?? ''] ?? FileLang.File;
-
-export const CalloutKind = { Note: 'note', Tip: 'tip', Warning: 'warning' } as const;
-export type TCalloutKind = TValueOf<typeof CalloutKind>;
 
 export const calloutLooks: Readonly<Record<TCalloutKind, ILook>> = {
   note: { label: 'Note', colour: '#0050b3', tint: '#e8f3fc' },

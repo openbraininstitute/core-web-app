@@ -6,44 +6,14 @@ import { match } from 'ts-pattern';
 import { CollaborationNotice, ReadOnlyReason } from '@/api/logbook/types';
 
 import type { TCollaborationNotice, TReadOnlyReason } from '@/api/logbook/types';
+import type {
+  ICollaborationSnapshot,
+  IPeer,
+  IWriterActor,
+  TNotice,
+  TRecord,
+} from '@/features/logbook/types';
 
-export interface IPeer {
-  readonly joinId: string;
-  readonly userId: string;
-  readonly label: string;
-  readonly via: string;
-}
-
-export type TNotice =
-  | {
-      readonly type: typeof CollaborationNotice.Peers;
-      readonly seq: number;
-      readonly peers: readonly IPeer[];
-    }
-  // own: this connection's changes are in that save; only then may the device copy go clean.
-  | { readonly type: typeof CollaborationNotice.Saved; readonly own: boolean }
-  | {
-      readonly type: typeof CollaborationNotice.Present;
-      readonly actor: { readonly label: string; readonly via: string };
-      readonly blockIds: readonly string[];
-      readonly ttlSeconds: number;
-    }
-  | {
-      readonly type: typeof CollaborationNotice.Writer;
-      readonly clientIds: readonly number[];
-      readonly actor: IWriterActor;
-    }
-  | { readonly type: typeof CollaborationNotice.ReadOnly; readonly reason: TReadOnlyReason }
-  | { readonly type: typeof CollaborationNotice.Closing };
-
-export interface IWriterActor {
-  readonly userId: string;
-  readonly label: string;
-  readonly via: string;
-}
-
-// Hand-written guards, not TypeBox, to keep the bundle small.
-type TRecord = Readonly<Record<string, unknown>>;
 const isRecord = (value: unknown): value is TRecord => typeof value === 'object' && isNotNil(value);
 const isString = (value: unknown): value is string => typeof value === 'string';
 const strings = (value: unknown): value is readonly string[] =>
@@ -126,23 +96,6 @@ export function noticeOf(payload: string): TNotice | null {
   } catch {
     return null;
   }
-}
-
-export interface IPresentAgent {
-  readonly label: string;
-  readonly blockIds: readonly string[];
-  readonly until: number;
-}
-
-export interface ICollaborationSnapshot {
-  readonly peersSeq: number;
-  readonly peers: readonly IPeer[];
-  readonly savedAt: number | null; // this connection's changes
-  readonly pageSavedAt: number | null; // anyone's changes
-  readonly agents: readonly IPresentAgent[];
-  readonly readOnly: TReadOnlyReason | null;
-  // When a refused join is retried; the editor is read-only until then.
-  readonly rejoinAt: number | null;
 }
 
 // Capped: agents may use a new Yjs client per call; the writers API still names evicted ones.

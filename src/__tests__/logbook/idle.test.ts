@@ -1,12 +1,9 @@
 import { WebSocketStatus } from '@hocuspocus/provider';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
-import {
-  coolWhenAcked,
-  type IPausableSocket,
-  pauseWhenHidden,
-  RECHECK_MS,
-} from '@/features/logbook/collaboration/idle';
+import { coolWhenAcked, pauseWhenHidden, RECHECK_MS } from '@/features/logbook/collaboration/idle';
+
+import type { IPausableSocket } from '@/features/logbook/types';
 
 const MINUTE = 60_000;
 

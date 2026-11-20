@@ -9,15 +9,14 @@ import {
   uploadLogFile,
 } from '@/features/logbook/api/log-files';
 import { insertAfterBlock } from '@/features/logbook/editor/insert';
-import { NoticeKind, reasonOf } from '@/features/logbook/log/notice';
+import { reasonOf } from '@/features/logbook/log/notice';
 import { settings } from '@/features/logbook/settings';
 import { IMAGE } from '@/features/logbook/shared/files';
+import { NoticeKind } from '@/features/logbook/types';
 
-import type { QueryClient } from '@tanstack/react-query';
 import type { Node as PmNode } from '@tiptap/pm/model';
 import type { Editor } from '@tiptap/react';
-import type { IProject } from '@/features/logbook/auth/session';
-import type { INotice } from '@/features/logbook/log/notice';
+import type { IUploadTarget } from '@/features/logbook/types';
 
 // Saved names uploading from this tab; blocks subscribe to one name.
 const uploading = new Set<string>();
@@ -58,14 +57,6 @@ function removeBlock(editor: Editor, id: string): void {
   const range = blockRange(editor.state.doc, id);
   if (isNil(range)) return;
   editor.view.dispatch(editor.state.tr.delete(range.from, range.to));
-}
-
-export interface IUploadTarget {
-  readonly editor: Editor;
-  readonly logId: string;
-  readonly project: IProject;
-  readonly client: QueryClient;
-  readonly notify: (notice: INotice) => void;
 }
 
 export async function uploadIntoPage(target: IUploadTarget, file: File): Promise<void> {

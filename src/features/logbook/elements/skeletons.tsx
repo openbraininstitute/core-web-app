@@ -1,10 +1,17 @@
 // Placeholders with the same boxes as the real thing, so nothing shifts when data lands.
+import { Skeleton } from '@/ui/molecules/skeleton';
 import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
 
 export function Bone({ className }: { readonly className?: string }) {
-  return <span className={cn('block rounded-full bg-neutral-2/60', className)} />;
+  return (
+    <Skeleton
+      as="span"
+      active={false}
+      className={cn('block rounded-full bg-neutral-2/60', className)}
+    />
+  );
 }
 
 const repeat = (count: number, render: (key: number) => ReactNode) =>

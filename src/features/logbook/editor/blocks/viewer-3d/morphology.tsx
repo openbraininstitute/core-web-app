@@ -5,7 +5,7 @@ import { CellMorphologyViewer } from '@/features/entities/cell-morphology/detail
 import { ViewerFrame, ViewerMessage } from '@/features/logbook/editor/blocks/viewer-3d/frame';
 import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
 
-import type { IViewer3dProps } from '@/features/logbook/editor/blocks/viewers-3d';
+import type { IViewer3dProps } from '@/features/logbook/types';
 
 /** The Data page's morphology viewer, for one morphology. */
 export default function MorphologyViewer3d({ entityId, project }: IViewer3dProps) {

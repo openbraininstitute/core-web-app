@@ -1,27 +1,16 @@
 // Reads the same pages list as the outline, so nothing here makes a request.
 import { isNil } from 'es-toolkit';
 
-import { Icon } from '@/features/logbook/ui/icons';
+import { Icon } from '@/ui/molecules/icon';
 import { cn } from '@/utils/css-class';
 
 import type { IPage } from '@/api/logbook/types';
-
-export interface INeighbours {
-  readonly index: number; // -1 when deleted
-  readonly previous: IPage | null;
-  readonly next: IPage | null;
-}
+import type { INeighbours, IPageNavProps } from '@/features/logbook/types';
 
 export function neighboursOf(pages: readonly IPage[], pageId: string): INeighbours {
   const index = pages.findIndex((page) => page.id === pageId);
   if (index < 0) return { index, previous: null, next: null };
   return { index, previous: pages[index - 1] ?? null, next: pages[index + 1] ?? null };
-}
-
-export interface IPageNavProps {
-  readonly pages: readonly IPage[];
-  readonly page: IPage; // may be deleted (not in the list)
-  readonly onOpen: (page: IPage) => void;
 }
 
 // Nothing for a one-page log or a deleted page.

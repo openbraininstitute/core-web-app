@@ -9,13 +9,13 @@ import {
   settleTabs,
   showArtifact,
   showPage,
-  TabKind,
   WARM_KEEP_MS,
   WARM_PAGES,
 } from '@/features/logbook/log/open-tabs';
+import { TabKind } from '@/features/logbook/types';
 
 import type { IPage } from '@/api/logbook/types';
-import type { IOpenTabs, ITabRef } from '@/features/logbook/log/open-tabs';
+import type { IOpenTabs, ITabRef } from '@/features/logbook/types';
 
 const page = (id: string, kind: IPage['kind'] = PageKind.Section): IPage => ({
   id,

@@ -5,7 +5,7 @@ import { ProblemType } from '@/api/logbook/types';
 import { CollaborationNotices } from '@/features/logbook/collaboration/notices';
 import { rejoinDelayMs, watchRefusals } from '@/features/logbook/collaboration/rejoin';
 
-import type { IRejoinProvider } from '@/features/logbook/collaboration/rejoin';
+import type { IRejoinProvider } from '@/features/logbook/types';
 
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => vi.useRealTimers());

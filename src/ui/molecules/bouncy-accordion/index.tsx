@@ -4,8 +4,8 @@
 import { motion, type Transition, useReducedMotion } from 'motion/react';
 import { type ReactNode, useCallback, useId, useLayoutEffect, useRef, useState } from 'react';
 
-import { EASE_OUT } from '@/features/logbook/helpers';
-import { Icon } from '@/features/logbook/ui/icons';
+import { EASE_OUT } from '@/constants/motion';
+import { Icon } from '@/ui/molecules/icon';
 import { cn } from '@/utils/css-class';
 
 export type TBouncyAccordionItem = {

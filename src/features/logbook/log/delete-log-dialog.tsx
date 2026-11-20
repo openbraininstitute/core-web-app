@@ -1,11 +1,10 @@
 import { LogWriters } from '@/features/logbook/board/rail';
 import { agoOf } from '@/features/logbook/helpers';
-import { ConfirmDeleteDialog } from '@/features/logbook/ui/confirm-delete-dialog';
-import { Icon } from '@/features/logbook/ui/icons';
+import { Icon } from '@/ui/molecules/icon';
+import { ConfirmDeleteDialog } from '@/ui/segments/confirm-delete-dialog';
 
-import type { IResearchLog } from '@/api/entitycore/types/entities/research-log';
-import type { IProject } from '@/features/logbook/auth/session';
-import type { IGoesWith } from '@/features/logbook/ui/confirm-delete-dialog';
+import type { IDeleteLogDialogProps } from '@/features/logbook/types';
+import type { IGoesWith } from '@/ui/segments/confirm-delete-dialog';
 
 const GOES: readonly IGoesWith[] = [
   { icon: 'notebook', text: 'Its pages, with all their text and history' },
@@ -15,14 +14,6 @@ const GOES: readonly IGoesWith[] = [
 
 const dateOf = (iso: string): string =>
   new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
-
-export interface IDeleteLogDialogProps {
-  readonly log: IResearchLog;
-  readonly project: IProject;
-  // Rejects with a reason the dialog shows; a 503 is safe to retry.
-  readonly onDelete: () => Promise<unknown>;
-  readonly onClose: () => void;
-}
 
 export function DeleteLogDialog({ log, project, onDelete, onClose }: IDeleteLogDialogProps) {
   return (

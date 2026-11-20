@@ -9,7 +9,7 @@
   font-size: 15px;
   line-height: 1.65;
   color: var(--color-neutral-10);
-  caret-color: var(--color-blue);
+  caret-color: var(--color-primary-6);
   overflow-wrap: break-word;
 }
 .rl-editor-read .ProseMirror {
@@ -143,7 +143,7 @@
   font-style: italic;
 }
 [data-tok="string"] {
-  color: var(--color-green);
+  color: var(--color-green-main);
 }
 [data-tok="number"] {
   color: #c2410c;

@@ -4,7 +4,6 @@ import { isNil, isNotNil } from 'es-toolkit';
 import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import * as Y from 'yjs';
 
-import { AvatarGroup } from '@/features/logbook/elements/motion/avatar-group';
 import { CLOCK_MS, useNow } from '@/features/logbook/helpers';
 import {
   presentList,
@@ -13,15 +12,18 @@ import {
   summaryOf,
   whoLabelOf,
 } from '@/features/logbook/log/presence-state';
-import { Menu } from '@/features/logbook/log/ui-state';
-import { Avatar } from '@/features/logbook/ui/avatar';
-import { Icon } from '@/features/logbook/ui/icons';
+import { Menu } from '@/features/logbook/types';
+import { Avatar } from '@/ui/molecules/avatar';
+import { Icon } from '@/ui/molecules/icon';
+import { AvatarGroup } from '@/ui/segments/avatar-group';
 
 import type { Editor } from '@tiptap/react';
-import type { MouseEvent as ReactMouseEvent } from 'react';
-import type { IPopAt } from '@/features/logbook/log/editor-card';
-import type { ILogShared } from '@/features/logbook/log/log-page';
-import type { IPresent } from '@/features/logbook/log/presence-state';
+import type {
+  IHereNowProps,
+  ILogShared,
+  IPresenceButtonProps,
+  IPresent,
+} from '@/features/logbook/types';
 
 // Two faces, then +N, which opens the full roster.
 const STACK = 2;
@@ -38,11 +40,6 @@ export function usePresent(props: ILogShared): IPresent[] {
     () => presentList(props.meActor, props.mode, live, changes, now),
     [props.meActor, props.mode, live, changes, now]
   );
-}
-
-export interface IPresenceButtonProps extends ILogShared {
-  readonly expanded: boolean;
-  readonly onToggle: (event: ReactMouseEvent<HTMLButtonElement>) => void;
 }
 
 export function PresenceButton(props: IPresenceButtonProps) {
@@ -127,11 +124,6 @@ function cursorOf(
     );
   }
   return null;
-}
-
-export interface IHereNowProps extends ILogShared {
-  readonly at: IPopAt;
-  readonly states: () => Map<number, Record<string, unknown>>;
 }
 
 export function HereNow(props: IHereNowProps) {

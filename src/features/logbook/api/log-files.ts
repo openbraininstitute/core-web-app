@@ -9,35 +9,20 @@ import { AssetStatus } from '@/api/entitycore/types/shared/global';
 import { createResearchUpload, putResearchUpload } from '@/api/logbook/queries/research';
 import { settings } from '@/features/logbook/settings';
 import { IMAGE, savedNameOf } from '@/features/logbook/shared/files';
+import { ArtifactKind } from '@/features/logbook/types';
 import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
 
 import type { IResearchLogAsset } from '@/api/entitycore/types/entities/research-log';
 import type { DirectoryListContent } from '@/api/entitycore/types/shared/global';
-import type { TValueOf } from '@/api/logbook/types';
-import type { IProject } from '@/features/logbook/auth/session';
-
-export interface ILogFile {
-  readonly path: string;
-  readonly localPath: string; // saved name without the hash part
-  readonly name: string;
-  readonly size: number;
-  readonly lastModified: string;
-}
-
-// A page's markdown copy written by the server's EntityCore sync; read-only here.
-export interface ILogDocument {
-  readonly assetId: string;
-  readonly path: string;
-  readonly title: string;
-  readonly pageId: string | null;
-  readonly size: number;
-}
-
-export interface ILogFiles {
-  readonly folderId: string | null;
-  readonly files: readonly ILogFile[];
-  readonly documents: readonly ILogDocument[];
-}
+import type {
+  IArtifact,
+  ILogDocument,
+  ILogFile,
+  ILogFiles,
+  IPlannedFile,
+  IProject,
+  TArtifactKind,
+} from '@/features/logbook/types';
 
 const FILES_LABEL = 'research_log_files';
 const DOCUMENT_LABEL = 'research_log_document';
@@ -45,16 +30,6 @@ const PAGE_TITLE = 'logbook_page_title';
 const PAGE_ID = 'logbook_page_id';
 
 export const MARKDOWN = /\.(md|markdown)$/i;
-
-export const ArtifactKind = {
-  Image: 'image',
-  Markdown: 'markdown',
-  Table: 'table',
-  Code: 'code',
-  Pdf: 'pdf',
-  Other: 'other',
-} as const;
-export type TArtifactKind = TValueOf<typeof ArtifactKind>;
 
 const TEXT =
   /\.(py|sh|bash|json|ipynb|ya?ml|toml|js|mjs|ts|r|jl|m|txt|log|mod|hoc|swc|asc|cfg|ini|xml)$/i;
@@ -71,18 +46,6 @@ export const kindOf = (name: string): TArtifactKind =>
           : TEXT.test(name)
             ? ArtifactKind.Code
             : ArtifactKind.Other;
-
-export interface IArtifact {
-  readonly id: string;
-  readonly name: string;
-  readonly where: string; // folder, or 'synced' for a page's copy
-  readonly size: number;
-  readonly savedAt: string | null;
-  readonly kind: TArtifactKind;
-  readonly path: string | null;
-  readonly assetId: string | null;
-  readonly pageId: string | null;
-}
 
 const folderOf = (localPath: string): string => localPath.split('/').slice(0, -1).join('/');
 
@@ -253,12 +216,6 @@ export async function sha256Hex(bytes: ArrayBuffer): Promise<string> {
 export const UPLOAD_MAX_BYTES = Number(settings.upload.maxMb) * 1024 * 1024;
 
 export const isTooLarge = (size: number, max = UPLOAD_MAX_BYTES): boolean => size > max;
-
-export interface IPlannedFile {
-  readonly path: string;
-  readonly size: number;
-  readonly sha256: string;
-}
 
 // Hash once here and reuse it for the upload, so the name and S3's checksum always match.
 export async function planFile(file: File): Promise<IPlannedFile> {

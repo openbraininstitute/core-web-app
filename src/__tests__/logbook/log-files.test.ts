@@ -2,7 +2,6 @@ import { expect, test } from 'vitest';
 
 import { putHeadersOf } from '@/api/logbook/queries/research';
 import {
-  ArtifactKind,
   artifactsOf,
   documentsOf,
   findLogFile,
@@ -16,6 +15,7 @@ import {
   UPLOAD_MAX_BYTES,
 } from '@/features/logbook/api/log-files';
 import { savedNameOf } from '@/features/logbook/shared/files';
+import { ArtifactKind } from '@/features/logbook/types';
 
 test('the hash is the full SHA-256; the PUT sends the signed headers but Content-Length', async () => {
   const bytes = new TextEncoder().encode('rate plot v1');

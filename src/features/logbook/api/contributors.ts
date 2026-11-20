@@ -3,7 +3,7 @@ import { queryOptions, useQuery } from '@tanstack/react-query';
 import { getResearchContributors } from '@/api/logbook/queries/research';
 import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
 
-import type { IProject } from '@/features/logbook/auth/session';
+import type { IProject } from '@/features/logbook/types';
 
 export const contributorsQuery = (project: IProject, logId: string) =>
   queryOptions({

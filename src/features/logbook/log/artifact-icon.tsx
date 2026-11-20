@@ -1,17 +1,11 @@
-import { ArtifactKind } from '@/features/logbook/api/log-files';
-import { FileLang, fileLangOf, fileLooks } from '@/features/logbook/blocks/kinds';
+import { fileLangOf, fileLooks } from '@/features/logbook/blocks/kinds';
 import { extensionOf } from '@/features/logbook/editor/shiki';
-import { Icon } from '@/features/logbook/ui/icons';
+import { ArtifactKind, FileLang } from '@/features/logbook/types';
+import { Icon } from '@/ui/molecules/icon';
 
-import type { IArtifact } from '@/features/logbook/api/log-files';
+import type { IArtifact, IArtifactLook } from '@/features/logbook/types';
 
-interface ILook {
-  readonly badge: string;
-  readonly bg: string;
-  readonly fg: string;
-}
-
-function lookOf(artifact: IArtifact): ILook {
+function lookOf(artifact: IArtifact): IArtifactLook {
   if (artifact.kind === ArtifactKind.Image) return { badge: '', bg: '#e8f1fb', fg: '#1677c9' };
   if (artifact.kind === ArtifactKind.Markdown) return { badge: 'MD', bg: '#eef2ff', fg: '#3730a3' };
   if (artifact.kind === ArtifactKind.Pdf) return { badge: 'PDF', bg: '#fdecea', fg: '#b42318' };

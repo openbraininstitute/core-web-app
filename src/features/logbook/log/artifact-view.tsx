@@ -6,7 +6,6 @@ import { clamp, isNil, isNotNil } from 'es-toolkit';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import {
-  ArtifactKind,
   documentTextQuery,
   fileBlobQuery,
   fileTextQuery,
@@ -20,10 +19,11 @@ import { useObjectUrl } from '@/features/logbook/hooks/use-object-url';
 import { ArtifactIcon } from '@/features/logbook/log/artifact-icon';
 import { useLogContext } from '@/features/logbook/log/context';
 import { CONTROL } from '@/features/logbook/log/controls';
-import { Icon } from '@/features/logbook/ui/icons';
+import { ArtifactKind } from '@/features/logbook/types';
+import { Icon } from '@/ui/molecules/icon';
 
 import type { PointerEvent as ReactPointerEvent } from 'react';
-import type { IArtifact } from '@/features/logbook/api/log-files';
+import type { IArtifact, IView } from '@/features/logbook/types';
 
 const NOTE = 'p-6 text-[14px] text-neutral-4';
 const TOOL =
@@ -44,12 +44,6 @@ function PageReader({ text }: { readonly text: string }) {
 const ZOOM_MIN = 0.05;
 const ZOOM_MAX = 16;
 const ZOOM_STEP = 1.25;
-
-interface IView {
-  readonly scale: number;
-  readonly x: number; // offset from the box's centre, px
-  readonly y: number;
-}
 
 // Zoom so the point under the pointer stays put.
 const zoomAt = (view: IView, factor: number, px: number, py: number): IView => {
@@ -246,7 +240,7 @@ export function ArtifactBar({
       {isNil(onOpenPage) ? null : (
         <button
           type="button"
-          className={`${CONTROL} bg-[#e8f3fc] text-[#0050b3] hover:bg-[#d6eafb]`}
+          className={`${CONTROL} bg-primary-0 text-primary-7 hover:bg-primary-1/50`}
           title="Open the live page, where it is edited"
           onClick={onOpenPage}
         >

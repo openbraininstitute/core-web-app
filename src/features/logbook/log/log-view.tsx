@@ -21,30 +21,13 @@ import {
   settleTabs,
   showArtifact,
   showPage,
-  TabKind,
 } from '@/features/logbook/log/open-tabs';
 import { navigate, pathOf } from '@/features/logbook/router';
+import { TabKind } from '@/features/logbook/types';
 
-import type { IResearchLog } from '@/api/entitycore/types/entities/research-log';
 import type { IPage } from '@/api/logbook/types';
-import type { IMe, IProject } from '@/features/logbook/auth/session';
-import type { TLayout } from '@/features/logbook/board/layout';
 import type { LocalCopy } from '@/features/logbook/collaboration/local-copy';
-import type { IOpenTabs, ITabRef } from '@/features/logbook/log/open-tabs';
-import type { TViewMode } from '@/features/logbook/log/view-mode';
-
-export interface ILogViewProps {
-  readonly me: IMe;
-  readonly project: IProject;
-  readonly logId: string;
-  readonly pageId: string | null; // null: the main page
-  readonly log: IResearchLog | null;
-  readonly layout: TLayout;
-  readonly mode: TViewMode;
-  readonly onMode: (mode: TViewMode) => void;
-  readonly onBack: () => void;
-  readonly onOpenList: () => void;
-}
+import type { ILogViewProps, IOpenTabs, IPageViewProps, ITabRef } from '@/features/logbook/types';
 
 // Local copy of the page; null while it loads.
 function useLocalCopy(pageId: string | undefined, userId: string): LocalCopy | null {
@@ -154,22 +137,6 @@ export function LogView(props: ILogViewProps) {
       />
     </div>
   ));
-}
-
-export interface IPageViewProps extends ILogViewProps {
-  readonly page: IPage;
-  readonly pages: readonly IPage[];
-  // Deleted while open: shown read-only from the local copy.
-  readonly deleted: boolean;
-  readonly shown: boolean; // on screen; false: mounted but hidden (warm)
-  readonly keepMs: number | null; // how long it stays mounted off screen; null: on screen
-  readonly onCool: (pageId: string) => void;
-  readonly tabs: readonly ITabRef[];
-  readonly artifactId: string | null; // the file shown over the page
-  readonly onOpenPage: (page: IPage) => void;
-  readonly onOpenArtifact: (id: string) => void;
-  readonly onSelectTab: (tab: ITabRef) => void;
-  readonly onCloseTab: (tab: ITabRef) => void;
 }
 
 function PageView(props: IPageViewProps) {

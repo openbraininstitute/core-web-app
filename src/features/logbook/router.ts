@@ -4,13 +4,7 @@ import { isNil } from 'es-toolkit';
 import { usePathname } from 'next/navigation';
 import { useMemo } from 'react';
 
-import type { IProject } from '@/features/logbook/auth/session';
-
-export interface IRoute {
-  readonly project: IProject | null;
-  readonly logId: string | null;
-  readonly pageId: string | null; // null: the main page
-}
+import type { IProject, IRoute } from '@/features/logbook/types';
 
 const ROUTE =
   /^\/app\/virtual-lab\/([0-9a-f-]{36})\/([0-9a-f-]{36})\/logbook(?:\/([0-9a-f-]{36})(?:\/page\/([0-9a-f-]{36}))?)?\/?$/;

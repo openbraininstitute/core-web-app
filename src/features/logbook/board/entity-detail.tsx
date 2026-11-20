@@ -8,15 +8,7 @@ import { PanelSkeleton } from '@/features/logbook/elements/skeletons';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
-import type { IProject } from '@/features/logbook/auth/session';
-import type { IEntityTarget } from '@/features/logbook/log/context';
-
-export interface IEntityDetailProps {
-  readonly target: IEntityTarget;
-  readonly project: IProject;
-  readonly narrow: boolean;
-  readonly onClose: () => void;
-}
+import type { IEntityDetailProps } from '@/features/logbook/types';
 
 /** Core's mini detail view, light variant, beside the log (a drawer on narrow screens). */
 export function EntityDetail({ target, project, narrow, onClose }: IEntityDetailProps) {

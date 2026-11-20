@@ -2,11 +2,10 @@
 import { isNil, isNotNil } from 'es-toolkit';
 import { useLayoutEffect, useState } from 'react';
 
-import type { RefObject } from 'react';
-import type { TValueOf } from '@/api/logbook/types';
+import { Layout } from '@/features/logbook/types';
 
-export const Layout = { Wide: 'wide', Compact: 'compact', Narrow: 'narrow' } as const;
-export type TLayout = TValueOf<typeof Layout>;
+import type { RefObject } from 'react';
+import type { TLayout } from '@/features/logbook/types';
 
 const WIDE_MIN = 1180;
 const COMPACT_MIN = 820;

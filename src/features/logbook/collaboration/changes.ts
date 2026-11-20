@@ -11,29 +11,18 @@ import { UNKNOWN_ACTOR } from '@/features/logbook/collaboration/actors';
 
 import type { Node as PmNode } from '@tiptap/pm/model';
 import type * as Y from 'yjs';
-import type { IActor } from '@/features/logbook/ui/avatar';
+import type {
+  IChange,
+  IChangeSnapshot,
+  ICollaborationChangesOptions,
+  IDiff,
+  IHighlight,
+  IPluginState,
+} from '@/features/logbook/types';
 
 export const HL_MS = 5200;
 const COALESCE_MS = 8000;
 const MAX_EVENTS = 30;
-
-export interface IChange {
-  readonly id: number;
-  readonly actor: IActor;
-  readonly local: boolean;
-  readonly at: number;
-  readonly from: number;
-  readonly to: number;
-  readonly blockId: string | null;
-  readonly summary: string;
-  readonly removed: string;
-}
-
-export interface IChangeSnapshot {
-  readonly events: readonly IChange[]; // newest first
-  readonly toast: IChange | null;
-  readonly seen: Readonly<Record<string, number>>; // actor key → last change time
-}
 
 export class ChangeFeed {
   #state: IChangeSnapshot = { events: [], toast: null, seen: {} };
@@ -120,33 +109,8 @@ export function summaryOf(doc: PmNode, from: number, to: number, removed: string
   return isNil(section) ? 'edited the text' : `edited ${section}`;
 }
 
-interface IHighlight {
-  readonly at: number;
-}
-
-interface IPluginState {
-  readonly decorations: DecorationSet;
-  readonly change: IChange | null;
-}
-
 const key = new PluginKey<IPluginState>('collaborationChanges');
 const EXPIRE = 'expire';
-
-export interface ICollaborationChangesOptions {
-  readonly doc: Y.Doc | null;
-  readonly feed: ChangeFeed | null;
-  readonly me: IActor;
-  readonly resolve: (clientId: number) => IActor;
-  readonly highlights: () => boolean;
-  readonly ready: () => boolean; // false until first sync, so the loaded page isn't "new"
-}
-
-// Diff the docs: the Yjs binding replaces a whole paragraph per keystroke, so steps can't tell.
-interface IDiff {
-  readonly from: number;
-  readonly to: number; // in the new document
-  readonly removed: string;
-}
 
 export function diffOf(before: PmNode, after: PmNode): IDiff | null {
   const start = before.content.findDiffStart(after.content);

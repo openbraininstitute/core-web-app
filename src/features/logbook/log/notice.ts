@@ -2,22 +2,6 @@ import { match, P } from 'ts-pattern';
 
 import { ApiError } from '@/api/error';
 
-import type { TValueOf } from '@/api/logbook/types';
-
-export const NoticeKind = {
-  Success: 'success',
-  Info: 'info',
-  Warning: 'warning',
-  Error: 'error',
-} as const;
-export type TNoticeKind = TValueOf<typeof NoticeKind>;
-
-export interface INotice {
-  readonly kind: TNoticeKind;
-  readonly title: string;
-  readonly description?: string;
-}
-
 /** A failure in words people can act on: the server's own reason first, else one from the status. */
 export function reasonOf(error: unknown): string {
   if (error instanceof ApiError) {

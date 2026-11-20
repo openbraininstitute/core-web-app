@@ -2,14 +2,12 @@ import { act, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { PageKind } from '@/api/logbook/types';
-import { Layout } from '@/features/logbook/board/layout';
 import { LogView } from '@/features/logbook/log/log-view';
-import { TabKind, tabKey, WARM_KEEP_MS } from '@/features/logbook/log/open-tabs';
-import { ViewMode } from '@/features/logbook/log/view-mode';
+import { tabKey, WARM_KEEP_MS } from '@/features/logbook/log/open-tabs';
+import { Layout, TabKind, ViewMode } from '@/features/logbook/types';
 
 import type { IPage } from '@/api/logbook/types';
-import type { ILogPageProps } from '@/features/logbook/log/log-page';
-import type { ILogViewProps } from '@/features/logbook/log/log-view';
+import type { ILogPageProps, ILogViewProps } from '@/features/logbook/types';
 
 const LAB = '0096a3d9-7e41-4f7a-afda-332d0504133a';
 const PROJECT = '3dcb6f91-1381-4c8f-814a-554c634ed4e8';

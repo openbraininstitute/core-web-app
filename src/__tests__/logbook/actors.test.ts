@@ -8,7 +8,7 @@ import {
   worksFor,
 } from '@/features/logbook/collaboration/actors';
 
-import type { IActorSources } from '@/features/logbook/collaboration/actors';
+import type { IActorSources } from '@/features/logbook/types';
 
 const LIVE = 1; // a peer on the page now
 const GONE = 2; // writer left; the server named it

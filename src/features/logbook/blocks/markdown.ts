@@ -9,9 +9,6 @@ import { BLOCK_TYPES, blockExtensions, FRAGMENT } from '@/features/logbook/block
 
 import type { JSONContent } from '@tiptap/core';
 
-// For packages that don't depend on Tiptap.
-export type TBlockJson = JSONContent;
-
 export const schema = getSchema(blockExtensions);
 const manager = new MarkdownManager({ extensions: blockExtensions });
 const blockTypes: ReadonlySet<string> = new Set(BLOCK_TYPES);

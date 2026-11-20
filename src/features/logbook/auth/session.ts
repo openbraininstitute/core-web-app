@@ -4,6 +4,8 @@ import { colourOf } from '@/features/logbook/blocks/colour';
 import { initialsOf } from '@/features/logbook/helpers';
 import { getClientSession } from '@/hooks/session';
 
+import type { IMe, IProject, TClaims } from '@/features/logbook/types';
+
 /** next-auth's `useSession().status` values. */
 export const SessionStatus = { Authenticated: 'authenticated', Loading: 'loading' } as const;
 
@@ -19,19 +21,6 @@ export const signIn = (): void => {
   location.assign(`/app/log-in?callbackUrl=${encodeURIComponent(back)}`);
 };
 
-export interface IProject {
-  readonly virtualLabId: string;
-  readonly projectId: string;
-}
-
-export interface IMe {
-  readonly userId: string;
-  readonly name: string;
-  readonly initials: string;
-  readonly colour: string;
-  readonly projects: readonly IProject[];
-}
-
 // Keycloak group `/proj/<lab>/<project>/<role>`: a project the person is in.
 const PROJECT_GROUP = /^\/proj\/([0-9a-f-]{36})\/([0-9a-f-]{36})\/[a-z]+$/;
 
@@ -43,7 +32,6 @@ export function projectsOf(groups: readonly string[]): IProject[] {
   return uniqBy(found, (p) => p.projectId);
 }
 
-type TClaims = Readonly<Record<string, unknown>>;
 const isClaims = (value: unknown): value is TClaims => typeof value === 'object' && isNotNil(value);
 
 // Display and routing only: services check the signature, the browser never decides access.

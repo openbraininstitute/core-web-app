@@ -7,7 +7,6 @@ import { useMemo, useRef, useState } from 'react';
 import { PageKind, ReadOnlyReason } from '@/api/logbook/types';
 import { artifactsOf, logFilesQuery } from '@/features/logbook/api/log-files';
 import { useUpdateLog } from '@/features/logbook/api/research-logs';
-import { Layout } from '@/features/logbook/board/layout';
 import { useCollaboration } from '@/features/logbook/collaboration/notices';
 import { FormatBar } from '@/features/logbook/editor/format-bar';
 import { SelectionMenu } from '@/features/logbook/editor/selection-menu';
@@ -16,24 +15,31 @@ import { ArtifactBar, ArtifactView } from '@/features/logbook/log/artifact-view'
 import { CONTROL } from '@/features/logbook/log/controls';
 import { EditorTabs } from '@/features/logbook/log/editor-tabs';
 import { InsertMenu } from '@/features/logbook/log/menus';
-import { NoticeKind, reasonOf } from '@/features/logbook/log/notice';
-import { TabKind } from '@/features/logbook/log/open-tabs';
+import { reasonOf } from '@/features/logbook/log/notice';
 import { HereNow, PresenceButton } from '@/features/logbook/log/presence';
 import { SaveStatus } from '@/features/logbook/log/save-status';
-import { CARD_MENUS, Menu, MobileTab, RightTab } from '@/features/logbook/log/ui-state';
-import { ViewMode } from '@/features/logbook/log/view-mode';
-import { Icon } from '@/features/logbook/ui/icons';
+import { CARD_MENUS } from '@/features/logbook/log/ui-state';
+import {
+  Layout,
+  Menu,
+  MobileTab,
+  NoticeKind,
+  RightTab,
+  TabKind,
+  ViewMode,
+} from '@/features/logbook/types';
+import { Icon } from '@/ui/molecules/icon';
 
-import type { CSSProperties, MouseEvent as ReactMouseEvent } from 'react';
-import type { IEditorTab } from '@/features/logbook/log/editor-tabs';
-import type { ILogShared } from '@/features/logbook/log/log-page';
-import type { ITabRef } from '@/features/logbook/log/open-tabs';
-import type { TMenu, TMobileTab, TRightTab } from '@/features/logbook/log/ui-state';
-
-export interface IPopAt {
-  readonly top: number;
-  readonly left: number;
-}
+import type { MouseEvent as ReactMouseEvent } from 'react';
+import type {
+  IClock,
+  IEditorCardProps,
+  IEditorTab,
+  IPopAt,
+  ITabRef,
+  TMenu,
+  TMobileTab,
+} from '@/features/logbook/types';
 
 const WIDTHS: Readonly<Partial<Record<TMenu, number>>> = {
   [Menu.Insert]: 292,
@@ -48,13 +54,6 @@ export function popAtOf(button: HTMLElement, card: HTMLElement, width: number): 
     top: b.bottom - c.top + 8,
     left: Math.max(8, Math.min(b.right - c.left - width, c.width - width - 8)),
   };
-}
-
-interface IClock {
-  readonly top: number;
-  readonly from: number;
-  readonly to: number;
-  readonly kind: string;
 }
 
 const MOBILE_TABS: readonly { readonly tab: TMobileTab; readonly label: string }[] = [
@@ -77,16 +76,6 @@ const KIND_NAMES: Readonly<Record<string, string>> = {
   file: 'file',
   callout: 'note',
 };
-
-export interface IEditorCardProps extends ILogShared {
-  readonly style: CSSProperties;
-  readonly mTab: TMobileTab;
-  readonly setMTab: (tab: TMobileTab) => void;
-  readonly sideOpen: boolean;
-  readonly rightTab: TRightTab;
-  readonly canShut: boolean;
-  readonly onShut: () => void;
-}
 
 export function EditorCard(props: IEditorCardProps) {
   const { editor, layout, menu, setMenu, selection, log } = props;
@@ -297,7 +286,7 @@ export function EditorCard(props: IEditorCardProps) {
         )}
         <button
           type="button"
-          className={`${CONTROL} bg-green text-white shadow-green-btn`}
+          className={`${CONTROL} bg-green-main text-white shadow-green-btn`}
           onClick={() => props.onMode(ViewMode.Read)}
         >
           <Icon name="check" size={15} stroke={2.6} />
@@ -320,7 +309,7 @@ export function EditorCard(props: IEditorCardProps) {
               >
                 {label}
                 {tab === MobileTab.History && isNotNil(selection) && props.mTab !== tab ? (
-                  <span className="absolute top-2 right-[14px] size-1.5 rounded-full bg-blue" />
+                  <span className="absolute top-2 right-[14px] size-1.5 rounded-full bg-primary-6" />
                 ) : null}
               </button>
             ))}
@@ -337,20 +326,20 @@ export function EditorCard(props: IEditorCardProps) {
         <ArtifactView key={artifact.id} artifact={artifact} />
       ) : null}
       {props.deleted && onLog ? (
-        <p className="m-0 bg-[#fdf3e1] px-6 py-2 text-[13px] text-[#854d0e]" role="status">
+        <p className="m-0 bg-warning-tint px-6 py-2 text-[13px] text-warning-ink" role="status">
           This section was deleted. What it held stays shown here until you leave it; changes are no
           longer saved.
         </p>
       ) : null}
       {isNotNil(props.readOnly) && onLog && !props.deleted ? (
-        <p className="m-0 bg-[#fdf3e1] px-6 py-2 text-[13px] text-[#854d0e]" role="status">
+        <p className="m-0 bg-warning-tint px-6 py-2 text-[13px] text-warning-ink" role="status">
           {props.readOnly === ReadOnlyReason.ReadAccess
             ? 'You can read this log, not change it.'
             : 'The page cannot take changes right now; what you type is kept and sent when it can.'}
         </p>
       ) : null}
       {isNotNil(rejoinAt) && isNil(props.readOnly) && onLog ? (
-        <p className="m-0 bg-[#fdf3e1] px-6 py-2 text-[13px] text-[#854d0e]" role="status">
+        <p className="m-0 bg-warning-tint px-6 py-2 text-[13px] text-warning-ink" role="status">
           The server is busy. The page is shown from this device and joins again by itself soon.
         </p>
       ) : null}

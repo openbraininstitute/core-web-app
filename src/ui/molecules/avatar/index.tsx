@@ -1,20 +1,17 @@
-import { Icon } from '@/features/logbook/ui/icons';
+import { Icon } from '@/ui/molecules/icon';
 import { cn } from '@/utils/css-class';
 
 import type { CSSProperties } from 'react';
 
-export interface IActor {
-  readonly key: string;
-  readonly name: string;
+/** What an avatar draws: white initials on a colour; an agent is a rounded square with a badge. */
+export interface IAvatarPerson {
   readonly initials: string;
   readonly colour: string;
   readonly agent: boolean;
-  /** The person this is, or the agent works for; null when only an agent label is known. */
-  readonly ownerId: string | null;
 }
 
 export interface IAvatarProps {
-  readonly actor: IActor;
+  readonly actor: IAvatarPerson;
   readonly size?: number;
   readonly title?: string;
   // Writing now: the turning ring.
@@ -45,7 +42,7 @@ export function Avatar({ actor, size = 30, title, ring = false, stacked = false 
     borderRadius: actor.agent ? agentRadiusOf(size) : 999,
     fontSize: size <= 28 ? 10 : 11,
     '--ring': actor.colour,
-    ...(stacked ? { border: '2px solid #fff', marginLeft: -8 } : {}),
+    ...(stacked ? { border: '2px solid var(--color-white)', marginLeft: -8 } : {}),
   } as CSSProperties;
   return (
     <span

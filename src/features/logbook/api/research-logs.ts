@@ -14,30 +14,14 @@ import {
 } from '@/api/entitycore/queries/general/research-log';
 import { deleteResearch } from '@/api/logbook/queries/research';
 import { pagesQuery } from '@/features/logbook/api/pages';
+import { LogOrderField, OrderDirection } from '@/features/logbook/types';
 import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
 
-import type { InfiniteData } from '@tanstack/react-query';
 import type { IResearchLog, IResearchLogDraft } from '@/api/entitycore/types/entities/research-log';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import type { TValueOf } from '@/api/logbook/types';
-import type { IProject } from '@/features/logbook/auth/session';
+import type { ILogFilter, ILogOrder, IProject, TLogPages } from '@/features/logbook/types';
 
 export const PAGE_SIZE = 10;
-
-export const LogOrderField = {
-  Name: 'name',
-  Created: 'creation_date',
-  Updated: 'update_date',
-} as const;
-export type TLogOrderField = TValueOf<typeof LogOrderField>;
-
-export const OrderDirection = { Ascending: 'asc', Descending: 'desc' } as const;
-export type TOrderDirection = TValueOf<typeof OrderDirection>;
-
-export interface ILogOrder {
-  readonly field: TLogOrderField;
-  readonly direction: TOrderDirection;
-}
 
 export const DEFAULT_ORDER: ILogOrder = {
   field: LogOrderField.Updated,
@@ -46,14 +30,6 @@ export const DEFAULT_ORDER: ILogOrder = {
 
 export const orderByOf = (order: ILogOrder): string =>
   `${order.direction === OrderDirection.Descending ? '-' : ''}${order.field}`;
-
-// Public: public logs of any project. Project: this project's. Both on: everything.
-export interface ILogFilter {
-  readonly public: boolean;
-  readonly project: boolean;
-  readonly search: string;
-  readonly order: ILogOrder;
-}
 
 export const noFilterOf = (filter: ILogFilter): boolean => !filter.public && !filter.project;
 
@@ -96,8 +72,6 @@ export const researchLogsQuery = (project: IProject, filter: ILogFilter) =>
     enabled: !noFilterOf(filter),
     staleTime: 30_000,
   });
-
-type TLogPages = InfiniteData<EntityCoreResponse<IResearchLog>, number>;
 
 const eachPage =
   (change: (logs: readonly IResearchLog[]) => readonly IResearchLog[]) =>

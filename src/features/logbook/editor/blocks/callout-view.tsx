@@ -1,7 +1,7 @@
 import { NodeViewContent, NodeViewWrapper } from '@tiptap/react';
 
 import { calloutKindOf, calloutLooks } from '@/features/logbook/blocks/kinds';
-import { Icon } from '@/features/logbook/ui/icons';
+import { Icon } from '@/ui/molecules/icon';
 
 import type { NodeViewProps } from '@tiptap/react';
 

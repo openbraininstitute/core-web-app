@@ -5,18 +5,13 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from '
 
 import { timeOf } from '@/features/logbook/helpers';
 import { useLivePage } from '@/features/logbook/log/context';
-import { Icon } from '@/features/logbook/ui/icons';
+import { Icon } from '@/ui/molecules/icon';
 
 import type { HocuspocusProvider } from '@hocuspocus/provider';
 import type * as Y from 'yjs';
 import type { LocalCopy } from '@/features/logbook/collaboration/local-copy';
 import type { CollaborationNotices } from '@/features/logbook/collaboration/notices';
-
-export interface ISaveStatusProps {
-  readonly notices: CollaborationNotices;
-  readonly copy: LocalCopy;
-  readonly iconOnly: boolean;
-}
+import type { ISaveStatusProps } from '@/features/logbook/types';
 
 const OFFLINE_AFTER_MS = 2000;
 
@@ -152,13 +147,13 @@ export function SaveStatus({ notices, copy, iconOnly }: ISaveStatusProps) {
       : `${isNil(savedAt) ? 'Saved' : `Saved at ${timeOf(savedAt)}`}. Every change is stored on the server within a second. Everyone here already sees it.`;
   return (
     <span
-      className="inline-flex flex-none items-center gap-1.5 text-[12px] font-semibold whitespace-nowrap text-neutral-4 data-[offline=true]:text-red"
+      className="inline-flex flex-none items-center gap-1.5 text-[12px] font-semibold whitespace-nowrap text-neutral-4 data-[offline=true]:text-destructive"
       data-offline={offline}
       role="status"
       title={title}
     >
       {offline ? (
-        <span className="size-2 rounded-full bg-red" aria-hidden="true" />
+        <span className="size-2 rounded-full bg-destructive" aria-hidden="true" />
       ) : saving ? (
         <span
           className="size-3 animate-spin rounded-full border-[1.5px] border-neutral-2 border-t-blue motion-reduce:animate-none"

@@ -2,40 +2,14 @@
 @import "./editor/content.css";
 
 @theme {
-  --color-line-num: #a3acb9;
-  --color-fill-2: #f0f2f5;
-  --color-fill-pill-hover: #eceff3;
-  --color-fill-item-hover: #edf1f6;
-  --color-soft: #f5f8fc;
-  --color-soft-2: #f7f9fc;
-  --color-code-bg: #f8fafc;
-  --color-overflow-avatar: #e8eef7;
-  --color-badge-plain: #e3e9f2;
-  --color-rule: #e8e8e8;
-  --color-block-border: #e6ebf1;
-  --color-rule-soft: #f0f2f5;
-  --color-rule-softer: #eef1f5;
-  --color-divider: #eeeeee;
-  --color-green: #237804;
-  --color-red: #d4282b;
-  --color-blue: #1677c9;
-  --color-blue-tint: #e8f3fc;
-  --color-scope-public-bg: #f0fdf4;
-  --color-scope-public-fg: #15803d;
-  --color-saved-fg: #166534;
-  --color-saved-dot: #16a34a;
-  --color-writing-fg: #5b21b6;
-  --color-writing-dot: #7c3aed;
-  --color-removed: #8c3b1c;
-
   --shadow-card:
     0 0 0 1px rgba(0, 39, 102, 0.05), 0 4px 12px -6px rgba(0, 39, 102, 0.08),
     0 1px 2px rgba(0, 39, 102, 0.04);
   --shadow-pop: 0 0 0 1px rgba(0, 39, 102, 0.08), 0 16px 40px -12px rgba(0, 39, 102, 0.28);
   --shadow-drawer: 0 24px 60px -12px rgba(0, 39, 102, 0.4);
-  --shadow-green-btn: 0 4px 10px -4px rgba(35, 120, 4, 0.5);
+  --shadow-green-btn: 0 4px 10px -4px rgba(0, 140, 5, 0.5);
   --shadow-navy-btn: 0 4px 10px -4px rgba(0, 39, 102, 0.45);
-  --shadow-red-btn: 0 4px 10px -4px rgba(212, 40, 43, 0.45);
+  --shadow-red-btn: 0 4px 10px -4px rgba(235, 51, 51, 0.45);
   --shadow-back-btn: 0 2px 8px -2px rgba(0, 39, 102, 0.18);
   --shadow-who-wrote: 0 8px 18px -8px rgba(0, 39, 102, 0.6);
   --shadow-toast: 0 10px 24px -8px rgba(0, 0, 0, 0.35);
@@ -132,7 +106,7 @@
   padding: 0;
   border: 1px solid var(--color-block-border);
   border-radius: 999px;
-  background-color: #fff;
+  background-color: var(--color-white);
   color: var(--color-primary-9);
   box-shadow: var(--shadow-block-btn);
   transition:
@@ -157,36 +131,9 @@
   border: 0;
   border-radius: 999px;
   background-color: var(--color-primary-9);
-  color: #fff;
+  color: var(--color-white);
   font-weight: 700;
   box-shadow: var(--shadow-navy-btn);
-}
-/* A registered property turns the gradient while the shape stays put. */
-@property --ring-turn {
-  syntax: "<angle>";
-  inherits: false;
-  initial-value: 0deg;
-}
-@keyframes ring-turn {
-  to {
-    --ring-turn: 360deg;
-  }
-}
-@utility writing-ring {
-  position: relative;
-  &::after {
-    content: "";
-    position: absolute;
-    inset: -3px;
-    padding: 2px;
-    border-radius: inherit;
-    background: conic-gradient(from var(--ring-turn), transparent 0 20%, var(--ring) 100%);
-    mask:
-      linear-gradient(#000 0 0) content-box exclude,
-      linear-gradient(#000 0 0);
-    animation: ring-turn 1.2s linear infinite;
-    pointer-events: none;
-  }
 }
 @utility label-caps {
   font-size: 12px;
@@ -219,9 +166,5 @@
   .logbook-root *::after {
     animation: none !important;
     transition: none !important;
-  }
-  /* No turning arc: a whole ring says the same. */
-  .writing-ring::after {
-    background: var(--ring);
   }
 }

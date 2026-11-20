@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 
-import { typedOf } from '@/features/logbook/ui/confirm-delete-dialog';
+import { typedOf } from '@/ui/segments/confirm-delete-dialog';
 
 test('the typed confirmation counts the right letters from the start; a wrong one is -1', () => {
   expect(typedOf('')).toBe(0);

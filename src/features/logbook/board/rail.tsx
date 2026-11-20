@@ -6,70 +6,29 @@ import { ActorVia } from '@/api/logbook/types';
 import { useContributors } from '@/features/logbook/api/contributors';
 import { colourOf } from '@/features/logbook/blocks/colour';
 import { OrderButton } from '@/features/logbook/board/log-order';
-import { AvatarGroup } from '@/features/logbook/elements/motion/avatar-group';
 import { PillSkeletons } from '@/features/logbook/elements/skeletons';
-import { agoOf, dateOf } from '@/features/logbook/helpers';
+import { agoOf, dateOf, POPOVER_PANEL } from '@/features/logbook/helpers';
 import { DeleteLogDialog } from '@/features/logbook/log/delete-log-dialog';
 import { NotifyPopover } from '@/features/logbook/log/menus';
 import { useNotifySettings } from '@/features/logbook/log/notify-settings';
-import { Icon } from '@/features/logbook/ui/icons';
-import {
-  PopoverAlign,
-  PopoverLayer,
-  PopoverSide,
-  useAnchoredPopover,
-} from '@/features/logbook/ui/popover';
+import { PopoverAlign, PopoverSide, RailHeading } from '@/features/logbook/types';
+import { Icon } from '@/ui/molecules/icon';
+import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
+import { AvatarGroup } from '@/ui/segments/avatar-group';
 import { cn } from '@/utils/css-class';
 
 import type { ReactNode, RefObject } from 'react';
 import type { IResearchLog } from '@/api/entitycore/types/entities/research-log';
-import type { IContributor, TValueOf } from '@/api/logbook/types';
-import type { ILogOrder } from '@/features/logbook/api/research-logs';
-import type { IProject } from '@/features/logbook/auth/session';
-import type { IAvatarGroupMember } from '@/features/logbook/elements/motion/avatar-group';
-import type { TPopoverAlign, TPopoverSide } from '@/features/logbook/ui/popover';
-
-// No heading in a wide rail; a title and X in the phone drawer.
-export const RailHeading = { None: 'none', Drawer: 'drawer' } as const;
-export type TRailHeading = TValueOf<typeof RailHeading>;
-
-export interface IScope {
-  readonly public: boolean;
-  readonly project: boolean;
-}
-
-export interface IMore {
-  readonly has: boolean;
-  readonly loading: boolean;
-  readonly failed: boolean;
-  readonly onMore: () => void;
-}
-
-export interface IRailProps {
-  // The pages read so far.
-  readonly logs: readonly IResearchLog[];
-  readonly more: IMore;
-  readonly loading: boolean;
-  readonly error: string | null;
-  readonly activeId: string | null;
-  readonly project: IProject;
-  readonly scope: IScope;
-  readonly search: string;
-  readonly order: ILogOrder;
-  readonly onOrder: (order: ILogOrder) => void;
-  readonly heading: TRailHeading;
-  readonly creating: boolean;
-  readonly onScope: (scope: IScope) => void;
-  readonly onSearch: (search: string) => void;
-  readonly onPick: (id: string) => void;
-  readonly onNew: () => void;
-  // The open log's pages, shown under its card.
-  readonly outline?: ReactNode;
-  readonly onClose: () => void;
-  // Each rejects with the reason shown on the card.
-  readonly onRename: (id: string, name: string) => Promise<unknown>;
-  readonly onDelete: (id: string) => Promise<unknown>;
-}
+import type { IContributor } from '@/api/logbook/types';
+import type {
+  IMore,
+  IProject,
+  IRailProps,
+  IScope,
+  TPopoverAlign,
+  TPopoverSide,
+} from '@/features/logbook/types';
+import type { IAvatarGroupMember } from '@/ui/segments/avatar-group';
 
 const SCOPE_BUTTON =
   'grid size-8 place-items-center rounded-full border-0 bg-transparent text-label transition-[background-color,color] duration-150 ease-[ease] hover:bg-white';
@@ -215,7 +174,7 @@ export function NewButton({
   return (
     <button
       type="button"
-      className="inline-flex h-10 flex-none items-center justify-center gap-2 rounded-full border border-white/20 bg-green px-4 text-[14px] font-bold text-white transition-[width,padding] duration-150 disabled:cursor-progress disabled:opacity-70 @max-[280px]/rail:w-10 @max-[280px]/rail:px-0"
+      className="inline-flex h-10 flex-none items-center justify-center gap-2 rounded-full border border-white/20 bg-green-main px-4 text-[14px] font-bold text-white transition-[width,padding] duration-150 disabled:cursor-progress disabled:opacity-70 @max-[280px]/rail:w-10 @max-[280px]/rail:px-0"
       title="New research log"
       disabled={creating}
       onClick={onNew}
@@ -225,8 +184,6 @@ export function NewButton({
     </button>
   );
 }
-
-const POPOVER_WIDTH = 340;
 
 // `align`: which bell edge the popover lines up with (left in the rail, right on home).
 export function SettingsButton({
@@ -246,34 +203,33 @@ export function SettingsButton({
   // Lets the toast stay up while the settings are open.
   readonly onOpenChange?: (open: boolean) => void;
 }) {
-  const { at, open, toggle, close } = useAnchoredPopover(POPOVER_WIDTH, align, side);
+  const [open, setOpen] = useState(false);
   const [settings, update] = useNotifySettings();
   useEffect(() => onOpenChange?.(open), [open, onOpenChange]);
   return (
-    <>
-      <button
-        type="button"
-        className={className}
+    <Popover open={open} onOpenChange={setOpen} modal>
+      {isNil(anchor) ? null : <PopoverAnchor virtualRef={anchor as RefObject<Element>} />}
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className={className}
+          aria-label="Notification settings"
+          title="Notification settings"
+        >
+          <Icon name="bell" size={iconSize} stroke={1.8} />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        align={align}
+        side={side}
+        sideOffset={8}
+        collisionPadding={8}
+        className={cn(POPOVER_PANEL, 'z-71 p-0')}
         aria-label="Notification settings"
-        title="Notification settings"
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        onClick={(event) => toggle(event, anchor?.current)}
       >
-        <Icon name="bell" size={iconSize} stroke={1.8} />
-      </button>
-      {isNil(at) ? null : (
-        <PopoverLayer label="Close notification settings" onClose={close}>
-          <NotifyPopover
-            className="fixed z-71"
-            style={at}
-            settings={settings}
-            onChange={update}
-            onClose={close}
-          />
-        </PopoverLayer>
-      )}
-    </>
+        <NotifyPopover settings={settings} onChange={update} onClose={() => setOpen(false)} />
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -433,7 +389,7 @@ export function CardMenu({
         <button
           type="button"
           role="menuitem"
-          className={cn(MENU_ITEM, 'text-[#b42318] hover:bg-[#fdecea]')}
+          className={cn(MENU_ITEM, 'text-destructive hover:bg-destructive/10')}
           onClick={onDelete}
         >
           <Icon name="trash" size={15} />
@@ -592,7 +548,7 @@ export function Rail(props: IRailProps) {
                   ) : null}
                 </span>
                 {failed?.id === log.id ? (
-                  <span className="text-[12px] font-semibold text-[#b42318]" role="alert">
+                  <span className="text-[12px] font-semibold text-destructive" role="alert">
                     {failed.text}
                   </span>
                 ) : null}

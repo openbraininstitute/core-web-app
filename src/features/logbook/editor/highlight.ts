@@ -1,20 +1,8 @@
 // One regex highlighter, Python-ish, for every language.
-import type { TValueOf } from '@/api/logbook/types';
 
-export const TokenKind = {
-  Comment: 'comment',
-  String: 'string',
-  Number: 'number',
-  Keyword: 'keyword',
-  Text: 'text',
-} as const;
-export type TTokenKind = TValueOf<typeof TokenKind>;
+import { TokenKind } from '@/features/logbook/types';
 
-export interface IToken {
-  readonly kind: TTokenKind;
-  readonly text: string;
-  readonly from: number;
-}
+import type { IToken } from '@/features/logbook/types';
 
 const KEYWORDS = new Set(
   'def import from for in return as if else elif with while class and or not None True False lambda try except'.split(

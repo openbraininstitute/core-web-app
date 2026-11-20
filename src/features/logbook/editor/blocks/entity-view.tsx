@@ -14,8 +14,8 @@ import { ViewerMessage } from '@/features/logbook/editor/blocks/viewer-3d/frame'
 import { has3dView, Viewer3d } from '@/features/logbook/editor/blocks/viewers-3d';
 import { Bone } from '@/features/logbook/elements/skeletons';
 import { useEntityDetail, useEntityPicker, useLogContext } from '@/features/logbook/log/context';
-import { Icon } from '@/features/logbook/ui/icons';
 import { DISMISSABLE_ATTRIBUTE } from '@/hooks/use-dismiss-on-outside-interaction';
+import { Icon } from '@/ui/molecules/icon';
 import { cn } from '@/utils/css-class';
 
 import type { NodeViewProps } from '@tiptap/react';

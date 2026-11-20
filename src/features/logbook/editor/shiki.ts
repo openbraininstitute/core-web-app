@@ -2,12 +2,8 @@
 // Editor code blocks use highlight.ts instead: decorations can't wait.
 import { isNil } from 'es-toolkit';
 
-import type { HighlighterCore, LanguageInput, ThemedToken } from 'shiki/core';
-
-interface IGrammar {
-  readonly id: string;
-  readonly load: LanguageInput; // a getter: the grammar loads only when asked
-}
+import type { HighlighterCore, ThemedToken } from 'shiki/core';
+import type { IGrammar } from '@/features/logbook/types';
 
 const python: IGrammar = { id: 'python', load: () => import('shiki/langs/python.mjs') };
 const shell: IGrammar = { id: 'shellscript', load: () => import('shiki/langs/shellscript.mjs') };

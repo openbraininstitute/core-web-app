@@ -11,26 +11,19 @@ import {
 import { SettingsButton } from '@/features/logbook/board/rail';
 import { worksFor } from '@/features/logbook/collaboration/actors';
 import { useNow } from '@/features/logbook/helpers';
-import { NoticeKind } from '@/features/logbook/log/notice';
-import { ToastSource } from '@/features/logbook/log/notify-settings';
-import { Icon } from '@/features/logbook/ui/icons';
-import { PopoverAlign, PopoverSide } from '@/features/logbook/ui/popover';
+import { NoticeKind, PopoverAlign, PopoverSide, ToastSource } from '@/features/logbook/types';
+import { Icon } from '@/ui/molecules/icon';
 import { cn } from '@/utils/css-class';
 
-import type { IMe } from '@/features/logbook/auth/session';
-import type { ChangeFeed, IChange } from '@/features/logbook/collaboration/changes';
-import type { INotice, TNoticeKind } from '@/features/logbook/log/notice';
-import type { INotifySettings } from '@/features/logbook/log/notify-settings';
+import type {
+  IAgentToastProps,
+  IChange,
+  IKindLook,
+  INotice,
+  TNoticeKind,
+} from '@/features/logbook/types';
 
 const AGENT_TOAST_MS = 7000;
-
-interface IKindLook {
-  readonly icon: string;
-  readonly badge: string; // tinted square behind the icon
-  readonly bar: string; // the draining time bar
-  readonly card: string;
-  readonly lifeMs: number | null; // null: stays until closed
-}
 
 // Errors stay until closed, so nobody misses one; the rest leave on their own.
 const looks: Readonly<Record<TNoticeKind, IKindLook>> = {
@@ -160,13 +153,6 @@ export function NoticeToast({
       )}
     </div>
   );
-}
-
-export interface IAgentToastProps {
-  readonly feed: ChangeFeed;
-  readonly settings: INotifySettings;
-  readonly me: IMe;
-  readonly onShow: (change: IChange) => void;
 }
 
 /** An agent just wrote in the page; the accent is the agent's own caret colour. */

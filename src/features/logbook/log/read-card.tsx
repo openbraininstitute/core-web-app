@@ -3,16 +3,15 @@ import { isNil, isNotNil } from 'es-toolkit';
 import { useState } from 'react';
 
 import { useDeleteLog, useUpdateLog } from '@/features/logbook/api/research-logs';
-import { Layout } from '@/features/logbook/board/layout';
 import { dateOf } from '@/features/logbook/helpers';
 import { DeleteLogDialog } from '@/features/logbook/log/delete-log-dialog';
 import { LogDetailsDialog } from '@/features/logbook/log/log-details-dialog';
 import { PagePlace, PageSteps } from '@/features/logbook/log/page-nav';
-import { ViewMode } from '@/features/logbook/log/view-mode';
 import { navigate, pathOf } from '@/features/logbook/router';
-import { Icon } from '@/features/logbook/ui/icons';
+import { Layout, ViewMode } from '@/features/logbook/types';
+import { Icon } from '@/ui/molecules/icon';
 
-import type { ILogShared } from '@/features/logbook/log/log-page';
+import type { ILogShared } from '@/features/logbook/types';
 
 export function ReadCard(props: ILogShared) {
   const { log, project, editor } = props;
@@ -68,7 +67,7 @@ export function ReadCard(props: ILogShared) {
         </button>
         <button
           type="button"
-          className="grid size-10 flex-none place-items-center rounded-full text-white disabled:opacity-50 bg-red shadow-red-btn"
+          className="grid size-10 flex-none place-items-center rounded-full text-white disabled:opacity-50 bg-destructive shadow-red-btn"
           aria-label="Delete"
           title="Delete"
           disabled={isNil(log) || remove.isPending}
@@ -90,7 +89,7 @@ export function ReadCard(props: ILogShared) {
           <PagePlace pages={props.pages} page={props.page} />
           {props.deleted ? (
             <p
-              className="mt-0 mb-4 rounded-xl bg-[#fdf3e1] px-4 py-2.5 text-[13px] text-[#854d0e]"
+              className="mt-0 mb-4 rounded-xl bg-warning-tint px-4 py-2.5 text-[13px] text-warning-ink"
               role="status"
             >
               This section was deleted. What it held stays shown here until you leave it.

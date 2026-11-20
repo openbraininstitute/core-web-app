@@ -2,22 +2,13 @@
 import { isNil } from 'es-toolkit';
 import { useEffect, useRef, useState } from 'react';
 
-import { Icon } from '@/features/logbook/ui/icons';
+import { Icon } from '@/ui/molecules/icon';
 
-import type { IResearchLogDraft } from '@/api/entitycore/types/entities/research-log';
+import type { ILogDetailsDialogProps } from '@/features/logbook/types';
 
 const FIELD =
   'w-full rounded-[12px] border border-block-border bg-white px-3 py-2.5 text-[15px] text-primary-9 outline-none focus:border-primary-4 focus:ring-2 focus:ring-primary-1';
 const LABEL = 'flex flex-col gap-1.5 text-[13px] font-bold text-neutral-4';
-
-export interface ILogDetailsDialogProps {
-  readonly open: boolean;
-  readonly name: string;
-  readonly description: string;
-  readonly saving: boolean;
-  readonly onSave: (draft: IResearchLogDraft) => Promise<unknown>;
-  readonly onClose: () => void;
-}
 
 export function LogDetailsDialog(props: ILogDetailsDialogProps) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -94,7 +85,7 @@ export function LogDetailsDialog(props: ILogDetailsDialogProps) {
           />
         </label>
         {isNil(failed) ? null : (
-          <p className="text-[13px] font-semibold text-[#b42318]" role="alert">
+          <p className="text-[13px] font-semibold text-destructive" role="alert">
             {failed}
           </p>
         )}

@@ -2,9 +2,9 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { expect, test, vi } from 'vitest';
 
 import { EditorTabs } from '@/features/logbook/log/editor-tabs';
-import { TabKind } from '@/features/logbook/log/open-tabs';
+import { TabKind } from '@/features/logbook/types';
 
-import type { IEditorTab } from '@/features/logbook/log/editor-tabs';
+import type { IEditorTab } from '@/features/logbook/types';
 
 const tab = (id: string, pinned = false): IEditorTab => ({
   tab: { kind: TabKind.Page, id },

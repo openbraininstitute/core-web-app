@@ -83,6 +83,25 @@
   --color-accent-foreground: #050a17;
   --color-background: #fafafa;
   --color-label: #8c8c8c;
+  --color-line-num: #a3acb9;
+  --color-fill-2: #f0f2f5;
+  --color-fill-pill-hover: #eceff3;
+  --color-fill-item-hover: #edf1f6;
+  --color-soft: #f5f8fc;
+  --color-code-bg: #f8fafc;
+  --color-rule: #e8e8e8;
+  --color-rule-soft: #f0f2f5;
+  --color-rule-softer: #eef1f5;
+  --color-block-border: #e6ebf1;
+  --color-warning-tint: #fdf3e1;
+  --color-warning-ink: #854d0e;
+  --color-scope-public-bg: #f0fdf4;
+  --color-scope-public-fg: #15803d;
+  --color-saved-fg: #166534;
+  --color-saved-dot: #16a34a;
+  --color-writing-fg: #5b21b6;
+  --color-writing-dot: #7c3aed;
+  --color-removed: #8c3b1c;
   --font-sans:
     var(--font-titillium-web), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
     "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
@@ -648,5 +667,40 @@ dialog {
   ::view-transition-old(*),
   ::view-transition-new(*) {
     animation-duration: 0ms !important;
+  }
+}
+
+/* A turning arc around an avatar that is writing now; `--ring` sets its colour. */
+@property --ring-turn {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+@keyframes ring-turn {
+  to {
+    --ring-turn: 360deg;
+  }
+}
+@utility writing-ring {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    padding: 2px;
+    border-radius: inherit;
+    background: conic-gradient(from var(--ring-turn), transparent 0 20%, var(--ring) 100%);
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+    animation: ring-turn 1.2s linear infinite;
+    pointer-events: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* No turning arc: a whole ring says the same. */
+  .writing-ring::after {
+    animation: none;
+    background: var(--ring);
   }
 }

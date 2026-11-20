@@ -6,11 +6,11 @@ import { FormatTools, TextStyleSelect, TOOL_RULE } from '@/features/logbook/edit
 import {
   activeOf,
   BLOCK_FORMATS,
-  Format,
   INLINE_FORMATS,
   isFormatActive,
   textStyleOf,
 } from '@/features/logbook/editor/formats';
+import { Format } from '@/features/logbook/types';
 
 import type { EditorState } from '@tiptap/pm/state';
 import type { Editor } from '@tiptap/react';

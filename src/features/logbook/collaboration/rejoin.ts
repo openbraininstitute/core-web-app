@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import { ProblemType } from '@/api/logbook/types';
 
 import type { CollaborationNotices } from '@/features/logbook/collaboration/notices';
+import type { IRejoinProvider } from '@/features/logbook/types';
 
 export const RetryableRefusal: ReadonlySet<string> = new Set([
   ProblemType.Overloaded,
@@ -21,14 +22,6 @@ const MIN_MS = 5000;
 // Full jitter under a doubling cap.
 export const rejoinDelayMs = (attempt: number, random: () => number = Math.random): number =>
   Math.max(MIN_MS, random() * Math.min(MAX_MS, FIRST_MS * 2 ** attempt));
-
-export interface IRejoinProvider {
-  on(event: string, listener: (data: never) => void): unknown;
-  off(event: string, listener: (data: never) => void): unknown;
-  sendToken(): Promise<void>;
-  startSync(): void;
-  readonly configuration: { readonly websocketProvider: { readonly status: WebSocketStatus } };
-}
 
 export function watchRefusals(
   provider: IRejoinProvider,

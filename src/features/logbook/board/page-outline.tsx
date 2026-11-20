@@ -13,30 +13,21 @@ import {
 } from '@/features/logbook/api/pages';
 import { CardMenu, RenameField } from '@/features/logbook/board/rail';
 import { DeletePageDialog } from '@/features/logbook/log/delete-page-dialog';
-import { Icon } from '@/features/logbook/ui/icons';
+import { Icon } from '@/ui/molecules/icon';
 
 import type { IPage } from '@/api/logbook/types';
-import type { IProject } from '@/features/logbook/auth/session';
+import type { IPageOutlineProps } from '@/features/logbook/types';
 
 // Tree lines are CSS borders: ::before is the branch, ::after the trunk, so they follow the rows.
 const BRANCH =
-  "group relative pb-1 pl-5 first:pt-2 first:before:h-[26px] before:pointer-events-none before:absolute before:top-0 before:left-0 before:h-[18px] before:w-4 before:rounded-bl-[12px] before:border-b-2 before:border-l-2 before:border-[#cfd8e3] before:content-[''] after:pointer-events-none after:absolute after:top-0 after:bottom-0 after:left-0 after:border-l-2 after:border-[#cfd8e3] after:content-[''] last:after:hidden";
+  "group relative pb-1 pl-5 first:pt-2 first:before:h-[26px] before:pointer-events-none before:absolute before:top-0 before:left-0 before:h-[18px] before:w-4 before:rounded-bl-[12px] before:border-b-2 before:border-l-2 before:border-neutral-2 before:content-[''] after:pointer-events-none after:absolute after:top-0 after:bottom-0 after:left-0 after:border-l-2 after:border-neutral-2 after:content-[''] last:after:hidden";
 const ROW =
-  'flex h-9 w-full items-center gap-2 rounded-full border-0 bg-transparent pr-9 pl-3 text-left text-[13px] font-semibold text-primary-9 transition-colors duration-150 hover:bg-fill-pill-hover aria-[current=page]:bg-[#e8f1fb] aria-[current=page]:font-bold';
+  'flex h-9 w-full items-center gap-2 rounded-full border-0 bg-transparent pr-9 pl-3 text-left text-[13px] font-semibold text-primary-9 transition-colors duration-150 hover:bg-fill-pill-hover aria-[current=page]:bg-primary-0 aria-[current=page]:font-bold';
 const DOTS =
   'absolute top-1.5 right-1 grid size-6 place-items-center rounded-full border-0 bg-transparent text-neutral-4 opacity-0 transition-opacity duration-150 group-focus-within:opacity-100 group-hover:opacity-100 hover:bg-fill-2 data-[open=true]:opacity-100';
 const FIELD = 'h-9 rounded-full px-3 text-[13px] font-semibold';
 const ADD =
-  'flex h-9 w-full items-center gap-2 rounded-full border border-[#91caff] bg-[#f0f7ff] pl-3 text-left text-[13px] font-semibold text-blue transition-colors duration-150 hover:bg-[#e3f0ff]';
-
-export interface IPageOutlineProps {
-  readonly project: IProject;
-  readonly logId: string;
-  readonly logName: string;
-  readonly pageId: string | null; // the page the address names; null: the main page
-  // `edit` opens it in the editor.
-  readonly onOpen: (page: IPage, edit?: boolean) => void;
-}
+  'flex h-9 w-full items-center gap-2 rounded-full border border-primary-2 bg-primary-0 pl-3 text-left text-[13px] font-semibold text-primary-6 transition-colors duration-150 hover:bg-primary-1/50';
 
 export function PageOutline(props: IPageOutlineProps) {
   const { project, logId, logName } = props;
@@ -174,7 +165,7 @@ export function PageOutline(props: IPageOutlineProps) {
         </li>
       </ul>
       {isNil(failed) ? null : (
-        <p className="m-0 pl-[42px] text-[12px] font-semibold text-[#b42318]" role="alert">
+        <p className="m-0 pl-[42px] text-[12px] font-semibold text-destructive" role="alert">
           {failed}
         </p>
       )}

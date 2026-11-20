@@ -4,7 +4,7 @@ import { queryOptions } from '@tanstack/react-query';
 import { getPageAuthorship } from '@/api/logbook/queries/page';
 import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
 
-import type { IProject } from '@/features/logbook/auth/session';
+import type { IProject } from '@/features/logbook/types';
 
 const WRITERS_MAX_CLIENTS = 100;
 

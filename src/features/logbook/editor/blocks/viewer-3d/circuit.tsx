@@ -5,7 +5,7 @@ import { ViewerFrame, ViewerMessage } from '@/features/logbook/editor/blocks/vie
 import { ModelPreview } from '@/features/scan-config/components/model-preview';
 import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
 
-import type { IViewer3dProps } from '@/features/logbook/editor/blocks/viewers-3d';
+import type { IViewer3dProps } from '@/features/logbook/types';
 
 /** The platform's circuit viewer, read-only, without electrodes. */
 export default function CircuitViewer3d({ entityId, project }: IViewer3dProps) {

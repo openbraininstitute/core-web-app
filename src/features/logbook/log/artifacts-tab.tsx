@@ -9,9 +9,9 @@ import { RowsSkeleton } from '@/features/logbook/elements/skeletons';
 import { agoOf, savedOf, sizeOf } from '@/features/logbook/helpers';
 import { ArtifactIcon } from '@/features/logbook/log/artifact-icon';
 import { useLogContext } from '@/features/logbook/log/context';
-import { Icon } from '@/features/logbook/ui/icons';
+import { Icon } from '@/ui/molecules/icon';
 
-import type { IArtifact } from '@/features/logbook/api/log-files';
+import type { IArtifact } from '@/features/logbook/types';
 
 const NOTE = 'px-1 text-[13px] leading-normal text-neutral-4';
 

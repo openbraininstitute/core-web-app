@@ -9,7 +9,6 @@ import {
   ALIGNMENTS,
   alignOf,
   BLOCK_FORMATS,
-  Format,
   formatStateOf,
   INLINE_FORMATS,
   isFormatActive,
@@ -18,6 +17,7 @@ import {
   TEXT_STYLES,
   textStyleOf,
 } from '@/features/logbook/editor/formats';
+import { Format } from '@/features/logbook/types';
 
 let editor: Editor;
 // The words of the first block are selected, as after a drag over them. (Not "select all": the

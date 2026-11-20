@@ -6,22 +6,23 @@ import { useInView } from 'react-intersection-observer';
 
 import { ActorVia } from '@/api/logbook/types';
 import { activityQuery, runsOf, summaryOf } from '@/features/logbook/api/activity';
-import { Layout } from '@/features/logbook/board/layout';
 import { peerActor } from '@/features/logbook/collaboration/actors';
 import { previewExtensions } from '@/features/logbook/editor/extensions';
 import { clip, liveAgoOf, useNow } from '@/features/logbook/helpers';
 import { ArtifactsTab } from '@/features/logbook/log/artifacts-tab';
 import { useLivePage } from '@/features/logbook/log/context';
 import { cardLabelOf, piecesOf } from '@/features/logbook/log/history';
-import { RightTab } from '@/features/logbook/log/ui-state';
-import { ViewMode } from '@/features/logbook/log/view-mode';
-import { Avatar } from '@/features/logbook/ui/avatar';
-import { Icon } from '@/features/logbook/ui/icons';
+import { Layout, RightTab, ViewMode } from '@/features/logbook/types';
+import { Avatar } from '@/ui/molecules/avatar';
+import { Icon } from '@/ui/molecules/icon';
 
-import type { IActivityRun } from '@/features/logbook/api/activity';
-import type { IChange } from '@/features/logbook/collaboration/changes';
-import type { ILogShared } from '@/features/logbook/log/log-page';
-import type { TRightTab } from '@/features/logbook/log/ui-state';
+import type {
+  IActivityRun,
+  IChange,
+  ILogShared,
+  ISidePaneProps,
+  TRightTab,
+} from '@/features/logbook/types';
 
 const SUB = 'text-[12px] text-neutral-4';
 const PIECE = 'flex items-start gap-[10px]';
@@ -299,14 +300,6 @@ function HistoryTab(props: ILogShared) {
   );
 }
 
-export interface ISidePaneProps extends ILogShared {
-  readonly tab: TRightTab;
-  readonly setTab: (tab: TRightTab) => void;
-  readonly editorShut: boolean;
-  readonly canShut: boolean;
-  readonly onShut: () => void;
-}
-
 const TABS: readonly { readonly tab: TRightTab; readonly label: string }[] = [
   { tab: RightTab.Preview, label: 'Preview' },
   { tab: RightTab.History, label: 'History' },
@@ -338,7 +331,7 @@ export function SidePane(props: ISidePaneProps) {
               >
                 {label}
                 {tab === RightTab.History && isNotNil(props.selection) ? (
-                  <span className="absolute top-[5px] right-1.5 size-1.5 rounded-full bg-blue" />
+                  <span className="absolute top-[5px] right-1.5 size-1.5 rounded-full bg-primary-6" />
                 ) : null}
               </button>
             ))}
@@ -347,7 +340,7 @@ export function SidePane(props: ISidePaneProps) {
             {props.editorShut ? (
               <button
                 type="button"
-                className="inline-flex h-[38px] items-center gap-1.5 rounded-full bg-green px-[14px] text-[14px] font-bold text-white"
+                className="inline-flex h-[38px] items-center gap-1.5 rounded-full bg-green-main px-[14px] text-[14px] font-bold text-white"
                 onClick={() => props.onMode(ViewMode.Read)}
               >
                 <Icon name="check" size={14} stroke={2.6} />

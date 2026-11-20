@@ -15,25 +15,28 @@ import {
 } from '@/features/logbook/api/research-logs';
 import { EntityDetail } from '@/features/logbook/board/entity-detail';
 import { Home } from '@/features/logbook/board/home';
-import { Layout, useLayout } from '@/features/logbook/board/layout';
+import { useLayout } from '@/features/logbook/board/layout';
 import { PageOutline } from '@/features/logbook/board/page-outline';
-import { Rail, RailHeading } from '@/features/logbook/board/rail';
+import { Rail } from '@/features/logbook/board/rail';
 import { UnsentCopies } from '@/features/logbook/board/unsent-copies';
 import { PageSkeleton } from '@/features/logbook/elements/skeletons';
 import { dragHandle } from '@/features/logbook/helpers';
 import { EntityDetailContext } from '@/features/logbook/log/context';
 import { markSeed } from '@/features/logbook/log/ui-state';
-import { ViewMode } from '@/features/logbook/log/view-mode';
 import { navigate, pathOf } from '@/features/logbook/router';
+import { Layout, RailHeading, ViewMode } from '@/features/logbook/types';
 import { cn } from '@/utils/css-class';
 
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import type { IPage } from '@/api/logbook/types';
-import type { ILogOrder } from '@/features/logbook/api/research-logs';
-import type { IMe, IProject } from '@/features/logbook/auth/session';
-import type { IMore, IScope } from '@/features/logbook/board/rail';
-import type { IEntityTarget } from '@/features/logbook/log/context';
-import type { TViewMode } from '@/features/logbook/log/view-mode';
+import type {
+  IBoardProps,
+  IEntityTarget,
+  ILogOrder,
+  IMore,
+  IScope,
+  TViewMode,
+} from '@/features/logbook/types';
 
 // The editor is most of the code: load it lazily, prefetched once the list shows.
 const loadLogView = () => import('@/features/logbook/log/log-view');
@@ -47,13 +50,6 @@ const RAIL_SHUT_BELOW = 110;
 
 // Container query: the rail header follows the rail's dragged width, not the window.
 const RAIL = '@container/rail flex min-h-0 flex-none flex-col gap-3 overflow-hidden p-3';
-
-export interface IBoardProps {
-  readonly me: IMe;
-  readonly project: IProject;
-  readonly logId: string | null;
-  readonly pageId: string | null; // a section of the open log; null: its main page
-}
 
 export function Board({ me, project, logId, pageId }: IBoardProps) {
   const root = useRef<HTMLDivElement>(null);
