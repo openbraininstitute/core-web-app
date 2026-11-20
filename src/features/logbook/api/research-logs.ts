@@ -1,4 +1,3 @@
-// EntityCore filters, searches and orders the list; the browser never does.
 import {
   infiniteQueryOptions,
   queryOptions,
