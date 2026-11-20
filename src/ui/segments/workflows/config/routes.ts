@@ -432,6 +432,39 @@ export function buildSimulateConfigureUrlFromDataViewEntity({
   });
 }
 
+/**
+ * configure URL for "build" on entity detail pages (data view action menu), with the entity
+ * pre-selected. Persists the selection to `sessionStorage`, so call it from an event handler.
+ */
+export function buildBuildConfigureUrlFromDataViewEntity({
+  workspace,
+  extendedType,
+  entityId,
+  flags,
+}: {
+  workspace: WorkspaceContext;
+  extendedType: TExtendedEntitiesTypeDict;
+  entityId: string;
+  flags?: FeatureFlags;
+}): string | null {
+  const workflow = getWorkflow({
+    activity: WorkflowActivityDictValue.build,
+    sourceType: extendedType,
+  });
+
+  if (!workflow || workflow.disabled || !featuresSatisfied(workflow.requiredFeatures, flags)) {
+    return null;
+  }
+
+  return buildConfigureUrlForEntity({
+    activity: WorkflowActivityDictValue.build,
+    targetType: workflow.targetType,
+    workspace,
+    entityId,
+    entityType: extendedType,
+  });
+}
+
 export function buildScanConfigConfigureHref({
   activity,
   targetType,

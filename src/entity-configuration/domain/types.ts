@@ -123,6 +123,8 @@ export type EntityCoreTypeConfig<
   isCopyable?: boolean;
   isDeletable?: boolean;
   isSimulatable: boolean | ((entity: T) => boolean);
+  /** shows a Build action on the detail page; needs a build workflow with this type as source */
+  isBuildable?: boolean;
   isContributionOption?: boolean;
   isContributable?: boolean;
 };

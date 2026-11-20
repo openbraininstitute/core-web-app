@@ -22,6 +22,7 @@ export {
   workflowHasMultipleSources,
 } from './helpers';
 export {
+  buildBuildConfigureUrlFromDataViewEntity,
   buildConfigureUrlForEntity,
   buildScanConfigConfigureHref,
   buildSimulateConfigureUrlFromDataViewEntity,
