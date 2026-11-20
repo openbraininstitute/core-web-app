@@ -67,6 +67,13 @@ describe('accounting client', () => {
     expect(error).toBeInstanceOf(ApiError);
     expect(error.cause?.status).toBe(200);
   });
+  it('throws a readable error when a success reply carries no data', async () => {
+    fetchMock.mockResolvedValue(json({ message: 'ok', data: null }));
+
+    const error = await listJobs({ page: 1, page_size: 20 }).catch((caught) => caught);
+
+    expect(error).toBeInstanceOf(ApiError);
+  });
 });
 
 describe('reportPath', () => {

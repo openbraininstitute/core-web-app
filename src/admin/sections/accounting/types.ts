@@ -209,6 +209,7 @@ export const JobPhase = {
   Reserved: 'reserved',
   Running: 'running',
   Finished: 'finished',
+  Expired: 'expired',
   Cancelled: 'cancelled',
 } as const;
 export type TJobPhase = (typeof JobPhase)[keyof typeof JobPhase];
@@ -223,3 +224,12 @@ export type TAccountingFilter = (typeof AccountingFilter)[keyof typeof Accountin
 
 export const EnabledFilter = { Any: 'any', Enabled: 'enabled', Disabled: 'disabled' } as const;
 export type TEnabledFilter = (typeof EnabledFilter)[keyof typeof EnabledFilter];
+
+export type TAccountingRoute = {
+  pattern: RegExp;
+  query: string[];
+};
+
+export type TAccountingTarget =
+  | { path: string; search: URLSearchParams }
+  | { status: number; message: string };

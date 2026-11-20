@@ -24,13 +24,14 @@ async function accountingGet<T>(path: string, params?: TParams, signal?: AbortSi
   const search = new URLSearchParams(
     Object.entries(compactRecord(params)).map(([key, value]) => [key, String(value)])
   );
-  const url = `${PROXY_ROOT}/${path}${search.size ? `?${search}` : ''}`;
+  const query = search.toString();
+  const url = `${PROXY_ROOT}/${path}${query ? `?${query}` : ''}`;
   const response = await fetch(url, { headers: { accept: 'application/json' }, signal });
   if (!response.ok) {
     throw await parseApiError(url, response.status, await response.json().catch(() => null));
   }
   const body = await response.json().catch(() => null);
-  if (typeof body !== 'object' || body === null || !('data' in body)) {
+  if (typeof body !== 'object' || body === null || body.data == null) {
     throw await parseApiError(url, response.status, body);
   }
 

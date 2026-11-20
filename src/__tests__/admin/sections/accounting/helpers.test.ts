@@ -5,11 +5,12 @@ import {
   accountingHref,
   dayBounds,
   jobPhase,
+  reportUsage,
   splitLedgers,
 } from '@/admin/sections/accounting/helpers';
 import { AccountingPage, JobPhase } from '@/admin/sections/accounting/types';
 
-import type { TAccountingJob, TLedgerEntry } from '@/admin/sections/accounting/types';
+import type { TAccountingJob, TJobReport, TLedgerEntry } from '@/admin/sections/accounting/types';
 
 describe('dayBounds', () => {
   it('turns local days into an inclusive start and an exclusive end with an offset', () => {
@@ -40,6 +41,7 @@ describe('jobPhase', () => {
     [{ reserved_at: 't', started_at: 't' }, JobPhase.Running],
     [{ started_at: 't', finished_at: 't' }, JobPhase.Finished],
     [{ reserved_at: 't', cancelled_at: 't' }, JobPhase.Cancelled],
+    [{ started_at: 't', finished_at: 't', cancelled_at: 't' }, JobPhase.Expired],
   ])('%j is %s', (fields, phase) => {
     expect(jobPhase(job(fields))).toBe(phase);
   });
@@ -60,5 +62,16 @@ describe('accountingHref', () => {
       '/app/admin/accounting/jobs?project=p+1'
     );
     expect(accountingHref(AccountingPage.Accounts)).toBe('/app/admin/accounting/accounts');
+  });
+});
+
+describe('reportUsage', () => {
+  it('describes each charge type', () => {
+    expect(reportUsage({ type: 'oneshot', count: 3 } as TJobReport)).toBe('3 units');
+    expect(reportUsage({ type: 'longrun', duration: 75 } as TJobReport)).toBe('1min 15s');
+  });
+
+  it('leaves a type it does not know blank instead of failing', () => {
+    expect(reportUsage({ type: 'gpu' } as unknown as TJobReport)).toBe('');
   });
 });

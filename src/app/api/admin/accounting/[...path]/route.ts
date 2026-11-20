@@ -17,5 +17,5 @@ export async function GET(
   const target = matchAccountingRoute((await params).path, request.nextUrl.searchParams);
   if ('status' in target) return accountingReply(target.status, target.message);
 
-  return forwardToAccounting(target.path, target.search);
+  return forwardToAccounting(target.path, target.search, request.signal);
 }

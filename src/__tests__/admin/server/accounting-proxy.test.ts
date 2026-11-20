@@ -67,6 +67,10 @@ describe('matchAccountingRoute', () => {
     expect(match(`admin/job/${ID}`, 'expand=journal')).toMatchObject({ status: 400 });
   });
 
+  it('refuses a query parameter with no name', () => {
+    expect(match(`admin/job/${ID}`, '=x')).toMatchObject({ status: 400 });
+  });
+
   it('refuses a repeated query parameter', () => {
     expect(match('admin/job', `${PAGE}&status=open&status=finished`)).toMatchObject({
       status: 400,
@@ -88,6 +92,7 @@ describe('matchAccountingRoute', () => {
 });
 
 const fetchMock = vi.fn();
+const OPEN = new AbortController().signal;
 
 beforeEach(() => {
   fetchMock.mockReset();
@@ -107,7 +112,7 @@ describe('forwardToAccounting', () => {
     const body = { message: 'ok', data: { balance: '10.00' } };
     fetchMock.mockResolvedValue(json(body));
 
-    const reply = await forwardToAccounting('balance/system', new URLSearchParams());
+    const reply = await forwardToAccounting('balance/system', new URLSearchParams(), OPEN);
 
     expect(fetchMock).toHaveBeenCalledWith(
       'https://cell-a/api/accounting/balance/system',
@@ -120,7 +125,7 @@ describe('forwardToAccounting', () => {
 
   it('keeps the query string', async () => {
     fetchMock.mockResolvedValue(json({ message: 'ok', data: null }));
-    await forwardToAccounting('admin/job', new URLSearchParams(PAGE));
+    await forwardToAccounting('admin/job', new URLSearchParams(PAGE), OPEN);
     expect(fetchMock.mock.calls[0][0]).toBe(`https://cell-a/api/accounting/admin/job?${PAGE}`);
   });
 
@@ -128,7 +133,7 @@ describe('forwardToAccounting', () => {
     const body = { error_code: 'ENTITY_NOT_FOUND', message: 'Job not found', details: null };
     fetchMock.mockResolvedValue(json(body, 404));
 
-    const reply = await forwardToAccounting(`admin/job/${ID}`, new URLSearchParams());
+    const reply = await forwardToAccounting(`admin/job/${ID}`, new URLSearchParams(), OPEN);
 
     expect(reply.status).toBe(404);
     await expect(reply.json()).resolves.toEqual(body);
@@ -142,7 +147,7 @@ describe('forwardToAccounting', () => {
   ])('reads %s as not reachable, never as a denial', async (_, upstream) => {
     fetchMock.mockResolvedValue(upstream());
 
-    const reply = await forwardToAccounting('balance/system', new URLSearchParams());
+    const reply = await forwardToAccounting('balance/system', new URLSearchParams(), OPEN);
 
     expect(reply.status).toBe(502);
     await expect(reply.json()).resolves.toEqual({
@@ -154,7 +159,7 @@ describe('forwardToAccounting', () => {
     fetchMock.mockResolvedValue(
       new Response('<html/>', { status: 504, headers: { 'content-type': 'text/html' } })
     );
-    const reply = await forwardToAccounting('balance/system', new URLSearchParams());
+    const reply = await forwardToAccounting('balance/system', new URLSearchParams(), OPEN);
     expect(reply.status).toBe(502);
     await expect(reply.json()).resolves.toEqual({ message: 'Accounting failed with status 504.' });
   });
@@ -164,7 +169,7 @@ describe('forwardToAccounting', () => {
     vi.spyOn(stalled, 'text').mockRejectedValue(new DOMException('timed out', 'TimeoutError'));
     fetchMock.mockResolvedValue(stalled);
 
-    const reply = await forwardToAccounting('balance/system', new URLSearchParams());
+    const reply = await forwardToAccounting('balance/system', new URLSearchParams(), OPEN);
 
     expect(reply.status).toBe(502);
     await expect(reply.json()).resolves.toEqual({ message: "Accounting didn't answer." });
@@ -174,19 +179,29 @@ describe('forwardToAccounting', () => {
     fetchMock.mockResolvedValue(
       new Response(null, { status: 204, headers: { 'content-type': 'application/json' } })
     );
-    const reply = await forwardToAccounting('balance/system', new URLSearchParams());
+    const reply = await forwardToAccounting('balance/system', new URLSearchParams(), OPEN);
     expect(reply.status).toBe(204);
+  });
+
+  it('stops waiting on accounting when the caller goes away', async () => {
+    fetchMock.mockResolvedValue(json({ message: 'ok', data: null }));
+    const caller = new AbortController();
+    caller.abort();
+
+    await forwardToAccounting('balance/system', new URLSearchParams(), caller.signal);
+
+    expect(fetchMock.mock.calls[0][1].signal.aborted).toBe(true);
   });
 
   it('says when accounting does not answer', async () => {
     fetchMock.mockRejectedValue(new TypeError('fetch failed'));
-    const reply = await forwardToAccounting('balance/system', new URLSearchParams());
+    const reply = await forwardToAccounting('balance/system', new URLSearchParams(), OPEN);
     expect(reply.status).toBe(502);
   });
 
   it('says when the URL is not configured, without calling out', async () => {
     serverConfig.ACCOUNTING_URL = undefined;
-    const reply = await forwardToAccounting('balance/system', new URLSearchParams());
+    const reply = await forwardToAccounting('balance/system', new URLSearchParams(), OPEN);
     expect(reply.status).toBe(503);
     expect(fetchMock).not.toHaveBeenCalled();
   });

@@ -4,6 +4,8 @@ import { serverConfig } from '@/config/server';
 
 import { isGatewayReply } from './service-probe';
 
+import type { TAccountingRoute, TAccountingTarget } from '../sections/accounting/types';
+
 const UUID = '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}';
 const SAFE_SEGMENT = /^[A-Za-z0-9-]+$/;
 const PAGE_PARAMS = ['page', 'page_size'];
@@ -12,11 +14,6 @@ const MAX_PAGE = 1_000_000;
 const UPSTREAM_TIMEOUT_MS = 15_000;
 
 const exact = (path: string) => new RegExp(`^${path}$`);
-
-type TAccountingRoute = {
-  pattern: RegExp;
-  query: string[];
-};
 
 /** Every accounting route the proxy forwards. Anything else gets a 404. */
 export const ACCOUNTING_ROUTES: TAccountingRoute[] = [
@@ -70,10 +67,6 @@ export const ACCOUNTING_ROUTES: TAccountingRoute[] = [
   },
 ];
 
-export type TAccountingTarget =
-  | { path: string; search: URLSearchParams }
-  | { status: number; message: string };
-
 const isPositiveInt = (value: string | null) => value !== null && /^[1-9]\d*$/.test(value);
 
 function pageProblem(search: URLSearchParams) {
@@ -102,7 +95,7 @@ export function matchAccountingRoute(
   const keys = [...search.keys()];
   const allowed = new Set(route.query);
   const unknown = keys.find((key) => !allowed.has(key));
-  if (unknown) return { status: 400, message: `Unknown query parameter: ${unknown}` };
+  if (unknown !== undefined) return { status: 400, message: `Unknown query parameter: ${unknown}` };
   if (new Set(keys).size !== keys.length)
     return { status: 400, message: 'Repeated query parameter' };
   const problem = route.query.includes('page_size') ? pageProblem(search) : null;
@@ -119,7 +112,11 @@ export function accountingReply(status: number, message: string) {
 }
 
 /** accounting-service has no auth, so a 401 or 403 is the gateway's and reads as not reachable. */
-export async function forwardToAccounting(path: string, search: URLSearchParams) {
+export async function forwardToAccounting(
+  path: string,
+  search: URLSearchParams,
+  signal: AbortSignal
+) {
   const base = serverConfig.ACCOUNTING_URL;
   if (!base) return accountingReply(503, "Accounting isn't configured in this environment.");
 
@@ -130,7 +127,7 @@ export async function forwardToAccounting(path: string, search: URLSearchParams)
       headers: { accept: 'application/json' },
       redirect: 'manual',
       cache: 'no-store',
-      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+      signal: AbortSignal.any([signal, AbortSignal.timeout(UPSTREAM_TIMEOUT_MS)]),
     });
   } catch {
     return accountingReply(502, "Accounting didn't answer.");

@@ -15,20 +15,15 @@ import { PageHeader } from '../../../shared/page-header';
 import { AdminLink, adminHref } from '../../../shell/admin-link';
 import { CapabilityGate } from '../../../shell/capability-gate';
 import { getAccount, listProjectAccounts } from '../api';
-import { ACCOUNT_TYPE_LABELS, accountingHref } from '../helpers';
-import { AccountingFilter, AccountingPage, AccountType } from '../types';
+import { ACCOUNT_TYPE_LABELS, accountingHref, accountLinks } from '../helpers';
+import { AccountingPage, AccountType } from '../types';
 import { Credits, EnabledPill } from './cells';
 import { accountNameColumn, createdColumn, creditsColumn } from './columns';
 
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
-import type { TAccount, TAccountingFilter, TAccountType, TProjectAccount } from '../types';
+import type { TAccount, TProjectAccount } from '../types';
 
 const PROJECTS_SOURCE = pagedSource(listProjectAccounts);
-
-const SCOPE_FILTERS: Partial<Record<TAccountType, TAccountingFilter>> = {
-  [AccountType.VirtualLab]: AccountingFilter.Vlab,
-  [AccountType.Project]: AccountingFilter.Project,
-};
 
 const PROJECT_COLUMNS: Array<ISimpleColumn<TProjectAccount>> = [
   accountNameColumn('Project'),
@@ -36,20 +31,6 @@ const PROJECT_COLUMNS: Array<ISimpleColumn<TProjectAccount>> = [
   creditsColumn('reservation', 'Reserved', (project) => project.reservation),
   createdColumn(),
 ];
-
-function accountLinks({ id, account_type: type }: TAccount) {
-  const journal = {
-    label: 'Journal',
-    href: accountingHref(AccountingPage.Journal, { [AccountingFilter.Account]: id }),
-  };
-  const scope = SCOPE_FILTERS[type];
-  if (!scope) return [journal];
-  return [
-    { label: 'Jobs', href: accountingHref(AccountingPage.Jobs, { [scope]: id }) },
-    journal,
-    { label: 'Report', href: accountingHref(AccountingPage.Reports, { [scope]: id }) },
-  ];
-}
 
 function AccountView({ account }: { account: TAccount }) {
   const router = useRouter();

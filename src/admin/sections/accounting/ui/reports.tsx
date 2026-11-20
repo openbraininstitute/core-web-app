@@ -2,9 +2,6 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { match } from 'ts-pattern';
-
-import { formatBytes, formatDurationFromSeconds } from '@/utils/format';
 
 import { adminQueryKeys } from '../../../query-keys';
 import { formatDateTime } from '../../../shared/format';
@@ -12,7 +9,8 @@ import { AdminPagedGrid, pagedSource } from '../../../shared/grid';
 import { PageHeader } from '../../../shared/page-header';
 import { AdminLink, adminHref } from '../../../shell/admin-link';
 import { getSystemBalance, listReport, reportPath } from '../api';
-import { AccountingFilter, ChargeType } from '../types';
+import { reportUsage } from '../helpers';
+import { AccountingFilter } from '../types';
 import { Credits } from './cells';
 import { creditsColumn } from './columns';
 import { useDayRange, useIdFilter } from './filters';
@@ -21,16 +19,6 @@ import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { TJobReport } from '../types';
 
 const REPORT_SOURCE = pagedSource(listReport);
-
-const usage = (report: TJobReport) =>
-  match(report)
-    .with({ type: ChargeType.Oneshot }, ({ count }) => `${count} units`)
-    .with({ type: ChargeType.Longrun }, ({ duration }) => formatDurationFromSeconds(duration))
-    .with(
-      { type: ChargeType.Storage },
-      ({ size, duration }) => `${formatBytes(size)} for ${formatDurationFromSeconds(duration)}`
-    )
-    .exhaustive();
 
 const COLUMNS: Array<ISimpleColumn<TJobReport>> = [
   {
@@ -66,7 +54,7 @@ const COLUMNS: Array<ISimpleColumn<TJobReport>> = [
     id: 'usage',
     header: 'Usage',
     width: { flex: 1, minWidth: 160 },
-    getValue: usage,
+    getValue: reportUsage,
   },
 ];
 
@@ -109,7 +97,7 @@ export function Reports() {
       <AdminPagedGrid<TJobReport>
         fill
         what="charged jobs"
-        columns={COLUMNS}
+        columns={project.id ? COLUMNS.filter((column) => column.id !== 'project') : COLUMNS}
         getRowId={(report) => report.job_id}
         dataSource={REPORT_SOURCE}
         queryKey={adminQueryKeys.accountingReport(path)}

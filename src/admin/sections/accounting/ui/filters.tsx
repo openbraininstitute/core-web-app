@@ -61,7 +61,7 @@ export function useIdFilter(key: TAccountingFilter, label: string) {
   return {
     id: id || undefined,
     control: id ? (
-      <Tag closable onClose={() => setId('')} className="m-0! py-1!">
+      <Tag key={key} closable onClose={() => setId('')} className="m-0! py-1!">
         {label}: <span className="font-mono">{id.slice(0, 8)}…</span>
       </Tag>
     ) : null,
@@ -90,6 +90,7 @@ export function useOptionFilter<T extends string>({
       <Select<T>
         allowClear
         showSearch
+        optionFilterProp="label"
         placeholder={placeholder}
         value={value ?? undefined}
         options={options}
