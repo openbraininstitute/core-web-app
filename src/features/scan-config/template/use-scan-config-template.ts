@@ -19,6 +19,7 @@ import {
   getConfigKeyForEntity,
   resolveScanConfigTab,
   ScanConfigCampaignOriginActionDict,
+  toScanConfigForm,
 } from '@/features/scan-config/helpers';
 import { useScanConfigEditingLocked } from '@/features/scan-config/hooks/use-config-editing-locked';
 import { useDefaultValidationTargets } from '@/features/scan-config/hooks/use-default-validation-targets';
@@ -83,8 +84,12 @@ export function useScanConfigTemplate({
   const [isEditingKey, setIsEditingKey] = useState(false);
   const [newKey, setNewKey] = useState('');
   // memoized: useConfig re-applies the initial config whenever its identity changes
+  //
+  // `toScanConfigForm` is a no-op for a campaign's own config (already shaped this way); it only
+  // does real work when `loadedConfig` is a single-coordinate config (e.g. duplicating from one
+  // specific result instead of the campaign), stripping its run-bookkeeping keys and `type`.
   const initialConfig = useMemo(
-    () => loadedConfig && withoutEmptyRegions(loadedConfig, schema),
+    () => loadedConfig && withoutEmptyRegions(toScanConfigForm(loadedConfig, schema), schema),
     [loadedConfig, schema]
   );
   const [config, setConfig] = useConfig({

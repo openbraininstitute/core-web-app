@@ -127,3 +127,12 @@ export function detailViewTabbedEmptyClass(variant: TViewVariant) {
 export function detailViewTabbedContentClass(variant: TViewVariant) {
   return cn('mt-5 min-h-0', variant === ViewVariant.Default && detailViewInsetPanelClass(variant));
 }
+
+/** Pill-shaped section heading (e.g. "File preview", "Model traces") on overview/analysis tabs */
+export function detailViewSectionHeadingClass(variant: TViewVariant) {
+  return cn(
+    'mb-5 mt-5 rounded-full border px-4 py-3 text-xl font-bold capitalize',
+    detailViewHeadingClass(variant, 'xl'),
+    detailViewPanelBorderClass(variant)
+  );
+}

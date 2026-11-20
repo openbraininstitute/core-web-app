@@ -22,6 +22,7 @@ export const circuitTypes: TExtendedEntitiesTypeDict[] = [
   'small_micro_circuit',
   'paired_neuron_circuit',
   'micro_circuit',
+  'whole_brain',
 ];
 
 export const getEntityByExtendedType = ({ type }: { type?: TExtendedEntitiesTypeDict }) =>

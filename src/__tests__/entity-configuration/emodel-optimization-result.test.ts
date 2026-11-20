@@ -32,8 +32,8 @@ describe('e-model optimisation result entity is removed', () => {
 
 describe('e-model optimisation campaign', () => {
   // The campaign is no longer browsable on its own: it is unlisted from Data > Simulations, but
-  // its domain config (and `resolve()`) stays registered because an e-model's own Configuration
-  // tab still traces back to the campaign that produced it (resolveEModelOptimizationCampaign).
+  // its domain config (and `resolve()`) stays registered because the optimisation workflow's
+  // campaign resolver uses it.
   it('is registered with the display title, but not listed under simulations', () => {
     const config = EntityCoreConfiguration.EModelOptimizationCampaign;
 

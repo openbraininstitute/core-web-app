@@ -613,8 +613,7 @@ export default async function Overview({
     includes(morphologyTypes, extendedType) ||
     Boolean(meshGlb) ||
     extendedType === ExtendedEntitiesTypeDict.ElectricalCellRecording ||
-    extendedType === ExtendedEntitiesTypeDict.IonChannelRecording ||
-    extendedType === ExtendedEntitiesTypeDict.IonChannelModel;
+    extendedType === ExtendedEntitiesTypeDict.IonChannelRecording;
 
   const isSimulationPage =
     getEntityByExtendedType({ type: extendedType })?.group === EntityTypeGroup.Simulations;
@@ -673,13 +672,6 @@ export default async function Overview({
       {extendedType === ExtendedEntitiesTypeDict.IonChannelRecording && (
         <IonChannelRecordingViewer
           resource={entity as IIonChannelRecording}
-          ctx={context}
-          variant={fieldVariant}
-        />
-      )}
-      {extendedType === ExtendedEntitiesTypeDict.IonChannelModel && (
-        <IonChannelModelOverview
-          icm={entity as IonChannelModel}
           ctx={context}
           variant={fieldVariant}
         />
@@ -747,6 +739,15 @@ export default async function Overview({
       <EModelOverview emodel={entity as IEModel} ctx={context} variant={fieldVariant} />
     ) : null;
 
+  const ionChannelModelFilePreviewSection =
+    extendedType === ExtendedEntitiesTypeDict.IonChannelModel ? (
+      <IonChannelModelOverview
+        icm={entity as IonChannelModel}
+        ctx={context}
+        variant={fieldVariant}
+      />
+    ) : null;
+
   // a result's own extracted e-features/protocols; its originating campaign's input config
   // lives on the Workflow tab (detail-view/configuration.tsx) instead
   const efeaturePreviewSection =
@@ -779,6 +780,7 @@ export default async function Overview({
       {emCellMeshSection}
       {morphometricsSection}
       {emodelFilePreviewSection}
+      {ionChannelModelFilePreviewSection}
       {efeaturePreviewSection}
     </>
   );

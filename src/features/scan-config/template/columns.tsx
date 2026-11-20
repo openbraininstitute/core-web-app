@@ -28,6 +28,7 @@ export function LeftColumn({ props, state }: ColumnProps) {
       config={state.config}
       setConfig={state.setConfig}
       campaignId={state.campaignId}
+      singleScanId={props.singleScanId}
       loading={state.loading}
       selectedEntry={state.selectedEntry}
       setSelectedEntry={state.setSelectedEntry}

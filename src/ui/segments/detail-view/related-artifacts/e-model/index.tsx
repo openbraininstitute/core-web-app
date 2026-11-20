@@ -6,8 +6,8 @@ import { type TViewVariant, ViewVariant, WorkspaceScope } from '@/constants';
 import { ExemplarTraces } from '@/features/entities/e-model/detail-view/exemplar-traces';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import Tabs, { Tab } from '@/ui/molecules/tabbed-page';
+import { useListingAreaClass } from '@/ui/segments/detail-view/related-artifacts/use-listing-area-class';
 import { detailViewGridContainerClass } from '@/ui/segments/detail-view/variant-styles';
-import { useMiniDetailView } from '@/ui/segments/mini-detail-view/event';
 import { cn } from '@/utils/css-class';
 
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
@@ -16,20 +16,6 @@ type Props = {
   emodel: IEModel;
   variant?: TViewVariant;
 };
-
-/**
- * `BrowseEntityScope`'s `[grid-area:body]`/`[grid-area:mini-view]` classes only take
- * effect inside a `display:grid` ancestor naming those areas — the main Data-browse
- * page provides one, this tab doesn't, so each listing brings its own (mirrors
- * `browse-widget.tsx`'s local-wrapper pattern).
- */
-function useListingAreaClass() {
-  const { mdv } = useMiniDetailView();
-  return cn('grid h-[calc(100vh-18rem)] min-h-96 gap-2 overflow-hidden', {
-    "grid-cols-[minmax(0,1fr)_minmax(30rem,44rem)] [grid-template-areas:'body_mini-view']": mdv,
-    "grid-cols-1 [grid-template-areas:'body']": !mdv,
-  });
-}
 
 export function RelatedEntities({ emodel, variant = ViewVariant.Light }: Props) {
   const ionChannelModelIds = emodel.ion_channel_models.map((icm) => icm.id);

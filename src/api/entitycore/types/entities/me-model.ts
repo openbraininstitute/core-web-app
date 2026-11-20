@@ -64,8 +64,10 @@ export interface IMEModel
   morphology: ICellMorphology;
   emodel: IEModel;
   calibration_result?: {
-    rin: number;
-  };
+    holding_current: number;
+    threshold_current: number;
+    rin?: number | null;
+  } | null;
 }
 
 export interface INestedMEModel extends IMEModelBase, Timestamps {

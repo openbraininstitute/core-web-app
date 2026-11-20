@@ -10,6 +10,7 @@ import { getElectricalCellRecording } from '@/api/entitycore/queries/experimenta
 import { getIonChannelRecording } from '@/api/entitycore/queries/experimental/ion-channel-recording';
 import { getEntity } from '@/api/entitycore/queries/general/entity';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
+import { getEModel } from '@/api/entitycore/queries/model/e-model';
 import { getIonChannelModel } from '@/api/entitycore/queries/model/ion-channel-model';
 import { getSimulations } from '@/api/entitycore/queries/simulation/campaign/simulation';
 import { getSimulationExecutions } from '@/api/entitycore/queries/simulation/campaign/simulation-execution';
@@ -31,6 +32,7 @@ import type {
   TEntityTypeDict,
 } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
 import type { IExecutionActivity } from '@/api/entitycore/types/entities/execution';
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
@@ -242,6 +244,7 @@ export function useModelQuery({
   } = useQuery<
     | ICircuit
     | IMEModel
+    | IEModel
     | IonChannelModel
     | IEMCellMesh
     | ICellMorphology
@@ -250,6 +253,7 @@ export function useModelQuery({
     Error,
     | ICircuit
     | IMEModel
+    | IEModel
     | IonChannelModel
     | IEMCellMesh
     | ICellMorphology
@@ -265,6 +269,8 @@ export function useModelQuery({
           .with(EntityTypeDict.Circuit, () => getCircuit(params))
           // @ts-expect-error this query won't start without the id
           .with(EntityTypeDict.Memodel, () => getMEModel(params))
+          // @ts-expect-error this query won't start without the id
+          .with(EntityTypeDict.Emodel, () => getEModel(params))
           // @ts-expect-error this query won't start without the id
           .with(EntityTypeDict.IonChannelModel, () => getIonChannelModel(params))
           // @ts-expect-error this query won't start without the id

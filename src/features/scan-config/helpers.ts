@@ -5,6 +5,8 @@ import {
 } from '@/api/entitycore/types/extended-entity-type';
 import {
   BuildScanConfigTabs,
+  type Config,
+  type ConfigSchema,
   type ConfigValue,
   ExtractScanConfigTabs,
   type NeuronPropertyFilter,
@@ -26,6 +28,7 @@ export {
   findLatestExecutionForEntity,
 } from '@/features/task-runner/status';
 
+import { omit } from 'es-toolkit';
 import { get } from 'es-toolkit/compat';
 import z from 'zod';
 
@@ -139,6 +142,9 @@ export const ScanConfigTabSearchParam = 'tab' as const;
 /** query param naming the result a results tab opens on (`?item={simulationId}`). */
 export const ScanConfigItemSearchParam = 'item' as const;
 
+/** query param holding the task config the results tabs open on (`?config={taskConfigId}`). */
+export const ScanConfigConfigSearchParam = 'config' as const;
+
 /** each activity's results tab — the one tab that is not `configuration`. */
 export const ScanConfigResultsTab = {
   [ScanConfigActivity.Simulate]: {
@@ -210,6 +216,24 @@ export function parseScanConfigMode(
   value: string | string[] | undefined
 ): TScanConfigCampaignOriginActionDict | undefined {
   return Object.values(ScanConfigCampaignOriginActionDict).find((action) => action === value);
+}
+
+/** What a single-coordinate config adds to the scan config it extends (obi-one `SingleConfigMixin`). */
+const SINGLE_CONFIG_KEYS = [
+  'idx',
+  'scan_output_root',
+  'coordinate_output_root',
+  'obi_one_version',
+  'single_coordinate_scan_params',
+];
+
+/**
+ * A config as the form of its workflow's scan config. A single-coordinate config is its scan
+ * config with one value per field, plus a few run keys and its own `type`; a scan config passes
+ * through as it is.
+ */
+export function toScanConfigForm(config: Record<string, unknown>, schema: ConfigSchema): Config {
+  return { ...omit(config, SINGLE_CONFIG_KEYS), type: schema.properties.type.const } as Config;
 }
 
 /** obiOne FromID reference written under an `initialize` model field */
