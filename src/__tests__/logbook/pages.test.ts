@@ -25,7 +25,7 @@ const page = (id: string, kind: IPage['kind'], position: number): IPage => ({
 
 test('the address names a section; no page id is the main page', () => {
   const project = { virtualLabId: LAB, projectId: PROJECT };
-  const base = `/app/virtual-lab/${LAB}/${PROJECT}/reports`;
+  const base = `/app/virtual-lab/${LAB}/${PROJECT}/logbook`;
   expect(pathOf(project, LOG)).toBe(`${base}/${LOG}`);
   expect(pathOf(project, LOG, SECTION)).toBe(`${base}/${LOG}/page/${SECTION}`);
   expect(routeOf(`${base}/${LOG}/page/${SECTION}`)).toEqual({

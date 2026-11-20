@@ -96,7 +96,7 @@ const onScreen = (id: string): boolean => view(id).parentElement?.className === 
 const offScreen = (id: string): boolean => view(id).parentElement?.className === 'hidden';
 const data = (id: string, name: string): string | null => view(id).getAttribute(`data-${name}`);
 const propsOf = (id: string): ILogPageProps => state.views.get(id) as ILogPageProps;
-const base = `/app/virtual-lab/${LAB}/${PROJECT}/reports/${LOG}`;
+const base = `/app/virtual-lab/${LAB}/${PROJECT}/logbook/${LOG}`;
 
 beforeEach(() => {
   state.pages = [main, a, b, c];

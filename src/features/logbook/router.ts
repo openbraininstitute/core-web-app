@@ -1,4 +1,4 @@
-// /app/virtual-lab/<lab>/<project>/reports[/<log id>[/page/<page id>]], the address agents link to.
+// /app/virtual-lab/<lab>/<project>/logbook[/<log id>[/page/<page id>]], the address agents link to.
 
 import { isNil } from 'es-toolkit';
 import { usePathname } from 'next/navigation';
@@ -13,7 +13,7 @@ export interface IRoute {
 }
 
 const ROUTE =
-  /^\/app\/virtual-lab\/([0-9a-f-]{36})\/([0-9a-f-]{36})\/reports(?:\/([0-9a-f-]{36})(?:\/page\/([0-9a-f-]{36}))?)?\/?$/;
+  /^\/app\/virtual-lab\/([0-9a-f-]{36})\/([0-9a-f-]{36})\/logbook(?:\/([0-9a-f-]{36})(?:\/page\/([0-9a-f-]{36}))?)?\/?$/;
 
 export function routeOf(pathname: string): IRoute {
   const match = ROUTE.exec(pathname);
@@ -30,7 +30,7 @@ export const pathOf = (
   logId: string | null = null,
   pageId: string | null = null
 ): string =>
-  `/app/virtual-lab/${project.virtualLabId}/${project.projectId}/reports${isNil(logId) ? '' : `/${logId}${isNil(pageId) ? '' : `/page/${pageId}`}`}`;
+  `/app/virtual-lab/${project.virtualLabId}/${project.projectId}/logbook${isNil(logId) ? '' : `/${logId}${isNil(pageId) ? '' : `/page/${pageId}`}`}`;
 
 // Next.js syncs usePathname with pushState, so app links and the back button reach us too.
 export function navigate(path: string, replace = false): void {
