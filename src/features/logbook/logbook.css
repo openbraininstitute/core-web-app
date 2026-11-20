@@ -80,6 +80,24 @@
   border-radius: 16px;
   box-shadow: var(--shadow-pop);
 }
+/* A panel kept off the left edge until `data-open` is true; its user sets position, z-index and width. */
+@utility drawer {
+  visibility: hidden;
+  top: calc(var(--spacing) * 2);
+  bottom: calc(var(--spacing) * 2);
+  left: calc(var(--spacing) * 2);
+  translate: calc(-100% - 24px);
+  border-radius: 24px;
+  background-color: var(--color-white);
+  box-shadow: var(--shadow-drawer);
+  transition-property: translate, visibility;
+  transition-duration: 220ms;
+  transition-timing-function: ease;
+  &[data-open="true"] {
+    visibility: visible;
+    translate: 0;
+  }
+}
 /* Positioned, so absolutely placed children (sr-only labels) scroll with the box, not the page. */
 @utility scroll-thin {
   position: relative;

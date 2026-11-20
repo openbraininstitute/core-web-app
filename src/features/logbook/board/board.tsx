@@ -256,10 +256,7 @@ export function Board({ me, project, logId, pageId }: IBoardProps) {
                     />
                   ) : null}
                   <aside
-                    className={cn(
-                      RAIL,
-                      'invisible fixed top-2 bottom-2 left-2 z-60 w-[min(360px,calc(100vw-40px))] translate-x-[calc(-100%-24px)] rounded-[24px] bg-white shadow-drawer transition-[translate,visibility] duration-[220ms] ease-[ease] data-[open=true]:visible data-[open=true]:translate-x-0'
-                    )}
+                    className={cn(RAIL, 'drawer fixed z-60 w-[min(360px,calc(100vw-40px))]')}
                     data-open={drawerOpen}
                     aria-label="Research logs"
                   >

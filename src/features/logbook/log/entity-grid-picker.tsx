@@ -136,6 +136,8 @@ export function EntityGridPicker({ multiple, onPick, onClose }: IEntityGridPicke
   const gridId = useId();
   const [active, setActive] = useState<TNavItem | undefined>(FIRST);
   const [openSection, setOpenSection] = useState<string | null>(FIRST_SECTION);
+  // Narrow screens: the types are a drawer over the dialog, opened from the type button.
+  const [navOpen, setNavOpen] = useState(false);
   const [scope, setScope] = useState<TWorkspaceScope>(WorkspaceScope.Combined);
   const [hierarchyId, setHierarchyId] = useState<string>(ALL_SPECIES);
   const [region, setRegion] = useState<{ readonly id: string; readonly label: string } | null>(
@@ -170,7 +172,7 @@ export function EntityGridPicker({ multiple, onPick, onClose }: IEntityGridPicke
   const activeSection = sectionOf(active?.key);
   const heading =
     isNil(active) || isNil(activeSection) ? null : (
-      <TypeChip section={activeSection} label={active.label} />
+      <TypeChip section={activeSection} label={active.label} onOpen={() => setNavOpen(true)} />
     );
 
   // A single pick is exclusive across types; many picks are kept per type.
@@ -203,21 +205,22 @@ export function EntityGridPicker({ multiple, onPick, onClose }: IEntityGridPicke
   const select = (item: TNavItem): void => {
     setActive(item);
     setPreview(null);
+    setNavOpen(false);
   };
 
   return (
     <div className="fixed inset-0 z-41 grid place-items-center bg-[rgba(0,16,38,0.32)] p-4">
       <section
-        className="logbook-card flex h-[min(860px,calc(100vh-32px))] w-[min(1360px,calc(100vw-32px))] flex-col overflow-hidden"
+        className="logbook-card relative flex h-[min(860px,calc(100vh-32px))] w-[min(1360px,calc(100vw-32px))] flex-col overflow-hidden"
         role="dialog"
         aria-modal="true"
         aria-label={multiple ? 'Link entities' : 'Replace the entity'}
       >
-        <header className="flex flex-none items-center gap-3 border-b border-rule-soft px-5 py-3.5">
-          <span className="grid size-[34px] flex-none place-items-center rounded-full bg-primary-0 text-primary-7">
+        <header className="flex flex-none items-center gap-3 border-b border-rule-soft px-5 py-3.5 max-sm:px-3">
+          <span className="grid size-[34px] flex-none place-items-center rounded-full bg-primary-0 text-primary-7 max-sm:hidden">
             <Icon name={multiple ? 'link' : 'replace'} size={16} />
           </span>
-          <h2 className="mr-auto text-[17px] font-bold text-primary-9">
+          <h2 className="mr-auto min-w-0 truncate text-[17px] font-bold text-primary-9">
             {multiple ? 'Link entities' : 'Replace the entity'}
           </h2>
           {/* biome-ignore lint/a11y/useSemanticElements: a segmented button group, not a form fieldset */}
@@ -232,10 +235,12 @@ export function EntityGridPicker({ multiple, onPick, onClose }: IEntityGridPicke
                 type="button"
                 className={PILL}
                 aria-pressed={scope === s.value}
+                aria-label={s.label}
+                title={s.label}
                 onClick={() => setScope(s.value)}
               >
                 <Icon name={s.icon} size={14} />
-                {s.label}
+                <span className="max-sm:hidden">{s.label}</span>
               </button>
             ))}
           </div>
@@ -245,10 +250,32 @@ export function EntityGridPicker({ multiple, onPick, onClose }: IEntityGridPicke
         </header>
 
         <div className="flex min-h-0 flex-1">
+          {navOpen ? (
+            <button
+              type="button"
+              className="absolute inset-0 z-55 cursor-default border-0 bg-[rgba(0,16,38,0.32)] md:hidden"
+              aria-label="Close the list of types"
+              onClick={() => setNavOpen(false)}
+            />
+          ) : null}
+          {/* A column from md up; below, the same drawer as the list of logs, inside the dialog. */}
           <nav
-            className="scroll-thin w-[264px] flex-none overflow-y-auto bg-white p-3 max-md:hidden"
+            className="scroll-thin w-[264px] flex-none overflow-y-auto bg-white p-3 max-md:drawer max-md:absolute max-md:z-60 max-md:w-[min(360px,calc(100%-40px))]"
+            data-open={navOpen}
             aria-label="Entity types"
+            onKeyDown={(event) => event.key === 'Escape' && setNavOpen(false)}
           >
+            <div className="mb-2 flex items-center justify-between pl-1 md:hidden">
+              <span className="label-caps">Entity types</span>
+              <button
+                type="button"
+                className="modal-close"
+                aria-label="Close the list of types"
+                onClick={() => setNavOpen(false)}
+              >
+                <Icon name="close" size={14} stroke={2.4} />
+              </button>
+            </div>
             <LayoutGroup id={`${gridId}-types`}>
               <BouncyAccordion
                 value={openSection}
@@ -479,21 +506,47 @@ function TypeList({
 }
 
 // What the grid lists, in the colour of its category, so the table reads as the chosen type.
-function TypeChip({ section, label }: { readonly section: INavSection; readonly label: string }) {
+// Narrow screens: only its icon, a button that opens the types drawer.
+function TypeChip({
+  section,
+  label,
+  onOpen,
+}: {
+  readonly section: INavSection;
+  readonly label: string;
+  readonly onOpen: () => void;
+}) {
+  const style = { background: section.look.tint, color: section.look.colour };
   return (
-    <span
-      className="inline-flex h-9 flex-none items-center gap-2 rounded-full pr-3.5 pl-1 text-[13px] font-semibold"
-      style={{ background: section.look.tint, color: section.look.colour }}
-    >
-      <span className="grid size-7 place-items-center rounded-full bg-white">
-        <Icon name={section.icon} size={14} />
+    <>
+      <span
+        className="inline-flex h-9 flex-none items-center gap-2 rounded-full pr-3.5 pl-1 text-[13px] font-semibold max-md:hidden"
+        style={style}
+      >
+        <span className="grid size-7 place-items-center rounded-full bg-white">
+          <Icon name={section.icon} size={14} />
+        </span>
+        <span className="opacity-75">{section.title}</span>
+        <Icon name="chevronRight" size={12} stroke={2.4} />
+        <span className="text-primary-9">{label}</span>
       </span>
-      <span className="opacity-75">{section.title}</span>
-      <Icon name="chevronRight" size={12} stroke={2.4} />
-      <span className="text-primary-9">{label}</span>
-    </span>
+      <button
+        type="button"
+        className="grid size-9 flex-none place-items-center rounded-full border-0 outline-none focus-visible:ring-2 focus-visible:ring-primary-4 md:hidden"
+        style={style}
+        aria-label={`${section.title}, ${label}. Choose another type`}
+        title={`${section.title} › ${label}`}
+        data-testid="logbook-picker-types"
+        onClick={onOpen}
+      >
+        <Icon name={section.icon} size={15} />
+      </button>
+    </>
   );
 }
+
+// In the trigger of a narrow screen, a filter shows its icon only; its list keeps the names.
+const TRIGGER_NAME = 'max-md:[[data-slot=select-trigger]_&]:hidden';
 
 function SpeciesBadge({ name }: { readonly name: string | null }) {
   return (
@@ -517,18 +570,22 @@ function SpeciesFilter({
 }) {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className={cn(FILTER, 'w-auto pl-1.5')} aria-label="Species">
+      <SelectTrigger
+        className={cn(FILTER, 'w-auto pl-1.5 max-md:pr-1.5')}
+        icoClassName="max-md:hidden"
+        aria-label="Species"
+      >
         <SelectValue placeholder="All species" />
       </SelectTrigger>
       <SelectContent className={cn(MENU, 'min-w-[220px]')}>
         <SelectItem value={ALL_SPECIES} className={MENU_ITEM}>
           <SpeciesBadge name={null} />
-          All species
+          <span className={TRIGGER_NAME}>All species</span>
         </SelectItem>
         {hierarchies.map((h) => (
           <SelectItem key={h.id} value={h.id} className={MENU_ITEM}>
             <SpeciesBadge name={h.species.displayName} />
-            {h.species.displayName}
+            <span className={TRIGGER_NAME}>{h.species.displayName}</span>
           </SelectItem>
         ))}
       </SelectContent>
@@ -568,24 +625,27 @@ function RegionFilter({
       <PopoverTrigger asChild>
         <button
           type="button"
-          className={cn(FILTER, 'max-w-[300px] pl-1.5')}
+          className={cn(FILTER, 'max-w-[300px] pl-1.5 max-md:pr-1.5')}
           disabled={disabled}
-          title={disabled ? hint : undefined}
+          aria-label={`Brain region: ${value?.label ?? 'Any brain region'}`}
+          title={disabled ? hint : (value?.label ?? 'Any brain region')}
         >
           <span className="grid size-6 flex-none place-items-center rounded-full bg-primary-0 text-primary-7">
             <Icon name="brain_region" size={13} />
           </span>
-          <span className="truncate">{value?.label ?? 'Any brain region'}</span>
+          <span className="truncate max-md:hidden">{value?.label ?? 'Any brain region'}</span>
           {isNil(chosen) ? null : (
             <span
               className="size-2 flex-none rounded-full"
               style={{ background: hexOf(chosen.data.color_hex_triplet) }}
             />
           )}
-          <Icon name="chevronDown" size={12} />
+          <span className="flex max-md:hidden">
+            <Icon name="chevronDown" size={12} />
+          </span>
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" className={cn(MENU, 'w-[340px]')}>
+      <PopoverContent align="start" className={cn(MENU, 'w-[340px] max-w-[calc(100vw-32px)]')}>
         <label className="mb-1.5 flex h-9 items-center gap-2 rounded-full bg-neutral-1 px-3 text-neutral-4">
           <Icon name="search" size={14} />
           <span className="sr-only">Search brain regions</span>
