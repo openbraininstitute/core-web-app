@@ -22,8 +22,8 @@ export interface IOpenTabs {
   readonly live: readonly string[];
   /** The file shown over the page on screen, if any. */
   readonly artifactId: string | null;
-  /** The address last acted on; null before the first one. */
-  readonly followed: { readonly pageId: string | null } | null;
+  /** The address last acted on, and whether the log had its page; null before the first one. */
+  readonly followed: { readonly pageId: string | null; readonly found: boolean } | null;
 }
 
 export const NO_TABS: IOpenTabs = { open: [], live: [], artifactId: null, followed: null };
@@ -32,6 +32,8 @@ export const NO_TABS: IOpenTabs = { open: [], live: [], artifactId: null, follow
 export const WARM_PAGES = 2;
 /** How long a warm page keeps its editor and socket before they are freed. */
 export const WARM_KEEP_MS = 60_000;
+
+export const tabKey = (tab: ITabRef): string => `${tab.kind}:${tab.id}`;
 
 const sameTab = (a: ITabRef, b: ITabRef): boolean => a.kind === b.kind && a.id === b.id;
 const isOpen = (tabs: IOpenTabs, tab: ITabRef): boolean => tabs.open.some((t) => sameTab(t, tab));
@@ -62,28 +64,26 @@ export function showArtifact(tabs: IOpenTabs, artifactId: string): IOpenTabs {
 }
 
 /**
- * Follows the address. A new address shows its page unless that page is already on screen (a
- * tab click got there first); an address the list does not have yet shows the main page and is
- * tried again with the next list. Pages gone from the list lose their tab, but the one on screen
- * stays, read-only, until something else is shown.
+ * Follows the address once per change: its page shows, or the main page when the log lacks it
+ * (shown later if the list gains it). Pages gone from the log lose their tab and view, except
+ * the one on screen.
  */
 export function settleTabs(
   tabs: IOpenTabs,
   pages: readonly IPage[],
   pageId: string | null
 ): IOpenTabs {
-  if (pages.length === 0) return tabs;
+  const main = pages.find((page) => page.kind === PageKind.Main) ?? pages[0];
+  if (isNil(main)) return tabs;
+  const named = isNil(pageId) ? main : pages.find((page) => page.id === pageId);
+  const seen = tabs.followed;
+  const moved = isNil(seen) || seen.pageId !== pageId;
+  const arrived = isNotNil(seen) && !seen.found && isNotNil(named);
   let next = tabs;
-  if (isNil(next.followed) || next.followed.pageId !== pageId) {
-    const target = isNil(pageId) ? undefined : pages.find((page) => page.id === pageId);
-    const main = pages.find((page) => page.kind === PageKind.Main) ?? pages[0];
-    if (isNotNil(target) || isNil(pageId)) {
-      const page = target ?? main;
-      if (next.live[0] !== page.id) next = showPage(next, page);
-      next = { ...next, followed: { pageId } };
-    } else if (next.live.length === 0 || next.live[0] !== main.id) {
-      next = showPage(next, main);
-    }
+  if (moved || arrived) {
+    const page = named ?? main;
+    if (next.live[0] !== page.id) next = showPage(next, page);
+    next = { ...next, followed: { pageId, found: isNotNil(named) } };
   }
   const known = new Set(pages.map((page) => page.id));
   const keep = (id: string): boolean => known.has(id) || id === next.live[0];

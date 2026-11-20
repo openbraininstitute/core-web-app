@@ -11,11 +11,13 @@ import { Layout } from '@/features/logbook/board/layout';
 import { useCollaboration } from '@/features/logbook/collaboration/notices';
 import { FormatBar } from '@/features/logbook/editor/format-bar';
 import { SelectionMenu } from '@/features/logbook/editor/selection-menu';
+import { ArtifactIcon } from '@/features/logbook/log/artifact-icon';
 import { ArtifactBar, ArtifactView } from '@/features/logbook/log/artifact-view';
 import { CONTROL } from '@/features/logbook/log/controls';
 import { EditorTabs } from '@/features/logbook/log/editor-tabs';
 import { InsertMenu } from '@/features/logbook/log/menus';
 import { NoticeKind, reasonOf } from '@/features/logbook/log/notice';
+import { TabKind } from '@/features/logbook/log/open-tabs';
 import { HereNow, PresenceButton } from '@/features/logbook/log/presence';
 import { SaveStatus } from '@/features/logbook/log/save-status';
 import { CARD_MENUS, Menu, MobileTab, RightTab } from '@/features/logbook/log/ui-state';
@@ -23,7 +25,9 @@ import { ViewMode } from '@/features/logbook/log/view-mode';
 import { Icon } from '@/features/logbook/ui/icons';
 
 import type { CSSProperties, MouseEvent as ReactMouseEvent } from 'react';
+import type { IEditorTab } from '@/features/logbook/log/editor-tabs';
 import type { ILogShared } from '@/features/logbook/log/log-page';
+import type { ITabRef } from '@/features/logbook/log/open-tabs';
 import type { TMenu, TMobileTab, TRightTab } from '@/features/logbook/log/ui-state';
 
 export interface IPopAt {
@@ -95,11 +99,55 @@ export function EditorCard(props: IEditorCardProps) {
   const rejoinAt = useCollaboration(props.notices, (state) => state.rejoinAt);
   const update = useUpdateLog(props.project);
   const listing = useQuery(logFilesQuery(props.logId, props.project));
-  const tabs = useMemo(() => {
-    const all = isNil(listing.data) ? [] : artifactsOf(listing.data);
-    return props.openTabs.flatMap((id) => all.filter((a) => a.id === id));
-  }, [listing.data, props.openTabs]);
-  const artifact = tabs.find((a) => a.id === props.activeTab) ?? null;
+  const files = useMemo(
+    () => (isNil(listing.data) ? [] : artifactsOf(listing.data)),
+    [listing.data]
+  );
+  const artifact = files.find((file) => file.id === props.artifactId) ?? null;
+  const title = log?.name ?? 'Research log';
+  const main = props.pages.find((page) => page.kind === PageKind.Main);
+  const pageTab: ITabRef = { kind: TabKind.Page, id: props.page.id };
+  const tabs: IEditorTab[] = [
+    ...(isNil(main)
+      ? []
+      : [
+          {
+            tab: { kind: TabKind.Page, id: main.id },
+            label: title,
+            hint: title,
+            icon: <Icon name="notebook" size={15} />,
+            pinned: true,
+          },
+        ]),
+    ...props.tabs.flatMap((tab): IEditorTab[] => {
+      if (tab.kind === TabKind.Page) {
+        // The page on screen may have left the list (deleted while shown).
+        const page =
+          tab.id === props.page.id ? props.page : props.pages.find((item) => item.id === tab.id);
+        if (isNil(page)) return [];
+        return [
+          {
+            tab,
+            label: page.title,
+            hint: `${title} / ${page.title}`,
+            icon: <Icon name="page" size={15} />,
+            pinned: false,
+          },
+        ];
+      }
+      const file = files.find((item) => item.id === tab.id);
+      if (isNil(file)) return [];
+      return [
+        {
+          tab,
+          label: file.name,
+          hint: `${file.name} (read-only)`,
+          icon: <ArtifactIcon artifact={file} size={20} />,
+          pinned: false,
+        },
+      ];
+    }),
+  ];
 
   // Reads the card's box on click, never during render.
   const toggle = (which: TMenu, event: ReactMouseEvent<HTMLButtonElement>): void => {
@@ -159,12 +207,7 @@ export function EditorCard(props: IEditorCardProps) {
   const writeTab = !narrow || props.mTab === MobileTab.Write;
   const onLog = isNil(artifact);
   const copied = props.pages.find((page) => page.id === artifact?.pageId);
-  const openCopiedPage = isNil(copied)
-    ? null
-    : () => {
-        props.selectTab(null);
-        props.onOpenPage(copied);
-      };
+  const openCopiedPage = isNil(copied) ? null : () => props.onOpenPage(copied);
   const whoWrote =
     onLog &&
     isNotNil(selection) &&
@@ -194,8 +237,9 @@ export function EditorCard(props: IEditorCardProps) {
           </button>
         ) : null}
         <EditorTabs
-          title={log?.name ?? 'Research log'}
-          pageTitle={props.page.kind === PageKind.Section ? props.page.title : null}
+          tabs={tabs}
+          active={isNil(artifact) ? pageTab : { kind: TabKind.Artifact, id: artifact.id }}
+          page={pageTab}
           status={<SaveStatus notices={props.notices} copy={props.copy} iconOnly={narrow} />}
           canRename={isNotNil(log) && props.readOnly !== ReadOnlyReason.ReadAccess}
           onRename={(name) =>
@@ -208,10 +252,8 @@ export function EditorCard(props: IEditorCardProps) {
               throw error;
             })
           }
-          artifacts={tabs}
-          active={artifact?.id ?? null}
-          onSelect={props.selectTab}
-          onClose={props.closeArtifact}
+          onSelect={props.onSelectTab}
+          onClose={props.onCloseTab}
         />
         {props.canShut ? (
           <button

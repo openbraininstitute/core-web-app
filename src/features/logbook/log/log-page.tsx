@@ -13,11 +13,11 @@ import {
   useSyncExternalStore,
 } from 'react';
 
-import { PageKind } from '@/api/logbook/types';
+import { PageKind, ReadOnlyReason } from '@/api/logbook/types';
 import { actorOfWriter, writersQuery } from '@/features/logbook/api/writers';
 import { Layout } from '@/features/logbook/board/layout';
 import { personActor, resolveActor } from '@/features/logbook/collaboration/actors';
-import { usePauseWhenHidden } from '@/features/logbook/collaboration/idle';
+import { useCoolWhenAcked, usePauseWhenHidden } from '@/features/logbook/collaboration/idle';
 import { useRejoin } from '@/features/logbook/collaboration/rejoin';
 import { editorExtensions } from '@/features/logbook/editor/extensions';
 import { insertAfterBlock } from '@/features/logbook/editor/insert';
@@ -78,10 +78,20 @@ const SplitShut = { None: 'none', Editor: 'editor', Side: 'side' } as const;
 type TSplitShut = TValueOf<typeof SplitShut>;
 
 export function LogPage(props: ILogPageProps) {
-  const { me, log, layout, mode, notices, feed, logId, copy } = props;
+  const { me, log, layout, mode, notices, feed, logId, copy, shown, keepMs, onCool } = props;
+  const pageId = props.page.id;
   const provider = useHocuspocusProvider();
   // A tab hidden for a while drops its socket so the server can unload the page.
   usePauseWhenHidden(provider);
+  // Off screen, the page lets go of its editor and socket; a change the server can still take waits.
+  const unsent = useCallback((): boolean => {
+    const { readOnly } = notices.snapshot();
+    return (
+      (isNil(readOnly) || readOnly === ReadOnlyReason.UnsavedLimit) && provider.hasUnsyncedChanges
+    );
+  }, [notices, provider]);
+  const cool = useCallback(() => onCool(pageId), [onCool, pageId]);
+  useCoolWhenAcked(unsent, keepMs, cool);
 
   // On `saved`, the local copy is clean once the provider has nothing unsent.
   useEffect(() => {
@@ -103,6 +113,10 @@ export function LogPage(props: ILogPageProps) {
   // Awareness maps a Yjs client to a user id; the server's list names the user.
   const { awareness } = provider;
   if (isNil(awareness)) throw new Error('The live page has no awareness');
+  // Off screen, the others no longer see this caret.
+  useEffect(() => {
+    if (!shown) awareness.setLocalStateField('cursor', null);
+  }, [shown, awareness]);
   // Writers the server named for unknown clients; asked once per view, a failed ask retries.
   const queries = useQueryClient();
   const [written, setWritten] = useState<ReadonlyMap<number, IActor>>(() => new Map());
@@ -118,7 +132,7 @@ export function LogPage(props: ILogPageProps) {
         .fetchQuery(
           writersQuery(
             props.project,
-            props.page.id,
+            pageId,
             wanted.toSorted((a, b) => a - b)
           )
         )
@@ -134,7 +148,7 @@ export function LogPage(props: ILogPageProps) {
           for (const id of wanted) asked.current.delete(id);
         });
     },
-    [queries, provider, props.project, props.page.id]
+    [queries, provider, props.project, pageId]
   );
   const resolve = useCallback(
     (clientId: number) =>
@@ -235,22 +249,15 @@ export function LogPage(props: ILogPageProps) {
     setShownNotice(next && { ...next, id: noticeId.current });
   }, []);
   const splitRef = useRef<HTMLDivElement>(null);
-  // Open artifact tabs in the order opened, and the one shown (null: the log). Keyed per log.
-  const [openTabs, setOpenTabs] = useState<readonly string[]>([]);
-  const [activeTab, setActiveTab] = useState<string | null>(null);
-  const openArtifact = useCallback((id: string): void => {
-    setOpenTabs((tabs) => (tabs.includes(id) ? tabs : [...tabs, id]));
-    setActiveTab(id);
-    setMTab(MobileTab.Write);
-    setSplitShut((shut) => (shut === SplitShut.Editor ? SplitShut.None : shut));
-  }, []);
-  // The right neighbour takes its place, else the left, else the log.
-  const closeArtifact = (id: string): void => {
-    const at = openTabs.indexOf(id);
-    const rest = openTabs.filter((tab) => tab !== id);
-    setOpenTabs(rest);
-    if (activeTab === id) setActiveTab(rest[at] ?? rest[at - 1] ?? null);
-  };
+  const { onOpenArtifact } = props;
+  const openArtifact = useCallback(
+    (id: string): void => {
+      onOpenArtifact(id);
+      setMTab(MobileTab.Write);
+      setSplitShut((shut) => (shut === SplitShut.Editor ? SplitShut.None : shut));
+    },
+    [onOpenArtifact]
+  );
 
   // For History: set on a real selection, cleared when it collapses.
   useEffect(() => {
@@ -316,11 +323,7 @@ export function LogPage(props: ILogPageProps) {
     showHistory,
     flash,
     setNotice,
-    openTabs,
-    activeTab,
     openArtifact,
-    closeArtifact,
-    selectTab: setActiveTab,
     readOnly,
     learnWriters,
     awarenessStates: () => awareness.getStates(),
@@ -426,7 +429,8 @@ export function LogPage(props: ILogPageProps) {
             <span className="h-11 w-[5px] rounded-full bg-neutral-2 transition-[background,height] duration-150 ease-[ease] group-hover:h-16 group-hover:bg-primary-4" />
           </button>
         ) : null}
-        {sideVisible ? (
+        {/* Off screen, only the editor stays: no second editor for Preview, no History clock. */}
+        {sideVisible && shown ? (
           <SidePane
             {...shared}
             tab={narrow ? RIGHT_TAB_OF_MOBILE[mTab] : rightTab}
@@ -463,11 +467,7 @@ export interface ILogShared extends ILogPageProps {
   readonly showHistory: (range: ISelection | null) => void;
   readonly flash: (from: number, to: number) => void;
   readonly setNotice: (notice: INotice | null) => void;
-  readonly openTabs: readonly string[];
-  readonly activeTab: string | null;
   readonly openArtifact: (id: string) => void;
-  readonly closeArtifact: (id: string) => void;
-  readonly selectTab: (id: string | null) => void;
   readonly readOnly: TReadOnlyReason | null;
   readonly awarenessStates: () => Map<number, Record<string, unknown>>;
   readonly learnWriters: (clientIds: readonly number[]) => void;

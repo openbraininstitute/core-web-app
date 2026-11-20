@@ -362,7 +362,7 @@ export function SidePane(props: ISidePaneProps) {
       {props.tab === RightTab.History ? (
         <HistoryTab {...props} />
       ) : props.tab === RightTab.Artifacts ? (
-        <ArtifactsTab active={props.activeTab} onOpen={props.openArtifact} />
+        <ArtifactsTab active={props.artifactId} onOpen={props.openArtifact} />
       ) : (
         <PreviewTab />
       )}

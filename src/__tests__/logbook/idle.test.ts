@@ -2,6 +2,7 @@ import { WebSocketStatus } from '@hocuspocus/provider';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import {
+  coolWhenAcked,
   type IPausableSocket,
   pauseWhenHidden,
   RECHECK_MS,
@@ -101,4 +102,35 @@ test('a tab opened in the background counts from the start; 0 never pauses; stop
   pauseWhenHidden(socket, () => unsent, 5 * MINUTE, page);
   vi.advanceTimersByTime(5 * MINUTE);
   expect(socket.calls).toEqual(['disconnect']);
+});
+
+test('a page left lets go after its keep time, once', () => {
+  const cool = vi.fn();
+  coolWhenAcked(() => unsent, MINUTE, cool);
+  vi.advanceTimersByTime(MINUTE - 1);
+  expect(cool).not.toHaveBeenCalled();
+  vi.advanceTimersByTime(1);
+  expect(cool).toHaveBeenCalledTimes(1);
+  vi.advanceTimersByTime(10 * MINUTE);
+  expect(cool).toHaveBeenCalledTimes(1);
+});
+
+test('a page left with unacknowledged changes is held until the server has them', () => {
+  const cool = vi.fn();
+  unsent = true;
+  coolWhenAcked(() => unsent, 0, cool);
+  vi.advanceTimersByTime(RECHECK_MS);
+  expect(cool).not.toHaveBeenCalled();
+  unsent = false;
+  vi.advanceTimersByTime(RECHECK_MS);
+  expect(cool).toHaveBeenCalledTimes(1);
+});
+
+test('a page shown again before its keep time is not let go', () => {
+  const cool = vi.fn();
+  const stop = coolWhenAcked(() => unsent, MINUTE, cool);
+  vi.advanceTimersByTime(MINUTE / 2);
+  stop();
+  vi.advanceTimersByTime(10 * MINUTE);
+  expect(cool).not.toHaveBeenCalled();
 });

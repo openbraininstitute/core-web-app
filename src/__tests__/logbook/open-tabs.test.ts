@@ -67,6 +67,19 @@ test('a link to a page the list did not have yet opens it once the list has it',
   expect(settleTabs(early, pages, 'a').live).toEqual(['a', 'main']);
 });
 
+test('with an old link, a tab click is not undone while the address catches up', () => {
+  const old = settleTabs(NO_TABS, pages, 'gone');
+  const clicked = showPage(old, a);
+  expect(settleTabs(clicked, pages, 'gone')).toBe(clicked);
+});
+
+test('the address moving to a page that left the log shows the main page', () => {
+  const onA = settleTabs(NO_TABS, pages, 'a');
+  const moved = settleTabs(onA, pages, 'gone');
+  expect(moved.live).toEqual(['main', 'a']);
+  expect(settleTabs(moved, pages, 'gone')).toBe(moved);
+});
+
 test('a tab click shows at once; the address catching up changes nothing on screen', () => {
   const start = settleTabs(NO_TABS, pages, 'a');
   const clicked = showArtifact(showPage(start, b), 'fig.png');
