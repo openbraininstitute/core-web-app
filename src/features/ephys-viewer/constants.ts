@@ -1,5 +1,5 @@
 import { swrCacheConfig } from '@/api/cache-storage';
-import { PROJECT_DATA_CACHES } from '@/utils/project-data-caches';
+import { ProjectDataCache } from '@/utils/project-data-caches';
 
 export const CHART_LINE_COLOR = '#0050b3';
 
@@ -10,7 +10,7 @@ export const CHART_LINE_COLOR = '#0050b3';
 // through. The ephys viewer streams its file inside a worker and caches under `NWB_H5_CACHE`
 // (`src/utils/h5/caches.ts`).
 export const NWB_ASSET_CACHE_CONFIG = swrCacheConfig(
-  PROJECT_DATA_CACHES.ephysNwbAssets,
+  ProjectDataCache.EphysNwbAssets,
   7 * 24 * 60 * 60, //  7 days fresh
   30 * 24 * 60 * 60 // 30 days stale-while-revalidate
 );

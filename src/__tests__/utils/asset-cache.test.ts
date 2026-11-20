@@ -123,21 +123,30 @@ describe('the bounded cache', () => {
     expect(stream.locked).toBe(false);
   });
 
-  it('makes room in itself before asking the browser for it', async () => {
+  it('makes room in itself where the browser says it lacks it', async () => {
     await writeEntry(BOUNDS, key('a'), bytes(6000).buffer, 6000);
     const cache = storage.bucket(BOUNDS.name);
-    let heldWhenAsked: string[] = [];
     vi.stubGlobal('navigator', {
       storage: {
-        estimate: async () => {
-          heldWhenAsked = [...cache.entries.keys()];
-          return { quota: 1_000_000, usage: 0 };
-        },
+        estimate: async () => ({ quota: 10_000, usage: cache.entries.has(key('a')) ? 6000 : 0 }),
       },
     });
     expect(await writeEntry(BOUNDS, key('b'), bytes(6000).buffer, 6000)).toBe(true);
-    expect(heldWhenAsked).not.toContain(key('a'));
+    expect([...cache.entries.keys()]).not.toContain(key('a'));
     expect([...cache.entries.keys()]).toContain(key('b'));
+  });
+
+  it('evicts nothing for a write that fails', async () => {
+    await writeEntry(BOUNDS, key('a'), bytes(6000).buffer, 6000);
+    const failing = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        controller.error(new Error('download dropped'));
+      },
+    });
+    expect(await writeEntry(BOUNDS, key('b'), failing, 6000)).toBe(false);
+    const cache = storage.bucket(BOUNDS.name);
+    expect(cache.entries.has(key('a'))).toBe(true);
+    expect(cache.entries.has(key('b'))).toBe(false);
   });
 
   it('keeps a stored entry where keeping its books fails', async () => {

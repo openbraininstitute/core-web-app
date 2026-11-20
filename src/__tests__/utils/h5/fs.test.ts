@@ -163,6 +163,8 @@ beforeEach(async () => {
   vi.stubGlobal('caches', storage);
 });
 
+afterEach(() => vi.restoreAllMocks());
+
 describe('fetchToFS', () => {
   it('publishes a complete download under the final name', async () => {
     const bytes = hdf5Bytes(4096);
@@ -306,7 +308,6 @@ describe('fetchToFS', () => {
     await fetchAsset();
 
     expect(fetchMock).toHaveBeenCalledOnce();
-    vi.restoreAllMocks();
   });
 
   it('does not cache a response that declares no length', async () => {

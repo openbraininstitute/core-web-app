@@ -10,7 +10,11 @@ const claim = vi.hoisted(() => vi.fn(async () => {}));
 
 vi.mock('next-auth/react', () => ({ useSession: () => session.current }));
 vi.mock('next/navigation', () => ({ usePathname: () => '/app/virtual-lab' }));
-vi.mock('@/utils/project-data-caches', () => ({ claimProjectDataCaches: claim }));
+const disown = vi.hoisted(() => vi.fn());
+vi.mock('@/utils/project-data-caches', () => ({
+  claimProjectDataCaches: claim,
+  disownProjectDataCaches: disown,
+}));
 
 const signedIn = (id: string | undefined) => ({
   status: 'authenticated',
@@ -23,6 +27,7 @@ beforeEach(() => {
   reload = vi.fn();
   vi.stubGlobal('location', { ...window.location, reload });
   claim.mockClear();
+  disown.mockClear();
   session.current = { status: 'loading', data: null };
 });
 
@@ -50,16 +55,19 @@ describe('useSessionState and the project data caches', () => {
     expect(claim).not.toHaveBeenCalled();
   });
 
-  it('starts afresh when another user signs in from another window', () => {
+  it('forgets the owner and starts afresh when another user signs in from another window', () => {
     session.current = signedIn('user-a');
     const { rerender } = renderHook(() => useSessionState());
     rerender();
     expect(reload).not.toHaveBeenCalled();
+    expect(disown).not.toHaveBeenCalled();
 
     session.current = signedIn('user-b');
     rerender();
 
+    expect(disown).toHaveBeenCalled();
     expect(reload).toHaveBeenCalled();
+    expect(disown.mock.invocationCallOrder[0]).toBeLessThan(reload.mock.invocationCallOrder[0]);
     expect(claim).toHaveBeenLastCalledWith('user-b');
   });
 });

@@ -171,10 +171,11 @@ async function lacksRoom(size: number): Promise<boolean> {
 }
 
 /**
- * Store a body of `size` bytes: a stream (a branch of a download's tee, say) is read to its end. Expired entries are
- * deleted first, then the least recently opened until the bucket has room for it; where the browser then says its
- * storage can't take it, it is not stored. A write that fails, the stream erroring with it, leaves no entry. Resolves
- * whether the entry was stored.
+ * Store a body of `size` bytes: a stream (a branch of a download's tee, say) is read to its end. Where the browser
+ * says its storage can't take it, expired entries are deleted first, then the least recently opened until the bucket
+ * has room for it; where it still can't, it is not stored. The bucket is brought back within its bounds after the
+ * write, so a write that fails costs no entry. A write that fails, the stream erroring with it, leaves no entry.
+ * Resolves whether the entry was stored.
  */
 export async function writeEntry(
   bounds: CacheBounds,
@@ -191,10 +192,12 @@ export async function writeEntry(
   let cache: Cache | null = null;
   try {
     cache = await caches.open(bounds.name);
-    await prune(cache, bounds, null, size).catch(() => {});
     if (await lacksRoom(size)) {
-      if (body instanceof ReadableStream) await body.cancel().catch(() => {});
-      return false;
+      await prune(cache, bounds, null, size).catch(() => {});
+      if (await lacksRoom(size)) {
+        if (body instanceof ReadableStream) await body.cancel().catch(() => {});
+        return false;
+      }
     }
     const headers = {
       'Content-Type': contentType,
