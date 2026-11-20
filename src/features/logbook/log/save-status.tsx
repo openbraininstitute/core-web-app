@@ -65,8 +65,11 @@ function useUnsent(provider: HocuspocusProvider, copy: LocalCopy): boolean {
 }
 
 // Local changes only: other tabs and devices get their own `saved` notice, not this one.
+// A sync after a reconnect covers the changes made before it: their `own` notice went to the old
+// join and cannot come again, and the sync has put them on the server.
 function useUnsaved(provider: HocuspocusProvider, notices: CollaborationNotices): boolean {
   const lastLocal = useRef<number | null>(null);
+  const syncedAt = useRef<number | null>(null);
   const subscribe = useCallback(
     (listener: () => void) => {
       const onUpdate = (_u: Uint8Array, _o: unknown, _d: Y.Doc, tr: Y.Transaction): void => {
@@ -74,10 +77,16 @@ function useUnsaved(provider: HocuspocusProvider, notices: CollaborationNotices)
         lastLocal.current = Date.now();
         listener();
       };
+      const onSynced = (): void => {
+        syncedAt.current = Date.now();
+        listener();
+      };
       provider.document.on('update', onUpdate);
+      provider.on('synced', onSynced);
       const stop = notices.subscribe(listener);
       return () => {
         provider.document.off('update', onUpdate);
+        provider.off('synced', onSynced);
         stop();
       };
     },
@@ -85,10 +94,13 @@ function useUnsaved(provider: HocuspocusProvider, notices: CollaborationNotices)
   );
   return useSyncExternalStore(subscribe, () => {
     const at = lastLocal.current;
-    const saved = notices.snapshot().savedAt;
-    return isNotNil(at) && (isNil(saved) || at > saved);
+    const covered = Math.max(notices.snapshot().savedAt ?? 0, syncedAt.current ?? 0);
+    return isNotNil(at) && at > covered;
   });
 }
+
+// The server saves within a second and says so; past this wait the notice was lost or came first.
+export const OTHERS_SAVE_WAIT_MS = 5000;
 
 // Remote changes after first sync: someone else's text is still on its way to Postgres.
 // Limit: `saved` has no clock, so Saved can show ~1 s early. Upgrade: a counter in `saved`.
@@ -96,14 +108,21 @@ function useOthersUnsaved(provider: HocuspocusProvider, notices: CollaborationNo
   const lastRemote = useRef<number | null>(null);
   const subscribe = useCallback(
     (listener: () => void) => {
+      let giveUp: ReturnType<typeof setTimeout> | undefined;
       const onUpdate = (_u: Uint8Array, origin: unknown, _d: Y.Doc, tr: Y.Transaction): void => {
         if (tr.local || origin !== provider || !provider.isSynced) return;
         lastRemote.current = Date.now();
+        clearTimeout(giveUp);
+        giveUp = setTimeout(() => {
+          lastRemote.current = null;
+          listener();
+        }, OTHERS_SAVE_WAIT_MS);
         listener();
       };
       provider.document.on('update', onUpdate);
       const stop = notices.subscribe(listener);
       return () => {
+        clearTimeout(giveUp);
         provider.document.off('update', onUpdate);
         stop();
       };
