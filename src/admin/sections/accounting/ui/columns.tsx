@@ -6,7 +6,6 @@ import { JOB_PHASES, jobPhase, splitLedgers, TRANSACTION_LABELS } from '../helpe
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { TAccountingJob, TJournalEntry, TLedgerEntry } from '../types';
 
-// Amounts are decimal strings from the service, shown as they come.
 export function Credits({ amount }: { amount: string | null | undefined }) {
   return <span className="font-mono tabular-nums">{amount ?? '—'}</span>;
 }

@@ -14,8 +14,8 @@ import { Loaded } from '../../../shared/load-state';
 import { PageHeader } from '../../../shared/page-header';
 import { AdminLink, adminHref } from '../../../shell/admin-link';
 import { getAccount, listProjectAccounts } from '../api';
-import { ACCOUNT_TYPE_LABELS, AccountingPage, accountingHref } from '../helpers';
-import { AccountType } from '../types';
+import { ACCOUNT_TYPE_LABELS, accountingHref } from '../helpers';
+import { AccountingPage, AccountType } from '../types';
 import { EnabledPill } from './accounts-list';
 import { Credits, creditsColumn } from './columns';
 
@@ -112,7 +112,9 @@ function AccountView({ account }: { account: TAccount }) {
           <AdminPagedGrid<TProjectAccount>
             what="projects"
             columns={PROJECT_COLUMNS}
-            getRowId={(project) => `${project.id}:${project.enabled}`}
+            getRowId={(project) =>
+              `${project.id}:${project.name}:${project.balance}:${project.reservation}:${project.enabled}`
+            }
             dataSource={PROJECTS_SOURCE}
             queryKey={adminQueryKeys.accountingProjects(account.id)}
             params={{ vlabId: account.id }}

@@ -2,14 +2,13 @@ import dayjs from 'dayjs';
 import { describe, expect, it } from 'vitest';
 
 import {
-  AccountingPage,
   accountingHref,
   dayBounds,
   formatDuration,
-  JobPhase,
   jobPhase,
   splitLedgers,
 } from '@/admin/sections/accounting/helpers';
+import { AccountingPage, JobPhase } from '@/admin/sections/accounting/types';
 
 import type { TAccountingJob, TLedgerEntry } from '@/admin/sections/accounting/types';
 

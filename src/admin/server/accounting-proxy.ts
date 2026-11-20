@@ -4,8 +4,6 @@ import { serverConfig } from '@/config/server';
 
 import { isGatewayReply } from './service-probe';
 
-import type { CapabilityPath } from '../capabilities/types';
-
 const UUID = '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}';
 const SAFE_SEGMENT = /^[A-Za-z0-9-]+$/;
 const PAGE_PARAMS = ['page', 'page_size'];
@@ -17,7 +15,6 @@ const exact = (path: string) => new RegExp(`^${path}$`);
 type TAccountingRoute = {
   method: 'GET';
   pattern: RegExp;
-  need: CapabilityPath;
   query: string[];
   paged?: boolean;
 };
@@ -27,27 +24,23 @@ export const ACCOUNTING_ROUTES: TAccountingRoute[] = [
   {
     method: 'GET',
     pattern: exact('admin/account/virtual-lab'),
-    need: 'accounting.admin',
     query: ['name', 'enabled', ...PAGE_PARAMS],
     paged: true,
   },
   {
     method: 'GET',
     pattern: exact(`admin/account/virtual-lab/${UUID}/project`),
-    need: 'accounting.admin',
     query: ['enabled', ...PAGE_PARAMS],
     paged: true,
   },
   {
     method: 'GET',
     pattern: exact(`admin/account/${UUID}`),
-    need: 'accounting.admin',
     query: [],
   },
   {
     method: 'GET',
     pattern: exact('admin/journal'),
-    need: 'accounting.admin',
     query: [
       'account_id',
       'job_id',
@@ -61,7 +54,6 @@ export const ACCOUNTING_ROUTES: TAccountingRoute[] = [
   {
     method: 'GET',
     pattern: exact('admin/job'),
-    need: 'accounting.admin',
     query: [
       'vlab_id',
       'proj_id',
@@ -77,26 +69,23 @@ export const ACCOUNTING_ROUTES: TAccountingRoute[] = [
   {
     method: 'GET',
     pattern: exact(`admin/job/${UUID}`),
-    need: 'accounting.admin',
     query: [],
   },
   {
     method: 'GET',
     pattern: exact('balance/system'),
-    need: 'accounting.admin',
     query: [],
   },
   {
     method: 'GET',
     pattern: exact(`report/(system|virtual-lab/${UUID}|project/${UUID})`),
-    need: 'accounting.admin',
     query: ['started_after', 'started_before', ...PAGE_PARAMS],
     paged: true,
   },
 ];
 
 export type TAccountingTarget =
-  | { path: string; search: URLSearchParams; need: CapabilityPath }
+  | { path: string; search: URLSearchParams }
   | { status: number; message: string };
 
 const isPositiveInt = (value: string | null) => value !== null && /^[1-9]\d*$/.test(value);
@@ -133,7 +122,7 @@ export function matchAccountingRoute(
   const problem = route.paged ? pageProblem(search) : null;
   if (problem) return { status: 400, message: problem };
 
-  return { path, search, need: route.need };
+  return { path, search };
 }
 
 const NO_STORE = { 'cache-control': 'private, no-store' };
@@ -142,7 +131,7 @@ function reply(status: number, message: string) {
   return Response.json({ message }, { status, headers: NO_STORE });
 }
 
-// accounting-service has no auth, so a 401 or 403 can only come from the gateway in front of it.
+/** accounting-service has no auth, so a 401 or 403 is the gateway's and reads as not reachable. */
 export async function forwardToAccounting(path: string, search: URLSearchParams) {
   const base = serverConfig.ACCOUNTING_URL;
   if (!base) return reply(503, "Accounting isn't configured in this environment.");

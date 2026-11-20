@@ -11,15 +11,14 @@ import { PageHeader } from '../../../shared/page-header';
 import { StatusPill } from '../../../shared/status-pill';
 import { adminHref } from '../../../shell/admin-link';
 import { listVlabAccounts } from '../api';
+import { EnabledFilter } from '../types';
 import { creditsColumn } from './columns';
 
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
-import type { TVlabAccount } from '../types';
+import type { TEnabledFilter, TVlabAccount } from '../types';
 
 const SHALLOW = { shallow: true };
 
-const EnabledFilter = { Any: 'any', Enabled: 'enabled', Disabled: 'disabled' } as const;
-type TEnabledFilter = (typeof EnabledFilter)[keyof typeof EnabledFilter];
 const ENABLED_OPTIONS = [
   { value: EnabledFilter.Any, label: 'Any' },
   { value: EnabledFilter.Enabled, label: 'Enabled' },
@@ -87,7 +86,9 @@ export function AccountsList() {
         fill
         what="accounts"
         columns={COLUMNS}
-        getRowId={(account) => `${account.id}:${account.enabled}`}
+        getRowId={(account) =>
+          `${account.id}:${account.name}:${account.balance}:${account.enabled}`
+        }
         dataSource={LABS_SOURCE}
         queryKey={adminQueryKeys.accountingLabs()}
         params={{

@@ -14,7 +14,8 @@ import { Loaded } from '../../../shared/load-state';
 import { PageHeader } from '../../../shared/page-header';
 import { AdminLink } from '../../../shell/admin-link';
 import { getJob } from '../api';
-import { AccountingPage, accountingHref } from '../helpers';
+import { accountingHref } from '../helpers';
+import { AccountingPage } from '../types';
 import { Credits, JOURNAL_COLUMNS, JobPhasePill, journalRowId } from './columns';
 
 import type { TAccountingJobDetail } from '../types';

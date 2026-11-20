@@ -1,18 +1,17 @@
 import dayjs from 'dayjs';
 
 import { ADMIN_ROOT } from '../../routes';
-import { AccountType, TransactionType } from './types';
+import { AccountType, JobPhase, TransactionType } from './types';
 
 import type { TStatusTone } from '../../shared/status-pill';
-import type { TAccountingJob, TAccountType, TLedgerEntry, TTransactionType } from './types';
-
-export const AccountingPage = {
-  Accounts: 'accounts',
-  Jobs: 'jobs',
-  Journal: 'journal',
-  Reports: 'reports',
-} as const;
-export type TAccountingPage = (typeof AccountingPage)[keyof typeof AccountingPage];
+import type {
+  TAccountingJob,
+  TAccountingPage,
+  TAccountType,
+  TJobPhase,
+  TLedgerEntry,
+  TTransactionType,
+} from './types';
 
 export function accountingHref(page: TAccountingPage, params?: Record<string, string>) {
   const search = new URLSearchParams(params);
@@ -24,8 +23,6 @@ export const isUuid = (value: string) =>
 
 export const DAY_FORMAT = 'YYYY-MM-DD';
 
-// Dates come from the URL. dayjs rolls an impossible date over into a real one, so it has to
-// format back unchanged.
 export function parseDay(value: string) {
   const day = dayjs(value);
   return value && day.isValid() && day.format(DAY_FORMAT) === value ? day : null;
@@ -38,15 +35,6 @@ export function dayBounds(from: string, to: string) {
     before: parseDay(to)?.add(1, 'day').startOf('day').toISOString(),
   };
 }
-
-export const JobPhase = {
-  Created: 'created',
-  Reserved: 'reserved',
-  Running: 'running',
-  Finished: 'finished',
-  Cancelled: 'cancelled',
-} as const;
-export type TJobPhase = (typeof JobPhase)[keyof typeof JobPhase];
 
 export const JOB_PHASES: Record<TJobPhase, { label: string; tone: TStatusTone }> = {
   [JobPhase.Created]: { label: 'Created', tone: 'neutral' },
@@ -86,7 +74,7 @@ export const TRANSACTION_LABELS: Record<TTransactionType, string> = {
   [TransactionType.Deplete]: 'Deplete',
 };
 
-// Each ledger amount is signed: the debited side is negative.
+/** Debited ledgers carry a negative amount. */
 export function splitLedgers(ledgers: TLedgerEntry[]) {
   const debited = ledgers.filter((ledger) => ledger.amount.startsWith('-'));
   const credited = ledgers.filter((ledger) => !ledger.amount.startsWith('-'));

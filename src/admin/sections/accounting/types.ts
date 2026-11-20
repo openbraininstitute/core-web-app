@@ -140,7 +140,6 @@ export type TAccountingJobDetail = TAccountingJob & {
   remaining_reservation: string;
 };
 
-// The report routes leave out fields at their default, so the optional ones may be absent.
 type TReportBase = {
   job_id: string;
   vlab_id?: string;
@@ -194,3 +193,23 @@ export type TJournalFilters = {
 };
 
 export type TReportFilters = { started_after?: string; started_before?: string };
+
+export const AccountingPage = {
+  Accounts: 'accounts',
+  Jobs: 'jobs',
+  Journal: 'journal',
+  Reports: 'reports',
+} as const;
+export type TAccountingPage = (typeof AccountingPage)[keyof typeof AccountingPage];
+
+export const JobPhase = {
+  Created: 'created',
+  Reserved: 'reserved',
+  Running: 'running',
+  Finished: 'finished',
+  Cancelled: 'cancelled',
+} as const;
+export type TJobPhase = (typeof JobPhase)[keyof typeof JobPhase];
+
+export const EnabledFilter = { Any: 'any', Enabled: 'enabled', Disabled: 'disabled' } as const;
+export type TEnabledFilter = (typeof EnabledFilter)[keyof typeof EnabledFilter];

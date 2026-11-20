@@ -30,7 +30,6 @@ describe('matchAccountingRoute', () => {
     expect(match(path, query)).toEqual({
       path,
       search: new URLSearchParams(query),
-      need: 'accounting.admin',
     });
   });
 
