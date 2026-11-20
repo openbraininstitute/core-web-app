@@ -102,6 +102,20 @@ export function liveAgoOf(at: number, now: number): string {
   return minutes < 60 ? `${minutes} min ago` : `${Math.round(minutes / 60)} h ago`;
 }
 
+// Values.
+
+/** The newest value, for callbacks built once (an editor's extensions) that must not go stale. */
+export class Latest<T> {
+  #value: T;
+  constructor(value: T) {
+    this.#value = value;
+  }
+  get = (): T => this.#value;
+  set = (value: T): void => {
+    this.#value = value;
+  };
+}
+
 // Clock.
 
 export const CLOCK_MS = 400;

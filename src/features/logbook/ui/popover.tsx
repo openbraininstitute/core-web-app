@@ -69,6 +69,8 @@ export function PopoverLayer({
   readonly onClose: () => void;
   readonly children: ReactNode;
 }) {
+  // No document on the server; the layer only ever opens in the browser.
+  if (typeof document === 'undefined') return null;
   return createPortal(
     <>
       <button

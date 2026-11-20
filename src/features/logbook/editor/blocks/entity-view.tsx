@@ -11,7 +11,7 @@ import {
 } from '@/features/logbook/api/entities';
 import { lookOfType } from '@/features/logbook/editor/blocks/entity-look';
 import { ViewerMessage } from '@/features/logbook/editor/blocks/viewer-3d/frame';
-import { viewer3dOf } from '@/features/logbook/editor/blocks/viewers-3d';
+import { has3dView, Viewer3d } from '@/features/logbook/editor/blocks/viewers-3d';
 import { Bone } from '@/features/logbook/elements/skeletons';
 import { useEntityDetail, useEntityPicker, useLogContext } from '@/features/logbook/log/context';
 import { Icon } from '@/features/logbook/ui/icons';
@@ -54,7 +54,7 @@ export function EntityView({
   const by = entity.data?.created_by?.pref_label;
   const date = dateOf(entity.data?.creation_date);
   const missing = entity.isError || !known;
-  const Viewer3d = viewer3dOf(type);
+  const viewable = has3dView(type);
   const openDetail = useEntityDetail();
   const hasDetail = isNotNil(openDetail) && isNotNil(coreTypeOf(type)) && !entity.isError;
 
@@ -150,7 +150,7 @@ export function EntityView({
               </>
             ) : null}
           </div>
-          {isNotNil(Viewer3d) && !entity.isError ? (
+          {viewable && !entity.isError ? (
             <button
               type="button"
               className="inline-flex h-[34px] items-center gap-1.5 rounded-full border-0 px-[14px] text-[13px] font-bold text-white"
@@ -164,9 +164,9 @@ export function EntityView({
           ) : null}
         </div>
       </div>
-      {open3d && isNotNil(Viewer3d) ? (
+      {open3d && viewable ? (
         <Suspense fallback={<ViewerMessage text="Loading the 3D view…" />}>
-          <Viewer3d entityId={entityId} project={project} />
+          <Viewer3d type={type} entityId={entityId} project={project} />
         </Suspense>
       ) : null}
     </NodeViewWrapper>

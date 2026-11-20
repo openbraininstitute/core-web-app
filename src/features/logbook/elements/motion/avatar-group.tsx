@@ -5,10 +5,10 @@
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { type ComponentPropsWithRef, type MouseEvent, type PointerEvent, useState } from 'react';
 
-import { Tooltip, TooltipProvider } from '@/features/logbook/elements/motion/tooltip';
 import { EASE_OUT, SPRING_LAYOUT, SPRING_PRESS } from '@/features/logbook/helpers';
 import { AgentBadge, agentRadiusOf } from '@/features/logbook/ui/avatar';
 import { useHoverCapable } from '@/hooks/use-hover-capable';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
 export interface AvatarGroupMember {
@@ -164,41 +164,41 @@ export function AvatarGroup({
   };
 
   return (
-    <TooltipProvider skipDelay={400}>
-      <div
-        {...props}
-        onPointerLeave={(event) => {
-          props.onPointerLeave?.(event);
-          setHovered(null);
-        }}
-        className={cn('inline-flex items-center', className)}
-      >
-        <ul aria-label={label ?? 'Members'} className="relative flex items-center">
-          <AnimatePresence initial={false} mode="popLayout">
-            {visible.map((member, index) => (
-              <motion.li
-                key={member.id}
-                layout={reduce ? false : 'position'}
-                initial={{ opacity: 0, scale: reduce ? 1 : 0.6 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{
-                  opacity: 0,
-                  scale: reduce ? 1 : 0.6,
-                  transition: { duration: 0.14, ease: EASE_OUT },
-                }}
-                transition={{
-                  layout: SPRING_LAYOUT,
-                  scale: SPRING_LAYOUT,
-                  opacity: { duration: 0.18, ease: EASE_OUT },
-                }}
-                // Later avatars sit on top, except the hovered one.
-                style={{
-                  marginLeft: index === 0 ? 0 : -overlap,
-                  zIndex: parting && hovered === index ? visible.length + 1 : index,
-                  position: 'relative',
-                }}
-              >
-                <Tooltip content={member.name} side="top">
+    <div
+      {...props}
+      onPointerLeave={(event) => {
+        props.onPointerLeave?.(event);
+        setHovered(null);
+      }}
+      className={cn('inline-flex items-center', className)}
+    >
+      <ul aria-label={label ?? 'Members'} className="relative flex items-center">
+        <AnimatePresence initial={false} mode="popLayout">
+          {visible.map((member, index) => (
+            <motion.li
+              key={member.id}
+              layout={reduce ? false : 'position'}
+              initial={{ opacity: 0, scale: reduce ? 1 : 0.6 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{
+                opacity: 0,
+                scale: reduce ? 1 : 0.6,
+                transition: { duration: 0.14, ease: EASE_OUT },
+              }}
+              transition={{
+                layout: SPRING_LAYOUT,
+                scale: SPRING_LAYOUT,
+                opacity: { duration: 0.18, ease: EASE_OUT },
+              }}
+              // Later avatars sit on top, except the hovered one.
+              style={{
+                marginLeft: index === 0 ? 0 : -overlap,
+                zIndex: parting && hovered === index ? visible.length + 1 : index,
+                position: 'relative',
+              }}
+            >
+              <Tooltip>
+                <TooltipTrigger asChild>
                   <motion.span
                     className={cn('relative block rounded-full', member.active && 'writing-ring')}
                     style={{
@@ -227,54 +227,57 @@ export function AvatarGroup({
                       <AgentBadge size={SIZES[size].px} colour={member.colour ?? 'currentColor'} />
                     ) : null}
                   </motion.span>
-                </Tooltip>
-              </motion.li>
-            ))}
-            {overflow > 0 ? (
-              <motion.li
-                key="overflow"
-                layout={reduce ? false : 'position'}
-                transition={{ layout: SPRING_LAYOUT }}
-                style={{ marginLeft: -overlap, zIndex: visible.length, position: 'relative' }}
+                </TooltipTrigger>
+                <TooltipContent side="top" sideOffset={6}>
+                  {member.name}
+                </TooltipContent>
+              </Tooltip>
+            </motion.li>
+          ))}
+          {overflow > 0 ? (
+            <motion.li
+              key="overflow"
+              layout={reduce ? false : 'position'}
+              transition={{ layout: SPRING_LAYOUT }}
+              style={{ marginLeft: -overlap, zIndex: visible.length, position: 'relative' }}
+            >
+              <motion.span
+                className="block"
+                {...hoverHandlers(visible.length)}
+                animate={{ x: offset(visible.length) }}
+                transition={SPRING_LAYOUT}
               >
-                <motion.span
-                  className="block"
-                  {...hoverHandlers(visible.length)}
-                  animate={{ x: offset(visible.length) }}
-                  transition={SPRING_LAYOUT}
+                <motion.button
+                  type="button"
+                  aria-expanded={onMore ? (moreOpen ?? false) : isExpanded}
+                  aria-haspopup={onMore ? 'dialog' : undefined}
+                  aria-label={isExpanded ? showFewer : showMore(overflow)}
+                  onClick={onMore ?? toggle}
+                  {...(reduce ? {} : { whileTap: { scale: 0.92 } })}
+                  transition={SPRING_PRESS}
+                  className={cn(
+                    'relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-9 font-medium text-white tabular-nums ring-2 ring-white outline-none focus-visible:ring-primary-4',
+                    SIZES[size].box
+                  )}
                 >
-                  <motion.button
-                    type="button"
-                    aria-expanded={onMore ? (moreOpen ?? false) : isExpanded}
-                    aria-haspopup={onMore ? 'dialog' : undefined}
-                    aria-label={isExpanded ? showFewer : showMore(overflow)}
-                    onClick={onMore ?? toggle}
-                    {...(reduce ? {} : { whileTap: { scale: 0.92 } })}
-                    transition={SPRING_PRESS}
-                    className={cn(
-                      'relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-9 font-medium text-white tabular-nums ring-2 ring-white outline-none focus-visible:ring-primary-4',
-                      SIZES[size].box
-                    )}
-                  >
-                    <AnimatePresence initial={false} mode="popLayout">
-                      <motion.span
-                        key={isExpanded ? 'less' : 'more'}
-                        aria-hidden="true"
-                        initial={{ opacity: 0, y: reduce ? 0 : isExpanded ? 8 : -8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: reduce ? 0 : isExpanded ? -8 : 8 }}
-                        transition={{ duration: 0.16, ease: EASE_OUT }}
-                      >
-                        {isExpanded ? '−' : `+${overflow}`}
-                      </motion.span>
-                    </AnimatePresence>
-                  </motion.button>
-                </motion.span>
-              </motion.li>
-            ) : null}
-          </AnimatePresence>
-        </ul>
-      </div>
-    </TooltipProvider>
+                  <AnimatePresence initial={false} mode="popLayout">
+                    <motion.span
+                      key={isExpanded ? 'less' : 'more'}
+                      aria-hidden="true"
+                      initial={{ opacity: 0, y: reduce ? 0 : isExpanded ? 8 : -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: reduce ? 0 : isExpanded ? -8 : 8 }}
+                      transition={{ duration: 0.16, ease: EASE_OUT }}
+                    >
+                      {isExpanded ? '−' : `+${overflow}`}
+                    </motion.span>
+                  </AnimatePresence>
+                </motion.button>
+              </motion.span>
+            </motion.li>
+          ) : null}
+        </AnimatePresence>
+      </ul>
+    </div>
   );
 }

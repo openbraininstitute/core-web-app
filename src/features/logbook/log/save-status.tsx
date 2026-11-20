@@ -23,28 +23,26 @@ const OFFLINE_AFTER_MS = 2000;
 const connected = (provider: HocuspocusProvider): boolean =>
   provider.configuration.websocketProvider.status === WebSocketStatus.Connected;
 
+// Offline only after the socket has been down a while, so a quick reconnect shows nothing.
 function useOffline(provider: HocuspocusProvider): boolean {
-  const [offline, setOffline] = useState(false);
+  const subscribe = useCallback(
+    (onChange: () => void) => {
+      provider.on('status', onChange);
+      return () => provider.off('status', onChange);
+    },
+    [provider]
+  );
+  const online = useSyncExternalStore(subscribe, () => connected(provider));
+  const [waited, setWaited] = useState(false);
   useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    const update = (): void => {
-      if (connected(provider)) {
-        if (isNotNil(timer)) clearTimeout(timer);
-        timer = null;
-        setOffline(false);
-      } else
-        timer ??= setTimeout(() => {
-          setOffline(true);
-        }, OFFLINE_AFTER_MS);
-    };
-    update();
-    provider.on('status', update);
+    if (online) return;
+    const timer = setTimeout(() => setWaited(true), OFFLINE_AFTER_MS);
     return () => {
-      provider.off('status', update);
-      if (isNotNil(timer)) clearTimeout(timer);
+      clearTimeout(timer);
+      setWaited(false);
     };
-  }, [provider]);
-  return offline;
+  }, [online]);
+  return !online && waited;
 }
 
 // One boolean, so a keystroke that changes nothing here renders nothing.

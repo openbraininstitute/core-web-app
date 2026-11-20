@@ -101,8 +101,12 @@ export function EditorCard(props: IEditorCardProps) {
   }, [listing.data, props.openTabs]);
   const artifact = tabs.find((a) => a.id === props.activeTab) ?? null;
 
-  const toggle = (which: TMenu) => (event: ReactMouseEvent<HTMLButtonElement>) => {
-    if (menu === which) return setMenu(Menu.None);
+  // Reads the card's box on click, never during render.
+  const toggle = (which: TMenu, event: ReactMouseEvent<HTMLButtonElement>): void => {
+    if (menu === which) {
+      setMenu(Menu.None);
+      return;
+    }
     if (isNotNil(card.current))
       setPopAt(popAtOf(event.currentTarget, card.current, WIDTHS[which] ?? 280));
     setMenu(which);
@@ -230,7 +234,11 @@ export function EditorCard(props: IEditorCardProps) {
           <ArtifactBar artifact={artifact} onOpenPage={openCopiedPage} />
         ) : (
           <>
-            <PresenceButton {...props} expanded={menu === Menu.Who} onToggle={toggle(Menu.Who)} />
+            <PresenceButton
+              {...props}
+              expanded={menu === Menu.Who}
+              onToggle={(event) => toggle(Menu.Who, event)}
+            />
             <button
               type="button"
               className={`${CONTROL} ml-auto bg-fill-2 text-primary-9 hover:bg-fill-item-hover disabled:cursor-not-allowed disabled:opacity-50`}
@@ -238,7 +246,7 @@ export function EditorCard(props: IEditorCardProps) {
               aria-expanded={menu === Menu.Insert}
               title="Link entities or upload a file"
               disabled={isNotNil(props.readOnly) || props.deleted}
-              onClick={toggle(Menu.Insert)}
+              onClick={(event) => toggle(Menu.Insert, event)}
             >
               <Icon name="plus" size={15} stroke={2.4} />
               <span className="@max-[420px]/pane:hidden!">Insert</span>

@@ -21,7 +21,7 @@ import { usePauseWhenHidden } from '@/features/logbook/collaboration/idle';
 import { useRejoin } from '@/features/logbook/collaboration/rejoin';
 import { editorExtensions } from '@/features/logbook/editor/extensions';
 import { insertAfterBlock } from '@/features/logbook/editor/insert';
-import { dragHandle } from '@/features/logbook/helpers';
+import { dragHandle, Latest } from '@/features/logbook/helpers';
 import { EntityPickerContext } from '@/features/logbook/log/context';
 import { EditorCard } from '@/features/logbook/log/editor-card';
 import { EntityGridPicker } from '@/features/logbook/log/entity-grid-picker';
@@ -96,11 +96,9 @@ export function LogPage(props: ILogPageProps) {
   const narrow = layout === Layout.Narrow;
   const meActor = useMemo(() => personActor(me.userId, me.name), [me.userId, me.name]);
   const [settings] = useNotifySettings();
-  // The editor reads the latest settings through this; written after render, never during.
-  const settingsRef = useRef(settings);
-  useLayoutEffect(() => {
-    settingsRef.current = settings;
-  });
+  // The editor is built once; it reads the newest settings through this holder.
+  const [liveSettings] = useState(() => new Latest(settings));
+  useLayoutEffect(() => liveSettings.set(settings), [liveSettings, settings]);
 
   // Awareness maps a Yjs client to a user id; the server's list names the user.
   const { awareness } = provider;
@@ -166,7 +164,7 @@ export function LogPage(props: ILogPageProps) {
           const peer = notices.snapshot().peers.find((p) => p.userId === user['userId']);
           return peer?.label ?? 'Someone';
         },
-        highlights: () => settingsRef.current.highlights,
+        highlights: () => liveSettings.get().highlights,
         ready: () => provider.isSynced,
       }),
       editable: mode === ViewMode.Edit,
