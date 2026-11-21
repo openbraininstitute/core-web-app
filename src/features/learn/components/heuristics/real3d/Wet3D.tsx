@@ -3463,15 +3463,20 @@ function withCrew(pose: Pose, sc: Scene, sel: number, count: number): Pose {
 /** Room under each of the ten, side by side, for its name and where it is from, px. */
 const LABEL_ROOM = 30;
 
-/** Where the ten go side by side: two rows of five, each with its name under it — and room under them for the credit. */
-function slotOf(i: number, w: number, h: number) {
+/**
+ * Where the ten go side by side: two rows of five, each with its name under it — and room under them for the credit.
+ * Another family of `n` goes the same way: in two rows, or one of five or fewer.
+ */
+function slotOf(i: number, w: number, h: number, n: number) {
   const [top, foot] = [4, 20];
-  const rowH = (h - top - foot) / 2;
-  const [col, row] = [i % 5, Math.floor(i / 5)];
+  const rows = n > 5 ? 2 : 1;
+  const cols = Math.ceil(n / rows);
+  const rowH = (h - top - foot) / rows;
+  const [col, row] = [i % cols, Math.floor(i / cols)];
   return {
-    x: ((col + 0.5) * w) / 5,
+    x: ((col + 0.5) * w) / cols,
     y: top + row * rowH + (rowH - LABEL_ROOM) / 2,
-    w: w / 5,
+    w: w / cols,
     h: rowH - LABEL_ROOM,
     label: top + (row + 1) * rowH - LABEL_ROOM + 9,
   };
@@ -3677,7 +3682,7 @@ function crewPose(
     crew: crew.map((sc, i): Place => {
       if (!sc) return { yaw, s: camera.s, ox: 0, oy: 0, stick: 1, alpha: 0 };
       if (stage === 'gallery') {
-        const slot = slotOf(i, w, h);
+        const slot = slotOf(i, w, h, family.length);
         return {
           yaw: (i === sel ? from : sc.yawPresent) + spun * GALLERY_TURNS[i % GALLERY_TURNS.length],
           s: Math.min((slot.w / 2 - 12) / sc.ext.hx, (slot.h / 2 - 4) / sc.ext.hy),
@@ -5798,7 +5803,7 @@ function drawCrew(
   if (pose.labels > 0.01) {
     family.forEach((spec, i) => {
       const a = pose.labels * (crew[i] ? pose.crew[i].alpha : 0);
-      const slot = slotOf(i, w, th);
+      const slot = slotOf(i, w, th, family.length);
       tag(
         ctx,
         capital(spec.cell),
@@ -6463,12 +6468,15 @@ function Wet3D({
   stage,
   back = false,
   controls,
+  family: own,
 }: {
   spec: Spec;
   stage: Stage;
   back?: boolean;
   /** Under the neuron's name and credit, above the figure, once it is named: the arrows that switch to another. */
   controls?: ReactNode;
+  /** The neurons shown with it, `spec` among them, in place of the ten: for another course's gallery. */
+  family?: Spec[];
 }) {
   const [scene, setScene] = useState<Scene | 'failed' | null>(
     () => scenes.get(keyOf(spec)) ?? null
@@ -6490,7 +6498,7 @@ function Wet3D({
   );
   // The ten it is one of — in its own look, on white or not — for the slides that show them all, fetched
   // once its own slides are under way, one at a time as the page is idle, so as not to stutter them.
-  const family = spec.look.white ? FLOATING : SPECS;
+  const family = own ?? (spec.look.white ? FLOATING : SPECS);
   const sel = family.findIndex((k) => k.id === spec.id);
   const [crew, setCrew] = useState<(Scene | null)[]>(() =>
     family.map((k) => scenes.get(keyOf(k)) ?? null)
@@ -6518,8 +6526,8 @@ function Wet3D({
 
   // the first slide's other brains, as soon as there is a figure to show them in
   useEffect(() => loadKin(), []);
-  // one region's own kinds of neuron, from a slide or two before they are wanted
-  const wantKinds = STAGES.indexOf(stage) >= STAGES.indexOf('gallery');
+  // one region's own kinds of neuron, from a slide or two before they are wanted — only ever among the ten
+  const wantKinds = !own && STAGES.indexOf(stage) >= STAGES.indexOf('gallery');
   useEffect(() => {
     if (wantKinds) loadKinds();
   }, [wantKinds]);
@@ -6781,7 +6789,9 @@ function Wet3D({
     soma: `The ${spec.cell}'s soma pulses: the cell body, where its inputs come together.`,
     dendrogram: `The ${spec.cell} stops turning, and its branches straighten out into a flat dendrogram that reads left to right: the dendrites to the left of the soma, the axon running off to the right.`,
     signals: `On the dendrogram, signals travel in along afferent axons to the ${spec.cell}'s dendrites, along them to the soma, and out along every branch of its efferent axon, each in its own colour.`,
-    gallery: `Ten real neurons side by side, each turning in three dimensions, each named: ${family.map((k) => k.cell).join(', ')}.`,
+    gallery: own
+      ? `${family.length} real neurons side by side, each turning in three dimensions, each named: ${family.map((k) => `${k.cell} (${k.where})`).join(', ')}.`
+      : `Ten real neurons side by side, each turning in three dimensions, each named: ${family.map((k) => k.cell).join(', ')}.`,
     atlas:
       'The ten neurons in their places in a glassy mouse brain, each with the region it was found in, in its own colour.',
     talk: 'The ten neurons in their places in the glassy brain, its regions in their colours, signals passing from one to another along the ways they connect.',
@@ -6921,3 +6931,34 @@ const variants = (specs: Spec[], kind?: string) =>
 
 /** The same ten, floating on white. */
 export const FLOAT_3D = variants(FLOATING);
+
+/**
+ * Eight neurons of the thalamic reticular nucleus, each reconstructed whole with its axon in the
+ * Allen CCF (Peng et al. 2021, Nature 598:174; from NeuroMorpho.Org), side by side as the ten are
+ * — each in one of the ten's colours, and named by the nucleus of the thalamus that gets the
+ * largest share of its axon's length (by the CCFv3 annotation at 25 µm).
+ */
+const RETICULAR: Spec[] = (
+  [
+    ['18869_4571_x10055_y8359-semi_r', 'anteroventral nucleus'],
+    ['18869_4457_x17404_y9449-semi_r', 'anteroventral nucleus'],
+    ['18869_00004-semi_r', 'anteroventral nucleus'],
+    ['18869_4727_x9851_y8415-semi_r', 'anteroventral nucleus'],
+    ['18869_4841_x18666_y8144-semi_r', 'lateral dorsal nucleus'],
+    ['18869_4848_x18620_y8132-semi_r', 'lateral dorsal nucleus'],
+    ['18869_5126_x8617_y7685-semi_r', 'lateral posterior nucleus'],
+    ['18869_4912_x19648_y8510-semi_r', 'ventral posterolateral nucleus'],
+  ] as const
+).map(([id, to], i) => ({
+  id,
+  cell: 'reticular neuron',
+  where: `→ ${to}`,
+  look: FLOATING[i].look,
+  spiny: false,
+  soma: 8,
+}));
+
+/** The thalamic reticular course's neurons, side by side, each turning, each named. */
+export function ReticularGallery({ back }: { back?: boolean }) {
+  return <Wet3D spec={RETICULAR[0]} stage="gallery" back={back} family={RETICULAR} />;
+}

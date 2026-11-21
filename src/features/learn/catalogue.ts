@@ -13,6 +13,7 @@ import { NEUROTRANSMITTERS_SLIDES } from '@/features/learn/slides/neurotransmitt
 import { PLATFORM_SLIDES } from '@/features/learn/slides/platform';
 import { PYTHON_SLIDES } from '@/features/learn/slides/python';
 import { SYNAPSE_PLASTICITY_SLIDES } from '@/features/learn/slides/synapse-plasticity';
+import { THALAMIC_RETICULAR_SLIDES } from '@/features/learn/slides/thalamic-reticular';
 import { VALIDATION_SLIDES } from '@/features/learn/slides/validation';
 import { WHY_MODEL_SLIDES } from '@/features/learn/slides/why-model';
 
@@ -200,6 +201,17 @@ export const LEARN_COURSES: LearnCourse[] = [
       'The Tsodyks–Markram model with stochastic release, for depression, facilitation and failures; then calcium-based long-term plasticity, and why timing and extracellular calcium matter.',
     slides: SYNAPSE_PLASTICITY_SLIDES,
     preview: 'synapse-short',
+  },
+  {
+    id: 'thalamic-reticular',
+    rough: true,
+    title: 'Thalamic reticular neurons',
+    level: 'Intermediate',
+    description:
+      'The thalamic reticular nucleus: the thin shell of inhibitory neurons around the thalamus, which every signal between the thalamus and the cortex passes through.',
+    slides: THALAMIC_RETICULAR_SLIDES,
+    // slide 1's: the whole brain, the thalamus deep inside it
+    preview: 'brain',
   },
 ];
 
