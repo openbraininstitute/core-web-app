@@ -41,7 +41,11 @@ export function CourseFigureLive({
   );
 }
 
-/** A course's figure on the Learn page's card: framed, so the part to play with reads as one thing. */
+/**
+ * A course's figure on the Learn page's card: on a white inset in the card's navy, as the mini
+ * detail view shows its previews, so the figure keeps the light look it is drawn in (a dark one
+ * would be near black, not navy) and the part to play with reads as one thing.
+ */
 export function CoursePreview({ widget }: { widget: LearnCourse['preview'] }) {
   return (
     <CourseFigureLive
@@ -49,8 +53,8 @@ export function CoursePreview({ widget }: { widget: LearnCourse['preview'] }) {
       className={
         // the Python course's figure is a code panel: it fills the frame, its own edges the frame's
         widget.startsWith('python:')
-          ? 'overflow-hidden rounded-[12px] border border-[#d9d9d9] [&_.shadow-sm]:shadow-none'
-          : 'rounded-[12px] border border-[#d9d9d9] p-[16px]'
+          ? 'overflow-hidden rounded-[12px] bg-white [&_.shadow-sm]:shadow-none'
+          : 'rounded-[12px] bg-white p-[16px]'
       }
     />
   );

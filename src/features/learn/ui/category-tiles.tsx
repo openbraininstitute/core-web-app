@@ -21,6 +21,7 @@ import {
   TeachIcon,
   TutorialsIcon,
 } from '@/features/learn/ui/icons';
+import { BOX_CLASS } from '@/features/scan-config/components/shared/box-class';
 import { cn } from '@/utils/css-class';
 
 /** Every tile, in order: those with a section, and those still to come. */
@@ -220,6 +221,8 @@ export function CategoryTiles({
   /** Tiles left out altogether, by key: switched off in the Sections options. */
   hidden?: string[];
 }) {
+  // five to a row, however wide the column: wider over the page-wide overview of the courses,
+  // rather than another number to a row, which would move the list under them as it slides
   return (
     <div data-learn="tiles" className="grid grid-cols-5 items-start gap-[10px]">
       {CATEGORIES.filter((c) => !hidden.includes(c.key)).map((category) => {
@@ -260,14 +263,20 @@ export const SELECTED_STYLES = [
 
 export const SELECTED_SLUGS = ['look', 'navy', 'bar', 'glow', 'lift', 'gradient'] as const;
 
-/** The list box's classes, and whether it is dark (no longer: the dark looks are gone). */
+/**
+ * The list box's classes, and whether it is dark (no longer: the dark looks are gone). The box is
+ * one of the page's boxes, the workflows' kind, but keeps its faint navy fill for now.
+ */
 export function listBox() {
   const dark = false;
   return {
     dark,
     box: dark
       ? 'learn-list border-primary-9 bg-primary-9 flex min-h-0 flex-1 flex-col gap-[12px] rounded-3xl border p-[12px]'
-      : 'learn-list border-primary-9/[0.06] bg-primary-9/[0.04] flex min-h-0 flex-1 flex-col gap-[12px] rounded-3xl border p-[12px]',
+      : cn(
+          BOX_CLASS,
+          'learn-list bg-primary-9/[0.04] flex min-h-0 flex-1 flex-col gap-[12px] p-[12px]'
+        ),
     title: dark
       ? 'text-[17px] leading-[23px] font-bold text-white'
       : 'text-[17px] leading-[23px] font-bold text-[#002766]',

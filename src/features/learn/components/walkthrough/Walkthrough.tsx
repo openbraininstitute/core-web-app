@@ -9,7 +9,15 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 
 import ChargeWidget from '@/features/learn/components/basics/ChargeWidget';
 import ExcitationWidget from '@/features/learn/components/basics/ExcitationWidget';
@@ -54,6 +62,8 @@ export interface Slide {
     | 'synapse-long';
   /** A closing link: to another course, by its id, or, naming none, to the Learn page. */
   cta?: { label: string; course?: string };
+  /** The name of the part of the course this slide starts: marked along the slides' bar, and named there on hover. */
+  section?: string;
 }
 
 /**
@@ -169,6 +179,59 @@ export default function Walkthrough({
 
   const s = slides[i];
   const wide = Boolean(s.widget);
+  // the course's parts, each where it starts along the bar
+  const sections = slides.flatMap((slide, k) =>
+    slide.section ? [{ k, name: slide.section }] : []
+  );
+  const n = slides.length;
+  // the left of the kth slide's dash: the dashes share the bar, 6 px (gap-1.5) apart
+  const dashLeft = (k: number) => `calc(${k} * ((100% - ${(n - 1) * 6}px) / ${n}) + ${k * 6}px)`;
+  // where each part's name goes, always shown: above the bar or below it, by turns, over its tick — reading on from it
+  // where there is room, or slid back along it where the next name or the bar's end is in the way — so that no two in a
+  // row overlap; and, where neither row has room for all of it, cut short. Laid out from the bar's end back, so that
+  // names crowded near it make room by sliding back; once the bar has a width, and again whenever it changes.
+  const barRef = useRef<HTMLDivElement>(null);
+  const nameRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [places, setPlaces] = useState<{ below: boolean; left: number; max?: number }[]>([]);
+  const partNames = sections.map(({ name }) => name).join('|');
+  // biome-ignore lint/correctness/useExhaustiveDependencies: laid out again only when the parts or the slide count change
+  useLayoutEffect(() => {
+    const bar = barRef.current;
+    if (!bar) return undefined;
+    const lay = () => {
+      const width = bar.clientWidth;
+      const slot = (width - (n - 1) * 6) / n + 6;
+      // in each row, how far right a name may still reach, px
+      const limit = [width, width];
+      const next: { below: boolean; left: number; max?: number }[] = [];
+      for (let j = sections.length - 1; j >= 0; j--) {
+        const x = sections[j].k * slot;
+        const span = (nameRefs.current[j]?.scrollWidth ?? 0) + 2;
+        // as far right as it can start, still over its tick and short of the next name in the row
+        const fit = (row: number) => {
+          const at = Math.min(x, limit[row] - span);
+          return at >= x - span && at >= 0 ? at : null;
+        };
+        const row = [j % 2, 1 - (j % 2)].find((r) => fit(r) !== null);
+        if (row !== undefined) {
+          const at = fit(row) ?? x;
+          limit[row] = at - 10;
+          next[j] = { below: row === 1, left: at };
+          continue;
+        }
+        // no room for all of it: in the row with more, from its tick — or as far back as that row allows — cut short
+        const more = limit[0] >= limit[1] ? 0 : 1;
+        const at = Math.max(0, Math.min(x, limit[more] - 28));
+        next[j] = { below: more === 1, left: at, max: Math.max(28, limit[more] - at) };
+        limit[more] = at - 10;
+      }
+      setPlaces(next);
+    };
+    lay();
+    const watch = new ResizeObserver(lay);
+    watch.observe(bar);
+    return () => watch.disconnect();
+  }, [n, partNames]);
   // Typed out on the way forward only: a slide you go back to is as you left it.
   const typing = !!typewriter && typewriterOn === true && dir > 0;
 
@@ -259,8 +322,14 @@ export default function Walkthrough({
         </div>
       </main>
 
-      <footer className="flex items-center justify-between gap-4 px-5 pb-5">
-        <div className="flex flex-1 gap-1.5" role="tablist" aria-label="Slides">
+      {/* The footer's padding is room for the parts' names, above the bar and below it. */}
+      <footer className="flex items-center justify-between gap-4 px-5 pt-7 pb-7">
+        <div
+          ref={barRef}
+          className="relative flex flex-1 gap-1.5"
+          role="tablist"
+          aria-label="Slides"
+        >
           {slides.map((_, k) => (
             <button
               type="button"
@@ -277,6 +346,45 @@ export default function Walkthrough({
               }`}
             />
           ))}
+          {sections.map(({ k, name }, j) => {
+            const place = places[j];
+            const below = place?.below ?? j % 2 === 1;
+            // the part the slide on show is in, picked out
+            const here = k <= i && (sections[j + 1]?.k ?? n) > i;
+            return (
+              <span key={`part-${k}`}>
+                {/* a tick from the bar, up or down to the name */}
+                <span
+                  aria-hidden="true"
+                  className={`pointer-events-none absolute h-2 w-0.5 rounded-full ${below ? 'top-1' : 'bottom-1'} ${
+                    k <= i ? 'bg-sky-400' : 'bg-slate-500'
+                  }`}
+                  style={{ left: dashLeft(k) }}
+                />
+                <button
+                  type="button"
+                  ref={(el) => {
+                    nameRefs.current[j] = el;
+                  }}
+                  onClick={() => {
+                    setDir(k > i ? 1 : -1);
+                    setI(k);
+                  }}
+                  title={name}
+                  aria-label={`${name}, from slide ${k + 1}`}
+                  className={`absolute overflow-hidden text-[11px] leading-[13px] text-ellipsis whitespace-nowrap transition-colors ${
+                    below ? 'top-3' : 'bottom-3'
+                  } ${here ? 'text-sky-300' : 'text-slate-400 hover:text-slate-200'}`}
+                  style={{
+                    left: place ? place.left : dashLeft(k),
+                    maxWidth: place?.max,
+                  }}
+                >
+                  {name}
+                </button>
+              </span>
+            );
+          })}
         </div>
         <span className="font-mono text-[10px] text-slate-600">← →</span>
       </footer>

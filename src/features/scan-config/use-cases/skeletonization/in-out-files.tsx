@@ -3,6 +3,7 @@ import { includes } from 'es-toolkit/compat';
 import { useMemo } from 'react';
 
 import { getCellMorphology } from '@/api/entitycore/queries/experimental/cell-morphology';
+import { getEmCellMesh } from '@/api/entitycore/queries/experimental/em-cell-mesh';
 import {
   ActivityStatus,
   type TActivityStatus,
@@ -21,6 +22,13 @@ import {
   makeTaskLogsFile,
   prependLogStreamFile,
 } from '@/features/task-logs-stream/descriptor';
+
+import {
+  inputMeshId,
+  SPINY_COMPARISON_NAME,
+  spinyAsset,
+  spinyComparisonFiles,
+} from './spiny-output';
 
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
@@ -84,6 +92,15 @@ export function InOutFiles({
     enabled: generatedMorphologies.length > 0,
   });
 
+  // the mesh skeletonized, for a 3D view of the output on it, once there is a morphology with spines to show
+  const meshId = inputMeshId(config);
+  const hasSpines = (morphologies ?? []).some((m) => !!spinyAsset(m));
+  const { data: mesh } = useQuery({
+    queryKey: ['skeletonization-input-mesh', meshId],
+    queryFn: () => getEmCellMesh({ id: meshId as string, context }),
+    enabled: !!meshId && hasSpines,
+  });
+
   const outputFiles: TActivityCustomFile[] = useMemo(() => {
     const files = (morphologies ?? []).map(
       (morphology) =>
@@ -94,14 +111,18 @@ export function InOutFiles({
           renderer: ActivityCustomFileRenderer.MiniDetailView,
         }) as TActivityCustomFile
     );
-    return prependLogStreamFile({
-      file:
-        logStreamFiles.output && execution
-          ? makeTaskLogsFile({ descriptor: logStreamFiles.output, execution })
-          : null,
-      files,
-    });
-  }, [morphologies, execution, logStreamFiles.output]);
+    // the comparison first, which is what a finished run opens on
+    return [
+      ...spinyComparisonFiles(mesh, morphologies ?? []),
+      ...prependLogStreamFile<TActivityCustomFile>({
+        file:
+          logStreamFiles.output && execution
+            ? makeTaskLogsFile({ descriptor: logStreamFiles.output, execution })
+            : null,
+        files,
+      }),
+    ];
+  }, [morphologies, mesh, execution, logStreamFiles.output]);
 
   useAutoSelectFileOnConfigChange({
     configId: config.id,
@@ -137,8 +158,12 @@ export function InOutFiles({
           name={
             file.renderer === ActivityCustomFileRenderer.TaskLogsViewer
               ? file.name
-              : 'Skeletonized morphology'
+              : file.renderer === ActivityCustomFileRenderer.SpinyComparison
+                ? SPINY_COMPARISON_NAME
+                : 'Skeletonized morphology'
           }
+          label={file.renderer === ActivityCustomFileRenderer.SpinyComparison ? '3D' : undefined}
+          interactive={file.renderer === ActivityCustomFileRenderer.SpinyComparison}
           onSelect={onSelect}
         />
       ))}

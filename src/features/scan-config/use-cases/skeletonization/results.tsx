@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 
 import { ViewVariant, WorkspaceSection } from '@/constants';
+import { SpinyComparisonViewerCard } from '@/features/entities/cell-morphology/spiny-comparison/spiny-comparison-viewer';
 import { useCostConfirmation } from '@/features/scan-config/components/cost-confirmation-modal';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
 import { ResultsLayout } from '@/features/scan-config/components/shared/results-layout';
@@ -173,6 +174,15 @@ export function SkeletonizationTab({
                   enableAnimation={false}
                 />
               </div>
+            )}
+            {selectedFile?.renderer === ActivityCustomFileRenderer.SpinyComparison && (
+              <SpinyComparisonViewerCard
+                key={selectedFile.id}
+                className="h-full w-full rounded-2xl"
+                mesh={selectedFile.mesh}
+                morphology={selectedFile.morphology}
+                ctx={context}
+              />
             )}
             {selectedFile?.renderer === ActivityCustomFileRenderer.TaskConfigurationViewer && (
               <TaskConfigurationViewer
