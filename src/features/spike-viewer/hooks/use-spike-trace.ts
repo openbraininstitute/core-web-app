@@ -87,6 +87,9 @@ export default function useSpikeTrace({
     return () => {
       cancelled = true;
       close();
+      // The worker is gone, so its session must go too: a tab hidden by <Activity> runs this,
+      // and on being shown again would otherwise hand the views the closed one.
+      setParsed((prev) => (prev?.session === session ? null : prev));
     };
   }, [spikeArrayBuffer, asset.id]);
 

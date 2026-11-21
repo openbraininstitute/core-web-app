@@ -69,7 +69,11 @@ export function useSpikeSession(data: SpikeData | null): SpikeSession | null {
     // Asked first, so every question after it is about these spikes.
     proxy.adopt(data).catch(() => {});
     setOpened({ data, session });
-    return close;
+    return () => {
+      close();
+      // As in useSpikeTrace: never hand out the session of a worker that has ended.
+      setOpened((prev) => (prev?.session === session ? undefined : prev));
+    };
   }, [data]);
   return opened?.data === data ? opened.session : null;
 }
