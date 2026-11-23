@@ -42,7 +42,7 @@ function AssistantCard({
         'flex h-full flex-col gap-3 rounded-lg border border-neutral-200 p-4',
         muted && 'opacity-70',
         accent &&
-          'border-[#d97757]/60 bg-linear-to-br from-[#fbece5] via-white to-white transition-[box-shadow,translate] duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-12px_rgba(217,119,87,0.45)]!'
+          'border-claude/60 bg-linear-to-br from-claude-light via-white to-white transition-[box-shadow,translate] duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-12px_color-mix(in_srgb,var(--color-claude)_45%,transparent)]!'
       )}
       style={{ boxShadow: cardShadow }}
     >
@@ -50,7 +50,7 @@ function AssistantCard({
         <span
           className={cn(
             'bg-primary-0 text-primary-8 flex size-9 shrink-0 items-center justify-center rounded-full',
-            accent && 'bg-white ring-1 ring-[#d97757]/30'
+            accent && 'bg-white ring-1 ring-claude/30'
           )}
         >
           <Icon className="size-5" />
@@ -59,7 +59,7 @@ function AssistantCard({
         <span
           className={cn(
             'text-primary-8 ml-auto rounded-full border border-neutral-300 px-2.5 py-0.5 text-[11px] font-normal uppercase tracking-[0.5px]',
-            accent && 'border-[#d97757] bg-[#d97757] font-medium text-white'
+            accent && 'border-claude bg-claude font-medium text-white'
           )}
         >
           {tag}
@@ -79,7 +79,7 @@ export function AiAssistantsBlock() {
   return (
     <section className="flex shrink-0 flex-col gap-4">
       <div className="flex flex-col gap-2">
-        <h2 className="text-primary-8 text-2xl font-bold">AI assistants</h2>
+        <h2 className="text-primary-8 text-2xl font-bold">Leveraging AI assistants</h2>
         <p className="text-primary-8 text-base font-normal">
           Work with OBI data, models and simulations from the assistant you prefer.
         </p>
@@ -112,7 +112,7 @@ export function AiAssistantsBlock() {
               href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/ai-assistants/claude`}
               className={cn(
                 actionClassName,
-                'border-[#d97757] bg-[#d97757] text-white! hover:border-[#c4633f] hover:bg-[#c4633f] hover:text-white!'
+                'border-claude bg-claude text-white! hover:border-claude-dark hover:bg-claude-dark hover:text-white!'
               )}
             >
               Set up the Claude plugin
@@ -127,9 +127,9 @@ export function AiAssistantsBlock() {
           description="Use OBI from ChatGPT. Setup instructions are on their way."
           muted
           action={
-            <span aria-disabled className={cn(actionClassName, 'cursor-not-allowed')}>
+            <button type="button" disabled className={cn(actionClassName, 'cursor-not-allowed')}>
               Instructions coming soon
-            </span>
+            </button>
           }
         />
       </div>

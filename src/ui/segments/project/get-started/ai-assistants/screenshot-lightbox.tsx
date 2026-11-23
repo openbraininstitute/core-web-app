@@ -8,25 +8,18 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useEffectEvent,
   useMemo,
   useRef,
   useState,
 } from 'react';
 
-export type Screenshot = {
-  src: string;
-  /** The size it is shown at on the page; the file holds twice these pixels. */
-  width: number;
-  height: number;
-  alt: string;
-  /** Shown under the enlarged image. */
-  caption: string;
-};
+import type { TScreenshot } from './types';
 
 const MAX_INLINE_HEIGHT = 560;
 
 const LightboxContext = createContext<{
-  screenshots: Screenshot[];
+  screenshots: TScreenshot[];
   open: (index: number) => void;
 } | null>(null);
 
@@ -34,7 +27,7 @@ const LightboxContext = createContext<{
 export function ScreenshotLightbox({
   screenshots,
   children,
-}: PropsWithChildren<{ screenshots: Screenshot[] }>) {
+}: PropsWithChildren<{ screenshots: TScreenshot[] }>) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [index, setIndex] = useState<number | null>(null);
 
@@ -51,15 +44,17 @@ export function ScreenshotLightbox({
     if (index !== null && dialog && !dialog.open) dialog.showModal();
   }, [index]);
 
+  const isOpen = index !== null;
+  const onKey = useEffectEvent((event: KeyboardEvent) => {
+    if (event.key === 'ArrowRight') step(1);
+    if (event.key === 'ArrowLeft') step(-1);
+  });
+
   useEffect(() => {
-    if (index === null) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'ArrowRight') step(1);
-      if (event.key === 'ArrowLeft') step(-1);
-    };
+    if (!isOpen) return;
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [index, step]);
+  }, [isOpen]);
 
   const context = useMemo(() => ({ screenshots, open }), [screenshots, open]);
   const current = index === null ? null : screenshots[index];
@@ -73,23 +68,25 @@ export function ScreenshotLightbox({
         aria-label={current?.caption}
         className="m-0 h-dvh max-h-none w-dvw max-w-none bg-transparent p-0 backdrop:bg-black/80 backdrop:backdrop-blur-sm"
       >
+        <button
+          type="button"
+          tabIndex={-1}
+          aria-hidden
+          onClick={close}
+          className="absolute inset-0 cursor-default"
+        />
         {current && index !== null && (
-          // biome-ignore lint/a11y/noStaticElementInteractions: clicks on the empty space around the image close it, the keyboard has Escape
-          // biome-ignore lint/a11y/useKeyWithClickEvents: as above
-          <div
-            className="flex h-full w-full flex-col items-center justify-center gap-4 p-6 sm:p-10"
-            onClick={(event) => event.target === event.currentTarget && close()}
-          >
+          <div className="pointer-events-none relative flex h-full w-full flex-col items-center justify-center gap-4 p-6 sm:p-10">
             <Image
               key={current.src}
               src={current.src}
               alt={current.alt}
               width={current.width * 2}
               height={current.height * 2}
-              className="h-auto max-h-[calc(100dvh-9rem)] w-auto max-w-full rounded-lg bg-white shadow-2xl"
+              className="pointer-events-auto h-auto max-h-[calc(100dvh-9rem)] w-auto max-w-full rounded-lg bg-white shadow-2xl"
               unoptimized
             />
-            <p className="max-w-3xl text-center text-sm text-white">
+            <p className="pointer-events-auto max-w-3xl text-center text-sm text-white">
               <span className="mr-2 text-white/60">
                 {index + 1} / {screenshots.length}
               </span>

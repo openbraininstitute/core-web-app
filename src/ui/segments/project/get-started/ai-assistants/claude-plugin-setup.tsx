@@ -1,25 +1,37 @@
 import { RiExternalLinkLine } from '@remixicon/react';
 
-import { ClaudeLogo } from './claude-logo';
-import { CopyValue } from './copy-value';
-import { LightboxScreenshot, type Screenshot, ScreenshotLightbox } from './screenshot-lightbox';
+import { OBI_MCP_CLIENT_ID, OBI_MCP_SERVER_URL } from '@/constants/obi-mcp';
+import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 
-import type { ReactNode } from 'react';
+import { ClaudeLogo } from './claude-logo';
+import { LightboxScreenshot, ScreenshotLightbox } from './screenshot-lightbox';
+
+import type { TScreenshot, TSetupStep } from './types';
 
 const IMAGES = '/images/ai-assistants/claude';
 
 const MARKETPLACE_REPOSITORY = 'openbraininstitute/obi-skills';
-const MCP_SERVER_URL = 'https://cell-a.openbraininstitute.org/api/agent-ts/mcp';
-const OAUTH_CLIENT_ID = 'obi-mcp';
 const EXAMPLE_PROMPT = 'Can you find me a small microcircuit from cortex?';
 
-type Step = {
-  title: string;
-  body: ReactNode;
-  image: { src: string; width: number; height: number; alt: string };
-};
+function CopyableValue({ value }: { value: string }) {
+  return (
+    <ButtonCopyId
+      value={value}
+      label={`Copy ${value}`}
+      tooltip="Copy"
+      className="max-w-full"
+      classNames={{
+        button:
+          'bg-neutral-1 h-auto max-w-full whitespace-normal rounded-md border border-neutral-200 py-1 pl-2.5 pr-1 text-left hover:bg-neutral-1',
+        icon: 'size-7 border-none',
+      }}
+    >
+      <code className="text-primary-9 break-all font-mono text-[13px]">{value}</code>
+    </ButtonCopyId>
+  );
+}
 
-const STEPS: Step[] = [
+const STEPS: TSetupStep[] = [
   {
     title: 'Open the plugins in Claude',
     body: (
@@ -50,7 +62,7 @@ const STEPS: Step[] = [
     body: (
       <>
         <p>In the URL field, enter the repository and press Sync:</p>
-        <CopyValue value={MARKETPLACE_REPOSITORY} />
+        <CopyableValue value={MARKETPLACE_REPOSITORY} />
         <p>Leave “Sync automatically” on so you get new versions of the plugin as they come out.</p>
       </>
     ),
@@ -95,7 +107,7 @@ const STEPS: Step[] = [
     body: (
       <>
         <p>The name and the server URL are already filled in. They should read:</p>
-        <CopyValue value={MCP_SERVER_URL} />
+        <CopyableValue value={OBI_MCP_SERVER_URL} />
         <p>
           Click <strong>Continue</strong>.
         </p>
@@ -117,7 +129,7 @@ const STEPS: Step[] = [
           <strong>OAuth client</strong>, choose <strong>Use your own OAuth client</strong> and enter
           this client ID:
         </p>
-        <CopyValue value={OAUTH_CLIENT_ID} />
+        <CopyableValue value={OBI_MCP_CLIENT_ID} />
         <p>
           Leave the client secret empty and click <strong>Add</strong>.
         </p>
@@ -167,7 +179,7 @@ const STEPS: Step[] = [
     body: (
       <>
         <p>Start a new chat and ask something about the platform, for example:</p>
-        <CopyValue value={EXAMPLE_PROMPT} />
+        <CopyableValue value={EXAMPLE_PROMPT} />
         <p>
           Claude answers with what it finds on the platform, with links that open it here in your
           virtual lab.
@@ -183,7 +195,7 @@ const STEPS: Step[] = [
   },
 ];
 
-const SCREENSHOTS: Screenshot[] = STEPS.map((step, index) => ({
+const SCREENSHOTS: TScreenshot[] = STEPS.map((step, index) => ({
   ...step.image,
   caption: `Step ${index + 1}: ${step.title}`,
 }));
