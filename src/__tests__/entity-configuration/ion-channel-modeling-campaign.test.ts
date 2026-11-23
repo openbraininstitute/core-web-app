@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { toIonChannelFittingForm } from './ion-channel-modeling-campaign';
+import { toIonChannelFittingForm } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 
 describe('toIonChannelFittingForm', () => {
   it('reshapes a pre-scan-config builder form into the current scan config', () => {

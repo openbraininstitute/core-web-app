@@ -2,9 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { WorkspaceSection } from '@/constants';
 import { ModelDataExtendedTypes, SimulationDataExtendedTypes } from '@/ui/segments/explore/helpers';
-
-import { listWorkflows } from './helpers';
-import { WorkflowListSortDict } from './types';
+import { listWorkflows } from '@/ui/segments/workflows/config/helpers';
+import { WorkflowListSortDict } from '@/ui/segments/workflows/config/types';
 
 import type { FeatureFlags } from '@/features/feature-flags/flags';
 

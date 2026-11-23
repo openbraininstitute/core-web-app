@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { commonParentRegion, neuronSafeName } from './ion-channel-model-properties';
+import {
+  commonParentRegion,
+  neuronSafeName,
+} from '@/features/scan-config/components/ui-elements/ion-channel-model-properties';
 
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 

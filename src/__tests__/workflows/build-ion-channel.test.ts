@@ -6,13 +6,16 @@ import { buildIonChannelWorkflow } from '@/features/scan-config/workflow/definit
 import { ScanConfigEntitySourceMode } from '@/features/scan-config/workflow/types';
 import { WorkflowSchemaSelectionMode } from '@/features/scan-config/workflow/workflow-schema-selection';
 import { ActivityValues } from '@/ui/segments/workflows/config';
+import {
+  getWorkflow,
+  listWorkflows,
+  resolveWorkflowRouteStage,
+} from '@/ui/segments/workflows/config/helpers';
 import { ScanConfigFromIdType } from '@/ui/segments/workflows/config/scan-config-binding';
 import {
   WorkflowInitialStageDict,
   WorkflowInitialStagePolicyDict,
 } from '@/ui/segments/workflows/config/types';
-
-import { getWorkflow, listWorkflows, resolveWorkflowRouteStage } from './helpers';
 
 const targetTypes = (context: 'configure' | 'browse') =>
   listWorkflows({ activity: ActivityValues.Build, context }).map((w) => w.targetType);

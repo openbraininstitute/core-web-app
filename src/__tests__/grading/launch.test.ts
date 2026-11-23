@@ -2,9 +2,9 @@ import { createHmac } from 'node:crypto';
 
 import { describe, expect, it } from 'vitest';
 
-import { pickDefaultProjectId, verifyLaunchParams } from './launch';
+import { pickDefaultProjectId, verifyLaunchParams } from '@/features/grading/launch';
 
-import type { RawParams } from './launch';
+import type { RawParams } from '@/features/grading/launch';
 
 const SECRET = 'test-hmac-secret';
 

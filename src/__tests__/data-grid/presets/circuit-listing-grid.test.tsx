@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { CircuitRepresentationView, circuitListingRowClass } from '../helpers';
+import {
+  CircuitRepresentationView,
+  circuitListingRowClass,
+} from '@/ui/segments/explore/circuit/helpers';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 

@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { adaptCircuitColumns, interleaveCircuitRows } from './circuit-recursive-grid';
+import {
+  adaptCircuitColumns,
+  interleaveCircuitRows,
+} from '@/ui/segments/explore/circuit/elements/circuit-recursive-grid';
 
 import type { ColumnProps } from 'antd/es/table';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';

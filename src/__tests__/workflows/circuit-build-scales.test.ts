@@ -13,7 +13,7 @@ const { CircuitScaleDictionary } = await import('@/api/entitycore/types/entities
 const { ExtendedEntitiesTypeDict } = await import('@/api/entitycore/types/extended-entity-type');
 const { EntityCoreFields } = await import('@/entity-configuration/definitions/fields-defs/enums');
 const { FilterOptionsKind } = await import('@/features/data-grid/core');
-const { BuildWorkflows } = await import('./activities/build');
+const { BuildWorkflows } = await import('@/ui/segments/workflows/config/activities/build');
 
 const context = { virtualLabId: 'lab-1', projectId: 'project-1' };
 

@@ -3,8 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { WorkspaceSection } from '@/constants';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-
-import { makeTypeDefaultFilters } from './helpers';
+import { makeTypeDefaultFilters } from '@/ui/segments/data-table/elements/helpers';
 
 // TODO: pre-existing spec that never ran before vitest was wired up; its
 // assertions about workflow-only fields (SpeciesName / generation_type /

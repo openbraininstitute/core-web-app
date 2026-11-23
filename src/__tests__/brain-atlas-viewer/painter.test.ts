@@ -83,7 +83,7 @@ vi.mock('@tolokoban/tgd', () => {
 // `satisfies CameraController` is the point of the annotation: this stub is why the
 // missing `resetZoom` was invisible to the suite, so make it fail to compile the day
 // the real interface changes shape.
-vi.mock('./camera', () => ({
+vi.mock('@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/camera', () => ({
   setCamera: () =>
     ({
       resetCamera: () => undefined,
@@ -93,11 +93,11 @@ vi.mock('./camera', () => ({
     }) satisfies CameraController,
 }));
 
-vi.mock('./hooks', () => ({
+vi.mock('@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/hooks', () => ({
   makeColor: () => ({ color: 'mock' }),
 }));
 
-vi.mock('./services/services', () => ({
+vi.mock('@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/services/services', () => ({
   getCachedBrainRegionMeshArrayBuffer: vi.fn(async () => new ArrayBuffer(8)),
   getPointCouldData: vi.fn(async () => new Float32Array()),
 }));
@@ -112,14 +112,14 @@ vi.mock('@/utils/logger', () => ({
 }));
 
 // Imported after the mocks are registered (vitest hoists vi.mock above this).
-import { Painter } from './painter';
+import { Painter } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/painter';
 // `errors` is intentionally NOT mocked, so the real class is shared with painter.ts
 // and `instanceof` works; `getCachedBrainRegionMeshArrayBuffer` comes from the mock above.
-import { RegionMeshNotAvailableError } from './services/errors';
-import { getCachedBrainRegionMeshArrayBuffer } from './services/services';
+import { RegionMeshNotAvailableError } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/services/errors';
+import { getCachedBrainRegionMeshArrayBuffer } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/services/services';
 
-import type { CameraController } from './camera';
-import type { VisibleRegion } from './types';
+import type { CameraController } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/camera';
+import type { VisibleRegion } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/types';
 
 const region: VisibleRegion = {
   id: 'cerebrum',
