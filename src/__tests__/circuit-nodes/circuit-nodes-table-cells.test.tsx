@@ -1,5 +1,7 @@
-import { act, render, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { NodesClosedError } from '@/features/circuit-nodes/hooks/nodes-worker-manager';
 
 import type { ComponentProps } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -17,6 +19,8 @@ const fixtures = vi.hoisted(() => ({
     return Object.keys(filter).length > 0 ? Uint32Array.from([1, 3, 4]) : null;
   }),
   getRowIndex: vi.fn(async () => 0),
+  neuronSetFilter: vi.fn(),
+  notifyError: vi.fn(),
   logError: vi.fn(),
 }));
 
@@ -28,6 +32,9 @@ vi.mock('@/features/circuit-nodes/components/nodes-grid', () => ({
   withNewColumnsOn: (columns: { name: string }[]) => new Set(columns.map((c) => c.name)),
 }));
 vi.mock('@/features/circuit-nodes/components/nodes-toolbar', () => ({ NodesToolbar: () => null }));
+vi.mock('@/components/notification', () => ({
+  useAppNotification: () => ({ error: fixtures.notifyError, warning: vi.fn() }),
+}));
 vi.mock('@/utils/logger', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/utils/logger')>()),
   logError: fixtures.logError,
@@ -52,6 +59,7 @@ vi.mock('@/features/circuit-nodes/hooks/use-nodes-worker', () => ({
     status: 'ready',
     getFilteredIndices: fixtures.getFilteredIndices,
     getRowIndex: fixtures.getRowIndex,
+    neuronSetFilter: fixtures.neuronSetFilter,
     isLoading: false,
     progress: null,
     error: null,
@@ -82,6 +90,8 @@ beforeEach(() => {
   fixtures.grid.mockClear();
   fixtures.getFilteredIndices.mockClear();
   fixtures.logError.mockClear();
+  fixtures.neuronSetFilter.mockReset();
+  fixtures.notifyError.mockClear();
 });
 
 /** What the grid's header says beside the count. */
@@ -247,5 +257,100 @@ describe('CircuitNodesTable with cells', () => {
     expect(grid().pickColumn).toBeUndefined();
     expect(grid().onRowClick).toBeUndefined();
     expect(fixtures.getFilteredIndices).not.toHaveBeenCalled();
+  });
+});
+
+/** A promise and the hands that settle it. */
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason: unknown) => void;
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
+}
+
+describe('CircuitNodesTable creating a neuron set', () => {
+  const onShownCellsChange = vi.fn();
+  const onHoveredCellChange = vi.fn();
+
+  function setTable(
+    circuit: ICircuit,
+    populationName: string,
+    onCreateNeuronSet: TableCells['onCreateNeuronSet']
+  ) {
+    return (
+      <CircuitNodesTable
+        circuit={circuit}
+        populationName={populationName}
+        onPopulationChange={() => {}}
+        cells={{
+          onShownCellsChange,
+          onHoveredCellChange,
+          onCreateNeuronSet,
+          neuronSetProperties: { cortex: { mtype: ['L5_TPC'] } },
+        }}
+      />
+    );
+  }
+
+  /** Ticks two rows, clicks "Create neuron set", and hands back the worker's pending answer. */
+  async function clickCreate() {
+    const answer = deferred<Record<string, string[]> | null>();
+    fixtures.neuronSetFilter.mockReturnValueOnce(answer.promise);
+    act(() => grid().onRowClick?.(1));
+    act(() => grid().onRowClick?.(3));
+    fireEvent.click(await screen.findByRole('button', { name: /create neuron set/i }));
+    expect(fixtures.neuronSetFilter).toHaveBeenCalledOnce();
+    return answer;
+  }
+
+  it('adds the set the worker found', async () => {
+    const onCreateNeuronSet = vi.fn();
+    render(setTable(CIRCUIT, 'cortex', onCreateNeuronSet));
+    const answer = await clickCreate();
+
+    await act(async () => answer.resolve({ mtype: ['L5_TPC'] }));
+    expect(onCreateNeuronSet).toHaveBeenCalledWith(
+      expect.objectContaining({
+        population: 'cortex',
+        property_filter: expect.objectContaining({ filter_dict: { mtype: ['L5_TPC'] } }),
+      })
+    );
+  });
+
+  it('drops a set that comes after a switch of population', async () => {
+    const onCreateNeuronSet = vi.fn();
+    const { rerender } = render(setTable(CIRCUIT, 'cortex', onCreateNeuronSet));
+    const answer = await clickCreate();
+
+    rerender(setTable(CIRCUIT, 'thalamus', onCreateNeuronSet));
+    await act(async () => answer.resolve({ mtype: ['L5_TPC'] }));
+    expect(onCreateNeuronSet).not.toHaveBeenCalled();
+  });
+
+  it('drops a set that comes after a switch to a population of the same name elsewhere', async () => {
+    const onCreateNeuronSet = vi.fn();
+    const { rerender } = render(setTable(CIRCUIT, 'cortex', onCreateNeuronSet));
+    const answer = await clickCreate();
+
+    rerender(setTable(OTHER_CIRCUIT, 'cortex', onCreateNeuronSet));
+    await act(async () => answer.resolve({ mtype: ['L5_TPC'] }));
+    expect(onCreateNeuronSet).not.toHaveBeenCalled();
+  });
+
+  it('says nothing when the nodes close mid-call, and frees the button', async () => {
+    const onCreateNeuronSet = vi.fn();
+    const { rerender } = render(setTable(CIRCUIT, 'cortex', onCreateNeuronSet));
+    const answer = await clickCreate();
+
+    rerender(setTable(CIRCUIT, 'thalamus', onCreateNeuronSet));
+    await act(async () => answer.reject(new NodesClosedError()));
+    expect(fixtures.notifyError).not.toHaveBeenCalled();
+    expect(fixtures.logError).not.toHaveBeenCalled();
+
+    rerender(setTable(CIRCUIT, 'cortex', onCreateNeuronSet));
+    expect(await screen.findByRole('button', { name: /create neuron set/i })).toBeEnabled();
   });
 });

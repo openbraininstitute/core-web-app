@@ -183,10 +183,10 @@ export default function CircuitNodesTable({
   // The neurons on show as a neuron set, where they are some but not all of them.
   const [makingSet, setMakingSet] = useState(false);
   const notification = useAppNotification();
-  const populationNameRef = useRef(population?.name);
+  const scopeRef = useRef(scope);
   useEffect(() => {
-    populationNameRef.current = population?.name;
-  }, [population?.name]);
+    scopeRef.current = scope;
+  }, [scope]);
   const onCreateNeuronSet = cells?.onCreateNeuronSet;
   const canMakeSet = !!(
     onCreateNeuronSet &&
@@ -209,7 +209,7 @@ export default function CircuitNodesTable({
       propertyFilter: neuronSetFilter,
     })
       .then(({ block }) => {
-        if (populationNameRef.current !== population.name) return;
+        if (scopeRef.current !== scope) return;
         if (block) {
           onCreateNeuronSet(block);
           return;

@@ -432,7 +432,7 @@ function ReadyMatrix({
           setOutside((known) => ({ ...known, [name]: read }));
         });
     }
-  }, [missing.join('|')]);
+  }, [missing.join('|'), nodeColumns?.getColumn]);
   const outsideError = wanted
     .map((name) => outside[name])
     .find((read): read is Error => read instanceof Error);
