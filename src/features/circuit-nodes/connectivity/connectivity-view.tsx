@@ -29,6 +29,7 @@ import {
   useConnectivityDownloadGate,
   useConnectivityMatrix,
 } from '@/features/circuit-nodes/connectivity/use-connectivity';
+import { NodesClosedError } from '@/features/circuit-nodes/hooks/nodes-worker-manager';
 import { GenericError } from '@/ui/molecules/generic-error';
 import { PILL_CLASS, PillSelect, ROUND_PILL_CLASS } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
@@ -426,9 +427,12 @@ function ReadyMatrix({
         .getColumn(name)
         .then((column) => nodeProperty(name, column))
         .catch((error: unknown) => (error instanceof Error ? error : new Error(String(error))))
-        .then((read) => setOutside((known) => ({ ...known, [name]: read })));
+        .then((read) => {
+          if (read instanceof NodesClosedError) return;
+          setOutside((known) => ({ ...known, [name]: read }));
+        });
     }
-  }, [missing.join('|')]);
+  }, [missing.join('|'), nodeColumns?.getColumn]);
   const outsideError = wanted
     .map((name) => outside[name])
     .find((read): read is Error => read instanceof Error);

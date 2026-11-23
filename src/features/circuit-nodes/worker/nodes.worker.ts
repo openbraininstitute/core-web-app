@@ -18,6 +18,8 @@ import type {
   OpenRequest,
   OpenResponse,
   SortItem,
+  TOfferedProperties,
+  TPropertyFilter,
 } from '@/features/circuit-nodes/types';
 
 let session: NodesSession | null = null;
@@ -73,6 +75,14 @@ const api = {
       return Comlink.transfer(column, [column.values.buffer as ArrayBuffer]);
     }
     return column;
+  },
+
+  async neuronSetFilter(
+    cells: Uint32Array,
+    offered: TOfferedProperties
+  ): Promise<TPropertyFilter | null> {
+    if (!session) throw new Error('NodesSession not initialized; call open() first');
+    return session.neuronSetFilter(cells, offered);
   },
 
   async setDerivedColumns(owner: string, columns: DerivedColumn[]): Promise<void> {

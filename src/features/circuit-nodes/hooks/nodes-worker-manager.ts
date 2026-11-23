@@ -16,6 +16,8 @@ import type {
   NodeGeometryOptions,
   OpenRequest,
   SortItem,
+  TOfferedProperties,
+  TPropertyFilter,
 } from '@/features/circuit-nodes/types';
 import type { NodesWorkerApi } from '@/features/circuit-nodes/worker/nodes.worker';
 
@@ -27,6 +29,14 @@ export interface NodesSessionState {
   rowCount: number;
   progress: DownloadProgress | null;
   error: Error | null;
+}
+
+/** A call ended because its nodes worker went before answering. */
+export class NodesClosedError extends Error {
+  constructor() {
+    super('The nodes were closed');
+    this.name = 'NodesClosedError';
+  }
 }
 
 /** stable reference for "no session yet" so React reads don't loop on identity */
@@ -61,8 +71,8 @@ interface Session {
   epoch: number;
   disposed: boolean;
   disposeTimer: ReturnType<typeof setTimeout> | null;
-  /** Ends each export under way, which a worker that is gone would leave waiting. */
-  exportEnders: Set<(error: Error) => void>;
+  /** Ends each long call under way, which a worker that is gone would leave waiting. */
+  callEnders: Set<(error: Error) => void>;
 }
 
 /**
@@ -108,7 +118,7 @@ class NodesWorkerRegistry {
         epoch: 0,
         disposed: false,
         disposeTimer: null,
-        exportEnders: new Set(),
+        callEnders: new Set(),
       };
       this.sessions.set(key, session);
     }
@@ -148,20 +158,30 @@ class NodesWorkerRegistry {
   exportCsv(key: string, request: CsvRequest, onPart: CsvPartHandler): Promise<void> {
     const session = this.sessions.get(key);
     if (!session?.proxy) return Promise.reject(new Error('Nodes worker not ready'));
-    const { proxy } = session;
-    return new Promise<void>((resolve, reject) => {
-      session.exportEnders.add(reject);
-      proxy
-        .exportCsv(request, Comlink.proxy(onPart))
-        .then(resolve, reject)
-        .finally(() => session.exportEnders.delete(reject));
-    });
+    return this.untilClosed(session, session.proxy.exportCsv(request, Comlink.proxy(onPart)));
   }
 
   getColumn(key: string, name: string): Promise<ColumnValues> {
     const session = this.sessions.get(key);
     if (!session?.proxy) return Promise.reject(new Error('Nodes worker not ready'));
-    return session.proxy.getColumn(name);
+    return this.untilClosed<ColumnValues>(session, session.proxy.getColumn(name));
+  }
+
+  neuronSetFilter(
+    key: string,
+    cells: Uint32Array,
+    offered: TOfferedProperties
+  ): Promise<TPropertyFilter | null> {
+    const session = this.sessions.get(key);
+    if (!session?.proxy) return Promise.reject(new Error('Nodes worker not ready'));
+    return this.untilClosed(session, session.proxy.neuronSetFilter(cells, offered));
+  }
+
+  private untilClosed<T>(session: Session, call: Promise<T>): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      session.callEnders.add(reject);
+      call.then(resolve, reject).finally(() => session.callEnders.delete(reject));
+    });
   }
 
   /**
@@ -203,7 +223,7 @@ class NodesWorkerRegistry {
   getGeometry(key: string, options?: NodeGeometryOptions): Promise<NodeGeometry> {
     const session = this.sessions.get(key);
     if (!session?.proxy) return Promise.reject(new Error('Nodes worker not ready'));
-    return session.proxy.getGeometry(options);
+    return this.untilClosed(session, session.proxy.getGeometry(options));
   }
 
   private setState(session: Session, patch: Partial<NodesSessionState>): void {
@@ -289,8 +309,8 @@ class NodesWorkerRegistry {
     const { proxy, worker } = session;
     session.proxy = null;
     session.worker = null;
-    for (const end of session.exportEnders) end(new Error('The nodes were closed'));
-    session.exportEnders.clear();
+    for (const end of session.callEnders) end(new NodesClosedError());
+    session.callEnders.clear();
     // terminating the worker frees the whole WASM heap (the ~700MB file); a
     // release of the comlink proxy first avoids dangling message ports.
     if (proxy) {

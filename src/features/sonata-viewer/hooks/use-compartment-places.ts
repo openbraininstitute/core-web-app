@@ -5,6 +5,7 @@ import pLimit from 'p-limit';
 import { useEffect, useState } from 'react';
 
 import { circuitMorphologyPath } from '@/api/one/circuit-visualization';
+import { NodesClosedError } from '@/features/circuit-nodes/hooks/nodes-worker-manager';
 import { loadSections } from '@/features/circuit-viewer/morphologies/load/read-sections';
 import { sectionTypeLabel } from '@/features/scan-config/components/circuit-viz/section-type-label';
 import {
@@ -130,9 +131,10 @@ export function useCompartmentPlaces({
       }
       if (!cancelled) setFound({ compartments, offsets, places: { distances, types } });
     };
-    measure().catch((error: unknown) =>
-      logError('The compartments could not be measured on their cells:', error)
-    );
+    measure().catch((error: unknown) => {
+      if (error instanceof NodesClosedError) return;
+      logError('The compartments could not be measured on their cells:', error);
+    });
     return () => {
       cancelled = true;
       // the morphologies not yet asked for; those on their way are shared with the 3D view
