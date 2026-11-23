@@ -15,3 +15,7 @@ export const HOVER_CARD_CLASS =
 
 /** A block's or a field's description, or why it can't be picked, in the hover card on hover. */
 export const DESCRIPTION_TOOLTIP_CLASS = `${HOVER_CARD_CLASS} text-primary-9 max-w-2xs min-w-2xs px-4 py-2 text-base text-wrap overflow-y-auto max-h-50 secondary-scrollbar`;
+
+/** The blocks-and-form window's two columns: on the grid's tracks where subgrid is supported, halves otherwise. */
+export const BLOCKS_AND_FORM_COLUMNS_CLASS =
+  'grid-cols-2 supports-[grid-template-columns:subgrid]:grid-cols-subgrid';

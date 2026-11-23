@@ -1,6 +1,9 @@
 'use client';
 
-import { BOX_CLASS } from '@/features/scan-config/components/shared/box-class';
+import {
+  BLOCKS_AND_FORM_COLUMNS_CLASS,
+  BOX_CLASS,
+} from '@/features/scan-config/components/shared/box-class';
 import ScanConfigTabsPanel, { toScanConfigTab } from '@/features/scan-config/components/tabs';
 import {
   BaseScanConfigTabs,
@@ -134,7 +137,8 @@ export function ScanConfigSkeleton({
               <div
                 className={cn(
                   BOX_CLASS,
-                  'col-span-2 mt-px mb-3 ml-px grid min-h-0 grid-cols-subgrid grid-rows-1 gap-x-0 overflow-hidden py-3'
+                  BLOCKS_AND_FORM_COLUMNS_CLASS,
+                  'col-span-2 mt-px mb-3 ml-px grid min-h-0 grid-rows-1 gap-x-0 overflow-hidden py-3'
                 )}
               >
                 <LeftColumnSkeleton />

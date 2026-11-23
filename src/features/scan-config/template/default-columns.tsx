@@ -8,7 +8,10 @@ import {
   SceneTablePaneProvider,
   useSceneTablePaneHost,
 } from '@/features/circuit-viewer/scene-table-pane';
-import { BOX_CLASS } from '@/features/scan-config/components/shared/box-class';
+import {
+  BLOCKS_AND_FORM_COLUMNS_CLASS,
+  BOX_CLASS,
+} from '@/features/scan-config/components/shared/box-class';
 import { Right } from '@/features/scan-config/components/ui-columns';
 import { ScanConfigActivity } from '@/features/scan-config/types';
 import { StackedPanes } from '@/features/spike-viewer/spike-statistics/stacked-panes';
@@ -62,9 +65,7 @@ export function DefaultConfigColumns({ props, state }: Props) {
           BOX_CLASS,
           // a pixel in for its ring, which then meets the project selector's left edge
           'mt-px mb-3 ml-px grid min-h-0 grid-rows-1 gap-x-0 overflow-hidden py-3',
-          shut === 'none'
-            ? 'col-span-2 grid-cols-2 supports-[grid-template-columns:subgrid]:grid-cols-subgrid'
-            : 'grid-cols-1',
+          shut === 'none' ? cn('col-span-2', BLOCKS_AND_FORM_COLUMNS_CLASS) : 'grid-cols-1',
           shut === 'both' && 'hidden'
         )}
       >

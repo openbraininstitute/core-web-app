@@ -27,6 +27,7 @@ import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
 import { uploadFilesAndCreateParts } from '../api/upload';
 import { AiAssistant, useAiAssistant } from '../assistant';
 import { fetchMessagesFromDB } from '../assistant/manager/message';
+import { isChatIdle } from '../helpers';
 
 import type { Config } from '@/features/scan-config/types';
 import type { AiAgentRateLimitEndpoint } from './rate-limit';
@@ -249,7 +250,7 @@ export function useServiceAiAgentChat(threadId: string) {
   ]);
 
   useEffect(() => {
-    setIsChatReady(chat.status !== 'submitted' && chat.status !== 'streaming');
+    setIsChatReady(isChatIdle(chat.status));
   }, [chat.status, setIsChatReady]);
 
   useEffect(() => () => setIsChatReady(true), [setIsChatReady]);
