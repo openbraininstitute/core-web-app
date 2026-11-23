@@ -73,7 +73,9 @@ function AccountView({ account }: { account: TAccount }) {
         <Detail label="Created">{formatDateTime(account.created_at)}</Detail>
         <Detail label="Updated">{formatDateTime(account.updated_at)}</Detail>
       </DetailList>
-      <AccountActions account={account} />
+      <CapabilityGate need="accounting.write">
+        <AccountActions account={account} />
+      </CapabilityGate>
       {isLab && (
         <>
           <h2 className="text-primary-9 font-semibold">Projects</h2>

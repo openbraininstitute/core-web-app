@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { describe, expect, it, vi } from 'vitest';
 
 import { AccountActions } from '@/admin/sections/accounting/ui/account-actions';
+import { ApiError } from '@/api/error';
 
 import type { TAccount } from '@/admin/sections/accounting/types';
 
@@ -35,6 +36,31 @@ const renderActions = (account: TAccount) =>
   );
 
 describe('AccountActions', () => {
+  it('closes the dialog when the outcome is unknown, so one click cannot send it again', async () => {
+    topUpMock.mockRejectedValue(new ApiError('may or may not', { code: 'OUTCOME_UNKNOWN' }));
+    renderActions(LAB);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Top up' }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.change(within(dialog).getByRole('spinbutton'), { target: { value: '10' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Top up' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  });
+
+  it('keeps the dialog open after a refusal, to fix the amount', async () => {
+    topUpMock.mockRejectedValue(new ApiError('Insufficient funds', { status: 400 }));
+    renderActions(LAB);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Top up' }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.change(within(dialog).getByRole('spinbutton'), { target: { value: '10' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Top up' }));
+
+    await waitFor(() => expect(topUpMock).toHaveBeenCalled());
+    expect(screen.getByRole('dialog')).toBeTruthy();
+  });
+
   it('offers only Enable on a disabled account', () => {
     renderActions({ ...LAB, enabled: false });
 

@@ -1,11 +1,13 @@
 import { match, P } from 'ts-pattern';
 
+import { ApiError } from '@/api/error';
 import { formatBytes, formatDurationFromSeconds } from '@/utils/format';
 
 import { ADMIN_ROOT } from '../../routes';
 import { parseDay } from '../../shared/day';
 import { Amount } from './schemas';
 import {
+  AccountingErrorCode,
   AccountingFilter,
   AccountingPage,
   AccountType,
@@ -136,13 +138,16 @@ export const amountField = ({
   ],
 });
 
+export const isOutcomeUnknown = (error: unknown) =>
+  error instanceof ApiError && error.cause?.code === AccountingErrorCode.OutcomeUnknown;
+
 const STATUS_ACCOUNT_TYPES: TAccountType[] = [AccountType.VirtualLab, AccountType.Project];
 
 export function describeStatusChange({ accounts, open_job_ids: openJobs }: TAccountStatus) {
   const shown = accounts.filter((account) => STATUS_ACCOUNT_TYPES.includes(account.account_type));
   const [first] = shown;
   const changed = `${first?.enabled ? 'Enabled' : 'Disabled'} ${shown.length} ${shown.length === 1 ? 'account' : 'accounts'}`;
-  if (!openJobs.length) return changed;
+  if (!openJobs.length || first?.enabled) return changed;
   return `${changed}. ${openJobs.length} open ${openJobs.length === 1 ? 'job' : 'jobs'} can't be charged until it's enabled again.`;
 }
 

@@ -11,6 +11,7 @@ import type { TAccountingJobDetail, TRefund, TRefundValues } from '../types';
 /** Only a finished or cancelled job can be refunded, and accounting checks the rest. */
 export function RefundJob({ job }: { job: TAccountingJobDetail }) {
   if (!job.finished_at && !job.cancelled_at) return null;
+  if (Number(job.total_charged) <= Number(job.total_refunded)) return null;
 
   return (
     <ActionButton<TRefundValues, TRefund | null>

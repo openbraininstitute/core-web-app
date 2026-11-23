@@ -88,6 +88,12 @@ describe('describeStatusChange', () => {
     ).toBe("Disabled 2 accounts. 1 open job can't be charged until it's enabled again.");
   });
 
+  it('says nothing about open jobs on an enable', () => {
+    expect(describeStatusChange({ accounts: [account(true)], open_job_ids: ['j1'] })).toBe(
+      'Enabled 1 account'
+    );
+  });
+
   it('leaves reservation accounts out of the count', () => {
     expect(
       describeStatusChange({

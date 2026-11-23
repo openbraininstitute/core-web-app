@@ -7,6 +7,7 @@ import { Button } from '@/ui/molecules/button';
 import { adminQueryKeys } from '../../../query-keys';
 import { FormModal } from '../../../shared/form-modal';
 import { useAdminWrite } from '../../../shared/use-admin-write';
+import { isOutcomeUnknown } from '../helpers';
 
 import type { TAction } from '../types';
 
@@ -43,7 +44,13 @@ export function ActionButton<Values extends Record<string, unknown>, Result>({
           okText={action.okText}
           danger={action.danger}
           pending={write.isPending}
-          onSubmit={(values) => write.mutate(values)}
+          onSubmit={(values) =>
+            write.mutate(values, {
+              onError: (error) => {
+                if (isOutcomeUnknown(error)) close();
+              },
+            })
+          }
           onClose={close}
         />
       )}

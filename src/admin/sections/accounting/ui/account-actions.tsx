@@ -2,6 +2,8 @@
 
 import { useQuery } from '@tanstack/react-query';
 
+import { Button } from '@/ui/molecules/button';
+
 import { adminQueryKeys } from '../../../query-keys';
 import { REQUIRED, typedNameField } from '../../../shared/form-modal';
 import {
@@ -37,6 +39,16 @@ function MoveButton({ account, vlabId }: { account: TAccount; vlabId: string }) 
   const options = (projects.data?.data ?? [])
     .filter((project) => project.id !== account.id)
     .map((project) => ({ value: project.id, label: project.name }));
+  if (projects.isPending) {
+    return (
+      <Button rounded variant="outline" size="sm" disabled>
+        Move to a project
+      </Button>
+    );
+  }
+  if (projects.isError) {
+    return <span className="text-destructive text-sm">Couldn't load the projects to move to</span>;
+  }
   if (!options.length) return null;
 
   return (

@@ -111,7 +111,7 @@ describe('writeAccess', () => {
     authMock.mockResolvedValueOnce({ accessToken: 'tok', user: { id: 'sub-1', username: 'op' } });
     getKeycloakGroupsMock.mockResolvedValueOnce(['/service/accounting/admin']);
 
-    await expect(writeAccess('accounting.admin')).resolves.toEqual({
+    await expect(writeAccess('accounting.write')).resolves.toEqual({
       operator: { id: 'sub-1', username: 'op' },
     });
     expect(getKeycloakGroupsMock).toHaveBeenCalledWith(expect.anything(), { fresh: true });
@@ -120,15 +120,23 @@ describe('writeAccess', () => {
   it('refuses with 503 when fresh groups cannot be read', async () => {
     getKeycloakGroupsMock.mockRejectedValueOnce(new Error('userinfo down'));
 
-    const access = await writeAccess('accounting.admin');
+    const access = await writeAccess('accounting.write');
 
     expect('denial' in access && access.denial.status).toBe(503);
+  });
+
+  it('refuses a wildcard admin, who can only read accounting', async () => {
+    getKeycloakGroupsMock.mockResolvedValueOnce(['/service/*/admin']);
+
+    const access = await writeAccess('accounting.write');
+
+    expect('denial' in access && access.denial.status).toBe(403);
   });
 
   it('refuses with 403 without the capability', async () => {
     getKeycloakGroupsMock.mockResolvedValueOnce(['/service/entitycore/admin']);
 
-    const access = await writeAccess('accounting.admin');
+    const access = await writeAccess('accounting.write');
 
     expect('denial' in access && access.denial.status).toBe(403);
   });
@@ -137,7 +145,7 @@ describe('writeAccess', () => {
     authMock.mockResolvedValueOnce({ accessToken: 'tok', user: {} });
     getKeycloakGroupsMock.mockResolvedValueOnce(['/service/accounting/admin']);
 
-    const access = await writeAccess('accounting.admin');
+    const access = await writeAccess('accounting.write');
 
     expect('denial' in access && access.denial.status).toBe(401);
   });

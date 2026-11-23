@@ -13,7 +13,12 @@ import {
   ReverseBody,
   TopUpBody,
 } from '../sections/accounting/schemas';
-import { AccountingMethod, AuditPhase } from '../sections/accounting/types';
+import {
+  AccountingErrorCode,
+  AccountingMethod,
+  AuditPhase,
+  UpstreamOutcome,
+} from '../sections/accounting/types';
 import { isGatewayReply } from './service-probe';
 
 import type { ZodType } from 'zod';
@@ -23,6 +28,7 @@ import type {
   TAccountingRoute,
   TAccountingTarget,
   TAccountingWrite,
+  TUpstreamOutcome,
 } from '../sections/accounting/types';
 
 const UUID = '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}';
@@ -182,46 +188,23 @@ export async function readWriteBody(
 const NO_STORE = { 'cache-control': 'private, no-store' };
 const NULL_BODY_STATUSES = [204, 205];
 
-export function accountingReply(status: number, message: string) {
-  return Response.json({ message }, { status, headers: NO_STORE });
+export function accountingReply(status: number, message: string, code?: string) {
+  return Response.json(
+    { message, ...(code && { error_code: code }) },
+    { status, headers: NO_STORE }
+  );
 }
 
 const unanswered = (write: boolean) =>
   write
     ? accountingReply(
         502,
-        "Accounting didn't answer, so this change may or may not have gone through. Check the journal before trying again."
+        "Accounting didn't answer, so this change may or may not have gone through. Check the journal before trying again.",
+        AccountingErrorCode.OutcomeUnknown
       )
     : accountingReply(502, "Accounting didn't answer.");
 
-/** A 401 or 403 is the gateway's, since accounting has no auth; a write ignores the page going away. */
-export async function forwardToAccounting(
-  path: string,
-  search: URLSearchParams,
-  { signal, write }: { signal?: AbortSignal; write?: TAccountingWrite } = {}
-) {
-  const base = serverConfig.ACCOUNTING_URL;
-  if (!base) return accountingReply(503, "Accounting isn't configured in this environment.");
-
-  const query = search.size ? `?${search}` : '';
-  const timeout = AbortSignal.timeout(UPSTREAM_TIMEOUT_MS);
-  let upstream: Response;
-  try {
-    upstream = await fetch(`${base.replace(/\/+$/, '')}/${path}${query}`, {
-      method: write?.method ?? AccountingMethod.Get,
-      headers: {
-        accept: 'application/json',
-        ...(write && { 'content-type': 'application/json' }),
-      },
-      body: write?.body,
-      redirect: 'manual',
-      cache: 'no-store',
-      signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
-    });
-  } catch {
-    return unanswered(!!write);
-  }
-
+async function replyFor(upstream: Response, write: boolean) {
   const isJson = upstream.headers.get('content-type')?.includes('json');
   if (write && upstream.ok && !isJson) {
     await upstream.body?.cancel();
@@ -247,8 +230,55 @@ export async function forwardToAccounting(
       headers: { 'content-type': 'application/json', ...NO_STORE },
     });
   } catch {
-    return unanswered(!!write);
+    return unanswered(write);
   }
+}
+
+async function callAccounting(
+  path: string,
+  search: URLSearchParams,
+  { signal, write }: { signal?: AbortSignal; write?: TAccountingWrite } = {}
+): Promise<{ reply: Response; upstream: number | TUpstreamOutcome }> {
+  const base = serverConfig.ACCOUNTING_URL;
+  if (!base) {
+    return {
+      reply: accountingReply(503, "Accounting isn't configured in this environment."),
+      upstream: UpstreamOutcome.NotSent,
+    };
+  }
+
+  const query = search.size ? `?${search}` : '';
+  const timeout = AbortSignal.timeout(UPSTREAM_TIMEOUT_MS);
+  let upstream: Response;
+  try {
+    upstream = await fetch(`${base.replace(/\/+$/, '')}/${path}${query}`, {
+      method: write?.method ?? AccountingMethod.Get,
+      headers: {
+        accept: 'application/json',
+        ...(write && { 'content-type': 'application/json' }),
+      },
+      body: write?.body,
+      redirect: 'manual',
+      cache: 'no-store',
+      signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
+    });
+  } catch (error) {
+    const timedOut = error instanceof DOMException && error.name === 'TimeoutError';
+    return {
+      reply: unanswered(!!write),
+      upstream: timedOut ? UpstreamOutcome.Timeout : UpstreamOutcome.NoReply,
+    };
+  }
+  return { reply: await replyFor(upstream, !!write), upstream: upstream.status };
+}
+
+/** A 401 or 403 is the gateway's, since accounting has no auth; a write ignores the page going away. */
+export async function forwardToAccounting(
+  path: string,
+  search: URLSearchParams,
+  options: { signal?: AbortSignal } = {}
+) {
+  return (await callAccounting(path, search, options)).reply;
 }
 
 /** One JSON line per write event, the trail of who moved which credits. */
@@ -288,13 +318,14 @@ export async function forwardAccountingWrite({
 }) {
   const entry = { operator: operator.id, username: operator.username, method, path, body };
   auditAccountingWrite({ ...entry, phase: AuditPhase.Sent });
-  const reply = await forwardToAccounting(path, new URLSearchParams(), {
+  const { reply, upstream } = await callAccounting(path, new URLSearchParams(), {
     write: { method, body: JSON.stringify(body) },
   });
   auditAccountingWrite({
     ...entry,
     phase: AuditPhase.Answered,
     status: reply.status,
+    upstream,
     moved: await movedBy(reply),
   });
   return reply;

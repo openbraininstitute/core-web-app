@@ -125,7 +125,7 @@ describe('accounting proxy writes', () => {
     const reply = await send('POST', 'budget/top-up', topUp);
 
     expect(reply.status).toBe(status);
-    expect(writeAccessMock).toHaveBeenCalledWith('accounting.admin');
+    expect(writeAccessMock).toHaveBeenCalledWith('accounting.write');
     expect(info).not.toHaveBeenCalled();
     expect(fetchMock).not.toHaveBeenCalled();
   });

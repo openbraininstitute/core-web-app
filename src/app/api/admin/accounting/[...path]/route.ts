@@ -29,7 +29,7 @@ async function write(request: NextRequest, { params }: TContext) {
   if (!isAdminPageWrite(request.headers)) {
     return accountingReply(400, "This change didn't come from the admin pages.");
   }
-  const access = await writeAccess('accounting.admin');
+  const access = await writeAccess('accounting.write');
   if ('denial' in access) return access.denial;
   const { operator } = access;
 

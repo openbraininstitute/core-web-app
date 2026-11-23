@@ -406,8 +406,20 @@ describe('forwardAccountingWrite', () => {
     const reply = await topUp();
 
     expect(reply.status).toBe(502);
-    expect((await reply.json()).message).toMatch(/may or may not have gone through/);
-    expect(auditLines()[1]).toMatchObject({ phase: 'answered', status: 502 });
+    expect(await reply.json()).toMatchObject({
+      message: expect.stringMatching(/may or may not have gone through/),
+      error_code: 'OUTCOME_UNKNOWN',
+    });
+    expect(auditLines()[1]).toMatchObject({ phase: 'answered', status: 502, upstream: 'timeout' });
+  });
+
+  it('logs what accounting answered, not only what the proxy did', async () => {
+    fetchMock.mockResolvedValue(json({ message: 'Internal error' }, 500));
+
+    const reply = await topUp();
+
+    expect(reply.status).toBe(502);
+    expect(auditLines()[1]).toMatchObject({ status: 502, upstream: 500 });
   });
 
   it('keeps going when the page that sent the write goes away', async () => {

@@ -4,7 +4,7 @@ import { ApiError } from '@/api/error';
 import { parseApiError } from '@/api/utils';
 import { compactRecord } from '@/utils/dictionary';
 
-import { AccountingMethod } from './types';
+import { AccountingErrorCode, AccountingMethod } from './types';
 
 import type {
   TAccount,
@@ -129,7 +129,9 @@ async function accountingWrite<T = null>(
     },
     body: JSON.stringify(body),
   }).catch((error) => {
-    throw isUnanswered(error) ? new ApiError(UNKNOWN_OUTCOME) : error;
+    throw isUnanswered(error)
+      ? new ApiError(UNKNOWN_OUTCOME, { code: AccountingErrorCode.OutcomeUnknown })
+      : error;
   });
 
   return (reply?.data ?? null) as T;

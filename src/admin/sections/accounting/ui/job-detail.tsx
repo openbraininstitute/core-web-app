@@ -31,7 +31,9 @@ function JobView({ job }: { job: TAccountingJobDetail }) {
         parent={{ label: 'Jobs', href: accountingHref(AccountingPage.Jobs) }}
         actions={
           <>
-            <RefundJob job={job} />
+            <CapabilityGate need="accounting.write">
+              <RefundJob job={job} />
+            </CapabilityGate>
             <Button rounded variant="outline" size="sm" asChild>
               <Link
                 href={accountingHref(AccountingPage.Journal, { [AccountingFilter.Job]: job.id })}

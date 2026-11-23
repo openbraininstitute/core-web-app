@@ -19,7 +19,7 @@ const ALL_FALSE: OperatorCapabilities = {
   virtualLab: { read: false, admin: false },
   promotions: { admin: false },
   education: { admin: false },
-  accounting: { admin: false },
+  accounting: { admin: false, write: false },
   simulator: { admin: false },
   launchSystem: { admin: false },
   admin: { access: false },
@@ -50,7 +50,7 @@ describe('deriveCapabilities', () => {
         education: { admin: true },
       },
     ],
-    ['accounting admin', ACCOUNTING_ADMIN_GROUP, { accounting: { admin: true } }],
+    ['accounting admin', ACCOUNTING_ADMIN_GROUP, { accounting: { admin: true, write: true } }],
     ['simulator admin', SIMULATOR_ADMIN_GROUP, { simulator: { admin: true } }],
     ['launch-system admin', LAUNCH_SYSTEM_ADMIN_GROUP, { launchSystem: { admin: true } }],
   ])('%s grants only its own leaves, plus admin.access', (_name, group, expected) => {
@@ -65,7 +65,7 @@ describe('deriveCapabilities', () => {
     expect(deriveCapabilities([WILDCARD_ADMIN_GROUP])).toEqual({
       ...ALL_FALSE,
       entitycore: { admin: true, assetWrite: false },
-      accounting: { admin: true },
+      accounting: { admin: true, write: false },
       simulator: { admin: true },
       admin: { access: true },
     });

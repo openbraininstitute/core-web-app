@@ -253,6 +253,16 @@ export type TAccountingRoute = {
 
 export const AuditPhase = { Sent: 'sent', Answered: 'answered', Refused: 'refused' } as const;
 
+export const AccountingErrorCode = { OutcomeUnknown: 'OUTCOME_UNKNOWN' } as const;
+
+/** What came back from accounting when there's no status to log. */
+export const UpstreamOutcome = {
+  NotSent: 'not sent',
+  Timeout: 'timeout',
+  NoReply: 'no reply',
+} as const;
+export type TUpstreamOutcome = (typeof UpstreamOutcome)[keyof typeof UpstreamOutcome];
+
 export type TAccountingWrite = { method: TAccountingMethod; body: string };
 
 export type TAccountingTarget =
