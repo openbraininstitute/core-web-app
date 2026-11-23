@@ -7,14 +7,6 @@ import type { PointerEvent as ReactPointerEvent } from 'react';
 
 export const POPOVER_PANEL = 'w-auto rounded-2xl border-0 bg-white shadow-(--shadow-pop)';
 
-export const initialsOf = (name: string): string =>
-  name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word[0]?.toUpperCase() ?? '')
-    .join('');
-
 export const clip = (text: string, length: number): string => {
   const flat = text.replace(/\s+/g, ' ').trim();
   return flat.length <= length ? flat : `${flat.slice(0, length - 1)}…`;

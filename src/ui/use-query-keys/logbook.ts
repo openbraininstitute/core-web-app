@@ -3,7 +3,6 @@ const prefix = 'logbook';
 const logs = (projectId: string) => [prefix, 'research-logs', { projectId }] as const;
 
 export const keyBuilderLogbook = {
-  me: (email: string | null) => [prefix, 'me', { email }] as const,
   logs,
   logsPage: (projectId: string, params: string) => [...logs(projectId), { params }] as const,
   log: (projectId: string, id: string) => [prefix, 'research-log', { projectId, id }] as const,

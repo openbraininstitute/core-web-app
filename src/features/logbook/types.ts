@@ -836,10 +836,7 @@ export interface IMe {
   readonly name: string;
   readonly initials: string;
   readonly colour: string;
-  readonly projects: readonly IProject[];
 }
-
-export type TClaims = Readonly<Record<string, unknown>>;
 
 export interface IUnsent {
   readonly failed: number;

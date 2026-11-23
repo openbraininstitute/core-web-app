@@ -2,7 +2,7 @@ import { isNotNil } from 'es-toolkit';
 
 import { ActorVia } from '@/api/logbook/types';
 import { colourOf } from '@/features/logbook/blocks/colour';
-import { initialsOf } from '@/features/logbook/helpers';
+import { extractInitials } from '@/util/slugify';
 
 import type { IActor, IActorSources, IPeer } from '@/features/logbook/types';
 
@@ -21,7 +21,7 @@ export const agentInitialsOf = (label: string): string =>
 export const personActor = (userId: string, name: string): IActor => ({
   key: userId,
   name,
-  initials: initialsOf(name),
+  initials: extractInitials(name),
   colour: colourOf(userId),
   agent: false,
   ownerId: userId,
