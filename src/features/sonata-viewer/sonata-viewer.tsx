@@ -968,9 +968,12 @@ export function SonataReportView({
         {unmeasuredPlaces && (
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="text-neutral-4 shrink-0 text-xs whitespace-nowrap">
-                No path distances
-              </span>
+              <button
+                type="button"
+                className="text-neutral-4 shrink-0 cursor-default text-xs whitespace-nowrap"
+              >
+                No path distances or section types
+              </button>
             </TooltipTrigger>
             <TooltipContent>
               Path distance and section type are measured on reports of up to{' '}

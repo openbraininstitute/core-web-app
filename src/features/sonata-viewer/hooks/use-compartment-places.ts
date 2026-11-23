@@ -18,6 +18,7 @@ import { logError } from '@/utils/logger';
 import type { ColumnValues, ParsedCircuitConfig } from '@/features/circuit-nodes/types';
 import type { Compartment } from '@/features/sonata-viewer/compartment-rows';
 import type { SectionPath } from '@/features/sonata-viewer/path-distance';
+import type { TCompartmentPlacesState } from '@/features/sonata-viewer/types';
 
 /** Morphologies asked for at once: a report may record thousands of cells. */
 const MORPHOLOGY_LOADS = 8;
@@ -33,12 +34,6 @@ export const MAX_MEASURED_IN_CONTAINER = 20;
 export type CompartmentPlaces = {
   distances: ReadonlyMap<number, number>;
   types: ReadonlyMap<number, string>;
-};
-
-type TCompartmentPlacesState = {
-  places: CompartmentPlaces | null;
-  /** Set where the report has more morphologies than the limit, so none were measured. */
-  unmeasured: { morphologies: number; limit: number } | null;
 };
 
 const NO_PLACES: TCompartmentPlacesState = { places: null, unmeasured: null };

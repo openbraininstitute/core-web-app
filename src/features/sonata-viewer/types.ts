@@ -1,5 +1,13 @@
+import type { CompartmentPlaces } from '@/features/sonata-viewer/hooks/use-compartment-places';
+
 export type SonataReportMetadata = {
   populations: PopulationMetadata[];
+};
+
+export type TCompartmentPlacesState = {
+  places: CompartmentPlaces | null;
+  /** Set where the report has more morphologies than the limit, so none were measured. */
+  unmeasured: { morphologies: number; limit: number } | null;
 };
 
 /** One recorded column of the data matrix. */
