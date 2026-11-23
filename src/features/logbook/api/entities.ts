@@ -39,6 +39,7 @@ const blockOfCore = new Map<string, TEntityType>(
 const coreTypes = new Set<string>(Object.values(ExtendedEntitiesTypeDict));
 
 export function coreTypeOf(type: string): TExtendedEntitiesTypeDict | null {
+  if (isNotNil(routeOfType(type))) return null;
   const mapped = Object.hasOwn(coreOfBlock, type) ? coreOfBlock[type as TEntityType] : undefined;
   if (isNotNil(mapped)) return mapped;
   return coreTypes.has(type) ? (type as TExtendedEntitiesTypeDict) : null;
