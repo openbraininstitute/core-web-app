@@ -2,7 +2,7 @@ import { expect, test } from 'vitest';
 
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { thumbnailSourceOf } from '@/features/logbook/editor/blocks/entity-thumbnail';
+import { thumbnailSourceOf } from '@/features/logbook/editor/blocks/thumbnail-source';
 import { ThumbnailFrom } from '@/features/logbook/types';
 
 import type { IAsset } from '@/api/entitycore/types/shared/global';
