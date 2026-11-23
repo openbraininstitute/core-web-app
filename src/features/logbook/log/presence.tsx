@@ -26,7 +26,7 @@ import type {
   IPresent,
 } from '@/features/logbook/types';
 
-export function usePresent(props: ILogShared): IPresent[] {
+function usePresent(props: ILogShared): IPresent[] {
   const now = useNow(CLOCK_MS, props.shown);
   const live = useSyncExternalStore(props.notices.subscribe, props.notices.snapshot);
   const changes = useSyncExternalStore(props.feed.subscribe, props.feed.snapshot);

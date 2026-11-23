@@ -3,7 +3,7 @@ import { EditorContent, useEditor, useEditorState } from '@tiptap/react';
 import { isNil, isNotNil } from 'es-toolkit';
 import { useEffect, useId, useMemo, useState, useSyncExternalStore } from 'react';
 import { useInView } from 'react-intersection-observer';
-import { match } from 'ts-pattern';
+import { match, P } from 'ts-pattern';
 
 import { ActorVia } from '@/api/logbook/types';
 import { activityQuery, runsOf, summaryOf } from '@/features/logbook/api/activity';
@@ -265,17 +265,21 @@ function HistoryTab(props: ILogShared) {
         <span className="label-caps">Earlier</span>
         {saved.isPending ? <span className={SUB}>Loading…</span> : null}
       </div>
-      {saved.isError && isNil(saved.data) ? (
-        <p className={SUB}>The earlier activity could not be read: {saved.error.message}</p>
-      ) : saved.isSuccess && earlier.length === 0 ? (
-        <p className={SUB}>Nothing saved before this visit.</p>
-      ) : (
-        <ol className="m-0 list-none p-0">
-          {earlier.map((run) => (
-            <SavedRow key={run.key} run={run} me={props.me.userId} now={now} />
-          ))}
-        </ol>
-      )}
+      {match(saved)
+        .with({ isError: true, data: P.nullish }, ({ error }) => (
+          <p className={SUB}>The earlier activity could not be read: {error.message}</p>
+        ))
+        .when(
+          () => saved.isSuccess && earlier.length === 0,
+          () => <p className={SUB}>Nothing saved before this visit.</p>
+        )
+        .otherwise(() => (
+          <ol className="m-0 list-none p-0">
+            {earlier.map((run) => (
+              <SavedRow key={run.key} run={run} me={props.me.userId} now={now} />
+            ))}
+          </ol>
+        ))}
       <div ref={end} aria-hidden="true" />
       {isFetchingNextPage ? <p className={SUB}>Loading older activity…</p> : null}
       {saved.isFetchNextPageError ? (

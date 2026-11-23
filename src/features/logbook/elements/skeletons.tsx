@@ -25,7 +25,7 @@ function Writers({ ring }: { readonly ring: string }) {
   );
 }
 
-export function LogCardSkeleton() {
+function LogCardSkeleton() {
   return (
     <div
       className="flex min-h-[188px] animate-pulse flex-col gap-2 rounded-2xl bg-white p-5 shadow-card"
@@ -48,7 +48,7 @@ export function LogCardSkeleton() {
   );
 }
 
-export function LogPillSkeleton() {
+function LogPillSkeleton() {
   return (
     <div
       className="flex animate-pulse flex-col gap-1 rounded-[12px] bg-neutral-1 p-[12px_14px_12px_16px]"

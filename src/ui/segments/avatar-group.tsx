@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { type ComponentPropsWithRef, type MouseEvent, type PointerEvent, useState } from 'react';
+import { match } from 'ts-pattern';
 
 import { EASE_OUT, SPRING_LAYOUT, SPRING_PRESS } from '@/constants/motion';
 import { useHoverCapable } from '@/hooks/use-hover-capable';
@@ -12,8 +13,6 @@ import { cn } from '@/utils/css-class';
 export interface IAvatarGroupMember {
   id: string;
   name: string;
-  /** Without one, or if it fails, initials show. */
-  src?: string;
   colour?: string;
   initials?: string;
   agent?: boolean;
@@ -42,17 +41,15 @@ function initials(name: string) {
   return letters.toUpperCase();
 }
 
-export interface IAvatarProps extends Omit<ComponentPropsWithRef<'span'>, 'children'> {
+interface IAvatarProps extends Omit<ComponentPropsWithRef<'span'>, 'children'> {
   name: string;
-  src?: string | undefined;
   size?: TAvatarSize;
   colour?: string | undefined;
   initials?: string | undefined;
 }
 
-export function Avatar({
+function Avatar({
   name,
-  src,
   size = 'md',
   colour,
   initials: shown,
@@ -60,8 +57,6 @@ export function Avatar({
   style,
   ...props
 }: IAvatarProps) {
-  const [failedSrc, setFailedSrc] = useState<string>();
-  const showImage = src && failedSrc !== src;
   return (
     <span
       {...props}
@@ -73,21 +68,8 @@ export function Avatar({
       )}
       style={colour ? { ...style, background: colour } : style}
     >
-      {showImage ? (
-        // biome-ignore lint/performance/noImgElement: avatars come from any host and fall back to initials
-        <img
-          src={src}
-          alt={name}
-          draggable={false}
-          onError={() => setFailedSrc(src)}
-          className="size-full object-cover"
-        />
-      ) : (
-        <>
-          <span aria-hidden="true">{shown ?? initials(name)}</span>
-          <span className="sr-only">{name}</span>
-        </>
-      )}
+      <span aria-hidden="true">{shown ?? initials(name)}</span>
+      <span className="sr-only">{name}</span>
     </span>
   );
 }
@@ -97,10 +79,6 @@ export interface IAvatarGroupProps extends Omit<ComponentPropsWithRef<'div'>, 'c
   /** Shown before the rest collapse into +N. */
   max?: number;
   size?: TAvatarSize;
-  /** Pair with `onExpandedChange`. */
-  expanded?: boolean;
-  defaultExpanded?: boolean;
-  onExpandedChange?: (expanded: boolean) => void;
   /** Accessible name for the list. */
   label?: string;
   labels?: IAvatarGroupLabels;
@@ -114,9 +92,6 @@ export function AvatarGroup({
   members,
   max = 4,
   size = 'md',
-  expanded,
-  defaultExpanded = false,
-  onExpandedChange,
   label,
   labels,
   onMore,
@@ -128,8 +103,8 @@ export function AvatarGroup({
   const showMore = labels?.showMore ?? showMoreMembers;
   const reduce = useReducedMotion();
   const canHover = useHoverCapable();
-  const [internalExpanded, setInternalExpanded] = useState(defaultExpanded);
-  const isExpanded = onMore ? false : (expanded ?? internalExpanded);
+  const [internalExpanded, setInternalExpanded] = useState(false);
+  const isExpanded = onMore ? false : internalExpanded;
   const [hovered, setHovered] = useState<number | null>(null);
 
   const limit = Math.max(1, max);
@@ -140,18 +115,27 @@ export function AvatarGroup({
   const push = Math.round(overlap * 0.75);
   const parting = !reduce && canHover && hovered !== null;
   const offset = (index: number) =>
-    !parting || index === hovered ? 0 : index < (hovered ?? 0) ? -push : push;
+    match(index)
+      .when(
+        () => !parting || index === hovered,
+        () => 0
+      )
+      .when(
+        () => index < (hovered ?? 0),
+        () => -push
+      )
+      .otherwise(() => push);
+  const slideY = match({ reduce, isExpanded })
+    .with({ reduce: true }, () => 0)
+    .with({ isExpanded: true }, () => 8)
+    .otherwise(() => -8);
   const hoverHandlers = (index: number) => ({
     onPointerEnter: (event: PointerEvent) => {
       if (event.pointerType === 'mouse') setHovered(index);
     },
   });
 
-  const toggle = () => {
-    const next = !isExpanded;
-    if (expanded === undefined) setInternalExpanded(next);
-    onExpandedChange?.(next);
-  };
+  const toggle = () => setInternalExpanded(!isExpanded);
 
   return (
     <div
@@ -204,7 +188,6 @@ export function AvatarGroup({
                   >
                     <Avatar
                       name={member.name}
-                      src={member.src}
                       size={size}
                       colour={member.colour}
                       initials={member.initials}
@@ -253,9 +236,9 @@ export function AvatarGroup({
                     <motion.span
                       key={isExpanded ? 'less' : 'more'}
                       aria-hidden="true"
-                      initial={{ opacity: 0, y: reduce ? 0 : isExpanded ? 8 : -8 }}
+                      initial={{ opacity: 0, y: slideY }}
                       animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: reduce ? 0 : isExpanded ? -8 : 8 }}
+                      exit={{ opacity: 0, y: -slideY }}
                       transition={{ duration: 0.16, ease: EASE_OUT }}
                     >
                       {isExpanded ? '−' : `+${overflow}`}

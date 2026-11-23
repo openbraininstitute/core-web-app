@@ -1,4 +1,4 @@
-import { queryOptions } from '@tanstack/react-query';
+import { queryOptions, useQuery } from '@tanstack/react-query';
 import { isNil, isNotNil } from 'es-toolkit';
 import { match, P } from 'ts-pattern';
 
@@ -11,6 +11,7 @@ import { UPLOAD_MAX_BYTES } from '@/features/logbook/constants';
 import { IMAGE, savedNameOf } from '@/features/logbook/shared/files';
 import { ArtifactKind } from '@/features/logbook/types';
 import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
+import { sha256HexOfBlob } from '@/utils/hash';
 
 import type { IResearchLogAsset } from '@/api/entitycore/types/entities/research-log';
 import type { DirectoryListContent } from '@/api/entitycore/types/shared/global';
@@ -20,14 +21,14 @@ import type {
   ILogFile,
   ILogFiles,
   IPlannedFile,
-  IProject,
   TArtifactKind,
 } from '@/features/logbook/types';
+import type { WorkspaceContext } from '@/types/common';
 
 const PAGE_TITLE = 'logbook_page_title';
 const PAGE_ID = 'logbook_page_id';
 
-export const MARKDOWN = /\.(md|markdown)$/i;
+const MARKDOWN = /\.(md|markdown)$/i;
 
 const TEXT =
   /\.(py|sh|bash|json|ipynb|ya?ml|toml|js|mjs|ts|r|jl|m|txt|log|mod|hoc|swc|asc|cfg|ini|xml)$/i;
@@ -133,7 +134,7 @@ export const documentsOf = (
 
 async function readLogFiles(
   logId: string,
-  project: IProject,
+  project: WorkspaceContext,
   signal?: AbortSignal
 ): Promise<ILogFiles> {
   const log = await getResearchLog({ id: logId, context: project, signal });
@@ -155,17 +156,20 @@ async function readLogFiles(
   return { folderId: folder.id, files: toLogFiles(listing), documents };
 }
 
-export const logFilesQuery = (logId: string, project: IProject) =>
+export const logFilesQuery = (logId: string, project: WorkspaceContext) =>
   queryOptions({
     queryKey: keyBuilderLogbook.files(logId),
     queryFn: ({ signal }) => readLogFiles(logId, project, signal),
     staleTime: 30_000,
   });
 
+export const useArtifacts = (logId: string, project: WorkspaceContext) =>
+  useQuery({ ...logFilesQuery(logId, project), select: artifactsOf });
+
 const downloadLogAsset = (
   logId: string,
   assetId: string,
-  project: IProject,
+  project: WorkspaceContext,
   signal: AbortSignal,
   path = ''
 ): Promise<Response> =>
@@ -179,7 +183,12 @@ const downloadLogAsset = (
     signal,
   });
 
-export const fileTextQuery = (logId: string, folderId: string, path: string, project: IProject) =>
+export const fileTextQuery = (
+  logId: string,
+  folderId: string,
+  path: string,
+  project: WorkspaceContext
+) =>
   queryOptions({
     queryKey: keyBuilderLogbook.fileText(logId, path),
     queryFn: async ({ signal }) =>
@@ -187,13 +196,18 @@ export const fileTextQuery = (logId: string, folderId: string, path: string, pro
     staleTime: Number.POSITIVE_INFINITY,
   });
 
-export const documentTextQuery = (logId: string, assetId: string, project: IProject) =>
+export const documentTextQuery = (logId: string, assetId: string, project: WorkspaceContext) =>
   queryOptions({
     queryKey: keyBuilderLogbook.documentText(logId, assetId),
     queryFn: async ({ signal }) => (await downloadLogAsset(logId, assetId, project, signal)).text(),
   });
 
-export const fileBlobQuery = (logId: string, folderId: string, path: string, project: IProject) =>
+export const fileBlobQuery = (
+  logId: string,
+  folderId: string,
+  path: string,
+  project: WorkspaceContext
+) =>
   queryOptions({
     queryKey: keyBuilderLogbook.fileBlob(logId, path),
     queryFn: async ({ signal }) =>
@@ -202,21 +216,16 @@ export const fileBlobQuery = (logId: string, folderId: string, path: string, pro
     gcTime: 5 * 60_000,
   });
 
-export async function sha256Hex(bytes: ArrayBuffer): Promise<string> {
-  const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
-  return [...digest].map((b) => b.toString(16).padStart(2, '0')).join('');
-}
-
 export const isTooLarge = (size: number, max = UPLOAD_MAX_BYTES): boolean => size > max;
 
 export async function planFile(file: File): Promise<IPlannedFile> {
-  const sha256 = await sha256Hex(await file.arrayBuffer());
+  const sha256 = await sha256HexOfBlob(file);
   return { path: savedNameOf(file.name, sha256), size: file.size, sha256 };
 }
 
 export async function uploadLogFile(
   logId: string,
-  project: IProject,
+  project: WorkspaceContext,
   file: File,
   planned: IPlannedFile
 ): Promise<void> {

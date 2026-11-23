@@ -53,19 +53,3 @@ export async function createResearchLog({
     body: draft,
   });
 }
-
-export async function updateResearchLog({
-  id,
-  context,
-  patch,
-}: {
-  id: string;
-  context: WorkspaceContext;
-  patch: Partial<TResearchLogDraft>;
-}) {
-  const api = await entityCoreApi();
-  return api.patch<IResearchLog>(`${baseUri}/${id}`, {
-    headers: { ...JSON_BODY, ...getEntityCoreContext(context).headers },
-    body: patch,
-  });
-}

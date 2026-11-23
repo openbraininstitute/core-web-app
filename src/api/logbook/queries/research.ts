@@ -1,7 +1,7 @@
 import { omit } from 'es-toolkit';
 
 import { getEntityCoreContext } from '@/api/entitycore/utils';
-import { logbookApi } from '@/api/logbook/utils';
+import { JSON_BODY, logbookApi } from '@/api/logbook/utils';
 
 import type {
   IActivityPage,
@@ -12,8 +12,6 @@ import type {
   IUploadTarget,
 } from '@/api/logbook/types';
 import type { WorkspaceContext } from '@/types/common';
-
-const JSON_BODY = { 'content-type': 'application/json' };
 
 export async function getResearch({
   id,

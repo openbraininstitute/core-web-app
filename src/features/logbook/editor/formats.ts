@@ -1,3 +1,4 @@
+import { isiOS, isMacOS } from '@tiptap/core';
 import { isNil } from 'es-toolkit';
 import { match } from 'ts-pattern';
 
@@ -22,12 +23,14 @@ const TIPTAP_NAMES: Readonly<Record<TFormat, string>> = {
 export const isFormatActive = (editor: Editor, format: TFormat): boolean =>
   editor.isActive(TIPTAP_NAMES[format]);
 
-const mac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent);
-export const keysOf = (keys: string): string =>
-  keys
+const isApple = (): boolean => typeof navigator !== 'undefined' && (isMacOS() || isiOS());
+const keysOf = (keys: string): string => {
+  const mac = isApple();
+  return keys
     .replace('Mod', mac ? '⌘' : 'Ctrl')
     .replace('Shift', mac ? '⇧' : 'Shift')
     .replaceAll('-', mac ? '' : '+');
+};
 export const titleOf = (format: { label: string; keys: string | null }): string =>
   isNil(format.keys) ? format.label : `${format.label} (${keysOf(format.keys)})`;
 

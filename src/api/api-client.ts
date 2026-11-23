@@ -104,7 +104,10 @@ class ApiClient {
       return response as unknown as T;
     }
     const contentType = response.headers.get('Content-Type') || '';
-    if (/application\/([\w.-]+\+)?json/.test(contentType)) {
+    if (
+      contentType.includes('application/json') ||
+      contentType.includes('application/problem+json')
+    ) {
       return response.json();
     }
     if (contentType.includes('text')) {

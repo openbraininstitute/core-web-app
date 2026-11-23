@@ -7,7 +7,8 @@ import { ACTIVITY_GAP_MS, ACTIVITY_REMOVED_MAX_CHARS } from '@/features/logbook/
 import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
 
 import type { IActivityEntry } from '@/api/logbook/types';
-import type { IActivityRun, IProject } from '@/features/logbook/types';
+import type { IActivityRun } from '@/features/logbook/types';
+import type { WorkspaceContext } from '@/types/common';
 
 const joinRemoved = (older: string, newer: string): string =>
   (older.length === 0 || newer.length === 0 ? older + newer : `${older} ${newer}`).slice(
@@ -62,7 +63,7 @@ export function summaryOf(run: Pick<IActivityRun, 'inserted' | 'deleted'>): stri
     .otherwise(() => `wrote ${n(run.inserted)} and removed ${n(run.deleted)}`);
 }
 
-export const activityQuery = (project: IProject, logId: string, openedAt: string) =>
+export const activityQuery = (project: WorkspaceContext, logId: string, openedAt: string) =>
   infiniteQueryOptions({
     queryKey: keyBuilderLogbook.activity(logId, openedAt),
     queryFn: ({ signal, pageParam }) =>

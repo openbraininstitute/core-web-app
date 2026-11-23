@@ -1,6 +1,7 @@
 import { isNil, isNotNil } from 'es-toolkit';
 import { useSyncExternalStore } from 'react';
 
+import { config } from '@/config';
 import {
   isTooLarge,
   logFilesQuery,
@@ -9,7 +10,6 @@ import {
 } from '@/features/logbook/api/log-files';
 import { insertAfterBlock } from '@/features/logbook/editor/insert';
 import { reasonOf } from '@/features/logbook/log/notice';
-import { settings } from '@/features/logbook/settings';
 import { IMAGE } from '@/features/logbook/shared/files';
 import { NoticeKind } from '@/features/logbook/types';
 
@@ -55,13 +55,13 @@ function removeBlock(editor: Editor, id: string): void {
   editor.view.dispatch(editor.state.tr.delete(range.from, range.to));
 }
 
-export async function uploadIntoPage(target: IUploadTarget, file: File): Promise<void> {
+async function uploadIntoPage(target: IUploadTarget, file: File): Promise<void> {
   const { editor, logId, project, client, notify } = target;
   if (isTooLarge(file.size)) {
     notify({
       kind: NoticeKind.Warning,
       title: `${file.name} is too large`,
-      description: `Files can be up to ${settings.upload.maxMb} MB.`,
+      description: `Files can be up to ${config.LOGBOOK_UPLOAD_MAX_MB} MB.`,
     });
     return;
   }

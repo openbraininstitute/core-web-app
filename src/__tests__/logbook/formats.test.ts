@@ -3,7 +3,8 @@ import { Editor } from '@tiptap/react';
 import { afterEach, expect, test, vi } from 'vitest';
 import * as Y from 'yjs';
 
-import { contentExtensions, FRAGMENT } from '@/features/logbook/blocks/extensions';
+import { contentExtensions } from '@/features/logbook/blocks/extensions';
+import { FRAGMENT } from '@/features/logbook/constants';
 import {
   ALIGNMENTS,
   alignOf,

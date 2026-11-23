@@ -1,17 +1,16 @@
-import { useQuery } from '@tanstack/react-query';
 import { EditorContent } from '@tiptap/react';
 import { isNil, isNotNil } from 'es-toolkit';
-import { useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { PageKind, ReadOnlyReason } from '@/api/logbook/types';
-import { artifactsOf, logFilesQuery } from '@/features/logbook/api/log-files';
+import { useArtifacts } from '@/features/logbook/api/log-files';
 import { useUpdateLog } from '@/features/logbook/api/research-logs';
 import { useCollaboration } from '@/features/logbook/collaboration/notices';
+import { CONTROL } from '@/features/logbook/constants';
 import { FormatBar } from '@/features/logbook/editor/format-bar';
 import { SelectionMenu } from '@/features/logbook/editor/selection-menu';
 import { ArtifactIcon } from '@/features/logbook/log/artifact-icon';
 import { ArtifactBar, ArtifactView } from '@/features/logbook/log/artifact-view';
-import { CONTROL } from '@/features/logbook/log/controls';
 import { EditorTabs } from '@/features/logbook/log/editor-tabs';
 import { InsertMenu } from '@/features/logbook/log/menus';
 import { reasonOf } from '@/features/logbook/log/notice';
@@ -46,7 +45,7 @@ const WIDTHS: Readonly<Partial<Record<TMenu, number>>> = {
   [Menu.Who]: 320,
 };
 
-export function popAtOf(button: HTMLElement, card: HTMLElement, width: number): IPopAt {
+function popAtOf(button: HTMLElement, card: HTMLElement, width: number): IPopAt {
   const b = button.getBoundingClientRect();
   const c = card.getBoundingClientRect();
   return {
@@ -85,11 +84,7 @@ export function EditorCard(props: IEditorCardProps) {
   const [clock, setClock] = useState<IClock | null>(null);
   const rejoinAt = useCollaboration(props.notices, (state) => state.rejoinAt);
   const update = useUpdateLog(props.project);
-  const listing = useQuery(logFilesQuery(props.logId, props.project));
-  const files = useMemo(
-    () => (isNil(listing.data) ? [] : artifactsOf(listing.data)),
-    [listing.data]
-  );
+  const files = useArtifacts(props.logId, props.project).data ?? [];
   const artifact = files.find((file) => file.id === props.artifactId) ?? null;
   const title = log?.name ?? 'Research log';
   const main = props.pages.find((page) => page.kind === PageKind.Main);

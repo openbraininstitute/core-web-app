@@ -8,7 +8,7 @@ import { Layout } from '@/features/logbook/types';
 import type { RefObject } from 'react';
 import type { TLayout } from '@/features/logbook/types';
 
-export const layoutOf = (width: number): TLayout =>
+const layoutOf = (width: number): TLayout =>
   match(width)
     .with(P.number.gte(LAYOUT_WIDE_MIN), () => Layout.Wide)
     .with(P.number.gte(LAYOUT_COMPACT_MIN), () => Layout.Compact)

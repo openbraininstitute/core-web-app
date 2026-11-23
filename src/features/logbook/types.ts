@@ -1,19 +1,26 @@
 import type { HocuspocusProvider, WebSocketStatus } from '@hocuspocus/provider';
 import type { InfiniteData, QueryClient } from '@tanstack/react-query';
-import type { JSONContent } from '@tiptap/core';
 import type { DecorationSet } from '@tiptap/pm/view';
 import type { Editor } from '@tiptap/react';
 import type { CSSProperties, MouseEvent as ReactMouseEvent, ReactNode } from 'react';
 import type { LanguageInput } from 'shiki/core';
 import type { IndexeddbPersistence } from 'y-indexeddb';
 import type * as Y from 'yjs';
+import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 import type { IResearchLog, TResearchLogDraft } from '@/api/entitycore/types/entities/research-log';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type {
+  EntityCoreIdentifiableNamed,
+  IPlatformUser,
+  NestedSpecies,
+  Timestamps,
+} from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { CollaborationNotice, IPage, TReadOnlyReason, TValueOf } from '@/api/logbook/types';
 import type { ChangeFeed } from '@/features/logbook/collaboration/changes';
 import type { LocalCopy } from '@/features/logbook/collaboration/local-copy';
 import type { CollaborationNotices } from '@/features/logbook/collaboration/notices';
+import type { WorkspaceContext } from '@/types/common';
 import type { TIconName } from '@/ui/molecules/icon';
 
 export interface IActor {
@@ -44,14 +51,12 @@ export interface IActivityRun {
   readonly removed: string;
 }
 
-export interface IEntity {
-  readonly id: string;
-  readonly name: string;
-  readonly type?: string;
-  readonly creation_date?: string;
-  readonly created_by?: { readonly pref_label: string };
-  readonly brain_region?: { readonly name: string; readonly acronym?: string } | null;
-  readonly subject?: { readonly species?: { readonly name: string } | null } | null;
+export interface IEntity
+  extends Readonly<Pick<EntityCoreIdentifiableNamed, 'id' | 'name'>>,
+    Readonly<Partial<Pick<Timestamps, 'creation_date'>>> {
+  readonly created_by?: Readonly<Pick<IPlatformUser, 'pref_label'>>;
+  readonly brain_region?: Readonly<Pick<BrainRegionHierarchyBase, 'name'>> | null;
+  readonly subject?: { readonly species?: Readonly<Pick<NestedSpecies, 'name'>> | null } | null;
 }
 
 export interface ILogFile {
@@ -127,9 +132,7 @@ export interface ILogOrder {
   readonly direction: TOrderDirection;
 }
 
-export interface ILogFilter {
-  readonly public: boolean;
-  readonly project: boolean;
+export interface ILogFilter extends IScope {
   readonly search: string;
   readonly order: ILogOrder;
 }
@@ -176,29 +179,26 @@ export const CalloutKind = { Note: 'note', Tip: 'tip', Warning: 'warning' } as c
 
 export type TCalloutKind = TValueOf<typeof CalloutKind>;
 
-export type TBlockJson = JSONContent;
-
 export interface IBoardProps {
   readonly me: IMe;
-  readonly project: IProject;
+  readonly project: WorkspaceContext;
   readonly logId: string | null;
   readonly pageId: string | null;
 }
 
 export interface IEntityDetailProps {
   readonly target: IEntityTarget;
-  readonly project: IProject;
+  readonly project: WorkspaceContext;
   readonly narrow: boolean;
   readonly onClose: () => void;
 }
 
-export interface IHomeProps {
+export interface ILogListProps {
   readonly logs: readonly IResearchLog[];
-  readonly total: number;
   readonly more: IMore;
   readonly loading: boolean;
   readonly error: string | null;
-  readonly project: IProject;
+  readonly project: WorkspaceContext;
   readonly scope: IScope;
   readonly search: string;
   readonly order: ILogOrder;
@@ -210,12 +210,16 @@ export interface IHomeProps {
   readonly onNew: () => void;
 }
 
+export interface IHomeProps extends ILogListProps {
+  readonly total: number;
+}
+
 export const Layout = { Wide: 'wide', Compact: 'compact', Narrow: 'narrow' } as const;
 
 export type TLayout = TValueOf<typeof Layout>;
 
 export interface IPageOutlineProps {
-  readonly project: IProject;
+  readonly project: WorkspaceContext;
   readonly logId: string;
   readonly logName: string;
   readonly pageId: string | null;
@@ -238,23 +242,9 @@ export interface IMore {
   readonly onMore: () => void;
 }
 
-export interface IRailProps {
-  readonly logs: readonly IResearchLog[];
-  readonly more: IMore;
-  readonly loading: boolean;
-  readonly error: string | null;
+export interface IRailProps extends ILogListProps {
   readonly activeId: string | null;
-  readonly project: IProject;
-  readonly scope: IScope;
-  readonly search: string;
-  readonly order: ILogOrder;
-  readonly onOrder: (order: ILogOrder) => void;
   readonly heading: TRailHeading;
-  readonly creating: boolean;
-  readonly onScope: (scope: IScope) => void;
-  readonly onSearch: (search: string) => void;
-  readonly onPick: (id: string) => void;
-  readonly onNew: () => void;
   readonly outline?: ReactNode;
   readonly onClose: () => void;
   readonly onRename: (id: string, name: string) => Promise<unknown>;
@@ -424,7 +414,7 @@ export interface IShikiToken {
 
 export interface IViewer3dProps {
   readonly entityId: string;
-  readonly project: IProject;
+  readonly project: WorkspaceContext;
 }
 
 export interface IToolProps {
@@ -509,11 +499,7 @@ export interface IGrammar {
   readonly load: LanguageInput;
 }
 
-export interface IArtifactLook {
-  readonly badge: string;
-  readonly bg: string;
-  readonly fg: string;
-}
+export type TArtifactLook = Pick<IFileLook, 'badge' | 'bg' | 'fg'>;
 
 export interface IView {
   readonly scale: number;
@@ -522,7 +508,7 @@ export interface IView {
 }
 
 export interface ILogContext {
-  readonly project: IProject;
+  readonly project: WorkspaceContext;
   readonly logId: string;
 }
 
@@ -543,7 +529,7 @@ export type TOpenEntityDetail = (target: IEntityTarget) => void;
 
 export interface IDeleteLogDialogProps {
   readonly log: IResearchLog;
-  readonly project: IProject;
+  readonly project: WorkspaceContext;
   readonly onDelete: () => Promise<unknown>;
   readonly onClose: () => void;
 }
@@ -603,7 +589,7 @@ export type TNavItem =
 export interface INavSection {
   readonly id: string;
   readonly title: string;
-  readonly icon: string;
+  readonly icon: TIconName;
   readonly look: Omit<ILook, 'label'>;
   readonly items: readonly TNavItem[];
 }
@@ -637,7 +623,7 @@ export interface ILogDetailsDialogProps {
 
 export interface ILogViewProps {
   readonly me: IMe;
-  readonly project: IProject;
+  readonly project: WorkspaceContext;
   readonly logId: string;
   readonly pageId: string | null;
   readonly log: IResearchLog | null;
@@ -763,7 +749,7 @@ export interface ISidePaneProps extends ILogShared {
 }
 
 export interface IKindLook {
-  readonly icon: string;
+  readonly icon: TIconName;
   readonly badge: string;
   readonly bar: string;
   readonly card: string;
@@ -811,7 +797,7 @@ export interface ISelection {
 export interface IUploadTarget {
   readonly editor: Editor;
   readonly logId: string;
-  readonly project: IProject;
+  readonly project: WorkspaceContext;
   readonly client: QueryClient;
   readonly notify: (notice: INotice) => void;
 }
@@ -821,14 +807,9 @@ export const ViewMode = { Read: 'read', Edit: 'edit' } as const;
 export type TViewMode = TValueOf<typeof ViewMode>;
 
 export interface IRoute {
-  readonly project: IProject | null;
+  readonly project: WorkspaceContext | null;
   readonly logId: string | null;
   readonly pageId: string | null;
-}
-
-export interface IProject {
-  readonly virtualLabId: string;
-  readonly projectId: string;
 }
 
 export interface IMe {

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { NodeViewWrapper } from '@tiptap/react';
 import { isNil, isNotNil } from 'es-toolkit';
 import { Suspense, useState } from 'react';
+import { match } from 'ts-pattern';
 
 import {
   coreTypeOf,
@@ -13,24 +14,16 @@ import { lookOfType } from '@/features/logbook/editor/blocks/entity-look';
 import { ViewerMessage } from '@/features/logbook/editor/blocks/viewer-3d/frame';
 import { has3dView, Viewer3d } from '@/features/logbook/editor/blocks/viewers-3d';
 import { Bone } from '@/features/logbook/elements/skeletons';
+import { dateOf } from '@/features/logbook/helpers';
 import { useEntityDetail, useEntityPicker, useLogContext } from '@/features/logbook/log/context';
 import { DISMISSABLE_ATTRIBUTE } from '@/hooks/use-dismiss-on-outside-interaction';
-import { Icon } from '@/ui/molecules/icon';
+import { Icon, isIconName } from '@/ui/molecules/icon';
 import { cn } from '@/utils/css-class';
 
 import type { NodeViewProps } from '@tiptap/react';
 
 const ACTION =
   'grid size-8 flex-none place-items-center rounded-full border-0 bg-white shadow-block-btn transition-[box-shadow,translate] duration-150 hover:-translate-y-px hover:shadow-pop';
-
-const dateOf = (iso: string | undefined): string | null =>
-  isNil(iso)
-    ? null
-    : new Date(iso).toLocaleDateString(undefined, {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-      });
 
 export function EntityView({ node, selected, updateAttributes, deleteNode }: NodeViewProps) {
   const { project } = useLogContext();
@@ -48,7 +41,8 @@ export function EntityView({ node, selected, updateAttributes, deleteNode }: Nod
   const region = entity.data?.brain_region?.name ?? (known ? null : 'Not in this catalogue');
   const species = entity.data?.subject?.species?.name;
   const by = entity.data?.created_by?.pref_label;
-  const date = dateOf(entity.data?.creation_date);
+  const created = entity.data?.creation_date;
+  const date = isNil(created) ? null : dateOf(created);
   const missing = entity.isError || !known;
   const viewable = has3dView(type);
   const openDetail = useEntityDetail();
@@ -65,7 +59,7 @@ export function EntityView({ node, selected, updateAttributes, deleteNode }: Nod
           className="grid size-10 flex-none place-items-center rounded-xl"
           style={{ background: look.tint, color: look.colour }}
         >
-          <Icon name={known ? type : 'cube'} size={20} stroke={1.8} />
+          <Icon name={known && isIconName(type) ? type : 'cube'} size={20} stroke={1.8} />
         </span>
         <div className="flex min-w-0 flex-[1_1_220px] flex-col gap-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -83,17 +77,11 @@ export function EntityView({ node, selected, updateAttributes, deleteNode }: Nod
           </div>
           <div className="text-[16px] leading-[1.3] font-bold">{entity.data?.name ?? label}</div>
           <div className="text-[12px] leading-[1.4] text-neutral-4">
-            {missing ? (
-              entity.isError ? (
-                'Not found in this project, or no access'
-              ) : (
-                'Shown with the generic card'
-              )
-            ) : entity.isPending ? (
-              <Bone className="my-[4px] h-2.5 w-40 animate-pulse" />
-            ) : (
-              `Created by ${by ?? 'unknown'}${isNil(date) ? '' : ` · ${date}`}`
-            )}
+            {match({ missing, error: entity.isError, pending: entity.isPending })
+              .with({ missing: true, error: true }, () => 'Not found in this project, or no access')
+              .with({ missing: true }, () => 'Shown with the generic card')
+              .with({ pending: true }, () => <Bone className="my-[4px] h-2.5 w-40 animate-pulse" />)
+              .otherwise(() => `Created by ${by ?? 'unknown'}${isNil(date) ? '' : ` · ${date}`}`)}
           </div>
         </div>
         <div className="flex items-center gap-2">

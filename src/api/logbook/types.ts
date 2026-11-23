@@ -70,7 +70,7 @@ export interface IActivityEntry {
   readonly actorId: number;
   readonly userId: string;
   readonly label: string;
-  readonly via: string;
+  readonly via: TActorVia;
   readonly minute: string;
   readonly inserted: number;
   readonly deleted: number;
@@ -87,7 +87,7 @@ export interface IContributor {
   readonly actorId: number;
   readonly userId: string;
   readonly label: string;
-  readonly via: string;
+  readonly via: TActorVia;
   readonly lastAt: string;
 }
 
@@ -103,7 +103,7 @@ export interface IWriter {
   readonly actorId: number;
   readonly userId: string;
   readonly label: string;
-  readonly via: string;
+  readonly via: TActorVia;
 }
 
 export interface IUploadTarget {

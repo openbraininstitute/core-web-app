@@ -9,7 +9,8 @@ import { PAGES_REFRESH_MS } from '@/features/logbook/constants';
 import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
 
 import type { IPage } from '@/api/logbook/types';
-import type { INewSection, IProject } from '@/features/logbook/types';
+import type { INewSection } from '@/features/logbook/types';
+import type { WorkspaceContext } from '@/types/common';
 
 export const pageToShow = (pages: readonly IPage[], wanted: string | null): IPage | null =>
   pages.find((page) => page.id === wanted) ??
@@ -19,12 +20,12 @@ export const pageToShow = (pages: readonly IPage[], wanted: string | null): IPag
 const inOrder = (pages: readonly IPage[]): IPage[] =>
   pages.toSorted((a, b) => a.position - b.position);
 
-async function pagesOf(researchId: string, project: IProject): Promise<IPage[]> {
+async function pagesOf(researchId: string, project: WorkspaceContext): Promise<IPage[]> {
   const research = await getResearch({ id: researchId, context: project });
   return inOrder(research.pages);
 }
 
-export const pagesQuery = (researchId: string, project: IProject) =>
+export const pagesQuery = (researchId: string, project: WorkspaceContext) =>
   queryOptions({
     queryKey: keyBuilderLogbook.pages(researchId),
     queryFn: () => pagesOf(researchId, project),
@@ -33,10 +34,10 @@ export const pagesQuery = (researchId: string, project: IProject) =>
       count < 2 && !(error instanceof ApiError && (error.cause?.status ?? 500) < 500),
   });
 
-export const usePages = (researchId: string, project: IProject, enabled = true) =>
+export const usePages = (researchId: string, project: WorkspaceContext, enabled = true) =>
   useQuery({ ...pagesQuery(researchId, project), enabled });
 
-export function useCreateSection(researchId: string, project: IProject) {
+export function useCreateSection(researchId: string, project: WorkspaceContext) {
   const queries = useQueryClient();
   return useMutation({
     mutationFn: ({ title, key }: INewSection) =>
@@ -54,7 +55,7 @@ export function useCreateSection(researchId: string, project: IProject) {
   });
 }
 
-export function useRenamePage(researchId: string, project: IProject) {
+export function useRenamePage(researchId: string, project: WorkspaceContext) {
   const queries = useQueryClient();
   return useMutation({
     mutationFn: ({ page, title }: { readonly page: IPage; readonly title: string }) =>
@@ -67,7 +68,7 @@ export function useRenamePage(researchId: string, project: IProject) {
   });
 }
 
-export function useDeleteSection(researchId: string, project: IProject) {
+export function useDeleteSection(researchId: string, project: WorkspaceContext) {
   const queries = useQueryClient();
   return useMutation({
     mutationFn: (pageId: string) => deletePage({ pageId, context: project }),

@@ -3,7 +3,7 @@ import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { ySyncPluginKey } from '@tiptap/y-tiptap';
 import { clamp, isNil, isNotNil } from 'es-toolkit';
-import { match } from 'ts-pattern';
+import { match, P } from 'ts-pattern';
 
 import { entityLookOf } from '@/features/logbook/blocks/kinds';
 import { UNKNOWN_ACTOR } from '@/features/logbook/collaboration/actors';
@@ -191,16 +191,15 @@ export const CollaborationChanges = Extension.create<ICollaborationChangesOption
             const { from, to, removed } = diff;
             if (remote && !options.ready()) return { decorations, change: null };
             const [author] = authors;
-            const actor = remote
-              ? isNil(author)
-                ? UNKNOWN_ACTOR
-                : options.resolve(author)
-              : options.me;
+            const actor = match({ remote, author })
+              .with({ remote: false }, () => options.me)
+              .with({ author: P.number }, ({ author: clientId }) => options.resolve(clientId))
+              .otherwise(() => UNKNOWN_ACTOR);
             const now = Date.now();
+            const block = topBlockAt(tr.doc, from);
             if (remote && options.highlights()) {
               const style = `--hl:${actor.colour}`;
               const spec: IHighlight = { at: now };
-              const block = topBlockAt(tr.doc, from);
               const tints = [
                 ...(to > from
                   ? [Decoration.inline(from, to, { class: 'rl-hl', style }, spec)]
@@ -218,7 +217,6 @@ export const CollaborationChanges = Extension.create<ICollaborationChangesOption
               ];
               decorations = decorations.add(tr.doc, tints);
             }
-            const block = topBlockAt(tr.doc, from);
             const blockId: unknown = block?.node.attrs['id'];
             const change: IChange = {
               id: nextId++,

@@ -2,7 +2,8 @@ import { isNil } from 'es-toolkit';
 import { usePathname } from 'next/navigation';
 import { useMemo } from 'react';
 
-import type { IProject, IRoute } from '@/features/logbook/types';
+import type { IRoute } from '@/features/logbook/types';
+import type { WorkspaceContext } from '@/types/common';
 
 const ROUTE =
   /^\/app\/virtual-lab\/([0-9a-f-]{36})\/([0-9a-f-]{36})\/logbook(?:\/([0-9a-f-]{36})(?:\/page\/([0-9a-f-]{36}))?)?\/?$/;
@@ -18,7 +19,7 @@ export function routeOf(pathname: string): IRoute {
 }
 
 export const pathOf = (
-  project: IProject,
+  project: WorkspaceContext,
   logId: string | null = null,
   pageId: string | null = null
 ): string =>

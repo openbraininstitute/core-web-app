@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react';
 import { match, P } from 'ts-pattern';
 
-import { CLOCK_MS, DAY_MS, HOUR_MS, MINUTE_MS } from '@/features/logbook/constants';
+import {
+  CLOCK_MS,
+  DAY_MS,
+  HOUR_MS,
+  MINUTE_MS,
+  STORAGE_VERSION,
+} from '@/features/logbook/constants';
 
 import type { PointerEvent as ReactPointerEvent } from 'react';
-
-export const POPOVER_PANEL = 'w-auto rounded-2xl border-0 bg-white shadow-(--shadow-pop)';
 
 export const clip = (text: string, length: number): string => {
   const flat = text.replace(/\s+/g, ' ').trim();
@@ -67,7 +71,6 @@ export function liveAgoOf(at: number, now: number): string {
     .otherwise(() => `${Math.round(minutes / 60)} h ago`);
 }
 
-const STORAGE_VERSION = '202611201';
 export const storageKeyOf = (slice: string, key: string): string =>
   `logbook:${STORAGE_VERSION}:${slice}:${key}`;
 

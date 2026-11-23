@@ -5,9 +5,9 @@ import { extensionOf } from '@/features/logbook/editor/shiki';
 import { ArtifactKind, FileLang } from '@/features/logbook/types';
 import { Icon } from '@/ui/molecules/icon';
 
-import type { IArtifact, IArtifactLook } from '@/features/logbook/types';
+import type { IArtifact, TArtifactLook } from '@/features/logbook/types';
 
-function lookOf(artifact: IArtifact): IArtifactLook {
+function lookOf(artifact: IArtifact): TArtifactLook {
   return match(artifact.kind)
     .with(ArtifactKind.Image, () => ({ badge: '', bg: '#e8f1fb', fg: '#1677c9' }))
     .with(ArtifactKind.Markdown, () => ({ badge: 'MD', bg: '#eef2ff', fg: '#3730a3' }))

@@ -16,7 +16,7 @@ const labelText = (label: unknown): string => escapeIn(String(label ?? ''), /[\\
 
 // `{type=circuit id=c-3f2a path="My data.csv"}`: quoted when a value has a space, `"`, `}` or `\`.
 const PAIR = /([^\s=]+)(?:=(?:"((?:[^"\\]|\\.)*)"|(\S*)))?/g;
-export function parseDirectiveAttributes(raw: string): Record<string, string> {
+function parseDirectiveAttributes(raw: string): Record<string, string> {
   return Object.fromEntries(
     [...raw.matchAll(PAIR)].map(([, key = '', quoted, bare]) => [
       key,

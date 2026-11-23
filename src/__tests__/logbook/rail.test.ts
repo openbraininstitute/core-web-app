@@ -2,6 +2,7 @@ import { expect, test } from 'vitest';
 
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { EntityLifecycleStatus } from '@/api/entitycore/types/shared/global';
+import { ActorVia } from '@/api/logbook/types';
 import {
   DEFAULT_ORDER,
   listParamsOf,
@@ -15,7 +16,9 @@ import { agoOf } from '@/features/logbook/helpers';
 import { LogOrderField, OrderDirection } from '@/features/logbook/types';
 
 import type { IResearchLog } from '@/api/entitycore/types/entities/research-log';
-import type { ILogOrder, IProject } from '@/features/logbook/types';
+import type { TActorVia } from '@/api/logbook/types';
+import type { ILogOrder } from '@/features/logbook/types';
+import type { WorkspaceContext } from '@/types/common';
 
 test('the log card says how long ago a log changed, then its date after a week', () => {
   const now = Date.parse('2026-11-14T12:00:00Z');
@@ -50,7 +53,7 @@ const log = (id: string, project: string, isPublic: boolean): IResearchLog => ({
   assets: [],
 });
 
-const PROJECT: IProject = { virtualLabId: 'lab', projectId: 'p1' };
+const PROJECT: WorkspaceContext = { virtualLabId: 'lab', projectId: 'p1' };
 
 const params = (filter: {
   public: boolean;
@@ -80,7 +83,7 @@ test('the scope filters and the search are EntityCore’s list filters, not the 
   expect(params({ public: true, project: true, order: created }).order_by).toBe('-creation_date');
 });
 
-const writer = (actorId: number, userId: string, label: string, via: string) => ({
+const writer = (actorId: number, userId: string, label: string, via: TActorVia) => ({
   actorId,
   userId,
   label,
@@ -94,9 +97,9 @@ test('members: each in the colour of their user id; the creator is not shown twi
     created_by: user('u-alice', 'Alice Admin'),
   };
   const members = membersOf(created, [
-    writer(1, 'u-alice', 'alice', 'ui'),
-    writer(2, 'u-alice', 'alice-claude', 'agent'),
-    writer(3, 'u-bob', 'bob', 'ui'),
+    writer(1, 'u-alice', 'alice', ActorVia.Ui),
+    writer(2, 'u-alice', 'alice-claude', ActorVia.Agent),
+    writer(3, 'u-bob', 'bob', ActorVia.Ui),
   ]);
   expect(members.map((m) => [m.name, m.colour])).toEqual([
     ['Alice Admin', colourOf('u-alice')],

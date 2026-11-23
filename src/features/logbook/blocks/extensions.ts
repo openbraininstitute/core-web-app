@@ -9,7 +9,6 @@ import { Callout, Entity, Figure, FileBlock } from '@/features/logbook/blocks/no
 import type { AnyExtension } from '@tiptap/core';
 
 // The server reads the same Yjs fragment name.
-export const FRAGMENT = 'default';
 
 // Top-level blocks carry a stable `id` so agents, history and preview can name them.
 export const BLOCK_TYPES = [

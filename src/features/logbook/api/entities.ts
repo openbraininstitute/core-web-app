@@ -11,7 +11,8 @@ import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import type { IEntity, IProject, TEntityType } from '@/features/logbook/types';
+import type { IEntity, TEntityType } from '@/features/logbook/types';
+import type { WorkspaceContext } from '@/types/common';
 
 const EntityIdSchema = z.uuid();
 
@@ -53,7 +54,7 @@ export function entityConfigOf(type: string) {
 
 const searchOrder: Partial<Record<TEntityType, string>> = { [EntityType.BrainRegion]: 'name' };
 
-export const entityQuery = (type: string, id: string, project: IProject) => {
+export const entityQuery = (type: string, id: string, project: WorkspaceContext) => {
   const config = entityConfigOf(type);
   const route = routeOfType(type);
   return queryOptions({
@@ -68,7 +69,7 @@ export const entityQuery = (type: string, id: string, project: IProject) => {
   });
 };
 
-export const entitySearchQuery = (type: TEntityType, search: string, project: IProject) =>
+export const entitySearchQuery = (type: TEntityType, search: string, project: WorkspaceContext) =>
   queryOptions({
     queryKey: keyBuilderLogbook.entitySearch(type, search, project.projectId),
     enabled: isNotNil(routeOfType(type)),

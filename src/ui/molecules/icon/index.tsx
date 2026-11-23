@@ -152,10 +152,10 @@ const paths = {
 
 export type TIconName = keyof typeof paths;
 
-const isIconName = (name: string): name is TIconName => Object.hasOwn(paths, name);
+export const isIconName = (name: string): name is TIconName => Object.hasOwn(paths, name);
 
 export interface IIconProps {
-  readonly name: string;
+  readonly name: TIconName;
   readonly size?: number;
   readonly stroke?: number;
 }

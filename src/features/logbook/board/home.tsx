@@ -1,4 +1,5 @@
-import { isNil, isNotNil } from 'es-toolkit';
+import { isNil } from 'es-toolkit';
+import { match, P } from 'ts-pattern';
 
 import { OrderButton } from '@/features/logbook/board/log-order';
 import {
@@ -16,7 +17,8 @@ import { PopoverAlign } from '@/features/logbook/types';
 import { Icon } from '@/ui/molecules/icon';
 
 import type { IResearchLog } from '@/api/entitycore/types/entities/research-log';
-import type { IHomeProps, IProject } from '@/features/logbook/types';
+import type { IHomeProps } from '@/features/logbook/types';
+import type { WorkspaceContext } from '@/types/common';
 
 function LogbookArt() {
   return (
@@ -63,7 +65,7 @@ function LogCard({
   log,
   onPick,
 }: {
-  readonly project: IProject;
+  readonly project: WorkspaceContext;
   readonly log: IResearchLog;
   readonly onPick: (id: string) => void;
 }) {
@@ -144,44 +146,53 @@ export function Home(props: IHomeProps) {
         </div>
       </header>
       <div className="scroll-thin flex min-h-0 flex-1 flex-col overflow-y-auto p-6 max-md:p-4">
-        {isNotNil(props.error) ? (
-          <div className={STATE} role="alert">
-            <strong className="text-[17px]">The research logs could not be loaded</strong>
-            <p className="max-w-[420px] text-[14px] text-neutral-4">{props.error}</p>
-          </div>
-        ) : props.loading ? (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4" aria-busy>
-            <CardSkeletons count={6} />
-          </div>
-        ) : noLogs ? (
-          <div className={STATE}>
-            <LogbookArt />
-            <h2 className="text-[22px] font-bold">Start your first research log</h2>
-            <p className="max-w-[440px] text-[15px] leading-normal text-neutral-4">
-              A research log keeps the question, the runs, the figures and the conclusions of a
-              piece of work in one place. You and your agents write it together, live, and everyone
-              in the project can follow along.
-            </p>
-            <button
-              type="button"
-              className="btn-navy mt-2 inline-flex items-center gap-2 disabled:cursor-progress disabled:opacity-70"
-              disabled={props.creating}
-              onClick={props.onNew}
-            >
-              <Icon name="plus" size={14} stroke={2.4} />
-              New research log
-            </button>
-          </div>
-        ) : logs.length === 0 ? (
-          <LogsEmpty query={props.search} scope={scope} />
-        ) : (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">
-            {logs.map((log) => (
-              <LogCard key={log.id} project={props.project} log={log} onPick={props.onPick} />
-            ))}
-            <LoadMore more={props.more} skeleton={<CardSkeletons count={3} />} />
-          </div>
-        )}
+        {match(props)
+          .with({ error: P.string }, ({ error }) => (
+            <div className={STATE} role="alert">
+              <strong className="text-[17px]">The research logs could not be loaded</strong>
+              <p className="max-w-[420px] text-[14px] text-neutral-4">{error}</p>
+            </div>
+          ))
+          .with({ loading: true }, () => (
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4" aria-busy>
+              <CardSkeletons count={6} />
+            </div>
+          ))
+          .when(
+            () => noLogs,
+            () => (
+              <div className={STATE}>
+                <LogbookArt />
+                <h2 className="text-[22px] font-bold">Start your first research log</h2>
+                <p className="max-w-[440px] text-[15px] leading-normal text-neutral-4">
+                  A research log keeps the question, the runs, the figures and the conclusions of a
+                  piece of work in one place. You and your agents write it together, live, and
+                  everyone in the project can follow along.
+                </p>
+                <button
+                  type="button"
+                  className="btn-navy mt-2 inline-flex items-center gap-2 disabled:cursor-progress disabled:opacity-70"
+                  disabled={props.creating}
+                  onClick={props.onNew}
+                >
+                  <Icon name="plus" size={14} stroke={2.4} />
+                  New research log
+                </button>
+              </div>
+            )
+          )
+          .when(
+            () => logs.length === 0,
+            () => <LogsEmpty query={props.search} scope={scope} />
+          )
+          .otherwise(() => (
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">
+              {logs.map((log) => (
+                <LogCard key={log.id} project={props.project} log={log} onPick={props.onPick} />
+              ))}
+              <LoadMore more={props.more} skeleton={<CardSkeletons count={3} />} />
+            </div>
+          ))}
       </div>
     </section>
   );

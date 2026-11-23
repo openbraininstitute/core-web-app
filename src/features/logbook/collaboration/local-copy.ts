@@ -2,26 +2,24 @@ import { isNil, isNotNil, noop } from 'es-toolkit';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
 
-import { DIRTY_YES } from '@/features/logbook/constants';
+import { COPY_STORAGE_VERSION, DIRTY_YES, FRAGMENT } from '@/features/logbook/constants';
 import { storageKeyOf } from '@/features/logbook/helpers';
 
 import type { IEntityCoreSyncState, IHeld, ILocalCopyDeps } from '@/features/logbook/types';
 
-export const COPY_PREFIX = storageKeyOf('page', '');
+export const COPY_PREFIX = `logbook:${COPY_STORAGE_VERSION}:page:`;
 export const copyName = (pageId: string, userId: string): string =>
   `${COPY_PREFIX}${pageId}:${userId}`;
 
 const locksOf = (): LockManager | null => globalThis.navigator?.locks ?? null;
 
-export function holdCopyLock(name: string): Promise<() => void> {
+function holdCopyLock(name: string): Promise<() => void> {
   const locks = locksOf();
   if (isNil(locks)) return Promise.resolve(noop);
   return new Promise((granted) => {
-    void locks.request(
-      name,
-      { mode: 'shared' },
-      () => new Promise<void>((release) => granted(release))
-    );
+    locks
+      .request(name, { mode: 'shared' }, () => new Promise<void>((release) => granted(release)))
+      .catch(() => granted(noop));
   });
 }
 
@@ -53,7 +51,7 @@ export class LocalCopy {
     this.document = document;
     this.#persistence = persistence;
     this.#release = release;
-    this.restored = document.getXmlFragment('default').length > 0;
+    this.restored = document.getXmlFragment(FRAGMENT).length > 0;
     document.on('update', this.#onUpdate);
   }
 

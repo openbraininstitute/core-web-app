@@ -6,12 +6,13 @@ import {
 } from '@tanstack/react-query';
 import { isNil, uniqBy } from 'es-toolkit';
 
+import { updateEntity } from '@/api/entitycore/queries/general/entity';
 import {
   createResearchLog,
   getResearchLog,
   getResearchLogs,
-  updateResearchLog,
 } from '@/api/entitycore/queries/general/research-log';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { deleteResearch } from '@/api/logbook/queries/research';
 import { pagesQuery } from '@/features/logbook/api/pages';
 import { LOGS_PAGE_SIZE } from '@/features/logbook/constants';
@@ -20,19 +21,20 @@ import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
 
 import type { IResearchLog, TResearchLogDraft } from '@/api/entitycore/types/entities/research-log';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import type { ILogFilter, ILogOrder, IProject, TLogPages } from '@/features/logbook/types';
+import type { ILogFilter, ILogOrder, TLogPages } from '@/features/logbook/types';
+import type { WorkspaceContext } from '@/types/common';
 
 export const DEFAULT_ORDER: ILogOrder = {
   field: LogOrderField.Updated,
   direction: OrderDirection.Descending,
 };
 
-export const orderByOf = (order: ILogOrder): string =>
+const orderByOf = (order: ILogOrder): string =>
   `${order.direction === OrderDirection.Descending ? '-' : ''}${order.field}`;
 
 export const noFilterOf = (filter: ILogFilter): boolean => !filter.public && !filter.project;
 
-export function listParamsOf(project: IProject, filter: ILogFilter): URLSearchParams {
+export function listParamsOf(project: WorkspaceContext, filter: ILogFilter): URLSearchParams {
   const params = new URLSearchParams({
     page_size: String(LOGS_PAGE_SIZE),
     order_by: orderByOf(filter.order),
@@ -58,7 +60,7 @@ const listingOf = ({ pages }: TLogPages) => ({
   total: pages[0]?.pagination.total_items ?? 0,
 });
 
-export const researchLogsQuery = (project: IProject, filter: ILogFilter) =>
+export const researchLogsQuery = (project: WorkspaceContext, filter: ILogFilter) =>
   infiniteQueryOptions({
     queryKey: keyBuilderLogbook.logsPage(
       project.projectId,
@@ -83,14 +85,14 @@ const eachPage =
       ? lists
       : { ...lists, pages: lists.pages.map((page) => ({ ...page, data: [...change(page.data)] })) };
 
-export const researchLogQuery = (project: IProject, id: string) =>
+export const researchLogQuery = (project: WorkspaceContext, id: string) =>
   queryOptions({
     queryKey: keyBuilderLogbook.log(project.projectId, id),
     queryFn: ({ signal }) => getResearchLog({ id, context: project, signal }),
     staleTime: 30_000,
   });
 
-export function useCreateLog(project: IProject) {
+export function useCreateLog(project: WorkspaceContext) {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (draft: TResearchLogDraft) => createResearchLog({ context: project, draft }),
@@ -101,11 +103,16 @@ export function useCreateLog(project: IProject) {
   });
 }
 
-export function useUpdateLog(project: IProject) {
+export function useUpdateLog(project: WorkspaceContext) {
   const client = useQueryClient();
   return useMutation({
     mutationFn: ({ id, ...patch }: Partial<TResearchLogDraft> & { readonly id: string }) =>
-      updateResearchLog({ id, context: project, patch }),
+      updateEntity<IResearchLog>({
+        type: EntityTypeDict.ResearchLog,
+        id,
+        data: patch,
+        context: project,
+      }),
     onSuccess: (updated) => {
       client.setQueryData(researchLogQuery(project, updated.id).queryKey, updated);
       client.setQueriesData<TLogPages>(
@@ -116,7 +123,7 @@ export function useUpdateLog(project: IProject) {
   });
 }
 
-export function useDeleteLog(project: IProject) {
+export function useDeleteLog(project: WorkspaceContext) {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => deleteResearch({ id, context: project }),

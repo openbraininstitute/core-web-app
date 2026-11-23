@@ -20,10 +20,10 @@ import type {
 
 export const statusLooks: Readonly<Record<TStatus, { readonly fg: string; readonly dot: string }>> =
   {
-    editing: { fg: 'var(--color-saved-fg)', dot: 'var(--color-saved-dot)' },
-    writing: { fg: 'var(--color-writing-fg)', dot: 'var(--color-writing-dot)' },
-    reading: { fg: 'var(--color-neutral-4)', dot: 'var(--color-neutral-3)' },
-    idle: { fg: 'var(--color-neutral-4)', dot: 'var(--color-neutral-2)' },
+    [Status.Editing]: { fg: 'var(--color-saved-fg)', dot: 'var(--color-saved-dot)' },
+    [Status.Writing]: { fg: 'var(--color-writing-fg)', dot: 'var(--color-writing-dot)' },
+    [Status.Reading]: { fg: 'var(--color-neutral-4)', dot: 'var(--color-neutral-3)' },
+    [Status.Idle]: { fg: 'var(--color-neutral-4)', dot: 'var(--color-neutral-2)' },
   };
 
 export function presentList(

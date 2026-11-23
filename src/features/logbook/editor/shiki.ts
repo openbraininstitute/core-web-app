@@ -29,7 +29,7 @@ const GRAMMARS: Readonly<Record<string, IGrammar>> = {
   m: { id: 'matlab', load: () => import('shiki/langs/matlab.mjs') },
 };
 
-export const THEME = 'github-light';
+const THEME = 'github-light';
 
 export const extensionOf = (name: string): string =>
   /\.([^./]+)$/.exec(name)?.[1]?.toLowerCase() ?? '';

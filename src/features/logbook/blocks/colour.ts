@@ -1,4 +1,4 @@
-import { FNV_OFFSET, FNV_PRIME } from '@/features/logbook/constants';
+import { FALLBACK_COLOUR, FNV_OFFSET, FNV_PRIME } from '@/features/logbook/constants';
 
 // Same colour for a user on every screen: FNV-1a of the user id picks one.
 const PALETTE = [
@@ -28,4 +28,4 @@ export function fnv1a(text: string): number {
 }
 
 export const colourOf = (userId: string): string =>
-  PALETTE[fnv1a(userId) % PALETTE.length] ?? '#595959';
+  PALETTE[fnv1a(userId) % PALETTE.length] ?? FALLBACK_COLOUR;

@@ -373,15 +373,12 @@ export function LogPage(props: ILogPageProps) {
         ) : (
           <EditorCard
             {...shared}
-            style={
-              narrow
-                ? mTab === MobileTab.Write
-                  ? { flex: '1 1 0' }
-                  : { flex: '0 0 auto' }
-                : bothOpen
-                  ? { flex: `0 0 calc(${split * 100}% - 8px)` }
-                  : { flex: '1 1 0' }
-            }
+            style={match({ narrow, bothOpen })
+              .with({ narrow: true }, () =>
+                mTab === MobileTab.Write ? { flex: '1 1 0' } : { flex: '0 0 auto' }
+              )
+              .with({ bothOpen: true }, () => ({ flex: `0 0 calc(${split * 100}% - 8px)` }))
+              .otherwise(() => ({ flex: '1 1 0' }))}
             mTab={mTab}
             setMTab={setMTab}
             sideOpen={sideVisible}
@@ -403,25 +400,28 @@ export function LogPage(props: ILogPageProps) {
             <span className="h-11 w-[5px] rounded-full bg-neutral-2 transition-[background,height] duration-150 ease-[ease] group-hover:h-16 group-hover:bg-primary-4" />
           </button>
         ) : null}
-        {sideVisible && shown ? (
-          <SidePane
-            {...shared}
-            tab={narrow ? RIGHT_TAB_OF_MOBILE[mTab] : rightTab}
-            setTab={setRightTab}
-            editorShut={editorShut}
-            canShut={bothOpen}
-            onShut={() => setSplitShut(SplitShut.Side)}
-          />
-        ) : sideShut ? (
-          <button
-            type="button"
-            className={cn(SHUT, 'ml-4')}
-            aria-label="Open the side pane"
-            onClick={() => setSplitShut(SplitShut.None)}
-          >
-            <span className={SHUT_LABEL}>{TAB_NAMES[rightTab]}</span>
-          </button>
-        ) : null}
+        {match({ sideOpen: sideVisible && shown, sideShut })
+          .with({ sideOpen: true }, () => (
+            <SidePane
+              {...shared}
+              tab={narrow ? RIGHT_TAB_OF_MOBILE[mTab] : rightTab}
+              setTab={setRightTab}
+              editorShut={editorShut}
+              canShut={bothOpen}
+              onShut={() => setSplitShut(SplitShut.Side)}
+            />
+          ))
+          .with({ sideShut: true }, () => (
+            <button
+              type="button"
+              className={cn(SHUT, 'ml-4')}
+              aria-label="Open the side pane"
+              onClick={() => setSplitShut(SplitShut.None)}
+            >
+              <span className={SHUT_LABEL}>{TAB_NAMES[rightTab]}</span>
+            </button>
+          ))
+          .otherwise(() => null)}
       </div>
       {overlays}
     </EntityPickerContext.Provider>

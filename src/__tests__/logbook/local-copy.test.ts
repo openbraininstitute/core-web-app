@@ -302,3 +302,18 @@ test('a copy that is gone reads as clean and is not made again', async () => {
   expect(await isCopyDirty(name)).toBe(false);
   expect((await indexedDB.databases()).map((d) => d.name)).not.toContain(name);
 });
+
+test('a copy still opens when the browser refuses its lock', async () => {
+  const locks = navigator.locks;
+  const refused = { request: () => Promise.reject(new Error('refused')), query: async () => ({}) };
+  Object.defineProperty(navigator, 'locks', { value: refused, configurable: true });
+  try {
+    const user = nextUser();
+    await typedCopy(user, 'kept without a lock');
+    const copy = await LocalCopy.open(PAGE, user);
+    expect(textOf(copy.document)).toBe('kept without a lock');
+    await copy.close();
+  } finally {
+    Object.defineProperty(navigator, 'locks', { value: locks, configurable: true });
+  }
+});

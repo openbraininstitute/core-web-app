@@ -1,4 +1,4 @@
-import { settings } from '@/features/logbook/settings';
+import { config } from '@/config';
 
 /** One minute in milliseconds. */
 export const MINUTE_MS = 60_000;
@@ -27,8 +27,8 @@ export const ACTIVITY_GAP_MS = 5 * MINUTE_MS;
 /** Most removed characters kept as text on one activity run. */
 export const ACTIVITY_REMOVED_MAX_CHARS = 1000;
 
-/** Largest file a log accepts, in bytes; the whole file is hashed in memory. */
-export const UPLOAD_MAX_BYTES = Number(settings.upload.maxMb) * 1024 * 1024;
+/** Largest file a log accepts, in bytes. */
+export const UPLOAD_MAX_BYTES = config.LOGBOOK_UPLOAD_MAX_MB * 1024 * 1024;
 
 /** Code longer than this is shown without highlighting. */
 export const HIGHLIGHT_MAX_CHARS = 200_000;
@@ -103,7 +103,7 @@ export const WARM_PAGES = 2;
 export const WARM_KEEP_MS = 60_000;
 
 /** A hidden tab's page disconnects after this long. */
-export const HIDDEN_PAUSE_MS = Number(settings.collaboration.hiddenPauseS) * 1000;
+export const HIDDEN_PAUSE_MS = config.LOGBOOK_COLLABORATION_HIDDEN_PAUSE_S * 1000;
 
 /** How often unacknowledged changes are checked again. */
 export const RECHECK_MS = 10_000;
@@ -143,3 +143,22 @@ export const FNV_OFFSET = 0x811c9dc5;
 
 /** FNV-1a 32-bit prime. */
 export const FNV_PRIME = 0x01000193;
+
+/** Shared look of the logbook's popover panels. */
+export const POPOVER_PANEL = 'w-auto rounded-2xl border-0 bg-white shadow-(--shadow-pop)';
+
+/** Version part of the logbook's browser storage keys. */
+export const STORAGE_VERSION = '202611201';
+
+/** Shared look of the pill-shaped controls in the editor and artifact bars. */
+export const CONTROL =
+  'inline-flex h-9 flex-none items-center gap-1.5 rounded-full px-3.5 text-[13px] font-bold whitespace-nowrap';
+
+/** Yjs fragment that holds a page's blocks. */
+export const FRAGMENT = 'default';
+
+/** Version of the page-copy database names, kept apart from STORAGE_VERSION so a settings change never orphans unsent copies. */
+export const COPY_STORAGE_VERSION = '202611201';
+
+/** Grey for an unknown person, entity or caret colour (palette neutral-4). */
+export const FALLBACK_COLOUR = '#595959';

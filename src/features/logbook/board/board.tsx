@@ -1,6 +1,7 @@
 import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { clamp, isNil, isNotNil } from 'es-toolkit';
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { match } from 'ts-pattern';
 
 import { PageKind } from '@/api/logbook/types';
 import {
@@ -31,6 +32,7 @@ import { EntityDetailContext } from '@/features/logbook/log/context';
 import { markSeed } from '@/features/logbook/log/ui-state';
 import { navigate, pathOf } from '@/features/logbook/router';
 import { Layout, RailHeading, ViewMode } from '@/features/logbook/types';
+import { useDebouncedValue } from '@/hooks/hooks';
 import { cn } from '@/utils/css-class';
 
 import type { PointerEvent as ReactPointerEvent } from 'react';
@@ -58,11 +60,7 @@ export function Board({ me, project, logId, pageId }: IBoardProps) {
   const [scope, setScope] = useState<IScope>({ public: true, project: true });
   const [search, setSearch] = useState('');
   const [order, setOrder] = useState<ILogOrder>(DEFAULT_ORDER);
-  const [searched, setSearched] = useState('');
-  useEffect(() => {
-    const timer = setTimeout(() => setSearched(search), SEARCH_WAIT_MS);
-    return () => clearTimeout(timer);
-  }, [search]);
+  const searched = useDebouncedValue(search, SEARCH_WAIT_MS);
   const filter = { ...scope, order, search: search.trim() === '' ? '' : searched };
   const off = noFilterOf(filter);
   const logs = useInfiniteQuery({
@@ -230,46 +228,49 @@ export function Board({ me, project, logId, pageId }: IBoardProps) {
             </main>
           ) : (
             <>
-              {narrow ? (
-                <>
-                  {drawerOpen ? (
-                    <button
-                      type="button"
-                      className="fixed inset-0 z-55 cursor-default border-0 bg-[rgba(0,16,38,0.32)]"
-                      aria-label="Close the list of logs"
-                      onClick={() => setDrawerOpen(false)}
-                    />
-                  ) : null}
+              {match({ narrow, railFolded })
+                .with({ narrow: true }, () => (
+                  <>
+                    {drawerOpen ? (
+                      <button
+                        type="button"
+                        className="fixed inset-0 z-55 cursor-default border-0 bg-[rgba(0,16,38,0.32)]"
+                        aria-label="Close the list of logs"
+                        onClick={() => setDrawerOpen(false)}
+                      />
+                    ) : null}
+                    <aside
+                      className={cn(RAIL, 'drawer fixed z-60 w-[min(360px,calc(100vw-40px))]')}
+                      data-open={drawerOpen}
+                      aria-label="Research logs"
+                    >
+                      {rail}
+                    </aside>
+                  </>
+                ))
+                .with({ railFolded: true }, () => (
+                  <button
+                    type="button"
+                    className="logbook-card flex w-[42px] flex-none justify-center border-0 px-0 py-5 transition-[background-color] duration-150 ease-[ease] hover:bg-soft"
+                    aria-label="Open the logbook"
+                    onClick={() => {
+                      setRailShut(false);
+                      if (isNotNil(shownDetail)) setRailHeldOpen(true);
+                      setRailW((w) => Math.max(w, RAIL_FLOOR));
+                    }}
+                  >
+                    <span className="label-caps [writing-mode:vertical-rl]">Logbook</span>
+                  </button>
+                ))
+                .otherwise(() => (
                   <aside
-                    className={cn(RAIL, 'drawer fixed z-60 w-[min(360px,calc(100vw-40px))]')}
-                    data-open={drawerOpen}
+                    className={cn('logbook-card', RAIL)}
+                    style={{ width: railW }}
                     aria-label="Research logs"
                   >
                     {rail}
                   </aside>
-                </>
-              ) : railFolded ? (
-                <button
-                  type="button"
-                  className="logbook-card flex w-[42px] flex-none justify-center border-0 px-0 py-5 transition-[background-color] duration-150 ease-[ease] hover:bg-soft"
-                  aria-label="Open the logbook"
-                  onClick={() => {
-                    setRailShut(false);
-                    if (isNotNil(shownDetail)) setRailHeldOpen(true);
-                    setRailW((w) => Math.max(w, RAIL_FLOOR));
-                  }}
-                >
-                  <span className="label-caps [writing-mode:vertical-rl]">Logbook</span>
-                </button>
-              ) : (
-                <aside
-                  className={cn('logbook-card', RAIL)}
-                  style={{ width: railW }}
-                  aria-label="Research logs"
-                >
-                  {rail}
-                </aside>
-              )}
+                ))}
               <main className="relative flex min-h-0 min-w-0 flex-1">
                 {layout === Layout.Wide && !railFolded ? (
                   // biome-ignore lint/a11y/useSemanticElements: a pointer-dragged resize handle; <hr> takes no pointer events

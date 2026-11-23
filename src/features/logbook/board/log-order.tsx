@@ -3,8 +3,7 @@ import { useId, useRef, useState } from 'react';
 
 import { EASE_OUT, SPRING_LAYOUT } from '@/constants/motion';
 import { DEFAULT_ORDER } from '@/features/logbook/api/research-logs';
-import { LOG_ORDER_WIDTH } from '@/features/logbook/constants';
-import { POPOVER_PANEL } from '@/features/logbook/helpers';
+import { LOG_ORDER_WIDTH, POPOVER_PANEL } from '@/features/logbook/constants';
 import { LogOrderField, OrderDirection } from '@/features/logbook/types';
 import { Icon } from '@/ui/molecules/icon';
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
@@ -33,7 +32,7 @@ const DIRECTIONS: readonly { readonly direction: TOrderDirection; readonly icon:
   { direction: OrderDirection.Descending, icon: 'arrowDown' },
 ];
 
-export function directionLabelOf(field: TLogOrderField, direction: TOrderDirection): string {
+function directionLabelOf(field: TLogOrderField, direction: TOrderDirection): string {
   const up = direction === OrderDirection.Ascending;
   if (field === LogOrderField.Name) return up ? 'A to Z' : 'Z to A';
   return up ? 'Oldest first' : 'Newest first';

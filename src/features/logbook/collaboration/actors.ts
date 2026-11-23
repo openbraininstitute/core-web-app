@@ -2,6 +2,7 @@ import { isNotNil } from 'es-toolkit';
 
 import { ActorVia } from '@/api/logbook/types';
 import { colourOf } from '@/features/logbook/blocks/colour';
+import { FALLBACK_COLOUR } from '@/features/logbook/constants';
 import { extractInitials } from '@/util/slugify';
 
 import type { IActor, IActorSources, IPeer } from '@/features/logbook/types';
@@ -10,12 +11,12 @@ export const UNKNOWN_ACTOR: IActor = {
   key: 'unknown',
   name: 'Someone',
   initials: '?',
-  colour: '#595959',
+  colour: FALLBACK_COLOUR,
   agent: false,
   ownerId: null,
 };
 
-export const agentInitialsOf = (label: string): string =>
+const agentInitialsOf = (label: string): string =>
   (label.split('-')[0] ?? '').slice(0, 2).toUpperCase();
 
 export const personActor = (userId: string, name: string): IActor => ({

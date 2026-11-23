@@ -1,3 +1,4 @@
+import { FALLBACK_COLOUR } from '@/features/logbook/constants';
 import { CalloutKind, FileLang } from '@/features/logbook/types';
 
 import type {
@@ -24,7 +25,7 @@ const isEntityType = (type: string): type is TEntityType => Object.hasOwn(entity
 export const entityLookOf = (type: string): ILook =>
   isEntityType(type)
     ? entityLooks[type]
-    : { label: type.replaceAll('_', ' ') || 'Entity', colour: '#595959', tint: '#f0f2f5' };
+    : { label: type.replaceAll('_', ' ') || 'Entity', colour: FALLBACK_COLOUR, tint: '#f0f2f5' };
 
 export const fileLooks: Readonly<Record<TFileLang, IFileLook>> = {
   python: { badge: 'PY', bg: '#ffe9a8', fg: '#1e3a5f', name: 'Python' },

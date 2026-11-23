@@ -8,8 +8,9 @@ import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import { isNil } from 'es-toolkit';
 
-import { BLOCK_TYPES, contentExtensions, FRAGMENT } from '@/features/logbook/blocks/extensions';
+import { BLOCK_TYPES, contentExtensions } from '@/features/logbook/blocks/extensions';
 import { CollaborationChanges } from '@/features/logbook/collaboration/changes';
+import { FALLBACK_COLOUR, FRAGMENT } from '@/features/logbook/constants';
 import { CalloutView } from '@/features/logbook/editor/blocks/callout-view';
 import { EntityView } from '@/features/logbook/editor/blocks/entity-view';
 import { FigureView } from '@/features/logbook/editor/blocks/figure-view';
@@ -98,7 +99,7 @@ export const CodeHighlight = Extension.create({
 
 export const caretColourOf = (user: Record<string, unknown>): string => {
   const colour = user['color'];
-  return typeof colour === 'string' && /^#[0-9a-f]{6}$/i.test(colour) ? colour : '#595959';
+  return typeof colour === 'string' && /^#[0-9a-f]{6}$/i.test(colour) ? colour : FALLBACK_COLOUR;
 };
 
 function caretOf(name: string, colour: string): HTMLElement {

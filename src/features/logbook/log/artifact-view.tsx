@@ -11,7 +11,7 @@ import {
   fileTextQuery,
   logFilesQuery,
 } from '@/features/logbook/api/log-files';
-import { ZOOM_MAX, ZOOM_MIN, ZOOM_STEP } from '@/features/logbook/constants';
+import { CONTROL, ZOOM_MAX, ZOOM_MIN, ZOOM_STEP } from '@/features/logbook/constants';
 import { CodeView, CsvTable } from '@/features/logbook/editor/blocks/file-view';
 import { withViews } from '@/features/logbook/editor/extensions';
 import { LinesSkeleton } from '@/features/logbook/elements/skeletons';
@@ -19,7 +19,6 @@ import { agoOf, savedOf, sizeOf } from '@/features/logbook/helpers';
 import { useObjectUrl } from '@/features/logbook/hooks/use-object-url';
 import { ArtifactIcon } from '@/features/logbook/log/artifact-icon';
 import { useLogContext } from '@/features/logbook/log/context';
-import { CONTROL } from '@/features/logbook/log/controls';
 import { ArtifactKind } from '@/features/logbook/types';
 import { Icon } from '@/ui/molecules/icon';
 import { cn } from '@/utils/css-class';

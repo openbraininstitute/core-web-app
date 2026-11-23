@@ -12,9 +12,7 @@ export interface IAvatarPerson {
 export interface IAvatarProps {
   readonly actor: IAvatarPerson;
   readonly size?: number;
-  readonly title?: string;
   readonly ring?: boolean;
-  readonly stacked?: boolean;
 }
 
 export const agentRadiusOf = (size: number): number => (size <= 26 ? 8 : 9);
@@ -32,7 +30,7 @@ export function AgentBadge({ size, colour }: { readonly size: number; readonly c
   );
 }
 
-export function Avatar({ actor, size = 30, title, ring = false, stacked = false }: IAvatarProps) {
+export function Avatar({ actor, size = 30, ring = false }: IAvatarProps) {
   const style = {
     width: size,
     height: size,
@@ -40,7 +38,6 @@ export function Avatar({ actor, size = 30, title, ring = false, stacked = false 
     borderRadius: actor.agent ? agentRadiusOf(size) : 999,
     fontSize: size <= 28 ? 10 : 11,
     '--ring': actor.colour,
-    ...(stacked ? { border: '2px solid var(--color-white)', marginLeft: -8 } : {}),
   } as CSSProperties;
   return (
     <span
@@ -49,7 +46,6 @@ export function Avatar({ actor, size = 30, title, ring = false, stacked = false 
         ring && 'writing-ring'
       )}
       style={style}
-      title={title}
     >
       {actor.initials.length > 0 ? (
         actor.initials

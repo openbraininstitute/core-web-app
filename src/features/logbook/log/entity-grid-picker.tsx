@@ -53,6 +53,7 @@ import type {
   TNavItem,
   TPicks,
 } from '@/features/logbook/types';
+import type { TIconName } from '@/ui/molecules/icon';
 
 const allowed = new Set<string>(DATA_BROWSE_ALLOWED_ENTITIES);
 const gridItems = (configs: Readonly<Record<string, { title: string; extendedType: string }>>) =>
@@ -100,7 +101,7 @@ const FIRST_SECTION = sectionOf(FIRST?.key)?.id ?? null;
 const SCOPES: readonly {
   readonly value: TWorkspaceScope;
   readonly label: string;
-  readonly icon: string;
+  readonly icon: TIconName;
 }[] = [
   { value: WorkspaceScope.Combined, label: 'All', icon: 'layers' },
   { value: WorkspaceScope.Project, label: 'This project', icon: 'people' },
@@ -403,11 +404,10 @@ export function EntityGridPicker({ multiple, onPick, onClose }: IEntityGridPicke
             onClick={confirm}
           >
             <Icon name={multiple ? 'link' : 'replace'} size={16} />
-            {!multiple
-              ? 'Replace'
-              : all.length === 0
-                ? 'Link entities'
-                : `Link ${all.length} ${all.length === 1 ? 'entity' : 'entities'}`}
+            {match({ multiple, count: all.length })
+              .with({ multiple: false }, () => 'Replace')
+              .with({ count: 0 }, () => 'Link entities')
+              .otherwise(({ count }) => `Link ${count} ${count === 1 ? 'entity' : 'entities'}`)}
           </button>
         </footer>
       </section>

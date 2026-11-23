@@ -86,7 +86,7 @@ function toNotice(value: unknown): TNotice | null {
     .exhaustive();
 }
 
-export function noticeOf(payload: string): TNotice | null {
+function noticeOf(payload: string): TNotice | null {
   try {
     return toNotice(JSON.parse(payload));
   } catch {

@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { NodeViewWrapper } from '@tiptap/react';
 import { isNil, isNotNil } from 'es-toolkit';
 import { useEffect, useState } from 'react';
-import { match } from 'ts-pattern';
+import { match, P } from 'ts-pattern';
 
 import {
   fileTextQuery,
@@ -19,7 +19,8 @@ import { useUploading } from '@/features/logbook/log/uploads';
 import { FileLang } from '@/features/logbook/types';
 
 import type { NodeViewProps } from '@tiptap/react';
-import type { IProject, IShikiToken } from '@/features/logbook/types';
+import type { IShikiToken } from '@/features/logbook/types';
+import type { WorkspaceContext } from '@/types/common';
 
 const NOTE = 'px-[14px] py-[10px] text-[13px] text-neutral-4';
 
@@ -106,7 +107,7 @@ export function CsvTable({ text }: { readonly text: string }) {
   );
 }
 
-export function FileBody({
+function FileBody({
   logId,
   folderId,
   path,
@@ -116,7 +117,7 @@ export function FileBody({
   readonly logId: string;
   readonly folderId: string;
   readonly path: string;
-  readonly project: IProject;
+  readonly project: WorkspaceContext;
   readonly csv: boolean;
 }) {
   const text = useQuery(fileTextQuery(logId, folderId, path, project));
@@ -133,12 +134,7 @@ export function FileBody({
     .exhaustive();
 }
 
-export const TEXT_LANGS = new Set<string>([
-  FileLang.Python,
-  FileLang.Csv,
-  FileLang.Json,
-  FileLang.Shell,
-]);
+const TEXT_LANGS = new Set<string>([FileLang.Python, FileLang.Csv, FileLang.Json, FileLang.Shell]);
 
 export function FileView({ node, selected }: NodeViewProps) {
   const { project, logId } = useLogContext();
@@ -156,13 +152,11 @@ export function FileView({ node, selected }: NodeViewProps) {
 
   const meta = [
     look.name,
-    isNil(saved)
-      ? uploading
-        ? 'uploading…'
-        : files.isPending
-          ? null
-          : 'not uploaded yet'
-      : sizeOf(saved.size),
+    match({ saved, uploading, pending: files.isPending })
+      .with({ saved: P.nonNullable }, ({ saved: file }) => sizeOf(file.size))
+      .with({ uploading: true }, () => 'uploading…')
+      .with({ pending: true }, () => null)
+      .otherwise(() => 'not uploaded yet'),
     shortPathOf(path),
   ]
     .filter(Boolean)

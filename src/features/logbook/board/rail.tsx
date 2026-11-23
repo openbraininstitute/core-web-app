@@ -7,8 +7,9 @@ import { ActorVia } from '@/api/logbook/types';
 import { useContributors } from '@/features/logbook/api/contributors';
 import { colourOf } from '@/features/logbook/blocks/colour';
 import { OrderButton } from '@/features/logbook/board/log-order';
+import { POPOVER_PANEL } from '@/features/logbook/constants';
 import { PillSkeletons } from '@/features/logbook/elements/skeletons';
-import { agoOf, dateOf, POPOVER_PANEL } from '@/features/logbook/helpers';
+import { agoOf, dateOf } from '@/features/logbook/helpers';
 import { DeleteLogDialog } from '@/features/logbook/log/delete-log-dialog';
 import { NotifyPopover } from '@/features/logbook/log/menus';
 import { useNotifySettings } from '@/features/logbook/log/notify-settings';
@@ -23,12 +24,12 @@ import type { IResearchLog } from '@/api/entitycore/types/entities/research-log'
 import type { IContributor } from '@/api/logbook/types';
 import type {
   IMore,
-  IProject,
   IRailProps,
   IScope,
   TPopoverAlign,
   TPopoverSide,
 } from '@/features/logbook/types';
+import type { WorkspaceContext } from '@/types/common';
 import type { IAvatarGroupMember } from '@/ui/segments/avatar-group';
 
 const SCOPE_BUTTON =
@@ -60,7 +61,7 @@ export function LogWriters({
   project,
   log,
 }: {
-  readonly project: IProject;
+  readonly project: WorkspaceContext;
   readonly log: IResearchLog;
 }) {
   const { ref: box, inView: shown } = useInView({
@@ -291,33 +292,34 @@ export function LogsEmpty({
   readonly compact?: boolean;
 }) {
   const needle = query.trim();
-  const { icon, title, text } =
-    !scope.public && !scope.project
-      ? {
-          icon: 'globe' as const,
-          title: 'Both filters are off',
-          text: 'Turn on Public, this project, or both, to list logs.',
-        }
-      : needle.length > 0
-        ? {
-            icon: 'search' as const,
-            title: 'No log matches',
-            text: `Nothing for “${needle}”. Try other words, or turn on both filters.`,
-          }
-        : {
-            icon: 'notebook' as const,
-            title: 'No logs here',
-            text: match(scope)
-              .with(
-                { public: true, project: false },
-                () => 'No public logs. Turn on this project’s logs to see the others.'
-              )
-              .with(
-                { public: false, project: true },
-                () => 'No logs in this project. Turn on Public to see public logs.'
-              )
-              .otherwise(() => 'Nobody has written a log yet.'),
-          };
+  const { icon, title, text } = match(scope)
+    .with({ public: false, project: false }, () => ({
+      icon: 'globe' as const,
+      title: 'Both filters are off',
+      text: 'Turn on Public, this project, or both, to list logs.',
+    }))
+    .when(
+      () => needle.length > 0,
+      () => ({
+        icon: 'search' as const,
+        title: 'No log matches',
+        text: `Nothing for “${needle}”. Try other words, or turn on both filters.`,
+      })
+    )
+    .otherwise(() => ({
+      icon: 'notebook' as const,
+      title: 'No logs here',
+      text: match(scope)
+        .with(
+          { public: true, project: false },
+          () => 'No public logs. Turn on this project’s logs to see the others.'
+        )
+        .with(
+          { public: false, project: true },
+          () => 'No logs in this project. Turn on Public to see public logs.'
+        )
+        .otherwise(() => 'Nobody has written a log yet.'),
+    }));
   return (
     <div
       className={cn(

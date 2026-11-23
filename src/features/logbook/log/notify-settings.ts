@@ -36,7 +36,7 @@ const subscribe = (listener: () => void): (() => void) => {
   return () => listeners.delete(listener);
 };
 
-export function updateNotifySettings(patch: Partial<INotifySettings>): void {
+function updateNotifySettings(patch: Partial<INotifySettings>): void {
   current = { ...snapshot(), ...patch };
   try {
     localStorage.setItem(KEY, JSON.stringify(current));

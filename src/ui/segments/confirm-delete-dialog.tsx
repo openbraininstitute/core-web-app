@@ -1,5 +1,6 @@
 import { isNil } from 'es-toolkit';
 import { useEffect, useId, useRef, useState } from 'react';
+import { match } from 'ts-pattern';
 
 import { Icon } from '@/ui/molecules/icon';
 import { cn } from '@/utils/css-class';
@@ -137,11 +138,13 @@ export function ConfirmDeleteDialog(props: IConfirmDeleteDialogProps) {
               <div
                 className={cn(
                   'flex h-11 items-center gap-2 rounded-[14px] border bg-white pr-2 pl-3.5 transition-[border-color,box-shadow] duration-150',
-                  typed === -1
-                    ? 'border-destructive/60 ring-3 ring-destructive/10'
-                    : ready
-                      ? 'border-destructive ring-3 ring-destructive/15'
-                      : 'border-block-border focus-within:border-primary-4 focus-within:ring-3 focus-within:ring-primary-1'
+                  match(typed)
+                    .with(-1, () => 'border-destructive/60 ring-3 ring-destructive/10')
+                    .with(WORD.length, () => 'border-destructive ring-3 ring-destructive/15')
+                    .otherwise(
+                      () =>
+                        'border-block-border focus-within:border-primary-4 focus-within:ring-3 focus-within:ring-primary-1'
+                    )
                 )}
               >
                 <input

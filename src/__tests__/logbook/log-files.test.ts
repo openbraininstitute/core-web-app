@@ -10,7 +10,6 @@ import {
   kindOf,
   planFile,
   searchArtifacts,
-  sha256Hex,
   shortPathOf,
   toLogFiles,
 } from '@/features/logbook/api/log-files';
@@ -19,8 +18,7 @@ import { savedNameOf } from '@/features/logbook/shared/files';
 import { ArtifactKind } from '@/features/logbook/types';
 
 test('the hash is the full SHA-256; the PUT sends the signed headers but Content-Length', async () => {
-  const bytes = new TextEncoder().encode('rate plot v1');
-  const sha256 = await sha256Hex(bytes.buffer);
+  const { sha256 } = await planFile(new File(['rate plot v1'], 'rate.png'));
   expect(sha256).toBe('426bb8ddb82528580792e49da7c0ec9e987fbc46cc4de49a127df3fc87863d41');
   const signed = {
     'If-None-Match': '*',

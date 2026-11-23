@@ -1,5 +1,5 @@
 import { isNil } from 'es-toolkit';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 
 import { Icon } from '@/ui/molecules/icon';
 import { cn } from '@/utils/css-class';
@@ -12,6 +12,7 @@ const LABEL = 'flex flex-col gap-1.5 text-[13px] font-bold text-neutral-4';
 
 export function LogDetailsDialog(props: ILogDetailsDialogProps) {
   const dialog = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
   const [name, setName] = useState(props.name);
   const [description, setDescription] = useState(props.description);
   const [failed, setFailed] = useState<string | null>(null);
@@ -44,7 +45,7 @@ export function LogDetailsDialog(props: ILogDetailsDialogProps) {
     <dialog
       ref={dialog}
       className="scroll-thin m-auto max-h-[calc(100dvh-24px)] w-[min(480px,calc(100vw-32px))] overflow-y-auto rounded-[20px] border-0 bg-white p-0 text-primary-9 shadow-pop backdrop:bg-[rgba(4,21,48,0.35)]"
-      aria-labelledby="log-details-title"
+      aria-labelledby={titleId}
       onClose={props.onClose}
       onClick={(event) => event.target === event.currentTarget && props.onClose()}
     >
@@ -56,7 +57,7 @@ export function LogDetailsDialog(props: ILogDetailsDialogProps) {
         }}
       >
         <div className="flex items-center justify-between">
-          <h2 id="log-details-title" className="text-[18px] font-bold">
+          <h2 id={titleId} className="text-[18px] font-bold">
             Name and description
           </h2>
           <button type="button" className="modal-close" aria-label="Close" onClick={props.onClose}>

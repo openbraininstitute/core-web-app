@@ -1,11 +1,13 @@
 // Markdown to and from a page's Yjs doc, headless; same blocks the editor makes.
+
 import { getSchema } from '@tiptap/core';
 import { MarkdownManager } from '@tiptap/markdown';
 import { updateYFragment, yXmlFragmentToProsemirrorJSON } from '@tiptap/y-tiptap';
 import { isNil } from 'es-toolkit';
 import * as Y from 'yjs';
 
-import { BLOCK_TYPES, blockExtensions, FRAGMENT } from '@/features/logbook/blocks/extensions';
+import { BLOCK_TYPES, blockExtensions } from '@/features/logbook/blocks/extensions';
+import { FRAGMENT } from '@/features/logbook/constants';
 
 import type { JSONContent } from '@tiptap/core';
 

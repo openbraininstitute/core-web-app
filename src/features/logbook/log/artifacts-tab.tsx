@@ -1,8 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
 import { isNil } from 'es-toolkit';
 import { useDeferredValue, useMemo, useState } from 'react';
+import { match } from 'ts-pattern';
 
-import { artifactsOf, logFilesQuery, searchArtifacts } from '@/features/logbook/api/log-files';
+import { searchArtifacts, useArtifacts } from '@/features/logbook/api/log-files';
 import { SearchField } from '@/features/logbook/board/rail';
 import { RowsSkeleton } from '@/features/logbook/elements/skeletons';
 import { agoOf, savedOf, sizeOf } from '@/features/logbook/helpers';
@@ -68,10 +68,10 @@ export function ArtifactsTab({
   readonly onOpen: (id: string) => void;
 }) {
   const { project, logId } = useLogContext();
-  const listing = useQuery(logFilesQuery(logId, project));
+  const artifacts = useArtifacts(logId, project);
   const [search, setSearch] = useState('');
   const query = useDeferredValue(search);
-  const all = useMemo(() => (isNil(listing.data) ? [] : artifactsOf(listing.data)), [listing.data]);
+  const all = artifacts.data ?? [];
   const shown = useMemo(() => searchArtifacts(all, query), [all, query]);
 
   return (
@@ -89,34 +89,41 @@ export function ArtifactsTab({
         </span>
       </div>
       <div className="scroll-thin min-h-0 flex-1 overflow-y-auto px-5 pb-10">
-        {listing.isPending ? (
-          <RowsSkeleton count={5} />
-        ) : listing.isError ? (
-          <p className={NOTE}>The artifacts could not be listed: {listing.error.message}</p>
-        ) : all.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 px-4 py-12 text-center">
-            <span className="grid size-12 place-items-center rounded-2xl bg-soft text-neutral-4">
-              <Icon name="upload" size={22} />
-            </span>
-            <strong className="text-[15px]">No artifacts yet</strong>
-            <p className={cn(NOTE, 'max-w-[280px]')}>
-              Files uploaded with Insert, or saved by an agent, show up here.
-            </p>
-          </div>
-        ) : shown.length === 0 ? (
-          <p className={NOTE}>No artifact matches “{query.trim()}”.</p>
-        ) : (
-          <ul className="m-0 flex list-none flex-col gap-2 p-0">
-            {shown.map((artifact) => (
-              <ArtifactCard
-                key={artifact.id}
-                artifact={artifact}
-                active={artifact.id === active}
-                onOpen={() => onOpen(artifact.id)}
-              />
-            ))}
-          </ul>
-        )}
+        {match(artifacts)
+          .with({ status: 'pending' }, () => <RowsSkeleton count={5} />)
+          .with({ status: 'error' }, ({ error }) => (
+            <p className={NOTE}>The artifacts could not be listed: {error.message}</p>
+          ))
+          .when(
+            () => all.length === 0,
+            () => (
+              <div className="flex flex-col items-center gap-2 px-4 py-12 text-center">
+                <span className="grid size-12 place-items-center rounded-2xl bg-soft text-neutral-4">
+                  <Icon name="upload" size={22} />
+                </span>
+                <strong className="text-[15px]">No artifacts yet</strong>
+                <p className={cn(NOTE, 'max-w-[280px]')}>
+                  Files uploaded with Insert, or saved by an agent, show up here.
+                </p>
+              </div>
+            )
+          )
+          .when(
+            () => shown.length === 0,
+            () => <p className={NOTE}>No artifact matches “{query.trim()}”.</p>
+          )
+          .otherwise(() => (
+            <ul className="m-0 flex list-none flex-col gap-2 p-0">
+              {shown.map((artifact) => (
+                <ArtifactCard
+                  key={artifact.id}
+                  artifact={artifact}
+                  active={artifact.id === active}
+                  onOpen={() => onOpen(artifact.id)}
+                />
+              ))}
+            </ul>
+          ))}
       </div>
     </div>
   );
