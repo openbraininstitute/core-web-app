@@ -101,11 +101,11 @@ describe('amountField', () => {
     );
   });
 
-  it.each(['12', '12.5', '0.000001'])('takes %s', async (value) => {
+  it.each(['12', '12.5', '0.01'])('takes %s', async (value) => {
     await expect(check.validator(null, value)).resolves.toBeUndefined();
   });
 
-  it.each(['0', '0.00', '-1', '1e3', '1.0000001'])('refuses %s', async (value) => {
+  it.each(['0', '0.00', '-1', '1e3', '1.005'])('refuses %s', async (value) => {
     await expect(check.validator(null, value)).rejects.toThrow();
   });
 

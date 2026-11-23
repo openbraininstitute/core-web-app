@@ -1,5 +1,6 @@
 import {
   accountingReply,
+  auditAccountingWrite,
   forwardAccountingWrite,
   forwardToAccounting,
   isAdminPageWrite,
@@ -25,23 +26,37 @@ export async function GET(request: NextRequest, { params }: TContext) {
 }
 
 async function write(request: NextRequest, { params }: TContext) {
+  const method = request.method as TAccountingMethod;
+  const segments = (await params).path;
+  const refuse = (reply: Response, operator?: string) => {
+    auditAccountingWrite({
+      phase: 'refused',
+      operator,
+      method,
+      path: segments.join('/').slice(0, 200),
+      status: reply.status,
+    });
+    return reply;
+  };
+
   if (!isAdminPageWrite(request.headers)) {
-    return accountingReply(403, "This change didn't come from the admin pages.");
+    return refuse(accountingReply(403, "This change didn't come from the admin pages."));
   }
   const denial = await capabilityDenial('accounting.admin', { fresh: true });
-  if (denial) return denial;
+  if (denial) return refuse(denial);
+  const session = await auth();
+  const operator = session?.user.id;
+  if (!operator) return refuse(accountingReply(401, 'Sign in again'));
 
-  const method = request.method as TAccountingMethod;
-  const target = matchAccountingRoute((await params).path, request.nextUrl.searchParams, method);
-  if ('status' in target) return accountingReply(target.status, target.message);
-  if (!target.body) return accountingReply(405, 'Method not allowed');
+  const target = matchAccountingRoute(segments, request.nextUrl.searchParams, method);
+  if ('status' in target) return refuse(accountingReply(target.status, target.message), operator);
+  if (!target.body) return refuse(accountingReply(405, 'Method not allowed'), operator);
 
   const body = await readWriteBody(request, target.body);
-  if ('status' in body) return accountingReply(body.status, body.message);
+  if ('status' in body) return refuse(accountingReply(body.status, body.message), operator);
 
-  const session = await auth();
   return forwardAccountingWrite({
-    operator: { id: session?.user.id, username: session?.user.username },
+    operator: { id: operator, username: session.user.username },
     method,
     path: target.path,
     body: body.value,

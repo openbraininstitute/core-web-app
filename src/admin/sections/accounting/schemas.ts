@@ -7,7 +7,7 @@ const id = z.guid();
 /** Credits as a decimal string, so no float rounding ever touches money. */
 export const Amount = z
   .string()
-  .regex(/^\d{1,15}(\.\d{1,6})?$/, 'Use a number like 12.5, with at most 6 decimals')
+  .regex(/^\d{1,15}(\.\d{1,2})?$/, 'Use a number like 12.50, with at most 2 decimals')
   .refine((value) => /[1-9]/.test(value), 'Has to be more than 0');
 
 export const TopUpBody = z.strictObject({ vlab_id: id, amount: Amount });

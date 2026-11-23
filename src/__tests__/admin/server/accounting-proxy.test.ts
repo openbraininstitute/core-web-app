@@ -293,7 +293,7 @@ describe('readWriteBody', () => {
     ['a number amount', { vlab_id: ID, amount: 12.5 }],
     ['a zero amount', { vlab_id: ID, amount: '0.00' }],
     ['a negative amount', { vlab_id: ID, amount: '-1' }],
-    ['too many decimals', { vlab_id: ID, amount: '1.0000001' }],
+    ['too many decimals', { vlab_id: ID, amount: '1.005' }],
     ['an exponent', { vlab_id: ID, amount: '1e3' }],
     ['a bad id', { vlab_id: 'lab', amount: '1' }],
     ['a missing field', { amount: '1' }],
@@ -381,5 +381,87 @@ describe('forwardAccountingWrite', () => {
     const { signal } = fetchMock.mock.calls[0][1];
     expect(signal.aborted).toBe(false);
     vi.restoreAllMocks();
+  });
+
+  it.each([
+    [
+      'a gateway timeout page',
+      () => new Response('<html/>', { status: 504, headers: { 'content-type': 'text/html' } }),
+    ],
+    ['a JSON 502', () => json({ message: 'Bad gateway' }, 502)],
+    ['a JSON 500', () => json({ message: 'Internal error' }, 500)],
+  ])('says the outcome is unknown after %s on a write', async (_, upstream) => {
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    fetchMock.mockResolvedValue(upstream());
+
+    const reply = await forwardAccountingWrite({
+      operator,
+      method: 'POST',
+      path: 'budget/top-up',
+      body,
+    });
+
+    expect(reply.status).toBe(502);
+    expect((await reply.json()).message).toMatch(/may or may not have gone through/);
+    vi.restoreAllMocks();
+  });
+
+  it('still says not reachable when the gateway refuses a write outright', async () => {
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    fetchMock.mockResolvedValue(json({ message: 'Forbidden' }, 403));
+
+    const reply = await forwardAccountingWrite({
+      operator,
+      method: 'POST',
+      path: 'budget/top-up',
+      body,
+    });
+
+    expect((await reply.json()).message).toBe("Accounting isn't reachable from this environment.");
+    vi.restoreAllMocks();
+  });
+
+  it('logs what accounting says it moved', async () => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
+    fetchMock.mockResolvedValue(
+      json({
+        message: 'Refund issued',
+        data: { journal_id: 7, job_id: ID, vlab_id: ID, proj_id: ID, amount: '3.20' },
+      })
+    );
+
+    await forwardAccountingWrite({
+      operator,
+      method: 'POST',
+      path: 'admin/refund',
+      body: { job_id: ID, reason: 'Failed run' },
+    });
+
+    expect(JSON.parse(info.mock.calls[1][0]).moved).toEqual({ journal_id: 7, amount: '3.20' });
+    info.mockRestore();
+  });
+});
+
+describe('readWriteBody limits', () => {
+  it('refuses a streamed body over the cap without a content length', async () => {
+    const big = new TextEncoder().encode(JSON.stringify({ job_id: ID, reason: 'x'.repeat(5000) }));
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(big);
+        controller.close();
+      },
+    });
+    const request = new Request('http://localhost/x', {
+      method: 'POST',
+      body: stream,
+      duplex: 'half',
+    } as RequestInit);
+
+    await expect(readWriteBody(request, RefundBody)).resolves.toMatchObject({ status: 413 });
+  });
+
+  it('refuses a __proto__ key instead of dropping it', async () => {
+    const body = `{"vlab_id":"${ID}","amount":"1","__proto__":{"admin":true}}`;
+    await expect(readWriteBody(post(body), TopUpBody)).resolves.toMatchObject({ status: 400 });
   });
 });

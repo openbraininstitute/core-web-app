@@ -134,22 +134,44 @@ export function isAdminPageWrite(headers: Headers) {
   );
 }
 
+/** The body as text, or `null` once it passes `maxBytes`, without reading the rest. */
+async function readCapped(request: Request, maxBytes: number) {
+  if (!request.body) return '';
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > maxBytes) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+  return new TextDecoder().decode(Buffer.concat(chunks));
+}
+
 /** The body as the route's schema reads it, so only known fields ever reach accounting. */
 export async function readWriteBody(
   request: Request,
   schema: ZodType
 ): Promise<{ value: unknown } | { status: number; message: string }> {
-  if (Number(request.headers.get('content-length') ?? 0) > MAX_BODY_BYTES) {
-    return { status: 413, message: 'Request body too large' };
-  }
-  const text = await request.text();
-  if (text.length > MAX_BODY_BYTES) return { status: 413, message: 'Request body too large' };
+  const tooLarge = { status: 413, message: 'Request body too large' };
+  if (Number(request.headers.get('content-length') ?? 0) > MAX_BODY_BYTES) return tooLarge;
+  const text = await readCapped(request, MAX_BODY_BYTES);
+  if (text === null) return tooLarge;
 
   let json: unknown;
   try {
     json = JSON.parse(text);
   } catch {
     return { status: 400, message: 'Request body is not JSON' };
+  }
+  // zod drops an own `__proto__` key instead of refusing it as an unknown field.
+  if (typeof json === 'object' && json !== null && Object.hasOwn(json, '__proto__')) {
+    return { status: 400, message: 'body: Unrecognized key: "__proto__"' };
   }
   const parsed = schema.safeParse(json);
   if (parsed.success) return { value: parsed.data };
@@ -210,6 +232,11 @@ export async function forwardToAccounting(
     await upstream.body?.cancel();
     return accountingReply(502, "Accounting isn't reachable from this environment.");
   }
+  // A write can be applied before a gateway gives up on it, so a 5xx leaves the outcome open.
+  if (write && upstream.status >= 500) {
+    await upstream.body?.cancel();
+    return unanswered(write);
+  }
   if (!upstream.headers.get('content-type')?.includes('json')) {
     await upstream.body?.cancel();
     return accountingReply(502, `Accounting failed with status ${upstream.status}.`);
@@ -226,12 +253,29 @@ export async function forwardToAccounting(
   }
 }
 
-type TOperator = { id?: string; username?: string };
+type TOperator = { id: string; username?: string };
 
-function audit(entry: Record<string, unknown>) {
+/** One JSON line per write event, the trail of who moved which credits. */
+export function auditAccountingWrite(entry: Record<string, unknown>) {
   // biome-ignore lint/suspicious/noConsole: the audit trail has to reach production logs
   console.info(
     JSON.stringify({ tag: 'admin-accounting-audit', at: new Date().toISOString(), ...entry })
+  );
+}
+
+const MOVED_FIELDS = ['journal_id', 'amount', 'total_amount'];
+
+/** What accounting says it moved, for writes whose amount it decides itself. */
+async function movedBy(reply: Response) {
+  if (!reply.ok) return undefined;
+  const data = await reply
+    .clone()
+    .json()
+    .then((body) => body?.data)
+    .catch(() => undefined);
+  if (typeof data !== 'object' || data === null) return undefined;
+  return Object.fromEntries(
+    MOVED_FIELDS.filter((key) => key in data).map((key) => [key, data[key]])
   );
 }
 
@@ -248,11 +292,16 @@ export async function forwardAccountingWrite({
   body: unknown;
 }) {
   const entry = { operator: operator.id, username: operator.username, method, path, body };
-  audit({ ...entry, phase: 'sent' });
+  auditAccountingWrite({ ...entry, phase: 'sent' });
   const reply = await forwardToAccounting(path, new URLSearchParams(), undefined, {
     method,
     body: JSON.stringify(body),
   });
-  audit({ ...entry, phase: 'answered', status: reply.status });
+  auditAccountingWrite({
+    ...entry,
+    phase: 'answered',
+    status: reply.status,
+    moved: await movedBy(reply),
+  });
   return reply;
 }

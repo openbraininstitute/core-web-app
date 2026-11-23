@@ -3,10 +3,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GET, PATCH, POST } from '@/app/api/admin/accounting/[...path]/route';
 
-const { capabilityDenialMock } = vi.hoisted(() => ({ capabilityDenialMock: vi.fn() }));
+const { capabilityDenialMock, authMock } = vi.hoisted(() => ({
+  capabilityDenialMock: vi.fn(),
+  authMock: vi.fn(),
+}));
 
 vi.mock('@/admin/server/require-capability', () => ({ capabilityDenial: capabilityDenialMock }));
-vi.mock('@/auth', () => ({ auth: async () => ({ user: { id: 'sub-1', username: 'op' } }) }));
+vi.mock('@/auth', () => ({ auth: authMock }));
 vi.mock('@/config/server', () => ({
   serverConfig: { ACCOUNTING_URL: 'https://cell-a/accounting' },
 }));
@@ -16,6 +19,8 @@ const fetchMock = vi.fn();
 
 beforeEach(() => {
   capabilityDenialMock.mockReset();
+  authMock.mockReset();
+  authMock.mockResolvedValue({ user: { id: 'sub-1', username: 'op' } });
   fetchMock.mockReset();
   vi.stubGlobal('fetch', fetchMock);
   vi.spyOn(console, 'info').mockImplementation(() => {});
@@ -130,6 +135,33 @@ describe('accounting proxy writes', () => {
 
     expect(reply.status).toBe(405);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('refuses a write with no operator to put in the audit line', async () => {
+    capabilityDenialMock.mockResolvedValue(null);
+    authMock.mockResolvedValue({ user: {} });
+
+    const reply = await send('POST', 'budget/top-up', topUp);
+
+    expect(reply.status).toBe(401);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('logs a refused write', async () => {
+    capabilityDenialMock.mockResolvedValue(null);
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
+
+    await send('POST', 'budget/top-up', { ...topUp, amount: 10 });
+
+    const lines = info.mock.calls.map(([line]) => JSON.parse(line));
+    expect(lines).toEqual([
+      expect.objectContaining({
+        phase: 'refused',
+        operator: 'sub-1',
+        path: 'budget/top-up',
+        status: 400,
+      }),
+    ]);
   });
 
   it('forwards a valid write with its method', async () => {
