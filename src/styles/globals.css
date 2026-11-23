@@ -519,18 +519,14 @@
   }
 }
 
-/*
-  Logbook recipes put on <button>. They live here, unlayered, because the preflight button reset
-  is unlayered too and beats any layered rule: inside logbook.css's layer they lose their
-  background, colour, padding and weight.
-*/
+/* Unlayered on purpose: the preflight button reset is unlayered too. */
 @utility logbook-card {
   background-color: var(--color-white);
   border-radius: 24px;
   box-shadow: var(--shadow-card);
 }
 
-@utility icon-btn {
+@utility logbook-icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -549,7 +545,7 @@
   }
 }
 
-@utility btn-navy {
+@utility logbook-btn-navy {
   height: 40px;
   padding: 0 18px;
   border: 0;

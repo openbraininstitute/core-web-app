@@ -12,7 +12,6 @@ const MorphologyViewer = lazy(
   () => import('@/features/logbook/editor/blocks/viewer-3d/morphology')
 );
 
-// A synthesized morphology is a cell morphology in EntityCore: same record, same viewer.
 const VIEWERS: Readonly<Partial<Record<string, ComponentType<IViewer3dProps>>>> = {
   [EntityType.Circuit]: lazy(() => import('@/features/logbook/editor/blocks/viewer-3d/circuit')),
   [EntityType.Morphology]: MorphologyViewer,

@@ -23,7 +23,7 @@ const CARD =
 const TITLE = 'text-[14px] leading-5 font-semibold text-primary-9';
 const TEXT =
   'mt-0.5 line-clamp-4 text-[13px] leading-[18px] text-neutral-4 select-text [overflow-wrap:anywhere]';
-const ICON_BUTTON = 'icon-btn size-7 rounded-lg';
+const ICON_BUTTON = 'logbook-icon-btn size-7 rounded-lg';
 
 export function ToastStack({
   narrow,

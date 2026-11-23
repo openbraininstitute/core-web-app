@@ -29,7 +29,7 @@ function LogbookFailed({ error, resetErrorBoundary }: FallbackProps) {
         <p className="max-w-105 text-[15px] leading-normal text-neutral-4">
           {error instanceof Error ? error.message : 'Something went wrong.'}
         </p>
-        <button type="button" className="btn-navy" onClick={resetErrorBoundary}>
+        <button type="button" className="logbook-btn-navy" onClick={resetErrorBoundary}>
           Try again
         </button>
       </section>

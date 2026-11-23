@@ -1,10 +1,6 @@
 import type { ReactNode } from 'react';
 
-/**
- * The fixed-height box every 3D viewer draws in; the viewers need a definite height.
- * It hangs under the card's header line, so the viewer's own rounded top corners are squared
- * here, leaving the shared viewers rounded everywhere else.
- */
+/** The fixed-height box every 3D viewer draws in; the viewers need a definite height. */
 export function ViewerFrame({ children }: { readonly children: ReactNode }) {
   return (
     <div className="relative h-[440px] w-full border-t border-block-border [&>*]:rounded-t-none">

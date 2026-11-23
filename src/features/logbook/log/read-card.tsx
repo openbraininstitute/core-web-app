@@ -46,7 +46,7 @@ export function ReadCard(props: ILogShared) {
           <h1 className="m-0 min-w-0 truncate text-[24px] font-bold">{title}</h1>
           <button
             type="button"
-            className="icon-btn size-8 flex-none"
+            className="logbook-icon-btn size-8 flex-none"
             aria-label="Edit name and description"
             title="Edit name and description"
             disabled={isNil(log)}

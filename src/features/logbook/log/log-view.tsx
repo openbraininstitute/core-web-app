@@ -92,7 +92,7 @@ export function LogView(props: ILogViewProps) {
         <p className="max-w-[380px] text-[15px] leading-normal text-neutral-4">
           {pages.error.message}
         </p>
-        <button type="button" className="btn-navy" onClick={props.onBack}>
+        <button type="button" className="logbook-btn-navy" onClick={props.onBack}>
           All research logs
         </button>
       </section>
@@ -104,7 +104,7 @@ export function LogView(props: ILogViewProps) {
         <p className="max-w-[380px] text-[15px] leading-normal text-neutral-4">
           This log is empty. It opens here once someone writes in it.
         </p>
-        <button type="button" className="btn-navy" onClick={props.onBack}>
+        <button type="button" className="logbook-btn-navy" onClick={props.onBack}>
           All research logs
         </button>
       </section>
@@ -151,7 +151,7 @@ function PageView(props: IPageViewProps) {
       <section className={OPENING}>
         <h2 className="text-[22px] font-bold">This log cannot be opened</h2>
         <p className="max-w-[380px] text-[15px] leading-normal text-neutral-4">{authFailed}</p>
-        <button type="button" className="btn-navy" onClick={props.onBack}>
+        <button type="button" className="logbook-btn-navy" onClick={props.onBack}>
           All research logs
         </button>
       </section>

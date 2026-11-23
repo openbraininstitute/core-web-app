@@ -171,7 +171,7 @@ export function Home(props: IHomeProps) {
                 </p>
                 <button
                   type="button"
-                  className="btn-navy mt-2 inline-flex items-center gap-2 disabled:cursor-progress disabled:opacity-70"
+                  className="logbook-btn-navy mt-2 inline-flex items-center gap-2 disabled:cursor-progress disabled:opacity-70"
                   disabled={props.creating}
                   onClick={props.onNew}
                 >
