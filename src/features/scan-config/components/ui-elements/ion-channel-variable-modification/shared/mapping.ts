@@ -134,6 +134,11 @@ export function decodeSelectionValue(value: string): {
 /** A stored single value or scan list, or null when it is neither. */
 export function toSectionValue(value: unknown): number | (number | null)[] | null {
   if (typeof value === 'number') return value;
-  if (Array.isArray(value) && value.every((v) => typeof v === 'number' || v === null)) return value;
+  if (
+    Array.isArray(value) &&
+    value.length > 0 &&
+    value.every((v) => typeof v === 'number' || v === null)
+  )
+    return value;
   return null;
 }

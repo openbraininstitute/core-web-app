@@ -116,6 +116,43 @@ describe('GlobalModificationBase', () => {
       modification: { ...modification, new_value: [0.05, null] },
     });
   });
+
+  it('saves null when the full-neuron value is cleared', () => {
+    const setState = vi.fn();
+    const modification = {
+      type: 'GlobalModification',
+      ion_channel_id: 'ic-natg',
+      channel_name: 'NaTg',
+      variable_name: 'gbar',
+      variable_type: 'RANGE',
+      new_value: 0.05,
+    };
+    render(<GlobalModificationBase {...baseProps} setState={setState} state={{ modification }} />);
+
+    const field = screen.getByTestId('scan-config-sweep-value');
+    fireEvent.change(field.querySelector('input') ?? field, { target: { value: '' } });
+
+    expect(setState).toHaveBeenLastCalledWith({
+      modification: { ...modification, new_value: null },
+    });
+  });
+
+  it('treats an empty scan list as no value, so the field and + button stay', () => {
+    const state: Record<string, ConfigValue> = {
+      modification: {
+        type: 'GlobalModification',
+        ion_channel_id: 'ic-natg',
+        channel_name: 'NaTg',
+        variable_name: 'gbar',
+        variable_type: 'RANGE',
+        new_value: [],
+      },
+    };
+    render(<GlobalModificationBase {...baseProps} state={state} />);
+
+    expect(screen.getAllByTestId('scan-config-sweep-value')).toHaveLength(1);
+    expect(screen.getByTestId('scan-config-sweep-expand')).toBeInTheDocument();
+  });
 });
 
 describe('RangeModificationBase', () => {
