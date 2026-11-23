@@ -99,10 +99,6 @@ export default function Block({
 
               const value = state[k];
               const fieldBorderClass = getFieldDiffClass(k);
-              // A sweep expanded into several values offers a way back to one
-              // value. It renders on this title row rather than inside the
-              // element so it sits level with the label instead of floating
-              // above the values card.
               const isSweepField =
                 blockElementSchema.ui_element === ScanConfigUIElementDict.FloatParameterSweep ||
                 blockElementSchema.ui_element === ScanConfigUIElementDict.IntParameterSweep;
@@ -133,7 +129,7 @@ export default function Block({
                     )}
                     {isSweepField && (
                       <SweepCollapseButton
-                        value={value}
+                        value={value as null | number | (number | null)[]}
                         disabled={disabled}
                         onChange={(single) => setState({ ...state, [k]: single })}
                       />

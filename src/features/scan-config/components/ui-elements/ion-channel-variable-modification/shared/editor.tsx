@@ -71,7 +71,10 @@ function SectionConfigRow({
   useFieldError(fieldPath, limitsError(value, min, max));
 
   return (
-    <div data-scan-config-block-element-item={`${uiElement}_editor_item`}>
+    <div
+      data-scan-config-block-element-item={`${uiElement}_editor_item`}
+      data-testid={`scan-config-section-list-${entry.section_list}`}
+    >
       <div className="mb-1.5 flex items-center gap-2">
         <span className="flex items-center">
           <span
@@ -87,7 +90,12 @@ function SectionConfigRow({
         {!isNil(entry.value) && (
           <span className="text-sm text-gray-400">Default: {entry.value}</span>
         )}
-        <SweepCollapseButton value={value} disabled={disabled} onChange={onChange} />
+        <SweepCollapseButton
+          value={value}
+          name={entry.section_list}
+          disabled={disabled}
+          onChange={onChange}
+        />
       </div>
 
       <div data-scan-config-block-element-item={`${uiElement}_editor_item_input`}>

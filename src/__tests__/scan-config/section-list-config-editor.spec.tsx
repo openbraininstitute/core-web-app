@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -28,7 +28,7 @@ function renderEditor(values: Record<string, SectionValue>, disabled = false) {
   return { onChange };
 }
 
-const collapseButtons = () => screen.queryAllByRole('button', { name: 'Use a single value' });
+const collapseButtons = () => screen.queryAllByRole('button', { name: /^Use a single value/ });
 
 describe('SectionListConfigEditor single value control', () => {
   it('shows only on the section lists that hold a scan', () => {
@@ -38,8 +38,17 @@ describe('SectionListConfigEditor single value control', () => {
 
   it('saves the first value as a single number', () => {
     const { onChange } = renderEditor({ somatic: 0.1, axonal: [null, 0.4, 0.6] });
-    fireEvent.click(collapseButtons()[0] as HTMLElement);
+    fireEvent.click(screen.getByRole('button', { name: 'Use a single value for axonal' }));
     expect(onChange).toHaveBeenCalledWith('axonal', 0.4);
+  });
+
+  it('names each button after its section list, inside a row a test can address', () => {
+    renderEditor({ somatic: [0.3, 0.5], axonal: [0.1, 0.2] });
+    const axonal = screen.getByTestId('scan-config-section-list-axonal');
+    expect(
+      within(axonal).getByRole('button', { name: 'Use a single value for axonal' })
+    ).toBeTruthy();
+    expect(within(axonal).getAllByTestId('scan-config-sweep-collapse')).toHaveLength(1);
   });
 
   it('is hidden when the form is read-only', () => {

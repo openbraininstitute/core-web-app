@@ -112,17 +112,20 @@ export function SweepIconButton({
 /** "Use a single value" for a field's title row: shown while the sweep holds a list. */
 export function SweepCollapseButton({
   value,
+  name,
   disabled,
   onChange,
 }: {
-  value: unknown;
+  value: null | number | (number | null)[];
+  /** Tells apart several buttons in one form, e.g. one per section list. */
+  name?: string;
   disabled?: boolean;
   onChange: (value: number | null) => void;
 }) {
   if (disabled || !Array.isArray(value)) return null;
   return (
     <SweepIconButton
-      label="Use a single value"
+      label={name ? `Use a single value for ${name}` : 'Use a single value'}
       testId="scan-config-sweep-collapse"
       className="ml-auto"
       onClick={() => onChange(sweepSingleValue(value))}
@@ -289,8 +292,7 @@ export default function ParameterSweep({
       <div
         data-scan-config-block-element={`${ScanConfigUIElementDict.FloatParameterSweep}_multiple`}
       >
-        {/* No collapse control here: it renders on the field's title row (see
-            Block), which is the only way it can truly line up with the label. */}
+        {/* No collapse control here: callers put SweepCollapseButton on the title row. */}
         <div className="border-neutral-2 rounded-lg border bg-white p-3">
           <div ref={rowsRef} className="flex flex-col gap-1">
             {multipleValues.map((v, i) => {
