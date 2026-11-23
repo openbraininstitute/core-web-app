@@ -250,12 +250,14 @@ export async function listDirectoryOfAssets({
   entityId,
   id,
   retryOnError = false,
+  signal,
 }: {
   ctx?: WorkspaceContext;
   entityType: TEntityTypeDict;
   entityId: string;
   id: string;
   retryOnError?: boolean;
+  signal?: AbortSignal;
 }): Promise<DirectoryListContent> {
   const api = await entityCoreApi();
   return await api.get<DirectoryListContent>(
@@ -266,6 +268,7 @@ export async function listDirectoryOfAssets({
         accept: 'application/json',
         'content-type': 'application/json',
       },
+      signal,
     },
     { retryOnError }
   );

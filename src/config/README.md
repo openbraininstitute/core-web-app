@@ -153,6 +153,7 @@ const platformApiUrlFields = {
   AUTH_MANAGER_URL: "/auth-manager/v1",
   CELL_API_URL: "/circuit",
   ENTITY_CORE_URL: "/entitycore",
+  LOGBOOK_URL: "/logbook",
   NOTEBOOK_API_URL: "/notebook_service",
   OBI_ONE_URL: "/obi-one",
   SMALL_SCALE_SIMULATOR_URL: "/small-scale-simulator",
@@ -250,6 +251,8 @@ Properties with `public: true` are available in both contexts:
   - `AI_AGENT_URL`, `AUTH_MANAGER_URL`, `CELL_API_URL`
   - `ENTITY_CORE_URL`, `NOTEBOOK_API_URL`, `OBI_ONE_URL`
   - `SMALL_SCALE_SIMULATOR_URL`, `THUMBNAIL_API_URL`, `VIRTUAL_LAB_API_URL`
+  - `LOGBOOK_URL`
+- `LOGBOOK_COLLABORATION_HIDDEN_PAUSE_S` (default 300), `LOGBOOK_UPLOAD_MAX_MB` (default 100)
 - `STRIPE_PUBLISHABLE_KEY`
 - `MATOMO_CDN_URL`, `MATOMO_SITE_ID`, `MATOMO_URL` (optional)
 - `SANITY_DATASET`
