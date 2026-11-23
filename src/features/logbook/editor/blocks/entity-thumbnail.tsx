@@ -78,7 +78,8 @@ async function pictureOf(
 }
 
 // Most pictures are small: a tile beside the card's text, not a band across it.
-const PICTURE = 'h-24 w-32 flex-none overflow-hidden rounded-xl border border-rule-soft bg-white';
+const PICTURE =
+  'h-[72px] w-24 flex-none overflow-hidden rounded-xl border border-rule-soft bg-white @md/entity:h-24 @md/entity:w-32';
 
 /** The entity's picture, a small tile at the card's right; a click opens it full size. */
 export function EntityThumbnail({

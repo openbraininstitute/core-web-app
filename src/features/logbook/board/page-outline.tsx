@@ -92,6 +92,7 @@ export function PageOutline(props: IPageOutlineProps) {
                     aria-current={page.id === current?.id ? 'page' : undefined}
                     title={isSection ? page.title : 'The main page of the log'}
                     onClick={() => props.onOpen(page)}
+                    onDoubleClick={isSection ? () => setRenaming(page.id) : undefined}
                   >
                     <span className="flex flex-none text-neutral-4">
                       <Icon name={isSection ? 'page' : 'home'} size={14} />
