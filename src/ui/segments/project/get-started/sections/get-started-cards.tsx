@@ -9,8 +9,8 @@ import {
 } from '@/ui/segments/project/get-started/query';
 import { keyBuilder as keyBuilderExternal } from '@/ui/use-query-keys/third-parties';
 
+import { AiAssistantsBlock } from './ai-assistants-block';
 import { GetStartedCard, GetStartedCardSkeleton } from './get-started-card';
-import { ObiAssistantBlock } from './obi-assistant-block';
 
 function GetStartedCardsSkeleton() {
   return (
@@ -35,7 +35,6 @@ export function GetStartedCards() {
   if (isLoading) return <GetStartedCardsSkeleton />;
 
   const cards = data?.getStarted ?? [];
-  const assistantTopics = data?.obiAssistant ?? [];
 
   return (
     <div className="flex flex-col gap-4">
@@ -46,7 +45,7 @@ export function GetStartedCards() {
           ))}
         </section>
       )}
-      <ObiAssistantBlock topics={assistantTopics} />
+      <AiAssistantsBlock />
     </div>
   );
 }

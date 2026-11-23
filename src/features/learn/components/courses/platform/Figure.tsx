@@ -12,6 +12,8 @@
 
 import { Fragment, type ReactNode } from 'react';
 
+import { OBI_MCP_CLIENT_ID, OBI_MCP_SERVER_URL } from '@/constants/obi-mcp';
+
 import { CodeBlock } from '../ui/Code';
 
 export const PLATFORM_STEPS = [
@@ -817,8 +819,8 @@ function Mcp() {
         small
         label="terminal: adding the platform to Claude Code"
         code={
-          '$ claude mcp add --transport http --client-id obi-mcp --callback-port 8080 \\\n' +
-          '    obi https://cell-a.openbraininstitute.org/api/agent-ts/mcp'
+          `$ claude mcp add --transport http --client-id ${OBI_MCP_CLIENT_ID} --callback-port 8080 \\\n` +
+          `    obi ${OBI_MCP_SERVER_URL}`
         }
       />
       <div className="grid gap-3 sm:grid-cols-3">
