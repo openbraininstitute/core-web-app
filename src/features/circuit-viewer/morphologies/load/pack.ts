@@ -3,14 +3,17 @@
  * circuit and cut into chunks of space. The format is specified in Bluenaas's `app/core/morphology_pack/docs/`
  * (`format.md`; what this reader relies on is in `reader-contract.md`). The reader reads the index and the somas when
  * it opens the pack, and the chunks one box of space at a time. A level's box is read over its base level's box, and
- * the base boxes read last are kept a while for the finer levels.
+ * the base boxes read last are kept a while for the finer levels. The bytes are asked of a `PackSource` a block at a
+ * time, so the file need not be in memory.
  */
 // Importing `z` by name brings in the whole of zod, and this reader runs in a worker with a bundle of its own.
 import * as z from 'zod';
 
 import { Arriving } from './arriving';
+import { floatsOf, PACKED_WORDS, packFar } from './packed-ends';
 
-import type { CircuitMorphologyData, MorphologySegments, PackBoxes, Vec3 } from '../types';
+import type { BoxSegments, CircuitMorphologyData, PackBoxes, Packing, Vec3 } from '../types';
+import type { PackSource } from './pack-source';
 
 const MAGIC = 0x4b43504d;
 const VERSION = 1;
@@ -121,11 +124,10 @@ async function inflate(deflated: Uint8Array, maxBytes: number): Promise<Uint8Arr
 }
 
 /** The index, and where in the file the blocks start: the index's offsets count from there. */
-async function openIndex(file: Arriving): Promise<{ index: PackIndex; blocks: number }> {
-  const whole = await file.until(HEADER_BYTES);
-  const header = file.bytes(0, HEADER_BYTES);
-  const view = new DataView(header.buffer, header.byteOffset, header.byteLength);
-  if (!whole || view.getUint32(0, true) !== MAGIC) throw new PackError('not a morphology pack');
+async function openIndex(file: PackSource): Promise<{ index: PackIndex; blocks: number }> {
+  const header = await file.read(0, HEADER_BYTES);
+  const view = header && new DataView(header.buffer, header.byteOffset, header.byteLength);
+  if (view?.getUint32(0, true) !== MAGIC) throw new PackError('not a morphology pack');
   const version = view.getUint16(4, true);
   if (version !== VERSION) throw new PackError(`morphology pack version ${version}`);
   const end = HEADER_BYTES + view.getUint32(8, true);
@@ -166,9 +168,10 @@ function soundLevels({ levels }: PackIndex): boolean {
 }
 
 /** The block at `start` in the file, once its bytes are in. */
-async function blockAt(file: Arriving, start: number, bytes: number): Promise<Uint8Array> {
-  if (!(await file.until(start + bytes))) throw new PackError(CUT_SHORT);
-  return file.bytes(start, start + bytes);
+async function blockAt(file: PackSource, start: number, bytes: number): Promise<Uint8Array> {
+  const block = await file.read(start, start + bytes);
+  if (!block) throw new PackError(CUT_SHORT);
+  return block;
 }
 
 const sum = (numbers: number[]) => numbers.reduce((total, n) => total + n, 0);
@@ -494,8 +497,12 @@ class Kept {
 export interface Pack extends PackBoxes {
   /** The somas, the populations, the frame and the bounds, with no segments. The bounds hold the finest level and every placed soma. */
   data: CircuitMorphologyData;
-  /** Reads the segments of box `box` at level `level`, with their cells numbered as the pack numbers them. */
-  readBox(level: number, box: number): Promise<MorphologySegments>;
+  packing: Packing;
+  /**
+   * Reads the segments of box `box` at level `level`, with their cells numbered as the pack numbers them, their ends
+   * `packed` (`packed-ends.ts`) or as floats.
+   */
+  readBox(level: number, box: number, packed?: boolean): Promise<BoxSegments>;
   /**
    * For each level, how many bytes of the file must be in before each box can be read at it: up to the end of its chunk
    * and of its bases' chunks (0 where there are none).
@@ -507,8 +514,8 @@ export interface Pack extends PackBoxes {
  * Opens a pack: reads its index and somas now, or once their bytes are in if the pack is still coming in. Its chunks
  * are read a box at a time (`readBox`), each once its bytes and its bases' bytes are in.
  */
-export async function openPack(bytes: Uint8Array | Arriving): Promise<Pack> {
-  const file = bytes instanceof Arriving ? bytes : Arriving.whole(bytes);
+export async function openPack(bytes: Uint8Array | PackSource): Promise<Pack> {
+  const file = bytes instanceof Uint8Array ? Arriving.whole(bytes) : bytes;
   const { index, blocks } = await openIndex(file);
   if (!soundLevels(index)) throw new PackError(AT_ODDS);
   const cells = sum(index.populations.map((p) => p.cells));
@@ -626,26 +633,46 @@ export async function openPack(bytes: Uint8Array | Arriving): Promise<Pack> {
       ? radii[step + RADIUS_TABLE]
       : 2 ** (step / index.radiusSteps);
 
-  const readBox = async (level: number, b: number): Promise<MorphologySegments> => {
+  const [cx, cy, cz] = centre;
+  const { gridUm } = index;
+  /** The ends packed: the near end in micrometres, the far end and the radii still in the pack's whole steps. */
+  const packedOf = (ends: Int32Array): Pick<BoxSegments, 'segments' | 'clamped'> => {
+    const segments = new Uint32Array((PACKED_WORDS * ends.length) / 8);
+    const near = floatsOf(segments);
+    let clamped = 0;
+    for (let o = 0, p = 0; o < ends.length; o += 8, p += PACKED_WORDS) {
+      near[p] = ends[o] * gridUm - cx;
+      near[p + 1] = ends[o + 1] * gridUm - cy;
+      near[p + 2] = ends[o + 2] * gridUm - cz;
+      const dx = ends[o + 4] - ends[o];
+      const dy = ends[o + 5] - ends[o + 1];
+      const dz = ends[o + 6] - ends[o + 2];
+      if (packFar(segments, p, dx, dy, dz, ends[o + 3], ends[o + 7])) clamped++;
+    }
+    return clamped > 0 ? { segments, clamped } : { segments };
+  };
+
+  const readBox = async (level: number, b: number, packed = false): Promise<BoxSegments> => {
     if (!index.levels[level] || !(b >= 0 && b < count)) {
       throw new RangeError(`morphology pack without a box ${b} at level ${level}`);
     }
     const grid = await gridAt(level, b);
     const { ends } = grid;
-    // A box kept for the finer levels is copied, not handed over, because its cells are renumbered in place. Any other
-    // box's whole numbers become micrometres in the same buffer, each read before it is written over.
+    // A box kept for the finer levels is copied, not handed over, because its cells are renumbered in place.
     const kept = isBase[level];
+    const segmentCells = kept ? grid.cells.slice() : grid.cells;
+    const segmentTypes = kept ? grid.types.slice() : grid.types;
+    if (packed) return { ...packedOf(ends), segmentCells, segmentTypes };
+    // A box not kept has its whole numbers become micrometres in the same buffer, each read before it is written over.
     const segments = kept ? new Float32Array(ends.length) : new Float32Array(ends.buffer);
-    const [cx, cy, cz] = centre;
-    const { gridUm } = index;
     for (let o = 0; o < ends.length; o += 4) {
       segments[o] = ends[o] * gridUm - cx;
       segments[o + 1] = ends[o + 1] * gridUm - cy;
       segments[o + 2] = ends[o + 2] * gridUm - cz;
       segments[o + 3] = radius(ends[o + 3]);
     }
-    if (!kept) return { segments, segmentCells: grid.cells, segmentTypes: grid.types };
-    return { segments, segmentCells: grid.cells.slice(), segmentTypes: grid.types.slice() };
+    return { segments, segmentCells, segmentTypes };
   };
-  return { data, boxes, levels, readBox, readableAt };
+  const packing = { gridUm, radiusSteps: index.radiusSteps };
+  return { data, boxes, levels, packing, readBox, readableAt };
 }

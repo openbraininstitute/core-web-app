@@ -40,6 +40,8 @@ function created(tier: Tier, detail: DetailStats | null) {
       return () => {};
     },
     setDetailRules: vi.fn(),
+    wideOcclusion: { strength: 2, reach: 0.6 },
+    setWideOcclusion: vi.fn(),
   };
   return {
     view,
@@ -205,6 +207,29 @@ describe('the circuit Debug menu', () => {
     expect(culling).toBeChecked();
     fireEvent.click(culling);
     expect(view.setDetailRules).toHaveBeenCalledExactlyOnceWith({ culling: false });
+  });
+
+  it("on WebGPU, sets the strength and the reach of the occlusion's wide term", () => {
+    const view = debug('webgpu');
+    openMenu();
+    expect(
+      screen.getByRole('button', { name: 'The wide occlusion at strength 2' })
+    ).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(
+      screen.getByRole('button', { name: "The wide occlusion reaching 30% of the view's height" })
+    );
+    expect(view.setWideOcclusion).toHaveBeenLastCalledWith({ reach: 0.3 });
+    fireEvent.click(screen.getByRole('button', { name: 'No wide occlusion' }));
+    expect(view.setWideOcclusion).toHaveBeenLastCalledWith({ strength: 0 });
+    expect(
+      screen.getByRole('button', { name: "The wide occlusion reaching 30% of the view's height" })
+    ).toBeDisabled();
+  });
+
+  it('on WebGL 2, has no wide occlusion to set', () => {
+    debug('webgl');
+    openMenu();
+    expect(screen.queryByRole('button', { name: 'No wide occlusion' })).toBeNull();
   });
 
   it('on WebGL 2, has no culling to switch and nothing it counted', () => {

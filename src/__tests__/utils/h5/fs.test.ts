@@ -1,7 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { fetchToFS, writeToFS } from '@/utils/h5/fs';
+import { fetchToFS, STALL_MS, writeToFS } from '@/utils/h5/fs';
 
+import { type FakeCache, FakeCacheStorage } from '../fake-caches';
+
+import type { CacheBounds } from '@/utils/asset-cache';
 import type { DownloadProgress } from '@/utils/h5/fs';
 
 /** The module object `ready` resolves to, with its FS swapped in per test. */
@@ -14,7 +17,6 @@ const DOWNLOAD_URL = 'https://entitycore.test/electrical-cell-recording/abc/asse
 const HDF5_SIGNATURE = [0x89, 0x48, 0x44, 0x46, 0x0d, 0x0a, 0x1a, 0x0a];
 
 type FakeFile = { bytes: Uint8Array };
-type FakeEntry = { bytes: Uint8Array; headers: Record<string, string> };
 
 /** Bytes that pass the signature check, so these tests are about lengths and not content. */
 function hdf5Bytes(length: number): Uint8Array {
@@ -112,54 +114,56 @@ function createFakeFS() {
   return { FS, files };
 }
 
-/** A `CacheStorage` that buffers bodies, so `match` can hand back a readable one every time. */
-function createFakeCaches() {
-  const entries = new Map<string, FakeEntry>();
-
-  const cache = {
-    match: async (url: string) => {
-      const entry = entries.get(url);
-
-      return entry ? new Response(bodyOf(entry.bytes), { headers: entry.headers }) : undefined;
-    },
-    put: async (url: string, response: Response) => {
-      const bytes = new Uint8Array(await response.arrayBuffer());
-      // A disk write does not land in the same microtask as its caller. Without a real turn of
-      // the loop here, an unawaited put would still commit in time to hide the race below.
-      await new Promise((resolve) => setTimeout(resolve, 0));
-      entries.set(url, { bytes, headers: Object.fromEntries(response.headers.entries()) });
-    },
-    delete: async (url: string) => entries.delete(url),
-  };
-
-  return { caches: { open: async () => cache } as unknown as CacheStorage, entries };
-}
+const BOUNDS: CacheBounds = { name: 'test-bucket', ttlMs: 60_000, maxBytes: 1 << 20 };
 
 let FS: ReturnType<typeof createFakeFS>['FS'];
 let files: Map<string, FakeFile>;
-let entries: Map<string, FakeEntry>;
+let entries: FakeCache['entries'];
 
 function fetchAsset(onProgress?: (progress: DownloadProgress) => void, fileKey = 'cell') {
   return fetchToFS({
     url: DOWNLOAD_URL,
     headers: {},
     fileKey,
-    cacheName: 'test-bucket',
+    cache: BOUNDS,
     extension: '.nwb',
     onProgress,
   });
 }
 
-beforeEach(() => {
+/** An entry as the bucket stores it, declaring `declared` bytes. */
+function seed(bytes: Uint8Array, declared = bytes.length) {
+  entries.set(DOWNLOAD_URL, {
+    body: bytes,
+    headers: new Headers({
+      'content-length': String(declared),
+      'x-cache-timestamp': String(Date.now()),
+    }),
+  });
+}
+
+beforeEach(async () => {
   const fs = createFakeFS();
   h5.FS = fs.FS;
   FS = fs.FS;
   files = fs.files;
 
-  const cacheStorage = createFakeCaches();
-  entries = cacheStorage.entries;
-  vi.stubGlobal('caches', cacheStorage.caches);
+  const storage = new FakeCacheStorage();
+  const cache = await storage.open(BOUNDS.name);
+  entries = cache.entries;
+  const put = cache.put.bind(cache);
+  cache.put = async (key, response) => {
+    if (key !== DOWNLOAD_URL) return put(key, response);
+    const buffered = new Response(await response.arrayBuffer(), { headers: response.headers });
+    // A disk write does not land in the same microtask as its caller. Without a real turn of
+    // the loop here, an unawaited put would still commit in time to hide the race below.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    return put(key, buffered);
+  };
+  vi.stubGlobal('caches', storage);
 });
+
+afterEach(() => vi.restoreAllMocks());
 
 describe('fetchToFS', () => {
   it('publishes a complete download under the final name', async () => {
@@ -176,7 +180,7 @@ describe('fetchToFS', () => {
     expect(files.get('cell.nwb')?.bytes).toEqual(bytes);
     expect(files.has('cell.nwb.part')).toBe(false);
     expect(progress.at(-1)).toEqual({ received: 4096, total: 4096 });
-    expect(entries.get(DOWNLOAD_URL)?.bytes).toEqual(bytes);
+    expect(entries.get(DOWNLOAD_URL)?.body).toEqual(bytes);
   });
 
   it('rejects a body that ends short of its content-length, leaving nothing behind', async () => {
@@ -188,7 +192,7 @@ describe('fetchToFS', () => {
     await expect(fetchAsset()).rejects.toThrow('ended early: 1024 of 4096 bytes');
     expect(files.size).toBe(0);
     // Whatever the put committed is a partial of the same download, so it goes too.
-    expect(entries.size).toBe(0);
+    expect(entries.has(DOWNLOAD_URL)).toBe(false);
   });
 
   it('rejects bytes that are not an HDF5 file', async () => {
@@ -199,6 +203,41 @@ describe('fetchToFS', () => {
 
     await expect(fetchAsset()).rejects.toThrow('not an HDF5 file');
     expect(files.size).toBe(0);
+    // The cache took the whole body before the check failed, so it is deleted after its write.
+    expect(entries.has(DOWNLOAD_URL)).toBe(false);
+  });
+
+  it('stops the download when the FS write fails part-way, leaving nothing in the cache', async () => {
+    let signal: AbortSignal | undefined;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_url: string, init: RequestInit) => {
+        signal = init.signal ?? undefined;
+        // Two chunks of a longer file, then nothing until the request is aborted.
+        return new Response(
+          new ReadableStream({
+            start(controller) {
+              controller.enqueue(hdf5Bytes(1024));
+              controller.enqueue(hdf5Bytes(1024));
+              signal?.addEventListener('abort', () => controller.error(signal?.reason));
+            },
+          }),
+          { status: 200, headers: { 'content-length': '8192' } }
+        );
+      })
+    );
+    const write = FS.write;
+    let writes = 0;
+    FS.write = (...args) => {
+      writes += 1;
+      if (writes === 2) throw new Error('out of memory');
+      return write(...args);
+    };
+
+    await expect(fetchAsset()).rejects.toThrow('out of memory');
+    expect(signal?.aborted).toBe(true);
+    expect(files.size).toBe(0);
+    expect(entries.has(DOWNLOAD_URL)).toBe(false);
   });
 
   it('rejects a declared length over the cap before writing a byte', async () => {
@@ -221,10 +260,7 @@ describe('fetchToFS', () => {
     const bytes = hdf5Bytes(4096);
     // What an interrupted `cache.put` leaves behind: the full length in the header, part of the
     // body behind it. Trusting it is what handed HDF5 a file it rejected at the superblock.
-    entries.set(DOWNLOAD_URL, {
-      bytes: bytes.subarray(0, 1024),
-      headers: { 'content-length': '4096' },
-    });
+    seed(bytes.subarray(0, 1024), 4096);
     const fetchMock = vi.fn(async () => responseOf(bytes));
     vi.stubGlobal('fetch', fetchMock);
 
@@ -237,7 +273,7 @@ describe('fetchToFS', () => {
 
   it('serves a sound cache entry without touching the network', async () => {
     const bytes = hdf5Bytes(2048);
-    entries.set(DOWNLOAD_URL, { bytes, headers: { 'content-length': '2048' } });
+    seed(bytes);
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
     const progress: DownloadProgress[] = [];
@@ -248,6 +284,30 @@ describe('fetchToFS', () => {
     expect(files.get(filename)?.bytes).toEqual(bytes);
     // A cache hit reads fast enough that a progress bar would only flicker.
     expect(progress).toHaveLength(0);
+  });
+
+  it('serves an entry longer than it declared, as an encoded response stores it', async () => {
+    const bytes = hdf5Bytes(2048);
+    // `Content-Length` counts the encoded bytes, the body the decoded ones.
+    seed(bytes, 1024);
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { filename } = await fetchAsset();
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(files.get(filename)?.bytes).toEqual(bytes);
+  });
+
+  it('downloads afresh past an expired entry', async () => {
+    seed(hdf5Bytes(2048));
+    vi.spyOn(Date, 'now').mockReturnValue(Date.now() + BOUNDS.ttlMs);
+    const fetchMock = vi.fn(async () => responseOf(hdf5Bytes(2048)));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await fetchAsset();
+
+    expect(fetchMock).toHaveBeenCalledOnce();
   });
 
   it('does not cache a response that declares no length', async () => {
@@ -261,7 +321,7 @@ describe('fetchToFS', () => {
 
     expect(files.get(filename)?.bytes).toEqual(bytes);
     // Nothing a later read could check it against, so it is not worth keeping.
-    expect(entries.size).toBe(0);
+    expect(entries.has(DOWNLOAD_URL)).toBe(false);
   });
 
   // Two SONATA populations kept in one file are read one after the other, each in its own
@@ -287,6 +347,117 @@ describe('fetchToFS', () => {
     await fetchAsset();
 
     expect(fetchMock).toHaveBeenCalledOnce();
+  });
+});
+
+describe('fetchToFS, where a download stops arriving', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  /** Sends `bytes` of a longer file, then nothing, its body erroring on abort as a real one does. */
+  const stopsAfter = (bytes: Uint8Array, declared: number) =>
+    vi.fn(
+      async (_url: string, { signal }: RequestInit) =>
+        new Response(
+          new ReadableStream({
+            start(controller) {
+              controller.enqueue(bytes);
+              signal?.addEventListener('abort', () => controller.error(signal.reason));
+            },
+          }),
+          { status: 200, headers: { 'content-length': String(declared) } }
+        )
+    );
+
+  it('gives up mid-file, saying why and leaving nothing to be read back', async () => {
+    vi.stubGlobal('fetch', stopsAfter(hdf5Bytes(1024), 4096));
+
+    const failed = expect(fetchAsset()).rejects.toThrow('nothing arrived for 30 seconds');
+    await vi.advanceTimersByTimeAsync(STALL_MS);
+    await failed;
+
+    expect(files.size).toBe(0);
+    expect(entries.has(DOWNLOAD_URL)).toBe(false);
+  });
+
+  it('gives up on a server that never answers', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        (_url: string, { signal }: RequestInit) =>
+          new Promise((_, reject) => {
+            signal?.addEventListener('abort', () => reject(signal.reason));
+          })
+      )
+    );
+
+    const failed = expect(fetchAsset()).rejects.toThrow('nothing arrived for 30 seconds');
+    await vi.advanceTimersByTimeAsync(STALL_MS);
+    await failed;
+  });
+
+  it('waits the whole time before it does', async () => {
+    vi.stubGlobal('fetch', stopsAfter(hdf5Bytes(1024), 4096));
+    const settled = vi.fn();
+    const failed = fetchAsset().catch(settled);
+
+    await vi.advanceTimersByTimeAsync(STALL_MS - 1);
+    expect(settled).not.toHaveBeenCalled();
+
+    await vi.advanceTimersByTimeAsync(1);
+    await failed;
+    expect(settled).toHaveBeenCalledOnce();
+  });
+
+  it('leaves alone a slow download that keeps arriving, far longer than the limit in all', async () => {
+    const bytes = hdf5Bytes(4096);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(
+            new ReadableStream({
+              start(controller) {
+                // A chunk just inside the limit each time, for four times the limit in all.
+                const gap = STALL_MS - 1000;
+                [0, 1, 2, 3].forEach((part) => {
+                  setTimeout(
+                    () => {
+                      controller.enqueue(bytes.subarray(part * 1024, (part + 1) * 1024));
+                      if (part === 3) controller.close();
+                    },
+                    (part + 1) * gap
+                  );
+                });
+              },
+            }),
+            { status: 200, headers: { 'content-length': '4096' } }
+          )
+      )
+    );
+
+    const download = fetchAsset();
+    await vi.advanceTimersByTimeAsync(5 * STALL_MS);
+
+    await expect(download).resolves.toEqual({ filename: 'cell.nwb' });
+    expect(files.get('cell.nwb')?.bytes).toEqual(bytes);
+  });
+
+  it('stops watching once the file is in, so a slow cache write is not taken for a stall', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => responseOf(hdf5Bytes(1024)))
+    );
+
+    const download = fetchAsset();
+    await vi.advanceTimersByTimeAsync(1);
+
+    await expect(download).resolves.toEqual({ filename: 'cell.nwb' });
+    expect(vi.getTimerCount()).toBe(0);
   });
 });
 

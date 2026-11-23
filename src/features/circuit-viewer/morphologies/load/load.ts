@@ -62,10 +62,11 @@ export async function loadCircuitMorphologies(options: LoadOptions): Promise<Loa
   const freshHeaders = options.freshHeaders && Comlink.proxy(options.freshHeaders);
   const worker = keepWorker(options.worker ?? browserWorker, options.signal);
   try {
-    const { data, boxes, levels, readableAt, fromCache } = await worker.call<Opened>((api) =>
-      api.open(options.request, options.populations, onProgress, freshHeaders)
+    const { data, boxes, levels, packing, readableAt, fromCache } = await worker.call<Opened>(
+      (api) => api.open(options.request, options.populations, onProgress, freshHeaders)
     );
-    const read = (wanted: BoxRead[]) => worker.call((api) => api.read(wanted));
+    const read = (wanted: BoxRead[], packed?: boolean) =>
+      worker.call((api) => api.read(wanted, packed));
     const arrival: PackArrival | undefined = fromCache
       ? undefined
       : {
@@ -89,7 +90,7 @@ export async function loadCircuitMorphologies(options: LoadOptions): Promise<Loa
       }
     );
     return {
-      data: { ...data, chunks: { boxes, levels, read, arrival } },
+      data: { ...data, chunks: { boxes, levels, packing, read, arrival } },
       fromCache,
       whole,
     };

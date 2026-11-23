@@ -1,0 +1,68 @@
+@import "tailwindcss/theme.css" theme(reference);
+@import "tailwindcss/utilities.css" layer(logbook) source(none);
+@import "./editor/content.css";
+
+@source "./";
+
+@theme {
+  --shadow-drawer: 0 24px 60px -12px rgba(0, 39, 102, 0.4);
+  --shadow-green-btn: 0 4px 10px -4px rgba(0, 140, 5, 0.5);
+  --shadow-back-btn: 0 2px 8px -2px rgba(0, 39, 102, 0.18);
+  --shadow-who-wrote: 0 8px 18px -8px rgba(0, 39, 102, 0.6);
+  --shadow-toast: 0 10px 24px -8px rgba(0, 0, 0, 0.35);
+  --shadow-seg-on: rgba(0, 39, 102, 0.12) 0 1px 3px;
+
+  --animate-drain: drain linear forwards;
+  @keyframes drain {
+    to {
+      transform: scaleX(0);
+    }
+  }
+}
+
+@utility pop {
+  background-color: var(--color-white);
+  border-radius: 16px;
+  box-shadow: var(--shadow-pop);
+}
+@utility drawer {
+  visibility: hidden;
+  top: calc(var(--spacing) * 2);
+  bottom: calc(var(--spacing) * 2);
+  left: calc(var(--spacing) * 2);
+  translate: calc(-100% - 24px);
+  border-radius: 24px;
+  background-color: var(--color-white);
+  box-shadow: var(--shadow-drawer);
+  transition-property: translate, visibility;
+  transition-duration: 220ms;
+  transition-timing-function: ease;
+  &[data-open="true"] {
+    visibility: visible;
+    translate: 0;
+  }
+}
+
+:where(.logbook-root) a {
+  color: var(--color-primary-6);
+}
+:where(.logbook-root) a:where(:hover) {
+  color: var(--color-primary-7);
+}
+
+@layer base {
+  .logbook-root :focus-visible {
+    outline: 2px solid var(--color-primary-4);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logbook-root,
+  .logbook-root *,
+  .logbook-root *::before,
+  .logbook-root *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

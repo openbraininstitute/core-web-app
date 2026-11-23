@@ -55,7 +55,6 @@ export function Scrubber({ from, to, left, right, disabled, timeRef, moveRef, on
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (disabled || e.button !== 0) return;
-    e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);
     e.currentTarget.focus();
     onSeek(timeAt(e.clientX));
@@ -97,7 +96,7 @@ export function Scrubber({ from, to, left, right, disabled, timeRef, moveRef, on
       onPointerMove={onPointerMove}
       onKeyDown={onKeyDown}
       className={cn(
-        'group absolute top-1/2 h-6 -translate-y-1/2 touch-none outline-none',
+        'group absolute top-1/2 h-6 -translate-y-1/2 touch-none select-none outline-none',
         disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
       )}
       style={{ left, width: right - left }}

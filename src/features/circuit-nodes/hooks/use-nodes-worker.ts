@@ -13,11 +13,14 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import type { IDatasource } from 'ag-grid-community';
 import type {
   ColumnMeta,
+  CsvPartHandler,
+  CsvRequest,
   DerivedColumn,
   FilterModel,
   NodeGeometryOptions,
   NodePopulation,
   SortItem,
+  TOfferedProperties,
 } from '@/features/circuit-nodes/types';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -138,6 +141,22 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
     [key]
   );
 
+  const neuronSetFilter = useCallback(
+    async (cells: Uint32Array, offered: TOfferedProperties) => {
+      if (!key) throw new Error('Nodes worker not ready');
+      return nodesWorkerRegistry.neuronSetFilter(key, cells, offered);
+    },
+    [key]
+  );
+
+  const exportCsv = useCallback(
+    async (request: CsvRequest, onPart: CsvPartHandler) => {
+      if (!key) throw new Error('Nodes worker not ready');
+      return nodesWorkerRegistry.exportCsv(key, request, onPart);
+    },
+    [key]
+  );
+
   const getGeometry = useCallback(
     async (options?: NodeGeometryOptions) => {
       if (!key) throw new Error('Nodes worker not ready');
@@ -170,6 +189,14 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
     [key]
   );
 
+  const getRowOrder = useCallback(
+    async (sort: SortItem[], filter: FilterModel) => {
+      if (!key) throw new Error('Nodes worker not ready');
+      return nodesWorkerRegistry.getRowOrder(key, sort, filter);
+    },
+    [key]
+  );
+
   const retry = useCallback(() => {
     if (key) nodesWorkerRegistry.retry(key);
   }, [key]);
@@ -180,10 +207,13 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
     columns: state.columns,
     datasource,
     getColumn,
+    neuronSetFilter,
+    exportCsv,
     getGeometry,
     setDerivedColumns,
     getFilteredIndices,
     getRowIndex,
+    getRowOrder,
     status: state.status,
     isLoading: state.status === 'loading',
     progress: state.progress,

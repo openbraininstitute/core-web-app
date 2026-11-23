@@ -161,9 +161,12 @@ export function useScanConfiguration({
   // Select the circuit-simulation generation endpoint + schema from the circuit's
   // `target_simulator` (Brian2 / LearningEngine), falling back to the descriptor default.
   const simulatorOverride = useMemo(() => {
+    if (activity !== ScanConfigActivity.Simulate) {
+      return null;
+    }
     const targetSimulator = entity && 'target_simulator' in entity ? entity.target_simulator : null;
     return resolveSimulatorScanConfigOverride(targetSimulator);
-  }, [entity]);
+  }, [activity, entity]);
 
   const effectiveSchemaName = simulatorOverride?.schemaName ?? registryResolved.schemaName;
   const effectiveEndpoint = simulatorOverride

@@ -8,8 +8,9 @@ import {
   WorkflowListContextDict,
   WorkflowListSortDict,
 } from '@/ui/segments/workflows/config';
-import { CarouselButtons } from '@/ui/segments/workflows/elements/carousel-buttons';
+import { MenuHeading } from '@/ui/segments/workflows/elements/menu-heading';
 import { MenuItem } from '@/ui/segments/workflows/elements/menu-item';
+import { onSelfClick } from '@/ui/segments/workflows/elements/on-self-click';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TActivityValue } from '@/ui/segments/workflows/config';
@@ -23,12 +24,16 @@ export function TypesMenu({
   current,
   category,
   onItemClick,
+  onBlankClick,
 }: {
   current: TExtendedEntitiesTypeDict | null;
   category: TActivityValue | null;
   onItemClick: (v: TExtendedEntitiesTypeDict | null) => void;
+  /** A click on the menu itself, between and around its cards. */
+  onBlankClick?: () => void;
 }) {
   const featureFlags = useFlags();
+  const onBlank = onSelfClick(onBlankClick);
 
   if (!category) return null;
   const options = listWorkflows({
@@ -52,19 +57,16 @@ export function TypesMenu({
       }}
       className="relative py-2"
       plugins={[WheelGesturesPlugin()]}
+      onClick={onBlank}
     >
-      <div className="relative py-2">
-        <div className="flex items-center justify-between gap-4">
-          <h1 className="text-neutral-3 mb-1 text-lg font-light">Type</h1>
-          <CarouselButtons />
-        </div>
-      </div>
-      <CarouselContent className="items-stretch">
+      <MenuHeading title="Type" className="py-2" onBlankClick={onBlankClick} />
+      <CarouselContent className="items-stretch" onClick={onBlank}>
         {options.map(({ targetType, disabled, entity, label, legacy }) => {
           return (
             <CarouselItem
               key={`type-selector-${targetType ?? `${entity.group}-${label}`}`}
               className="w-max basis-1/2 py-2 md:basis-1/3! lg:basis-1/5! 2xl:basis-1/6!"
+              onClick={onBlank}
             >
               <MenuItem<TExtendedEntitiesTypeDict | null>
                 testId={typeTestId(targetType)}

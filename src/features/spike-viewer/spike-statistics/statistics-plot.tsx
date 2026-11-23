@@ -12,10 +12,19 @@ import { TooltipCard } from '@/features/spike-viewer/spike-statistics/plot-toolt
 import type { Config } from 'plotly.js-dist-min';
 import type { TimeCursor } from '@/features/sonata-viewer/time-cursor';
 import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
-import type { Figure, HoverPoint } from '@/features/spike-viewer/spike-statistics/figures';
+import type {
+  Figure,
+  HoverPoint,
+  PlotRanges,
+} from '@/features/spike-viewer/spike-statistics/figures';
 import type { PlacedTooltip } from '@/features/spike-viewer/spike-statistics/plot-tooltip';
 
 const Plot = createPlotlyComponent(Plotly);
+
+/** A plot's own record of where its axes are, once drawn. */
+type DrawnGraph = HTMLElement & {
+  _fullLayout?: { xaxis: { range: [number, number] }; yaxis: { range: [number, number] } };
+};
 
 const CONFIG: Partial<Config> = {
   displaylogo: false,
@@ -35,16 +44,25 @@ const CONFIG: Partial<Config> = {
 
 /**
  * One of the statistics' figures, filling its box; see `figures.ts` for what
- * each draws. `onPointClick` is told the `customdata` of a point clicked. A
- * figure over time can carry the config's timings and the player's time over it.
+ * each draws. `onPointClick` is told the point clicked, and
+ * `onPointHover` the point under the pointer, null once it leaves them, and
+ * `onRangesChange` where its axes are after a zoom, a pan or a reset. A figure
+ * over time can carry the config's timings and the player's time over it.
  */
 export default function StatisticsPlot({
   figure,
   onPointClick,
+  onPointDoubleClick,
+  onPointHover,
+  onRangesChange,
   timeline,
 }: {
   figure: Figure;
-  onPointClick?: (customdata: unknown) => void;
+  onPointClick?: (point: HoverPoint) => void;
+  /** A double click, which zooms out, comes after the click its first press made. */
+  onPointDoubleClick?: () => void;
+  onPointHover?: (point: HoverPoint | null) => void;
+  onRangesChange?: (ranges: PlotRanges) => void;
   timeline?: { events: readonly TimelineEvent[]; timeCursor?: TimeCursor };
 }) {
   const [tip, setTip] = useState<PlacedTooltip>();
@@ -57,11 +75,24 @@ export default function StatisticsPlot({
   const attachListeners = usePlotListeners({
     onRelayout: (event) => {
       if (setsAxisRange(event as Readonly<Record<string, unknown>>)) zoomed();
+      // From the plot, not the event: a reset can say only that the range is automatic.
+      const layout = (graph as DrawnGraph | null)?._fullLayout;
+      if (!layout) return;
+      const [x0, x1] = layout.xaxis.range;
+      const [y0, y1] = layout.yaxis.range;
+      onRangesChange?.({ x: [x0, x1], y: [y0, y1] });
     },
-    onDoubleClick: zoomedOut,
-    onClick: (event) => onPointClick?.(event.points[0]?.customdata),
+    onDoubleClick: () => {
+      zoomedOut();
+      onPointDoubleClick?.();
+    },
+    onClick: (event) => {
+      const point = event.points[0] as HoverPoint | undefined;
+      if (point) onPointClick?.(point);
+    },
     onHover: (event) => {
       const point = event.points[0] as HoverPoint | undefined;
+      onPointHover?.(point ?? null);
       const card = point && figure.tooltip?.(point);
       const box = boxRef.current?.getBoundingClientRect();
       const mouse = event.event as MouseEvent | undefined;
@@ -74,7 +105,10 @@ export default function StatisticsPlot({
       const flip = at.x - box.left > box.width * 0.6;
       setTip({ clientX: at.x, clientY: at.y, flip, card });
     },
-    onUnhover: () => setTip(undefined),
+    onUnhover: () => {
+      setTip(undefined);
+      onPointHover?.(null);
+    },
   });
   // react-plotly follows the window, not this box, which the grab bars around
   // the plot resize on their own.
@@ -98,6 +132,8 @@ export default function StatisticsPlot({
       onPointerMove={(e) => {
         pointerRef.current = { x: e.clientX, y: e.clientY };
       }}
+      // Plotly can miss the way out of a mark on a quick move off the plot.
+      onPointerLeave={onPointHover && (() => onPointHover(null))}
     >
       <Plot
         data={figure.data}

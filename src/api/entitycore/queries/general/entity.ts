@@ -1,9 +1,15 @@
+import { kebabCase } from 'es-toolkit/compat';
+
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
 
 import type { EntityCountResponse, IEntity } from '@/api/entitycore/types/entities/entity';
-import type { TEntityTypeWithBrainRegionDict } from '@/api/entitycore/types/entity-type';
+import type {
+  TEntityTypeDict,
+  TEntityTypeWithBrainRegionDict,
+} from '@/api/entitycore/types/entity-type';
 import type { BrainRegionHierarchyFilter } from '@/api/entitycore/types/shared/request';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/entity';
@@ -60,5 +66,72 @@ export async function getEntity({
       'content-type': 'application/json',
       ...getEntityCoreContext(context).headers,
     },
+  });
+}
+
+/** What every entity's route takes on `PATCH`; a type that takes more widens it. */
+export type EntityUpdate = { name?: string; description?: string };
+
+/**
+ * Updates an entity through its own route's `PATCH`, with only the fields given. The route is
+ * the type's name in kebab case, which holds for every type a workflow listing shows (task
+ * configs, simulation campaigns, the legacy single-neuron ones).
+ */
+export async function updateEntity<
+  T extends IEntity = IEntity,
+  U extends EntityUpdate = EntityUpdate,
+>({
+  type,
+  id,
+  data,
+  context,
+}: {
+  type: TEntityTypeDict;
+  id: string;
+  data: U;
+  context?: WorkspaceContext | null;
+}): Promise<T> {
+  const api = await entityCoreApi();
+  return await api.patch(`/${kebabCase(type)}/${id}`, {
+    body: data,
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...getEntityCoreContext(context).headers,
+    },
+  });
+}
+
+export async function getEntityByRoute<T>({
+  route,
+  id,
+  context,
+  signal,
+}: {
+  route: string;
+  id: string;
+  context?: WorkspaceContext | null;
+  signal?: AbortSignal;
+}): Promise<T> {
+  const api = await entityCoreApi();
+  return api.get<T>(`/${route}/${id}`, { headers: getEntityCoreContext(context).headers, signal });
+}
+
+export async function getEntitiesByRoute<T>({
+  route,
+  queryParams,
+  context,
+  signal,
+}: {
+  route: string;
+  queryParams: Record<string, string>;
+  context?: WorkspaceContext | null;
+  signal?: AbortSignal;
+}) {
+  const api = await entityCoreApi();
+  return api.get<EntityCoreResponse<T>>(`/${route}`, {
+    headers: getEntityCoreContext(context).headers,
+    queryParams,
+    signal,
   });
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import { DESCRIPTION_TOOLTIP_CLASS } from '@/features/scan-config/components/shared/box-class';
 import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
 import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import { UIElementRender } from '@/features/scan-config/components/ui-elements';
@@ -14,7 +15,6 @@ import {
 } from '@/features/scan-config/types';
 import { MarkdownDescription } from '@/ui/molecules/markdown-description';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
-import { cn } from '@/utils/css-class';
 
 import { isPlainObject } from '../utils';
 
@@ -97,14 +97,10 @@ export function ObjectField({
                   hideWhenDetached
                   align="center"
                   side="right"
-                  className={cn(
-                    'text-white shadow-bnb max-w-2xs min-w-2xs rounded-md',
-                    'bg-primary-8 px-4 py-2 text-base text-wrap',
-                    'overflow-y-auto max-h-50 primary-scrollbar'
-                  )}
-                  arrowClassName="bg-primary-8"
+                  showArrow={false}
+                  className={DESCRIPTION_TOOLTIP_CLASS}
                 >
-                  <MarkdownDescription dark>{fieldSchema.description}</MarkdownDescription>
+                  <MarkdownDescription>{fieldSchema.description}</MarkdownDescription>
                 </TooltipContent>
               </Tooltip>
             </div>

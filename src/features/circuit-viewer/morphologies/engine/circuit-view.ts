@@ -15,7 +15,7 @@ import {
 } from '@/features/viewer-3d/engine/motion-quality';
 import { spinAbout, stopGlide } from '@/features/viewer-3d/engine/rotation';
 import { FRONT, SceneView } from '@/features/viewer-3d/engine/scene-view';
-import { logError } from '@/utils/logger';
+import { logError, logWarn } from '@/utils/logger';
 
 import { extentOf, morphologiesExtent, packExtent } from '../extent';
 import {
@@ -69,6 +69,7 @@ import type {
   DetailStats,
   ElectrodeGroup,
   ElectrodeHit,
+  IWideOcclusion,
   LocationMarker,
   MarkerOnScreen,
   Population,
@@ -105,6 +106,12 @@ const NUDGE_MS = 900;
 const NUDGE_GROWTH = 0.06;
 /** How long a full morph into the dendrogram, or back, takes in ms, as in morphoviewer. */
 const MORPH_MS = 600;
+/** How many frames on end that drew part of what they saw are each followed by another. */
+const CLAMPED_FRAMES = 30;
+/** How long after such a frame the next one no longer counts as following it, ms. */
+const CLAMPED_APART_MS = 1000;
+/** The occlusion's wide term as a view starts with it. */
+const WIDE_OCCLUSION: IWideOcclusion = { strength: 1, reach: 0.6 };
 /**
  * Moving frames over the somas alone are cut down as in the EM mesh viewer, but a step down in resolution is kept only
  * where it saves a tenth: drawn front first, many somas cost more in corners than in pixels.
@@ -295,16 +302,17 @@ function somasBox(positions: Float32Array, keep?: (cell: number) => boolean): So
  * The materials a tier draws the circuit with, all reading the uniforms of `CircuitView`: the segments and the
  * morphologies' somas in the look; the cloud of somas; the same three in cell numbers for the pick; the segments and
  * somas in segment numbers for the pick of a section; and the dots. The segments are drawn once per material, over the
- * same quads, and each material draws its own share of them.
+ * same quads, and each material draws its own share of them; so are the morphologies' somas in the look and for the
+ * picks.
  */
 export interface CircuitMaterials {
   segment: THREE.Material[];
-  soma: THREE.Material;
+  soma: THREE.Material[];
   cloud: THREE.Material;
   /** The cloud drawn whole, translucent, each soma the cell of its instance. */
   wholeCloud: THREE.Material;
-  ids: { segment: THREE.Material[]; soma: THREE.Material; cloud: THREE.Material };
-  spots: { segment: THREE.Material[]; soma: THREE.Material };
+  ids: { segment: THREE.Material[]; soma: THREE.Material[]; cloud: THREE.Material };
+  spots: { segment: THREE.Material[]; soma: THREE.Material[] };
   /** The lit cells drawn over the frame, through what covers them, where the tier draws them (`throughs`). */
   through?: { segment: THREE.Material[]; soma: THREE.Material };
   electrode: THREE.Material;
@@ -349,6 +357,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     detailed: Detailed | null;
   } | null = null;
   private detailRules: DetailRules;
+  wideOcclusion = WIDE_OCCLUSION;
   private detailListeners = new Set<(detail: DetailStats | null) => void>();
   /** What the listeners were last told. */
   private toldDetail: DetailStats | null = null;
@@ -397,6 +406,9 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
    * down.
    */
   protected timing: FrameTiming | null = null;
+  /** The frames on end that drew part of what they saw, and when the last one was told of. */
+  private clampedFrames = 0;
+  private clampedAt = 0;
   /** Whether a moving frame keeps the occlusion, where the tier draws one. */
   protected get aoMoving(): boolean {
     return this.motionNow()?.rung.ao === true;
@@ -842,12 +854,13 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
         charts === spheres ? sphereAttribute : new THREE.InstancedBufferAttribute(charts, 4)
       )
       .setAttribute('aCell', new THREE.InstancedBufferAttribute(cells, 1));
-    const somaMesh = quads(somas, materials.soma);
+    const onSomas = (soma: THREE.Material[]) => soma.map((material) => quads(somas, material));
+    const somaMeshes = onSomas(materials.soma);
     // Beside `chunks`, which holds the segments.
-    this.surfaces.add(somaMesh);
+    this.surfaces.add(...somaMeshes);
 
     const segmentIds = onSegments(drawing?.ids ?? materials.ids.segment);
-    const ids = [...segmentIds, quads(somas, materials.ids.soma)];
+    const ids = [...segmentIds, ...onSomas(materials.ids.soma)];
     this.ids.add(...ids);
     let throughSegments: Quads[] = [];
     let through: Quads[] = [];
@@ -864,12 +877,18 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       for (const mesh of [...segmentMeshes, ...segmentIds, ...throughSegments]) mesh.visible = true;
     // Sections and offsets are known only of morphologies read whole.
     const spots = data.trees
-      ? [...onSegments(materials.spots.segment), quads(somas, materials.spots.soma)]
+      ? [...onSegments(materials.spots.segment), ...onSomas(materials.spots.soma)]
       : [];
     if (spots.length > 0) this.spots.add(...spots);
     this.spotUniforms.uSegments.value = data.segmentCells.length;
     const detailed = stream ? { stream, chosenFor: null, seenChanged: false } : null;
-    this.layer = { data, meshes: [...segmentMeshes, somaMesh, ...through], ids, spots, detailed };
+    this.layer = {
+      data,
+      meshes: [...segmentMeshes, ...somaMeshes, ...through],
+      ids,
+      spots,
+      detailed,
+    };
     // Start over: dropping the occlusion for other morphologies says nothing about these.
     this.morphologyMotion?.configure(this.morphologyMotionOptions);
     this.compileIds();
@@ -920,6 +939,11 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     return true;
   }
 
+  setWideOcclusion(wide: Partial<IWideOcclusion>): void {
+    this.wideOcclusion = { ...this.wideOcclusion, ...wide };
+    this.invalidate();
+  }
+
   onDetail(listener: (detail: DetailStats | null) => void): () => void {
     this.detailListeners.add(listener);
     listener(this.toldDetail);
@@ -954,7 +978,10 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     let boxes: number[] | null = null;
     let still = false;
     if (read) {
-      const { marked, rest, ...counted } = read;
+      const { marked, rest, clamped, ...counted } = read;
+      // Tested behind a depth that hid little, it marked nearly every box in view: as with a frame that saw through,
+      // its marks are not what is seen.
+      if (this.noteClamped(clamped)) return;
       boxes = stream.boxesMarked(marked);
       counts = { ...counted, boxes: boxes.length };
       still = rest === stream.rest;
@@ -965,6 +992,31 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     }
     this.culled = counts;
     if (this.toldDetail) this.tell({ ...this.toldDetail, culled: counts });
+  }
+
+  /**
+   * A frame that drew part of what it saw is followed by another, which tests against all of it. While cells are
+   * hidden that takes a few frames, so they follow one another, up to `CLAMPED_FRAMES` of them. The read of a frame
+   * after those is taken as it is: no test hides more, and the boxes it marked are the nearest to what is seen. Returns
+   * whether the read is left out.
+   */
+  private noteClamped(clamped: boolean): boolean {
+    if (!clamped) {
+      this.clampedFrames = 0;
+      return false;
+    }
+    const now = performance.now();
+    const follows = now - this.clampedAt < CLAMPED_APART_MS;
+    this.clampedFrames = follows ? this.clampedFrames + 1 : 1;
+    this.clampedAt = now;
+    if (this.clampedFrames <= CLAMPED_FRAMES) {
+      this.invalidate();
+      return true;
+    }
+    if (this.clampedFrames === CLAMPED_FRAMES + 1) {
+      logWarn('More segments seen than a frame may draw: drawn in part');
+    }
+    return false;
   }
 
   /**
@@ -1302,7 +1354,10 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       const { min, max, points } = this.frameOn;
       const centre = new THREE.Vector3(...this.centre);
       this.frameBox(
-        new THREE.Box3(new THREE.Vector3(...min).sub(centre), new THREE.Vector3(...max).sub(centre)),
+        new THREE.Box3(
+          new THREE.Vector3(...min).sub(centre),
+          new THREE.Vector3(...max).sub(centre)
+        ),
         points?.map((v, i) => v - this.centre[i % 3])
       );
       return;
@@ -1361,6 +1416,11 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       new THREE.Vector3(...bounds.min).add(shift),
       new THREE.Vector3(...bounds.max).add(shift)
     );
+  }
+
+  /** Whether the last paint of the cell table may have hidden cells. */
+  protected get hidesCells(): boolean {
+    return this.table?.hides ?? false;
   }
 
   setCellColors(colors: CellColors | null): void {

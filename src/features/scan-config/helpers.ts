@@ -51,6 +51,7 @@ export const VALID_AI_CONFIG_KEYS = [
   'me_model_synaptic_model_placement_config',
   'create_extracellular_recording_array_config',
   'synapse_parameterization_config',
+  'ion_channel_fitting_config',
 ] as const;
 
 export type TAIConfigKey = (typeof VALID_AI_CONFIG_KEYS)[number];
@@ -83,6 +84,7 @@ const BUILD_CONFIG_KEY_BY_SCHEMA: Partial<Record<SchemaName, TAIConfigKey>> = {
   [SchemaNameDict.ExtracellularRecordingArrayScanConfig]:
     'create_extracellular_recording_array_config',
   [SchemaNameDict.SynapseParameterizationScanConfig]: 'synapse_parameterization_config',
+  [SchemaNameDict.IonChannelFittingScanConfig]: 'ion_channel_fitting_config',
 };
 
 export function getConfigKeyForEntity(
@@ -133,6 +135,9 @@ export const ScanConfigModeSearchParam = 'mode' as const;
 
 /** query param holding the editor's active tab (`?tab=simulations`). */
 export const ScanConfigTabSearchParam = 'tab' as const;
+
+/** query param naming the result a results tab opens on (`?item={simulationId}`). */
+export const ScanConfigItemSearchParam = 'item' as const;
 
 /** each activity's results tab — the one tab that is not `configuration`. */
 export const ScanConfigResultsTab = {

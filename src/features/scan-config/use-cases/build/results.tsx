@@ -145,7 +145,7 @@ export function BuildTab({
         }
         middle={
           !!resolvedActiveConfig && (
-            <div className="h-full bg-white! w-full">
+            <div className="h-full w-full">
               <InOutFiles
                 config={resolvedActiveConfig}
                 execStatus={activeConfigExecStatus}

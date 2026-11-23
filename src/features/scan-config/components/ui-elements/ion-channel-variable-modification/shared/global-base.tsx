@@ -14,6 +14,7 @@ import {
   type MechanismVariablesRoot,
   MechanismVariableTypeDict,
   type SectionListEntry,
+  toSectionValue,
 } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
 import { ModificationShell } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/modification-shell';
 import {
@@ -91,14 +92,10 @@ export function GlobalModificationBase({
     return group?.variables.find((v) => v.neuron_variable === variableName) ?? null;
   }, [currentValue, channelGroups]);
 
-  const newValue: number | null = useMemo(() => {
-    if (!isValidModification) return null;
-    const v = currentModification.new_value;
-    if (typeof v === 'number') return v;
-    // TODO: re-enable array support when multi-value sweep when supported in obi-one
-    // if (Array.isArray(v) && v.every((x) => typeof x === 'number')) return v as number[];
-    return null;
-  }, [isValidModification, currentModification]);
+  const newValue: SectionValue = useMemo(
+    () => (isValidModification ? toSectionValue(currentModification.new_value) : null),
+    [isValidModification, currentModification]
+  );
 
   const sectionLabel = useMemo(
     () =>
@@ -121,7 +118,6 @@ export function GlobalModificationBase({
 
   const editorValues: Record<string, SectionValue> = useMemo(() => {
     if (!isValidModification || !sectionLabel) return {};
-    if (newValue === null) return {};
     return { [sectionLabel]: newValue };
   }, [isValidModification, newValue, sectionLabel]);
 

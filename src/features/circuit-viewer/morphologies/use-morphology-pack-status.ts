@@ -9,7 +9,6 @@ import {
   type MorphologyPackStatus,
   requestMorphologyPack,
 } from '@/api/small-scale-simulator/circuit/morphology-pack';
-import { circuitMorphologiesFlag, useFlag } from '@/features/feature-flags';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 const POLL_MS = 10_000;
@@ -17,8 +16,8 @@ const FAILED: MorphologyPackStatus = { state: MorphologyPackState.Failed };
 
 /**
  * The circuit's morphology pack as Bluenaas has it, its build queued the first time it is asked for: `undefined` until
- * Bluenaas answers, `null` where it is not asked (no circuit, a single cell, the `circuit-morphologies` flag off, no
- * project). With `poll`, asked again every 10 s while it builds.
+ * Bluenaas answers, `null` where it is not asked (no circuit, a single cell, no project). With `poll`, asked again
+ * every 10 s while it builds.
  *
  * Gone once nothing reads it, so the next visit asks again: a pair or small circuit switches to its pack then, never
  * during the visit it was built in.
@@ -27,10 +26,8 @@ export function useMorphologyPackStatus(
   circuit: Pick<ICircuit, 'id' | 'scale'> | undefined,
   { poll = false }: { poll?: boolean } = {}
 ): MorphologyPackStatus | null | undefined {
-  const flag = !!useFlag(circuitMorphologiesFlag.key);
   const ctx = useWorkspace();
   const asked =
-    flag &&
     circuit !== undefined &&
     circuit.scale !== CircuitScaleDictionary.Single &&
     !!ctx.virtualLabId &&

@@ -47,8 +47,10 @@ type Props = {
   className?: string;
   /** max rows before the list scrolls; raise it when the field stands alone in its column */
   visibleItemCount?: number;
-  /** replaces the default "Add <entity> to scan" label of the add button (flat lists only) */
+  /** replaces the default label of the add button (flat lists only) */
   addLabel?: string;
+  /** false when the entities of a flat list are not scanned over (see `ModelIdentifierSummaryView`) */
+  isScan?: boolean;
   /** optional cap on the number of entities the user may select (flat fields only) */
   maxSelections?: number;
   /** value stamped on the container's `data-scan-config-block-element` (the mapped ui_element) */
@@ -79,6 +81,7 @@ function ModelIdentifierField({
   className,
   visibleItemCount,
   addLabel,
+  isScan,
   maxSelections,
   blockElement,
 }: Props) {
@@ -366,6 +369,7 @@ function ModelIdentifierField({
         onRemoveGroup={handleRemoveGroup}
         visibleItemCount={visibleItemCount}
         addLabel={addLabel}
+        isScan={isScan}
       />
     </div>
   );

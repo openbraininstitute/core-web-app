@@ -145,6 +145,8 @@ export interface IFormBindingOptions {
    * anywhere in the form may start a block, cell clicks having little else to do there.
    */
   singleMorphology?: boolean;
+  /** What the form's property neuron sets can show, by population, with each property's values. */
+  neuronSetProperties?: Readonly<Record<string, Readonly<Record<string, readonly string[]>>>>;
 }
 
 /** Whether the form has a block of stored locations open. */

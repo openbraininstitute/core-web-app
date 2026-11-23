@@ -6,7 +6,9 @@ import {
   mortonSorted,
 } from '@/features/circuit-viewer/morphologies/load/morton';
 
-import type { MorphologySegments } from '@/features/circuit-viewer/morphologies/types';
+import { PACKING, packedOf, unpackedOf } from './packed';
+
+import type { BoxSegments, MorphologySegments } from '@/features/circuit-viewer/morphologies/types';
 
 /** A segment a point, from it to a micrometre along x, each of a cell and a type of its own. */
 const segmentsFrom = (points: number[][]): MorphologySegments => ({
@@ -15,7 +17,7 @@ const segmentsFrom = (points: number[][]): MorphologySegments => ({
   segmentTypes: Uint8Array.from(points, (_, i) => i + 1),
 });
 
-const startsOf = ({ segments, segmentCells }: MorphologySegments) =>
+const startsOf = ({ segments, segmentCells }: BoxSegments) =>
   Array.from(segmentCells, (_, i) => Array.from(segments.subarray(8 * i, 8 * i + 3)));
 
 describe('mortonOrder', () => {
@@ -30,7 +32,7 @@ describe('mortonOrder', () => {
       [0, 10, 0],
       [10, 10, 10],
     ];
-    const out = mortonOrder(segmentsFrom(corners));
+    const out = mortonOrder(segmentsFrom(corners), PACKING);
     const starts = startsOf(out);
     expect(starts).toEqual([
       [0, 0, 0],
@@ -57,13 +59,31 @@ describe('mortonOrder', () => {
       [5, 5, 5.001],
       [5, 5, 5.002],
     ];
-    const out = mortonOrder(segmentsFrom(together));
+    const out = mortonOrder(segmentsFrom(together), PACKING);
     expect(Array.from(out.segmentCells)).toEqual([11, 10, 12, 13]);
   });
 
   it('leaves a single segment as it is', () => {
     const one = segmentsFrom([[1, 2, 3]]);
-    expect(mortonOrder(one)).toBe(one);
+    expect(mortonOrder(one, PACKING)).toBe(one);
+  });
+
+  it('orders packed ends as it orders the same ends as floats', () => {
+    const floats = segmentsFrom([
+      [0, 10, 10],
+      [10, 0, 0],
+      [10, 10, 0],
+      [0, 0, 10],
+      [0, 0, 0],
+      [5, 5, 5],
+    ]);
+    const ordered = mortonOrder(floats, PACKING);
+    const packed = mortonOrder({ ...floats, segments: packedOf(floats.segments) }, PACKING);
+
+    expect(packed.segments).toBeInstanceOf(Uint32Array);
+    expect([...unpackedOf(packed.segments as Uint32Array)]).toEqual([...ordered.segments]);
+    expect(packed.segmentCells).toEqual(ordered.segmentCells);
+    expect(packed.segmentTypes).toEqual(ordered.segmentTypes);
   });
 });
 

@@ -1,11 +1,13 @@
 import * as Comlink from 'comlink';
 
-import { CIRCUIT_H5_CACHE } from '@/features/circuit-nodes/types';
 import { NodesSession } from '@/features/circuit-nodes/worker/nodes-h5';
+import { CIRCUIT_H5_CACHE } from '@/utils/h5/caches';
 import { fetchToFS, unlinkFromFS } from '@/utils/h5/fs';
 
 import type {
   ColumnValues,
+  CsvPartHandler,
+  CsvRequest,
   DerivedColumn,
   DownloadProgress,
   FilterModel,
@@ -16,6 +18,8 @@ import type {
   OpenRequest,
   OpenResponse,
   SortItem,
+  TOfferedProperties,
+  TPropertyFilter,
 } from '@/features/circuit-nodes/types';
 
 let session: NodesSession | null = null;
@@ -34,7 +38,7 @@ const api = {
       url: opts.url,
       headers: opts.headers,
       fileKey: opts.fileKey,
-      cacheName: CIRCUIT_H5_CACHE,
+      cache: CIRCUIT_H5_CACHE,
       onProgress,
     });
     session = new NodesSession(filename, opts.populationKey);
@@ -44,6 +48,17 @@ const api = {
   async getRows(req: GetRowsRequest): Promise<GetRowsResponse> {
     if (!session) throw new Error('NodesSession not initialized; call open() first');
     return session.getRows(req);
+  },
+
+  /** Hands `onPart` the session's CSV a part at a time, each transferred, until it is whole or told to stop. */
+  async exportCsv(request: CsvRequest, onPart: CsvPartHandler): Promise<void> {
+    const exported = session;
+    if (!exported) throw new Error('NodesSession not initialized; call open() first');
+    for (const { part, done, total } of exported.csvParts(request)) {
+      const more = await onPart(Comlink.transfer(part, [part.buffer]), done, total);
+      if (!more) return;
+      if (session !== exported) throw new Error('The nodes were closed before their CSV was whole');
+    }
   },
 
   async getColumn(name: string): Promise<ColumnValues> {
@@ -62,6 +77,14 @@ const api = {
     return column;
   },
 
+  async neuronSetFilter(
+    cells: Uint32Array,
+    offered: TOfferedProperties
+  ): Promise<TPropertyFilter | null> {
+    if (!session) throw new Error('NodesSession not initialized; call open() first');
+    return session.neuronSetFilter(cells, offered);
+  },
+
   async setDerivedColumns(owner: string, columns: DerivedColumn[]): Promise<void> {
     if (!session) throw new Error('NodesSession not initialized; call open() first');
     session.setDerivedColumns(owner, columns);
@@ -76,6 +99,12 @@ const api = {
   async getRowIndex(nodeId: number, sort: SortItem[], filter: FilterModel): Promise<number> {
     if (!session) throw new Error('NodesSession not initialized; call open() first');
     return session.getRowIndex(nodeId, sort, filter);
+  },
+
+  async getRowOrder(sort: SortItem[], filter: FilterModel): Promise<Uint32Array | null> {
+    if (!session) throw new Error('NodesSession not initialized; call open() first');
+    const order = session.getRowOrder(sort, filter);
+    return order ? Comlink.transfer(order, [order.buffer as ArrayBuffer]) : null;
   },
 
   async getGeometry(options?: NodeGeometryOptions): Promise<NodeGeometry> {

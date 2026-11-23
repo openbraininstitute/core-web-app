@@ -4,6 +4,7 @@ import { createContext, useContext, useMemo } from 'react';
 
 import type { ReactNode } from 'react';
 import type { TSupportedEntitiesForScanConfiguration } from '@/features/scan-config/types';
+import type { SimulationCompartmentSets } from '@/features/sonata-viewer/compartment-sets';
 import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
 import type { SimulationRun } from '@/features/spike-viewer/time-window';
 
@@ -21,6 +22,8 @@ type SimulationContextValue = {
   model: TSupportedEntitiesForScanConfiguration | null;
   run: SimulationRun | null;
   neuronSets: SimulationNeuronSets | null;
+  /** The locations its compartment reports record, by set, each beside the block it came from. */
+  compartmentSets: SimulationCompartmentSets | null;
   /** Picks which of the campaign's simulations is on show, for a viewer's header. */
   simulationPicker: ReactNode;
   /** When the simulation's stimuli, recordings and synaptic changes happen, from its config. */
@@ -47,6 +50,7 @@ const SimulationContext = createContext<SimulationContextValue>({
   model: null,
   run: null,
   neuronSets: null,
+  compartmentSets: null,
   simulationPicker: null,
   timeline: NO_TIMELINE,
 });
@@ -55,6 +59,7 @@ export function SimulationProvider({
   model,
   run,
   neuronSets,
+  compartmentSets,
   simulationPicker = null,
   timeline = NO_TIMELINE,
   children,
@@ -62,6 +67,7 @@ export function SimulationProvider({
   model: TSupportedEntitiesForScanConfiguration | null | undefined;
   run: SimulationRun | null | undefined;
   neuronSets?: SimulationNeuronSets | null;
+  compartmentSets?: SimulationCompartmentSets | null;
   simulationPicker?: ReactNode;
   timeline?: readonly TimelineEvent[];
   children: ReactNode;
@@ -71,10 +77,11 @@ export function SimulationProvider({
       model: model ?? null,
       run: run ?? null,
       neuronSets: neuronSets ?? null,
+      compartmentSets: compartmentSets ?? null,
       simulationPicker,
       timeline,
     }),
-    [model, run, neuronSets, simulationPicker, timeline]
+    [model, run, neuronSets, compartmentSets, simulationPicker, timeline]
   );
 
   return <SimulationContext.Provider value={value}>{children}</SimulationContext.Provider>;

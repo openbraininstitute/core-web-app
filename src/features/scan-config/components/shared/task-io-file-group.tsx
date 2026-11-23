@@ -1,5 +1,4 @@
-import { RiArrowDownSLine } from '@remixicon/react';
-
+import { Chevron, CountBadge } from '@/features/scan-config/components/components';
 import { classNames } from '@/util/utils';
 
 import type { ReactNode } from 'react';
@@ -49,18 +48,15 @@ export function TaskIOFileGroup({ title, count, selected, expanded, onToggle, ch
         >
           {title}
         </span>
+        {/* the count and chevron of the configuration's block dictionaries */}
         <span
           className={classNames(
-            'flex shrink-0 items-center gap-1 rounded-full border px-3 py-1 text-xs uppercase',
-            holdsSelection
-              ? 'border-white bg-white text-primary-9'
-              : 'border-[oklch(0.968_0.007_247.896)] bg-[oklch(0.929_0.013_255.508)] text-neutral-5'
+            'flex shrink-0 items-center gap-3',
+            holdsSelection ? 'text-white' : 'text-primary-9'
           )}
         >
-          {count}
-          <RiArrowDownSLine
-            className={classNames('size-4 transition-transform', expanded && 'rotate-180')}
-          />
+          <CountBadge count={count} selected={holdsSelection} />
+          <Chevron rotate={expanded ? 90 : 0} />
         </span>
       </button>
       {expanded && (

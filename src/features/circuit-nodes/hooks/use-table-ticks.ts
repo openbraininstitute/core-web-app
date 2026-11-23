@@ -18,6 +18,13 @@ export type ScopedFilter = { scope: string; model: FilterModel };
 type Stored<T> = [T | undefined, Dispatch<SetStateAction<T | undefined>>];
 
 const NO_FLIPS: ReadonlySet<number> = new Set();
+
+function sameRows(a: Uint32Array | null, b: Uint32Array | null): boolean {
+  if (a === b) return true;
+  if (!a || !b || a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
+}
 const EMPTY_FILTER: FilterModel = {};
 
 /**
@@ -69,7 +76,18 @@ export function useTableTicks({
     let cancelled = false;
     getFilteredIndices(filterModel).then(
       (indices) => {
-        if (!cancelled) setRows({ scope, filter: filterModel, indices, error: null });
+        if (cancelled) return;
+        // The same rows again, for a filter handed back unchanged, keep their array: a new
+        // one would cut the raster's spikes and the scene's cells anew for nothing.
+        setRows((previous) => ({
+          scope,
+          filter: filterModel,
+          indices:
+            previous?.scope === scope && sameRows(previous.indices, indices)
+              ? previous.indices
+              : indices,
+          error: null,
+        }));
       },
       (error: unknown) => {
         if (cancelled) return;

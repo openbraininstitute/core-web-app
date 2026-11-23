@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 
-import ObiLogo from '@/features/learn/components/ui/ObiLogo';
+import ObiLogo from '@/components/logo/obi-logo';
 import { ID_MENU } from '@/ui/segments/landing/constants';
 import { cn } from '@/utils/css-class';
 

@@ -16,8 +16,14 @@ import {
   isDetailRow,
 } from '@/features/data-grid/renderers/aggrid/detail-rows';
 import { isExpanderClick } from '@/features/data-grid/renderers/aggrid/expand-cell';
+import {
+  fittedWidthsOf,
+  measureContentWidths,
+  planColumnWidths,
+} from '@/features/data-grid/renderers/aggrid/fit-columns';
 import { isInteractiveClick } from '@/features/data-grid/renderers/aggrid/interactive-target';
 import { registerDataGridModules } from '@/features/data-grid/renderers/aggrid/register-modules';
+import { useRowHoverCard } from '@/features/data-grid/renderers/aggrid/row-hover-card';
 import { mergePageSelection } from '@/features/data-grid/renderers/aggrid/selection';
 import {
   DATA_GRID_LOCALE_TEXT,
@@ -50,6 +56,10 @@ registerDataGridModules();
 const SYNTHETIC_COL_IDS = new Set([EXPAND_COL_ID, 'ag-Grid-SelectionColumn']);
 
 const DEFAULT_ROW_HEIGHT = 44;
+/** The narrowest a fitted, capped column shrinks to when the columns overrun the grid. */
+const MIN_SHRUNK_WIDTH = 160;
+/** How long fitted cells must hold their width before their columns are refitted. */
+const REFIT_SETTLE_MS = 100;
 
 /**
  * Vertically centre every cell's content; AG Grid otherwise top-aligns text in tall rows.
@@ -79,6 +89,7 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
     isRowSelectable,
     expandColumn,
     loadingLabel,
+    rowHoverCard,
   } = props;
 
   const headerCheckboxOverride = props.headerCheckbox;
@@ -88,7 +99,10 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
   useEffect(() => setMounted(true), []);
 
   const apiRef = useRef<GridApi<TDisplayRow<Row>> | null>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const getRowId = controller.schema.getRowId;
+  const lastFittedWidths = fittedWidthsOf(controller.context.section);
+  const hoverCard = useRowHoverCard(rowHoverCard);
 
   // Reconciled, not sorted-by-index: a column the stored order never mentions keeps its
   // DECLARED slot rather than being appended last. Non-movable columns are dropped from
@@ -109,15 +123,102 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
       buildColDefs(orderedColumns, {
         hidden,
         columnWidths: state.columnWidths,
+        fittedStartWidths: lastFittedWidths,
         withExpandColumn: Boolean(detail),
         expandColumn,
       }),
-    [orderedColumns, hidden, state.columnWidths, detail, expandColumn]
+    [orderedColumns, hidden, state.columnWidths, lastFittedWidths, detail, expandColumn]
+  );
+
+  // Columns sized to their content: shown, and not resized by the user, whose width wins.
+  const fitted = useMemo(
+    () =>
+      orderedColumns
+        .filter((c) => c.width?.fitContent && !hidden.has(c.id) && state.columnWidths[c.id] == null)
+        .map((c) => ({ id: c.id, maxWidth: c.width?.maxWidth, minWidth: c.width?.minWidth })),
+    [orderedColumns, hidden, state.columnWidths]
+  );
+  // One fit is one change: the widths are measured and planned first and applied together,
+  // so the columns to the right of a capped or shrunk one move once, not twice.
+  const fitFrame = useRef(0);
+  useEffect(() => () => cancelAnimationFrame(fitFrame.current), []);
+  const fitColumns = useCallback(() => {
+    const api = apiRef.current;
+    if (!api || api.isDestroyed() || fitted.length === 0) return;
+    // a page still loading has nothing to fit to, so the last page's widths stay
+    if (api.getDisplayedRowCount() === 0) return;
+    // a frame on, so the cells the rows just brought are committed and measured; one fit a
+    // frame, however often it is asked for, as by a resize's every step
+    cancelAnimationFrame(fitFrame.current);
+    fitFrame.current = requestAnimationFrame(() => {
+      const root = rootRef.current;
+      if (api.isDestroyed() || !root) return;
+      const natural = measureContentWidths(
+        root,
+        fitted.map(({ id }) => id)
+      );
+      const fittedIds = new Set(fitted.map(({ id }) => id));
+      const fixedWidth = api
+        .getAllDisplayedColumns()
+        .filter((column) => !column.isPinned() && !fittedIds.has(column.getColId()))
+        // a flexible column gives way down to its minimum before a fitted one has to shrink
+        .reduce(
+          (sum, column) =>
+            sum + (column.getFlex() ? column.getMinWidth() : column.getActualWidth()),
+          0
+        );
+      const { left, right } = api.getHorizontalPixelRange();
+      const planned = planColumnWidths({
+        columns: fitted.flatMap(({ id, maxWidth, minWidth }) => {
+          const width = natural.get(id);
+          return width === undefined ? [] : [{ id, natural: width, maxWidth, minWidth }];
+        }),
+        fixedWidth,
+        available: right - left,
+        floor: MIN_SHRUNK_WIDTH,
+      });
+      for (const [id, width] of planned) lastFittedWidths.set(id, width);
+      const changed = [...planned]
+        .filter(([id, width]) => Math.abs(width - (api.getColumn(id)?.getActualWidth() ?? 0)) >= 1)
+        .map(([colId, width]) => ({ colId, width }));
+      // not `setColumnWidths`, which re-flexes only the columns right of the last one it
+      // resized: a flexible column left of a fitted one would keep its width and leave a gap
+      if (changed.length === 0) return;
+      // a column state is applied with the animation of a moved column, which a fit is not
+      const suppressed = api.getGridOption('suppressColumnMoveAnimation');
+      api.setGridOption('suppressColumnMoveAnimation', true);
+      api.applyColumnState({ state: changed });
+      api.setGridOption('suppressColumnMoveAnimation', suppressed ?? false);
+    });
+  }, [fitted, lastFittedWidths]);
+  useEffect(() => fitColumns(), [fitColumns]);
+
+  // Fitted cells whose content changes width after the fit refit their columns, once the
+  // changes settle. The observer reads the latest fit through a ref, so it is made once.
+  const fitColumnsRef = useRef(fitColumns);
+  useEffect(() => {
+    fitColumnsRef.current = fitColumns;
+  }, [fitColumns]);
+  const cellObserver = useMemo(() => {
+    if (typeof ResizeObserver === 'undefined') return undefined;
+    let settle: ReturnType<typeof setTimeout> | undefined;
+    return new ResizeObserver(() => {
+      clearTimeout(settle);
+      settle = setTimeout(() => fitColumnsRef.current(), REFIT_SETTLE_MS);
+    });
+  }, []);
+  useEffect(() => () => cellObserver?.disconnect(), [cellObserver]);
+  const watchFittedCell = useCallback(
+    (content: Element) => {
+      cellObserver?.observe(content);
+      return () => cellObserver?.unobserve(content);
+    },
+    [cellObserver]
   );
 
   const context = useMemo<IAgGridContext<Row>>(
-    () => ({ controller, operators, facets, cellRenderers, detail }),
-    [controller, operators, facets, cellRenderers, detail]
+    () => ({ controller, operators, facets, cellRenderers, detail, watchFittedCell }),
+    [controller, operators, facets, cellRenderers, detail, watchFittedCell]
   );
 
   // AG Grid does not re-render header components when `context` changes, so headers would
@@ -372,6 +473,7 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
   return (
     // our cells are flex, so text-align alone won't centre/right-align them
     <div
+      ref={rootRef}
       className={`ag-data-grid h-full min-h-0 w-full [&_.ag-overlay-loading-center]:border-0! [&_.ag-overlay-loading-center]:bg-transparent! [&_.ag-overlay-loading-center]:shadow-none! [&_.ag-cell.ag-center-aligned-cell]:justify-center! [&_.ag-cell.ag-right-aligned-cell]:justify-end! ${
         effectiveSelectionMode === 'single' ? SINGLE_SELECT_RADIO_CLASS : ''
       }`}
@@ -405,14 +507,23 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
           apiRef.current = e.api;
           applySelection();
         }}
-        onRowDataUpdated={applySelection}
+        onFirstDataRendered={fitColumns}
+        onGridSizeChanged={fitColumns}
+        onRowDataUpdated={() => {
+          applySelection();
+          fitColumns();
+        }}
         onColumnMoved={onColumnMoved}
         onColumnResized={onColumnResized}
         onCellClicked={onCellClicked}
+        onCellMouseOver={hoverCard.onCellMouseOver}
+        onCellMouseOut={hoverCard.onCellMouseOut}
+        onBodyScroll={hoverCard.onBodyScroll}
         getRowStyle={getRowStyle}
         getRowClass={getRowClass ? rowClass : undefined}
         processRowPostCreate={getRowTestId || selectionEnabled ? processRowPostCreate : undefined}
       />
+      {hoverCard.card}
     </div>
   );
 }

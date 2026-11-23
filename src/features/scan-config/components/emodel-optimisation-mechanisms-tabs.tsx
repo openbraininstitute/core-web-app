@@ -1,4 +1,4 @@
-import { CheckCircleFilled, WarningFilled } from '@ant-design/icons';
+import { WarningFilled } from '@ant-design/icons';
 import { match } from 'ts-pattern';
 
 import { CountBadge, LeftMenuTab } from '@/features/scan-config/components/components';
@@ -114,11 +114,7 @@ export function EModelOptimisationMechanismsTabList({
                 selected={isSelected}
                 testId={`scan-config-emodel-mechanisms-tab-count-${key}`}
               />
-              {tabHasErrors(key, emodelErrors) ? (
-                <WarningFilled className="text-yellow-400!" />
-              ) : (
-                <CheckCircleFilled className="text-green-600!" />
-              )}
+              {tabHasErrors(key, emodelErrors) && <WarningFilled className="text-yellow-400!" />}
             </div>
           </LeftMenuTab>
         );

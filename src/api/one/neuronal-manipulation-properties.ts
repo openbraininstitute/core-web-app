@@ -37,6 +37,11 @@ export type TFetchNeuronalManipulationPropertiesParams = {
    */
   neuronSet?: unknown;
   /**
+   * Named neuron sets that `neuronSet` references (a combined set), sent as `neuron_sets`.
+   * Omitted from the POST body when empty or when `includeNeuronSet` is false.
+   */
+  neuronSets?: Record<string, unknown>;
+  /**
    * When `true`, include `neuron_set` in the POST body (Circuit endpoint).
    * Leave unset/false for MEModel requests.
    */
@@ -49,7 +54,8 @@ export type TFetchNeuronalManipulationPropertiesParams = {
  *
  * Posts to `/declared{endpoint}`:
  * - MEModel: `{ entity_id }`
- * - Circuit: `{ entity_id, neuron_set }` when `includeNeuronSet` is true
+ * - Circuit: `{ entity_id, neuron_set }` when `includeNeuronSet` is true, plus `neuron_sets`
+ *   when the neuron set references other sets
  *
  * @param params - Request context, endpoint, entity id, and optional neuron set.
  * @returns Mechanism variables keyed by ion channel (`MechanismVariablesByIonChannel`).
@@ -59,16 +65,20 @@ export async function fetchNeuronalManipulationProperties({
   endpoint,
   entityId,
   neuronSet,
+  neuronSets,
   includeNeuronSet = false,
   signal,
 }: TFetchNeuronalManipulationPropertiesParams): Promise<TNeuronalManipulationPropertiesResponse> {
   const api = await obioneApi();
 
-  const body: { entity_id: string; neuron_set?: unknown } = {
+  const body: { entity_id: string; neuron_set?: unknown; neuron_sets?: Record<string, unknown> } = {
     entity_id: entityId,
   };
   if (includeNeuronSet) {
     body.neuron_set = neuronSet ?? null;
+    if (neuronSets && Object.keys(neuronSets).length > 0) {
+      body.neuron_sets = neuronSets;
+    }
   }
 
   return api.post<TNeuronalManipulationPropertiesResponse>(`/declared${endpoint}`, {

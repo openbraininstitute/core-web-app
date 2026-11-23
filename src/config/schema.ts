@@ -21,6 +21,8 @@ const configFields = {
   AUTH_PROXY_URL: { schema: z.url().optional(), public: true },
 
   GRADING_WEB_LAUNCH_HMAC_SECRET: { schema: z.string().optional(), public: false },
+  ACCOUNTING_URL: { schema: z.url().optional(), public: false },
+  GRADING_SERVICE_URL: { schema: z.url().optional(), public: false },
 
   MAILCHIMP_API_KEY: {
     schema: z.string().nonempty().optional(),
@@ -53,6 +55,12 @@ const configFields = {
   THUMBNAIL_API_URL: { schema: z.url().optional(), public: true },
   VIRTUAL_LAB_API_URL: { schema: z.url().optional(), public: true },
   LAUNCH_SYSTEM_URL: { schema: z.url().optional(), public: true },
+  LOGBOOK_URL: { schema: z.url().optional(), public: true },
+  LOGBOOK_COLLABORATION_HIDDEN_PAUSE_S: {
+    schema: z.coerce.number().int().min(0).default(300),
+    public: true,
+  },
+  LOGBOOK_UPLOAD_MAX_MB: { schema: z.coerce.number().int().min(1).default(100), public: true },
   ROOT_ROUTE: { schema: z.string(), public: true },
 
   SENTRY_DSN: {
@@ -130,7 +138,10 @@ const platformApiUrlFields = {
   THUMBNAIL_API_URL: '/thumbnail-generation',
   VIRTUAL_LAB_API_URL: '/virtual-lab-manager',
   LAUNCH_SYSTEM_URL: '/launch-system',
+  LOGBOOK_URL: '/logbook',
 } as const satisfies Partial<Record<keyof typeof configFields, string>>;
+
+export type PlatformApiUrlField = keyof typeof platformApiUrlFields;
 
 const baseServerSchema = z
   .object(
@@ -164,12 +175,12 @@ const applyApiUrlTransforms = <T extends z.ZodObject<any>>(schema: T) =>
     })
     .transform((data) => ({
       ...data,
-      ...Object.fromEntries(
+      ...(Object.fromEntries(
         Object.entries(platformApiUrlFields).map(([field, path]) => [
           field,
-          data[field] ?? `${data.API_ORIGIN}${DEFAULT_API_BASE_PATH}${path}`,
+          data[field] || `${data.API_ORIGIN}${DEFAULT_API_BASE_PATH}${path}`,
         ])
-      ),
+      ) as Record<PlatformApiUrlField, string>),
     }));
 
 export const serverSchema = applyApiUrlTransforms(baseServerSchema);

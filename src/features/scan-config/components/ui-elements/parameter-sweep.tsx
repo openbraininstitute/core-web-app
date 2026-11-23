@@ -1,14 +1,24 @@
-import { RiAddLine, RiDeleteBinLine, RiEyeFill, RiEyeLine } from '@remixicon/react';
+import { RiAddLine, RiCloseLine, RiDeleteBinLine, RiEyeFill, RiEyeLine } from '@remixicon/react';
 import { InputNumber } from 'antd';
 import { isNil } from 'es-toolkit/compat';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { createContext, Fragment, type ReactNode, useContext, useMemo } from 'react';
+import {
+  createContext,
+  Fragment,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import {
   resolveScanIndex,
   scanValueSelectionAtom,
   selectScanValueAtom,
 } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
+import { ScanHint, ScanHintTooltip } from '@/features/scan-config/components/shared/scan-hint';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 import { cn } from '@/utils/css-class';
 
@@ -35,12 +45,7 @@ export function ScanValueSelectorProvider({
   );
 }
 
-/**
- * The scalar a sweep collapses to — its first usable value.
- *
- * Exported because the "back to a single value" control lives on the field's
- * title row, which `Block` owns, not inside this component.
- */
+/** The scalar a sweep collapses to — its first usable value. */
 export function sweepSingleValue(value: null | number | (number | null)[]): number | null {
   if (Array.isArray(value)) return value.find((entry) => !isNil(entry)) ?? null;
   return isNil(value) ? null : value;
@@ -55,6 +60,7 @@ export function sweepSingleValue(value: null | number | (number | null)[]): numb
  */
 export function SweepIconButton({
   label,
+  hint,
   testId,
   onClick,
   pressed,
@@ -63,6 +69,8 @@ export function SweepIconButton({
   children,
 }: {
   label: string;
+  /** Shown under the label in a hover tooltip, in place of the browser's own. */
+  hint?: ReactNode;
   /** E2E handle. The label is product copy; this is what a test addresses. */
   testId?: string;
   onClick: () => void;
@@ -72,14 +80,14 @@ export function SweepIconButton({
   className?: string;
   children: ReactNode;
 }) {
-  return (
+  const button = (
     <button
       type="button"
       data-testid={testId}
       aria-label={label}
       aria-pressed={pressed}
       disabled={disabled}
-      title={label}
+      title={hint ? undefined : label}
       className={cn(
         'inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full',
         'text-primary-8 bg-white ring-1 ring-neutral-200 transition-colors',
@@ -92,6 +100,67 @@ export function SweepIconButton({
       {children}
     </button>
   );
+
+  if (!hint) return button;
+  return (
+    <ScanHintTooltip title={label} hint={hint}>
+      {button}
+    </ScanHintTooltip>
+  );
+}
+
+/** "Use a single value" for a field's title row: shown while the sweep holds a list. */
+export function SweepCollapseButton({
+  value,
+  name,
+  disabled,
+  onChange,
+}: {
+  value: null | number | (number | null)[];
+  /** Tells apart several buttons in one form, e.g. one per section list. */
+  name?: string;
+  disabled?: boolean;
+  onChange: (value: number | null) => void;
+}) {
+  if (disabled || !Array.isArray(value)) return null;
+  return (
+    <SweepIconButton
+      label={name ? `Use a single value for ${name}` : 'Use a single value'}
+      testId="scan-config-sweep-collapse"
+      className="ml-auto"
+      onClick={() => onChange(sweepSingleValue(value))}
+    >
+      <RiCloseLine className="size-3.5" />
+    </SweepIconButton>
+  );
+}
+
+/**
+ * The buttons in a value field's suffix. antd sets `pointer-events: none` on the
+ * suffix, and focuses the field's input on any click inside it, which would
+ * pull the cursor back to this row before a + moves it to the value it adds.
+ */
+function SweepFieldActions({ children }: { children: ReactNode }) {
+  return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: only stops the click bubbling
+    // biome-ignore lint/a11y/useKeyWithClickEvents: the buttons inside handle keys
+    <span
+      className="pointer-events-auto flex items-center gap-1"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {children}
+    </span>
+  );
+}
+
+/** `rows` without row `i`; with `shift`, the rows after it move up one, as after a removal. */
+function withoutRow(rows: ReadonlySet<number>, i: number, shift: boolean): ReadonlySet<number> {
+  if (!rows.has(i) && !shift) return rows;
+  const next = new Set<number>();
+  for (const row of rows) {
+    if (row !== i) next.add(shift && row > i ? row - 1 : row);
+  }
+  return next;
 }
 
 export default function ParameterSweep({
@@ -122,6 +191,20 @@ export default function ParameterSweep({
     if (Array.isArray(value)) return value;
     return [value];
   })();
+
+  // Row a + asks to take the cursor. One-shot: if the value has not grown by the
+  // time this commits, nothing is focused, rather than some later row.
+  const rowsRef = useRef<HTMLDivElement>(null);
+  const [focusRow, setFocusRow] = useState<number | null>(null);
+  useEffect(() => {
+    if (focusRow === null) return;
+    rowsRef.current?.querySelectorAll('input')[focusRow]?.focus();
+    setFocusRow(null);
+  }, [focusRow]);
+
+  // Rows a + added that the user has not left yet: an empty one is not flagged
+  // until then, so pressing + never shows a red field straight away.
+  const [freshRows, setFreshRows] = useState<ReadonlySet<number>>(() => new Set());
 
   // Only sweeps inside a ScanValueSelectorProvider (today: electrode locations)
   // offer per-value eyes; everywhere else this stays null and nothing renders.
@@ -163,10 +246,7 @@ export default function ParameterSweep({
   if (mode === 'single' && !Array.isArray(value)) {
     const errorMessage = !isNil(value) ? error(value) : undefined;
     return (
-      <div
-        className="relative"
-        data-scan-config-block-element={`${ScanConfigUIElementDict.FloatParameterSweep}_single`}
-      >
+      <div data-scan-config-block-element={`${ScanConfigUIElementDict.FloatParameterSweep}_single`}>
         <InputNumber
           data-testid="scan-config-sweep-value"
           controls={false}
@@ -176,24 +256,33 @@ export default function ParameterSweep({
           onChange={(v) => {
             onChange(v);
           }}
-          // room for the floating add button so long values never run under it
-          className="w-full! [&_input]:pr-9"
+          className="w-full!"
+          suffix={
+            !disabled &&
+            allowMultiple && (
+              <SweepFieldActions>
+                <SweepIconButton
+                  label="Scan over several values"
+                  hint={ScanHint.expandValues}
+                  testId="scan-config-sweep-expand"
+                  onClick={() => {
+                    // Open with an empty second value, so one press is enough to
+                    // start a scan. The preview stays on the value already there.
+                    selectValue?.(0);
+                    // the cursor goes to the first empty value
+                    setFocusRow(isNil(value) ? 0 : 1);
+                    setFreshRows(new Set(isNil(value) ? [0, 1] : [1]));
+                    onChange([value, null]);
+                  }}
+                >
+                  <RiAddLine className="size-3.5" />
+                </SweepIconButton>
+              </SweepFieldActions>
+            )
+          }
         />
 
         {errorMessage && <span className="text-red-500">{errorMessage}</span>}
-
-        {!disabled && allowMultiple && (
-          <SweepIconButton
-            label="Scan over several values"
-            testId="scan-config-sweep-expand"
-            className="absolute top-1/2 right-2 -translate-y-1/2"
-            onClick={() => {
-              onChange(multipleValues);
-            }}
-          >
-            <RiAddLine className="size-3.5" />
-          </SweepIconButton>
-        )}
       </div>
     );
   }
@@ -203,31 +292,88 @@ export default function ParameterSweep({
       <div
         data-scan-config-block-element={`${ScanConfigUIElementDict.FloatParameterSweep}_multiple`}
       >
-        {/* No collapse control here: it renders on the field's title row (see
-            Block), which is the only way it can truly line up with the label. */}
+        {/* No collapse control here: callers put SweepCollapseButton on the title row. */}
         <div className="border-neutral-2 rounded-lg border bg-white p-3">
-          <div className="flex flex-col gap-1">
+          <div ref={rowsRef} className="flex flex-col gap-1">
             {multipleValues.map((v, i) => {
               const errorMessage = !isNil(v) ? error(v) : undefined;
-              const isLast = i === multipleValues.length - 1;
-              const canRemove = multipleValues.length >= 2;
+              const showAdd = !disabled && i === multipleValues.length - 1;
+              const showRemove = !disabled && multipleValues.length >= 2;
               const isActiveValue = valueSelector?.activeIndex === i;
               return (
                 // biome-ignore lint/suspicious/noArrayIndexKey: values are positional
                 <Fragment key={k + i}>
-                  <div className="flex w-full items-center gap-1.5">
-                    <InputNumber
-                      data-testid="scan-config-sweep-value"
-                      className="min-w-0 flex-1"
-                      status={v === null || errorMessage ? 'error' : undefined}
-                      value={v}
-                      disabled={disabled}
-                      onChange={(newValue) => {
-                        const updated = [...multipleValues];
-                        updated[i] = newValue;
-                        onChange(updated);
-                      }}
-                    />
+                  <div
+                    data-testid="scan-config-sweep-row"
+                    className="flex w-full items-center gap-1.5"
+                  >
+                    <div data-testid="scan-config-sweep-field" className="min-w-0 flex-1">
+                      <InputNumber
+                        data-testid="scan-config-sweep-value"
+                        controls={false}
+                        className="w-full!"
+                        status={
+                          (v === null && !freshRows.has(i)) || errorMessage ? 'error' : undefined
+                        }
+                        value={v}
+                        disabled={disabled}
+                        onChange={(newValue) => {
+                          const updated = [...multipleValues];
+                          updated[i] = newValue;
+                          onChange(updated);
+                        }}
+                        onBlur={() => setFreshRows((rows) => withoutRow(rows, i, false))}
+                        // In the suffix, so the field keeps room for them by itself.
+                        // Bin last, so it lines up on every row; add on the last row only.
+                        suffix={
+                          (showAdd || showRemove) && (
+                            <SweepFieldActions>
+                              {showAdd && (
+                                <SweepIconButton
+                                  label="Add a value"
+                                  hint={ScanHint.addValue}
+                                  testId="scan-config-sweep-add"
+                                  onClick={() => {
+                                    // The value you just added is the one you want
+                                    // to see, so it becomes the active coordinate.
+                                    selectValue?.(multipleValues.length);
+                                    setFocusRow(multipleValues.length);
+                                    setFreshRows((rows) =>
+                                      new Set(rows).add(multipleValues.length)
+                                    );
+                                    onChange([...multipleValues, null]);
+                                  }}
+                                >
+                                  <RiAddLine className="size-3.5" />
+                                </SweepIconButton>
+                              )}
+                              {showRemove && (
+                                <SweepIconButton
+                                  label="Remove this value"
+                                  testId="scan-config-sweep-remove"
+                                  onClick={() => {
+                                    const updated = [...multipleValues];
+                                    updated.splice(i, 1);
+                                    setFreshRows((rows) => withoutRow(rows, i, true));
+                                    // One value left is no longer a scan: back to the
+                                    // single field, which has no value to keep an eye on.
+                                    if (updated.length === 1) {
+                                      onChange(updated[0]);
+                                      return;
+                                    }
+                                    // Keep the eye on the same value it was on.
+                                    selectValue?.(activeIndexAfterRemoval(i));
+                                    onChange(updated);
+                                  }}
+                                >
+                                  <RiDeleteBinLine className="size-3.5" />
+                                </SweepIconButton>
+                              )}
+                            </SweepFieldActions>
+                          )
+                        }
+                      />
+                    </div>
 
                     {valueSelector && (
                       <SweepIconButton
@@ -248,47 +394,6 @@ export default function ParameterSweep({
                           <RiEyeLine className="size-3.5" />
                         )}
                       </SweepIconButton>
-                    )}
-
-                    {/* Fixed column order — eye, delete, add — with reserved
-                        slots so add stays pinned right on every row even though
-                        only the last row can use it. */}
-                    {!disabled && (
-                      <>
-                        <span className="flex size-6 shrink-0 items-center justify-center">
-                          {canRemove && (
-                            <SweepIconButton
-                              label="Remove this value"
-                              testId="scan-config-sweep-remove"
-                              onClick={() => {
-                                const updated = [...multipleValues];
-                                updated.splice(i, 1);
-                                // Keep the eye on the same value it was on.
-                                selectValue?.(activeIndexAfterRemoval(i));
-                                onChange(updated);
-                              }}
-                            >
-                              <RiDeleteBinLine className="size-3.5" />
-                            </SweepIconButton>
-                          )}
-                        </span>
-                        <span className="flex size-6 shrink-0 items-center justify-center">
-                          {isLast && (
-                            <SweepIconButton
-                              label="Add a value"
-                              testId="scan-config-sweep-add"
-                              onClick={() => {
-                                // The value you just added is the one you want
-                                // to see, so it becomes the active coordinate.
-                                selectValue?.(multipleValues.length);
-                                onChange([...multipleValues, null]);
-                              }}
-                            >
-                              <RiAddLine className="size-3.5" />
-                            </SweepIconButton>
-                          )}
-                        </span>
-                      </>
                     )}
                   </div>
                   {errorMessage && <span className="text-red-500">{errorMessage}</span>}

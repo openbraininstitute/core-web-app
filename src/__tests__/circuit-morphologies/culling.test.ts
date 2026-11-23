@@ -2,9 +2,15 @@
 import * as THREE from 'three/webgpu';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { HOLE } from '@/features/circuit-viewer/morphologies/engine/impostors';
+import { HOLE, MIN_RADIUS } from '@/features/circuit-viewer/morphologies/engine/impostors';
 import { arenaStorage } from '@/features/circuit-viewer/morphologies/engine/webgpu/arena-gpu';
 import { Culling, DRAWS } from '@/features/circuit-viewer/morphologies/engine/webgpu/culling';
+import {
+  MOST_SEEN,
+  SEGMENTS,
+  seenRoom,
+} from '@/features/circuit-viewer/morphologies/engine/webgpu/culling-wgsl';
+import { DepthPyramid } from '@/features/circuit-viewer/morphologies/engine/webgpu/depth-pyramid';
 
 import { fakeGpu } from './fake-gpu';
 
@@ -14,10 +20,14 @@ import type { CullTally } from '@/features/circuit-viewer/morphologies/types';
 const h = vi.hoisted(() => ({ logError: vi.fn() }));
 vi.mock('@/utils/logger', () => ({ logError: h.logError }));
 
-/** The words a read of the counts finds: the counters, the draws' arguments, then the blocks marked. */
-function wordsOf({ tested, kept, drawn }: CullTally, marked = [0, 0]): Uint32Array {
+/**
+ * The words a read of the counts finds: the counters, the draws' arguments, then the blocks marked. `seen` is what
+ * the tests saw before the seen draws were capped.
+ */
+function wordsOf({ tested, kept, drawn }: CullTally, marked = [0, 0], seen = drawn): Uint32Array {
   const words = new Uint32Array(4 + 20 + marked.length);
   words[1] = tested;
+  words[2] = seen;
   words[4 + DRAWS.keptFlat / 4 + 1] = kept;
   words[4 + DRAWS.seenTubes / 4 + 1] = drawn;
   words.set(marked, 24);
@@ -29,27 +39,39 @@ const read = (counts: CullTally, marked = [0, 0], rest = 1) => ({
   ...counts,
   marked: Uint32Array.from(marked),
   rest,
+  clamped: false,
 });
 
 /** An arena of 64 blocks: two words of them marked. */
 const ARENA = { marked: { size: 8 } } as unknown as ArenaBuffers;
 const camera = new THREE.OrthographicCamera();
 const shift = new THREE.Vector3();
+const cells = new THREE.DataTexture();
 
 function cullingOn(options?: Parameters<typeof fakeGpu>[0]) {
-  const { gpu, device, renderer } = fakeGpu(options);
+  const { gpu, device, renderer, pass } = fakeGpu(options);
   const counted = vi.fn();
   const culling = new Culling(renderer, device, arenaStorage(), counted);
   culling.setArena(ARENA);
   culling.targetOf(16, 8);
-  const run = (rest = 1) => culling.run(camera, shift, 12, HOLE, 100, rest);
-  /** The next read mapped, finding `counts` and the blocks `marked`. */
-  const map = async (counts: CullTally, marked?: number[]) => {
-    gpu.found = wordsOf(counts, marked);
+  const run = (rest = 1, hiding = false, readBack = true, { replaying = false } = {}) =>
+    culling.run(camera, shift, 12, replaying, HOLE, 100, rest, cells, hiding, readBack);
+  /** The next read mapped, finding `counts`, the blocks `marked` and `seen` segments seen. */
+  const map = async (counts: CullTally, marked?: number[], seen?: number) => {
+    gpu.found = wordsOf(counts, marked, seen);
     gpu.maps.shift()?.();
     await Promise.resolve();
   };
-  return { culling, counted, run, map, maps: gpu.maps };
+  return {
+    culling,
+    counted,
+    run,
+    map,
+    maps: gpu.maps,
+    pass,
+    submits: vi.mocked(device.queue.submit),
+    writes: vi.mocked(device.queue.writeBuffer),
+  };
 }
 
 const A = { tested: 300, kept: 200, drawn: 100 };
@@ -68,6 +90,16 @@ describe("the culling's counts and its failures", () => {
     culling.setArena(null);
     await map(B);
     expect(counted).toHaveBeenCalledOnce();
+  });
+
+  it('tests a segment at the least radius it is drawn with, and at twice that while a replay is loaded', () => {
+    const build = vi.spyOn(DepthPyramid.prototype, 'build');
+    const { run } = cullingOn();
+    run();
+    expect(build.mock.lastCall?.[3][1]).toBe(MIN_RADIUS);
+    run(1, false, true, { replaying: true });
+    expect(build.mock.lastCall?.[3][1]).toBe(2 * MIN_RADIUS);
+    build.mockRestore();
   });
 
   it('draws each list from a buffer of its own', () => {
@@ -111,6 +143,54 @@ describe("the culling's counts and its failures", () => {
     draw(culling);
     await map(A);
     expect(maps).toHaveLength(7);
+  });
+
+  it('caps the seen draws once the segments are tested', () => {
+    const { run, pass } = cullingOn();
+    run();
+    const [capped] = pass.dispatchWorkgroups.mock.invocationCallOrder.slice(-1);
+    expect(pass.dispatchWorkgroups).toHaveBeenLastCalledWith(1);
+    expect(capped).toBeGreaterThan(pass.dispatchWorkgroupsIndirect.mock.invocationCallOrder[0]);
+    expect(capped).toBeLessThan(pass.end.mock.invocationCallOrder[0]);
+  });
+
+  it('tells of a frame that saw more segments than it may draw', async () => {
+    const { counted, run, map } = cullingOn();
+    const most = { ...A, drawn: MOST_SEEN };
+    run();
+    await map(most);
+    expect(counted).toHaveBeenLastCalledWith(read(most));
+    run();
+    await map(most, undefined, MOST_SEEN + 1);
+    expect(counted).toHaveBeenLastCalledWith({ ...read(most), clamped: true });
+  });
+
+  it('reads nothing back of tests not read back', () => {
+    const { run, maps, submits } = cullingOn();
+    expect(run(1, false, false)).toBe(true);
+    expect(submits).toHaveBeenCalledOnce();
+    expect(maps).toHaveLength(0);
+    run();
+    expect(maps).toHaveLength(1);
+  });
+
+  it('reads the second of two tests once, where the frame before them went unread', async () => {
+    const { counted, run, map, maps, submits } = cullingOn();
+    for (let frame = 0; frame < 9; frame++) run();
+    run(2, false, false);
+    run(2);
+    expect(maps).toHaveLength(8);
+    expect(submits).toHaveBeenCalledTimes(11);
+
+    // The second test's, read once the first frame's buffer was free.
+    await map(A);
+    expect(submits).toHaveBeenCalledTimes(12);
+    for (let k = 0; k < 7; k++) await map(A);
+    expect(submits).toHaveBeenCalledTimes(12);
+    expect(maps).toHaveLength(1);
+    await map(B);
+    expect(counted).toHaveBeenLastCalledWith(read(B, undefined, 2));
+    expect(maps).toHaveLength(0);
   });
 
   it('hands on the blocks a frame marked with its counts', async () => {
@@ -166,5 +246,48 @@ describe("the culling's counts and its failures", () => {
     for (let k = 0; k < 8; k++) await map(A);
     expect(maps).toHaveLength(0);
     expect(counted).toHaveBeenCalledExactlyOnceWith(null);
+  });
+});
+
+describe('the culling while the cell table hides cells', () => {
+  /** Where the last write of the draws' arguments starts, in bytes and in words of what it writes. */
+  const lastReset = (writes: ReturnType<typeof cullingOn>['writes']) => {
+    const [, offset, , dataOffset] = writes.mock.calls.at(-1) ?? [];
+    return { offset, dataOffset };
+  };
+
+  it('starts every list again where none is hidden', () => {
+    const { run, writes } = cullingOn();
+    run();
+    expect(lastReset(writes)).toEqual({ offset: 0, dataOffset: 0 });
+  });
+
+  it('starts only the seen lists again, so the kept list still hides what comes back', () => {
+    const { run, writes } = cullingOn();
+    run(1, true);
+    expect(lastReset(writes)).toEqual({ offset: DRAWS.seenFlat, dataOffset: DRAWS.seenFlat / 4 });
+  });
+
+  it('counts nothing as kept from an arena before, even in tests that leave the kept list alone', () => {
+    const { culling, writes } = cullingOn();
+    writes.mockClear();
+    culling.setArena(ARENA);
+    const [, offset, data] = writes.mock.calls.at(-1) ?? [];
+    expect(offset).toBe(0);
+    expect((data as Uint32Array).length).toBe(20);
+  });
+});
+
+describe('the seen list', () => {
+  it('has room for the most seen of each kind, and is no longer than the arena', () => {
+    expect(seenRoom(640)).toBe(640);
+    expect(seenRoom(MOST_SEEN + 64)).toBe(MOST_SEEN + 64);
+    expect(seenRoom(3 * MOST_SEEN)).toBe(2 * MOST_SEEN);
+  });
+
+  it('is as long for the test, which writes no more of a kind than its draw takes', () => {
+    expect(SEGMENTS).toContain(`let room = min(cap, ${2 * MOST_SEEN}u);`);
+    expect(SEGMENTS).toContain(`if (k < ${MOST_SEEN}u) { lists[cap + room - 1u - k] = i; }`);
+    expect(SEGMENTS).toContain(`if (k < ${MOST_SEEN}u) { lists[cap + k] = i; }`);
   });
 });

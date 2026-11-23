@@ -1,5 +1,10 @@
 import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
-import type { CameraPose, FrameBox, ViewControls, ViewFrame } from '@/features/viewer-3d/engine/scene-view';
+import type {
+  CameraPose,
+  FrameBox,
+  ViewControls,
+  ViewFrame,
+} from '@/features/viewer-3d/engine/scene-view';
 import type { SectionType } from '../section-type';
 import type { CircuitSpikes } from '../types';
 import type { MortonSorted } from './load/morton';
@@ -64,6 +69,22 @@ export type MorphologySegments = Pick<
   'segments' | 'segmentCells' | 'segmentTypes'
 >;
 
+/** What a pack's packed ends are counted in (`load/packed-ends.ts`): its grid, µm, and its radius steps to a doubling. */
+export interface Packing {
+  gridUm: number;
+  radiusSteps: number;
+}
+
+/**
+ * A box's segments as a read hands them over: `segments` as `MorphologySegments` has them, or packed, five words each,
+ * where the read was asked for that. `clamped` counts the box's segments that did not fit packed, and were cut short
+ * or given another radius: as the pack has them, some of which the page may not draw.
+ */
+export type BoxSegments = Omit<MorphologySegments, 'segments'> & {
+  segments: Float32Array | Uint32Array;
+  clamped?: number;
+};
+
 /**
  * A level of a pack: what it left out, end branches shorter than `pruneUm`, then points within `toleranceUm` of the
  * path, and its segments in each box.
@@ -92,8 +113,13 @@ export interface BoxRead {
 
 /** A pack's segments, read a box at a time as the view wants them. */
 export interface MorphologyChunks extends PackBoxes {
-  /** The segments of each box asked for, at its level, in that order, their cells numbered as the data's. */
-  read(wanted: BoxRead[]): Promise<MorphologySegments[]>;
+  packing: Packing;
+  /**
+   * The segments of each box asked for, at its level, in that order, their cells numbered as the data's, their ends
+   * `packed` or as floats. The arrays are the caller's from then on: the stream detaches them once it is done with
+   * them.
+   */
+  read(wanted: BoxRead[], packed?: boolean): Promise<BoxSegments[]>;
   /** Where the pack is still coming in: a box is read at a level once its bytes are in. None, and the whole is. */
   arrival?: PackArrival;
 }
@@ -129,6 +155,17 @@ export interface DetailRules {
   culling: boolean;
 }
 
+/**
+ * The occlusion's wide term on WebGPU, which shades the circuit's shape where the fine term shades a soma against its
+ * neighbours. Set from the Debug menu while it is tried out.
+ */
+export interface IWideOcclusion {
+  /** The power what it multiplies the picture by is raised to; 0 for none. */
+  strength: number;
+  /** How far it reaches, as a share of the view's height. */
+  reach: number;
+}
+
 /** What the culling's tests counted: the segments of the blocks tested, those kept to hide others, and those drawn. */
 export interface CullTally {
   tested: number;
@@ -148,6 +185,8 @@ export interface CullCounts extends CullTally {
 export interface CullRead extends CullTally {
   marked: Uint32Array;
   rest: number;
+  /** Whether more segments were seen than a frame may draw, so that the frame drew part of them. */
+  clamped: boolean;
 }
 
 /** What a view draws of morphologies read a box at a time. */
@@ -278,6 +317,8 @@ export interface CircuitMorphologyView extends ViewControls {
   setDetailRules(rules: Partial<DetailRules>): void;
   /** Told what is drawn of morphologies read a box at a time whenever it changes, and null where there are none. */
   onDetail(listener: (detail: DetailStats | null) => void): () => void;
+  readonly wideOcclusion: IWideOcclusion;
+  setWideOcclusion(wide: Partial<IWideOcclusion>): void;
   /**
    * Show these somas, each a sphere as the somas view drew them, in `colors` where given; null shows none. The view is
    * framed on them unless the populations on show before, or these, take in the others. The positions are kept, not

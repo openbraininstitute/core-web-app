@@ -65,8 +65,8 @@ const fixtures = vi.hoisted(() => ({
 }));
 
 // `positionless` is left out where a test has none, as most do.
-type Placement = Omit<ReturnType<typeof usePopulationsPlacement>, 'positionless'> &
-  Partial<Pick<ReturnType<typeof usePopulationsPlacement>, 'positionless'>>;
+type Placement = Omit<ReturnType<typeof usePopulationsPlacement>, 'positionless' | 'retry'> &
+  Partial<Pick<ReturnType<typeof usePopulationsPlacement>, 'positionless' | 'retry'>>;
 
 vi.mock('@/ui/hooks/use-workspace', () => {
   const useWorkspace = () => ({ virtualLabId: 'lab', projectId: 'project' });

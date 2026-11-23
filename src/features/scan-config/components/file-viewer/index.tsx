@@ -5,6 +5,7 @@ import { match, P } from 'ts-pattern';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { Loader } from '@/components/loader';
 import { EphysViewer } from '@/features/ephys-viewer';
+import { BOX_CLASS } from '@/features/scan-config/components/shared/box-class';
 import { isAssetBackedFile } from '@/features/scan-config/types';
 import { SonataViewer } from '@/features/sonata-viewer';
 import { SpikeViewer } from '@/features/spike-viewer';
@@ -156,13 +157,20 @@ export function FileViewer({ file, context, loading = false, className = '' }: F
 
   const viewerContent = renderFileContent(displayFile, context);
 
+  // A report's views lay out their own boxes on the page; any other file sits in one, inset
+  // as theirs are.
+  const boxed = !isSpikeReport && !isVoltageReport;
+
   return (
     <div
-      className={cn('text-primary-9 relative rounded-2xl bg-white p-6 w-full', className, {
-        'p-0': edgeToEdge,
-      })}
+      className={cn('text-primary-9 relative w-full', className, boxed && 'pt-px pr-px pb-3 pl-3')}
     >
-      <div className={cn('relative h-full overflow-auto p-6', { 'p-0': edgeToEdge })}>
+      <div
+        className={cn('relative h-full overflow-auto p-6', {
+          'p-0': edgeToEdge,
+          [BOX_CLASS]: boxed,
+        })}
+      >
         <Suspense>{viewerContent}</Suspense>
         {loading && !isFilePreloading && (
           <div className="absolute inset-0 z-10 flex h-full cursor-progress items-center justify-center rounded-2xl backdrop-blur-xs">

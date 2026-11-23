@@ -1,13 +1,10 @@
-import { RiCloseLine } from '@remixicon/react';
 import { isNil } from 'es-toolkit/compat';
 
+import { FieldDescriptionTooltip } from '@/features/scan-config/components/shared/field-description-tooltip';
 import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
 import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import { UIElementRender } from '@/features/scan-config/components/ui-elements';
-import {
-  SweepIconButton,
-  sweepSingleValue,
-} from '@/features/scan-config/components/ui-elements/parameter-sweep';
+import { SweepCollapseButton } from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { isReferenceFieldVisible } from '@/features/scan-config/components/ui-elements/reference';
 import { resolveNeuronFilterProperties } from '@/features/scan-config/helpers';
 import { useBlockDiff } from '@/features/scan-config/hooks/use-block-diff';
@@ -21,7 +18,6 @@ import {
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { MarkdownDescription } from '@/ui/molecules/markdown-description';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
@@ -103,15 +99,9 @@ export default function Block({
 
               const value = state[k];
               const fieldBorderClass = getFieldDiffClass(k);
-              // A sweep expanded into several values offers a way back to one
-              // value. It renders on this title row rather than inside the
-              // element so it sits level with the label instead of floating
-              // above the values card.
-              const canCollapseSweep =
-                !disabled &&
-                Array.isArray(value) &&
-                (blockElementSchema.ui_element === ScanConfigUIElementDict.FloatParameterSweep ||
-                  blockElementSchema.ui_element === ScanConfigUIElementDict.IntParameterSweep);
+              const isSweepField =
+                blockElementSchema.ui_element === ScanConfigUIElementDict.FloatParameterSweep ||
+                blockElementSchema.ui_element === ScanConfigUIElementDict.IntParameterSweep;
 
               return (
                 <div
@@ -137,70 +127,49 @@ export default function Block({
                     {blockElementSchema.units && (
                       <FieldUnit unit={blockElementSchema.units} className="ml-1 text-base" />
                     )}
-                    {canCollapseSweep && (
-                      <SweepIconButton
-                        label="Use a single value"
-                        testId="scan-config-sweep-collapse"
-                        className="ml-auto"
-                        onClick={() => {
-                          setState({ ...state, [k]: sweepSingleValue(value as (number | null)[]) });
-                        }}
-                      >
-                        <RiCloseLine className="size-3.5" />
-                      </SweepIconButton>
+                    {isSweepField && (
+                      <SweepCollapseButton
+                        value={value as null | number | (number | null)[]}
+                        disabled={disabled}
+                        onChange={(single) => setState({ ...state, [k]: single })}
+                      />
                     )}
                   </div>
 
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="block w-full">
-                        <div
-                          className={cn(
-                            'w-full min-w-0 max-w-full border',
-                            isPillField ? 'rounded-full' : 'rounded-lg',
-                            fieldBorderClass,
-                            !fieldBorderClass && 'border-transparent'
-                          )}
-                        >
-                          <UIElementRender
-                            k={k}
-                            disabled={disabled}
-                            paramSchema={blockElementSchema}
-                            config={config}
-                            schema={schema}
-                            entity={entity}
-                            schemaMappingConfig={schemaMappingConfig}
-                            state={state}
-                            setState={setState}
-                            selectedEntry={selectedEntry}
-                            errorPathPrefix={
-                              errorPathPrefix ? `${errorPathPrefix}/${k}` : undefined
-                            }
-                          />
-                        </div>
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent
-                      avoidCollisions
-                      hideWhenDetached
-                      align="center"
-                      side="right"
-                      className={cn(
-                        'text-white shadow-bnb max-w-2xs min-w-2xs rounded-md ',
-                        'bg-primary-8 px-4 py-2 text-base text-wrap ',
-                        'overflow-y-auto max-h-50 primary-scrollbar'
-                      )}
-                      arrowClassName="bg-primary-8"
-                    >
-                      {k === 'circuit' && entity ? (
+                  <FieldDescriptionTooltip
+                    content={
+                      k === 'circuit' && entity ? (
                         entity.description
                       ) : (
-                        <MarkdownDescription dark>
-                          {blockElementSchema.description}
-                        </MarkdownDescription>
-                      )}
-                    </TooltipContent>
-                  </Tooltip>
+                        <MarkdownDescription>{blockElementSchema.description}</MarkdownDescription>
+                      )
+                    }
+                  >
+                    <span className="block w-full">
+                      <div
+                        className={cn(
+                          'w-full min-w-0 max-w-full border',
+                          isPillField ? 'rounded-full' : 'rounded-lg',
+                          fieldBorderClass,
+                          !fieldBorderClass && 'border-transparent'
+                        )}
+                      >
+                        <UIElementRender
+                          k={k}
+                          disabled={disabled}
+                          paramSchema={blockElementSchema}
+                          config={config}
+                          schema={schema}
+                          entity={entity}
+                          schemaMappingConfig={schemaMappingConfig}
+                          state={state}
+                          setState={setState}
+                          selectedEntry={selectedEntry}
+                          errorPathPrefix={errorPathPrefix ? `${errorPathPrefix}/${k}` : undefined}
+                        />
+                      </div>
+                    </span>
+                  </FieldDescriptionTooltip>
 
                   {(() => {
                     if (

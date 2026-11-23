@@ -25,6 +25,7 @@ const Passthrough = vi.hoisted(
       children
 );
 
+vi.mock('next/navigation', () => ({ useSearchParams: () => new URLSearchParams() }));
 vi.mock('@/features/scan-config/components/atoms', () => ({
   useModelQuery: () => mocks.model,
 }));
@@ -48,7 +49,8 @@ vi.mock('@/services/small-scale-simulator/circuit', () => ({
   runSimulationBatch: mocks.runSimulationBatch,
 }));
 vi.mock('@/api/one/runner', () => ({ runTask: mocks.runTask }));
-vi.mock('@/entity-configuration/domain/simulation/simulation-campaign', () => ({
+vi.mock('@/entity-configuration/domain/simulation/simulation-campaign', async (importOriginal) => ({
+  ...(await importOriginal<object>()),
   listAllChildren: async () => [{ id: 's1', name: 's1', entity_id: 'model', assets: [] }],
   listExecutionsBySimulationId: async () => [],
 }));

@@ -11,7 +11,6 @@ const fixtures = vi.hoisted(() => ({
     columns: ColumnMeta[] | undefined;
   },
   scene: vi.fn(),
-  flags: {} as Record<string, boolean>,
   /** Whether Bluenaas has the circuit's pack ready. */
   packReady: false,
 }));
@@ -23,10 +22,6 @@ vi.mock('@/features/circuit-viewer/circuit-scene', () => ({
     fixtures.scene(props);
     return null;
   },
-}));
-vi.mock('@/features/feature-flags', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/features/feature-flags')>()),
-  useFlag: (key: string) => fixtures.flags[key],
 }));
 vi.mock('@/features/circuit-viewer/morphologies/use-morphology-pack-status', () => ({
   useMorphologyPackStatus: (circuit: unknown) =>
@@ -66,7 +61,6 @@ vi.mock('@/ui/segments/app-setup/discover-app', () => ({
 }));
 
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
-import { circuitMorphologiesFlag } from '@/features/feature-flags/flags';
 import { SpikeReplayView } from '@/features/spike-viewer/spike-replay/spike-replay-view';
 
 import type { TSceneSubject } from '@/features/circuit-viewer/circuit-scene';
@@ -122,7 +116,6 @@ beforeEach(() => {
   fixtures.nodes = [POINTS];
   fixtures.session = { status: 'ready', columns: POSITIONED };
   fixtures.scene.mockClear();
-  fixtures.flags = {};
   fixtures.packReady = false;
 });
 
@@ -145,11 +138,9 @@ describe('SpikeReplayView', () => {
   });
 
   it.each([
-    [false, true, false],
-    [true, true, true],
-    [true, false, false],
-  ])('replays over a small microcircuit from the pack only with the flag (%s) and the pack ready (%s)', (flag, ready, large) => {
-    fixtures.flags = { [circuitMorphologiesFlag.key]: flag };
+    [true, true],
+    [false, false],
+  ])('replays over a small microcircuit from the pack only with the pack ready (%s)', (ready, large) => {
     fixtures.packReady = ready;
     const small = circuitOf(CircuitScaleDictionary.SmallMicrocircuit);
     render(<SpikeReplayView data={spikes('points')} subject={small} />);

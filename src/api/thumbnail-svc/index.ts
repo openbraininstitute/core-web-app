@@ -8,6 +8,33 @@ import buildQueryString from '@/util/query-params-builder';
 
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 
+/** The service's error body: an RFC 9457 problem (`application/problem+json`) with a stable code. */
+export type ThumbnailProblem = { status: number; code: string; detail: string };
+
+/** A refused thumbnail request, carrying the service's problem. */
+export class ThumbnailError extends Error {
+  constructor(readonly problem: ThumbnailProblem) {
+    super(problem.detail);
+    this.name = 'ThumbnailError';
+  }
+}
+
+/** Codes for a state that passes on its own (asset still uploading, entitycore busy). */
+const TRANSIENT_CODES = new Set(['ASSET_NOT_READY', 'ENTITYCORE_UNAVAILABLE']);
+
+/** True when asking again later may succeed. */
+export function isTransientThumbnailError(error: unknown): boolean {
+  return error instanceof ThumbnailError && TRANSIENT_CODES.has(error.problem.code);
+}
+
+/** The problem of a failed response; a body that is not one (a proxy page) keeps its status. */
+async function problemOf(response: Response): Promise<ThumbnailProblem> {
+  const body = await response.json().catch(() => null);
+  return body && typeof body.code === 'string'
+    ? { status: response.status, code: body.code, detail: String(body.detail ?? '') }
+    : { status: response.status, code: 'UNKNOWN', detail: response.statusText };
+}
+
 /** Resolution for small grid-cell thumbnails. Keeps payloads light. */
 export const GRID_PREVIEW_DPI = 100;
 /** Resolution for the zoomable detail-view preview, where the user can expand the image. */
@@ -60,7 +87,6 @@ export async function getPreviewBlob(
   const session = await getSession();
 
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
     Authorization: `Bearer ${session?.accessToken}`,
     Accept: accept,
   };
@@ -73,7 +99,7 @@ export async function getPreviewBlob(
     headers,
   });
   if (!response.ok) {
-    throw new Error('Error generating thumbnail', { cause: await response.json() });
+    throw new ThumbnailError(await problemOf(response));
   }
   const blob = await response.blob();
   return blob;

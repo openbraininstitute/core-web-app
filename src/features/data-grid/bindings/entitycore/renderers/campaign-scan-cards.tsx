@@ -1,6 +1,7 @@
 'use client';
 
 import { RiCheckLine, RiFileCopyLine } from '@remixicon/react';
+import Link from 'next/link';
 
 import { isFromIdRef } from '@/features/scan-config/helpers';
 import { getParamLabel } from '@/features/task-runner/expanded-view';
@@ -117,7 +118,8 @@ function CopyableId({ id }: { id: string }): ReactNode {
         aria-label={`Copy ID ${id}`}
         onClick={() => void copy(id)}
         className={cn(
-          'flex w-full min-w-0 cursor-pointer items-center justify-end gap-1',
+          // above the card's stretched link, so a copy is not also a click through
+          'relative z-10 flex w-full min-w-0 cursor-pointer items-center justify-end gap-1',
           'text-primary-8 transition-colors hover:text-primary-6'
         )}
       >
@@ -132,18 +134,35 @@ function CopyableId({ id }: { id: string }): ReactNode {
   );
 }
 
-function ScanParameterCard({ card }: { card: IScanCard }): ReactNode {
+function ScanParameterCard({ card, href }: { card: IScanCard; href?: string | null }): ReactNode {
+  const heading = (
+    <>
+      <span
+        title={card.title}
+        className="min-w-0 flex-1 truncate text-sm font-semibold text-primary-9"
+      >
+        {card.title}
+      </span>
+      {card.status ? <CampaignStatusBadge status={card.status} compact /> : null}
+    </>
+  );
+  const headingClass =
+    'flex items-center justify-between gap-2 border-b border-neutral-2 px-3 py-2';
   return (
-    <div className="flex w-full min-w-0 flex-col overflow-hidden rounded-xl border border-neutral-2 bg-white transition-colors hover:bg-gray-50">
-      <div className="flex items-center justify-between gap-2 border-b border-neutral-2 px-3 py-2">
-        <span
-          title={card.title}
-          className="min-w-0 flex-1 truncate text-sm font-semibold text-primary-9"
+    <div className="relative flex w-full min-w-0 flex-col overflow-hidden rounded-xl border border-neutral-2 bg-white transition-colors hover:bg-gray-50">
+      {/* the whole card leads to the run in its campaign's results: the heading's link
+          is stretched over it, and the id copy buttons sit above that */}
+      {href ? (
+        <Link
+          href={href}
+          title={`Open ${card.title}`}
+          className={cn(headingClass, 'after:absolute after:inset-0')}
         >
-          {card.title}
-        </span>
-        {card.status ? <CampaignStatusBadge status={card.status} compact /> : null}
-      </div>
+          {heading}
+        </Link>
+      ) : (
+        <div className={headingClass}>{heading}</div>
+      )}
       <div className="p-1.5">
         {card.params.length > 0 ? (
           <dl className="flex flex-col gap-0.5">
@@ -180,6 +199,8 @@ interface CampaignScanCardsProps {
   title?: string;
   loading?: boolean;
   error?: unknown;
+  /** where a card leads, by its id; no link without it */
+  cardHref?: (id: string) => string | null;
 }
 
 /**
@@ -191,6 +212,7 @@ export function CampaignScanCards({
   title,
   loading,
   error,
+  cardHref,
 }: CampaignScanCardsProps): ReactNode {
   const cards = loading || error ? [] : toScanCardData(records);
   const cols = scanCardColumns(loading ? 2 : cards.length);
@@ -228,7 +250,7 @@ export function CampaignScanCards({
         ) : (
           <div className="grid gap-2" style={gridStyle}>
             {cards.map((card) => (
-              <ScanParameterCard key={card.id} card={card} />
+              <ScanParameterCard key={card.id} card={card} href={cardHref?.(card.id)} />
             ))}
           </div>
         )}

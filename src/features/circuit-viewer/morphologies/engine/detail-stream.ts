@@ -1,4 +1,5 @@
-import { logError } from '@/utils/logger';
+import { detach } from '@/utils/buffer';
+import { logError, logWarn } from '@/utils/logger';
 
 import { chooseDetail, type Detail, type DetailView } from './detail';
 import { roomFor, SEGMENT_BYTES, SegmentArena, type UploadsOf } from './segment-arena';
@@ -6,10 +7,10 @@ import { roomFor, SEGMENT_BYTES, SegmentArena, type UploadsOf } from './segment-
 import type * as THREE from 'three';
 import type {
   BoxRead,
+  BoxSegments,
   DetailRules,
   DetailStats,
   MorphologyChunks,
-  MorphologySegments,
   PackArrival,
 } from '../types';
 
@@ -69,6 +70,14 @@ function mark(marks: Marks, boxes: readonly number[]): void {
   for (const box of boxes) marks.at[box] = read;
 }
 
+/**
+ * Lets go of a read box's arrays at once, where the browser can. Left to the collector, the boxes of a whole load
+ * stay in the page's memory for some seconds after they are placed.
+ */
+function letGoOf({ segments, segmentCells, segmentTypes }: BoxSegments): void {
+  for (const { buffer } of [segments, segmentCells, segmentTypes]) detach(buffer);
+}
+
 function isAbort(e: unknown): boolean {
   return e instanceof DOMException && e.name === 'AbortError';
 }
@@ -111,7 +120,8 @@ function arenaPlan(
  * Streams a pack's boxes into an arena at the levels the view wants (`chooseDetail`). Boxes the view no longer wants
  * are let go of at once. The others are read from the pack a batch at a time, nearest the focus first, and swapped in
  * a box at a time as they come. A box goes finer only while the view is still, and coarser at once. Placing is paced
- * (`apply`), so that a frame uploads little.
+ * (`apply`), so that a frame uploads little. What a read hands over is the stream's alone, and it lets go of each
+ * box's arrays once the box is placed or no longer wanted (`letGoOf`).
  *
  * Where the arena keeps a base, every box's coarsest level is read and kept: first the bases of the boxes in view,
  * then the finer levels they want, then the other bases. A box then goes back to its base with no read, and the budget
@@ -154,8 +164,8 @@ export class DetailStream {
     return this.still && drawn >= 0 ? drawn : coarsest;
   };
   /** What has come in and is not placed yet: levels by box, and bases. */
-  private ready = new Map<number, { level: number; segments: MorphologySegments }>();
-  private bases = new Map<number, MorphologySegments>();
+  private ready = new Map<number, { level: number; segments: BoxSegments }>();
+  private bases = new Map<number, BoxSegments>();
   /** Whether no base is left to read: each is placed, has come in, or could not be read. */
   private basesRead: boolean;
   private reading = false;
@@ -163,6 +173,7 @@ export class DetailStream {
   /** The boxes of batches that could not be read, which are not read again, and whether that was logged. */
   private unread = new Set<number>();
   private told = false;
+  private toldClamped = false;
   /**
    * For a pack still coming in: how much is in, and the finest level of each box that is in (the number of levels where
    * none is); whether that lifted the level a box was chosen at since the levels were last chosen; and what stops the
@@ -242,7 +253,8 @@ export class DetailStream {
 
   /**
    * Makes a stream into an arena on `geometry` (the segments' quad), as large as the pack's boxes can need within
-   * `budget` and uploaded through `uploadsOf`. The arena keeps a base if it then holds at most `baseUpTo` segments.
+   * `budget` and uploaded through `uploadsOf`, which takes the segments' ends packed. The arena keeps a base if it then
+   * holds at most `baseUpTo` segments.
    */
   static of(
     chunks: MorphologyChunks,
@@ -253,7 +265,8 @@ export class DetailStream {
     baseUpTo = 0
   ): DetailStream {
     const { capacity, base } = arenaPlan(chunks, budget, baseUpTo);
-    const arena = new SegmentArena(geometry, capacity, uploadsOf, base);
+    const packing = uploadsOf && chunks.packing;
+    const arena = new SegmentArena(geometry, capacity, uploadsOf, base, packing);
     return new DetailStream(chunks, arena, onRead);
   }
 
@@ -279,6 +292,7 @@ export class DetailStream {
     const stream = new DetailStream(this.chunks, arena, this.onRead);
     stream.unread = this.unread;
     stream.told = this.told;
+    stream.toldClamped = this.toldClamped;
     stream.sight = this.sight;
     stream.still = this.still;
     stream.occludersLost = true;
@@ -444,18 +458,19 @@ export class DetailStream {
         break;
       }
       uploaded += arena.putBase(box, segments);
+      letGoOf(segments);
       // Those out of view are not tested, and stopping the marks for them would hold back the finer levels wanted.
       if (detail.order.subarray(0, detail.inView).includes(box)) this.occludersLost = true;
       if (arena.sizeOf(box) === undefined) drawn[box] = this.coarsest;
       this.bases.delete(box);
       changed = true;
     }
+    for (const [box, { level, segments }] of this.ready) {
+      if (level === wanted[box]) continue;
+      letGoOf(segments);
+      this.ready.delete(box);
+    }
     const arrived = [...this.ready]
-      .filter(([box, { level }]) => {
-        if (level === wanted[box]) return true;
-        this.ready.delete(box);
-        return false;
-      })
       .map(([box, { level, segments }]) => ({
         box,
         level,
@@ -470,6 +485,7 @@ export class DetailStream {
         break;
       }
       uploaded += arena.replace(box, segments);
+      letGoOf(segments);
       this.boxMoved();
       drawn[box] = level;
       this.ready.delete(box);
@@ -487,6 +503,8 @@ export class DetailStream {
   stop(): void {
     this.stopped = true;
     this.unlisten?.();
+    for (const { segments } of this.ready.values()) letGoOf(segments);
+    for (const segments of this.bases.values()) letGoOf(segments);
     this.ready.clear();
     this.bases.clear();
     this.arena.dispose();
@@ -581,13 +599,28 @@ export class DetailStream {
     if (batch.length === 0) batch = this.basesToRead(null);
     if (batch.length === 0) return;
     this.reading = true;
-    this.chunks.read(batch).then(
+    this.chunks.read(batch, this.arena.packed).then(
       (read) => {
         this.reading = false;
-        if (this.stopped) return;
+        if (this.stopped) {
+          read.forEach(letGoOf);
+          return;
+        }
+        const clamped = read.reduce((sum, box) => sum + (box.clamped ?? 0), 0);
+        if (clamped > 0 && !this.toldClamped) {
+          logWarn(
+            `${clamped} segments of one read cut short or given another radius, past what packed ends hold`
+          );
+          this.toldClamped = true;
+        }
         batch.forEach(({ level, box }, i) => {
-          if (this.isBase(level)) this.bases.set(box, read[i]);
-          else this.ready.set(box, { level, segments: read[i] });
+          if (this.isBase(level)) {
+            this.bases.set(box, read[i]);
+            return;
+          }
+          const stale = this.ready.get(box);
+          if (stale) letGoOf(stale.segments);
+          this.ready.set(box, { level, segments: read[i] });
         });
         this.onRead();
         this.read();

@@ -1,10 +1,9 @@
 import {
-  CheckCircleFilled,
   CheckOutlined,
   CloseOutlined,
   DeleteOutlined,
   EditOutlined,
-  PlusCircleOutlined,
+  PlusOutlined,
   WarningFilled,
 } from '@ant-design/icons';
 import { Input } from 'antd';
@@ -13,6 +12,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Fragment, memo, useEffect, useMemo, useRef } from 'react';
 
 import { useFieldErrors } from '@/features/scan-config/components/hooks/field-errors';
+import { DESCRIPTION_TOOLTIP_CLASS } from '@/features/scan-config/components/shared/box-class';
 import {
   DISTANCE_DISTRIBUTIONS_KEY,
   remapParameterDistributions,
@@ -33,6 +33,9 @@ import type { Config, ConfigSchema, IBlockDictionary, TBlock } from '@/features/
 import type { ConfigHighlight } from '@/state/config-highlights';
 
 import styles from './block-dictionary-entries.module.css';
+
+/** An entry's own actions: shown only while the pointer is over the entry, or it has keyboard focus. */
+const ENTRY_ACTION_CLASS = 'invisible group-hover/entry:visible group-focus-visible/entry:visible';
 
 type EntryTabProps = Omit<React.ComponentProps<'div'>, 'onClick'> & {
   entryKey: string;
@@ -67,7 +70,7 @@ function EntryTab({
       {...props}
       ref={ref}
       className={cn(
-        'text-primary-8 flex h-12.5 min-h-12.5 min-w-37.5 items-center justify-between ',
+        'group/entry text-primary-8 flex h-12.5 min-h-12.5 min-w-37.5 items-center justify-between ',
         'rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow ',
         'hover:bg-linear-to-r hover:from-[#003A8C] hover:to-primary-10 hover:text-white gap-1',
         {
@@ -268,224 +271,232 @@ export default function BlockDictionaryEntries({
             opacity: 0,
           }}
           transition={{ duration: 0.3, ease: 'linear' }}
-          className={cn('flex flex-col w-full items-center z-0 mb-4!')}
+          className={cn('flex flex-col w-full z-0 mb-4!')}
         >
-          <div
-            id={`${rootElement}-menu-block-dictionary-sub-entry__container`}
-            className="flex flex-col w-full gap-1.5 px-4"
-          >
-            {/* Render deleted entries first with red border */}
-            {deletedEntriesFromHighlights.map((entry) => renderBlockTab(entry))}
+          {/* Hung off a rule under the open dictionary, as an open file group's files are. */}
+          <div className="border-neutral-2 mt-1.5 ml-4 flex flex-col gap-1.5 border-l pl-3">
+            <div
+              id={`${rootElement}-menu-block-dictionary-sub-entry__container`}
+              className="flex flex-col w-full gap-1.5"
+            >
+              {/* Render deleted entries first with red border */}
+              {deletedEntriesFromHighlights.map((entry) => renderBlockTab(entry))}
 
-            {/* Render added entries from highlights (restore flow, aiConfig may be null) */}
-            {addedEntriesFromHighlights.map((entry) => renderBlockTab(entry))}
+              {/* Render added entries from highlights (restore flow, aiConfig may be null) */}
+              {addedEntriesFromHighlights.map((entry) => renderBlockTab(entry))}
 
-            {Object.entries(config[rootElement] ?? {})
-              .filter(([block_key]) => {
-                if (deletedConfigKeys.has(block_key)) return false;
-                return true;
-              })
-              .map(([subkey, subValue]) => {
-                const isSelected = selectedRootElement === rootElement && subkey === selectedEntry;
-                const entryDiffClass = getEntryDiffClass(subkey, isSelected);
+              {Object.entries(config[rootElement] ?? {})
+                .filter(([block_key]) => {
+                  if (deletedConfigKeys.has(block_key)) return false;
+                  return true;
+                })
+                .map(([subkey, subValue]) => {
+                  const isSelected =
+                    selectedRootElement === rootElement && subkey === selectedEntry;
+                  const entryDiffClass = getEntryDiffClass(subkey, isSelected);
 
-                return (
-                  <Fragment key={subkey}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <EntryTab
-                          data-testid={`scan-config-entry-${rootElement}-${subkey}`}
-                          entryKey={subkey}
-                          isSelected={isSelected}
-                          diffClass={entryDiffClass}
-                          displayName={subkey}
-                          onClick={() => handleEntryClick(subkey)}
-                        >
-                          <div className="flex-1 min-w-0 text-left">
-                            {isSelected && isEditingKey && !readOnly && (
-                              <>
-                                <Input
-                                  value={newKey}
-                                  className="inline-block h-5 w-[70%] text-sm outline-none"
-                                  classNames={{
-                                    input: 'border-none !bg-transparent text-white',
-                                  }}
-                                  ref={renameInputRef}
-                                  onKeyDown={(e) => {
-                                    e.stopPropagation();
-                                    if (e.key === 'Enter') {
-                                      onNameChangeConfirm(e);
-                                    }
-                                  }}
-                                  maxLength={24}
-                                  onClick={(e) => e.stopPropagation()}
-                                  onChange={(v) => {
-                                    v.stopPropagation();
-                                    setNewKey(v.currentTarget.value);
-                                  }}
-                                  status={newKeyError ? 'error' : undefined}
-                                  size="small"
-                                />
-                                <div className="ml-3 inline-block">
-                                  <CheckOutlined
-                                    className={cn('mr-2', newKeyError && 'opacity-30')}
-                                    disabled={newKeyError}
-                                    onClick={onNameChangeConfirm}
-                                  />
-
-                                  <CloseOutlined
-                                    onClick={() => {
-                                      setIsEditingKey(false);
-                                      setNewKey('');
+                  return (
+                    <Fragment key={subkey}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <EntryTab
+                            data-testid={`scan-config-entry-${rootElement}-${subkey}`}
+                            entryKey={subkey}
+                            isSelected={isSelected}
+                            diffClass={entryDiffClass}
+                            displayName={subkey}
+                            onClick={() => handleEntryClick(subkey)}
+                          >
+                            <div className="flex-1 min-w-0 text-left">
+                              {isSelected && isEditingKey && !readOnly && (
+                                <>
+                                  <Input
+                                    value={newKey}
+                                    className="inline-block h-5 w-[70%] text-sm outline-none"
+                                    classNames={{
+                                      input: 'border-none !bg-transparent text-white',
                                     }}
+                                    ref={renameInputRef}
+                                    onKeyDown={(e) => {
+                                      e.stopPropagation();
+                                      if (e.key === 'Enter') {
+                                        onNameChangeConfirm(e);
+                                      }
+                                    }}
+                                    maxLength={24}
+                                    onClick={(e) => e.stopPropagation()}
+                                    onChange={(v) => {
+                                      v.stopPropagation();
+                                      setNewKey(v.currentTarget.value);
+                                    }}
+                                    status={newKeyError ? 'error' : undefined}
+                                    size="small"
                                   />
-                                </div>
-                              </>
-                            )}
+                                  <div className="ml-3 inline-block">
+                                    <CheckOutlined
+                                      className={cn('mr-2', newKeyError && 'opacity-30')}
+                                      disabled={newKeyError}
+                                      onClick={onNameChangeConfirm}
+                                    />
 
-                            {(!isSelected || (isSelected && !isEditingKey)) && (
-                              <div className="flex items-center">
-                                <div className="inline-block truncate max-w-[24ch]">{subkey}</div>
-                                {!readOnly &&
-                                  !campaignId &&
-                                  isChatReady &&
-                                  highlights.length === 0 && (
-                                    <EditOutlined
-                                      className="ml-3"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setSelectedRootElement(rootElement);
-                                        setSelectedEntry(subkey);
-                                        setIsEditingKey(true);
-                                        setNewKey(subkey);
+                                    <CloseOutlined
+                                      onClick={() => {
+                                        setIsEditingKey(false);
+                                        setNewKey('');
                                       }}
                                     />
-                                  )}
-                              </div>
-                            )}
-                          </div>
+                                  </div>
+                                </>
+                              )}
 
-                          <div className="flex gap-2 text-[14px]">
-                            {errors?.find((error) =>
-                              error.instancePath.startsWith(`/${rootElement}/${subkey}`)
-                            ) ||
-                            Array.from(fieldErrors.keys()).some((key) =>
-                              key.startsWith(`${rootElement}/${subkey}`)
-                            ) ? (
-                              <WarningFilled className="text-yellow-400!" />
-                            ) : (
-                              <CheckCircleFilled className="text-green-600!" />
-                            )}
+                              {(!isSelected || (isSelected && !isEditingKey)) && (
+                                <div className="flex items-center">
+                                  <div className="inline-block truncate max-w-[24ch]">{subkey}</div>
+                                </div>
+                              )}
+                            </div>
 
-                            {!campaignId &&
-                              !loading &&
-                              !readOnly &&
-                              isChatReady &&
-                              highlights.length === 0 && (
-                                <DeleteOutlined
-                                  className="cursor-pointer"
-                                  onClick={(e: React.MouseEvent) => {
-                                    e.stopPropagation();
+                            {/* Rename and delete at the pill's end, left of a warning where the entry
+                                has one: an entry that is fine needs no tick. */}
+                            <div className="flex items-center gap-2 text-[14px]">
+                              {!readOnly &&
+                                !campaignId &&
+                                isChatReady &&
+                                highlights.length === 0 &&
+                                !(isSelected && isEditingKey) && (
+                                  <EditOutlined
+                                    className={ENTRY_ACTION_CLASS}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedRootElement(rootElement);
+                                      setSelectedEntry(subkey);
+                                      setIsEditingKey(true);
+                                      setNewKey(subkey);
+                                    }}
+                                  />
+                                )}
 
-                                    setEditing(false);
-                                    setSelectedRootElement(rootElement);
+                              {!campaignId &&
+                                !loading &&
+                                !readOnly &&
+                                isChatReady &&
+                                highlights.length === 0 && (
+                                  <DeleteOutlined
+                                    className={cn('cursor-pointer', ENTRY_ACTION_CLASS)}
+                                    onClick={(e: React.MouseEvent) => {
+                                      e.stopPropagation();
 
-                                    if (!isPlainObject(config[rootElement])) return;
+                                      setEditing(false);
+                                      setSelectedRootElement(rootElement);
 
-                                    const newConfig = structuredClone(config);
-                                    const targetSection = newConfig[rootElement];
+                                      if (!isPlainObject(config[rootElement])) return;
 
-                                    if (!isPlainObject(targetSection)) return;
+                                      const newConfig = structuredClone(config);
+                                      const targetSection = newConfig[rootElement];
 
-                                    delete targetSection[subkey];
+                                      if (!isPlainObject(targetSection)) return;
 
-                                    // Schema-aware cleanup: clear refs + dependent manipulation fields
-                                    const cleaned = clearDeletedBlockReferences(
-                                      newConfig,
-                                      schema,
-                                      rootElement,
-                                      subkey
-                                    );
+                                      delete targetSection[subkey];
 
-                                    // Also clear nested refs (e.g. combination tuples)
-                                    Object.entries(cleaned).forEach(([configK, configV]) => {
-                                      if (configK === 'initialize' || !isPlainObject(configV))
-                                        return;
+                                      // Schema-aware cleanup: clear refs + dependent manipulation fields
+                                      const cleaned = clearDeletedBlockReferences(
+                                        newConfig,
+                                        schema,
+                                        rootElement,
+                                        subkey
+                                      );
 
-                                      Object.values(configV).forEach((entryV) => {
-                                        rewriteBlockReferences(entryV, subkey, {
-                                          type: RewriteBlockReferencesModeDict.Clear,
+                                      // Also clear nested refs (e.g. combination tuples)
+                                      Object.entries(cleaned).forEach(([configK, configV]) => {
+                                        if (configK === 'initialize' || !isPlainObject(configV))
+                                          return;
+
+                                        Object.values(configV).forEach((entryV) => {
+                                          rewriteBlockReferences(entryV, subkey, {
+                                            type: RewriteBlockReferencesModeDict.Clear,
+                                          });
                                         });
                                       });
-                                    });
 
-                                    // Distributions are referenced by plain string, so reset any
-                                    // parameter using the deleted distribution back to uniform.
-                                    const afterDelete =
-                                      rootElement === DISTANCE_DISTRIBUTIONS_KEY
-                                        ? remapParameterDistributions(cleaned, schema, subkey, null)
-                                        : cleaned;
+                                      // Distributions are referenced by plain string, so reset any
+                                      // parameter using the deleted distribution back to uniform.
+                                      const afterDelete =
+                                        rootElement === DISTANCE_DISTRIBUTIONS_KEY
+                                          ? remapParameterDistributions(
+                                              cleaned,
+                                              schema,
+                                              subkey,
+                                              null
+                                            )
+                                          : cleaned;
 
-                                    setConfig(afterDelete);
+                                      setConfig(afterDelete);
 
-                                    setSelectedEntry('');
-                                    allEntries.delete(subkey);
-                                  }}
-                                />
-                              )}
+                                      setSelectedEntry('');
+                                      allEntries.delete(subkey);
+                                    }}
+                                  />
+                                )}
+
+                              {(errors?.some((error) =>
+                                error.instancePath.startsWith(`/${rootElement}/${subkey}`)
+                              ) ||
+                                Array.from(fieldErrors.keys()).some((key) =>
+                                  key.startsWith(`${rootElement}/${subkey}`)
+                                )) && <WarningFilled className="text-yellow-400!" />}
+                            </div>
+                          </EntryTab>
+                        </TooltipTrigger>
+                        <TooltipContent
+                          avoidCollisions
+                          hideWhenDetached
+                          align="end"
+                          side="right"
+                          showArrow={false}
+                          className={DESCRIPTION_TOOLTIP_CLASS}
+                        >
+                          <div className="text-base">
+                            <BlockDictionaryEntryTooltip
+                              blockType={rootElementSchema.additionalProperties.oneOf.find((v) => {
+                                if (!isPlainObject(subValue)) return null;
+                                if (typeof subValue.type !== 'string') return null;
+
+                                return v.properties.type.const === subValue.type;
+                              })}
+                            />
                           </div>
-                        </EntryTab>
-                      </TooltipTrigger>
-                      <TooltipContent
-                        avoidCollisions
-                        hideWhenDetached
-                        align="end"
-                        side="right"
-                        className={cn(
-                          'text-white shadow-bnb max-w-2xs min-w-2xs rounded-md ',
-                          'bg-primary-8 px-4 py-2 text-base text-wrap ',
-                          'overflow-y-auto max-h-50 primary-scrollbar'
-                        )}
-                        arrowClassName="bg-primary-8"
-                      >
-                        <div className="text-base">
-                          <BlockDictionaryEntryTooltip
-                            blockType={rootElementSchema.additionalProperties.oneOf.find((v) => {
-                              if (!isPlainObject(subValue)) return null;
-                              if (typeof subValue.type !== 'string') return null;
+                        </TooltipContent>
+                      </Tooltip>
+                    </Fragment>
+                  );
+                })}
+            </div>
 
-                              return v.properties.type.const === subValue.type;
-                            })}
-                          />
-                        </div>
-                      </TooltipContent>
-                    </Tooltip>
-                  </Fragment>
-                );
-              })}
+            {!campaignId && !loading && !readOnly && isChatReady && highlights.length === 0 && (
+              <button
+                data-testid={`scan-config-add-entry-${rootElement}`}
+                // Set apart from the entries over it: outlined in navy round a navy plus.
+                className={cn(
+                  'group/add text-primary-9 flex h-12.5 min-h-12.5 w-full min-w-37.5 items-center ',
+                  'justify-between rounded-full border-2 border-primary-9/35 bg-white px-5 py-2 text-sm font-semibold',
+                  'hover:border-primary-9 hover:bg-primary-9/5 transition-colors ease-in-out'
+                )}
+                type="button"
+                onClick={() => {
+                  setSelectedRootElement(rootElement);
+                  setEditing(true);
+                  setSelectedEntry('');
+                }}
+              >
+                <span>
+                  Add <span className="lowercase">{singularName}</span>
+                </span>
+                <span className="bg-primary-9 flex size-6 shrink-0 items-center justify-center rounded-full text-white transition-transform group-hover/add:scale-110">
+                  <PlusOutlined className="text-xs" />
+                </span>
+              </button>
+            )}
           </div>
-
-          {!campaignId && !loading && !readOnly && isChatReady && highlights.length === 0 && (
-            <button
-              data-testid={`scan-config-add-entry-${rootElement}`}
-              className={cn(
-                'text-primary-8 flex h-12.5 min-h-12.5 w-90percent min-w-37.5 items-center ',
-                'justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow mt-1.5',
-                'hover:bg-gray-100 hover:text-primary-8 hover:shadow-sm hover:[&_svg]:scale-125 transition-all ease-in-out'
-              )}
-              type="button"
-              onClick={() => {
-                setSelectedRootElement(rootElement);
-                setEditing(true);
-                setSelectedEntry('');
-              }}
-            >
-              <span>
-                Add <span className="lowercase">{singularName}</span>
-              </span>
-              <PlusCircleOutlined />
-            </button>
-          )}
         </motion.div>
       )}
     </AnimatePresence>
@@ -498,9 +509,7 @@ const BlockDictionaryEntryTooltip = memo(
     return (
       <div className="flex flex-col gap-2">
         <div className="font-bold">{blockType.title}</div>
-        <MarkdownDescription dark className="max-w-2xs">
-          {blockType.description}
-        </MarkdownDescription>
+        <MarkdownDescription className="max-w-2xs">{blockType.description}</MarkdownDescription>
       </div>
     );
   },

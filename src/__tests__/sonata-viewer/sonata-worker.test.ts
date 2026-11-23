@@ -116,4 +116,16 @@ describe('the report worker, reading the matrix a block of rows at a time', () =
       expect(found.spikes?.[column]).toBe(crossings);
     }
   });
+
+  it('works out every column alike, as a compartment report’s compartments each', async () => {
+    const window: [number, number] = [START + 990 * DT, START + 1010 * DT];
+    const cells = await worker.getCellStatistics(POPULATION, 0, window);
+    const traces = await worker.getTraceStatistics(POPULATION, 0, window);
+    expect(traces.mean).toHaveLength(CELLS);
+    for (const column of [0, 3, CELLS - 1]) {
+      expect(traces.mean[column]).toBe(cells.mean[column]);
+      expect(traces.sd[column]).toBe(cells.sd[column]);
+      expect(traces.spikes?.[column]).toBe(cells.spikes?.[column]);
+    }
+  });
 });

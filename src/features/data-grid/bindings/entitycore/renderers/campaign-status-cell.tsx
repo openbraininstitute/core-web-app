@@ -66,6 +66,8 @@ export interface ICampaignStatusBadgePopoverProps {
   scanQueryKey?: ReadonlyArray<unknown>;
   /** Popover heading, e.g. `"{name} execution status"`. */
   title?: string;
+  /** Where a scan card leads, by its id: the run itself in its campaign's results. */
+  cardHref?: (id: string) => string | null;
   /** Gate the status poll (ASYNC sources). Default: true. */
   enabled?: boolean;
 }
@@ -118,6 +120,7 @@ export function CampaignStatusBadgePopover({
   fetchScanRows,
   scanQueryKey,
   title,
+  cardHref,
   enabled = true,
 }: ICampaignStatusBadgePopoverProps): ReactNode {
   const [open, setOpen] = useState(false);
@@ -195,6 +198,7 @@ export function CampaignStatusBadgePopover({
             title={title}
             loading={scanLoading}
             error={scanError}
+            cardHref={cardHref}
           />
         }
       >

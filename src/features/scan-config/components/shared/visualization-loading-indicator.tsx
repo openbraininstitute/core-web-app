@@ -56,7 +56,8 @@ export function VisualizationLoadingIndicator({
   return (
     <div
       className={cn(
-        // Cover the canvas until neurites replace soma placeholders; chip stays top-center.
+        // Cover the canvas until neurites replace soma placeholders; chip stays in the middle,
+        // clear of the viewer's controls, which run along the top and, narrow, reach its centre.
         'absolute inset-0 z-10 bg-white/90 backdrop-blur-[1px]',
         className
       )}
@@ -65,7 +66,7 @@ export function VisualizationLoadingIndicator({
       aria-label={label}
       data-testid="visualization-loading"
     >
-      <div className="absolute inset-x-0 top-3 flex justify-center px-3">
+      <div className="absolute inset-0 flex items-center justify-center px-3">
         <div
           className={cn(
             'flex flex-col gap-1.5 bg-white/90 px-3 py-1.5 text-sm text-primary-9 shadow-md ring-1 ring-black/5 backdrop-blur',

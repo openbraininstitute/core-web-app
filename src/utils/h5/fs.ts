@@ -1,5 +1,7 @@
 import { ready } from 'h5wasm';
 
+import { type CacheBounds, deleteEntry, openEntry, writeEntry } from '@/utils/asset-cache';
+
 /**
  * Download progress reported from a worker's fetch loop. `total` is null when the response
  * carries no Content-Length.
@@ -43,7 +45,7 @@ function isHDF5Signature(head: Uint8Array): boolean {
  * A ceiling here turns that into a sentence. It is deliberately not the
  * theoretical maximum: leaving room for h5wasm's own working set is the point.
  */
-const MAX_ASSET_BYTES = 2 * 1024 * 1024 * 1024;
+export const MAX_ASSET_BYTES = 2 * 1024 * 1024 * 1024;
 
 function formatSize(bytes: number): string {
   return `${(bytes / 1024 / 1024 / 1024).toFixed(1)} GiB`;
@@ -60,6 +62,34 @@ function tooLargeError(bytes: number, exact: boolean): AssetFetchError {
     0,
     `Asset is too large to open in the browser (${size}; limit ${formatSize(MAX_ASSET_BYTES)})`
   );
+}
+
+/**
+ * How long a download may go with nothing arriving before it is given up on. A connection that
+ * dies mid-transfer, as a phone's hotspot can, often never says so: the read just never returns,
+ * and whatever waits on it waits for good. A slow download that keeps arriving is left alone.
+ */
+export const STALL_MS = 30_000;
+
+/** Aborts a download with an error saying why once `STALL_MS` pass without `alive` being called. */
+function watchForStall() {
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const alive = () => {
+    clearTimeout(timer);
+    timer = setTimeout(
+      () =>
+        controller.abort(
+          new AssetFetchError(
+            0,
+            `The download stopped: nothing arrived for ${STALL_MS / 1000} seconds`
+          )
+        ),
+      STALL_MS
+    );
+  };
+  alive();
+  return { signal: controller.signal, alive, stop: () => clearTimeout(timer) };
 }
 
 type EmscriptenFS = Awaited<typeof ready>['FS'];
@@ -127,12 +157,15 @@ function streamToFS({
   body,
   total,
   onProgress,
+  onChunk,
 }: {
   FS: EmscriptenFS;
   filename: string;
   body: ReadableStream<Uint8Array>;
   total: number | null;
   onProgress?: (progress: DownloadProgress) => void;
+  /** Told each time bytes arrive. */
+  onChunk?: () => void;
 }): Promise<void> {
   return publishToFS(FS, filename, async (partial) => {
     const reader = body.getReader();
@@ -150,6 +183,7 @@ function streamToFS({
       for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
+        onChunk?.();
         // A response that declared no length gets checked as it arrives; one
         // that did was already rejected before the first read. Checked before
         // the write, so the chunk that would cross the limit is never stored.
@@ -205,24 +239,25 @@ async function restoreFromCache({
   filename,
 }: {
   FS: EmscriptenFS;
-  cache: Cache;
+  cache: CacheBounds;
   url: string;
   filename: string;
 }): Promise<boolean> {
-  const cached = await cache.match(url);
+  const cached = await openEntry(cache, url);
   if (!cached) return false;
 
   try {
-    if (!cached.body) throw new AssetFetchError(0, 'Cached asset has no body stream');
     // No progress reporting: a cache hit reads from disk fast enough that the bar would only
-    // flicker, so the UI shows its quick spinner instead.
-    await streamToFS({ FS, filename, body: cached.body, total: contentLength(cached) });
+    // flicker, so the UI shows its quick spinner instead. The size is what the response declared,
+    // which for an encoded one is less than what it decodes to, so `streamToFS` takes a longer
+    // body; only a shorter one is an interrupted write.
+    await streamToFS({ FS, filename, body: cached.body, total: cached.size || null });
 
     return true;
   } catch {
     // Whatever the entry turned out to be, it can not be trusted. Drop it and let the caller
     // download afresh, rather than reporting an error whose only answer is a reload.
-    await cache.delete(url);
+    await deleteEntry(cache, url);
 
     return false;
   }
@@ -242,7 +277,7 @@ export async function fetchToFS({
   url,
   headers,
   fileKey,
-  cacheName,
+  cache,
   extension = '.h5',
   onProgress,
 }: {
@@ -250,14 +285,11 @@ export async function fetchToFS({
   headers: Record<string, string>;
   fileKey: string;
   /** `CacheStorage` bucket to read from and write to. Keep one per asset kind. */
-  cacheName: string;
+  cache: CacheBounds;
   extension?: string;
   onProgress?: (progress: DownloadProgress) => void;
 }): Promise<{ filename: string }> {
-  // Instantiating the WASM module and opening the CacheStorage bucket are independent, and on a
-  // cold worker the former is the slower of the two — running them in series would add it to the
-  // front of every download.
-  const [{ FS }, cache] = await Promise.all([ready, caches.open(cacheName)]);
+  const { FS } = await ready;
   if (!FS) throw new Error('h5wasm FS not initialized');
 
   const filename = `${fileKey}${extension}`;
@@ -272,52 +304,66 @@ export async function fetchToFS({
 
   if (await restoreFromCache({ FS, cache, url, filename })) return { filename };
 
-  const fresh = await fetch(url, { headers });
-  if (!fresh.ok) {
-    throw new AssetFetchError(fresh.status, `Asset fetch failed (${fresh.status})`);
-  }
-  if (!fresh.body) {
-    throw new AssetFetchError(0, 'Asset response has no body stream');
-  }
-  const total = contentLength(fresh);
-  // Cheapest place to stop: the server has told us the size and we have not
-  // written a byte yet.
-  if (total && total > MAX_ASSET_BYTES) throw tooLargeError(total, true);
-
-  // Stream the *live network response* into the FS while tee-ing a second branch into CacheStorage,
-  // so progress reflects the actual download (not a fast local cache read). The network is the
-  // bottleneck, so the tee's buffers stay near-empty and memory stays at ~chunk + final file size.
-  //
-  // Only a response that declares its length is cached at all: the entry is checked against that
-  // length on the way back out, and one carrying no length could not be told apart from a
-  // truncated copy of itself.
-  let body = fresh.body;
-  let cachePut: Promise<void> | null = null;
-  if (total) {
-    const [toFs, toCache] = fresh.body.tee();
-    // Best-effort cross-session cache. The .catch keeps this from becoming an unhandled rejection if
-    // the FS-write loop below throws and we bail before awaiting it; a failed write just re-downloads.
-    cachePut = cache
-      .put(url, new Response(toCache, { headers: fresh.headers, status: 200 }))
-      .catch(() => {});
-    body = toFs;
-  }
-
+  const stall = watchForStall();
+  // Apart from the stall's, so that stopping the download for another reason isn't reported as a stall.
+  const abort = new AbortController();
+  let stored: Promise<boolean> | null = null;
   try {
-    await streamToFS({ FS, filename, body, total, onProgress });
+    const fresh = await fetch(url, {
+      headers,
+      signal: AbortSignal.any([stall.signal, abort.signal]),
+    });
+    stall.alive();
+    if (!fresh.ok) {
+      throw new AssetFetchError(fresh.status, `Asset fetch failed (${fresh.status})`);
+    }
+    if (!fresh.body) {
+      throw new AssetFetchError(0, 'Asset response has no body stream');
+    }
+    const total = contentLength(fresh);
+    // Cheapest place to stop: the server has told us the size and we have not
+    // written a byte yet.
+    if (total && total > MAX_ASSET_BYTES) throw tooLargeError(total, true);
+
+    // Stream the *live network response* into the FS while tee-ing a second branch into
+    // CacheStorage, so progress reflects the actual download (not a fast local cache read). The
+    // network is the bottleneck, so the tee's buffers stay near-empty and memory stays at ~chunk +
+    // final file size.
+    //
+    // Only a response that declares its length is cached at all: the entry is checked against that
+    // length on the way back out, and one carrying no length could not be told apart from a
+    // truncated copy of itself.
+    let body = fresh.body;
+    if (total) {
+      const [toFs, toCache] = fresh.body.tee();
+      // Best-effort cross-session cache: `writeEntry` never rejects, and a failed write just
+      // re-downloads.
+      stored = writeEntry(cache, url, toCache, total);
+      body = toFs;
+    }
+
+    try {
+      await streamToFS({ FS, filename, body, total, onProgress, onChunk: stall.alive });
+    } catch (err) {
+      // The FS write can fail with the download still going, and the tee would then buffer the
+      // rest of it for this branch, so it is stopped first. Whatever the cache took is a partial
+      // or a bad copy, so the delete waits for the write, which is otherwise free to land after it.
+      abort.abort();
+      await stored;
+      await deleteEntry(cache, url);
+      throw err;
+    }
   } catch (err) {
-    // Anything the put committed is a partial of the same download. Awaited before the delete
-    // because it would otherwise be free to land after it; the tee's source has ended by here, so
-    // it settles at once.
-    await cachePut;
-    await cache.delete(url);
-    throw err;
+    // However the abort surfaced, as the read's rejection or the fetch's, it says why.
+    throw stall.signal.aborted ? stall.signal.reason : err;
+  } finally {
+    stall.stop();
   }
 
   // Awaited: a second population stored in the same file opens its own worker as soon as this one
   // is released, and `cache.match` cannot see an entry whose put has not committed. Returning
   // first costs a second download of the whole file.
-  await cachePut;
+  await stored;
 
   return { filename };
 }
