@@ -1,8 +1,12 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useCompartmentPlaces } from '@/features/sonata-viewer/hooks/use-compartment-places';
+import {
+  MAX_MEASURED_IN_CONTAINER,
+  MAX_MEASURED_MORPHOLOGIES,
+  useCompartmentPlaces,
+} from '@/features/sonata-viewer/hooks/use-compartment-places';
 
 import type { ReactNode } from 'react';
 import type { ColumnValues, ParsedCircuitConfig } from '@/features/circuit-nodes/types';
@@ -11,6 +15,8 @@ import type { Compartment } from '@/features/sonata-viewer/compartment-rows';
 const h = vi.hoisted(() => ({
   loading: 0,
   most: 0,
+  loads: 0,
+  container: false,
   load: (_path: string): Promise<unknown> => Promise.resolve([]),
 }));
 
@@ -22,11 +28,16 @@ vi.mock('@/utils/logger', async (importOriginal) => ({
   logError: vi.fn(),
 }));
 vi.mock('@/features/scan-config/components/circuit-viz/sources/resolve-morphology-path', () => ({
-  resolveMorphologyLocation: () => ({ path: 'morphologies', format: 'swc', container: false }),
+  resolveMorphologyLocation: () => ({
+    path: 'morphologies',
+    format: 'swc',
+    container: h.container,
+  }),
   morphologyFileOf: (_: unknown, name: string) => `morphologies/${name}.swc`,
 }));
 vi.mock('@/features/circuit-viewer/morphologies/load/read-sections', () => ({
   loadSections: async (_: unknown, { path }: { path: string }) => {
+    h.loads += 1;
     h.loading += 1;
     h.most = Math.max(h.most, h.loading);
     try {
@@ -40,8 +51,8 @@ vi.mock('@/features/sonata-viewer/path-distance', () => ({
   sectionPaths: () => new Map([[1, { start: 10, length: 100, type: 2 }]]),
 }));
 
-/** A cell per morphology, each recording one compartment on section 1. */
-function places(cells: number) {
+/** Cells recording one compartment each on section 1, over `morphologies` morphologies. */
+function places(cells: number, morphologies = cells) {
   const compartments = new Map<number, Compartment[]>(
     Array.from({ length: cells }, (_, nodeId) => [
       nodeId,
@@ -50,7 +61,7 @@ function places(cells: number) {
   );
   const morphology = {
     kind: 'string',
-    values: Array.from({ length: cells }, (_, nodeId) => `m${nodeId}`),
+    values: Array.from({ length: cells }, (_, nodeId) => `m${nodeId % morphologies}`),
   } as unknown as ColumnValues;
   const client = new QueryClient();
   // the same between renders, as the viewer's are: new ones would start the measuring again
@@ -84,10 +95,10 @@ describe('useCompartmentPlaces', () => {
 
     const { result } = places(3);
 
-    await waitFor(() => expect(result.current).not.toBeNull());
-    expect([...(result.current?.distances.keys() ?? [])].sort()).toEqual([0, 2]);
+    await waitFor(() => expect(result.current.places).not.toBeNull());
+    expect([...(result.current.places?.distances.keys() ?? [])].sort()).toEqual([0, 2]);
     // halfway along a 100 µm section that starts 10 µm out
-    expect(result.current?.distances.get(0)).toBe(60);
+    expect(result.current.places?.distances.get(0)).toBe(60);
   });
 
   it('asks for no more morphologies once it is let go of', async () => {
@@ -109,8 +120,60 @@ describe('useCompartmentPlaces', () => {
 
     const { result } = places(40);
 
-    await waitFor(() => expect(result.current?.distances.size).toBe(40));
+    await waitFor(() => expect(result.current.places?.distances.size).toBe(40));
     expect(h.most).toBeGreaterThan(1);
     expect(h.most).toBeLessThanOrEqual(8);
+  });
+
+  describe('over the morphology limit', () => {
+    beforeEach(() => {
+      h.loads = 0;
+      h.container = false;
+      h.load = () => Promise.resolve([]);
+    });
+
+    it('measures nothing and says how many there are', async () => {
+      const { result } = places(MAX_MEASURED_MORPHOLOGIES + 1);
+
+      await waitFor(() => expect(result.current.unmeasured).not.toBeNull());
+      expect(result.current.unmeasured).toEqual({
+        morphologies: MAX_MEASURED_MORPHOLOGIES + 1,
+        limit: MAX_MEASURED_MORPHOLOGIES,
+      });
+      expect(result.current.places).toBeNull();
+      expect(h.loads).toBe(0);
+    });
+
+    it('measures a report at the limit', async () => {
+      const { result } = places(MAX_MEASURED_MORPHOLOGIES);
+
+      await waitFor(() =>
+        expect(result.current.places?.distances.size).toBe(MAX_MEASURED_MORPHOLOGIES)
+      );
+      expect(result.current.unmeasured).toBeNull();
+    });
+
+    it('counts a morphology shared by several cells once', async () => {
+      const { result } = places(MAX_MEASURED_MORPHOLOGIES + 100, MAX_MEASURED_MORPHOLOGIES);
+
+      await waitFor(() =>
+        expect(result.current.places?.distances.size).toBe(MAX_MEASURED_MORPHOLOGIES + 100)
+      );
+      expect(h.loads).toBe(MAX_MEASURED_MORPHOLOGIES);
+    });
+
+    it('holds a container circuit to its lower limit', async () => {
+      h.container = true;
+
+      const over = places(MAX_MEASURED_IN_CONTAINER + 1);
+      await waitFor(() => expect(over.result.current.unmeasured).not.toBeNull());
+      expect(over.result.current.unmeasured?.limit).toBe(MAX_MEASURED_IN_CONTAINER);
+      expect(h.loads).toBe(0);
+
+      const at = places(MAX_MEASURED_IN_CONTAINER);
+      await waitFor(() =>
+        expect(at.result.current.places?.distances.size).toBe(MAX_MEASURED_IN_CONTAINER)
+      );
+    });
   });
 });

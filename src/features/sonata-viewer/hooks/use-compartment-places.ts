@@ -22,6 +22,10 @@ import type { SectionPath } from '@/features/sonata-viewer/path-distance';
 /** Morphologies asked for at once: a report may record thousands of cells. */
 const MORPHOLOGY_LOADS = 8;
 
+export const MAX_MEASURED_MORPHOLOGIES = 200;
+/** Lower: OBI-One downloads the whole container for each morphology read from it. */
+export const MAX_MEASURED_IN_CONTAINER = 20;
+
 /**
  * Where each of a report's compartments is on its cell, by trace: how far along its
  * neurites from the soma, in µm, and its section's type.
@@ -31,12 +35,23 @@ export type CompartmentPlaces = {
   types: ReadonlyMap<number, string>;
 };
 
+export type TUnmeasuredPlaces = { morphologies: number; limit: number };
+
+export type TCompartmentPlacesState = {
+  places: CompartmentPlaces | null;
+  /** Set where the report has more morphologies than the limit, so none were measured. */
+  unmeasured: TUnmeasuredPlaces | null;
+};
+
+const NO_PLACES: TCompartmentPlacesState = { places: null, unmeasured: null };
+
 /**
  * The places of a report's compartments, measured on their cells' morphologies once those
  * load: through the 3D view's cache, so one it has drawn is not asked for again. A
  * compartment set's offset says where along its section each one is; without one, a
- * section's compartments are at its segments' centres, as NEURON reports them. Null until
- * they are in, and where the circuit has no morphologies to measure on.
+ * section's compartments are at its segments' centres, as NEURON reports them. Places are
+ * null until they are in, where the circuit has no morphologies to measure on, and where the
+ * report has more morphologies than the limit.
  */
 export function useCompartmentPlaces({
   enabled,
@@ -55,13 +70,13 @@ export function useCompartmentPlaces({
   /** Each compartment's offset along its section, where a compartment set says it. */
   offsets: ReadonlyMap<number, number> | undefined;
   getColumn: (name: string) => Promise<ColumnValues>;
-}): CompartmentPlaces | null {
+}): TCompartmentPlacesState {
   const { virtualLabId, projectId } = useWorkspace();
   const queryClient = useQueryClient();
   const [found, setFound] = useState<{
     compartments: ReadonlyMap<number, readonly Compartment[]>;
     offsets: ReadonlyMap<number, number> | undefined;
-    places: CompartmentPlaces;
+    state: TCompartmentPlacesState;
   }>();
   useEffect(() => {
     if (!enabled || !circuitId || !circuitConfig || !populationName) return;
@@ -79,6 +94,21 @@ export function useCompartmentPlaces({
           : morphologies.kind === 'string'
             ? morphologies.values[nodeId]
             : undefined;
+      const names = new Set<string>();
+      for (const nodeId of compartments.keys()) {
+        const name = nameOf(nodeId);
+        if (name) names.add(name);
+      }
+      const most = location.container ? MAX_MEASURED_IN_CONTAINER : MAX_MEASURED_MORPHOLOGIES;
+      if (names.size > most) {
+        if (cancelled) return;
+        setFound({
+          compartments,
+          offsets,
+          state: { places: null, unmeasured: { morphologies: names.size, limit: most } },
+        });
+        return;
+      }
       const pathsOf = new Map<string, Promise<Map<number, SectionPath> | null>>();
       const failed = new Set<string>();
       const distances = new Map<number, number>();
@@ -128,7 +158,13 @@ export function useCompartmentPlaces({
       if (failed.size > 0) {
         logError(`${failed.size} morphologies could not be measured on:`, [...failed].slice(0, 5));
       }
-      if (!cancelled) setFound({ compartments, offsets, places: { distances, types } });
+      if (!cancelled) {
+        setFound({
+          compartments,
+          offsets,
+          state: { places: { distances, types }, unmeasured: null },
+        });
+      }
     };
     measure().catch((error: unknown) =>
       logError('The compartments could not be measured on their cells:', error)
@@ -150,5 +186,7 @@ export function useCompartmentPlaces({
     projectId,
     queryClient,
   ]);
-  return found?.compartments === compartments && found.offsets === offsets ? found.places : null;
+  return found?.compartments === compartments && found.offsets === offsets
+    ? found.state
+    : NO_PLACES;
 }

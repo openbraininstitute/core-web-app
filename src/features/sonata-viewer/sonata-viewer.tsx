@@ -77,6 +77,7 @@ import { TABLE_BOX_CLASS } from '@/features/spike-viewer/spike-statistics/statis
 import { meanTraceFigure } from '@/features/spike-viewer/spike-statistics/time-course-figures';
 import { WindowChip } from '@/features/spike-viewer/spike-statistics/window-chip';
 import { PillSelect } from '@/ui/molecules/select/pill-select';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
 import type { Remote } from 'comlink';
@@ -463,7 +464,7 @@ export function SonataReportView({
     () => (population ? compartmentsOf(population) : NO_COMPARTMENTS),
     [population]
   );
-  const compartmentPlaces = useCompartmentPlaces({
+  const { places: compartmentPlaces, unmeasured: unmeasuredPlaces } = useCompartmentPlaces({
     enabled: compartmental && status === 'ready',
     circuitId: circuit?.id,
     circuitConfig,
@@ -953,14 +954,35 @@ export function SonataReportView({
       },
     },
     resetRequest,
-    headerExtra: docked && timeWindow && (
-      <WindowChip
-        name="Trace window"
-        title="The traces' zoom, which the table's statistics and the plots follow: click to see the whole run again"
-        time={timeWindow}
-        cells={null}
-        onClear={() => handleTimeWindowChange(null)}
-      />
+    headerExtra: (
+      <>
+        {docked && timeWindow && (
+          <WindowChip
+            name="Trace window"
+            title="The traces' zoom, which the table's statistics and the plots follow: click to see the whole run again"
+            time={timeWindow}
+            cells={null}
+            onClear={() => handleTimeWindowChange(null)}
+          />
+        )}
+        {unmeasuredPlaces && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span
+                className="text-neutral-4 shrink-0 text-xs whitespace-nowrap"
+                data-testid="compartment-places-unmeasured"
+              >
+                No path distances
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              Path distance and section type are measured on reports of up to{' '}
+              {unmeasuredPlaces.limit.toLocaleString()} morphologies; this one records{' '}
+              {unmeasuredPlaces.morphologies.toLocaleString()}.
+            </TooltipContent>
+          </Tooltip>
+        )}
+      </>
     ),
   };
 
