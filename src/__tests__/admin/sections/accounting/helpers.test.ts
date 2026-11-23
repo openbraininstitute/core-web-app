@@ -73,7 +73,8 @@ describe('accountingHref', () => {
 });
 
 describe('describeStatusChange', () => {
-  const account = (enabled: boolean) => ({ enabled }) as TAccount;
+  const account = (enabled: boolean, account_type = 'proj') =>
+    ({ enabled, account_type }) as TAccount;
 
   it('counts the accounts it changed', () => {
     expect(describeStatusChange({ accounts: [account(true)], open_job_ids: [] })).toBe(
@@ -85,6 +86,15 @@ describe('describeStatusChange', () => {
     expect(
       describeStatusChange({ accounts: [account(false), account(false)], open_job_ids: ['j1'] })
     ).toBe("Disabled 2 accounts. 1 open job can't be charged until it's enabled again.");
+  });
+
+  it('leaves reservation accounts out of the count', () => {
+    expect(
+      describeStatusChange({
+        accounts: [account(false), account(false, 'rsv')],
+        open_job_ids: [],
+      })
+    ).toBe('Disabled 1 account');
   });
 });
 

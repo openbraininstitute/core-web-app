@@ -218,6 +218,23 @@ describe('client writes and the proxy allowlist', () => {
     expect(error).toBeInstanceOf(ApiError);
     expect(error.message).toBe('Insufficient funds in the virtual-lab account');
   });
+
+  it.each([
+    ['the connection drops', () => fetchMock.mockRejectedValue(new TypeError('Failed to fetch'))],
+    [
+      'a gateway answers with a page',
+      () =>
+        fetchMock.mockResolvedValue(
+          new Response('<html/>', { status: 502, headers: { 'content-type': 'text/html' } })
+        ),
+    ],
+  ])('says the outcome is unknown when %s', async (_, arrange) => {
+    arrange();
+
+    const error = await topUp({ vlab_id: ID, amount: '10' }).catch((caught) => caught);
+
+    expect(error.message).toMatch(/may or may not have gone through/);
+  });
 });
 
 describe('reportPath', () => {

@@ -27,14 +27,23 @@ const LAB: TAccount = {
   updated_at: '2026-11-01T00:00:00Z',
 };
 
+const renderActions = (account: TAccount) =>
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <AccountActions account={account} />
+    </QueryClientProvider>
+  );
+
 describe('AccountActions', () => {
+  it('offers only Enable on a disabled account', () => {
+    renderActions({ ...LAB, enabled: false });
+
+    expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual(['Enable']);
+  });
+
   it('sends a top-up amount as the string the operator typed', async () => {
     topUpMock.mockResolvedValue(null);
-    render(
-      <QueryClientProvider client={new QueryClient()}>
-        <AccountActions account={LAB} />
-      </QueryClientProvider>
-    );
+    renderActions(LAB);
 
     fireEvent.click(screen.getByRole('button', { name: 'Top up' }));
     const dialog = await screen.findByRole('dialog');

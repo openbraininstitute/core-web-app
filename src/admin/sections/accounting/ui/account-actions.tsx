@@ -27,12 +27,12 @@ import type {
   TAccountActionValues as TValues,
 } from '../types';
 
-const PROJECT_OPTIONS_PAGE = { page: 1, page_size: 100 };
+const PROJECT_OPTIONS = { enabled: true, page: 1, page_size: 100 };
 
 function MoveButton({ account, vlabId }: { account: TAccount; vlabId: string }) {
   const projects = useQuery({
     queryKey: adminQueryKeys.accountingProjectOptions(vlabId),
-    queryFn: ({ signal }) => listProjectAccounts({ vlabId, ...PROJECT_OPTIONS_PAGE }, signal),
+    queryFn: ({ signal }) => listProjectAccounts({ vlabId, ...PROJECT_OPTIONS }, signal),
   });
   const options = (projects.data?.data ?? [])
     .filter((project) => project.id !== account.id)
@@ -68,7 +68,7 @@ function statusAction(account: TAccount): TAction<TValues, TAccountStatus> {
     title: `${verb} ${account.name}?`,
     description: enabling
       ? `Enables the ${what}, so jobs can be charged to it again.`
-      : `Disables the ${what}. Jobs already running keep running, but nothing can be charged to it until it's enabled again.`,
+      : `Disables the ${what}. Jobs already running keep running, but nothing can be charged to it until it's enabled again. Credits can't be moved or depleted while it's disabled, so deplete it first if its credits should go.`,
     okText: verb,
     danger: !enabling,
     write: () => setAccountEnabled(account.id, { enabled: enabling }),
@@ -81,7 +81,7 @@ function depleteAction(account: TAccount, isLab: boolean): TAction<TValues, TDep
   return {
     label: 'Deplete',
     title: `Deplete ${account.name}?`,
-    description: `Moves every credit in ${isLab ? 'this lab and all its projects' : 'this project'} to the system account. This can't be undone.`,
+    description: `Moves every credit in ${isLab ? 'this lab and its enabled projects' : 'this project'} to the system account.${isLab ? ' Disabled projects keep theirs.' : ''} This can't be undone.`,
     fields: [typedNameField(account.name, 'account')],
     okText: 'Deplete',
     danger: true,
@@ -143,6 +143,14 @@ export function AccountActions({ account }: { account: TAccount }) {
   const isLab = account.account_type === AccountType.VirtualLab;
   const vlabId = account.account_type === AccountType.Project ? account.parent_id : null;
   if (!isLab && !vlabId) return null;
+  if (!account.enabled) {
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        <ActionButton action={statusAction(account)} />
+        <span className="text-neutral-4 text-sm">Credits move only on an enabled account.</span>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-wrap gap-2">

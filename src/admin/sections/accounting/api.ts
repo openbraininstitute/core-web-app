@@ -1,5 +1,6 @@
 import { match, P } from 'ts-pattern';
 
+import { ApiError } from '@/api/error';
 import { parseApiError } from '@/api/utils';
 import { compactRecord } from '@/utils/dictionary';
 
@@ -75,7 +76,7 @@ export const listVlabAccounts = (params: TVlabAccountFilters & TPageParams, sign
   paged<TVlabAccount>('admin/account/virtual-lab', params, signal);
 
 export const listProjectAccounts = (
-  { vlabId, ...params }: { vlabId: string } & TPageParams,
+  { vlabId, ...params }: { vlabId: string; enabled?: boolean } & TPageParams,
   signal?: AbortSignal
 ) => paged<TProjectAccount>(`admin/account/virtual-lab/${id(vlabId)}/project`, params, signal);
 
@@ -108,6 +109,12 @@ export const listReport = (
   signal?: AbortSignal
 ) => paged<TJobReport>(path, params, signal);
 
+const UNKNOWN_OUTCOME =
+  "The reply didn't arrive, so this change may or may not have gone through. Check the journal before trying again.";
+
+const isUnanswered = (error: unknown) =>
+  !(error instanceof ApiError) || ((error.cause?.status ?? 0) >= 500 && !error.cause?.message);
+
 async function accountingWrite<T = null>(
   path: string,
   body: unknown,
@@ -121,6 +128,8 @@ async function accountingWrite<T = null>(
       'x-admin-request': '1',
     },
     body: JSON.stringify(body),
+  }).catch((error) => {
+    throw isUnanswered(error) ? new ApiError(UNKNOWN_OUTCOME) : error;
   });
 
   return (reply?.data ?? null) as T;
