@@ -6,12 +6,11 @@ import {
   readWorkflowSessionSelection,
   WorkflowSessionSelectionMode,
 } from '@/features/scan-config/workflow/workflow-session-selection';
-
 import {
   buildBuildConfigureUrlFromDataViewEntity,
   buildSimulateConfigureUrlFromDataViewEntity,
   resolveSimulateSourceTypeFromDataView,
-} from './routes';
+} from '@/ui/segments/workflows/config/routes';
 
 const workspace = { virtualLabId: 'lab-1', projectId: 'project-1' };
 
