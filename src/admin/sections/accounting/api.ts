@@ -1,3 +1,5 @@
+import { match, P } from 'ts-pattern';
+
 import { parseApiError } from '@/api/utils';
 import { compactRecord } from '@/utils/dictionary';
 
@@ -68,11 +70,14 @@ export const listJournal = (params: TJournalFilters & TPageParams, signal?: Abor
 export const getSystemBalance = (signal?: AbortSignal) =>
   accountingGet<{ balance: string }>('balance/system', undefined, signal);
 
-export function reportPath({ vlabId, projectId }: { vlabId?: string; projectId?: string }) {
-  if (projectId) return `report/project/${id(projectId)}`;
-  if (vlabId) return `report/virtual-lab/${id(vlabId)}`;
-  return 'report/system';
-}
+export const reportPath = (scope: { vlabId?: string; projectId?: string }) =>
+  match(scope)
+    .with(
+      { projectId: P.string.minLength(1) },
+      ({ projectId }) => `report/project/${id(projectId)}`
+    )
+    .with({ vlabId: P.string.minLength(1) }, ({ vlabId }) => `report/virtual-lab/${id(vlabId)}`)
+    .otherwise(() => 'report/system');
 
 export const listReport = (
   { path, ...params }: { path: string } & TReportFilters & TPageParams,

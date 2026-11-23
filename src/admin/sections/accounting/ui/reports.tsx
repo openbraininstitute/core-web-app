@@ -4,16 +4,18 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 
 import { adminQueryKeys } from '../../../query-keys';
+import { useDayRange } from '../../../shared/day';
+import { errorReason } from '../../../shared/errors';
 import { formatDateTime } from '../../../shared/format';
 import { AdminPagedGrid, pagedSource } from '../../../shared/grid';
 import { PageHeader } from '../../../shared/page-header';
 import { AdminLink, adminHref } from '../../../shell/admin-link';
 import { getSystemBalance, listReport, reportPath } from '../api';
-import { reportUsage } from '../helpers';
+import { dayBounds, reportUsage } from '../helpers';
 import { AccountingFilter } from '../types';
 import { Credits } from './cells';
 import { creditsColumn } from './columns';
-import { useDayRange, useIdFilter } from './filters';
+import { useIdFilter } from './filters';
 
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { TJobReport } from '../types';
@@ -59,10 +61,11 @@ const COLUMNS: Array<ISimpleColumn<TJobReport>> = [
 ];
 
 function SystemBalance() {
-  const { data } = useQuery({
+  const { data, error } = useQuery({
     queryKey: adminQueryKeys.accountingSystemBalance(),
     queryFn: ({ signal }) => getSystemBalance(signal),
   });
+  if (error) return <span>System account balance unavailable: {errorReason(error)}</span>;
   if (!data) return null;
 
   return (
@@ -77,6 +80,7 @@ export function Reports() {
   const vlab = useIdFilter(AccountingFilter.Vlab, 'Virtual lab');
   const project = useIdFilter(AccountingFilter.Project, 'Project');
   const range = useDayRange();
+  const bounds = dayBounds(range.from, range.to);
   const path = reportPath({ vlabId: vlab.id, projectId: project.id });
 
   return (
@@ -103,8 +107,8 @@ export function Reports() {
         queryKey={adminQueryKeys.accountingReport(path)}
         params={{
           path,
-          started_after: range.bounds.after,
-          started_before: range.bounds.before,
+          started_after: bounds.after,
+          started_before: bounds.before,
         }}
         onRowClick={(report) => router.push(adminHref('accountingJob', report.job_id))}
       />

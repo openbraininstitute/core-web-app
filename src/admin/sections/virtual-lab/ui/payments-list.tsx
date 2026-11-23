@@ -1,9 +1,9 @@
 'use client';
 
-import { DatePicker, Segmented } from 'antd';
-import { parseAsString, parseAsStringLiteral, useQueryState } from 'nuqs';
+import { Segmented } from 'antd';
+import { parseAsStringLiteral, useQueryState } from 'nuqs';
 
-import { DAY_FORMAT, parseDay } from '../../../shared/day';
+import { parseDay, useDayRange } from '../../../shared/day';
 import { PageHeader } from '../../../shared/page-header';
 import { PaymentsGrid } from './billing';
 import { shallow, useListFilters } from './list-filters';
@@ -52,8 +52,7 @@ export function PaymentsList() {
     'type',
     parseAsStringLiteral(TYPES).withDefault('any').withOptions(shallow)
   );
-  const [from, setFrom] = useQueryState('from', parseAsString.withDefault('').withOptions(shallow));
-  const [to, setTo] = useQueryState('to', parseAsString.withDefault('').withOptions(shallow));
+  const range = useDayRange();
   const { params, controls } = useListFilters({ placeholder: 'Last 4 digits of the card' });
 
   return (
@@ -66,18 +65,12 @@ export function PaymentsList() {
           options={TYPE_OPTIONS}
           onChange={(value) => setType(value as PaymentTypeFilter)}
         />
-        <DatePicker.RangePicker
-          value={[parseDay(from), parseDay(to)]}
-          onChange={(dates) => {
-            setFrom(dates?.[0]?.format(DAY_FORMAT) ?? '');
-            setTo(dates?.[1]?.format(DAY_FORMAT) ?? '');
-          }}
-        />
+        {range.control}
       </div>
       {isCardSearchable(params.query) ? (
         <PaymentsGrid
           acrossOwners
-          params={paymentFilters({ card: params.query, type, from, to })}
+          params={paymentFilters({ card: params.query, type, from: range.from, to: range.to })}
         />
       ) : (
         <p className="border-neutral-2 text-neutral-4 rounded-lg border bg-white p-5">

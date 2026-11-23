@@ -1,11 +1,9 @@
 'use client';
 
-import { DatePicker, Segmented, Select, Tag } from 'antd';
+import { Segmented, Select, Tag } from 'antd';
 import { parseAsString, parseAsStringLiteral, useQueryState } from 'nuqs';
 
-import { DAY_FORMAT, parseDay } from '../../../shared/day';
 import { shallow } from '../../virtual-lab/ui/list-filters';
-import { dayBounds } from '../helpers';
 import { EnabledFilter } from '../types';
 
 import type { TAccountingFilter, TEnabledFilter } from '../types';
@@ -31,24 +29,6 @@ export function useEnabledFilter() {
         value={enabled}
         options={ENABLED_OPTIONS}
         onChange={(value) => setEnabled(value as TEnabledFilter)}
-      />
-    ),
-  };
-}
-
-export function useDayRange() {
-  const [from, setFrom] = useQueryState('from', parseAsString.withDefault('').withOptions(shallow));
-  const [to, setTo] = useQueryState('to', parseAsString.withDefault('').withOptions(shallow));
-
-  return {
-    bounds: dayBounds(from, to),
-    control: (
-      <DatePicker.RangePicker
-        value={[parseDay(from), parseDay(to)]}
-        onChange={(dates) => {
-          setFrom(dates?.[0]?.format(DAY_FORMAT) ?? '');
-          setTo(dates?.[1]?.format(DAY_FORMAT) ?? '');
-        }}
       />
     ),
   };

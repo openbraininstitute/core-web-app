@@ -1,8 +1,32 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { listJobs, reportPath } from '@/admin/sections/accounting/api';
+import {
+  getAccount,
+  getJob,
+  getSystemBalance,
+  listJobs,
+  listJournal,
+  listProjectAccounts,
+  listReport,
+  listVlabAccounts,
+  reportPath,
+} from '@/admin/sections/accounting/api';
+import {
+  AccountingSubtype,
+  ChargeType,
+  JobStatusFilter,
+  TransactionType,
+} from '@/admin/sections/accounting/types';
+import { matchAccountingRoute } from '@/admin/server/accounting-proxy';
 import { isForbidden } from '@/admin/shared/errors';
 import { ApiError } from '@/api/error';
+
+import type {
+  TJobFilters,
+  TJournalFilters,
+  TReportFilters,
+  TVlabAccountFilters,
+} from '@/admin/sections/accounting/types';
 
 const fetchMock = vi.fn();
 
@@ -73,6 +97,56 @@ describe('accounting client', () => {
     const error = await listJobs({ page: 1, page_size: 20 }).catch((caught) => caught);
 
     expect(error).toBeInstanceOf(ApiError);
+  });
+});
+
+describe('client requests and the proxy allowlist', () => {
+  const ID = '3fa85f64-5717-4562-b3fc-2c963f66afa6';
+  const PAGE = { page: 1, page_size: 20 };
+  const DAY = '2026-11-01T00:00:00.000Z';
+  const vlabFilters: Required<TVlabAccountFilters> = { name: 'lab', enabled: true };
+  const jobFilters: Required<TJobFilters> = {
+    vlab_id: ID,
+    proj_id: ID,
+    service_type: ChargeType.Oneshot,
+    service_subtype: AccountingSubtype.SingleCellSim,
+    status: JobStatusFilter.Finished,
+    started_after: DAY,
+    started_before: DAY,
+  };
+  const journalFilters: Required<TJournalFilters> = {
+    account_id: ID,
+    job_id: ID,
+    transaction_type: TransactionType.ChargeOneshot,
+    transaction_after: DAY,
+    transaction_before: DAY,
+  };
+  const reportFilters: Required<TReportFilters> = { started_after: DAY, started_before: DAY };
+
+  const calls: Array<[string, () => Promise<unknown>]> = [
+    ['listVlabAccounts', () => listVlabAccounts({ ...vlabFilters, ...PAGE })],
+    ['listProjectAccounts', () => listProjectAccounts({ vlabId: ID, ...PAGE })],
+    ['getAccount', () => getAccount(ID)],
+    ['listJobs', () => listJobs({ ...jobFilters, ...PAGE })],
+    ['getJob', () => getJob(ID)],
+    ['listJournal', () => listJournal({ ...journalFilters, ...PAGE })],
+    ['getSystemBalance', () => getSystemBalance()],
+    ...[{}, { vlabId: ID }, { projectId: ID }].map((scope): [string, () => Promise<unknown>] => [
+      `listReport ${reportPath(scope)}`,
+      () => listReport({ path: reportPath(scope), ...reportFilters, ...PAGE }),
+    ]),
+  ];
+
+  it.each(calls)('%s sends only what the proxy forwards', async (_, call) => {
+    fetchMock.mockResolvedValue(
+      json({ message: 'ok', data: { items: [], meta: { total_items: 0 } } })
+    );
+
+    await call();
+
+    const url = new URL(fetchMock.mock.calls[0][0], 'http://x');
+    const path = url.pathname.replace('/api/admin/accounting/', '');
+    expect(matchAccountingRoute(path.split('/'), url.searchParams)).not.toHaveProperty('status');
   });
 });
 

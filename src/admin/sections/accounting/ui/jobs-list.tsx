@@ -7,14 +7,16 @@ import { useState } from 'react';
 import { isUuid } from '@/features/data-grid/react/filters/id-tokens';
 
 import { adminQueryKeys } from '../../../query-keys';
+import { useDayRange } from '../../../shared/day';
 import { formatDateTime } from '../../../shared/format';
 import { AdminPagedGrid, pagedSource } from '../../../shared/grid';
 import { PageHeader } from '../../../shared/page-header';
 import { AdminLink, adminHref } from '../../../shell/admin-link';
 import { listJobs } from '../api';
+import { dayBounds } from '../helpers';
 import { AccountingFilter, AccountingSubtype, ChargeType, JobStatusFilter } from '../types';
 import { JobPhasePill } from './cells';
-import { useDayRange, useIdFilter, useOptionFilter } from './filters';
+import { useIdFilter, useOptionFilter } from './filters';
 
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { TAccountingJob, TAccountingSubtype, TChargeType, TJobStatusFilter } from '../types';
@@ -99,6 +101,7 @@ export function JobsList() {
     width: 'w-40!',
   });
   const range = useDayRange();
+  const bounds = dayBounds(range.from, range.to);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
@@ -143,8 +146,8 @@ export function JobsList() {
           service_type: type.value,
           service_subtype: subtype.value,
           status: status.value,
-          started_after: range.bounds.after,
-          started_before: range.bounds.before,
+          started_after: bounds.after,
+          started_before: bounds.before,
         }}
         onRowClick={(job) => router.push(adminHref('accountingJob', job.id))}
       />

@@ -1,4 +1,4 @@
-import { match } from 'ts-pattern';
+import { match, P } from 'ts-pattern';
 
 import { formatBytes, formatDurationFromSeconds } from '@/utils/format';
 
@@ -51,14 +51,14 @@ export const JOB_PHASES: Record<TJobPhase, { label: string; tone: TStatusTone }>
   [JobPhase.Cancelled]: { label: 'Cancelled', tone: 'neutral' },
 };
 
-export function jobPhase(job: TAccountingJob): TJobPhase {
-  if (job.cancelled_at && job.finished_at) return JobPhase.Expired;
-  if (job.cancelled_at) return JobPhase.Cancelled;
-  if (job.finished_at) return JobPhase.Finished;
-  if (job.started_at) return JobPhase.Running;
-  if (job.reserved_at) return JobPhase.Reserved;
-  return JobPhase.Created;
-}
+export const jobPhase = (job: TAccountingJob): TJobPhase =>
+  match(job)
+    .with({ cancelled_at: P.string, finished_at: P.string }, () => JobPhase.Expired)
+    .with({ cancelled_at: P.string }, () => JobPhase.Cancelled)
+    .with({ finished_at: P.string }, () => JobPhase.Finished)
+    .with({ started_at: P.string }, () => JobPhase.Running)
+    .with({ reserved_at: P.string }, () => JobPhase.Reserved)
+    .otherwise(() => JobPhase.Created);
 
 export const ACCOUNT_TYPE_LABELS: Record<TAccountType, string> = {
   [AccountType.System]: 'System',

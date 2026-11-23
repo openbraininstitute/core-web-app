@@ -1,13 +1,14 @@
 'use client';
 
 import { adminQueryKeys } from '../../../query-keys';
+import { useDayRange } from '../../../shared/day';
 import { AdminPagedGrid, pagedSource } from '../../../shared/grid';
 import { PageHeader } from '../../../shared/page-header';
 import { listJournal } from '../api';
-import { TRANSACTION_LABELS } from '../helpers';
+import { dayBounds, TRANSACTION_LABELS } from '../helpers';
 import { AccountingFilter, TransactionType } from '../types';
 import { JOURNAL_COLUMNS, journalRowId } from './columns';
-import { useDayRange, useIdFilter, useOptionFilter } from './filters';
+import { useIdFilter, useOptionFilter } from './filters';
 
 import type { TJournalEntry, TTransactionType } from '../types';
 
@@ -27,6 +28,7 @@ export function JournalList() {
     options: TYPE_OPTIONS,
   });
   const range = useDayRange();
+  const bounds = dayBounds(range.from, range.to);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
@@ -50,8 +52,8 @@ export function JournalList() {
           account_id: account.id,
           job_id: job.id,
           transaction_type: type.value,
-          transaction_after: range.bounds.after,
-          transaction_before: range.bounds.before,
+          transaction_after: bounds.after,
+          transaction_before: bounds.before,
         }}
       />
     </div>
