@@ -5,13 +5,25 @@ import Logout from '@/app/app/log-out/Logout';
 
 const signOut = vi.hoisted(() => vi.fn());
 vi.mock('next-auth/react', () => ({ signOut }));
+const dropCleanCopies = vi.hoisted(() => vi.fn(async () => {}));
+vi.mock('@/features/logbook/collaboration/local-sync', () => ({ dropCleanCopies }));
 
 afterEach(() => {
   vi.unstubAllGlobals();
   signOut.mockReset();
+  dropCleanCopies.mockClear();
 });
 
 describe('logging out', () => {
+  it('drops the logbook pages this browser kept, before signing out', async () => {
+    vi.stubGlobal('caches', { delete: async () => true });
+
+    render(<Logout />);
+
+    await waitFor(() => expect(signOut).toHaveBeenCalled());
+    expect(dropCleanCopies).toHaveBeenCalledTimes(1);
+  });
+
   it('drops the project files the viewers kept in the browser, then signs out', async () => {
     const dropped: string[] = [];
     vi.stubGlobal('caches', {

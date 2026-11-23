@@ -5,6 +5,11 @@ import { useEffect } from 'react';
 
 import { clearProjectDataCaches } from '@/utils/project-data-caches';
 
+async function clearLogbookCopies() {
+  const { dropCleanCopies } = await import('@/features/logbook/collaboration/local-sync');
+  await dropCleanCopies();
+}
+
 /**
  * How long signing out waits for the caches to go: gigabytes of them can take a while. The marker of whose they are is
  * left as it is, so that whatever is left is deleted when someone else signs in.
@@ -14,7 +19,8 @@ const CLEAR_TIMEOUT_MS = 2000;
 export default function Logout() {
   useEffect(() => {
     const timeout = new Promise<void>((resolve) => setTimeout(resolve, CLEAR_TIMEOUT_MS));
-    Promise.race([clearProjectDataCaches(), timeout]).finally(() => signOut({ callbackUrl: '/' }));
+    const cleared = Promise.allSettled([clearProjectDataCaches(), clearLogbookCopies()]);
+    Promise.race([cleared, timeout]).finally(() => signOut({ callbackUrl: '/' }));
   }, []);
 
   return (

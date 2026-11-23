@@ -1,3 +1,5 @@
+import { config } from '@/config';
+
 import { type FeatureFlags, flags } from './flags';
 
 export const FEATURE_FLAGS_COOKIE = 'feature-flags';
@@ -9,5 +11,12 @@ export const defaultFlags: FeatureFlags = flags.reduce((acc, flag) => {
   acc[flag.key as keyof FeatureFlags] = flag.defaultValue;
   return acc;
 }, {} as FeatureFlags);
+
+export const lockedFlags = (): Partial<FeatureFlags> =>
+  Object.fromEntries(
+    flags
+      .filter((flag) => flag.environments?.includes(config.DEPLOYMENT_ENV) === false)
+      .map((flag) => [flag.key, flag.defaultValue])
+  );
 
 export type { FeatureFlags };

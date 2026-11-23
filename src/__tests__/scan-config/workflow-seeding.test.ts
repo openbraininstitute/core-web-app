@@ -152,6 +152,24 @@ const initializeModelSchema = {
   },
 } as unknown as ConfigSchema;
 
+const RECORDING_ID = '0198f7f5-3bd0-7a2a-9c6f-1f6f2b1c9a22';
+
+/** Ion channel build shape: `initialize.recordings` is a `model_identifier_multiple` array */
+const ionChannelFittingSchema = {
+  title: 'IonChannelFittingScanConfig',
+  properties: {
+    type: { const: 'IonChannelFittingScanConfig', default: '' },
+    initialize: {
+      ui_element: 'block_single',
+      title: 'Initialization',
+      properties: {
+        type: { const: 'IonChannelFittingScanConfig.Initialize', default: '' },
+        recordings: { ui_element: 'model_identifier_multiple', type: 'array', maxItems: 3 },
+      },
+    },
+  },
+} as unknown as ConfigSchema;
+
 const emptyIonChannelConfig: Config = {
   type: 'IonChannelModelSimulationScanConfig',
   initialize: { type: 'IonChannelModelSimulationScanConfig.Initialize', simulation_length: 1000 },
@@ -318,6 +336,22 @@ describe('WorkflowSeed.applyTo', () => {
 
     expect(patched.initialize).toEqual({
       circuit: { type: ScanConfigFromIdType.MEModelFromID, id_str: ION_CHANNEL_ID },
+    });
+  });
+
+  it('writes a single selection as a list when the initialize field takes several entities', () => {
+    const patched = workflowSeed.applyTo({
+      config: { type: 'IonChannelFittingScanConfig', initialize: { recordings: [] } },
+      schema: ionChannelFittingSchema,
+      sessionSelection: singleSelection({
+        type: ExtendedEntitiesTypeDict.IonChannelRecording,
+        id: RECORDING_ID,
+      }),
+      resolveFromIdType: () => ScanConfigFromIdType.IonChannelRecordingFromID,
+    });
+
+    expect(patched.initialize).toEqual({
+      recordings: [{ type: ScanConfigFromIdType.IonChannelRecordingFromID, id_str: RECORDING_ID }],
     });
   });
 });

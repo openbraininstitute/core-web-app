@@ -5,6 +5,8 @@ export interface ApiErrorCause {
   details?: any;
   /** FastAPI `HTTPException` reason, from a `{ detail }` body. */
   detail?: string;
+  /** RFC 9457 problem type, from a `{ type }` body (the logbook server). */
+  type?: string;
 }
 
 /*

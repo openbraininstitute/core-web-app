@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  BuildOutlined,
   CheckOutlined,
   CopyOutlined,
   DeleteOutlined,
@@ -30,7 +31,11 @@ import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive, downloadFailedNotification } from '@/services/entity-download';
 import { Action, ActionKind } from '@/ui/molecules/side-menu-action';
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
-import { buildSimulateConfigureUrlFromDataViewEntity } from '@/ui/segments/workflows/config';
+import {
+  buildBuildConfigureUrlFromDataViewEntity,
+  buildSimulateConfigureUrlFromDataViewEntity,
+  findBuildWorkflowForEntity,
+} from '@/ui/segments/workflows/config';
 import { cn } from '@/utils/css-class';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -52,7 +57,7 @@ export default function ActionMenu({
   isPublicEntity: boolean;
   variant?: TViewVariant;
 }) {
-  const { replace: navigate } = useRouter();
+  const { replace: navigate, push } = useRouter();
   const queryClient = useQueryClient();
   const [, setCircuit] = useAtom(downloadPanelCircuitAtom);
   const { error: notifyError, success: notifySuccess } = useAppNotification();
@@ -136,8 +141,21 @@ export default function ActionMenu({
     });
   }, [isSimulatable, ctx, type, entity, flags]);
 
-  const simulateBlockReason = getWorkflowLifecycleBlockReason(entity);
-  const simulateDisabled = Boolean(simulateBlockReason);
+  const workflowBlockReason = getWorkflowLifecycleBlockReason(entity);
+  const workflowDisabled = Boolean(workflowBlockReason);
+
+  const canBuild = Boolean(entityType.isBuildable && findBuildWorkflowForEntity(type, flags));
+
+  // built on click: the URL writes the pre-selection to sessionStorage
+  const startBuild = () => {
+    const href = buildBuildConfigureUrlFromDataViewEntity({
+      workspace: ctx,
+      extendedType: type,
+      entityId: entity.id,
+      flags,
+    });
+    if (href) push(href);
+  };
 
   return (
     <div
@@ -169,13 +187,13 @@ export default function ActionMenu({
       </Action>
 
       {simulateHref &&
-        (simulateDisabled ? (
+        (workflowDisabled ? (
           <Action
             variant={variant}
             kind={ActionKind.Button}
             testId="data-view-action-simulate"
             disabled
-            disabledReason={simulateBlockReason}
+            disabledReason={workflowBlockReason}
             icon={<ExperimentOutlined />}
           >
             Simulate
@@ -191,6 +209,20 @@ export default function ActionMenu({
             Simulate
           </Action>
         ))}
+
+      {canBuild && (
+        <Action
+          variant={variant}
+          kind={ActionKind.Button}
+          testId="data-view-action-build"
+          onClick={startBuild}
+          disabled={workflowDisabled}
+          disabledReason={workflowBlockReason}
+          icon={<BuildOutlined />}
+        >
+          Build
+        </Action>
+      )}
 
       {entityType.isDownloadable && (
         <Action

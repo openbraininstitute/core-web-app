@@ -2,7 +2,7 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { config } from '@/config';
 import { PanelState } from '@/ui/segments/ai/types';
 
-import { defineFlag } from './define-flag';
+import { defineFlag, type TDeploymentEnv } from './define-flag';
 
 export const aiPanelStateFlag = defineFlag<PanelState>({
   key: 'aiPanelState',
@@ -101,6 +101,17 @@ export const emodelValidationFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
+const LOGBOOK_ENVIRONMENTS: readonly TDeploymentEnv[] = ['local', 'staging'];
+
+export const logbookFlag = defineFlag<boolean>({
+  key: 'logbook',
+  defaultValue: false,
+  values: [true, false],
+  description: 'Logbook: research logs, in the top menu after Reports',
+  environments: LOGBOOK_ENVIRONMENTS,
+  visible: () => LOGBOOK_ENVIRONMENTS.includes(config.DEPLOYMENT_ENV),
+});
+
 export const flags = [
   aiPanelStateFlag,
   brainRegionSimulationFlag,
@@ -113,6 +124,7 @@ export const flags = [
   greyMenuPillsFlag,
   hideHelpFlag,
   emodelValidationFlag,
+  logbookFlag,
 ] as const;
 
 export type FlagKey = (typeof flags)[number]['key'];

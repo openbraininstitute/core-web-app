@@ -16,6 +16,7 @@ import {
   HelpIcon,
   Home,
   LearnIcon,
+  LogbookIcon,
   NotebookIcon,
   ReportsIcon,
   WorkflowIcon,
@@ -23,7 +24,13 @@ import {
 import { FeedbackStarIcon } from '@/components/icons/FeedbackStarIcon';
 import { config } from '@/config';
 import { WorkspaceMainPages } from '@/constants';
-import { greyMenuPillsFlag, hideHelpFlag, learnFlag, useFlag } from '@/features/feature-flags';
+import {
+  greyMenuPillsFlag,
+  hideHelpFlag,
+  learnFlag,
+  logbookFlag,
+  useFlag,
+} from '@/features/feature-flags';
 import { createBreakpoint, useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Badge } from '@/ui/molecules/badge';
@@ -151,6 +158,16 @@ const links: LinkItem[] = [
     hasAction: false,
   },
   {
+    id: 'workspace-logbook',
+    key: 'logbook',
+    title: 'Logbook',
+    url: WorkspaceMainPages.Logbook,
+    icon: <LogbookIcon className="group-hover:text-primary-3 size-[17px]! shrink-0" />,
+    allowText: true,
+    className: 'px-6 gap-2',
+    hasAction: false,
+  },
+  {
     id: 'workspace-help',
     key: 'help',
     title: 'Help',
@@ -197,6 +214,7 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
 
   const learn = useFlag(learnFlag.key);
   const help = useFlag(hideHelpFlag.key) !== true;
+  const logbook = useFlag(logbookFlag.key) === true;
   // the links, all but the active one, on the page's grey rather than white: behind its flag
   const grey = useFlag(greyMenuPillsFlag.key) === true;
   const fill = grey ? 'bg-background' : 'bg-white';
@@ -214,6 +232,7 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
       links.filter((link) => {
         if (link.id === 'workspace-learn') return learn;
         if (link.id === 'workspace-help') return help;
+        if (link.id === 'workspace-logbook') return logbook;
         if (link.id === 'workspace-course') {
           return (
             hasCourse && isVlabAdmin && projectId === virtualLabData?.course?.template_project_id
@@ -221,7 +240,15 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
         }
         return true;
       }),
-    [learn, help, hasCourse, isVlabAdmin, projectId, virtualLabData?.course?.template_project_id]
+    [
+      learn,
+      help,
+      logbook,
+      hasCourse,
+      isVlabAdmin,
+      projectId,
+      virtualLabData?.course?.template_project_id,
+    ]
   );
 
   const hashedLinks = filteredLinks.map((link) => ({
