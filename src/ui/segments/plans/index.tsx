@@ -87,7 +87,12 @@ export default function Plans({ plans }: { plans: PlanV2[] }) {
       {/* Desktop */}
       <div className="relative hidden w-screen grid-cols-4 gap-3 px-16 xl:grid pt-12">
         {sortedPlans.map((plan) => (
-          <PlanCard key={plan.name} plan={plan} testId={planTestId(plan)} />
+          <PlanCard
+            key={plan.name}
+            plan={plan}
+            startFreeHref={plan.name === 'Free' ? '/app/virtual-lab' : undefined}
+            testId={planTestId(plan)}
+          />
         ))}
       </div>
 
@@ -128,7 +133,11 @@ export default function Plans({ plans }: { plans: PlanV2[] }) {
                 className="basis-full pl-4 md:basis-1/3"
                 data-index={index}
               >
-                <PlanCard plan={plan} testId={planTestId(plan, 'mobile')} />
+                <PlanCard
+                  plan={plan}
+                  startFreeHref={plan.name === 'Free' ? '/app/virtual-lab' : undefined}
+                  testId={planTestId(plan, 'mobile')}
+                />
               </CarouselItem>
             ))}
           </CarouselContent>

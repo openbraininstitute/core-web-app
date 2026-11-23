@@ -10,25 +10,9 @@ import { LANDING_WAY_IN, LandingTileStage } from './landing-tile-stage';
 
 import styles from './living-hero.module.css';
 
-export const SCIENCE_SCENES = [
-  { label: 'Simulate whole brains', group: 'brain' },
-  { label: 'Simulate activity', group: 'simulate' },
-  { label: 'Explore data', group: 'explore' },
-  { label: 'Build models', group: 'build' },
-  { label: 'Virtual labs', group: 'labs' },
-  { label: 'Skeletonize meshes', group: 'skeletonize' },
-  { label: 'Skeletonize morphologies and extract spines', group: 'dendrites' },
-  { label: 'Grow a neocortex', group: 'neocortex' },
-] as const;
 /** The scene the opening shows first: the fly's brain and nerve cord turning as its model runs. */
 export const FIRST_SCENE = 0;
-/** How long the opening stands, while the page is visible, before it glides on to the first chapter, ms. */
-export const LANDING_AUTO_CONTINUE_MS = 8000;
-
-/**
- * The public opening shows the science scenes, the fly's brain first, then glides on to the
- * Virtual Labs chapter by itself unless the visitor gets there first (a chapter, the arrow or a scroll).
- */
+/** The tour starts when the visitor chooses a chapter or continues from the landing. */
 export function LivingHero({
   onContinue,
   onChapter,
@@ -42,7 +26,6 @@ export function LivingHero({
   const [visible, setVisible] = useState(true);
   const touchY = useRef<number | null>(null);
   const heroRef = useRef<HTMLElement>(null);
-  const interacted = useRef(false);
   // The chapters along the foot and the arrow down come in last, with the landing's way in.
   const [wayIn, setWayIn] = useState(false);
   useEffect(() => {
@@ -73,30 +56,6 @@ export function LivingHero({
       document.removeEventListener('visibilitychange', visibility);
     };
   }, []);
-
-  // The parent hands a fresh `onContinue` each render; the countdown must not restart with it.
-  const continueRef = useRef(onContinue);
-  useEffect(() => {
-    continueRef.current = onContinue;
-  }, [onContinue]);
-
-  // Counts only while the page is shown: a tab opened in the background still opens on the landing.
-  const shownFor = useRef(0);
-  useEffect(() => {
-    if (!visible || shownFor.current >= LANDING_AUTO_CONTINUE_MS) return;
-    const started = performance.now();
-    const timer = window.setTimeout(() => {
-      shownFor.current = LANDING_AUTO_CONTINUE_MS;
-      if (!interacted.current) continueRef.current();
-    }, LANDING_AUTO_CONTINUE_MS - shownFor.current);
-    return () => {
-      shownFor.current = Math.min(
-        LANDING_AUTO_CONTINUE_MS,
-        shownFor.current + performance.now() - started
-      );
-      window.clearTimeout(timer);
-    };
-  }, [visible]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -167,39 +126,32 @@ export function LivingHero({
       }}
     >
       {scene !== null && (
-        <LandingTileStage
-          scene={scene}
-          reduced={reduced}
-          visible={visible}
-          onSelect={setScene}
-          onInteraction={() => {
-            interacted.current = true;
-          }}
-        />
+        <LandingTileStage scene={scene} reduced={reduced} visible={visible} onSelect={setScene} />
       )}
-      <button
-        type="button"
-        className={styles.nextChapter}
-        aria-label="Next screen"
-        onClick={onContinue}
+      <nav
+        className={`${THEME_NAV_RAIL} ${styles.homeChapterRail}`}
+        aria-label="Platform sections"
         style={lastIn}
       >
-        <svg
-          aria-hidden="true"
-          viewBox="0 0 24 24"
-          width="26"
-          height="26"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M6 9l6 6 6-6" />
-        </svg>
-      </button>
-      <nav className={THEME_NAV_RAIL} aria-label="Platform sections" style={lastIn}>
-        <ThemeLine links={BRAIN_THEME_LINKS} goTo={onChapter} publicAppearance />
+        <div className={styles.chapterNavigation}>
+          <ThemeLine links={BRAIN_THEME_LINKS} goTo={onChapter} publicAppearance />
+          <button type="button" className={styles.tourLink} onClick={onContinue}>
+            See what you can do
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
+        </div>
       </nav>
     </section>
   );

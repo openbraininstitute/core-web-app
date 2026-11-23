@@ -21,6 +21,8 @@ import { cn } from '@/utils/css-class';
 
 import { useHeaderContrast } from './use-header-contrast';
 
+const headerLabel = 'text-[14px] leading-[18px] font-semibold whitespace-nowrap';
+
 /**
  * All the site's pages as one menu in the top bar, under the headings of its own menu; on a phone, where its words do
  * not fit beside the logo and the way in, by its mark alone. Not modal: the page goes on scrolling under it.
@@ -46,16 +48,36 @@ export function FindOutMore({
       aria-hidden={!shown}
       inert={!shown || undefined}
       className={cn(
-        'transition-opacity duration-500',
+        'flex items-center gap-5 transition-opacity duration-500',
         shown ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
       )}
     >
+      {['Features', 'Pricing'].map((label) => {
+        const href = `/${label.toLowerCase()}`;
+        const active = pathname === href;
+        return (
+          <Link
+            key={href}
+            href={href}
+            aria-current={active ? 'page' : undefined}
+            className={cn(
+              headerLabel,
+              'hidden hover:underline md:inline-flex',
+              light ? 'text-white' : 'text-primary-9',
+              active && 'underline underline-offset-4'
+            )}
+          >
+            {label}
+          </Link>
+        );
+      })}
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger
           ref={trigger}
           aria-label="Find out more"
           className={cn(
-            'group flex items-center gap-[4px] text-[14px] leading-[18px] font-semibold whitespace-nowrap transition-[color,opacity] duration-300 hover:opacity-60 max-sm:-m-[9px] max-sm:p-[9px]',
+            headerLabel,
+            'group flex items-center gap-[4px] transition-[color,opacity] duration-300 hover:opacity-60 max-sm:-m-[9px] max-sm:p-[9px]',
             light ? 'text-white' : 'text-primary-9'
           )}
         >
@@ -75,7 +97,10 @@ export function FindOutMore({
           }}
         >
           {MENU_ITEMS.map((item) => (
-            <DropdownMenuGroup key={item.caption}>
+            <DropdownMenuGroup
+              key={item.caption}
+              className={item.slug === '/pricing' ? 'md:hidden' : undefined}
+            >
               {item.submenu && (
                 <DropdownMenuLabel className="px-3 pt-2 pb-1 text-[11px] leading-[16px] font-semibold tracking-[0.12em] text-neutral-500 uppercase">
                   {item.caption}

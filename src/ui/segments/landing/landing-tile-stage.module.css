@@ -160,49 +160,52 @@
   animation: nudge 4.2s ease-in-out infinite;
 }
 .reassurance {
-  position: absolute;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 400ms ease;
+}
+.reassurance {
   width: max-content;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
   margin: 12px 0 0;
   font-size: 21px;
-  font-weight: 300;
+  font-weight: 400;
+}
+.cta:not([data-cta-state="waiting"]) + .reassurance {
+  visibility: visible;
+  opacity: 1;
 }
 /* Beside the field the chosen one's name is under it, not under the headline; phones keep it under the headline. */
 .actionRow .label {
   display: none;
 }
-/* what the one beside the field is, in a bubble floating by it, low on its left (the renderer's HERO_TILE, 1590 / 540) */
+/* Centre the caption below the selected model at HERO_TILE.x = 1590. */
 .heroLabels {
   position: absolute;
-  left: 1250px;
-  top: 770px;
-  width: 400px;
-  height: 140px;
+  left: 1330px;
+  top: 825px;
+  width: 520px;
+  height: 60px;
   pointer-events: none;
   z-index: 3;
 }
 .heroLabel {
   position: absolute;
   top: 0;
-  left: 0;
-  max-width: 400px;
+  left: 50%;
+  width: max-content;
+  max-width: 520px;
+  transform: translateX(-50%);
   margin: 0;
-  padding: 16px 22px 18px;
-  border-radius: 18px;
-  border: 1px solid rgb(19 48 111 / 0.08);
-  background: rgb(255 255 255 / 0.86);
-  backdrop-filter: blur(8px);
-  box-shadow:
-    0 14px 34px rgb(20 40 90 / 0.14),
-    0 2px 6px rgb(20 40 90 / 0.08);
-  text-align: left;
+  padding: 10px 18px;
+  border: 1px solid rgb(19 48 111 / 0.16);
+  border-radius: 14px;
+  background: transparent;
+  text-align: center;
   font-size: 25px;
   line-height: 1.22;
   font-weight: 300;
   color: #13306f;
-  animation: bubble-float 5.5s ease-in-out infinite;
+
   opacity: 0;
   transition: opacity 450ms ease;
 }
@@ -272,26 +275,18 @@
   }
 }
 @media (max-width: 799px) {
-  /* down to the arrow to the next page (living-hero.module.css: fixed, clamp(64px, 9.5vh, 88px) up, 44 px tall), under
-   * the top bar's 72 */
+  /* Leave room for the top bar and the chapter picker. */
   .host {
     position: relative;
     min-height: 480px;
-    height: calc(100svh - 72px - clamp(64px, 9.5vh, 88px) - 44px);
+    height: calc(100svh - 72px - clamp(64px, 9.5vh, 88px) - 56px);
     overflow: visible;
   }
-  /* From the top: the chosen one, its name, the field under it (the canvas down to the renderer's 1040), then the
-   * words and the way in (PHONE_UNDER_FIELD in landing-tile-stage.tsx sums these). */
+  /* Keep the invitation above a compact model and tile field. */
   .stage {
-    --canvas-top: 8px;
+    --canvas-top: 180px;
     --mobile-title-size: 28px;
-    --words-at: calc(
-      var(--canvas-top) +
-      (var(--phone-stage-h) - 40) *
-      var(--stage-scale) *
-      1px +
-      6px
-    );
+    --words-at: 12px;
     position: relative;
     width: 100%;
     height: 100%;
@@ -340,9 +335,7 @@
     font-weight: 600;
   }
   .reassurance {
-    left: 0;
-    transform: none;
-    font-size: 12px;
+    font-size: 13px;
   }
   .heroImage {
     display: none;
@@ -430,32 +423,6 @@
   text-transform: uppercase;
   color: #008c05;
 }
-.heroLabel::before {
-  content: "";
-  position: absolute;
-  top: -8px;
-  right: 46px;
-  width: 16px;
-  height: 16px;
-  rotate: 45deg;
-  background: inherit;
-  border-top: 1px solid rgb(19 48 111 / 0.08);
-  border-left: 1px solid rgb(19 48 111 / 0.08);
-}
-@keyframes bubble-float {
-  0%,
-  100% {
-    translate: 0 0;
-  }
-  50% {
-    translate: 0 -7px;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .heroLabel {
-    animation: none;
-  }
-}
 /* A phone: the chosen one's name centred under it (the renderer's PHONE_HERO_H: its box down to the stage's foot less
  * 590), plain. */
 @media (max-width: 799px) {
@@ -466,12 +433,14 @@
     height: auto;
   }
   .heroLabel {
-    width: 100%;
-    max-width: none;
-    padding: 0;
-    border: 0;
-    border-radius: 0;
-    background: none;
+    left: 50%;
+    width: max-content;
+    max-width: 100%;
+    transform: translateX(-50%);
+    padding: 6px 10px;
+    border: 1px solid rgb(19 48 111 / 0.16);
+    border-radius: 10px;
+    background: transparent;
     backdrop-filter: none;
     box-shadow: none;
     text-align: center;

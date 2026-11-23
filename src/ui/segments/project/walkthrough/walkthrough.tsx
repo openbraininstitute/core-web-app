@@ -45,6 +45,7 @@ import publicTour from './public-tour.module.css';
 /** A screen of a walkthrough: its words, and what its stage shows, which each walkthrough says. */
 export interface IWalkthroughChapter {
   id: string;
+  externalProgress?: boolean;
   /** Over the progress dots while it is on. */
   label: string;
   /** Colour-by for the circuit on show, in the chapter's column. */
@@ -777,6 +778,8 @@ export function Walkthrough<C extends IWalkthroughChapter>({
     chapterId: introContent && wideScreen ? visual.id : chapter.id,
     enabled: !!introContent && (introDone || introLeft),
     onComplete: advanceChapter,
+    autoAdvance: on < chapters.length - 1,
+    externalProgress: (introContent && wideScreen ? visual : chapter).externalProgress,
   });
   // While the intro is up, the first screen waits a page below it, and scrolls up as it leaves.
   const underIntro: CSSProperties = LANDING_PEELS

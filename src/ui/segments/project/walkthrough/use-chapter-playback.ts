@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 
 import type { RefObject } from 'react';
 
+export const CHAPTER_MEDIA_PROGRESS = 'chapter-media-progress';
+
 export interface ChapterPlayback {
   progress: number;
   playing: boolean;
@@ -24,12 +26,16 @@ export function useChapterPlayback({
   enabled,
   onComplete,
   duration = 24000,
+  autoAdvance = true,
+  externalProgress = false,
 }: {
   stage: RefObject<HTMLDivElement | null>;
   chapterId: string;
   enabled: boolean;
   onComplete: () => void;
   duration?: number;
+  autoAdvance?: boolean;
+  externalProgress?: boolean;
 }): ChapterPlayback {
   const [state, setState] = useState({ id: chapterId, progress: 0, playing: false });
   const toggle = useRef(() => {});
@@ -48,6 +54,8 @@ export function useChapterPlayback({
     let hovering = false;
     let completed = false;
     let elapsed = 0;
+    let mediaProgress = 0;
+    let mediaCompleted = false;
     let last = Date.now();
     let video: HTMLVideoElement | null = null;
     let videoLoops = false;
@@ -55,7 +63,8 @@ export function useChapterPlayback({
     const publish = (progress: number, playing: boolean) =>
       setState({ id: chapterId, progress, playing });
     const complete = () => {
-      if (completed || !visible || preference.matches || paused || held.current) return;
+      if (!autoAdvance || completed || !visible || preference.matches || paused || held.current)
+        return;
       completed = true;
       publish(1, false);
       onComplete();
@@ -63,7 +72,13 @@ export function useChapterPlayback({
     const update = () => {
       const now = Date.now();
       const running = visible && !preference.matches && !paused && !completed && !held.current;
-      if (video) {
+      if (externalProgress) {
+        publish(mediaProgress, visible && !preference.matches && !paused && !completed);
+        if (mediaCompleted && visible && !preference.matches && !paused) {
+          held.current = false;
+          complete();
+        }
+      } else if (video) {
         // Manual navigation holds the tour, not the film: controls still reflect actual playback.
         const progress =
           Number.isFinite(video.duration) && video.duration > 0
@@ -78,6 +93,15 @@ export function useChapterPlayback({
       }
       last = now;
     };
+    const mediaUpdate = (event: Event) => {
+      const detail = (
+        event as CustomEvent<{ chapterId: string; progress: number; completed: boolean }>
+      ).detail;
+      if (detail?.chapterId !== chapterId) return;
+      mediaProgress = Math.min(1, Math.max(0, detail.progress));
+      mediaCompleted = detail.completed;
+      update();
+    };
     const bind = () => {
       const candidate = host.querySelector<HTMLVideoElement>('[data-stage-current="true"] video');
       if (candidate === video) return;
@@ -88,7 +112,7 @@ export function useChapterPlayback({
       const originalLoop = candidate.loop;
       videoLoops = originalLoop;
       // It ends, to move on, only while the tour plays by itself.
-      candidate.loop = held.current ? originalLoop : false;
+      candidate.loop = !autoAdvance || held.current ? originalLoop : false;
       // A neighbouring scene stays mounted while scrolling. Re-entering an ended video must
       // start a fresh viewing, rather than immediately sending the visitor forward again.
       candidate.currentTime = 0;
@@ -129,7 +153,7 @@ export function useChapterPlayback({
         held.current = false;
         paused = false;
         if (video) {
-          video.loop = false;
+          video.loop = !autoAdvance && videoLoops;
           void video.play().catch(() => {});
         }
       } else {
@@ -157,6 +181,7 @@ export function useChapterPlayback({
     };
     host.addEventListener('pointermove', pointerMove, { passive: true });
     host.addEventListener('pointerleave', pointerLeave);
+    if (externalProgress) window.addEventListener(CHAPTER_MEDIA_PROGRESS, mediaUpdate);
     bind();
     update();
     const observer = new MutationObserver(bind);
@@ -171,6 +196,7 @@ export function useChapterPlayback({
     preference.addEventListener('change', visibility);
     return () => {
       window.clearInterval(timer);
+      window.removeEventListener(CHAPTER_MEDIA_PROGRESS, mediaUpdate);
       observer.disconnect();
       detachVideo();
       document.removeEventListener('visibilitychange', visibility);
@@ -180,7 +206,7 @@ export function useChapterPlayback({
       toggle.current = () => {};
       holdCurrent.current = () => {};
     };
-  }, [chapterId, enabled, stage, onComplete, duration]);
+  }, [chapterId, enabled, stage, onComplete, duration, autoAdvance, externalProgress]);
 
   return {
     progress: state.id === chapterId ? state.progress : 0,

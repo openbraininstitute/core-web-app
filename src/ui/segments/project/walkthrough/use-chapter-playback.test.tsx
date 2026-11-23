@@ -1,7 +1,7 @@
 import { act, cleanup, fireEvent, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useChapterPlayback } from './use-chapter-playback';
+import { CHAPTER_MEDIA_PROGRESS, useChapterPlayback } from './use-chapter-playback';
 
 let hidden = false;
 let reduced = false;
@@ -66,6 +66,76 @@ describe('chapter playback', () => {
     expect(onComplete).toHaveBeenCalledTimes(1);
     unmount();
     expect(video.loop).toBe(true);
+  });
+
+  it('keeps the final chapter video looping, including after pausing and resuming', () => {
+    const layer = document.createElement('div');
+    layer.dataset.stageCurrent = 'true';
+    const video = document.createElement('video');
+    video.loop = true;
+    layer.append(video);
+    host.append(layer);
+    Object.defineProperty(video, 'duration', { value: 8 });
+    const onComplete = vi.fn();
+    const stage = { current: host };
+    const { result } = renderHook(() =>
+      useChapterPlayback({
+        stage,
+        chapterId: 'join',
+        enabled: true,
+        autoAdvance: false,
+        onComplete,
+      })
+    );
+    expect(video.loop).toBe(true);
+    expect(result.current.playing).toBe(true);
+    fireEvent.ended(video);
+    expect(onComplete).not.toHaveBeenCalled();
+    act(() => result.current.toggle());
+    expect(result.current.playing).toBe(false);
+    act(() => result.current.toggle());
+    expect(video.loop).toBe(true);
+    expect(result.current.playing).toBe(true);
+  });
+
+  it('tracks the AI sequence and advances once when its final prompt completes', () => {
+    const onComplete = vi.fn();
+    const stage = { current: host };
+    const { result } = renderHook(() =>
+      useChapterPlayback({
+        stage,
+        chapterId: 'agents',
+        enabled: true,
+        externalProgress: true,
+        onComplete,
+      })
+    );
+    act(() => result.current.hold());
+    act(() => vi.advanceTimersByTime(30000));
+    expect(onComplete).not.toHaveBeenCalled();
+    act(() => {
+      window.dispatchEvent(
+        new CustomEvent(CHAPTER_MEDIA_PROGRESS, {
+          detail: { chapterId: 'agents', progress: 0.6, completed: false },
+        })
+      );
+    });
+    expect(result.current.progress).toBe(0.6);
+    expect(result.current.playing).toBe(true);
+    act(() => {
+      window.dispatchEvent(
+        new CustomEvent(CHAPTER_MEDIA_PROGRESS, {
+          detail: { chapterId: 'agents', progress: 1, completed: true },
+        })
+      );
+      window.dispatchEvent(
+        new CustomEvent(CHAPTER_MEDIA_PROGRESS, {
+          detail: { chapterId: 'agents', progress: 1, completed: true },
+        })
+      );
+    });
+    expect(onComplete).toHaveBeenCalledTimes(1);
+    expect(result.current.progress).toBe(1);
   });
 
   it('gives model chapters a viewing interval and pauses it when the tab is hidden', () => {

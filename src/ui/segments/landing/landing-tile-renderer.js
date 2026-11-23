@@ -1,3 +1,5 @@
+import { LANDING_MODELS as FEATURES } from './landing-models';
+
 /**
  * Canvas artwork adapted from LandingPage_V1; application UI stays in React.
  * @param {HTMLCanvasElement} canvas
@@ -68,93 +70,6 @@ export function createLandingTileRenderer(
   const requestFrame = (callback) => {
     frameId = requestAnimationFrame(callback);
   };
-  // ---- features ----
-  // zoom = picture width relative to the tile (the subjects have white margins); hero = width on the right
-  const FEATURES = [
-    {
-      label: 'Simulate whole brains',
-      img: '/static/landing-v1/fly-brain.jpg',
-      // a turning loop: the tile shows its frames as it plays, the picture until then
-      video: '/static/landing-v1/fly-brain.mp4',
-      // small enough that the whole brain and nerve cord sit inside the hexagon, seen from any side
-      zoom: 0.68,
-      hero: 700,
-      alt: "The male fly's brain and nerve cord, lit as its model's neurons fire",
-    },
-    {
-      label: 'Simulate activity',
-      img: '/static/landing-v1/microcircuits.jpg',
-      video: '/static/landing-v1/microcircuits.mp4',
-      // shown big, only the centre of the clip (its white margins cropped), so the subject fills the white area
-      crop: 0.85,
-      zoom: 1.7,
-      hero: 640,
-      alt: 'Simulated cortical microcircuit, its neurons firing',
-    },
-    {
-      label: 'Explore data',
-      img: '/static/landing-v1/somatosensory.jpg',
-      video: '/static/landing-v1/somatosensory.mp4',
-      // shown big, only the centre of the clip (its white margins cropped), so the subject fills the white area
-      crop: 0.65,
-      zoom: 1.7,
-      hero: 760,
-      alt: 'Reconstructed fly neurons',
-    },
-    {
-      label: 'Build models',
-      img: '/static/landing-v1/hippocampus-growth.jpg',
-      video: '/static/landing-v1/hippocampus-growth.mp4',
-      // shown big, only the centre of the clip (its white margins cropped), so the subject fills the white area
-      crop: 0.65,
-      zoom: 1.7,
-      hero: 780,
-      alt: 'Whole-brain model',
-    },
-    {
-      label: 'Virtual labs',
-      img: '/static/landing-v1/full-brain.jpg',
-      video: '/static/landing-v1/full-brain.mp4',
-      // shown big, only the centre of the clip (its white margins cropped), so the subject fills the white area
-      crop: 0.65,
-      zoom: 1.7,
-      hero: 760,
-      alt: 'Brain atlas',
-    },
-    {
-      label: 'Skeletonize meshes',
-      img: '/static/landing-v1/thalamus-growth.jpg',
-      video: '/static/landing-v1/thalamus-growth.mp4',
-      // shown big, only the centre of the clip (its white margins cropped), so the subject fills the white area
-      crop: 0.65,
-      zoom: 1.7,
-      hero: 700,
-      alt: "A neuron's EM mesh, its spines coloured by their distance from the soma",
-    },
-    {
-      label: 'Skeletonize morphologies and extract spines',
-      img: '/static/landing-v1/dendrite-ride.jpg?v=3',
-      // the learn branch's fly-through down the cell's spiniest dendrite, its mesh opaque in the fly model's blue, its
-      // sections' spines each a colour of their own, there and back (a loop with no jump), stepped at half the ride's pace
-      video: '/static/landing-v1/dendrite-ride.mp4?v=3',
-      // it fills its frame to the edges: a white fade round them
-      feather: true,
-      zoom: 1.15,
-      hero: 760,
-      alt: 'Riding down a dendrite past its spines, coloured by their distance from the soma',
-    },
-    {
-      label: 'Grow a neocortex',
-      img: '/static/landing-v1/neocortex-growth.jpg',
-      video: '/static/landing-v1/neocortex-growth.mp4',
-      // shown big, only the centre of the clip (its white margins cropped), so the subject fills the white area
-      crop: 0.65,
-      zoom: 1.7,
-      hero: 700,
-      alt: 'A neocortex growing',
-    },
-  ];
-
   // ---- hex grid (same as index.html): pointy-top, circumradius R; a tile lifted to height h is R * (1 + 0.7 h) ----
   const R = 55,
     SCALE_PER_H = 0.7,
@@ -170,7 +85,7 @@ export function createLandingTileRenderer(
   // in its top half, the field under it from `fieldTop`, and no tiles over the chosen one.
   const STAGE_H = heroAbove ? Math.max(1080, phoneStageH) : 1080,
     FOOT = STAGE_H - 40;
-  const PHONE = { x0: 450, x1: 1410, fieldTop: FOOT - 440, big: 112, medium: 78 };
+  const PHONE = { x0: 450, x1: 1410, fieldTop: FOOT - 440, big: 112, medium: 69 };
   // the chosen one's box on a phone: from the top down to its name, which is over the field's top
   const PHONE_HERO_H = PHONE.fieldTop - 120;
   const FEATURE_SLOTS = [
@@ -178,7 +93,7 @@ export function createLandingTileRenderer(
     ...Array.from({ length: Math.max(1, FEATURES.length - (heroBeside ? 2 : 1)) }, () => ({
       x: 0,
       y: 0,
-      r: heroAbove ? PHONE.medium : 97,
+      r: heroAbove ? PHONE.medium : 88,
     })),
   ];
   // where the chosen one goes, in the right third, its tile growing as if to a cube this big as the cube melts away
@@ -186,11 +101,11 @@ export function createLandingTileRenderer(
   // animation look weird"; it was 90)
   const HERO_TILE = heroAbove
       ? { x: 930, y: 10 + PHONE_HERO_H / 2, r: (210 * PHONE_HERO_H) / 480 }
-      : { x: 1590, y: 540, r: 330 },
+      : { x: 1590, y: 480, r: 330 },
     BOW = 0;
   // the chosen one itself, out of its cube: as wide as the example says (smaller in step on a phone), within this box
   const BIG_W = heroAbove ? 960 : 720,
-    BIG_H = heroAbove ? PHONE_HERO_H : 820,
+    BIG_H = heroAbove ? PHONE_HERO_H : 620,
     HERO_K = HERO_TILE.r / 330;
   // ---- small white tiles round them, a new set on every pick, as on the first landing: each grown until its straight
   // edge almost touches a picture tile; a fade of lower, smaller ones round them; a few tiny ones for depth ----
@@ -1153,24 +1068,32 @@ export function createLandingTileRenderer(
     if (!src) return;
     const nw = src.videoWidth || src.naturalWidth,
       nh = src.videoHeight || src.naturalHeight;
-    const crop = f.crop ?? 1;
-    const full = Math.min(f.hero * HERO_K, BIG_W, (BIG_H * nw) / nh);
+    const bounds = f.heroBounds;
+    const progress = Math.min(1, Math.max(0, t));
+    const sourceX = bounds ? nw * bounds.x * progress : 0;
+    const sourceY = bounds ? nh * bounds.y * progress : 0;
+    const sourceW = nw * (1 + ((bounds?.width ?? 1) - 1) * progress);
+    const sourceH = nh * (1 + ((bounds?.height ?? 1) - 1) * progress);
+    const aspect = bounds ? (nw * bounds.width) / (nh * bounds.height) : nw / nh;
+    const maximumWidth = bounds && !heroAbove ? 600 : BIG_W;
+    const full = Math.min(f.hero * HERO_K, maximumWidth, BIG_H * aspect) / (bounds ? 1.8 : 1);
     const rs = c.baseR;
     const inCube = Math.sqrt(3) * rs * at.k * f.zoom,
       inBigCube = Math.sqrt(3) * HERO_TILE.r * f.zoom;
-    const w = inCube * (full / inBigCube) ** t,
-      h = (w * nh) / nw;
+    c.zoomStarted ??= performance.now();
+    const elapsed = Math.max(0, performance.now() - c.zoomStarted);
+    const zoom =
+      bounds && !reduceMotion ? 1 + 0.4 * (1 - Math.cos((elapsed / 24000) * Math.PI * 2)) : 1;
+    const w = inCube * (full / inBigCube) ** t * (1 + (zoom - 1) * progress),
+      h = (w * sourceH) / sourceW;
     ctx.save();
     ctx.globalAlpha = alpha * (c.appear ?? 1);
-    // its white goes, as the page's pictures' does
     ctx.globalCompositeOperation = 'multiply';
-    if (crop < 1 && !f.feather) {
-      // only the centre of the picture, grown to the same box: the subject is the bigger by 1 / crop
-      const k = 1 - Math.sqrt(Math.min(1, Math.max(0, t))) * (1 - crop),
-        sw = nw * k,
-        sh = nh * k;
-      ctx.drawImage(src, (nw - sw) / 2, (nh - sh) / 2, sw, sh, x - w / 2, y - h / 2, w, h);
-    } else ctx.drawImage(f.feather ? feathered(src, w, h) : src, x - w / 2, y - h / 2, w, h);
+    if (bounds) {
+      ctx.drawImage(src, sourceX, sourceY, sourceW, sourceH, x - w / 2, y - h / 2, w, h);
+    } else {
+      ctx.drawImage(f.feather ? feathered(src, w, h) : src, x - w / 2, y - h / 2, w, h);
+    }
     ctx.restore();
   }
   let slices = [];
@@ -1202,7 +1125,7 @@ export function createLandingTileRenderer(
     v.muted = true;
     v.loop = true;
     v.playsInline = true;
-    v.preload = 'auto';
+    v.preload = 'none';
     v.defaultPlaybackRate = v.playbackRate = f.rate ?? 1;
     v.src = f.video;
     v.addEventListener('playing', () => keepTime(v));
@@ -1321,6 +1244,26 @@ export function createLandingTileRenderer(
     const drawn = cells
       .filter((c) => c.h > 0.01 || c.turnStart >= 0)
       .sort((a, b) => (isBig(a) ? 300 : a.order || 0) - (isBig(b) ? 300 : b.order || 0));
+    const geometry = drawn.map((c) => {
+      const at = c.role === 'feature' ? placeOf(c, now) : homeOf(c);
+      const [dx, dy] = driftAt(c, now);
+      const [sx, sy] = shiftAt(c, now);
+      return { c, x: at.x + dx + sx, y: at.y + dy + sy, r: radiusOf(c) * at.k };
+    });
+    for (const tile of geometry) {
+      tile.c.displayRadius = tile.r;
+      if (tile.c.role === 'feature') continue;
+      for (const other of geometry) {
+        if (tile === other) continue;
+        const distance = Math.hypot(tile.x - other.x, tile.y - other.y);
+        // Keeping both centres beyond the other's circumradius bounds overlap to half a face.
+        if (other.c.role === 'feature' && distance < other.r) {
+          tile.c.displayRadius = 0;
+          break;
+        }
+        tile.c.displayRadius = Math.min(tile.c.displayRadius, distance);
+      }
+    }
     for (const c of drawn) {
       let p = c.orient;
       if (c.turnStart >= 0) {
@@ -1333,7 +1276,7 @@ export function createLandingTileRenderer(
           c.turnDur = 0;
         } else p = c.orient === 0 ? (f <= 0 ? 0 : turnEase(f)) : 1 - (f <= 0 ? 0 : turnEase(f));
       }
-      if (c.h <= 0.01) continue;
+      if (c.h <= 0.01 || c.displayRadius <= 0.01) continue;
       const rs = c.role === 'feature' ? c.baseR : radiusOf(c);
       const at = c.role === 'feature' ? placeOf(c, now) : homeOf(c);
       const [dx, dy] = driftAt(c, now);
@@ -1344,7 +1287,7 @@ export function createLandingTileRenderer(
         drawTile(
           at.x + ox,
           at.y + oy,
-          radiusOf(c) * at.k,
+          c.displayRadius,
           rs * at.k,
           p,
           c.pics[0],
@@ -1395,7 +1338,7 @@ export function createLandingTileRenderer(
   // the tile under the pointer is found on the hexagon itself (highest tile wins where they overlap)
   const insideHex = (c, x, y) => {
     const at = c.role === 'feature' ? (c.place ?? homeOf(c)) : homeOf(c);
-    const r = radiusOf(c) * at.k,
+    const r = c.displayRadius ?? radiusOf(c) * at.k,
       dx = Math.abs(x - at.x),
       dy = Math.abs(y - at.y);
     return dx <= r * APO && dy + dx / Math.sqrt(3) <= r;
@@ -1498,6 +1441,7 @@ export function createLandingTileRenderer(
       back = heroCell;
     if (!back) return;
     const ms = reduceMotion ? 0 : flightMs;
+    tile.zoomStarted = now + ms;
     moveTile(tile, now, bigOf(tile), ms);
     back.home = slotPlace(back, slot);
     moveTile(back, now, back.home, ms);

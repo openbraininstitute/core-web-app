@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
+import { CHAPTER_MEDIA_PROGRESS } from '@/ui/segments/project/walkthrough/use-chapter-playback';
 import { cn } from '@/utils/css-class';
 
 import { AGENTS } from './agent-ready';
@@ -40,7 +41,12 @@ const TYPE_MS = 34;
 const HOLD_MS = 1300;
 const SENT_MS = 700;
 
-type TPhase = 'connecting' | 'typing' | 'sent';
+type TPhase = 'connecting' | 'typing' | 'sent' | 'done';
+
+const typingTime = (length: number) => 450 + (length - 1) * TYPE_MS;
+const promptTime = (prompt: (typeof PROMPTS)[number]) =>
+  (prompt.agent === 'OBI' ? 0 : CONNECT_MS) + typingTime(prompt.text.length) + HOLD_MS + SENT_MS;
+const totalTime = PROMPTS.reduce((sum, prompt) => sum + promptTime(prompt), 0);
 
 const mark = (name: string) => AGENTS.find((agent) => agent.name === name);
 
@@ -56,7 +62,7 @@ function ObiMark() {
 /**
  * Three prompt boxes, as Claude's, ChatGPT's and the platform's own OBI Assistant's, each in turn connecting to
  * the platform, by its OBI connector or plugin, or built in, typing what someone asks of it, sending it, and
- * handing over to the next, round and round; from the start each time they come into view.
+ * handing over to the next, then completing the chapter after OBI Assistant.
  * All three boxes remain visible while the active prompt animates.
  */
 export function AgentPrompts({ className }: { className?: string }) {
@@ -86,7 +92,7 @@ export function AgentPrompts({ className }: { className?: string }) {
   }, []);
 
   useEffect(() => {
-    if (!seen) return;
+    if (!seen || state.phase === 'done') return;
     const { box, phase, typed } = state;
     const length = PROMPTS[box].text.length;
     const step = (): [number, () => void] => {
@@ -108,12 +114,38 @@ export function AgentPrompts({ className }: { className?: string }) {
       }
       return [
         SENT_MS,
-        () => setState({ box: (box + 1) % PROMPTS.length, phase: 'connecting', typed: 0 }),
+        () =>
+          setState(
+            box === PROMPTS.length - 1
+              ? { box, phase: 'done', typed }
+              : { box: box + 1, phase: 'connecting', typed: 0 }
+          ),
       ];
     };
     const [wait, then] = step();
     const timer = setTimeout(then, wait);
     return () => clearTimeout(timer);
+  }, [seen, state]);
+
+  useEffect(() => {
+    if (!seen) return;
+    const { box, phase, typed } = state;
+    const before = PROMPTS.slice(0, box).reduce((sum, prompt) => sum + promptTime(prompt), 0);
+    const connection = PROMPTS[box].agent === 'OBI' ? 0 : CONNECT_MS;
+    const typing = typingTime(PROMPTS[box].text.length);
+    const elapsed =
+      phase === 'done'
+        ? totalTime
+        : before +
+          (phase === 'connecting'
+            ? 0
+            : connection +
+              (phase === 'typing' ? (typed ? 450 + (typed - 1) * TYPE_MS : 0) : typing + HOLD_MS));
+    window.dispatchEvent(
+      new CustomEvent(CHAPTER_MEDIA_PROGRESS, {
+        detail: { chapterId: 'agents', progress: elapsed / totalTime, completed: phase === 'done' },
+      })
+    );
   }, [seen, state]);
 
   return (

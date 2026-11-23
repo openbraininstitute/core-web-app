@@ -4,10 +4,7 @@ import { useEffect, useRef } from 'react';
 
 import styles from './get-started.module.css';
 
-/**
- * A mosaic of the tour's own films, nine moving at once: Virtual Labs, an EM neuron, a simulation set up, a
- * morphology, the models, the Allen V1 circuit, a notebook, simulation results and a class. 10 s.
- */
+/** The latest platform overview mosaic, supplied for the closing chapter. */
 export function GetStartedBrain({ near = true }: { near?: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   useEffect(() => {
@@ -37,14 +34,14 @@ export function GetStartedBrain({ near = true }: { near?: boolean }) {
     <div data-chapter-media className={styles.brainArtwork}>
       <video
         ref={videoRef}
-        src={near ? '/images/start/walkthrough/get-started-mosaic.mp4' : undefined}
-        poster="/images/start/walkthrough/get-started-mosaic.jpg"
+        src={near ? '/images/start/walkthrough/get-started-mosaic.mp4?v=8d932eff' : undefined}
+        poster="/images/start/walkthrough/get-started-mosaic.jpg?v=8d932eff"
         muted
         loop
         playsInline
         preload="metadata"
         className={styles.mosaicVideo}
-        aria-label="A mosaic of the platform: virtual labs, neurons, circuits, simulations, notebooks and teaching"
+        aria-label="An animated mosaic of platform workflows, brain models, simulation results and teaching"
       />
     </div>
   );

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
 import { firstPaintReady, firstPaintShown, wordsBegan } from './first-paint-handoff';
+import { LANDING_MODELS as FEATURES } from './landing-models';
 
 import styles from './landing-tile-stage.module.css';
 
@@ -22,43 +23,12 @@ export const landingSmallsNow = (): Smalls | null => landingSmalls?.() ?? null;
 export const LANDING_WAY_IN = 'landing-way-in';
 const wayIn = () => window.dispatchEvent(new Event(LANDING_WAY_IN));
 
-// In the renderer's order (landing-tile-renderer.js FEATURES), which draws them; here for their names.
-const FEATURES = [
-  {
-    label: 'Simulate whole brains',
-    alt: "The male fly's brain and nerve cord, lit as its model's neurons fire",
-    caption: { kicker: 'Simulate', text: 'Whole brain model of the Fly Central Nervous System' },
-  },
-  { label: 'Simulate activity', alt: 'Simulated cortical microcircuit, its neurons firing' },
-  { label: 'Explore data', alt: 'Reconstructed fly neurons' },
-  { label: 'Build models', alt: 'Whole-brain model' },
-  { label: 'Virtual labs', alt: 'Brain atlas' },
-  {
-    label: 'Skeletonize meshes',
-    alt: "A neuron's EM mesh, its spines coloured by their distance from the soma",
-  },
-  {
-    label: 'Skeletonize morphologies and extract spines',
-    alt: 'Riding down a dendrite past its spines, coloured by their distance from the soma',
-  },
-  { label: 'Grow a neocortex', alt: 'A neocortex growing' },
-];
-
 /** How long after the words start coming in "Try it now" does, ms (with the logo and words, user; and in the
  * page's first HTML: landing-first-paint.module.css). */
 const CTA_AFTER_WORDS = 300;
 
-/** On a phone, what is under the field: the gap, two lines of words, "Try it now" and a margin, px (the module's
- * phone rules). */
-const PHONE_UNDER_FIELD = 8 + 6 + 2 * 1.04 * 28 + 12 + 48 + 8;
-
-/** How tall the stage is on a phone, px: the field and the words at the foot, the chosen one taking the height left
- * above them once the stage is as wide as the screen (renderer `phoneStageH`). */
-function phoneStageHeight(width: number, height: number) {
-  const room = height - PHONE_UNDER_FIELD,
-    scale = Math.min(width / 1000, room / 1040);
-  return Math.max(1080, 40 + room / scale);
-}
+/** Reserved space above the mobile artwork for the tagline, CTA and credit message. */
+const PHONE_COPY_HEIGHT = 180;
 
 /** The supplied landing composition, with accessible controls and a stacked phone layout. */
 export function LandingTileStage({
@@ -66,13 +36,13 @@ export function LandingTileStage({
   reduced,
   visible,
   onSelect,
-  onInteraction,
+  onInteraction = () => {},
 }: {
   scene: number;
   reduced: boolean;
   visible: boolean;
   onSelect: (index: number) => void;
-  onInteraction: () => void;
+  onInteraction?: () => void;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const stage = useRef<HTMLDivElement>(null);
@@ -133,13 +103,13 @@ export function LandingTileStage({
     // (laid out once, when the renderer is made)
     const opened = container.getBoundingClientRect();
     const phone = opened.width < 800;
-    const stageH = phone ? phoneStageHeight(opened.width, opened.height) : 1080;
+    const stageH = 1080;
     composition.style.setProperty('--phone-stage-h', String(stageH));
     const resize = new ResizeObserver(() => {
       const { width, height } = container.getBoundingClientRect();
-      // a phone: the stage's middle 1000 px across, and down to the field's foot with the words under it
+      // Fit the mobile artwork below the invitation.
       const scale = phone
-        ? Math.min(width / 1000, (height - PHONE_UNDER_FIELD) / (stageH - 40))
+        ? Math.min(width / 1000, (height - PHONE_COPY_HEIGHT) / stageH)
         : Math.min(width / 1920, height / 1080);
       composition.style.setProperty('--stage-scale', String(scale));
       if (!phone) {
@@ -233,10 +203,14 @@ export function LandingTileStage({
               className={styles.cta}
               data-cta-state={ctaState}
               data-landing-cta
+              aria-describedby="landing-free-offer"
               href="/app/virtual-lab"
             >
               Try it now
             </Link>
+            <p id="landing-free-offer" className={styles.reassurance}>
+              Start free · 100 credits included
+            </p>
           </div>
         </div>
         {/* What the chosen one is, under its big cube: the one going fading as the next comes. */}
@@ -254,7 +228,7 @@ export function LandingTileStage({
               data-active={index === scene}
               aria-hidden={index !== scene}
             >
-              {'caption' in feature && feature.caption ? (
+              {feature.caption ? (
                 <>
                   <strong>{feature.caption.kicker}</strong>
                   {feature.caption.text}

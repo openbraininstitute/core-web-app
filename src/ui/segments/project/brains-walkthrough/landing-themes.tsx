@@ -1,6 +1,13 @@
+import { RiArrowDownSLine } from '@remixicon/react';
 import { Fragment, useEffect, useRef, useState } from 'react';
 
 import { SERIF } from '@/features/learn/components/heuristics/shared';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/ui/molecules/dropdown-menu';
 import { cn } from '@/utils/css-class';
 
 import { BRAIN_THEMES } from './chapters';
@@ -42,7 +49,43 @@ export function ThemeLine({
   if (publicAppearance) {
     return (
       <div className={progressStyles.chapterTimeline}>
-        <div ref={timeline} className={progressStyles.timelineChapters}>
+        <div className="pointer-events-auto relative flex min-w-0 items-center gap-3 lg:hidden">
+          <DropdownMenu modal={false}>
+            <DropdownMenuTrigger className="flex min-h-11 shrink-0 items-center gap-1 rounded-full border border-neutral-200 bg-white px-4 font-semibold text-primary-9">
+              Chapters <RiArrowDownSLine aria-hidden="true" className="size-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="top" sideOffset={8} className="z-[1000] min-w-48">
+              {BRAIN_THEMES.map((theme) => (
+                <DropdownMenuItem
+                  key={theme}
+                  aria-current={theme === underlined ? 'location' : undefined}
+                  className={cn(
+                    'min-h-11 cursor-pointer',
+                    theme === underlined && 'bg-primary-1 font-semibold text-primary-9'
+                  )}
+                  onSelect={() => {
+                    const to = links?.[theme];
+                    if (to) goTo?.(to);
+                  }}
+                >
+                  {theme}
+                  {theme === underlined && (
+                    <span aria-hidden="true" className="ml-auto">
+                      ✓
+                    </span>
+                  )}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {underlined && (
+            <span className="truncate font-semibold text-primary-9">{underlined}</span>
+          )}
+        </div>
+        <div
+          ref={timeline}
+          className={cn(progressStyles.timelineChapters, progressStyles.desktopTimeline)}
+        >
           {BRAIN_THEMES.map((theme) => (
             <button
               key={theme}

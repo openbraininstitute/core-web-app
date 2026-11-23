@@ -35,7 +35,8 @@ export default function Menu({ className }: { className?: string }) {
           data-testid="header-go-to-platform"
           className={cn(pills.pill, pills.header)}
         >
-          Go to platform
+          <span className="sm:hidden">Enter platform</span>
+          <span className="max-sm:hidden">Enter the platform</span>
         </Link>
       </div>
     </header>

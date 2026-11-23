@@ -9,6 +9,8 @@ import { cn } from '@/utils/css-class';
 
 import type { AdvantagesProps, PlanV2 } from '@/types/virtual-lab/pricing';
 
+import pills from '@/ui/segments/landing/cta-pill.module.css';
+
 export default function PlanHeader({
   plan,
   billingInterval,
@@ -16,6 +18,7 @@ export default function PlanHeader({
   isCurrentTier,
   hideContactButton,
   testId,
+  startFreeHref,
 }: {
   plan: PlanV2;
   billingInterval: 'month' | 'year';
@@ -23,6 +26,7 @@ export default function PlanHeader({
   isCurrentTier?: boolean;
   hideContactButton?: boolean;
   testId?: string;
+  startFreeHref?: string;
 }) {
   const displayedFeatures = plan.has_subscription
     ? ((billingInterval === 'month'
@@ -68,6 +72,12 @@ export default function PlanHeader({
           />
         )}
       </div>
+
+      {startFreeHref && (
+        <Link href={startFreeHref} className={pills.pill}>
+          Start free
+        </Link>
+      )}
 
       {plan.has_contact_button && !hideContactButton && (
         <div className="w-full">

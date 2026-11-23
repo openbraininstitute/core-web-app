@@ -11,42 +11,9 @@
   color: var(--ink);
   padding: 0;
 }
-.nextChapter {
-  position: fixed;
-  bottom: clamp(64px, 9.5vh, 88px);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 67;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  color: var(--ink);
-  cursor: pointer;
-  transition: opacity 200ms;
-}
-.nextChapter:hover {
-  opacity: 0.6;
-}
-.nextChapter:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 4px;
-}
 @media (max-width: 799px) {
   .hero {
     padding: 72px 0 100px;
-  }
-}
-@media (pointer: coarse) {
-  .nextChapter {
-    width: 44px;
-    height: 44px;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .nextChapter {
-    transition: none;
   }
 }
 
@@ -86,4 +53,44 @@
   .topPhrase {
     animation: none;
   }
+}
+
+/* The homepage has a tour link under the rail, so anchor the whole group lower. */
+.hero .homeChapterRail {
+  bottom: max(10px, env(safe-area-inset-bottom));
+}
+@media (max-width: 1023px) {
+  .hero .homeChapterRail {
+    bottom: 0;
+    padding-bottom: max(4px, env(safe-area-inset-bottom));
+  }
+}
+
+.chapterNavigation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.tourLink {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 44px;
+  padding-inline: 8px;
+  pointer-events: auto;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+}
+.tourLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.tourLink:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
 }

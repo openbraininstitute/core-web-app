@@ -102,7 +102,8 @@ export function createFeatureTileRenderer(
   const REDRAW_EPS = 0.0005;
 
   // ---------- the video frame ----------
-  const FRAME = frameRect; // 16:9, page px
+  // 16:9, page px; a chapter may ask for its own (setSource's `frame`), the tiles then laid round that one
+  let FRAME = frameRect;
   // The whole frame is always covered by video tiles (every tile touching the frame), so nothing eats into
   // the video. The edge only grows OUTWARDS: here and there extra tiles stick out past the frame.
   const EDGE_ROW = 1.5; // tile radii per extra row of static edge tiles
@@ -577,10 +578,11 @@ void main() { outColor = vec4(mix(vec3(1.0), GLOW_COL, glow(gl_FragCoord.xy)), 1
         ih = source.image.videoHeight || source.image.height;
       if (iw && ih) {
         const k = 1 - 2 * VIDEO_INSET;
-        const sc = Math.min(FRAME.w / (iw * k), FRAME.h / (ih * k));
+        const F = v.frame ?? FRAME;
+        const sc = Math.min(F.w / (iw * k), F.h / (ih * k));
         const w = iw * sc,
           h = ih * sc;
-        v.rect = { x: FRAME.x + (FRAME.w - w) / 2, y: FRAME.y + (FRAME.h - h) / 2, w, h };
+        v.rect = { x: F.x + (F.w - w) / 2, y: F.y + (F.h - h) / 2, w, h };
       }
     }
     v.stamp = source.stamp;
@@ -642,7 +644,8 @@ void main() { outColor = vec4(mix(vec3(1.0), GLOW_COL, glow(gl_FragCoord.xy)), 1
   }
   // tiles crossed by the frame line: together with the tiles whose centre is inside, they cover the whole frame
   const frameCells = new Set();
-  {
+  function findFrameCells() {
+    frameCells.clear();
     const step = R / 6;
     for (let x = FRAME.x; x <= FRAME.x + FRAME.w; x += step) {
       frameCells.add(cellAt(x, FRAME.y));
@@ -652,6 +655,14 @@ void main() { outColor = vec4(mix(vec3(1.0), GLOW_COL, glow(gl_FragCoord.xy)), 1
       frameCells.add(cellAt(FRAME.x, y));
       frameCells.add(cellAt(FRAME.x + FRAME.w, y));
     }
+  }
+  findFrameCells();
+  // the tiles laid round another frame: those near it can be part of the video now
+  function setFrame(frame) {
+    if (frame === FRAME) return;
+    FRAME = frame;
+    findFrameCells();
+    for (const t of tiles) t.cand ||= frameSdf(t.x, t.y) < (EDGE_OUT + 1) * R;
   }
   // is the tile's hexagon completely inside the frame? (pointy-top: half width 0.866 R, half height R)
   function hexInside(x, y) {
@@ -869,15 +880,23 @@ void main() { outColor = vec4(mix(vec3(1.0), GLOW_COL, glow(gl_FragCoord.xy)), 1
   }
 
   let pending = null;
-  function startChange(read, empty) {
+  function startChange(read, empty, frame = frameRect) {
     const old = records[cur];
     const first = records.length === 1 && cur === 0;
     for (const record of records) if (record !== old) gl.deleteTexture(record.tex);
-    const record = { tex: makeTexture(), rect: { ...FRAME }, read, stamp: null, empty };
+    const record = { tex: makeTexture(), rect: { ...frame }, frame, read, stamp: null, empty };
     records.splice(0, records.length, old, record);
+    const moved = frame !== FRAME;
+    setFrame(frame);
     cur = 0;
-    if (reduced || first) cur = 1;
-    else {
+    if (reduced || first) {
+      cur = 1;
+      // no wave: the tiles take the new frame's shape at once
+      if (moved) {
+        reshape();
+        endFall();
+      }
+    } else {
       trans = { to: 1, dir: 1, start: clock(), ready: false, wait: 0 };
       reshape();
     }
@@ -890,7 +909,7 @@ void main() { outColor = vec4(mix(vec3(1.0), GLOW_COL, glow(gl_FragCoord.xy)), 1
     if (pending) {
       const p = pending;
       pending = null;
-      startChange(p.read, p.empty);
+      startChange(p.read, p.empty, p.frame);
     }
   }
 
@@ -1160,15 +1179,15 @@ void main() { outColor = vec4(mix(vec3(1.0), GLOW_COL, glow(gl_FragCoord.xy)), 1
     /** The next video, `read` giving its current frame (null until it has one); `empty` (or a function saying so)
      * when there is none, so the tiles need not wait for it. Asked for during a change, it starts after it.
      * @param {() => ({ image: TexImageSource, stamp: unknown } | null)} read
-     * @param {{ empty?: boolean | (() => boolean) }} [options]
+     * @param {{ empty?: boolean | (() => boolean), frame?: { x: number, y: number, w: number, h: number } }} [options]
      */
-    setSource(read, { empty = true } = {}) {
+    setSource(read, { empty = true, frame = frameRect } = {}) {
       const isEmpty = typeof empty === 'function' ? empty : () => empty;
       if (trans) {
-        pending = { read, empty: isEmpty };
+        pending = { read, empty: isEmpty, frame };
         return;
       }
-      startChange(read, isEmpty);
+      startChange(read, isEmpty, frame);
     },
     setVisible(value) {
       visible = value;

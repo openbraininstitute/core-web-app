@@ -14,12 +14,14 @@ export function PlanCard({
   className,
   hideContactButton,
   testId,
+  startFreeHref,
 }: {
   plan: PlanV2;
   isCurrentTier?: boolean;
   className?: string;
   hideContactButton?: boolean;
   testId?: string;
+  startFreeHref?: string;
 }) {
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
 
@@ -39,6 +41,7 @@ export function PlanCard({
         isCurrentTier={isCurrentTier}
         hideContactButton={hideContactButton}
         testId={testId}
+        startFreeHref={startFreeHref}
       />
       <PlanBody plan={plan} isCurrentTier={isCurrentTier} />
     </div>

@@ -155,6 +155,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
   },
   {
     id: 'agents',
+    externalProgress: true,
     theme: 'Leverage AI',
     label: 'AI',
     scene: 'agents',

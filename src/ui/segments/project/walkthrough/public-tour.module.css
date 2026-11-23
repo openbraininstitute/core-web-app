@@ -560,3 +560,21 @@
     opacity: 0;
   }
 }
+
+@media (max-width: 1023px) {
+  .chapterTimeline {
+    width: auto;
+    justify-content: center;
+    gap: 12px;
+  }
+  .chapterTimeline .desktopTimeline,
+  .chapterTimeline .navPauseSpace {
+    display: none;
+  }
+  .chapterTimeline .navPause {
+    position: static;
+    margin: 0;
+    flex-shrink: 0;
+    transform: none;
+  }
+}

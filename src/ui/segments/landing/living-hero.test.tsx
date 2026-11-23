@@ -1,6 +1,8 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { LANDING_MODELS } from './landing-models';
+
 vi.mock('@/ui/segments/project/brains-walkthrough/chapters', () => ({
   BRAIN_THEMES: ['Virtual Labs', 'Explore'],
   BRAIN_THEME_LINKS: { 'Virtual Labs': 'start', Explore: 'analysis' },
@@ -23,34 +25,25 @@ vi.mock('./landing-tile-stage', () => ({
   }) => (
     <div data-testid="landing-artwork" data-reduced={reduced}>
       <h1>Neuroscience at the speed of thought</h1>
-      <p data-testid="science-caption">
-        {
-          [
-            'Simulate whole brains',
-            'Simulate activity',
-            'Explore data',
-            'Build models',
-            'Virtual labs',
-            'Skeletonize meshes',
-            'Skeletonize morphologies and extract spines',
-          ][scene]
-        }
-      </p>
+      <p data-testid="science-caption">{LANDING_MODELS[scene].label}</p>
       <a href="/app/virtual-lab">Try it now</a>
+
       <button
         type="button"
         onClick={() => {
-          onInteraction();
-          onSelect(3);
+          onInteraction?.();
+          onSelect(
+            LANDING_MODELS.findIndex((model) => model.label === 'Build detailed brain models')
+          );
         }}
       >
-        Show Build models
+        Show Build detailed brain models
       </button>
     </div>
   ),
 }));
 
-import { FIRST_SCENE, LANDING_AUTO_CONTINUE_MS, LivingHero, SCIENCE_SCENES } from './living-hero';
+import { FIRST_SCENE, LivingHero } from './living-hero';
 
 let reduced = false;
 beforeEach(() => {
@@ -73,7 +66,7 @@ describe('public science opening', () => {
   it('opens on the fly brain with the headline and working CTA', () => {
     render(<LivingHero onContinue={vi.fn()} onChapter={vi.fn()} />);
     expect(screen.getByTestId('science-caption')).toHaveTextContent(
-      SCIENCE_SCENES[FIRST_SCENE].label
+      LANDING_MODELS[FIRST_SCENE].label
     );
     expect(screen.getByRole('link', { name: 'Try it now' })).toHaveAttribute(
       'href',
@@ -84,27 +77,19 @@ describe('public science opening', () => {
     );
   });
 
-  it('glides on to the first chapter by itself, once, within ten seconds', () => {
-    expect(LANDING_AUTO_CONTINUE_MS).toBeLessThan(10000);
+  it('keeps the visitor on the homepage after the previous autoplay delay', () => {
     const onContinue = vi.fn();
-    const { rerender } = render(<LivingHero onContinue={onContinue} onChapter={vi.fn()} />);
-    act(() => vi.advanceTimersByTime(LANDING_AUTO_CONTINUE_MS / 2));
-    // A fresh callback from the parent must not restart the countdown.
-    rerender(<LivingHero onContinue={onContinue} onChapter={vi.fn()} />);
-    act(() => vi.advanceTimersByTime(LANDING_AUTO_CONTINUE_MS / 2 - 1));
+    render(<LivingHero onContinue={onContinue} onChapter={vi.fn()} />);
+    act(() => vi.advanceTimersByTime(20_000));
     expect(onContinue).not.toHaveBeenCalled();
-    act(() => vi.advanceTimersByTime(1));
-    expect(onContinue).toHaveBeenCalledTimes(1);
-    act(() => vi.advanceTimersByTime(LANDING_AUTO_CONTINUE_MS * 2));
-    expect(onContinue).toHaveBeenCalledTimes(1);
   });
 
   it('lets tile selection update the hero without advancing away during interaction', () => {
     const onContinue = vi.fn();
     render(<LivingHero onContinue={onContinue} onChapter={vi.fn()} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Show Build models' }));
-    expect(screen.getByTestId('science-caption')).toHaveTextContent('Build models');
-    act(() => vi.advanceTimersByTime(LANDING_AUTO_CONTINUE_MS * 2));
+    fireEvent.click(screen.getByRole('button', { name: 'Show Build detailed brain models' }));
+    expect(screen.getByTestId('science-caption')).toHaveTextContent('Build detailed brain models');
+    act(() => vi.advanceTimersByTime(20_000));
     expect(onContinue).not.toHaveBeenCalled();
   });
 
@@ -121,7 +106,7 @@ describe('public science opening', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Explore$/ }));
     expect(onChapter).toHaveBeenCalledWith('analysis');
     expect(screen.queryByRole('button', { name: /Discover Virtual Labs/ })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Next screen' }));
+    fireEvent.click(screen.getByRole('button', { name: 'See what you can do' }));
     expect(onContinue).toHaveBeenCalledTimes(1);
     fireEvent.wheel(screen.getByRole('region', { name: 'Discover the Open Brain Platform' }), {
       deltaY: 30,
