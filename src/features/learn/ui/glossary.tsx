@@ -208,12 +208,12 @@ export function GlossaryCard({
     'flex h-[34px] items-center gap-[6px] rounded-full border border-[#e8e8e8] px-[14px] text-[12px] font-semibold text-[#003a8c] hover:border-[#d9d9d9] hover:bg-[#f5f9ff]';
 
   return (
-    <section className={cn(className, 'pt-0 pr-[44px] pb-[34px] pl-[40px]')}>
+    <section className={cn(className, 'pt-[12px] pr-[44px] pb-[34px] pl-[40px]')}>
       <div className="flex max-w-[760px] flex-col gap-[22px]">
         {/* level with the middle of the category tiles, as a course's title is */}
         <header
           data-learn="head"
-          className="flex min-h-[84px] items-center justify-between gap-[20px]"
+          className="flex min-h-[86px] items-center justify-between gap-[20px]"
         >
           <div className="flex flex-col gap-[7px]">
             <h1 className="text-[31px] leading-[38px] font-bold text-[#002766]">{term.term}</h1>

@@ -1,0 +1,336 @@
+{
+  "name": "864691134884740346",
+  "source": {
+    "title": "MICrONS neuron 864691134884740346, from the examples of morph-spines",
+    "url": "https://github.com/openbraininstitute/morph-spines",
+    "path": "examples/data/",
+    "licence": "Apache License 2.0",
+    "credit": "Reconstructed from electron microscopy of mouse visual cortex by the MICrONS Consortium (Nature 640, 2025, doi:10.1038/s41586-025-08790-w)"
+  },
+  "units": "µm",
+  "frame": "µm, around the centre of mesh.glb's box (decodeGlb's frame): subtract centreNm / 1000 from the H5's coordinates",
+  "centreNm": [
+    411552.5,
+    447223.5,
+    964701.5
+  ],
+  "bounds": {
+    "mesh": {
+      "min": [
+        -16.5665,
+        -23.6625,
+        -5.1815
+      ],
+      "max": [
+        16.5665,
+        23.6625,
+        5.1815
+      ]
+    },
+    "skeleton": {
+      "min": [
+        -14.8876,
+        -23.6193,
+        -4.4824
+      ],
+      "max": [
+        13.7566,
+        20.5661,
+        4.4796
+      ]
+    },
+    "spines": {
+      "min": [
+        -16.5444,
+        -23.6075,
+        -5.0615
+      ],
+      "max": [
+        16.5916,
+        23.6405,
+        5.1787
+      ]
+    },
+    "soma": {
+      "min": [
+        -6.6611,
+        -7.2002,
+        -3.6734
+      ],
+      "max": [
+        3.459,
+        4.0987,
+        4.6538
+      ]
+    },
+    "all": {
+      "min": [
+        -16.5665,
+        -23.6625,
+        -5.1815
+      ],
+      "max": [
+        16.5916,
+        23.6625,
+        5.1815
+      ]
+    }
+  },
+  "counts": {
+    "meshVertices": 9671,
+    "meshTriangles": 19362,
+    "skeletonPoints": 315,
+    "skeletonSections": 11,
+    "swcSamples": 305,
+    "spines": 24,
+    "spineMeshVertices": 9091,
+    "spineMeshVerticesInFile": 21918,
+    "spineMeshTriangles": 43740,
+    "spineSkeletonPoints": 973,
+    "spineSkeletonPointsInFile": 1131,
+    "spineSkeletonSections": 182,
+    "somaMeshVertices": 4167,
+    "somaMeshTriangles": 8330
+  },
+  "spineLengthRange": [
+    0.5024,
+    3.324
+  ],
+  "headNeck": false,
+  "optionalColumns": [],
+  "sectionIdOffset": 1,
+  "sectionIdCheck": {
+    "rule": "MorphIO section index = afferent_section_id - sectionIdOffset; median distance (µm) from afferent_center to that section, for each offset tried",
+    "medianDistance": {
+      "0": 3.8028,
+      "1": 0.0,
+      "2": 3.9234
+    }
+  },
+  "swcSectionOrderMatchesMorphio": true,
+  "reversedSpines": [
+    0,
+    2,
+    3,
+    5,
+    6,
+    8,
+    9,
+    11,
+    15,
+    16,
+    22,
+    23
+  ],
+  "reversedSpinesNote": "table rows whose frame faces the other way to the format's: their tip (spineRoot + spineDirection * spineLength, local y = spineLength) is nearer their section than their root (afferent_surface, the local origin), which lies nearer the spine's free end",
+  "frameMaxError": 9.79e-07,
+  "frameConvention": "spinePositions = rotate(spineRotation, spineLocalPositions) + spineTranslation, the quaternion x, y, z, w (scipy's Rotation.from_quat, three.js Quaternion); spineTranslation is afferent_surface",
+  "checks": {
+    "spineToMeshMedian": 0.0915,
+    "skeletonToMeshMedian": 0.2125,
+    "skeletonRadiusMedian": 0.2383,
+    "spineSkeletonToOwnMeshMedian": 0.109,
+    "spinesWithOnePointSkeleton": [
+      1,
+      4,
+      10,
+      14,
+      20
+    ],
+    "spinesWithSkeletonOutsideMesh": [
+      10,
+      14
+    ],
+    "quaternionNormMaxError": 2.97e-08
+  },
+  "shots": {
+    "whole": {
+      "target": [
+        0.0125,
+        0.0,
+        0.0
+      ],
+      "radius": 29.35,
+      "direction": [
+        0.3071,
+        -0.3685,
+        0.8774
+      ],
+      "up": [
+        0.0,
+        1.0,
+        0.0
+      ]
+    },
+    "soma": {
+      "target": [
+        -1.3519,
+        -1.2771,
+        1.1368
+      ],
+      "radius": 16.24,
+      "direction": [
+        0.3071,
+        -0.3685,
+        0.8774
+      ],
+      "up": [
+        0.0,
+        1.0,
+        0.0
+      ]
+    },
+    "dendrite": {
+      "target": [
+        9.5469,
+        19.0413,
+        2.0586
+      ],
+      "radius": 7.88,
+      "direction": [
+        -0.6207,
+        0.2764,
+        0.7338
+      ],
+      "up": [
+        -0.2304,
+        0.8302,
+        -0.5076
+      ]
+    },
+    "spine": {
+      "target": [
+        9.9188,
+        16.9192,
+        2.772
+      ],
+      "radius": 1.5,
+      "direction": [
+        0.1579,
+        -0.8959,
+        0.4153
+      ],
+      "up": [
+        -0.3662,
+        0.3375,
+        0.8672
+      ]
+    }
+  },
+  "shotsNote": "direction: unit vector from target to camera; radius: the subject fits in a sphere of this radius (µm) around target",
+  "chosen": {
+    "spine": 17,
+    "section": 9
+  },
+  "arraysNote": "spines.bin, little-endian; offset in bytes, length in values; itemSize values per item. Spine i's vertices are items spineVertexStart[i] to spineVertexStart[i + 1], its triangles spineTriangleStart[i] to spineTriangleStart[i + 1] (indices into all spines' vertices); its skeleton's points spineSkeletonPointStart[i] to spineSkeletonPointStart[i + 1]",
+  "arrays": {
+    "spinePositions": {
+      "type": "f32",
+      "offset": 0,
+      "length": 27273,
+      "itemSize": 3
+    },
+    "spineLocalPositions": {
+      "type": "f32",
+      "offset": 109092,
+      "length": 27273,
+      "itemSize": 3
+    },
+    "spineIndices": {
+      "type": "u32",
+      "offset": 218184,
+      "length": 131220,
+      "itemSize": 3
+    },
+    "spineVertexStart": {
+      "type": "u32",
+      "offset": 743064,
+      "length": 25,
+      "itemSize": 1
+    },
+    "spineTriangleStart": {
+      "type": "u32",
+      "offset": 743164,
+      "length": 25,
+      "itemSize": 1
+    },
+    "spineRoot": {
+      "type": "f32",
+      "offset": 743264,
+      "length": 72,
+      "itemSize": 3
+    },
+    "spineCentre": {
+      "type": "f32",
+      "offset": 743552,
+      "length": 72,
+      "itemSize": 3
+    },
+    "spineDirection": {
+      "type": "f32",
+      "offset": 743840,
+      "length": 72,
+      "itemSize": 3
+    },
+    "spineRotation": {
+      "type": "f32",
+      "offset": 744128,
+      "length": 96,
+      "itemSize": 4
+    },
+    "spineTranslation": {
+      "type": "f32",
+      "offset": 744512,
+      "length": 72,
+      "itemSize": 3
+    },
+    "spineLength": {
+      "type": "f32",
+      "offset": 744800,
+      "length": 24,
+      "itemSize": 1
+    },
+    "spineSection": {
+      "type": "i32",
+      "offset": 744896,
+      "length": 24,
+      "itemSize": 1
+    },
+    "spineSectionPos": {
+      "type": "f32",
+      "offset": 744992,
+      "length": 24,
+      "itemSize": 1
+    },
+    "spineSkeletonPoints": {
+      "type": "f32",
+      "offset": 745088,
+      "length": 3892,
+      "itemSize": 4
+    },
+    "spineSkeletonSegments": {
+      "type": "u32",
+      "offset": 760656,
+      "length": 1898,
+      "itemSize": 2
+    },
+    "spineSkeletonPointStart": {
+      "type": "u32",
+      "offset": 768248,
+      "length": 25,
+      "itemSize": 1
+    },
+    "somaPositions": {
+      "type": "f32",
+      "offset": 768348,
+      "length": 12501,
+      "itemSize": 3
+    },
+    "somaIndices": {
+      "type": "u32",
+      "offset": 818352,
+      "length": 24990,
+      "itemSize": 3
+    }
+  }
+}

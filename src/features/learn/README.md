@@ -35,8 +35,12 @@ The other platform changes Learn tries out are feature flags of their own, off b
   `slides/` holds each one's slides.
 - `progress.ts` keeps where the learner got to in localStorage (`learn/progress/v1`), until progress
   has a home on the platform.
-- The figures' data (about 7 MB: the 3D figure's meshes and neurons, and the validation course's
-  pictures and films) is in `public/static/learn/`. `fonts.ts` loads the courses' typefaces.
+- The figures' data (about 8 MB: the 3D figure's meshes and neurons, the validation course's
+  pictures and films, and the skeletonization course's neuron, its mesh, skeleton and spines) is in
+  `public/static/learn/`. `fonts.ts` loads the courses' typefaces.
+- The skeletonization course's figure is drawn with the platform's 3D viewer engine
+  (`SceneViewer`), and its data made by `scripts/learn/skeletonization_data.py` and its recorded
+  Python cells by `scripts/learn/skeletonization_cells.py`.
 
 ## How the courses are drawn
 
