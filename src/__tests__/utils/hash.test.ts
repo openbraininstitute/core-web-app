@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 
 import { describe, expect, it } from 'vitest';
 
-import { sha256HexOfBlob } from './hash';
+import { sha256HexOfBlob } from '@/utils/hash';
 
 function nodeSha256(data: Uint8Array): string {
   return createHash('sha256').update(data).digest('hex');

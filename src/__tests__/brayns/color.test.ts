@@ -1,4 +1,4 @@
-import Color from './color';
+import Color from '@/services/brayns/common/utils/color';
 
 describe('Tfw.Color', () => {
   describe('mix()', () => {

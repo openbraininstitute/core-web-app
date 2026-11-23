@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveTraces } from './column-mapping';
+import { resolveTraces } from '@/features/sonata-viewer/worker/column-mapping';
 
 /** `mapping` of a soma report: one unique node per column, as the SONATA spec describes. */
 function somaReport(nodeCount: number) {

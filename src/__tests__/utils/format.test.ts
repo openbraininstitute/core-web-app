@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatDurationFromSeconds } from './format';
+import { formatDurationFromSeconds } from '@/utils/format';
 
 describe('formatDurationFromSeconds', () => {
   it('formats mixed remainders with compact units', () => {

@@ -3,15 +3,14 @@ import { describe, expect, it } from 'vitest';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { SchemaNameDict } from '@/features/scan-config/types';
 import { buildSynaptomeWorkflow } from '@/features/scan-config/workflow/definitions/build-synaptome';
-
-import { BuildWorkflows } from './activities/build';
-import { getTargetType } from './helpers';
+import { BuildWorkflows } from '@/ui/segments/workflows/config/activities/build';
+import { getTargetType } from '@/ui/segments/workflows/config/helpers';
 import {
   buildGeneratedApiUrl,
   resolveScanConfigFromIdType,
   ScanConfigFromIdType,
-} from './scan-config-binding';
-import { findScanConfigRegistryByDefinition } from './scan-config-registry';
+} from '@/ui/segments/workflows/config/scan-config-binding';
+import { findScanConfigRegistryByDefinition } from '@/ui/segments/workflows/config/scan-config-registry';
 
 const descriptor = BuildWorkflows.find(
   (workflow) => workflow.targetType === ExtendedEntitiesTypeDict.BuildSynaptomeCampaign

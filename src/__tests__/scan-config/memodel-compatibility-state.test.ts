@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { deriveCompatibilityState } from '@/features/scan-config/components/memodel-compatibility/compatibility-state';
 import { messages } from '@/i18n/en/me-model';
-
-import { deriveCompatibilityState } from './compatibility-state';
 
 import type { CompatibilityCheckResponse } from '@/api/small-scale-simulator/single-neuron/compatibility';
 import type { ApiResponse } from '@/types/small-scale-simulator/common';

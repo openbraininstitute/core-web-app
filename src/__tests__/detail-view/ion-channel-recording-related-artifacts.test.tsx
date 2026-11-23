@@ -4,8 +4,7 @@ import { Suspense } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
-
-import { IonChannelRecordingRelatedArtifacts } from './ion-channel-recording';
+import { IonChannelRecordingRelatedArtifacts } from '@/ui/segments/detail-view/related-artifacts/ion-channel-model/ion-channel-recording';
 
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 

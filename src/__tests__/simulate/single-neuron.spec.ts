@@ -1,4 +1,4 @@
-import { roundToSignificantFigures } from './single-neuron';
+import { roundToSignificantFigures } from '@/constants/simulate/single-neuron';
 
 describe('single-neuron', () => {
   it('rounds whole numbers to 4 significant numbers', () => {

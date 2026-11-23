@@ -3,9 +3,11 @@ import { renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { ActivityStatus } from '@/api/entitycore/types/entities/task-activity';
+import {
+  invalidateProjectBalance,
+  useBalanceRefreshOnTaskCompletion,
+} from '@/features/task-runner/hooks/use-balance-refresh';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
-
-import { invalidateProjectBalance, useBalanceRefreshOnTaskCompletion } from './use-balance-refresh';
 
 import type { ReactNode } from 'react';
 import type { TActivityStatus } from '@/api/entitycore/types/entities/task-activity';

@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import Link from './index';
+import Link from '@/components/Link/index';
 
 const useSearchParamsMockFn = vi.hoisted(() => vi.fn());
 
