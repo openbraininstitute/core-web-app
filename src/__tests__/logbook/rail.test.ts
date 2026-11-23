@@ -1,0 +1,116 @@
+import { expect, test } from 'vitest';
+
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
+import { EntityLifecycleStatus } from '@/api/entitycore/types/shared/global';
+import { ActorVia } from '@/api/logbook/types';
+import {
+  DEFAULT_ORDER,
+  listParamsOf,
+  logsOf,
+  nextPageOf,
+  noFilterOf,
+} from '@/features/logbook/api/research-logs';
+import { colourOf } from '@/features/logbook/blocks/colour';
+import { membersOf } from '@/features/logbook/board/rail';
+import { LogOrderField, OrderDirection } from '@/features/logbook/types';
+
+import type { IResearchLog } from '@/api/entitycore/types/entities/research-log';
+import type { TActorVia } from '@/api/logbook/types';
+import type { ILogOrder } from '@/features/logbook/types';
+import type { WorkspaceContext } from '@/types/common';
+
+const user = (id: string, prefLabel: string) => ({
+  id,
+  pref_label: prefLabel,
+  creation_date: '2026-11-14T00:00:00Z',
+  update_date: '2026-11-14T00:00:00Z',
+});
+
+const log = (id: string, project: string, isPublic: boolean): IResearchLog => ({
+  id,
+  legacy_id: null,
+  type: EntityTypeDict.ResearchLog,
+  lifecycle_status: EntityLifecycleStatus.Active,
+  name: id,
+  description: '',
+  authorized_public: isPublic,
+  authorized_project_id: project,
+  creation_date: '2026-11-14T00:00:00Z',
+  update_date: '2026-11-14T00:00:00Z',
+  created_by: user('u-alice', 'Alice'),
+  updated_by: user('u-alice', 'Alice'),
+  assets: [],
+});
+
+const PROJECT: WorkspaceContext = { virtualLabId: 'lab', projectId: 'p1' };
+
+const params = (filter: {
+  public: boolean;
+  project: boolean;
+  search?: string;
+  order?: ILogOrder;
+}) => Object.fromEntries(listParamsOf(PROJECT, { search: '', order: DEFAULT_ORDER, ...filter }));
+
+test('the scope filters and the search are EntityCore’s list filters, not the browser’s', () => {
+  const order = { page_size: '10', order_by: '-update_date' };
+  expect(params({ public: true, project: true })).toEqual(order);
+  expect(params({ public: true, project: false })).toEqual({ ...order, authorized_public: 'true' });
+  expect(params({ public: false, project: true })).toEqual({
+    ...order,
+    authorized_project_id: 'p1',
+  });
+  expect(params({ public: true, project: true, search: '  spike  ' })).toEqual({
+    ...order,
+    ilike_search: '*spike*',
+  });
+  expect(noFilterOf({ public: false, project: false, search: 'x', order: DEFAULT_ORDER })).toBe(
+    true
+  );
+  const name = { field: LogOrderField.Name, direction: OrderDirection.Ascending };
+  expect(params({ public: true, project: true, order: name }).order_by).toBe('name');
+  const created = { field: LogOrderField.Created, direction: OrderDirection.Descending };
+  expect(params({ public: true, project: true, order: created }).order_by).toBe('-creation_date');
+});
+
+const writer = (actorId: number, userId: string, label: string, via: TActorVia) => ({
+  actorId,
+  userId,
+  label,
+  via,
+  lastAt: '2026-11-14T00:00:00Z',
+});
+
+test('members: each in the colour of their user id; the creator is not shown twice', () => {
+  const created = {
+    ...log('l1', 'p1', false),
+    created_by: user('u-alice', 'Alice Admin'),
+  };
+  const members = membersOf(created, [
+    writer(1, 'u-alice', 'alice', ActorVia.Ui),
+    writer(2, 'u-alice', 'alice-claude', ActorVia.Agent),
+    writer(3, 'u-bob', 'bob', ActorVia.Ui),
+  ]);
+  expect(members.map((m) => [m.name, m.colour])).toEqual([
+    ['Alice Admin', colourOf('u-alice')],
+    ['alice-claude', colourOf('u-alice')],
+    ['bob', colourOf('u-bob')],
+  ]);
+});
+
+const page = (n: number, total: number, ids: string[]) => ({
+  data: ids.map((i) => log(i, 'p1', false)),
+  pagination: { page: n, page_size: 10, total_items: total },
+});
+
+test('pages of 10: the next page until the total is read, a log shifted into two pages once', () => {
+  expect(nextPageOf(page(1, 25, []))).toBe(2);
+  expect(nextPageOf(page(2, 25, []))).toBe(3);
+  expect(nextPageOf(page(3, 25, []))).toBeUndefined();
+  expect(nextPageOf(page(1, 10, []))).toBeUndefined();
+  expect(nextPageOf(page(1, 0, []))).toBeUndefined();
+  expect(logsOf([page(1, 12, ['a', 'b']), page(2, 12, ['b', 'c'])]).map((l) => l.id)).toEqual([
+    'a',
+    'b',
+    'c',
+  ]);
+});

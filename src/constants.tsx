@@ -73,6 +73,7 @@ export const WorkspaceMainPages = {
   Workflows: WorkspaceSection.GeneralWorkflow,
   Notebooks: WorkspaceSection.Notebooks,
   Reports: 'reports',
+  Logbook: 'logbook',
 } as const;
 
 export type TWorkspaceMainPages = (typeof WorkspaceMainPages)[keyof typeof WorkspaceMainPages];

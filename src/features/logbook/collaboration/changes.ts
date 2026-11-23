@@ -1,0 +1,294 @@
+import { Extension } from '@tiptap/core';
+import { Plugin, PluginKey } from '@tiptap/pm/state';
+import { Mapping } from '@tiptap/pm/transform';
+import { Decoration, DecorationSet } from '@tiptap/pm/view';
+import { ySyncPluginKey } from '@tiptap/y-tiptap';
+import { clamp, isNil, isNotNil } from 'es-toolkit';
+import { match, P } from 'ts-pattern';
+
+import { entityLookOf } from '@/features/logbook/blocks/kinds';
+import { UNKNOWN_ACTOR } from '@/features/logbook/collaboration/actors';
+import {
+  CHANGE_COALESCE_MS,
+  CHANGE_HIGHLIGHT_MS,
+  CHANGE_MAX_EVENTS,
+} from '@/features/logbook/constants';
+
+import type { Node as PmNode } from '@tiptap/pm/model';
+import type { Mappable } from '@tiptap/pm/transform';
+import type * as Y from 'yjs';
+import type {
+  IChange,
+  IChangeSnapshot,
+  ICollaborationChangesOptions,
+  IDiff,
+  IHighlight,
+  IPluginState,
+} from '@/features/logbook/types';
+
+export class ChangeFeed {
+  #state: IChangeSnapshot = { events: [], toast: null, seen: {} };
+  readonly #listeners = new Set<() => void>();
+
+  readonly subscribe = (listener: () => void): (() => void) => {
+    this.#listeners.add(listener);
+    return () => this.#listeners.delete(listener);
+  };
+
+  readonly snapshot = (): IChangeSnapshot => this.#state;
+
+  push(change: IChange): void {
+    const [last, ...rest] = this.#state.events;
+    const sameRun =
+      isNotNil(last) &&
+      last.actor.key === change.actor.key &&
+      last.blockId === change.blockId &&
+      change.at - last.at < CHANGE_COALESCE_MS &&
+      last.removed.length === 0 &&
+      change.removed.length === 0;
+    const merged: IChange = sameRun
+      ? {
+          ...change,
+          id: last.id,
+          from: Math.min(last.from, change.from),
+          to: Math.max(last.to, change.to),
+          summary: last.summary,
+        }
+      : change;
+    const events = sameRun ? [merged, ...rest] : [merged, ...this.#state.events];
+    this.#state = {
+      events: events.slice(0, CHANGE_MAX_EVENTS),
+      toast: change.actor.agent ? merged : this.#state.toast,
+      seen: { ...this.#state.seen, [change.actor.key]: change.at },
+    };
+    for (const listener of this.#listeners) listener();
+  }
+
+  remap(mapping: Mappable): void {
+    const moved = (change: IChange): IChange => {
+      const from = mapping.map(change.from, 1);
+      const to = Math.max(from, mapping.map(change.to, -1));
+      return from === change.from && to === change.to ? change : { ...change, from, to };
+    };
+    const events = this.#state.events.map(moved);
+    const toast = isNil(this.#state.toast) ? null : moved(this.#state.toast);
+    if (toast === this.#state.toast && events.every((event, i) => event === this.#state.events[i]))
+      return;
+    this.#state = { ...this.#state, events, toast };
+    for (const listener of this.#listeners) listener();
+  }
+
+  dismissToast(): void {
+    this.#state = { ...this.#state, toast: null };
+    for (const listener of this.#listeners) listener();
+  }
+}
+
+const textOf = (node: PmNode): string => node.textContent.replace(/\s+/g, ' ').trim();
+
+function sectionAt(doc: PmNode, pos: number): string | null {
+  let section: string | null = null;
+  doc.forEach((block, offset) => {
+    if (offset >= pos) return;
+    if (block.type.name === 'heading' && Number(block.attrs['level']) <= 2) section = textOf(block);
+  });
+  return section;
+}
+
+export function summaryOf(doc: PmNode, from: number, to: number, removed: string): string {
+  const section = sectionAt(doc, from);
+  const where = isNil(section) ? '' : ` to ${section}`;
+  const inside = isNil(section) ? '' : ` in ${section}`;
+  const added: PmNode[] = [];
+  doc.forEach((block, offset) => {
+    if (offset >= from && offset + block.nodeSize <= to) added.push(block);
+  });
+  const first = added[0];
+  const named = isNil(first)
+    ? null
+    : match<string, string | null>(first.type.name)
+        .with('heading', () => `added ${textOf(first)}`)
+        .with('figure', () => `added a figure${where}`)
+        .with('table', () => `added a table${where}`)
+        .with('codeBlock', () => `added code${where}`)
+        .with('callout', () => `added a note${where}`)
+        .with(
+          'entity',
+          () => `linked the ${entityLookOf(String(first.attrs['type'])).label.toLowerCase()}`
+        )
+        .with('file', () => `attached ${String(first.attrs['name'])}`)
+        .otherwise(() => null);
+  if (isNotNil(named)) return named;
+  if (removed.length > 0 && to > from) return `reworded a sentence${inside}`;
+  if (removed.length > 0) return `removed text${inside}`;
+  return isNil(section) ? 'edited the text' : `edited ${section}`;
+}
+
+const key = new PluginKey<IPluginState>('collaborationChanges');
+const EXPIRE = 'expire';
+
+export function diffOf(before: PmNode, after: PmNode): IDiff | null {
+  const start = before.content.findDiffStart(after.content);
+  if (isNil(start)) return null;
+  const end = before.content.findDiffEnd(after.content);
+  if (isNil(end)) return null;
+  const overlap = start - Math.min(end.a, end.b);
+  const endA = overlap > 0 ? end.a + overlap : end.a;
+  const endB = overlap > 0 ? end.b + overlap : end.b;
+  return { from: start, to: endB, removed: before.textBetween(start, endA, ' ', ' ').trim() };
+}
+
+function topBlockAt(doc: PmNode, pos: number): { node: PmNode; from: number } | null {
+  const clamped = clamp(pos, 0, doc.content.size);
+  const $pos = doc.resolve(clamped);
+  if ($pos.depth === 0) {
+    const node = doc.nodeAt(clamped);
+    return isNil(node) ? null : { node, from: clamped };
+  }
+  return { node: $pos.node(1), from: $pos.before(1) };
+}
+
+let nextId = 1;
+
+export const CollaborationChanges = Extension.create<ICollaborationChangesOptions>({
+  name: 'collaborationChanges',
+
+  addOptions: () => ({
+    doc: null,
+    feed: null,
+    me: UNKNOWN_ACTOR,
+    resolve: () => UNKNOWN_ACTOR,
+    highlights: () => true,
+    ready: () => true,
+  }),
+
+  addProseMirrorPlugins() {
+    const options = this.options;
+    let authors: number[] = [];
+    const capture = (transaction: Y.Transaction): void => {
+      if (transaction.origin === ySyncPluginKey) {
+        authors = [];
+        return;
+      }
+      const moved = [...transaction.afterState].flatMap(([client, clock]) =>
+        clock > (transaction.beforeState.get(client) ?? 0) ? [client] : []
+      );
+      authors = moved.length > 0 ? moved : [...transaction.deleteSet.clients.keys()];
+    };
+
+    return [
+      new Plugin<IPluginState>({
+        key,
+        state: {
+          init: () => ({ decorations: DecorationSet.empty, change: null, mapping: new Mapping() }),
+          apply(tr, old, before) {
+            const mapping = new Mapping(
+              isNotNil(tr.getMeta('appendedTransaction'))
+                ? [...old.mapping.maps, ...tr.mapping.maps]
+                : tr.mapping.maps
+            );
+            let decorations = old.decorations.map(tr.mapping, tr.doc);
+            if (tr.getMeta(key) === EXPIRE) {
+              const cutoff = Date.now() - CHANGE_HIGHLIGHT_MS;
+              const stale = decorations.find(
+                undefined,
+                undefined,
+                (spec: IHighlight) => spec.at <= cutoff
+              );
+              decorations = decorations.remove(stale);
+            }
+            if (!tr.docChanged) return { decorations, change: null, mapping };
+            const sync: unknown = tr.getMeta(ySyncPluginKey);
+            const remote = isNotNil(sync) && Boolean(Reflect.get(Object(sync), 'isChangeOrigin'));
+            const diff = diffOf(before.doc, tr.doc);
+            const added = isNil(diff)
+              ? ''
+              : tr.doc.textBetween(diff.from, diff.to, ' ', ' ').trim();
+            if (
+              isNil(diff) ||
+              (tr.doc.content.size === before.doc.content.size && added === diff.removed)
+            )
+              return { decorations, change: null, mapping };
+            const { from, to, removed } = diff;
+            if (remote && !options.ready()) return { decorations, change: null, mapping };
+            const [author] = authors;
+            const actor = match({ remote, author })
+              .with({ remote: false }, () => options.me)
+              .with({ author: P.number }, ({ author: clientId }) => options.resolve(clientId))
+              .otherwise(() => UNKNOWN_ACTOR);
+            const now = Date.now();
+            const block = topBlockAt(tr.doc, from);
+            if (remote && options.highlights()) {
+              const style = `--hl:${actor.colour}`;
+              const spec: IHighlight = { at: now };
+              const tints = [
+                ...(to > from
+                  ? [Decoration.inline(from, to, { class: 'rl-hl', style }, spec)]
+                  : []),
+                ...(isNil(block)
+                  ? []
+                  : [
+                      Decoration.node(
+                        block.from,
+                        block.from + block.node.nodeSize,
+                        { class: 'rl-hl-block', style },
+                        spec
+                      ),
+                    ]),
+              ];
+              decorations = decorations.add(tr.doc, tints);
+            }
+            const blockId: unknown = block?.node.attrs['id'];
+            const change: IChange = {
+              id: nextId++,
+              actor,
+              local: !remote,
+              at: now,
+              from,
+              to,
+              blockId: typeof blockId === 'string' ? blockId : null,
+              summary: summaryOf(tr.doc, from, to, removed),
+              removed,
+            };
+            return { decorations, change, mapping };
+          },
+        },
+        props: {
+          decorations: (state) => key.getState(state)?.decorations ?? DecorationSet.empty,
+        },
+        view: (view) => {
+          options.doc?.on('beforeObserverCalls', capture);
+          let timer: ReturnType<typeof setTimeout> | undefined;
+          const scheduleExpiry = (): void => {
+            if (isNotNil(timer)) return;
+            const decorations = key.getState(view.state)?.decorations;
+            if (isNil(decorations) || decorations.find().length === 0) return;
+            timer = setTimeout(() => {
+              timer = undefined;
+              view.dispatch(view.state.tr.setMeta(key, EXPIRE).setMeta('addToHistory', false));
+            }, 1000);
+          };
+          return {
+            update: (_view, previous) => {
+              const state = key.getState(view.state);
+              const before = key.getState(previous);
+              if (
+                isNotNil(state) &&
+                state.mapping !== before?.mapping &&
+                state.mapping.maps.length > 0
+              )
+                options.feed?.remap(state.mapping);
+              if (isNotNil(state?.change) && state.change !== before?.change)
+                options.feed?.push(state.change);
+              scheduleExpiry();
+            },
+            destroy: () => {
+              options.doc?.off('beforeObserverCalls', capture);
+              clearTimeout(timer);
+            },
+          };
+        },
+      }),
+    ];
+  },
+});

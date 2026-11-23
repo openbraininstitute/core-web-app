@@ -91,6 +91,7 @@ Defines a new feature flag.
 - `labels`: Optional display labels for values
 - `description`: Optional description
 - `visible`: Whether to show in the Experimental Features panel in user profile, allowing users to toggle the flag
+- `environments`: Optional list of deployments (`local`, `staging`, ...) where the flag can leave its default. Anywhere else `getAllFlags()` returns the default, whatever the cookie holds, so the feature cannot be switched on there. Not set: every deployment
 
 Note: Environment-specific behavior can be achieved by combining `defaultValue` with custom visibility logic based on deployment environment.
 

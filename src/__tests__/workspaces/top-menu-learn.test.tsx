@@ -63,6 +63,21 @@ describe('TopMenuNavigation / hide-help', () => {
   });
 });
 
+describe('TopMenuNavigation / logbook', () => {
+  it('leaves Logbook out by default: its flag is off unless switched on', () => {
+    renderMenu();
+    expect(screen.queryByTestId('workspace-logbook')).toBeNull();
+    expect(screen.getByTestId('workspace-reports')).toBeInTheDocument();
+  });
+
+  it('shows Logbook, right after Reports, while its flag is on', () => {
+    renderMenu({ logbook: true });
+    expect(screen.getByTestId('workspace-logbook')).toHaveAttribute('href', `${base}/logbook`);
+    const ids = screen.getAllByRole('link').map((link) => link.getAttribute('data-testid'));
+    expect(ids.indexOf('workspace-logbook')).toBe(ids.indexOf('workspace-reports') + 1);
+  });
+});
+
 describe('TopMenuNavigation / grey-menu-pills', () => {
   it('keeps the links white, as on main, while its flag is off', () => {
     renderMenu({ learn: true });

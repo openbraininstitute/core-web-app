@@ -1,0 +1,58 @@
+import { describe, expect, it } from 'vitest';
+
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { SchemaNameDict } from '@/features/scan-config/types';
+import { buildSynaptomeWorkflow } from '@/features/scan-config/workflow/definitions/build-synaptome';
+import { BuildWorkflows } from '@/ui/segments/workflows/config/activities/build';
+import { getTargetType } from '@/ui/segments/workflows/config/helpers';
+import {
+  buildGeneratedApiUrl,
+  resolveScanConfigFromIdType,
+  ScanConfigFromIdType,
+} from '@/ui/segments/workflows/config/scan-config-binding';
+import { findScanConfigRegistryByDefinition } from '@/ui/segments/workflows/config/scan-config-registry';
+
+const descriptor = BuildWorkflows.find(
+  (workflow) => workflow.targetType === ExtendedEntitiesTypeDict.BuildSynaptomeCampaign
+);
+
+describe('build synaptome workflow registration', () => {
+  it('is registered under the build activity', () => {
+    expect(descriptor).toBeDefined();
+    expect(descriptor?.sourceType).toBe(ExtendedEntitiesTypeDict.Memodel);
+    expect(descriptor?.disabled).toBe(false);
+  });
+
+  it('is not gated behind a feature flag', () => {
+    expect(descriptor?.requiredFeatures ?? []).toEqual([]);
+  });
+
+  it('binds the obi-one MEModelSynapticModelPlacementScanConfig schema and generate endpoint', () => {
+    const registry = findScanConfigRegistryByDefinition(buildSynaptomeWorkflow);
+
+    expect(registry?.schemaName).toBe(SchemaNameDict.BuildSynaptomeScanConfig);
+    expect(buildGeneratedApiUrl(registry?.configureBinding.generatedApiPath ?? '')).toContain(
+      '/generated/me-model-synaptic-model-placement-scan-config-generate-grid'
+    );
+  });
+
+  it("is the build an ME-model's Build action resolves to", () => {
+    const registry = findScanConfigRegistryByDefinition(buildSynaptomeWorkflow);
+
+    expect(registry?.targetType).toBe(ExtendedEntitiesTypeDict.BuildSynaptomeCampaign);
+    // the single neuron build picks its inputs in the editor, so no other build takes an ME-model
+    expect(getTargetType({ activity: 'build', sourceType: ExtendedEntitiesTypeDict.Memodel })).toBe(
+      ExtendedEntitiesTypeDict.BuildSynaptomeCampaign
+    );
+  });
+
+  it('writes the browsed ME-model into initialize as an MEModelFromID', () => {
+    const registry = findScanConfigRegistryByDefinition(buildSynaptomeWorkflow);
+    // biome-ignore lint/style/noNonNullAssertion: asserted by the previous expectations
+    const binding = registry!.configureBinding;
+
+    expect(resolveScanConfigFromIdType(binding, ExtendedEntitiesTypeDict.Memodel)).toBe(
+      ScanConfigFromIdType.MEModelFromID
+    );
+  });
+});
