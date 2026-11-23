@@ -197,26 +197,10 @@ export default function BlockDictionaryEntries({
 
     newConfig[selectedRootElement] = targetSectionRenamed;
 
-    const initConfig = newConfig.initialize;
-    if (
-      isPlainObject(initConfig) &&
-      isPlainObject(initConfig.node_set) &&
-      typeof initConfig.node_set.block_name === 'string' &&
-      initConfig.node_set.block_name === selectedEntry
-    ) {
-      initConfig.node_set.block_name = newKey;
-    }
-
-    Object.entries(newConfig).forEach(([configK, configV]) => {
-      if (configK === 'initialize' || !isPlainObject(configV)) return;
-
-      // Rename refs in section entries (incl. nested combination tuples)
-      Object.values(configV).forEach((entryV) => {
-        rewriteBlockReferences(entryV, selectedEntry, {
-          type: RewriteBlockReferencesModeDict.Rename,
-          to: newKey,
-        });
-      });
+    // Entry names are unique across the config, so matching `block_name` alone is safe.
+    rewriteBlockReferences(newConfig, selectedEntry, {
+      type: RewriteBlockReferencesModeDict.Rename,
+      to: newKey,
     });
 
     // Distributions are referenced by plain string in each parameter's `distribution`, not via
