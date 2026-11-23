@@ -319,6 +319,24 @@ export function EditorCard(props: IEditorCardProps) {
           longer saved.
         </p>
       ) : null}
+      {props.outdated && onLog ? (
+        <p
+          className="m-0 flex items-center gap-3 bg-warning-tint px-6 py-2 text-[13px] text-warning-ink"
+          role="status"
+        >
+          <span className="min-w-0 flex-1">
+            A newer version of the logbook wrote something on this page. Reload to see all of it and
+            keep writing.
+          </span>
+          <button
+            type="button"
+            className="flex-none rounded-full border-0 bg-white px-3 py-1 text-[12.5px] font-bold text-primary-9"
+            onClick={() => window.location.reload()}
+          >
+            Reload
+          </button>
+        </p>
+      ) : null}
       {isNotNil(props.readOnly) && onLog && !props.deleted ? (
         <p className="m-0 bg-warning-tint px-6 py-2 text-[13px] text-warning-ink" role="status">
           {props.readOnly === ReadOnlyReason.ReadAccess

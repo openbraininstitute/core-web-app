@@ -1,6 +1,6 @@
 import { useEditorState } from '@tiptap/react';
 import { BubbleMenu } from '@tiptap/react/menus';
-import { isNil } from 'es-toolkit';
+import { isNil, isNotNil } from 'es-toolkit';
 import { useEffect, useState } from 'react';
 import { match } from 'ts-pattern';
 
@@ -9,11 +9,13 @@ import { usePages } from '@/features/logbook/api/pages';
 import { PAGE_LINK_LIST_MAX } from '@/features/logbook/constants';
 import {
   insertPageLink,
+  listKeyOf,
   pageQueryAt,
   pagesMatching,
   setPageListKeys,
 } from '@/features/logbook/editor/page-link';
-import { useLogContext } from '@/features/logbook/log/context';
+import { useEntityPicker, useLogContext } from '@/features/logbook/log/context';
+import { ListKey } from '@/features/logbook/types';
 import { Icon } from '@/ui/molecules/icon';
 
 import type { EditorState } from '@tiptap/pm/state';
@@ -52,7 +54,9 @@ export function PageLinkMenu({
     setActive(0);
     if (isNil(query)) setDismissedAt(null);
   }
-  const open = editor.isEditable && !isNil(query) && query.from !== dismissedAt;
+  // The picker is null wherever the page can't be edited: `editor.isEditable` would go stale here.
+  const canEdit = isNotNil(useEntityPicker());
+  const open = canEdit && !isNil(query) && query.from !== dismissedAt;
   const found = open ? pagesMatching(pages, query.text, pageId).slice(0, PAGE_LINK_LIST_MAX) : [];
   const pick = (page: IPage | undefined): boolean => {
     if (isNil(query) || isNil(page)) return false;
@@ -65,21 +69,22 @@ export function PageLinkMenu({
     if (!open) return;
     const view = editor.view;
     setPageListKeys(view, (event) =>
-      match(event.key)
-        .with('ArrowDown', () => {
-          setActive((at) => (at + 1) % Math.max(found.length, 1));
+      match(listKeyOf(event, found.length))
+        .with(ListKey.Down, () => {
+          setActive((at) => (at + 1) % found.length);
           return true;
         })
-        .with('ArrowUp', () => {
-          setActive((at) => (at - 1 + found.length) % Math.max(found.length, 1));
+        .with(ListKey.Up, () => {
+          setActive((at) => (at - 1 + found.length) % found.length);
           return true;
         })
-        .with('Enter', 'Tab', () => pick(found[active]))
-        .with('Escape', () => {
+        .with(ListKey.Pick, () => pick(found[active]))
+        .with(ListKey.Close, () => {
           setDismissedAt(query?.from ?? null);
           return true;
         })
-        .otherwise(() => false)
+        .with(null, () => false)
+        .exhaustive()
     );
     return () => setPageListKeys(view, null);
   });

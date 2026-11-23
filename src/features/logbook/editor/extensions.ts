@@ -6,7 +6,7 @@ import { Markdown } from '@tiptap/markdown';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { ReactNodeViewRenderer } from '@tiptap/react';
-import { isNil } from 'es-toolkit';
+import { isNil, noop } from 'es-toolkit';
 
 import { BLOCK_TYPES, contentExtensions } from '@/features/logbook/blocks/extensions';
 import { CollaborationChanges } from '@/features/logbook/collaboration/changes';
@@ -147,7 +147,13 @@ export function editorExtensions(options: IEditorOptions): AnyExtension[] {
       types: [...BLOCK_TYPES],
       filterTransaction: (transaction) => !isChangeOrigin(transaction),
     }),
-    Collaboration.configure({ document: provider.document, field: FRAGMENT }),
+    Collaboration.configure({
+      document: provider.document,
+      field: FRAGMENT,
+      // A block this build does not know (a newer release wrote it) would otherwise be deleted
+      // from the shared page; with this the sync skips it, stops writing, and the page says reload.
+      ySyncOptions: { onInvalidContent: options.onOutdated },
+    }),
     CollaborationCaret.configure({
       provider,
       user: { userId: me.key, name: me.name, color: me.colour } satisfies ICaretUser,
@@ -172,6 +178,7 @@ export function editorExtensions(options: IEditorOptions): AnyExtension[] {
 
 export const previewExtensions = (document: HocuspocusProvider['document']): AnyExtension[] => [
   ...withViews(),
-  Collaboration.configure({ document, field: FRAGMENT }),
+  // Read-only: an unknown block is skipped, never deleted from the shared page.
+  Collaboration.configure({ document, field: FRAGMENT, ySyncOptions: { onInvalidContent: noop } }),
   CodeHighlight,
 ];

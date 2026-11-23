@@ -1,11 +1,18 @@
 import { Editor } from '@tiptap/core';
-import { TextSelection } from '@tiptap/pm/state';
+import { NodeSelection, TextSelection } from '@tiptap/pm/state';
 import { afterEach, expect, test } from 'vitest';
 
 import { jsonToMarkdown, markdownToJson } from '@/__tests__/logbook/blocks/markdown';
 import { PageKind } from '@/api/logbook/types';
 import { contentExtensions } from '@/features/logbook/blocks/extensions';
-import { insertPageLink, pageQueryAt, pagesMatching } from '@/features/logbook/editor/page-link';
+import {
+  insertPageLink,
+  listKeyOf,
+  pageQueryAt,
+  pagesMatching,
+  startPageLink,
+} from '@/features/logbook/editor/page-link';
+import { ListKey } from '@/features/logbook/types';
 
 import type { JSONContent } from '@tiptap/core';
 import type { IPage } from '@/api/logbook/types';
@@ -51,6 +58,62 @@ test('`[[` and the start of a name at the caret open the list, with the name so 
 test('in a code block, `[[` is code, not a link', () => {
   const e = editorWith([{ type: 'codeBlock', content: [{ type: 'text', text: 'a[[b' }] }]);
   expect(pageQueryAt(e.state)).toBeNull();
+});
+
+test('in inline code, `[[` is code too: no list, so no link lands inside the code span', () => {
+  const e = editorWith([
+    { type: 'paragraph', content: [{ type: 'text', text: 'arr[[0', marks: [{ type: 'code' }] }] },
+  ]);
+  expect(pageQueryAt(e.state)).toBeNull();
+});
+
+test('a key with a modifier keeps its meaning; with nothing to choose, arrows and Enter go back to the text', () => {
+  const key = (k: string, extra: Partial<KeyboardEvent> = {}) =>
+    ({
+      key: k,
+      shiftKey: false,
+      metaKey: false,
+      ctrlKey: false,
+      altKey: false,
+      ...extra,
+    }) as KeyboardEvent;
+  expect(listKeyOf(key('ArrowDown'), 2)).toBe(ListKey.Down);
+  expect(listKeyOf(key('Enter'), 2)).toBe(ListKey.Pick);
+  expect(listKeyOf(key('Enter', { shiftKey: true }), 2)).toBeNull();
+  expect(listKeyOf(key('Tab', { shiftKey: true }), 2)).toBeNull();
+  expect(listKeyOf(key('ArrowUp'), 0)).toBeNull();
+  expect(listKeyOf(key('Enter'), 0)).toBeNull();
+  expect(listKeyOf(key('Escape'), 0)).toBe(ListKey.Close);
+});
+
+test('Insert > Link a page never replaces a selected card or selected text, and never types into code', () => {
+  const card = { type: 'entity', attrs: { label: 'CA1', type: 'circuit', entityId: 'c-1' } };
+  const withCard = editorWith([line('one'), card]);
+  const cardAt = withCard.state.doc.child(0).nodeSize;
+  withCard.view.dispatch(
+    withCard.state.tr.setSelection(NodeSelection.create(withCard.state.doc, cardAt))
+  );
+  startPageLink(withCard as never);
+  const blocks: JSONContent[] = withCard.getJSON().content ?? [];
+  // The card stays, and `[[` starts the line right after it.
+  expect(blocks.slice(0, 3).map((b) => b.type)).toEqual(['paragraph', 'entity', 'paragraph']);
+  expect(blocks[2]?.content?.[0]?.text).toBe('[[');
+  expect(pageQueryAt(withCard.state)).toMatchObject({ text: '' });
+
+  const withText = editorWith([line('keep this')]);
+  withText.view.dispatch(
+    withText.state.tr.setSelection(TextSelection.create(withText.state.doc, 1, 5))
+  );
+  startPageLink(withText as never);
+  expect(withText.getText()).toBe('keep[[ this');
+  expect(pageQueryAt(withText.state)).toMatchObject({ text: '' });
+
+  const inCode = editorWith([{ type: 'codeBlock', content: [{ type: 'text', text: 'x = 1' }] }]);
+  startPageLink(inCode as never);
+  const after: JSONContent[] = inCode.getJSON().content ?? [];
+  expect(after[0]?.content?.[0]?.text).toBe('x = 1');
+  expect(after[1]?.content?.[0]?.text).toBe('[[');
+  expect(pageQueryAt(inCode.state)).toMatchObject({ text: '' });
 });
 
 test('names that start with the query lead; the page being written is never offered', () => {
