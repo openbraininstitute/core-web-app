@@ -25,3 +25,7 @@ test('a brain region card stays a brain region, not the region circuit of the sa
   expect(coreTypeOf('brain_region')).toBeNull();
   expect(has3dView('brain_region')).toBe(false);
 });
+
+test('a simulation card is read from its own route, so it has no core details panel', () => {
+  expect(coreTypeOf('simulation')).toBeNull();
+});
