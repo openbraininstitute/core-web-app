@@ -1,10 +1,7 @@
 import { Dataset, File, Group } from 'h5wasm';
 import { match } from 'ts-pattern';
 
-import {
-  type OfferedProperties,
-  propertyFilterOf,
-} from '@/features/circuit-nodes/neuron-set-block';
+import { propertyFilterOf } from '@/features/circuit-nodes/neuron-set-block';
 import { csvLines } from '@/features/circuit-nodes/nodes-csv';
 import {
   type ColumnFilter,
@@ -20,9 +17,11 @@ import {
   type NodeGeometry,
   type NodeGeometryOptions,
   type NumberFilter,
+  type OfferedProperties,
   POSITION_COLUMNS,
   type SortItem,
   type TextFilter,
+  type TPropertyFilter,
 } from '@/features/circuit-nodes/types';
 
 const SYNTHETIC_NODE_ID = 'node_id';
@@ -699,18 +698,16 @@ export class NodesSession {
     return out;
   }
 
-  /** {@link propertyFilterOf} over the file's columns, read in place. */
-  neuronSetFilter(cells: Uint32Array, offered: OfferedProperties): Record<string, string[]> | null {
+  neuronSetFilter(cells: Uint32Array, offered: OfferedProperties): TPropertyFilter | null {
     return propertyFilterOf({
       cells,
       rowCount: this.rowCount,
       columns: this.columns,
       offered,
-      read: (name) => {
-        const handle = this.columnIndex.get(name);
-        if (handle?.kind !== ColumnKindDict.Categorical) return null;
-        return { library: handle.library, indices: this.loadColumn(name) as Uint32Array };
-      },
+      read: (name) => ({
+        library: (this.columnIndex.get(name) as CategoricalHandle).library,
+        indices: this.loadColumn(name) as Uint32Array,
+      }),
     });
   }
 

@@ -26,8 +26,8 @@ import { logError } from '@/utils/logger';
 
 import type { ComponentProps } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { NeuronSetBlock, OfferedProperties } from '@/features/circuit-nodes/neuron-set-block';
-import type { ViewMode } from '@/features/circuit-nodes/types';
+import type { NeuronSetBlock } from '@/features/circuit-nodes/neuron-set-block';
+import type { OfferedProperties, ViewMode } from '@/features/circuit-nodes/types';
 
 import styles from '@/features/circuit-nodes/circuit-nodes-table.module.css';
 
@@ -192,15 +192,14 @@ export default function CircuitNodesTable({
     shown.length < rowCount
       ? () => {
           setMakingSet(true);
-          const offered = cells?.neuronSetProperties?.[population.name] ?? {};
           neuronSetBlock({
             population,
             cells: shown,
             ticked: ticks.ticked.size > 0,
             filterModel: ticks.filterModel,
             columns,
-            offered,
-            propertyFilter: (shownCells) => neuronSetFilter(shownCells, offered),
+            offered: cells?.neuronSetProperties?.[population.name] ?? {},
+            propertyFilter: neuronSetFilter,
           })
             .then(({ block }) => {
               if (block) {

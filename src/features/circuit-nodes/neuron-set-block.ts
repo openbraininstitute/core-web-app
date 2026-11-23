@@ -2,17 +2,16 @@ import { NodePopulationType } from '@/api/entitycore/types/entities/circuit';
 
 import { ColumnKindDict } from './types';
 
-import type { ColumnMeta, FilterModel, NodePopulation } from './types';
+import type {
+  ColumnMeta,
+  FilterModel,
+  NodePopulation,
+  OfferedProperties,
+  TPropertyFilter,
+} from './types';
 
 /** A block for a scan config's neuron sets, as obi-one's schema has it. */
 export type NeuronSetBlock = Record<string, unknown>;
-
-/**
- * What a property neuron set's form can show of a population: each property it offers, with the
- * values it offers (`NodePropertyUniqueValuesByPopulation`). obi-one leaves out a property with too
- * many values, so a set saying it would open empty.
- */
-export type OfferedProperties = Readonly<Record<string, readonly string[]>>;
 
 /** The properties kept longest when a selection is said by its cells' values, the most telling first. */
 const TELLING = [
@@ -118,14 +117,7 @@ function countKept(narrowings: readonly Narrowing[], rowCount: number, limit: nu
   return count;
 }
 
-const narrowable = (columns: readonly ColumnMeta[], offered: OfferedProperties) =>
-  columns.filter((c) => c.kind === ColumnKindDict.Categorical && c.name in offered);
-
-/**
- * Each categorical property on offer narrowed to the values the cells have, where those pick out
- * exactly the cells, with the properties that add nothing dropped, the least telling first; null
- * where they don't. Runs in the nodes worker, which reads the columns in place.
- */
+/** The offered values that pick out exactly `cells`, with as few properties as can; null where none do. */
 export function propertyFilterOf({
   cells,
   rowCount,
@@ -138,13 +130,14 @@ export function propertyFilterOf({
   rowCount: number;
   columns: readonly ColumnMeta[];
   offered: OfferedProperties;
-  /** A categorical column's library and a code per node; null for any other column. */
-  read: (name: string) => { library: string[]; indices: Uint32Array } | null;
-}): Record<string, string[]> | null {
+  /** A categorical column's library and its code per node. */
+  read: (name: string) => { library: string[]; indices: Uint32Array };
+}): TPropertyFilter | null {
   const narrowings: Narrowing[] = [];
-  for (const meta of narrowable(columns, offered)) {
+  for (const meta of columns.filter(
+    (c) => c.kind === ColumnKindDict.Categorical && c.name in offered
+  )) {
     const values = read(meta.name);
-    if (!values) continue;
     const kept = new Uint8Array(values.library.length);
     let count = 0;
     for (const cell of cells) {
@@ -189,12 +182,7 @@ export function propertyFilterOf({
   );
 }
 
-/**
- * The neuron set for the cells a table leaves on show, a property set wherever the values the form
- * can show say exactly which cells they are (see `propertyFilterOf`), else their ids. Where the
- * table's filter is only lists of those values, they are the property set. Cells only their ids
- * can say, past `MAX_ID_SET_CELLS` of them, make no set: `block` is null.
- */
+/** The cells on show as a property neuron set where values say them, else by id; null past `MAX_ID_SET_CELLS` ids. */
 export async function neuronSetBlock({
   population,
   cells,
@@ -212,13 +200,15 @@ export async function neuronSetBlock({
   filterModel: FilterModel;
   columns: readonly ColumnMeta[];
   offered: OfferedProperties;
-  /** `propertyFilterOf` for these cells, run where the columns are. */
-  propertyFilter: (cells: Uint32Array) => Promise<Record<string, string[]> | null>;
+  propertyFilter: (
+    cells: Uint32Array,
+    offered: OfferedProperties
+  ) => Promise<TPropertyFilter | null>;
 }): Promise<{ block: NeuronSetBlock; by: 'property' | 'id' } | { block: null; by: null }> {
   const asFiltered = ticked ? null : filterAsProperties(filterModel, columns, offered);
   if (asFiltered) return { block: propertyBlock(population, asFiltered), by: 'property' };
 
-  const byValues = narrowable(columns, offered).length > 0 ? await propertyFilter(cells) : null;
+  const byValues = await propertyFilter(cells, offered);
   if (byValues) return { block: propertyBlock(population, byValues), by: 'property' };
   return cells.length > MAX_ID_SET_CELLS
     ? { block: null, by: null }

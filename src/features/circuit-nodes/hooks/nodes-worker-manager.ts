@@ -2,7 +2,6 @@ import * as Comlink from 'comlink';
 
 import { config } from '@/config';
 
-import type { OfferedProperties } from '@/features/circuit-nodes/neuron-set-block';
 import type {
   ColumnMeta,
   ColumnValues,
@@ -15,8 +14,10 @@ import type {
   GetRowsResponse,
   NodeGeometry,
   NodeGeometryOptions,
+  OfferedProperties,
   OpenRequest,
   SortItem,
+  TPropertyFilter,
 } from '@/features/circuit-nodes/types';
 import type { NodesWorkerApi } from '@/features/circuit-nodes/worker/nodes.worker';
 
@@ -165,12 +166,11 @@ class NodesWorkerRegistry {
     return session.proxy.getColumn(name);
   }
 
-  /** Cloned, not transferred: the caller keeps its cells. */
   neuronSetFilter(
     key: string,
     cells: Uint32Array,
     offered: OfferedProperties
-  ): Promise<Record<string, string[]> | null> {
+  ): Promise<TPropertyFilter | null> {
     const session = this.sessions.get(key);
     if (!session?.proxy) return Promise.reject(new Error('Nodes worker not ready'));
     return session.proxy.neuronSetFilter(cells, offered);

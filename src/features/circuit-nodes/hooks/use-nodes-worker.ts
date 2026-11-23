@@ -11,7 +11,6 @@ import {
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 import type { IDatasource } from 'ag-grid-community';
-import type { OfferedProperties } from '@/features/circuit-nodes/neuron-set-block';
 import type {
   ColumnMeta,
   CsvPartHandler,
@@ -20,6 +19,7 @@ import type {
   FilterModel,
   NodeGeometryOptions,
   NodePopulation,
+  OfferedProperties,
   SortItem,
 } from '@/features/circuit-nodes/types';
 import type { WorkspaceContext } from '@/types/common';
