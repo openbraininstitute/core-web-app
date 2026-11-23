@@ -34,7 +34,9 @@ async function accountingGet<T>(path: string, params?: TParams, signal?: AbortSi
   }
   const body = await response.json().catch(() => null);
   if (typeof body !== 'object' || body === null || body.data == null) {
-    throw await parseApiError(url, response.status, body);
+    throw await parseApiError(url, response.status, {
+      message: 'Accounting sent a reply with no data.',
+    });
   }
 
   return (body as { data: T }).data;

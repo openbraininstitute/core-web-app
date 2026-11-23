@@ -10,7 +10,7 @@ import { AccountingFilter, TransactionType } from '../types';
 import { JOURNAL_COLUMNS, journalRowId } from './columns';
 import { useIdFilter, useOptionFilter } from './filters';
 
-import type { TJournalEntry, TTransactionType } from '../types';
+import type { TJournalEntry, TJournalFilters, TTransactionType } from '../types';
 
 const JOURNAL_SOURCE = pagedSource(listJournal);
 
@@ -48,13 +48,15 @@ export function JournalList() {
         getRowId={journalRowId}
         dataSource={JOURNAL_SOURCE}
         queryKey={adminQueryKeys.accountingJournal()}
-        params={{
-          account_id: account.id,
-          job_id: job.id,
-          transaction_type: type.value,
-          transaction_after: bounds.after,
-          transaction_before: bounds.before,
-        }}
+        params={
+          {
+            account_id: account.id,
+            job_id: job.id,
+            transaction_type: type.value,
+            transaction_after: bounds.after,
+            transaction_before: bounds.before,
+          } satisfies TJournalFilters
+        }
       />
     </div>
   );

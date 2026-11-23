@@ -18,7 +18,7 @@ import { creditsColumn } from './columns';
 import { useIdFilter } from './filters';
 
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
-import type { TJobReport } from '../types';
+import type { TJobReport, TReportFilters } from '../types';
 
 const REPORT_SOURCE = pagedSource(listReport);
 
@@ -105,11 +105,13 @@ export function Reports() {
         getRowId={(report) => report.job_id}
         dataSource={REPORT_SOURCE}
         queryKey={adminQueryKeys.accountingReport(path)}
-        params={{
-          path,
-          started_after: bounds.after,
-          started_before: bounds.before,
-        }}
+        params={
+          {
+            path,
+            started_after: bounds.after,
+            started_before: bounds.before,
+          } satisfies { path: string } & TReportFilters
+        }
         onRowClick={(report) => router.push(adminHref('accountingJob', report.job_id))}
       />
     </div>

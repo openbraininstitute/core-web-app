@@ -19,7 +19,13 @@ import { JobPhasePill } from './cells';
 import { useIdFilter, useOptionFilter } from './filters';
 
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
-import type { TAccountingJob, TAccountingSubtype, TChargeType, TJobStatusFilter } from '../types';
+import type {
+  TAccountingJob,
+  TAccountingSubtype,
+  TChargeType,
+  TJobFilters,
+  TJobStatusFilter,
+} from '../types';
 
 const JOBS_SOURCE = pagedSource(listJobs);
 
@@ -140,15 +146,17 @@ export function JobsList() {
         getRowId={(job) => `${job.id}:${job.updated_at}`}
         dataSource={JOBS_SOURCE}
         queryKey={adminQueryKeys.accountingJobs()}
-        params={{
-          vlab_id: vlab.id,
-          proj_id: project.id,
-          service_type: type.value,
-          service_subtype: subtype.value,
-          status: status.value,
-          started_after: bounds.after,
-          started_before: bounds.before,
-        }}
+        params={
+          {
+            vlab_id: vlab.id,
+            proj_id: project.id,
+            service_type: type.value,
+            service_subtype: subtype.value,
+            status: status.value,
+            started_after: bounds.after,
+            started_before: bounds.before,
+          } satisfies TJobFilters
+        }
         onRowClick={(job) => router.push(adminHref('accountingJob', job.id))}
       />
     </div>

@@ -12,7 +12,7 @@ import { accountNameColumn, createdColumn, creditsColumn } from './columns';
 import { useEnabledFilter } from './filters';
 
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
-import type { TVlabAccount } from '../types';
+import type { TVlabAccount, TVlabAccountFilters } from '../types';
 
 const LABS_SOURCE = pagedSource(listVlabAccounts);
 
@@ -45,10 +45,12 @@ export function AccountsList() {
         }
         dataSource={LABS_SOURCE}
         queryKey={adminQueryKeys.accountingLabs()}
-        params={{
-          name: search.params.query,
-          enabled: enabled.enabled,
-        }}
+        params={
+          {
+            name: search.params.query,
+            enabled: enabled.enabled,
+          } satisfies TVlabAccountFilters
+        }
         onRowClick={(account) => router.push(adminHref('account', account.id))}
       />
     </div>

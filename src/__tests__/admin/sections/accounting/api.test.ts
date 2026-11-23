@@ -97,6 +97,7 @@ describe('accounting client', () => {
     const error = await listJobs({ page: 1, page_size: 20 }).catch((caught) => caught);
 
     expect(error).toBeInstanceOf(ApiError);
+    expect(error.message).toBe('Accounting sent a reply with no data.');
   });
 });
 
