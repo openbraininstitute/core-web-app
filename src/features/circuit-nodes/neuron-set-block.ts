@@ -2,7 +2,7 @@ import { NodePopulationType } from '@/api/entitycore/types/entities/circuit';
 
 import { ColumnKindDict } from './types';
 
-import type { ColumnMeta, ColumnValues, FilterModel, NodePopulation } from './types';
+import type { ColumnMeta, FilterModel, NodePopulation } from './types';
 
 /** A block for a scan config's neuron sets, as obi-one's schema has it. */
 export type NeuronSetBlock = Record<string, unknown>;
@@ -118,44 +118,33 @@ function countKept(narrowings: readonly Narrowing[], rowCount: number, limit: nu
   return count;
 }
 
+const narrowable = (columns: readonly ColumnMeta[], offered: OfferedProperties) =>
+  columns.filter((c) => c.kind === ColumnKindDict.Categorical && c.name in offered);
+
 /**
- * The neuron set for the cells a table leaves on show, a property set wherever the values the form
- * can show say exactly which cells they are, else their ids. Where the table's filter is only lists
- * of those values, they are the property set. Otherwise each categorical property on offer is
- * narrowed to the values the cells have; where nothing else has those values, the properties that
- * add nothing are dropped, the least telling first, and the rest are the set. Cells only their ids
- * can say, past `MAX_ID_SET_CELLS` of them, make no set: `block` is null.
+ * Each categorical property on offer narrowed to the values the cells have, where those pick out
+ * exactly the cells, with the properties that add nothing dropped, the least telling first; null
+ * where they don't. Runs in the nodes worker, which reads the columns in place.
  */
-export async function neuronSetBlock({
-  population,
+export function propertyFilterOf({
   cells,
   rowCount,
-  ticked,
-  filterModel,
   columns,
   offered,
-  getColumn,
+  read,
 }: {
-  population: NodePopulation;
   /** The cells on show, by node index, sorted. */
   cells: Uint32Array;
   rowCount: number;
-  /** Whether rows are ticked: the cells are then the ticks, whatever the filter. */
-  ticked: boolean;
-  filterModel: FilterModel;
   columns: readonly ColumnMeta[];
   offered: OfferedProperties;
-  getColumn: (name: string) => Promise<ColumnValues>;
-}): Promise<{ block: NeuronSetBlock; by: 'property' | 'id' } | { block: null; by: null }> {
-  const asFiltered = ticked ? null : filterAsProperties(filterModel, columns, offered);
-  if (asFiltered) return { block: propertyBlock(population, asFiltered), by: 'property' };
-
+  /** A categorical column's library and a code per node; null for any other column. */
+  read: (name: string) => { library: string[]; indices: Uint32Array } | null;
+}): Record<string, string[]> | null {
   const narrowings: Narrowing[] = [];
-  for (const meta of columns.filter(
-    (c) => c.kind === ColumnKindDict.Categorical && c.name in offered
-  )) {
-    const values = await getColumn(meta.name);
-    if (values.kind !== 'categorical') continue;
+  for (const meta of narrowable(columns, offered)) {
+    const values = read(meta.name);
+    if (!values) continue;
     const kept = new Uint8Array(values.library.length);
     let count = 0;
     for (const cell of cells) {
@@ -183,11 +172,7 @@ export async function neuronSetBlock({
   }
   const exact = (kept: readonly Narrowing[]) =>
     kept.length > 0 && countKept(kept, rowCount, cells.length) === cells.length;
-  if (!exact(narrowings)) {
-    return cells.length > MAX_ID_SET_CELLS
-      ? { block: null, by: null }
-      : { block: idBlock(population, cells), by: 'id' };
-  }
+  if (!exact(narrowings)) return null;
 
   // The least telling are tried first: a property not among them, then theirs from the last.
   const rank = (name: string) => {
@@ -199,8 +184,43 @@ export async function neuronSetBlock({
     const without = kept.filter((n) => n !== dropped);
     if (exact(without)) kept = without;
   }
-  const filterDict = Object.fromEntries(
+  return Object.fromEntries(
     kept.map((n) => [n.name, n.library.filter((_, code) => n.kept[code] === 1)])
   );
-  return { block: propertyBlock(population, filterDict), by: 'property' };
+}
+
+/**
+ * The neuron set for the cells a table leaves on show, a property set wherever the values the form
+ * can show say exactly which cells they are (see `propertyFilterOf`), else their ids. Where the
+ * table's filter is only lists of those values, they are the property set. Cells only their ids
+ * can say, past `MAX_ID_SET_CELLS` of them, make no set: `block` is null.
+ */
+export async function neuronSetBlock({
+  population,
+  cells,
+  ticked,
+  filterModel,
+  columns,
+  offered,
+  propertyFilter,
+}: {
+  population: NodePopulation;
+  /** The cells on show, by node index, sorted. */
+  cells: Uint32Array;
+  /** Whether rows are ticked: the cells are then the ticks, whatever the filter. */
+  ticked: boolean;
+  filterModel: FilterModel;
+  columns: readonly ColumnMeta[];
+  offered: OfferedProperties;
+  /** `propertyFilterOf` for these cells, run where the columns are. */
+  propertyFilter: (cells: Uint32Array) => Promise<Record<string, string[]> | null>;
+}): Promise<{ block: NeuronSetBlock; by: 'property' | 'id' } | { block: null; by: null }> {
+  const asFiltered = ticked ? null : filterAsProperties(filterModel, columns, offered);
+  if (asFiltered) return { block: propertyBlock(population, asFiltered), by: 'property' };
+
+  const byValues = narrowable(columns, offered).length > 0 ? await propertyFilter(cells) : null;
+  if (byValues) return { block: propertyBlock(population, byValues), by: 'property' };
+  return cells.length > MAX_ID_SET_CELLS
+    ? { block: null, by: null }
+    : { block: idBlock(population, cells), by: 'id' };
 }

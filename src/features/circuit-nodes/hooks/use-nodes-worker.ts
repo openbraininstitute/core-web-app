@@ -11,6 +11,7 @@ import {
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 import type { IDatasource } from 'ag-grid-community';
+import type { OfferedProperties } from '@/features/circuit-nodes/neuron-set-block';
 import type {
   ColumnMeta,
   CsvPartHandler,
@@ -140,6 +141,14 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
     [key]
   );
 
+  const neuronSetFilter = useCallback(
+    async (cells: Uint32Array, offered: OfferedProperties) => {
+      if (!key) throw new Error('Nodes worker not ready');
+      return nodesWorkerRegistry.neuronSetFilter(key, cells, offered);
+    },
+    [key]
+  );
+
   const exportCsv = useCallback(
     async (request: CsvRequest, onPart: CsvPartHandler) => {
       if (!key) throw new Error('Nodes worker not ready');
@@ -198,6 +207,7 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
     columns: state.columns,
     datasource,
     getColumn,
+    neuronSetFilter,
     exportCsv,
     getGeometry,
     setDerivedColumns,

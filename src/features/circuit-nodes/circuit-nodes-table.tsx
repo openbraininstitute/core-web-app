@@ -126,6 +126,7 @@ export default function CircuitNodesTable({
     exportCsv,
     status,
     getColumn,
+    neuronSetFilter,
     setDerivedColumns,
     getFilteredIndices,
     getRowIndex,
@@ -191,15 +192,15 @@ export default function CircuitNodesTable({
     shown.length < rowCount
       ? () => {
           setMakingSet(true);
+          const offered = cells?.neuronSetProperties?.[population.name] ?? {};
           neuronSetBlock({
             population,
             cells: shown,
-            rowCount,
             ticked: ticks.ticked.size > 0,
             filterModel: ticks.filterModel,
             columns,
-            offered: cells?.neuronSetProperties?.[population.name] ?? {},
-            getColumn,
+            offered,
+            propertyFilter: (shownCells) => neuronSetFilter(shownCells, offered),
           })
             .then(({ block }) => {
               if (block) {

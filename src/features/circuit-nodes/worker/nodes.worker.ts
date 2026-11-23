@@ -4,6 +4,7 @@ import { NodesSession } from '@/features/circuit-nodes/worker/nodes-h5';
 import { CIRCUIT_H5_CACHE } from '@/utils/h5/caches';
 import { fetchToFS, unlinkFromFS } from '@/utils/h5/fs';
 
+import type { OfferedProperties } from '@/features/circuit-nodes/neuron-set-block';
 import type {
   ColumnValues,
   CsvPartHandler,
@@ -73,6 +74,14 @@ const api = {
       return Comlink.transfer(column, [column.values.buffer as ArrayBuffer]);
     }
     return column;
+  },
+
+  async neuronSetFilter(
+    cells: Uint32Array,
+    offered: OfferedProperties
+  ): Promise<Record<string, string[]> | null> {
+    if (!session) throw new Error('NodesSession not initialized; call open() first');
+    return session.neuronSetFilter(cells, offered);
   },
 
   async setDerivedColumns(owner: string, columns: DerivedColumn[]): Promise<void> {

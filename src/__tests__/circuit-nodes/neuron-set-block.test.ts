@@ -1,8 +1,15 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import { MAX_ID_SET_CELLS, neuronSetBlock } from '@/features/circuit-nodes/neuron-set-block';
+import {
+  MAX_ID_SET_CELLS,
+  neuronSetBlock,
+  type OfferedProperties,
+  propertyFilterOf,
+} from '@/features/circuit-nodes/neuron-set-block';
 
-import type { ColumnMeta, ColumnValues } from '@/features/circuit-nodes/types';
+import type { ColumnMeta } from '@/features/circuit-nodes/types';
+
+type Column = { library: string[]; indices: Uint32Array };
 
 // Six cells: two L5_TPC in layer 5, one L5_MC in layer 5, three L6_BPC in layer 6.
 const MTYPE = { library: ['L5_TPC', 'L5_MC', 'L6_BPC'], indices: Uint32Array.of(0, 0, 1, 2, 2, 2) };
@@ -22,22 +29,25 @@ const COLUMNS: ColumnMeta[] = [
 ];
 // As obi-one lists them: not a property with too many values.
 const OFFERED = { mtype: MTYPE.library, layer: LAYER.library, etype: ETYPE.library };
-const getColumn = async (name: string): Promise<ColumnValues> => {
+const read = (name: string): Column => {
   const values = { mtype: MTYPE, layer: LAYER, etype: ETYPE, cell_type: CELL_TYPE }[name];
   if (!values) throw new Error(`No column ${name}`);
-  return { kind: 'categorical', ...values };
+  return values;
 };
+const filterOver =
+  (rowCount: number, offered: OfferedProperties, readColumn: (name: string) => Column = read) =>
+  async (cells: Uint32Array) =>
+    propertyFilterOf({ cells, rowCount, columns: COLUMNS, offered, read: readColumn });
 const population = { name: 'S1', type: 'biophysical', file: 'nodes.h5' };
 const build = (cells: number[], ticked: boolean, filterModel = {}, offered: object = OFFERED) =>
   neuronSetBlock({
     population,
     cells: Uint32Array.from(cells),
-    rowCount: 6,
     ticked,
     filterModel,
     columns: COLUMNS,
-    offered: offered as Record<string, string[]>,
-    getColumn,
+    offered: offered as OfferedProperties,
+    propertyFilter: filterOver(6, offered as OfferedProperties),
   });
 
 describe('neuronSetBlock', () => {
@@ -78,16 +88,30 @@ describe('neuronSetBlock', () => {
     expect(block).toMatchObject({ property_filter: { filter_dict: { mtype: ['L6_BPC'] } } });
   });
 
+  it('asks nothing of the worker where no categorical property is on offer', async () => {
+    const propertyFilter = vi.fn();
+    const { by } = await neuronSetBlock({
+      population,
+      cells: Uint32Array.of(0, 1),
+      ticked: true,
+      filterModel: {},
+      columns: COLUMNS,
+      offered: { x: ['1'] },
+      propertyFilter,
+    });
+    expect(by).toBe('id');
+    expect(propertyFilter).not.toHaveBeenCalled();
+  });
+
   it('names point populations', async () => {
     const { block } = await neuronSetBlock({
       population: { name: 'drosophila', type: 'brian2_point', file: 'n.h5' },
       cells: Uint32Array.of(0),
-      rowCount: 6,
       ticked: true,
       filterModel: {},
       columns: COLUMNS,
       offered: OFFERED,
-      getColumn,
+      propertyFilter: filterOver(6, OFFERED),
     });
     expect(block?.type).toBe('PointPopulationIDNeuronSet');
   });
@@ -157,19 +181,18 @@ describe('neuronSetBlock', () => {
 
     it('still says that many cells by values that pick out exactly them', async () => {
       const many = MAX_ID_SET_CELLS + 1;
+      const offered = { mtype: ['A', 'B'] };
       const { block, by } = await neuronSetBlock({
         population,
         cells: Uint32Array.from(upTo(many)),
-        rowCount: many * 2,
         ticked: false,
         filterModel: { x: { filterType: 'number', type: 'greaterThan', filter: '10' } },
         columns: COLUMNS,
-        offered: { mtype: ['A', 'B'] },
-        getColumn: async () => ({
-          kind: 'categorical',
+        offered,
+        propertyFilter: filterOver(many * 2, offered, () => ({
           library: ['A', 'B'],
           indices: Uint32Array.from({ length: many * 2 }, (_, row) => (row < many ? 0 : 1)),
-        }),
+        })),
       });
       expect(by).toBe('property');
       expect(block).toMatchObject({ property_filter: { filter_dict: { mtype: ['A'] } } });
