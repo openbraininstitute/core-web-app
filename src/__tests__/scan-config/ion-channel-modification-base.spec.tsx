@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { GlobalModificationBase } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/global-base';
@@ -76,6 +76,46 @@ describe('GlobalModificationBase', () => {
     expect(screen.getByText('gbar')).toBeInTheDocument();
     expect(screen.getByLabelText('View ion channel NaTg')).toBeInTheDocument();
   });
+
+  it('shows a scan saved as a list of values, one field per value', () => {
+    const state: Record<string, ConfigValue> = {
+      modification: {
+        type: 'GlobalModification',
+        ion_channel_id: 'ic-natg',
+        channel_name: 'NaTg',
+        variable_name: 'gbar',
+        variable_type: 'RANGE',
+        new_value: [0.05, 0.1, 0.2],
+      },
+    };
+    render(<GlobalModificationBase {...baseProps} state={state} />);
+
+    const fields = screen.getAllByTestId('scan-config-sweep-value');
+    expect(fields.map((f) => (f.querySelector('input') ?? f).getAttribute('value'))).toEqual([
+      '0.05',
+      '0.1',
+      '0.2',
+    ]);
+  });
+
+  it('turns a single value into a scan', () => {
+    const setState = vi.fn();
+    const modification = {
+      type: 'GlobalModification',
+      ion_channel_id: 'ic-natg',
+      channel_name: 'NaTg',
+      variable_name: 'gbar',
+      variable_type: 'RANGE',
+      new_value: 0.05,
+    };
+    render(<GlobalModificationBase {...baseProps} setState={setState} state={{ modification }} />);
+
+    fireEvent.click(screen.getByTestId('scan-config-sweep-expand'));
+
+    expect(setState).toHaveBeenCalledWith({
+      modification: { ...modification, new_value: [0.05, null] },
+    });
+  });
 });
 
 describe('RangeModificationBase', () => {
@@ -110,6 +150,43 @@ describe('RangeModificationBase', () => {
     // also appears in the trigger's section-list badge, hence getAllByText.
     expect(screen.getAllByText('somatic').length).toBeGreaterThan(0);
     expect(screen.getByText('axonal')).toBeInTheDocument();
+  });
+
+  it('shows a section-list scan as one field per value', () => {
+    const state: Record<string, ConfigValue> = {
+      modification: {
+        type: 'RangeModification',
+        ion_channel_id: 'ic-natg',
+        variable_name: 'gbar',
+        section_list_modifications: { somatic: [0.1, 0.3], axonal: 0.2 },
+      },
+    };
+    render(<RangeModificationBase {...baseProps} state={state} />);
+
+    const fields = screen.getAllByTestId('scan-config-sweep-value');
+    expect(fields.map((f) => (f.querySelector('input') ?? f).getAttribute('value'))).toEqual([
+      '0.1',
+      '0.3',
+      '0.2',
+    ]);
+  });
+
+  it('drops a cleared section list instead of saving null', () => {
+    const setState = vi.fn();
+    const modification = {
+      type: 'RangeModification',
+      ion_channel_id: 'ic-natg',
+      variable_name: 'gbar',
+      section_list_modifications: { somatic: [0.1, 0.3], axonal: 0.2 },
+    };
+    render(<RangeModificationBase {...baseProps} setState={setState} state={{ modification }} />);
+
+    const axonal = screen.getAllByTestId('scan-config-sweep-value')[2];
+    fireEvent.change(axonal.querySelector('input') ?? axonal, { target: { value: '' } });
+
+    expect(setState).toHaveBeenLastCalledWith({
+      modification: { ...modification, section_list_modifications: { somatic: [0.1, 0.3] } },
+    });
   });
 
   it('honours the gating reason over the picker', () => {
