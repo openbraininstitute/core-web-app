@@ -95,7 +95,11 @@ describe('BlockDictionaryEntries', () => {
         include_virtual_populations: true,
       },
       stimuli: {
-        s1: { neuron_set: ref('BioAll'), targeted: ref('Other') },
+        s1: {
+          neuron_set: ref('BioAll'),
+          targeted: ref('Other'),
+          timestamps: { block_dict_name: 'timestamps', block_name: 'BioAll' },
+        },
         s2: {
           combined_with: [
             [ref('BioAll'), 'union'],
@@ -129,7 +133,11 @@ describe('BlockDictionaryEntries', () => {
         include_virtual_populations: true,
       },
       stimuli: {
-        s1: { neuron_set: ref('AllBio123'), targeted: ref('Other') },
+        s1: {
+          neuron_set: ref('AllBio123'),
+          targeted: ref('Other'),
+          timestamps: { block_dict_name: 'timestamps', block_name: 'BioAll' },
+        },
         s2: {
           combined_with: [
             [ref('AllBio123'), 'union'],

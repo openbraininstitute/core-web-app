@@ -197,11 +197,11 @@ export default function BlockDictionaryEntries({
 
     newConfig[selectedRootElement] = targetSectionRenamed;
 
-    // Entry names are unique across the config, so matching `block_name` alone is safe.
-    rewriteBlockReferences(newConfig, selectedEntry, {
-      type: RewriteBlockReferencesModeDict.Rename,
-      to: newKey,
-    });
+    rewriteBlockReferences(
+      newConfig,
+      { dictionary: selectedRootElement, name: selectedEntry },
+      { type: RewriteBlockReferencesModeDict.Rename, to: newKey }
+    );
 
     // Distributions are referenced by plain string in each parameter's `distribution`, not via
     // block references, so cascade the rename into every parameter that uses the old name.
@@ -396,9 +396,11 @@ export default function BlockDictionaryEntries({
                                           return;
 
                                         Object.values(configV).forEach((entryV) => {
-                                          rewriteBlockReferences(entryV, subkey, {
-                                            type: RewriteBlockReferencesModeDict.Clear,
-                                          });
+                                          rewriteBlockReferences(
+                                            entryV,
+                                            { dictionary: rootElement, name: subkey },
+                                            { type: RewriteBlockReferencesModeDict.Clear }
+                                          );
                                         });
                                       });
 

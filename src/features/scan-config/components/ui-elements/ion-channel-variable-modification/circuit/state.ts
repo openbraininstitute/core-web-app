@@ -1,3 +1,4 @@
+import { referencesBlock } from '@/features/scan-config/components/rewrite-block-references';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { isType, ScanConfigUIElementDict } from '@/features/scan-config/types';
 
@@ -66,23 +67,6 @@ function stableStringify(value: unknown): string {
   }
 
   return JSON.stringify(value);
-}
-
-function referenceMatchesDeletedBlock(
-  value: unknown,
-  deletedBlockDictionaryName: string,
-  deletedBlockName: string
-) {
-  if (
-    !isPlainObject(value) ||
-    value.block_name !== deletedBlockName ||
-    (typeof value.block_dict_name === 'string' &&
-      value.block_dict_name !== deletedBlockDictionaryName)
-  ) {
-    return false;
-  }
-
-  return true;
 }
 
 function findMatchingBlock(blocks: TBlock[] | undefined, state: ConfigObject): TBlock | null {
@@ -168,7 +152,12 @@ function clearDeletedReferencesInState({
   deletedBlockName: string;
 }) {
   for (const [fieldKey, fieldValue] of Object.entries(state)) {
-    if (!referenceMatchesDeletedBlock(fieldValue, deletedBlockDictionaryName, deletedBlockName)) {
+    if (
+      !referencesBlock(fieldValue, {
+        dictionary: deletedBlockDictionaryName,
+        name: deletedBlockName,
+      })
+    ) {
       continue;
     }
 
