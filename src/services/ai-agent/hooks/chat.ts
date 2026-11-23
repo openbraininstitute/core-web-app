@@ -249,8 +249,10 @@ export function useServiceAiAgentChat(threadId: string) {
   ]);
 
   useEffect(() => {
-    setIsChatReady(chat.status === 'ready');
+    setIsChatReady(chat.status !== 'submitted' && chat.status !== 'streaming');
   }, [chat.status, setIsChatReady]);
+
+  useEffect(() => () => setIsChatReady(true), [setIsChatReady]);
 
   const [pendingUserMessage, setPendingUserMessage] = useState<{
     text: string;

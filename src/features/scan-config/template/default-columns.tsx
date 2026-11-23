@@ -62,7 +62,9 @@ export function DefaultConfigColumns({ props, state }: Props) {
           BOX_CLASS,
           // a pixel in for its ring, which then meets the project selector's left edge
           'mt-px mb-3 ml-px grid min-h-0 grid-rows-1 gap-x-0 overflow-hidden py-3',
-          shut === 'none' ? 'col-span-2 grid-cols-subgrid' : 'grid-cols-1',
+          shut === 'none'
+            ? 'col-span-2 grid-cols-2 supports-[grid-template-columns:subgrid]:grid-cols-subgrid'
+            : 'grid-cols-1',
           shut === 'both' && 'hidden'
         )}
       >
