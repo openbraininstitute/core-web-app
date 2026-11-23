@@ -4,6 +4,7 @@ import { formatBytes, formatDurationFromSeconds } from '@/utils/format';
 
 import { ADMIN_ROOT } from '../../routes';
 import { parseDay } from '../../shared/day';
+import { Amount } from './schemas';
 import {
   AccountingFilter,
   AccountingPage,
@@ -13,12 +14,14 @@ import {
   TransactionType,
 } from './types';
 
+import type { FormModalField } from '../../shared/form-modal';
 import type { TStatusTone } from '../../shared/status-pill';
 import type {
   TAccount,
   TAccountingFilter,
   TAccountingJob,
   TAccountingPage,
+  TAccountStatus,
   TAccountType,
   TJobPhase,
   TJobReport,
@@ -106,6 +109,40 @@ export function accountLinks({ id, account_type: type }: TAccount) {
     journal,
     { label: 'Report', href: accountingHref(AccountingPage.Reports, { [scope]: id }) },
   ];
+}
+
+/** An amount of credits, held as a string and checked as the proxy will. */
+export const amountField = ({
+  label = 'Amount',
+  optional = false,
+  extra,
+}: {
+  label?: string;
+  optional?: boolean;
+  extra?: string;
+} = {}): FormModalField => ({
+  name: 'amount',
+  label,
+  kind: 'amount',
+  placeholder: '0.00',
+  extra,
+  rules: [
+    { required: !optional, message: 'Required' },
+    {
+      validator: async (_, value?: string | null) => {
+        if (value == null || value === '') return;
+        const parsed = Amount.safeParse(value);
+        if (!parsed.success) throw new Error(parsed.error.issues[0].message);
+      },
+    },
+  ],
+});
+
+export function describeStatusChange({ accounts, open_job_ids: openJobs }: TAccountStatus) {
+  const [first] = accounts;
+  const changed = `${first?.enabled ? 'Enabled' : 'Disabled'} ${accounts.length} ${accounts.length === 1 ? 'account' : 'accounts'}`;
+  if (!openJobs.length) return changed;
+  return `${changed}. ${openJobs.length} open ${openJobs.length === 1 ? 'job' : 'jobs'} can't be charged until it's enabled again.`;
 }
 
 export const reportUsage = (report: TJobReport) =>

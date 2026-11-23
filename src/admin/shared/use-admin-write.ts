@@ -10,7 +10,7 @@ import type { QueryKey } from '@tanstack/react-query';
 
 export type AdminWriteOptions<Args, Result = unknown> = {
   write: (args: Args) => Promise<Result>;
-  done: string;
+  done: string | ((result: Result) => string);
   failed: string;
   onSuccess?: (result: Result) => void;
 };
@@ -31,7 +31,10 @@ export function useAdminWrite<Args, Result = unknown>({
     // Awaited so a dialog stays pending until the page shows the new data.
     onSuccess: async (result) => {
       if (refreshes) await queryClient.invalidateQueries({ queryKey: refreshes });
-      notification.success({ message: done, placement: 'topRight' });
+      notification.success({
+        message: typeof done === 'string' ? done : done(result),
+        placement: 'topRight',
+      });
       onSuccess?.(result);
     },
     onError: (error) =>

@@ -113,8 +113,10 @@ async function accountingWrite<T = null>(method: TAccountingMethod, path: string
     },
     body: JSON.stringify(body),
   });
+  if (!response.ok) {
+    throw await parseApiError(url, response.status, await response.json().catch(() => null));
+  }
   const reply = await response.json().catch(() => null);
-  if (!response.ok) throw await parseApiError(url, response.status, reply);
 
   return (reply?.data ?? null) as T;
 }
