@@ -6,16 +6,14 @@ import { amountField } from '../helpers';
 import { REASON_MAX_LENGTH } from '../schemas';
 import { ActionButton } from './action-button';
 
-import type { TAccountingJobDetail, TRefund } from '../types';
-
-type TValues = { amount?: string | null; reason: string };
+import type { TAccountingJobDetail, TRefund, TRefundValues } from '../types';
 
 /** Only a finished or cancelled job can be refunded, and accounting checks the rest. */
 export function RefundJob({ job }: { job: TAccountingJobDetail }) {
   if (!job.finished_at && !job.cancelled_at) return null;
 
   return (
-    <ActionButton<TValues, TRefund>
+    <ActionButton<TRefundValues, TRefund | null>
       action={{
         label: 'Refund',
         title: 'Refund this job?',
@@ -41,7 +39,7 @@ export function RefundJob({ job }: { job: TAccountingJobDetail }) {
         buttonVariant: 'outline',
         write: ({ amount, reason }) =>
           refundJob({ job_id: job.id, amount: amount || undefined, reason }),
-        done: (result) => `Refunded ${result.amount} credits`,
+        done: (result) => (result ? `Refunded ${result.amount} credits` : 'Job refunded'),
         failed: "Couldn't refund the job",
       }}
     />

@@ -426,6 +426,8 @@ describe('forwardAccountingWrite', () => {
     ],
     ['a JSON 502', () => json({ message: 'Bad gateway' }, 502)],
     ['a JSON 500', () => json({ message: 'Internal error' }, 500)],
+    ['a 204', () => new Response(null, { status: 204 })],
+    ['a plain-text 200', () => new Response('ok', { headers: { 'content-type': 'text/plain' } })],
   ])('says the outcome is unknown after %s on a write', async (_, upstream) => {
     fetchMock.mockResolvedValue(upstream());
 

@@ -19,9 +19,13 @@ import { amountField, describeStatusChange } from '../helpers';
 import { AccountType } from '../types';
 import { ActionButton } from './action-button';
 
-import type { TAccount, TAccountStatus, TAction, TDepleted } from '../types';
-
-type TValues = { amount: string; credited_to: string; name: string };
+import type {
+  TAccount,
+  TAccountStatus,
+  TAction,
+  TDepleted,
+  TAccountActionValues as TValues,
+} from '../types';
 
 const PROJECT_OPTIONS_PAGE = { page: 1, page_size: 100 };
 

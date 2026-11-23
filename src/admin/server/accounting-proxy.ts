@@ -136,7 +136,6 @@ export function isAdminPageWrite(headers: Headers) {
   );
 }
 
-/** The body as text, or `null` once it passes `maxBytes`, without reading the rest. */
 async function readCapped(request: Request, maxBytes: number) {
   if (!request.body) return '';
   const reader = request.body.getReader();
@@ -171,7 +170,6 @@ export async function readWriteBody(
   } catch {
     return { status: 400, message: 'Request body is not JSON' };
   }
-  // zod drops an own `__proto__` key instead of refusing it as an unknown field.
   if (typeof json === 'object' && json !== null && Object.hasOwn(json, '__proto__')) {
     return { status: 400, message: 'body: Unrecognized key: "__proto__"' };
   }
@@ -224,16 +222,20 @@ export async function forwardToAccounting(
     return unanswered(!!write);
   }
 
+  const isJson = upstream.headers.get('content-type')?.includes('json');
+  if (write && upstream.ok && !isJson) {
+    await upstream.body?.cancel();
+    return unanswered(true);
+  }
   if (isGatewayReply(upstream) || upstream.status === 401 || upstream.status === 403) {
     await upstream.body?.cancel();
     return accountingReply(502, "Accounting isn't reachable from this environment.");
   }
-  // A write can be applied before a gateway gives up on it, so a 5xx leaves the outcome open.
   if (write && upstream.status >= 500) {
     await upstream.body?.cancel();
     return unanswered(true);
   }
-  if (!upstream.headers.get('content-type')?.includes('json')) {
+  if (!isJson) {
     await upstream.body?.cancel();
     return accountingReply(502, `Accounting failed with status ${upstream.status}.`);
   }
@@ -259,7 +261,6 @@ export function auditAccountingWrite(entry: Record<string, unknown>) {
 
 const MOVED_FIELDS = ['journal_id', 'amount', 'total_amount'];
 
-/** What accounting says it moved, for writes whose amount it decides itself. */
 async function movedBy(reply: Response) {
   if (!reply.ok) return undefined;
   const data = await reply

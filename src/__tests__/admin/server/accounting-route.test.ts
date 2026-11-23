@@ -112,7 +112,7 @@ describe('accounting proxy writes', () => {
       'x-admin-request': '1',
     });
 
-    expect(reply.status).toBe(403);
+    expect(reply.status).toBe(400);
     expect(writeAccessMock).not.toHaveBeenCalled();
     expect(fetchMock).not.toHaveBeenCalled();
   });

@@ -37,7 +37,6 @@ export function useAdminWrite<Args, Result = unknown>({
       });
       onSuccess?.(result);
     },
-    // A failed write may still have changed something, so the page reloads what it shows.
     onError: (error) => {
       if (refreshes) queryClient.invalidateQueries({ queryKey: refreshes });
       notification.error({

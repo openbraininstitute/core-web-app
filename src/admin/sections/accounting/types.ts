@@ -279,6 +279,9 @@ export type TRefund = {
   amount: string;
 };
 
+export type TAccountActionValues = { amount: string; credited_to: string; name: string };
+export type TRefundValues = { amount?: string | null; reason: string };
+
 /** A write behind a button and a form dialog; `done` is the message once it's through. */
 export type TAction<Values, Result = null> = {
   label: string;

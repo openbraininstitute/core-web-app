@@ -37,7 +37,6 @@ import type {
 
 const PROXY_ROOT = '/api/admin/accounting';
 
-/** The reply's JSON, or the proxy's error thrown. */
 async function accountingFetch(url: string, init: RequestInit) {
   const response = await fetch(url, init);
   if (!response.ok) {
@@ -109,7 +108,6 @@ export const listReport = (
   signal?: AbortSignal
 ) => paged<TJobReport>(path, params, signal);
 
-/** Budget routes answer with a message and no data, so a write's data may be null. */
 async function accountingWrite<T = null>(
   path: string,
   body: unknown,

@@ -28,7 +28,6 @@ const fieldControl = ({ kind, min, max, options, placeholder }: FormModalField) 
     .with('integer', () => (
       <InputNumber min={min} max={max} precision={0} placeholder={placeholder} className="w-full" />
     ))
-    // A string all the way, so money never passes through a float.
     .with('amount', () => (
       <InputNumber<string> stringMode min="0" placeholder={placeholder} className="w-full" />
     ))
