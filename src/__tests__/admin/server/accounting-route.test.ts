@@ -158,6 +158,22 @@ describe('accounting proxy writes', () => {
     ]);
   });
 
+  it('keeps a write going when the page that sent it goes away', async () => {
+    fetchMock.mockResolvedValue(Response.json({ message: 'ok', data: null }));
+
+    await POST(
+      new NextRequest('http://localhost/api/admin/accounting/budget/top-up', {
+        method: 'POST',
+        headers: ADMIN_HEADERS,
+        body: JSON.stringify(topUp),
+        signal: AbortSignal.abort(),
+      }),
+      context('budget/top-up')
+    );
+
+    expect(fetchMock.mock.calls[0][1].signal.aborted).toBe(false);
+  });
+
   it('forwards a valid write with its method', async () => {
     const status = { accounts: [], open_job_ids: [] };
     fetchMock.mockResolvedValue(Response.json({ message: 'Account disabled', data: status }));

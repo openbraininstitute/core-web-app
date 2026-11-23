@@ -133,6 +133,14 @@ describe('writeAccess', () => {
     expect('denial' in access && access.denial.status).toBe(403);
   });
 
+  it('asks to sign in again when Keycloak rejects the token', async () => {
+    getKeycloakGroupsMock.mockResolvedValueOnce(null);
+
+    const access = await writeAccess('accounting.write');
+
+    expect('denial' in access && access.denial.status).toBe(401);
+  });
+
   it('refuses with 403 without the capability', async () => {
     getKeycloakGroupsMock.mockResolvedValueOnce(['/service/entitycore/admin']);
 

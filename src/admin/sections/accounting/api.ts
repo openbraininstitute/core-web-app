@@ -134,7 +134,7 @@ async function accountingWrite<T = null>(
       : error;
   });
 
-  return (reply?.data ?? null) as T;
+  return (reply?.data ?? null) as T | null;
 }
 
 export const setAccountEnabled = (accountId: string, body: TAccountStatusBody) =>

@@ -71,7 +71,7 @@ function MoveButton({ account, vlabId }: { account: TAccount; vlabId: string }) 
   );
 }
 
-function statusAction(account: TAccount): TAction<TValues, TAccountStatus> {
+function statusAction(account: TAccount): TAction<TValues, TAccountStatus | null> {
   const enabling = !account.enabled;
   const verb = enabling ? 'Enable' : 'Disable';
   const what = account.account_type === AccountType.VirtualLab ? 'lab and its projects' : 'project';
@@ -84,7 +84,7 @@ function statusAction(account: TAccount): TAction<TValues, TAccountStatus> {
     okText: verb,
     danger: !enabling,
     write: () => setAccountEnabled(account.id, { enabled: enabling }),
-    done: describeStatusChange,
+    done: (result) => (result ? describeStatusChange(result) : `${verb}d`),
     failed: `Couldn't ${verb.toLowerCase()} the account`,
   };
 }

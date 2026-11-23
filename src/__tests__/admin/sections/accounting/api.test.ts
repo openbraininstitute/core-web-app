@@ -20,6 +20,7 @@ import {
   setAccountEnabled,
   topUp,
 } from '@/admin/sections/accounting/api';
+import { isOutcomeUnknown } from '@/admin/sections/accounting/helpers';
 import {
   AccountingSubtype,
   ChargeType,
@@ -228,12 +229,26 @@ describe('client writes and the proxy allowlist', () => {
           new Response('<html/>', { status: 502, headers: { 'content-type': 'text/html' } })
         ),
     ],
+    [
+      'the proxy says so',
+      () =>
+        fetchMock.mockResolvedValue(
+          json(
+            {
+              message: "Accounting didn't answer, so this change may or may not have gone through.",
+              error_code: 'OUTCOME_UNKNOWN',
+            },
+            502
+          )
+        ),
+    ],
   ])('says the outcome is unknown when %s', async (_, arrange) => {
     arrange();
 
     const error = await topUp({ vlab_id: ID, amount: '10' }).catch((caught) => caught);
 
     expect(error.message).toMatch(/may or may not have gone through/);
+    expect(isOutcomeUnknown(error)).toBe(true);
   });
 });
 

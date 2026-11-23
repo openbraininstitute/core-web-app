@@ -16,11 +16,13 @@ import type { CapabilityPath, OperatorCapabilities, TOperator } from '../capabil
 // out: a session whose refresh token died still decrypts, so it counts too. A token Keycloak
 // rejects while the session still looks valid throws instead: log-in would send that session
 // straight back here, so the error page offers a fresh sign-in.
+class TokenRejectedError extends Error {}
+
 async function resolveAccess(fresh: boolean) {
   const session = await auth();
   if (!session || session.error === 'RefreshAccessTokenError') return null;
   const groups = await getKeycloakGroups(session, { fresh });
-  if (!groups) throw new Error('keycloak rejected the access token');
+  if (!groups) throw new TokenRejectedError('keycloak rejected the access token');
   return { session, capabilities: deriveCapabilities(groups) };
 }
 
@@ -50,8 +52,13 @@ export async function writeAccess(
   let access: Awaited<ReturnType<typeof resolveAccess>>;
   try {
     access = await resolveAccess(true);
-  } catch {
-    return { denial: denied(503, "Couldn't confirm your access. Try again, or sign in again.") };
+  } catch (error) {
+    return {
+      denial:
+        error instanceof TokenRejectedError
+          ? denied(401, 'Sign in again')
+          : denied(503, "Couldn't confirm your access. Try again, or sign in again."),
+    };
   }
   const denial = denialFor(access?.capabilities ?? null, need);
   if (denial) return { denial };

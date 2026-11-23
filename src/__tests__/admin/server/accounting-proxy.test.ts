@@ -422,15 +422,6 @@ describe('forwardAccountingWrite', () => {
     expect(auditLines()[1]).toMatchObject({ status: 502, upstream: 500 });
   });
 
-  it('keeps going when the page that sent the write goes away', async () => {
-    fetchMock.mockResolvedValue(json({ message: 'ok', data: null }));
-
-    await topUp();
-
-    const { signal } = fetchMock.mock.calls[0][1];
-    expect(signal.aborted).toBe(false);
-  });
-
   it.each([
     [
       'a gateway timeout page',
