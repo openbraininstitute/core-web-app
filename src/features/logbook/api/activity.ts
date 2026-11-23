@@ -1,21 +1,18 @@
-// Saved activity up to when the log opened; anything after comes from the live change feed.
 import { infiniteQueryOptions } from '@tanstack/react-query';
 import { isNotNil } from 'es-toolkit';
+import { match } from 'ts-pattern';
 
 import { getResearchActivity } from '@/api/logbook/queries/research';
+import { ACTIVITY_GAP_MS, ACTIVITY_REMOVED_MAX_CHARS } from '@/features/logbook/constants';
 import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
 
 import type { IActivityEntry } from '@/api/logbook/types';
 import type { IActivityRun, IProject } from '@/features/logbook/types';
 
-const GAP_MS = 5 * 60_000;
-const RUN_REMOVED_MAX = 1000;
-
-// Runs are built newest first, so older text goes in front.
 const joinRemoved = (older: string, newer: string): string =>
   (older.length === 0 || newer.length === 0 ? older + newer : `${older} ${newer}`).slice(
     0,
-    RUN_REMOVED_MAX
+    ACTIVITY_REMOVED_MAX_CHARS
   );
 
 export function runsOf(entries: readonly IActivityEntry[]): IActivityRun[] {
@@ -29,7 +26,7 @@ export function runsOf(entries: readonly IActivityEntry[]): IActivityRun[] {
       last.via === entry.via &&
       last.label === entry.label &&
       last.pageId === entry.pageId &&
-      last.from - at <= GAP_MS
+      last.from - at <= ACTIVITY_GAP_MS
     ) {
       runs[runs.length - 1] = {
         ...last,
@@ -58,14 +55,13 @@ export function runsOf(entries: readonly IActivityEntry[]): IActivityRun[] {
 
 const n = (count: number): string => `${count} ${count === 1 ? 'character' : 'characters'}`;
 
-// Counts are Yjs clocks, so a block or picture counts as one.
 export function summaryOf(run: Pick<IActivityRun, 'inserted' | 'deleted'>): string {
-  if (run.deleted === 0) return `wrote ${n(run.inserted)}`;
-  if (run.inserted === 0) return `removed ${n(run.deleted)}`;
-  return `wrote ${n(run.inserted)} and removed ${n(run.deleted)}`;
+  return match(run)
+    .with({ deleted: 0 }, () => `wrote ${n(run.inserted)}`)
+    .with({ inserted: 0 }, () => `removed ${n(run.deleted)}`)
+    .otherwise(() => `wrote ${n(run.inserted)} and removed ${n(run.deleted)}`);
 }
 
-// Limit: the opening minute may overlap the live feed. Upgrade: per-second rows.
 export const activityQuery = (project: IProject, logId: string, openedAt: string) =>
   infiniteQueryOptions({
     queryKey: keyBuilderLogbook.activity(logId, openedAt),

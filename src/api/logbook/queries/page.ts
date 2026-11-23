@@ -66,7 +66,6 @@ export async function deletePage({
   return api.delete<void>(`/page/${pageId}`, { headers: getEntityCoreContext(context).headers });
 }
 
-/** Who the given Yjs clients of a page are, from the text the server stored. */
 export async function getPageAuthorship({
   pageId,
   context,

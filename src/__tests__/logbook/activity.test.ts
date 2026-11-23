@@ -26,9 +26,9 @@ test('rows of one writer at most 5 minutes apart merge; another writer or a gap 
   const runs = runsOf([
     entry('30', 'alice', 10),
     entry('28', 'alice', 5, 2),
-    entry('24', 'alice', 1), // 4 min gap: same run
+    entry('24', 'alice', 1),
     entry('23', 'bob', 7),
-    entry('10', 'bob', 3), // 13 min gap: new run
+    entry('10', 'bob', 3),
   ]);
   expect(runs.map((r) => [r.userId, r.inserted, r.deleted])).toEqual([
     ['alice', 16, 2],

@@ -14,14 +14,13 @@ import {
 } from '@/api/entitycore/queries/general/research-log';
 import { deleteResearch } from '@/api/logbook/queries/research';
 import { pagesQuery } from '@/features/logbook/api/pages';
+import { LOGS_PAGE_SIZE } from '@/features/logbook/constants';
 import { LogOrderField, OrderDirection } from '@/features/logbook/types';
 import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
 
-import type { IResearchLog, IResearchLogDraft } from '@/api/entitycore/types/entities/research-log';
+import type { IResearchLog, TResearchLogDraft } from '@/api/entitycore/types/entities/research-log';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { ILogFilter, ILogOrder, IProject, TLogPages } from '@/features/logbook/types';
-
-export const PAGE_SIZE = 10;
 
 export const DEFAULT_ORDER: ILogOrder = {
   field: LogOrderField.Updated,
@@ -33,10 +32,9 @@ export const orderByOf = (order: ILogOrder): string =>
 
 export const noFilterOf = (filter: ILogFilter): boolean => !filter.public && !filter.project;
 
-// `*` is EntityCore's wildcard, so `*x*` means "contains".
 export function listParamsOf(project: IProject, filter: ILogFilter): URLSearchParams {
   const params = new URLSearchParams({
-    page_size: String(PAGE_SIZE),
+    page_size: String(LOGS_PAGE_SIZE),
     order_by: orderByOf(filter.order),
   });
   if (filter.public && !filter.project) params.set('authorized_public', 'true');
@@ -49,12 +47,16 @@ export function listParamsOf(project: IProject, filter: ILogFilter): URLSearchPa
 export const nextPageOf = ({ pagination }: EntityCoreResponse<unknown>): number | undefined =>
   pagination.page * pagination.page_size < pagination.total_items ? pagination.page + 1 : undefined;
 
-// Limit: offset paging can repeat a log, so dedupe by id. Upgrade: a keyset cursor in EntityCore.
 export const logsOf = (pages: readonly EntityCoreResponse<IResearchLog>[]): IResearchLog[] =>
   uniqBy(
     pages.flatMap((page) => page.data),
     (log) => log.id
   );
+
+const listingOf = ({ pages }: TLogPages) => ({
+  logs: logsOf(pages),
+  total: pages[0]?.pagination.total_items ?? 0,
+});
 
 export const researchLogsQuery = (project: IProject, filter: ILogFilter) =>
   infiniteQueryOptions({
@@ -69,6 +71,7 @@ export const researchLogsQuery = (project: IProject, filter: ILogFilter) =>
     },
     initialPageParam: 1,
     getNextPageParam: nextPageOf,
+    select: listingOf,
     enabled: !noFilterOf(filter),
     staleTime: 30_000,
   });
@@ -80,7 +83,6 @@ const eachPage =
       ? lists
       : { ...lists, pages: lists.pages.map((page) => ({ ...page, data: [...change(page.data)] })) };
 
-// For an open log the list doesn't hold (hidden by a search or filter).
 export const researchLogQuery = (project: IProject, id: string) =>
   queryOptions({
     queryKey: keyBuilderLogbook.log(project.projectId, id),
@@ -91,7 +93,7 @@ export const researchLogQuery = (project: IProject, id: string) =>
 export function useCreateLog(project: IProject) {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: (draft: IResearchLogDraft) => createResearchLog({ context: project, draft }),
+    mutationFn: (draft: TResearchLogDraft) => createResearchLog({ context: project, draft }),
     onSuccess: (created) => {
       client.setQueryData(researchLogQuery(project, created.id).queryKey, created);
       return client.invalidateQueries({ queryKey: keyBuilderLogbook.logs(project.projectId) });
@@ -102,7 +104,7 @@ export function useCreateLog(project: IProject) {
 export function useUpdateLog(project: IProject) {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, ...patch }: Partial<IResearchLogDraft> & { readonly id: string }) =>
+    mutationFn: ({ id, ...patch }: Partial<TResearchLogDraft> & { readonly id: string }) =>
       updateResearchLog({ id, context: project, patch }),
     onSuccess: (updated) => {
       client.setQueryData(researchLogQuery(project, updated.id).queryKey, updated);
@@ -117,18 +119,15 @@ export function useUpdateLog(project: IProject) {
 export function useDeleteLog(project: IProject) {
   const client = useQueryClient();
   return useMutation({
-    // Via the logbook server, not EntityCore, or its pages stay behind. Safe to retry.
     mutationFn: (id: string) => deleteResearch({ id, context: project }),
     onSuccess: (_answer, id) => {
       client.removeQueries({ queryKey: researchLogQuery(project, id).queryKey });
-      // Refetch too: offset paging shifts every later page by one.
       client.setQueriesData<TLogPages>(
         { queryKey: keyBuilderLogbook.logs(project.projectId) },
         eachPage((logs) => logs.filter((log) => log.id !== id))
       );
       return client.invalidateQueries({ queryKey: keyBuilderLogbook.logs(project.projectId) });
     },
-    // Also on failure: the delete may have gone through with the answer lost.
     onSettled: (_answer, _error, id) =>
       client.removeQueries({ queryKey: pagesQuery(id, project).queryKey }),
   });

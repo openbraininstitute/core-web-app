@@ -3,6 +3,7 @@ import { useId, useRef, useState } from 'react';
 
 import { EASE_OUT, SPRING_LAYOUT } from '@/constants/motion';
 import { DEFAULT_ORDER } from '@/features/logbook/api/research-logs';
+import { LOG_ORDER_WIDTH } from '@/features/logbook/constants';
 import { POPOVER_PANEL } from '@/features/logbook/helpers';
 import { LogOrderField, OrderDirection } from '@/features/logbook/types';
 import { Icon } from '@/ui/molecules/icon';
@@ -12,7 +13,6 @@ import { cn } from '@/utils/css-class';
 import type { ILogOrder, TLogOrderField, TOrderDirection } from '@/features/logbook/types';
 import type { TIconName } from '@/ui/molecules/icon';
 
-const WIDTH = 264;
 const PANEL = cn(
   POPOVER_PANEL,
   'z-71 flex max-w-[calc(100vw-16px)] origin-top-right flex-col gap-1 p-2'
@@ -33,7 +33,6 @@ const DIRECTIONS: readonly { readonly direction: TOrderDirection; readonly icon:
   { direction: OrderDirection.Descending, icon: 'arrowDown' },
 ];
 
-// "A to Z" for a name, "Newest first" for a date.
 export function directionLabelOf(field: TLogOrderField, direction: TOrderDirection): string {
   const up = direction === OrderDirection.Ascending;
   if (field === LogOrderField.Name) return up ? 'A to Z' : 'Z to A';
@@ -46,7 +45,6 @@ const fieldLabelOf = (field: TLogOrderField): string =>
 const isDefault = (order: ILogOrder): boolean =>
   order.field === DEFAULT_ORDER.field && order.direction === DEFAULT_ORDER.direction;
 
-// The chosen row's direction arrows; the lit one sits on a white dot.
 function DirectionSwitch({
   order,
   name,
@@ -97,7 +95,6 @@ export function OrderButton({
 }) {
   const [open, setOpen] = useState(false);
   const button = useRef<HTMLButtonElement>(null);
-  // Line up with the whole search box, not the small button.
   const searchBox = useRef({
     getBoundingClientRect: (): DOMRect =>
       (button.current?.closest('label') ?? button.current)?.getBoundingClientRect() ??
@@ -118,7 +115,6 @@ export function OrderButton({
           title={`Sorted by ${summary}`}
         >
           <Icon name="sort" size={15} stroke={2} />
-          {/* A dot marks a non-default order. */}
           {isDefault(order) ? null : (
             <span className="absolute top-0.5 right-0.5 size-2 rounded-full bg-primary-6 ring-2 ring-neutral-1" />
           )}
@@ -126,7 +122,7 @@ export function OrderButton({
       </PopoverTrigger>
       <PopoverContent asChild align="end" sideOffset={8} collisionPadding={8} className={PANEL}>
         <motion.div
-          style={{ width: WIDTH }}
+          style={{ width: LOG_ORDER_WIDTH }}
           aria-label="Sort logs"
           initial={reduce ? false : { opacity: 0, scale: 0.96, y: -4 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}

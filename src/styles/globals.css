@@ -670,7 +670,6 @@ dialog {
   }
 }
 
-/* A turning arc around an avatar that is writing now; `--ring` sets its colour. */
 @property --ring-turn {
   syntax: "<angle>";
   inherits: false;
@@ -698,7 +697,6 @@ dialog {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  /* No turning arc: a whole ring says the same. */
   .writing-ring::after {
     animation: none;
     background: var(--ring);

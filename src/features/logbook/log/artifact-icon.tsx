@@ -1,3 +1,5 @@
+import { match } from 'ts-pattern';
+
 import { fileLangOf, fileLooks } from '@/features/logbook/blocks/kinds';
 import { extensionOf } from '@/features/logbook/editor/shiki';
 import { ArtifactKind, FileLang } from '@/features/logbook/types';
@@ -6,13 +8,16 @@ import { Icon } from '@/ui/molecules/icon';
 import type { IArtifact, IArtifactLook } from '@/features/logbook/types';
 
 function lookOf(artifact: IArtifact): IArtifactLook {
-  if (artifact.kind === ArtifactKind.Image) return { badge: '', bg: '#e8f1fb', fg: '#1677c9' };
-  if (artifact.kind === ArtifactKind.Markdown) return { badge: 'MD', bg: '#eef2ff', fg: '#3730a3' };
-  if (artifact.kind === ArtifactKind.Pdf) return { badge: 'PDF', bg: '#fdecea', fg: '#b42318' };
-  const lang = fileLangOf(artifact.name);
-  if (lang !== FileLang.File) return fileLooks[lang];
-  const ext = extensionOf(artifact.name).slice(0, 4).toUpperCase();
-  return { badge: ext.length > 0 ? ext : 'FILE', bg: '#f0f2f5', fg: '#262626' };
+  return match(artifact.kind)
+    .with(ArtifactKind.Image, () => ({ badge: '', bg: '#e8f1fb', fg: '#1677c9' }))
+    .with(ArtifactKind.Markdown, () => ({ badge: 'MD', bg: '#eef2ff', fg: '#3730a3' }))
+    .with(ArtifactKind.Pdf, () => ({ badge: 'PDF', bg: '#fdecea', fg: '#b42318' }))
+    .otherwise(() => {
+      const lang = fileLangOf(artifact.name);
+      if (lang !== FileLang.File) return fileLooks[lang];
+      const ext = extensionOf(artifact.name).slice(0, 4).toUpperCase();
+      return { badge: ext.length > 0 ? ext : 'FILE', bg: '#f0f2f5', fg: '#262626' };
+    });
 }
 
 export function ArtifactIcon({

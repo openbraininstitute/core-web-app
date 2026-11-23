@@ -1,4 +1,3 @@
-// useEditorState with a selector, so keystrokes that change no button render nothing.
 import { useEditorState } from '@tiptap/react';
 
 import {
@@ -26,7 +25,6 @@ const FADE = 'transition-[background-color,color] duration-[120ms] ease-[ease]';
 
 export const TOOL_RULE = 'mx-1.5 h-5 w-px bg-rule';
 
-// Mouse down keeps the editor's selection.
 export function Tool({ label, keys = null, icon, pressed, disabled, onRun }: IToolProps) {
   return (
     <button
@@ -72,7 +70,6 @@ export function FormatTools({
   ));
 }
 
-// Plain text or one of the three headings, for the block the caret is in.
 export function TextStyleSelect({
   editor,
   style,

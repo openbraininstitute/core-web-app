@@ -25,14 +25,20 @@ Then:
 - **Helpers and utilities**: go in that feature's `helpers.ts`; use `helpers.tsx` when helpers return JSX or mix components with functions.
 - Create a new file only when the code is big enough to need its own file.
 
-### 5. No `switch`
+### 5. No `switch`, no if/else chains
 Use [`ts-pattern`](https://github.com/gvergnaud/ts-pattern) (`match(...).with(...)`) instead of `switch` statements.
+The same goes for successive `if` / `else if` chains and nested ternaries that pick one of three or more outcomes:
+`match(kind).with(Kind.A, ...).with(Kind.B, ...).exhaustive()`, or `.when(...)` / `P.when` for conditions.
+A single guard clause (`if (isNil(x)) return;`) and a plain two-way ternary stay as they are.
 
 ### 6. API calls live in `src/api/`
 - New entitycore requests go in `src/api/entitycore/` (requests in `queries/<domain>/<entity>.ts`, types in `types/`).
 - Other services follow the same rule, each in its own folder: `src/api/one/`, `src/api/small-scale-simulator/`, `src/api/thumbnail-svc/`, `src/api/virtual-lab-svc/`, `src/api/entity-download/`, ...
 - A new service gets a new folder in `src/api/`.
 - Components and features call these functions; they do not build request URLs themselves.
+- An entitycore entity type is built from the base types in `src/api/entitycore/types/shared/global.ts`
+  (`EntityCoreIdentifiableNamed`, `Timestamps`, `EntityAuthorization`, `IAsset`, `IPlatformUser`, ...) with `extends`, `Pick` and `Omit`.
+  Add only the fields that are new for that entity. A shape that more than one entity shares goes in `shared/`, not in the entity's file.
 
 ### 7. Tests live in `src/__tests__/`
 - All tests go in `src/__tests__/<feature-name>/`, mirroring the feature's folders

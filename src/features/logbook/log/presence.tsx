@@ -4,7 +4,8 @@ import { isNil, isNotNil } from 'es-toolkit';
 import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import * as Y from 'yjs';
 
-import { CLOCK_MS, useNow } from '@/features/logbook/helpers';
+import { CLOCK_MS, PRESENCE_STACK } from '@/features/logbook/constants';
+import { useNow } from '@/features/logbook/helpers';
 import {
   presentList,
   stackOrder,
@@ -25,16 +26,11 @@ import type {
   IPresent,
 } from '@/features/logbook/types';
 
-// Two faces, then +N, which opens the full roster.
-const STACK = 2;
-
 export function usePresent(props: ILogShared): IPresent[] {
-  // A warm page kept hidden doesn't tick.
   const now = useNow(CLOCK_MS, props.shown);
   const live = useSyncExternalStore(props.notices.subscribe, props.notices.snapshot);
   const changes = useSyncExternalStore(props.feed.subscribe, props.feed.snapshot);
   const { notices } = props;
-  // Expire agents on a tick, never during a render.
   useEffect(() => notices.expire(now), [notices, now]);
   return useMemo(
     () => presentList(props.meActor, props.mode, live, changes, now),
@@ -57,7 +53,7 @@ export function PresenceButton(props: IPresenceButtonProps) {
   const group = (
     <AvatarGroup
       members={members}
-      max={STACK}
+      max={PRESENCE_STACK}
       size="md"
       label="Here now"
       labels={{ showMore: (count) => `Show all ${count} more here now` }}
@@ -68,10 +64,9 @@ export function PresenceButton(props: IPresenceButtonProps) {
   return (
     <>
       <span className="inline-flex h-9 flex-none items-center @max-[470px]/pane:hidden!">
-        {stacked.length > STACK ? (
+        {stacked.length > PRESENCE_STACK ? (
           group
         ) : (
-          // No +N, so the faces open the roster.
           <button
             type="button"
             className="inline-flex items-center rounded-full"
@@ -97,7 +92,6 @@ export function PresenceButton(props: IPresenceButtonProps) {
   );
 }
 
-// cursor.head is a Yjs relative position.
 function cursorOf(
   editor: Editor,
   userId: string,
@@ -157,11 +151,9 @@ export function HereNow(props: IHereNowProps) {
         <strong>Here now</strong>
         <span className="text-[12px] font-semibold text-neutral-4">({summaryOf(present)})</span>
       </div>
-      {/* Five rows (46 px each) show; more scroll. */}
       <div className="scroll-thin flex max-h-[232px] flex-col gap-0.5 overflow-y-auto">
         {present.map((p) => {
           const look = statusLooks[p.status];
-          // Only someone with a caret (an editor, not a reader) can be jumped to.
           const canJump = jumpable.split('\n').includes(p.actor.key);
           return (
             <div

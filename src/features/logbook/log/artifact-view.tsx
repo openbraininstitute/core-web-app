@@ -1,9 +1,9 @@
-// Bytes are read once when the tab opens (a saved file never changes), never for the list.
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Markdown } from '@tiptap/markdown';
 import { EditorContent, useEditor } from '@tiptap/react';
 import { clamp, isNil, isNotNil } from 'es-toolkit';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { match, P } from 'ts-pattern';
 
 import {
   documentTextQuery,
@@ -11,6 +11,7 @@ import {
   fileTextQuery,
   logFilesQuery,
 } from '@/features/logbook/api/log-files';
+import { ZOOM_MAX, ZOOM_MIN, ZOOM_STEP } from '@/features/logbook/constants';
 import { CodeView, CsvTable } from '@/features/logbook/editor/blocks/file-view';
 import { withViews } from '@/features/logbook/editor/extensions';
 import { LinesSkeleton } from '@/features/logbook/elements/skeletons';
@@ -41,18 +42,12 @@ function PageReader({ text }: { readonly text: string }) {
   );
 }
 
-const ZOOM_MIN = 0.05;
-const ZOOM_MAX = 16;
-const ZOOM_STEP = 1.25;
-
-// Zoom so the point under the pointer stays put.
 const zoomAt = (view: IView, factor: number, px: number, py: number): IView => {
   const scale = clamp(view.scale * factor, ZOOM_MIN, ZOOM_MAX);
   const k = scale / view.scale;
   return { scale, x: px - (px - view.x) * k, y: py - (py - view.y) * k };
 };
 
-// CSS transform only: the browser composites it, no re-layout.
 function ImageViewer({ src, alt }: { readonly src: string; readonly alt: string }) {
   const box = useRef<HTMLDivElement>(null);
   const drag = useRef<{ readonly x: number; readonly y: number } | null>(null);
@@ -191,7 +186,6 @@ function save(blob: Blob, name: string): void {
   link.href = url;
   link.download = name;
   link.click();
-  // After the click has handed the file to the browser.
   setTimeout(() => URL.revokeObjectURL(url));
 }
 
@@ -288,7 +282,6 @@ export function ArtifactView({ artifact }: { readonly artifact: IArtifact }) {
 
   if (artifact.kind === ArtifactKind.Other) return <Details artifact={artifact} />;
   const loading = binary ? blob : text;
-  // The bytes may be in before their URL is.
   if (loading.isPending || (binary && blob.isSuccess && isNil(blobUrl)))
     return (
       <div className={NOTE} role="status" aria-label={`Opening ${artifact.name}`}>
@@ -296,27 +289,28 @@ export function ArtifactView({ artifact }: { readonly artifact: IArtifact }) {
       </div>
     );
   if (loading.isError) return <p className={NOTE}>{artifact.name} could not be read.</p>;
-  if (artifact.kind === ArtifactKind.Image && isNotNil(blobUrl))
-    return <ImageViewer src={blobUrl} alt={artifact.name} />;
-  if (artifact.kind === ArtifactKind.Pdf && isNotNil(blobUrl))
-    return <iframe className="min-h-0 flex-1 border-0" src={blobUrl} title={artifact.name} />;
   const content = text.data ?? '';
   const scroll = 'scroll-thin min-h-0 flex-1 overflow-auto';
-  if (artifact.kind === ArtifactKind.Markdown)
-    return (
+  return match({ kind: artifact.kind, blobUrl })
+    .with({ kind: ArtifactKind.Image, blobUrl: P.string }, ({ blobUrl: src }) => (
+      <ImageViewer src={src} alt={artifact.name} />
+    ))
+    .with({ kind: ArtifactKind.Pdf, blobUrl: P.string }, ({ blobUrl: src }) => (
+      <iframe className="min-h-0 flex-1 border-0" src={src} title={artifact.name} />
+    ))
+    .with({ kind: ArtifactKind.Markdown }, () => (
       <div className={scroll}>
         <PageReader text={content} />
       </div>
-    );
-  if (artifact.kind === ArtifactKind.Table)
-    return (
+    ))
+    .with({ kind: ArtifactKind.Table }, () => (
       <div className={`${scroll} p-4`}>
         <CsvTable text={content} />
       </div>
-    );
-  return (
-    <div className={`${scroll} bg-code-bg`}>
-      <CodeView text={content} name={artifact.name} />
-    </div>
-  );
+    ))
+    .otherwise(() => (
+      <div className={`${scroll} bg-code-bg`}>
+        <CodeView text={content} name={artifact.name} />
+      </div>
+    ));
 }

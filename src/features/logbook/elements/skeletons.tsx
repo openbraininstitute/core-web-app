@@ -1,4 +1,3 @@
-// Placeholders with the same boxes as the real thing, so nothing shifts when data lands.
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { cn } from '@/utils/css-class';
 
@@ -79,10 +78,8 @@ export function PillSkeletons({ count }: { readonly count: number }) {
   return repeat(count, (key) => <LogPillSkeleton key={key} />);
 }
 
-// Each width once: it doubles as the key.
 const LINES = ['w-full', 'w-11/12', 'w-4/5', 'w-[97%]', 'w-3/5'] as const;
 
-/** Text lines, for a paragraph still loading. */
 export function LinesSkeleton({ count = 3 }: { readonly count?: number }) {
   return (
     <span className="flex animate-pulse flex-col gap-2.5" aria-hidden="true">
@@ -93,7 +90,6 @@ export function LinesSkeleton({ count = 3 }: { readonly count?: number }) {
   );
 }
 
-/** A log's page: its title bar and a few paragraphs. */
 export function PageSkeleton() {
   return (
     <section
@@ -115,7 +111,6 @@ export function PageSkeleton() {
   );
 }
 
-/** The board before it can draw: the list of logs, or a log with the rail beside it. */
 export function BoardSkeleton({ withLog }: { readonly withLog: boolean }) {
   return (
     <div
@@ -151,7 +146,6 @@ export function BoardSkeleton({ withLog }: { readonly withLog: boolean }) {
   );
 }
 
-/** List rows: an icon and two lines each. */
 export function RowsSkeleton({ count = 4 }: { readonly count?: number }) {
   return (
     <span className="flex animate-pulse flex-col gap-2" aria-hidden="true">
@@ -168,7 +162,6 @@ export function RowsSkeleton({ count = 4 }: { readonly count?: number }) {
   );
 }
 
-/** A side panel's card: a heading, a picture and a few lines. */
 export function PanelSkeleton() {
   return (
     <section

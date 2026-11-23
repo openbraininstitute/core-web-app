@@ -1,4 +1,3 @@
-// Reads the listing only: nothing downloads until its tab opens, and search filters in memory.
 import { useQuery } from '@tanstack/react-query';
 import { isNil } from 'es-toolkit';
 import { useDeferredValue, useMemo, useState } from 'react';

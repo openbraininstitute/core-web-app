@@ -42,8 +42,8 @@ test('the page shown: the one asked for when the log has it, else the main page'
   const exp = page(SECTION, PageKind.Section, 1);
   expect(pageToShow([main, exp], SECTION)).toBe(exp);
   expect(pageToShow([main, exp], null)).toBe(main);
-  expect(pageToShow([main, exp], 'gone')).toBe(main); // an old link to a deleted section
-  expect(pageToShow([], null)).toBeNull(); // a log no writer opened yet
+  expect(pageToShow([main, exp], 'gone')).toBe(main);
+  expect(pageToShow([], null)).toBeNull();
 });
 
 test('the pages before and after a page; none for a page no longer in the log', () => {

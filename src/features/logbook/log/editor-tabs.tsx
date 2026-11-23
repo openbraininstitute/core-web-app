@@ -21,7 +21,6 @@ function TitleField({
   readonly onRename: (name: string) => Promise<unknown>;
 }) {
   const [value, setValue] = useState(title);
-  // A rename from elsewhere replaces the draft, during render rather than in an effect.
   const [seen, setSeen] = useState(title);
   if (seen !== title) {
     setSeen(title);
@@ -118,7 +117,6 @@ function TabList({
   );
 }
 
-// Vertical wheel scrolls the strip sideways, like browser tabs.
 const wheel = (event: WheelEvent<HTMLDivElement>): void => {
   if (Math.abs(event.deltaY) > Math.abs(event.deltaX))
     event.currentTarget.scrollLeft += event.deltaY;
@@ -143,7 +141,6 @@ export function EditorTabs(props: IEditorTabsProps) {
     observer.observe(el);
     return () => observer.disconnect();
   }, [tabs.length]);
-  // Keep the selected tab in view.
   // biome-ignore lint/correctness/useExhaustiveDependencies: re-run when the selected tab or the tabs change
   useEffect(() => {
     strip.current
@@ -151,8 +148,6 @@ export function EditorTabs(props: IEditorTabsProps) {
       ?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }, [active, tabs.length]);
 
-  // WAI-ARIA tabs with manual activation: arrows, Home and End move focus, Enter or Space opens,
-  // so passing over a tab never loads its page.
   const moveFocus = (from: HTMLElement, key: string): boolean => {
     const all = [...(strip.current?.querySelectorAll<HTMLElement>('[role="tab"]') ?? [])];
     const at = all.indexOf(from);

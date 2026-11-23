@@ -1,18 +1,11 @@
-// Close the socket of a long-hidden tab so the server can unload the page; unsent edits wait first.
 import { WebSocketStatus } from '@hocuspocus/provider';
 import { isNil } from 'es-toolkit';
 import { useEffect } from 'react';
 
-import { settings } from '@/features/logbook/settings';
+import { HIDDEN_PAUSE_MS, RECHECK_MS } from '@/features/logbook/constants';
 
 import type { IPageVisibility, IPausableProvider, IPausableSocket } from '@/features/logbook/types';
 
-export const HIDDEN_PAUSE_MS = Number(settings.collaboration.hiddenPauseS) * 1000;
-
-// Re-check unacked changes this often; the server acks within its 1 s save.
-export const RECHECK_MS = 10_000;
-
-// `afterMs` 0 never pauses.
 export function pauseWhenHidden(
   socket: IPausableSocket,
   unsent: () => boolean,
@@ -44,14 +37,13 @@ export function pauseWhenHidden(
     if (socket.status !== WebSocketStatus.Connected) void socket.connect();
   };
   page.addEventListener('visibilitychange', changed);
-  changed(); // a tab opened in the background starts counting now
+  changed();
   return () => {
     clearTimeout(timer);
     page.removeEventListener('visibilitychange', changed);
   };
 }
 
-// A page left: calls `cool` after `afterMs`, once nothing is unsent.
 export function coolWhenAcked(
   unsent: () => boolean,
   afterMs: number,
@@ -66,7 +58,6 @@ export function coolWhenAcked(
   return () => clearTimeout(timer);
 }
 
-// `afterMs` null: the page is on screen and is kept.
 export const useCoolWhenAcked = (
   unsent: () => boolean,
   afterMs: number | null,

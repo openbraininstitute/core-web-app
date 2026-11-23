@@ -5,7 +5,8 @@ import * as Y from 'yjs';
 
 import { CollaborationNotice } from '@/api/logbook/types';
 import { CollaborationNotices } from '@/features/logbook/collaboration/notices';
-import { OTHERS_SAVE_WAIT_MS, SaveStatus } from '@/features/logbook/log/save-status';
+import { OTHERS_SAVE_WAIT_MS } from '@/features/logbook/constants';
+import { SaveStatus } from '@/features/logbook/log/save-status';
 
 import type { LocalCopy } from '@/features/logbook/collaboration/local-copy';
 
@@ -39,7 +40,6 @@ const saved = (own: boolean): void =>
   act(() => void notices.receive(JSON.stringify({ type: CollaborationNotice.Saved, own })));
 const typeHere = (text: string): void =>
   act(() => provider.document.transact(() => provider.document.getText('t').insert(0, text)));
-// A change of someone else, as the provider applies it.
 const typeElsewhere = (text: string): void => {
   const elsewhere = new Y.Doc();
   elsewhere.getText('t').insert(0, text);

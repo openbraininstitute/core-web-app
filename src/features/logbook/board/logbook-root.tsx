@@ -26,9 +26,7 @@ export function LogbookRoot() {
   const route = useRoute();
   const signedIn = session.status === SessionStatus.Authenticated;
   const pending = session.status === SessionStatus.Loading;
-  // next-auth marks a failed token refresh on the session.
   const sessionError = session.data?.error ?? null;
-  // Who this is, from the Keycloak access token.
   const me = useQuery({
     queryKey: keyBuilderLogbook.me(session.data?.user?.email ?? null),
     enabled: signedIn,
@@ -36,7 +34,6 @@ export function LogbookRoot() {
     staleTime: Number.POSITIVE_INFINITY,
   });
 
-  // No session: go to Keycloak once and come back here.
   const redirected = useRef(false);
   useEffect(() => {
     if (pending || signedIn || isNotNil(sessionError) || redirected.current) return;
@@ -44,7 +41,6 @@ export function LogbookRoot() {
     void signIn();
   }, [pending, signedIn, sessionError]);
 
-  // At /, use the person's first project.
   const fallback = me.data?.projects[0] ?? null;
   useEffect(() => {
     if (isNil(route.project) && isNotNil(fallback)) navigate(pathOf(fallback), true);

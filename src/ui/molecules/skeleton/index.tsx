@@ -7,7 +7,6 @@ function Skeleton({
   ...props
 }: React.ComponentProps<'div'> & {
   active?: boolean;
-  /** `span` for a placeholder inside phrasing content. */
   as?: 'div' | 'span';
 }) {
   return (

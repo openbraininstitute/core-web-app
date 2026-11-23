@@ -2,7 +2,6 @@ import { expect, test } from 'vitest';
 
 import { meOf } from '@/features/logbook/auth/session';
 
-// A JWT payload is base64url of UTF-8 JSON.
 const tokenOf = (claims: Record<string, unknown>): string => {
   const bytes = new TextEncoder().encode(JSON.stringify(claims));
   const payload = btoa(String.fromCharCode(...bytes))

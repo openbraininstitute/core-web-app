@@ -14,7 +14,6 @@ export interface IGoesWith {
   readonly text: string;
 }
 
-// Letters typed right from the start; -1 once one is wrong.
 export function typedOf(value: string): number {
   const typed = value.trim().toLowerCase();
   return WORD.startsWith(typed) ? typed.length : -1;
@@ -26,8 +25,7 @@ export interface IConfirmDeleteDialogProps {
   readonly ticket: ReactNode;
   readonly goes: readonly IGoesWith[];
   readonly button: string;
-  readonly failedText: string; // shown when the error has no message
-  // Rejects with the reason (a 503 is safe to retry).
+  readonly failedText: string;
   readonly onDelete: () => Promise<unknown>;
   readonly onClose: () => void;
 }
@@ -40,7 +38,6 @@ export function ConfirmDeleteDialog(props: IConfirmDeleteDialogProps) {
   const [value, setValue] = useState('');
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
-  // A class, not a key: a new key would rebuild the field and drop focus.
   const [shaking, setShaking] = useState(false);
   const typed = typedOf(value);
   const ready = typed === WORD.length;
@@ -83,7 +80,6 @@ export function ConfirmDeleteDialog(props: IConfirmDeleteDialogProps) {
       }}
       onClick={(event) => event.target === event.currentTarget && close()}
     >
-      {/* Clips to round corners; the form scrolls inside on short windows. */}
       <form
         className="scroll-thin max-h-[calc(100dvh-24px)] overflow-y-auto"
         onSubmit={(event) => {

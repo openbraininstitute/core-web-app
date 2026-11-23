@@ -1,5 +1,5 @@
-// Push edits only this device has, at app start and before sign-out; clean copies cost no request.
 import { delay, isNil, noop } from 'es-toolkit';
+import { match } from 'ts-pattern';
 import { clearDocument, IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
 
@@ -13,6 +13,7 @@ import {
   whenCopyFree,
   whenLoaded,
 } from '@/features/logbook/collaboration/local-copy';
+import { LOCAL_SYNC_PAUSE_MS, LOCAL_SYNC_TRIES } from '@/features/logbook/constants';
 import { CopySync } from '@/features/logbook/types';
 
 import type { ICopyReport, IPageDocs, ISyncOptions, TCopySync } from '@/features/logbook/types';
@@ -38,9 +39,6 @@ export async function localCopies(userId: string): Promise<{ name: string; pageI
     .map((name) => ({ name, pageId: name.slice(COPY_PREFIX.length, -suffix.length) }));
 }
 
-// Resending a Yjs update is harmless; after the last try the copy stays dirty for next start.
-const TRIES = 3;
-const PAUSE_MS = 1000;
 const transient = (error: unknown): boolean => {
   const status = statusOf(error);
   return isNil(status) || status >= 500 || status === 429;
@@ -50,7 +48,7 @@ async function withRetry<T>(call: () => Promise<T>, pauseMs: number): Promise<T>
     try {
       return await call();
     } catch (error) {
-      if (attempt >= TRIES || !transient(error)) throw error;
+      if (attempt >= LOCAL_SYNC_TRIES || !transient(error)) throw error;
       await delay(pauseMs * 2 ** (attempt - 1));
     }
   }
@@ -73,7 +71,6 @@ async function missingOnServer(
   }
 }
 
-// On 409 change-needs-missing-content the page changed under us: re-read and resend the diff.
 async function sendMissing(
   docs: IPageDocs,
   pageId: string,
@@ -99,8 +96,6 @@ async function sendMissing(
 // y-indexeddb keeps `persistence.set` keys in this store, next to the page's updates.
 const CUSTOM_STORE = 'custom';
 
-// The dirty keys, read without loading the page: a clean copy costs one small read, not its text.
-// A database that is gone reads as none and is not made again.
 function dirtyKeysOf(name: string): Promise<string[]> {
   return new Promise((resolve, reject) => {
     const open = indexedDB.open(name);
@@ -129,7 +124,6 @@ function dirtyKeysOf(name: string): Promise<string[]> {
   });
 }
 
-/** A tab, open or crashed, wrote edits to this copy that the server has not confirmed. */
 export const isCopyDirty = async (name: string): Promise<boolean> =>
   (await dirtyKeysOf(name)).length > 0;
 
@@ -139,29 +133,28 @@ async function syncCopy(
   pageId: string,
   pauseMs: number
 ): Promise<TCopySync> {
-  // Unreadable keys count as dirty: sending again is harmless, skipping could lose edits.
   if (!(await isCopyDirty(name).catch(() => true))) return CopySync.Clean;
   const local = new Y.Doc();
   const persistence = new IndexeddbPersistence(name, local);
   try {
     await whenLoaded(persistence);
     const result = await sendMissing(docs, pageId, local, pauseMs);
-    // No tab has the copy open (its lock is ours), so every key's edits were just sent.
     for (const key of await dirtyKeysOf(name)) await persistence.del(key);
     return result;
   } catch (error) {
-    const status = statusOf(error);
-    if (status === 404) return CopySync.Gone;
-    if (status === 403) return CopySync.Refused;
-    console.warn(`The copy of page ${pageId} could not be sent:`, error);
-    return CopySync.Failed;
+    return match(statusOf(error))
+      .with(404, () => CopySync.Gone)
+      .with(403, () => CopySync.Refused)
+      .otherwise(() => {
+        console.warn(`The copy of page ${pageId} could not be sent:`, error);
+        return CopySync.Failed;
+      });
   } finally {
     await persistence.destroy().catch(noop);
     local.destroy();
   }
 }
 
-// One at a time to bound memory (two page docs per dirty copy). Never throws.
 export async function syncCopies(
   docs: IPageDocs,
   userId: string,
@@ -170,12 +163,11 @@ export async function syncCopies(
   const skip = options.skip ?? openCopies();
   const reports: ICopyReport[] = [];
   for (const { name, pageId } of await localCopies(userId).catch(() => [])) {
-    // Open in this tab (skip) or in another (its lock): that tab's provider sends it.
     const result = skip.has(name)
       ? CopySync.Open
       : await whenCopyFree(
           name,
-          () => syncCopy(docs, name, pageId, options.pauseMs ?? PAUSE_MS),
+          () => syncCopy(docs, name, pageId, options.pauseMs ?? LOCAL_SYNC_PAUSE_MS),
           CopySync.Open
         );
     reports.push({ name, pageId, result });
@@ -183,7 +175,6 @@ export async function syncCopies(
   return reports;
 }
 
-// A copy with unsent edits stays (deleting it loses work); so does one open in a tab.
 async function dropClean(names: readonly string[]): Promise<void> {
   for (const name of names) {
     const drop = async (): Promise<void> => {
@@ -193,13 +184,11 @@ async function dropClean(names: readonly string[]): Promise<void> {
   }
 }
 
-/** Sign-out: deletes every user's copy that the server already has. Never throws. */
 export async function dropCleanCopies(): Promise<void> {
   await closeAllCopies().catch(noop);
   await dropClean(await copyNames().catch(() => []));
 }
 
-/** App start: deletes other users' saved copies, for a sign-out that skipped the log-out page. */
 export async function dropOthersCleanCopies(userId: string): Promise<void> {
   const mine = `:${userId}`;
   const names = await copyNames().catch(() => []);

@@ -104,7 +104,6 @@ class ApiClient {
       return response as unknown as T;
     }
     const contentType = response.headers.get('Content-Type') || '';
-    // `+json` too: RFC 9457 errors come as application/problem+json.
     if (/application\/([\w.-]+\+)?json/.test(contentType)) {
       return response.json();
     }

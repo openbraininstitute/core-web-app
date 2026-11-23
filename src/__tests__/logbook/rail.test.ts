@@ -1,5 +1,7 @@
 import { expect, test } from 'vitest';
 
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
+import { EntityLifecycleStatus } from '@/api/entitycore/types/shared/global';
 import {
   DEFAULT_ORDER,
   listParamsOf,
@@ -22,18 +24,30 @@ test('the log card says how long ago a log changed, then its date after a week',
   expect(agoOf(at(5 * 60_000), now)).toContain('5');
   expect(agoOf(at(3 * 3_600_000), now)).toContain('3');
   expect(agoOf(at(10 * 86_400_000), now)).toContain('2026');
-  expect(agoOf(new Date(now + 60_000).toISOString(), now)).toBe('just now'); // a clock ahead
+  expect(agoOf(new Date(now + 60_000).toISOString(), now)).toBe('just now');
+});
+
+const user = (id: string, prefLabel: string) => ({
+  id,
+  pref_label: prefLabel,
+  creation_date: '2026-11-14T00:00:00Z',
+  update_date: '2026-11-14T00:00:00Z',
 });
 
 const log = (id: string, project: string, isPublic: boolean): IResearchLog => ({
   id,
+  legacy_id: null,
+  type: EntityTypeDict.ResearchLog,
+  lifecycle_status: EntityLifecycleStatus.Active,
   name: id,
   description: '',
   authorized_public: isPublic,
   authorized_project_id: project,
   creation_date: '2026-11-14T00:00:00Z',
   update_date: '2026-11-14T00:00:00Z',
-  created_by: { pref_label: 'Alice' },
+  created_by: user('u-alice', 'Alice'),
+  updated_by: user('u-alice', 'Alice'),
+  assets: [],
 });
 
 const PROJECT: IProject = { virtualLabId: 'lab', projectId: 'p1' };
@@ -77,11 +91,11 @@ const writer = (actorId: number, userId: string, label: string, via: string) => 
 test('members: each in the colour of their user id; the creator is not shown twice', () => {
   const created = {
     ...log('l1', 'p1', false),
-    created_by: { pref_label: 'Alice Admin', sub_id: 'u-alice' },
+    created_by: user('u-alice', 'Alice Admin'),
   };
   const members = membersOf(created, [
-    writer(1, 'u-alice', 'alice', 'ui'), // the creator writing: same person
-    writer(2, 'u-alice', 'alice-claude', 'agent'), // her agent: its own avatar
+    writer(1, 'u-alice', 'alice', 'ui'),
+    writer(2, 'u-alice', 'alice-claude', 'agent'),
     writer(3, 'u-bob', 'bob', 'ui'),
   ]);
   expect(members.map((m) => [m.name, m.colour])).toEqual([

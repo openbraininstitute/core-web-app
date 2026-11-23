@@ -20,7 +20,6 @@ export function ReadCard(props: ILogShared) {
   const update = useUpdateLog(project);
   const [editingName, setEditingName] = useState(false);
   const title = log?.name ?? 'Research log';
-  // Others rely on a log, so delete asks first.
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const deleteLog = (): void => {
     if (isNotNil(log)) setConfirmingDelete(true);

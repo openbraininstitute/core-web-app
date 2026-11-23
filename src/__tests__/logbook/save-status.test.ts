@@ -1,4 +1,3 @@
-// Only this tab's own (local) changes count toward the save status.
 import { expect, test } from 'vitest';
 import * as Y from 'yjs';
 

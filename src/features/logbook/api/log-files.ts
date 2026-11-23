@@ -1,13 +1,13 @@
-// Log files live in one EntityCore folder asset; uploads only add, so a saved plot never changes.
 import { queryOptions } from '@tanstack/react-query';
 import { isNil, isNotNil } from 'es-toolkit';
+import { match, P } from 'ts-pattern';
 
 import { downloadAsset, listDirectoryOfAssets } from '@/api/entitycore/queries/assets';
 import { getResearchLog } from '@/api/entitycore/queries/general/research-log';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
-import { AssetStatus } from '@/api/entitycore/types/shared/global';
+import { AssetLabel, AssetStatus } from '@/api/entitycore/types/shared/global';
 import { createResearchUpload, putResearchUpload } from '@/api/logbook/queries/research';
-import { settings } from '@/features/logbook/settings';
+import { UPLOAD_MAX_BYTES } from '@/features/logbook/constants';
 import { IMAGE, savedNameOf } from '@/features/logbook/shared/files';
 import { ArtifactKind } from '@/features/logbook/types';
 import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
@@ -24,8 +24,6 @@ import type {
   TArtifactKind,
 } from '@/features/logbook/types';
 
-const FILES_LABEL = 'research_log_files';
-const DOCUMENT_LABEL = 'research_log_document';
 const PAGE_TITLE = 'logbook_page_title';
 const PAGE_ID = 'logbook_page_id';
 
@@ -35,17 +33,13 @@ const TEXT =
   /\.(py|sh|bash|json|ipynb|ya?ml|toml|js|mjs|ts|r|jl|m|txt|log|mod|hoc|swc|asc|cfg|ini|xml)$/i;
 
 export const kindOf = (name: string): TArtifactKind =>
-  IMAGE.test(name)
-    ? ArtifactKind.Image
-    : MARKDOWN.test(name)
-      ? ArtifactKind.Markdown
-      : /\.csv$/i.test(name)
-        ? ArtifactKind.Table
-        : /\.pdf$/i.test(name)
-          ? ArtifactKind.Pdf
-          : TEXT.test(name)
-            ? ArtifactKind.Code
-            : ArtifactKind.Other;
+  match(name)
+    .with(P.string.regex(IMAGE), () => ArtifactKind.Image)
+    .with(P.string.regex(MARKDOWN), () => ArtifactKind.Markdown)
+    .with(P.string.regex(/\.csv$/i), () => ArtifactKind.Table)
+    .with(P.string.regex(/\.pdf$/i), () => ArtifactKind.Pdf)
+    .with(P.string.regex(TEXT), () => ArtifactKind.Code)
+    .otherwise(() => ArtifactKind.Other);
 
 const folderOf = (localPath: string): string => localPath.split('/').slice(0, -1).join('/');
 
@@ -77,7 +71,6 @@ export function artifactsOf(data: ILogFiles): IArtifact[] {
   return [...documents, ...files];
 }
 
-// Name only: the list shows no folder, so match only what people can see.
 export function searchArtifacts(artifacts: readonly IArtifact[], query: string): IArtifact[] {
   const needle = query.trim().toLowerCase();
   if (needle.length === 0) return [...artifacts];
@@ -87,7 +80,6 @@ export function searchArtifacts(artifacts: readonly IArtifact[], query: string):
 export const UPLOAD_ACCEPT =
   '.png,.jpg,.jpeg,.webp,.gif,.svg,.json,.swc,.nrrd,.obj,.hoc,.asc,.abf,.nwb,.h5,.txt,.mod,.pdf,.glb,.gz,.gzip,.tgz,.ipynb,.zip,.md,.markdown,.csv,.py,.sh';
 
-// `<stem>.<first 12 hex of the SHA-256>.<ext>`; older names have no hash part.
 const HASHED = /^(.+)\.[0-9a-f]{12}(\.[^./]+)?$/;
 
 export function shortPathOf(path: string): string {
@@ -108,7 +100,6 @@ export const toLogFiles = (listing: DirectoryListContent): ILogFile[] =>
     };
   });
 
-// Exact saved name, else the newest file with that local name.
 export function findLogFile(files: readonly ILogFile[], src: string): ILogFile | null {
   const exact = files.find((file) => file.path === src);
   if (isNotNil(exact)) return exact;
@@ -120,9 +111,14 @@ export function findLogFile(files: readonly ILogFile[], src: string): ILogFile |
   );
 }
 
-export const documentsOf = (assets: readonly IResearchLogAsset[]): ILogDocument[] =>
+export const documentsOf = (
+  assets: readonly Pick<
+    IResearchLogAsset,
+    'id' | 'path' | 'label' | 'size' | 'is_directory' | 'meta'
+  >[]
+): ILogDocument[] =>
   assets
-    .filter((a) => a.label === DOCUMENT_LABEL && !a.is_directory)
+    .filter((a) => a.label === AssetLabel.research_log_document && !a.is_directory)
     .map((a) => {
       const title = a.meta?.[PAGE_TITLE];
       const pageId = a.meta?.[PAGE_ID];
@@ -141,10 +137,12 @@ async function readLogFiles(
   signal?: AbortSignal
 ): Promise<ILogFiles> {
   const log = await getResearchLog({ id: logId, context: project, signal });
-  const assets = log.assets ?? [];
-  const documents = documentsOf(assets);
-  const folder = assets.find(
-    (a) => a.label === FILES_LABEL && a.is_directory && a.status === AssetStatus.CREATED
+  const documents = documentsOf(log.assets);
+  const folder = log.assets.find(
+    (a) =>
+      a.label === AssetLabel.research_log_files &&
+      a.is_directory &&
+      a.status === AssetStatus.CREATED
   );
   if (isNil(folder)) return { folderId: null, files: [], documents };
   const listing = await listDirectoryOfAssets({
@@ -181,7 +179,6 @@ const downloadLogAsset = (
     signal,
   });
 
-// Files are add-only, so read once per tab.
 export const fileTextQuery = (logId: string, folderId: string, path: string, project: IProject) =>
   queryOptions({
     queryKey: keyBuilderLogbook.fileText(logId, path),
@@ -190,14 +187,12 @@ export const fileTextQuery = (logId: string, folderId: string, path: string, pro
     staleTime: Number.POSITIVE_INFINITY,
   });
 
-// Publish replaces the document in place, so always read it fresh.
 export const documentTextQuery = (logId: string, assetId: string, project: IProject) =>
   queryOptions({
     queryKey: keyBuilderLogbook.documentText(logId, assetId),
     queryFn: async ({ signal }) => (await downloadLogAsset(logId, assetId, project, signal)).text(),
   });
 
-// The bytes, not a URL: whoever shows them makes the URL and revokes it (useObjectUrl).
 export const fileBlobQuery = (logId: string, folderId: string, path: string, project: IProject) =>
   queryOptions({
     queryKey: keyBuilderLogbook.fileBlob(logId, path),
@@ -212,18 +207,13 @@ export async function sha256Hex(bytes: ArrayBuffer): Promise<string> {
   return [...digest].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-// The whole file is hashed in memory (no streaming digest), so check size before reading.
-export const UPLOAD_MAX_BYTES = Number(settings.upload.maxMb) * 1024 * 1024;
-
 export const isTooLarge = (size: number, max = UPLOAD_MAX_BYTES): boolean => size > max;
 
-// Hash once here and reuse it for the upload, so the name and S3's checksum always match.
 export async function planFile(file: File): Promise<IPlannedFile> {
   const sha256 = await sha256Hex(await file.arrayBuffer());
   return { path: savedNameOf(file.name, sha256), size: file.size, sha256 };
 }
 
-// Idempotent: the name carries the hash, so null upload or a 412 means it's already saved.
 export async function uploadLogFile(
   logId: string,
   project: IProject,
@@ -235,7 +225,6 @@ export async function uploadLogFile(
     context: project,
     file: { name: file.name, size: planned.size, sha256: planned.sha256 },
   });
-  // A different name means server and client naming drifted; the block would never resolve.
   if (answer.path !== planned.path)
     throw new Error(`The server saved ${file.name} as ${answer.path}, not ${planned.path}`);
   if (isNil(answer.upload)) return;

@@ -1,4 +1,3 @@
-// On app start, send local page copies the server may lack; the sync code loads only here.
 import { useQuery } from '@tanstack/react-query';
 
 import { CopySync } from '@/features/logbook/types';
@@ -23,7 +22,6 @@ export function UnsentCopies({ userId, enabled }: IUnsentCopiesProps) {
     queryKey: keyBuilderLogbook.unsentCopies(userId),
     queryFn: () => syncAtStart(userId),
     enabled,
-    // Once per app start; "Try again" runs it again.
     staleTime: Number.POSITIVE_INFINITY,
     retry: false,
   });

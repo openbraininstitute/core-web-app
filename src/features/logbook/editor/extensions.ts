@@ -42,11 +42,9 @@ export const withViews = (): AnyExtension[] =>
 
 const CODE_BLOCK = 'codeBlock';
 
-/** Code block colours, worked out for the whole document. */
 export function codeDecorations(doc: PmNode): DecorationSet {
   const decorations: Decoration[] = [];
   doc.descendants((node, pos) => {
-    // Into lists and quotes, never into a paragraph's text.
     if (node.type.name !== CODE_BLOCK) return !node.isTextblock;
     let offset = pos + 1;
     for (const line of node.textContent.split('\n')) {
@@ -64,7 +62,6 @@ export function codeDecorations(doc: PmNode): DecorationSet {
   return DecorationSet.create(doc, decorations);
 }
 
-// True when a step's changed range, before or after, lies in or across a code block.
 function touchesCode(tr: Transaction): boolean {
   let hit = false;
   const visit = (node: PmNode): boolean => {
@@ -89,8 +86,6 @@ export const CodeHighlight = Extension.create({
       key: codeHighlightKey,
       state: {
         init: (_config, state) => codeDecorations(state.doc),
-        // Typing outside code only moves the colours (mapping); code is tokenised again only
-        // when an edit touches a code block, not on every keystroke anywhere in the page.
         apply: (tr, old) => {
           if (!tr.docChanged) return old;
           return touchesCode(tr) ? codeDecorations(tr.doc) : old.map(tr.mapping, tr.doc);
@@ -101,7 +96,6 @@ export const CodeHighlight = Extension.create({
   ],
 });
 
-/** Another client's colour, from its awareness: anything but a hex colour could inject CSS. */
 export const caretColourOf = (user: Record<string, unknown>): string => {
   const colour = user['color'];
   return typeof colour === 'string' && /^#[0-9a-f]{6}$/i.test(colour) ? colour : '#595959';
@@ -123,7 +117,6 @@ export function editorExtensions(options: IEditorOptions): AnyExtension[] {
   const { provider, me } = options;
   return [
     ...withViews(),
-    // Remote changes keep their ids; only our own edits stamp new ones.
     UniqueID.configure({
       types: [...BLOCK_TYPES],
       filterTransaction: (transaction) => !isChangeOrigin(transaction),
@@ -150,7 +143,6 @@ export function editorExtensions(options: IEditorOptions): AnyExtension[] {
   ];
 }
 
-// Read-only on the same Yjs doc: follows changes, no carets, tints or block ids.
 export const previewExtensions = (document: HocuspocusProvider['document']): AnyExtension[] => [
   ...withViews(),
   Collaboration.configure({ document, field: FRAGMENT }),

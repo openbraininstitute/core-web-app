@@ -1,4 +1,3 @@
-/* Only what the logbook adds to the app's theme; editor content is in editor/content.css. */
 @import "./editor/content.css";
 
 @theme {
@@ -17,7 +16,6 @@
   --shadow-block-btn: 0 1px 4px rgba(0, 39, 102, 0.18);
 
   --animate-up: up 0.25s ease-out;
-  /* A toast's time bar; the duration is set per toast. */
   --animate-drain: drain linear forwards;
   @keyframes drain {
     to {
@@ -30,7 +28,6 @@
       transform: translateY(8px);
     }
   }
-  /* A wrong letter in the delete confirmation. */
   --animate-shake: shake 0.32s ease-in-out;
   @keyframes shake {
     20%,
@@ -54,7 +51,6 @@
   border-radius: 16px;
   box-shadow: var(--shadow-pop);
 }
-/* A panel kept off the left edge until `data-open` is true; its user sets position, z-index and width. */
 @utility drawer {
   visibility: hidden;
   top: calc(var(--spacing) * 2);
@@ -72,7 +68,6 @@
     translate: 0;
   }
 }
-/* Positioned, so absolutely placed children (sr-only labels) scroll with the box, not the page. */
 @utility scroll-thin {
   position: relative;
   scrollbar-width: thin;
@@ -96,7 +91,6 @@
     color: var(--color-primary-9);
   }
 }
-/* Every modal's close button: visible on any background. */
 @utility modal-close {
   display: grid;
   place-items: center;
@@ -143,8 +137,6 @@
   color: var(--color-neutral-4);
 }
 
-/* Unlayered, or core's unlayered reset (`a { color: inherit }`) wins; `:where` keeps it as weak
-   as that reset, so a utility class on a link still wins. */
 :where(.logbook-root) a {
   color: var(--color-primary-6);
 }

@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { match } from 'ts-pattern';
 
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
 import { ViewerFrame, ViewerMessage } from '@/features/logbook/editor/blocks/viewer-3d/frame';
@@ -14,11 +15,13 @@ export default function CircuitViewer3d({ entityId, project }: IViewer3dProps) {
     queryFn: () => getCircuit({ id: entityId, context: project }),
     staleTime: Number.POSITIVE_INFINITY,
   });
-  if (circuit.isPending) return <ViewerMessage text="Loading the circuit…" />;
-  if (circuit.isError) return <ViewerMessage text="This circuit can't be shown." />;
-  return (
-    <ViewerFrame>
-      <ModelPreview model={circuit.data} electrodeOverlaysEnabled={false} />
-    </ViewerFrame>
-  );
+  return match(circuit)
+    .with({ status: 'pending' }, () => <ViewerMessage text="Loading the circuit…" />)
+    .with({ status: 'error' }, () => <ViewerMessage text="This circuit can't be shown." />)
+    .with({ status: 'success' }, ({ data }) => (
+      <ViewerFrame>
+        <ModelPreview model={data} electrodeOverlaysEnabled={false} />
+      </ViewerFrame>
+    ))
+    .exhaustive();
 }

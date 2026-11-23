@@ -102,7 +102,6 @@ export async function updateEntity<
   });
 }
 
-/** One entity by its route (`circuit`, `cell-morphology`, ...). */
 export async function getEntityByRoute<T>({
   route,
   id,
@@ -118,7 +117,6 @@ export async function getEntityByRoute<T>({
   return api.get<T>(`/${route}/${id}`, { headers: getEntityCoreContext(context).headers, signal });
 }
 
-/** One page of the entities of one route (`circuit`, `cell-morphology`, ...). */
 export async function getEntitiesByRoute<T>({
   route,
   queryParams,

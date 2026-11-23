@@ -1,8 +1,9 @@
-// Offline after ~2 s down; a deploy blip (~1 s) just shows as Saving…
 import { WebSocketStatus } from '@hocuspocus/provider';
 import { isNil, isNotNil } from 'es-toolkit';
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { match } from 'ts-pattern';
 
+import { OFFLINE_AFTER_MS, OTHERS_SAVE_WAIT_MS } from '@/features/logbook/constants';
 import { timeOf } from '@/features/logbook/helpers';
 import { useLivePage } from '@/features/logbook/log/context';
 import { Icon } from '@/ui/molecules/icon';
@@ -13,12 +14,9 @@ import type { LocalCopy } from '@/features/logbook/collaboration/local-copy';
 import type { CollaborationNotices } from '@/features/logbook/collaboration/notices';
 import type { ISaveStatusProps } from '@/features/logbook/types';
 
-const OFFLINE_AFTER_MS = 2000;
-
 const connected = (provider: HocuspocusProvider): boolean =>
   provider.configuration.websocketProvider.status === WebSocketStatus.Connected;
 
-// Offline only after the socket has been down a while, so a quick reconnect shows nothing.
 function useOffline(provider: HocuspocusProvider): boolean {
   const subscribe = useCallback(
     (onChange: () => void) => {
@@ -40,7 +38,6 @@ function useOffline(provider: HocuspocusProvider): boolean {
   return !online && waited;
 }
 
-// One boolean, so a keystroke that changes nothing here renders nothing.
 function useUnsent(provider: HocuspocusProvider, copy: LocalCopy): boolean {
   const subscribe = useCallback(
     (listener: () => void) => {
@@ -59,9 +56,6 @@ function useUnsent(provider: HocuspocusProvider, copy: LocalCopy): boolean {
   );
 }
 
-// Local changes only: other tabs and devices get their own `saved` notice, not this one.
-// A sync after a reconnect covers the changes made before it: their `own` notice went to the old
-// join and cannot come again, and the sync has put them on the server.
 function useUnsaved(provider: HocuspocusProvider, notices: CollaborationNotices): boolean {
   const lastLocal = useRef<number | null>(null);
   const syncedAt = useRef<number | null>(null);
@@ -94,11 +88,6 @@ function useUnsaved(provider: HocuspocusProvider, notices: CollaborationNotices)
   });
 }
 
-// The server saves within a second and says so; past this wait the notice was lost or came first.
-export const OTHERS_SAVE_WAIT_MS = 5000;
-
-// Remote changes after first sync: someone else's text is still on its way to Postgres.
-// Limit: `saved` has no clock, so Saved can show ~1 s early. Upgrade: a counter in `saved`.
 function useOthersUnsaved(provider: HocuspocusProvider, notices: CollaborationNotices): boolean {
   const lastRemote = useRef<number | null>(null);
   const subscribe = useCallback(
@@ -139,12 +128,21 @@ export function SaveStatus({ notices, copy, iconOnly }: ISaveStatusProps) {
   const othersUnsaved = useOthersUnsaved(provider, notices);
   const savedAt = useSyncExternalStore(notices.subscribe, () => notices.snapshot().pageSavedAt);
   const saving = unsent || unsaved || othersUnsaved;
-  const label = offline ? 'Offline' : saving ? 'Saving…' : 'Saved';
-  const title = offline
-    ? 'Your changes are kept on this device and sent when the connection is back.'
-    : saving
-      ? 'Storing the latest changes.'
-      : `${isNil(savedAt) ? 'Saved' : `Saved at ${timeOf(savedAt)}`}. Every change is stored on the server within a second. Everyone here already sees it.`;
+  const state = { offline, saving };
+  const label = match(state)
+    .with({ offline: true }, () => 'Offline')
+    .with({ saving: true }, () => 'Saving…')
+    .otherwise(() => 'Saved');
+  const title = match(state)
+    .with(
+      { offline: true },
+      () => 'Your changes are kept on this device and sent when the connection is back.'
+    )
+    .with({ saving: true }, () => 'Storing the latest changes.')
+    .otherwise(
+      () =>
+        `${isNil(savedAt) ? 'Saved' : `Saved at ${timeOf(savedAt)}`}. Every change is stored on the server within a second. Everyone here already sees it.`
+    );
   return (
     <span
       className="inline-flex flex-none items-center gap-1.5 text-[12px] font-semibold whitespace-nowrap text-neutral-4 data-[offline=true]:text-destructive"
@@ -152,18 +150,21 @@ export function SaveStatus({ notices, copy, iconOnly }: ISaveStatusProps) {
       role="status"
       title={title}
     >
-      {offline ? (
-        <span className="size-2 rounded-full bg-destructive" aria-hidden="true" />
-      ) : saving ? (
-        <span
-          className="size-3 animate-spin rounded-full border-[1.5px] border-neutral-2 border-t-blue motion-reduce:animate-none"
-          aria-hidden="true"
-        />
-      ) : (
-        <span className="flex text-saved-fg" aria-hidden="true">
-          <Icon name="check" size={13} stroke={2.6} />
-        </span>
-      )}
+      {match(state)
+        .with({ offline: true }, () => (
+          <span className="size-2 rounded-full bg-destructive" aria-hidden="true" />
+        ))
+        .with({ saving: true }, () => (
+          <span
+            className="size-3 animate-spin rounded-full border-[1.5px] border-neutral-2 border-t-blue motion-reduce:animate-none"
+            aria-hidden="true"
+          />
+        ))
+        .otherwise(() => (
+          <span className="flex text-saved-fg" aria-hidden="true">
+            <Icon name="check" size={13} stroke={2.6} />
+          </span>
+        ))}
       <span className={iconOnly || (!saving && !offline) ? 'sr-only' : undefined}>{label}</span>
     </span>
   );

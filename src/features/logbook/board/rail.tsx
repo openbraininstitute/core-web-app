@@ -1,6 +1,7 @@
 import { isNil, uniqBy } from 'es-toolkit';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
+import { match } from 'ts-pattern';
 
 import { ActorVia } from '@/api/logbook/types';
 import { useContributors } from '@/features/logbook/api/contributors';
@@ -34,17 +35,15 @@ const SCOPE_BUTTON =
   'grid size-8 place-items-center rounded-full border-0 bg-transparent text-label transition-[background-color,color] duration-150 ease-[ease] hover:bg-white';
 const LIST_EMPTY = 'px-3 text-[14px] text-neutral-4';
 
-// Creator first, then writers newest first; the creator isn't shown twice.
 export const membersOf = (
   log: IResearchLog,
   contributors: readonly IContributor[]
 ): IAvatarGroupMember[] => {
-  // Limit: no sub_id here; person id equals the Keycloak sub only locally. Upgrade: add sub_id.
-  const sub = log.created_by.sub_id ?? log.created_by.id ?? null;
+  const sub = log.created_by.id;
   const creator: IAvatarGroupMember = {
     id: `creator:${log.id}`,
     name: log.created_by.pref_label,
-    ...(isNil(sub) ? {} : { colour: colourOf(sub) }),
+    colour: colourOf(sub),
   };
   const writers = contributors
     .filter((c) => !(c.userId === sub && c.via !== ActorVia.Agent))
@@ -57,7 +56,6 @@ export const membersOf = (
   return uniqBy([creator, ...writers], (member) => member.name);
 };
 
-// Writers load once the card nears the screen, never for unseen cards.
 export function LogWriters({
   project,
   log,
@@ -65,7 +63,6 @@ export function LogWriters({
   readonly project: IProject;
   readonly log: IResearchLog;
 }) {
-  // Writers load only for cards near the screen; fallbackInView covers browsers without an observer.
   const { ref: box, inView: shown } = useInView({
     rootMargin: '200px',
     triggerOnce: true,
@@ -88,7 +85,6 @@ export function LogWriters({
   );
 }
 
-// Reads the next page as the end nears the screen; a failed page shows a retry.
 export function LoadMore({
   more,
   skeleton,
@@ -98,7 +94,6 @@ export function LoadMore({
 }) {
   const { ref: end, inView: near } = useInView({ rootMargin: '400px', fallbackInView: true });
   const { has, loading, failed, onMore } = more;
-  // Keep going while the end stays in view; a tall screen holds more than one page.
   useEffect(() => {
     if (near && has && !loading && !failed) onMore();
   }, [near, has, loading, failed, onMore]);
@@ -124,7 +119,6 @@ export function LoadMore({
   );
 }
 
-// Public and project scope switches; both on shows all.
 export function ScopeFilter({
   scope,
   onScope,
@@ -170,7 +164,6 @@ export function NewButton({
   readonly creating: boolean;
   readonly onNew: () => void;
 }) {
-  // Folds to a round plus in a rail under 280px; never outside a rail.
   return (
     <button
       type="button"
@@ -185,7 +178,6 @@ export function NewButton({
   );
 }
 
-// `align`: which bell edge the popover lines up with (left in the rail, right on home).
 export function SettingsButton({
   align = PopoverAlign.Start,
   side = PopoverSide.Below,
@@ -198,9 +190,7 @@ export function SettingsButton({
   readonly side?: TPopoverSide;
   readonly className?: string;
   readonly iconSize?: number;
-  // What the panel lines up with, if not the bell (e.g. the whole toast).
   readonly anchor?: RefObject<Element | null>;
-  // Lets the toast stay up while the settings are open.
   readonly onOpenChange?: (open: boolean) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -233,7 +223,6 @@ export function SettingsButton({
   );
 }
 
-// Search box with a clear button; Escape clears too.
 export function SearchField({
   value,
   onSearch,
@@ -247,7 +236,6 @@ export function SearchField({
   readonly label?: string;
   readonly placeholder?: string;
   readonly className?: string;
-  // Extra buttons at the end of the box, after clear.
   readonly children?: ReactNode;
 }) {
   const input = useRef<HTMLInputElement>(null);
@@ -293,7 +281,6 @@ export function SearchField({
   );
 }
 
-// Why the list is empty and what to do; home and the rail share it.
 export function LogsEmpty({
   query,
   scope,
@@ -320,12 +307,16 @@ export function LogsEmpty({
         : {
             icon: 'notebook' as const,
             title: 'No logs here',
-            text:
-              scope.public && !scope.project
-                ? 'No public logs. Turn on this project’s logs to see the others.'
-                : scope.project && !scope.public
-                  ? 'No logs in this project. Turn on Public to see public logs.'
-                  : 'Nobody has written a log yet.',
+            text: match(scope)
+              .with(
+                { public: true, project: false },
+                () => 'No public logs. Turn on this project’s logs to see the others.'
+              )
+              .with(
+                { public: false, project: true },
+                () => 'No logs in this project. Turn on Public to see public logs.'
+              )
+              .otherwise(() => 'Nobody has written a log yet.'),
           };
   return (
     <div
@@ -353,7 +344,6 @@ export function LogsEmpty({
 const MENU_ITEM =
   'flex w-full items-center gap-2.5 rounded-[9px] px-2.5 py-2 text-left text-[14px] font-semibold text-primary-9 transition-colors hover:bg-fill-item-hover';
 
-// The dots menu: Rename edits in place, Delete asks first.
 export function CardMenu({
   name,
   deleteLabel = 'Delete',
@@ -400,7 +390,6 @@ export function CardMenu({
   );
 }
 
-// Enter or blur saves, Escape keeps the old name.
 export function RenameField({
   name,
   label = 'Name of the log',
@@ -445,7 +434,6 @@ export function RenameField({
       onChange={(event) => setValue(event.target.value)}
       onBlur={() => finish(save)}
       onKeyDown={(event) => {
-        // Enter only blurs: the blur saves, so the field never saves twice.
         if (event.key === 'Enter') event.currentTarget.blur();
         if (event.key === 'Escape') finish(onCancel);
       }}
@@ -501,7 +489,6 @@ export function Rail(props: IRailProps) {
         <OrderButton order={props.order} onOrder={props.onOrder} />
       </SearchField>
       <nav
-        // Scrollbar sits in the rail's padding with its room always kept, so pills never shift.
         className="scroll-thin -mr-2 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-4 pb-2 [scrollbar-gutter:stable]"
         aria-label="Research logs"
         aria-busy={props.loading || props.more.loading}
@@ -513,7 +500,6 @@ export function Rail(props: IRailProps) {
         ) : null}
         {shown.map((log) => (
           <Fragment key={log.id}>
-            {/* A stretched button covers the card, so the +N button sits beside it, not inside. */}
             <div
               className="group relative rounded-[12px] bg-neutral-1 transition-[background-color] duration-150 ease-[ease] hover:bg-fill-pill-hover data-[on=true]:bg-primary-9"
               data-on={log.id === activeId}

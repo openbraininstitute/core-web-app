@@ -1,4 +1,3 @@
-// The editor stays mounted (hidden) under artifact tabs, so caret, history and sync survive.
 import { useQuery } from '@tanstack/react-query';
 import { EditorContent } from '@tiptap/react';
 import { isNil, isNotNil } from 'es-toolkit';
@@ -46,7 +45,6 @@ const WIDTHS: Readonly<Partial<Record<TMenu, number>>> = {
   [Menu.Who]: 320,
 };
 
-// Under the button, clamped inside the card.
 export function popAtOf(button: HTMLElement, card: HTMLElement, width: number): IPopAt {
   const b = button.getBoundingClientRect();
   const c = card.getBoundingClientRect();
@@ -84,7 +82,6 @@ export function EditorCard(props: IEditorCardProps) {
   const body = useRef<HTMLDivElement>(null);
   const [popAt, setPopAt] = useState<IPopAt>({ top: 52, left: 8 });
   const [clock, setClock] = useState<IClock | null>(null);
-  // Set while a busy-server refusal is being retried.
   const rejoinAt = useCollaboration(props.notices, (state) => state.rejoinAt);
   const update = useUpdateLog(props.project);
   const listing = useQuery(logFilesQuery(props.logId, props.project));
@@ -110,7 +107,6 @@ export function EditorCard(props: IEditorCardProps) {
         ]),
     ...props.tabs.flatMap((tab): IEditorTab[] => {
       if (tab.kind === TabKind.Page) {
-        // The page on screen may have left the list (deleted while shown).
         const page =
           tab.id === props.page.id ? props.page : props.pages.find((item) => item.id === tab.id);
         if (isNil(page)) return [];
@@ -138,7 +134,6 @@ export function EditorCard(props: IEditorCardProps) {
     }),
   ];
 
-  // Reads the card's box on click, never during render.
   const toggle = (which: TMenu, event: ReactMouseEvent<HTMLButtonElement>): void => {
     if (menu === which) {
       setMenu(Menu.None);
@@ -149,9 +144,7 @@ export function EditorCard(props: IEditorCardProps) {
     setMenu(which);
   };
 
-  // Rebuilt only when the document changes.
   const offsets = useRef<{ doc: unknown; list: number[] }>({ doc: null, list: [] });
-  // By height only, so moving sideways onto the clock keeps the same block.
   const blockAt = (y: number): number | null => {
     const doc = editor.state.doc;
     if (offsets.current.doc !== doc) {
@@ -174,9 +167,7 @@ export function EditorCard(props: IEditorCardProps) {
     return list[hi] ?? null;
   };
 
-  // One clock for the hovered block, not one per block.
   const track = (event: ReactMouseEvent<HTMLDivElement>): void => {
-    // On the clock itself: keep it where it is.
     if (event.target instanceof Element && isNotNil(event.target.closest('[data-clock]'))) return;
     const host = body.current;
     const from = blockAt(event.clientY);
@@ -212,7 +203,6 @@ export function EditorCard(props: IEditorCardProps) {
       style={props.style}
       aria-label={narrow ? 'Log toolbar and editor' : 'Editor'}
     >
-      {/* Row 1: tabs */}
       <div className="flex items-end gap-1 rounded-t-[24px] bg-soft pt-2 pr-2 pl-2">
         {narrow ? (
           <button
@@ -256,7 +246,6 @@ export function EditorCard(props: IEditorCardProps) {
           </button>
         ) : null}
       </div>
-      {/* Row 2: actions, or the artifact's details */}
       <header
         className="flex min-h-14 flex-wrap items-center gap-2 px-4 py-2.5 data-[rule=true]:border-b data-[rule=true]:border-rule max-md:px-2.5"
         data-rule={writeTab}

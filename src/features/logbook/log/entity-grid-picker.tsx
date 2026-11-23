@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { isNil, isNotNil } from 'es-toolkit';
 import { LayoutGroup, motion } from 'motion/react';
 import { useDeferredValue, useId, useMemo, useState } from 'react';
+import { match, P } from 'ts-pattern';
 
 import { dataBrowseListingUsesBrainRegionHierarchy } from '@/api/entitycore/types/extended-entity-type';
 import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
@@ -11,6 +12,7 @@ import { useBrainRegionRootHierarchyQuery } from '@/features/brain-region-hierar
 import { useAvailableHierarchySpeciesQuery } from '@/features/brain-region-hierarchy/hooks';
 import { blockTypeOf, entitySearchQuery } from '@/features/logbook/api/entities';
 import { entityLooks } from '@/features/logbook/blocks/kinds';
+import { REGION_SEARCH_MAX } from '@/features/logbook/constants';
 import { groupLooks } from '@/features/logbook/editor/blocks/entity-look';
 import { hexOf } from '@/features/logbook/helpers';
 import { useLogContext } from '@/features/logbook/log/context';
@@ -64,7 +66,6 @@ const gridItems = (configs: Readonly<Record<string, { title: string; extendedTyp
 const lookOf = (group: TEntityTypeGroup) =>
   groupLooks[group] ?? { colour: '#002766', tint: '#f0f2f5' };
 
-// The Data page's own categories and types, in its order.
 const SECTIONS: readonly INavSection[] = [
   {
     id: 'experimental',
@@ -111,17 +112,14 @@ const PILL =
   'inline-flex h-[30px] flex-none items-center gap-1.5 rounded-full border-0 px-3 text-[13px] font-semibold text-primary-9 transition-colors hover:bg-white aria-pressed:bg-primary-9 aria-pressed:text-white';
 const FILTER =
   'inline-flex h-9 min-w-0 items-center gap-2 rounded-full border border-rule bg-white px-3 text-[13px] font-semibold text-primary-9 transition-colors hover:border-neutral-2 disabled:cursor-not-allowed disabled:opacity-50';
-// Core's popover and select draw an undefined fill and a black border; these match the trigger.
 const MENU = 'rounded-2xl border border-rule bg-white p-1.5 text-primary-9 shadow-pop';
 const MENU_ITEM =
   'flex w-full cursor-pointer items-center gap-2.5 rounded-xl py-1.5 pr-8 pl-1.5 text-left text-[13px] text-primary-9 outline-none hover:bg-fill-item-hover focus:bg-fill-item-hover';
 
-/** Link entities through the Data page's categories and grids, filtered by species and region. */
 export function EntityGridPicker({ multiple, onPick, onClose }: IEntityGridPickerProps) {
   const gridId = useId();
   const [active, setActive] = useState<TNavItem | undefined>(FIRST);
   const [openSection, setOpenSection] = useState<string | null>(FIRST_SECTION);
-  // Narrow screens: the types are a drawer over the dialog, opened from the type button.
   const [navOpen, setNavOpen] = useState(false);
   const [scope, setScope] = useState<TWorkspaceScope>(WorkspaceScope.Combined);
   const [hierarchyId, setHierarchyId] = useState<string>(ALL_SPECIES);
@@ -129,7 +127,6 @@ export function EntityGridPicker({ multiple, onPick, onClose }: IEntityGridPicke
     null
   );
   const [picks, setPicks] = useState<TPicks>({});
-  // The grid's own rows for what is ticked in it, so it shows them ticked on every page.
   const [rows, setRows] = useState<Readonly<Record<string, EntityCoreIdentifiableNamed[]>>>({});
   const [preview, setPreview] = useState<{
     readonly record: EntityCoreObjectTypes;
@@ -141,7 +138,6 @@ export function EntityGridPicker({ multiple, onPick, onClose }: IEntityGridPicke
   const hierarchies = useAvailableHierarchySpeciesQuery().remoteAvailableHierarchies ?? [];
   const coreType = isNotNil(active) && 'coreType' in active ? active.coreType : null;
   const usesRegion = isNotNil(coreType) && dataBrowseListingUsesBrainRegionHierarchy(coreType);
-  // A region narrows to itself; a species alone narrows to its tree's root, as the Data page does.
   const regionId = region?.id ?? (isNil(species) ? null : (tree.result.root?.id ?? null));
   const regionParams = useMemo(
     () =>
@@ -160,7 +156,6 @@ export function EntityGridPicker({ multiple, onPick, onClose }: IEntityGridPicke
       <TypeChip section={activeSection} label={active.label} onOpen={() => setNavOpen(true)} />
     );
 
-  // A single pick is exclusive across types; many picks are kept per type.
   const choose = (key: string, chosen: readonly IPickedEntity[]): void =>
     setPicks((current) => (multiple ? { ...current, [key]: chosen } : { [key]: chosen.slice(-1) }));
   const chooseRows = (selected: EntityCoreIdentifiableNamed[]): void => {
@@ -243,7 +238,6 @@ export function EntityGridPicker({ multiple, onPick, onClose }: IEntityGridPicke
               onClick={() => setNavOpen(false)}
             />
           ) : null}
-          {/* A column from md up; below, the same drawer as the list of logs, inside the dialog. */}
           <nav
             className="scroll-thin w-[264px] flex-none overflow-y-auto bg-white p-3 max-md:drawer max-md:absolute max-md:z-60 max-md:w-[min(360px,calc(100%-40px))]"
             data-open={navOpen}
@@ -280,7 +274,6 @@ export function EntityGridPicker({ multiple, onPick, onClose }: IEntityGridPicke
                     <span className="flex items-center gap-2">
                       <span className="flex min-w-0 flex-col">
                         {section.title}
-                        {/* A closed category still says which of its types is chosen. */}
                         {section === activeSection && openSection !== section.id ? (
                           <span
                             className="truncate text-[12px] font-semibold"
@@ -316,65 +309,69 @@ export function EntityGridPicker({ multiple, onPick, onClose }: IEntityGridPicke
                 : "grid-cols-[minmax(0,1fr)_minmax(320px,400px)] [grid-template-areas:'body_mini-view']"
             )}
           >
-            {isNil(active) ? null : 'blockType' in active ? (
-              <QuickList
-                type={active.blockType}
-                heading={heading}
-                picked={picks[active.key] ?? []}
-                onToggle={toggle}
-              />
-            ) : (
-              <BrowseEntityScope
-                id={`${gridId}-${active.key}`}
-                section={WorkspaceSection.Data}
-                dataType={active.coreType}
-                scope={scope}
-                extraQueryParams={regionParams}
-                extraToolbarSlots={{
-                  entityType: heading,
-                  brainRegion: (
-                    <>
-                      <SpeciesFilter
-                        value={hierarchyId}
-                        hierarchies={hierarchies}
-                        onChange={(value) => {
-                          setHierarchyId(value);
-                          setRegion(null);
-                        }}
-                      />
-                      <RegionFilter
-                        options={isNil(species) ? [] : tree.result.options}
-                        value={region}
-                        disabled={isNil(species) || !usesRegion}
-                        hint={
-                          usesRegion
-                            ? 'Pick a species to filter by brain region.'
-                            : 'This type has no brain region to filter by.'
-                        }
-                        onChange={setRegion}
-                      />
-                    </>
-                  ),
-                }}
-                requireBrainRegion={false}
-                requireSpeciesSelector={false}
-                requireScopeSelector={false}
-                requireMiniDetailView={false}
-                allowDownload={false}
-                allowDelete={false}
-                mainTableProps={{
-                  selectionType: multiple ? 'checkbox' : 'radio',
-                  selectedRows: rows[active.key] ?? [],
-                  onRowsSelected: chooseRows,
-                  hideSelectAll: !multiple,
-                  onCellClick: (_basePath, record, recordType) =>
-                    setPreview({ record: record as EntityCoreObjectTypes, dataType: recordType }),
-                }}
-                classNames={{
-                  container: 'h-full min-h-0 w-full min-w-0 overflow-hidden [grid-area:body]',
-                }}
-              />
-            )}
+            {match(active)
+              .with(P.nullish, () => null)
+              .with({ blockType: P.string }, (item) => (
+                <QuickList
+                  type={item.blockType}
+                  heading={heading}
+                  picked={picks[item.key] ?? []}
+                  onToggle={toggle}
+                />
+              ))
+              .with({ coreType: P.string }, (item) => (
+                <BrowseEntityScope
+                  id={`${gridId}-${item.key}`}
+                  section={WorkspaceSection.Data}
+                  dataType={item.coreType}
+                  scope={scope}
+                  extraQueryParams={regionParams}
+                  extraToolbarSlots={{
+                    entityType: heading,
+                    brainRegion: (
+                      <>
+                        <SpeciesFilter
+                          value={hierarchyId}
+                          hierarchies={hierarchies}
+                          onChange={(value) => {
+                            setHierarchyId(value);
+                            setRegion(null);
+                          }}
+                        />
+                        <RegionFilter
+                          options={isNil(species) ? [] : tree.result.options}
+                          value={region}
+                          disabled={isNil(species) || !usesRegion}
+                          hint={
+                            usesRegion
+                              ? 'Pick a species to filter by brain region.'
+                              : 'This type has no brain region to filter by.'
+                          }
+                          onChange={setRegion}
+                        />
+                      </>
+                    ),
+                  }}
+                  requireBrainRegion={false}
+                  requireSpeciesSelector={false}
+                  requireScopeSelector={false}
+                  requireMiniDetailView={false}
+                  allowDownload={false}
+                  allowDelete={false}
+                  mainTableProps={{
+                    selectionType: multiple ? 'checkbox' : 'radio',
+                    selectedRows: rows[item.key] ?? [],
+                    onRowsSelected: chooseRows,
+                    hideSelectAll: !multiple,
+                    onCellClick: (_basePath, record, recordType) =>
+                      setPreview({ record: record as EntityCoreObjectTypes, dataType: recordType }),
+                  }}
+                  classNames={{
+                    container: 'h-full min-h-0 w-full min-w-0 overflow-hidden [grid-area:body]',
+                  }}
+                />
+              ))
+              .exhaustive()}
             {isNil(preview) ? null : (
               <div className="h-full min-h-0 [grid-area:mini-view]">
                 <MiniDetailViewRenderer
@@ -438,7 +435,6 @@ function PickCount({
   );
 }
 
-// The open category's types; the chosen one wears a pill that slides between rows.
 function TypeList({
   section,
   activeKey,
@@ -490,8 +486,6 @@ function TypeList({
   );
 }
 
-// What the grid lists, in the colour of its category, so the table reads as the chosen type.
-// Narrow screens: only its icon, a button that opens the types drawer.
 function TypeChip({
   section,
   label,
@@ -530,7 +524,6 @@ function TypeChip({
   );
 }
 
-// In the trigger of a narrow screen, a filter shows its icon only; its list keeps the names.
 const TRIGGER_NAME = 'max-md:[[data-slot=select-trigger]_&]:hidden';
 
 function SpeciesBadge({ name }: { readonly name: string | null }) {
@@ -578,9 +571,6 @@ function SpeciesFilter({
   );
 }
 
-const REGION_MATCHES = 60;
-
-// A searchable brain region list of the chosen species; the first matches only, to stay quick.
 function RegionFilter({
   options,
   value,
@@ -599,7 +589,7 @@ function RegionFilter({
   const needle = search.trim().toLowerCase();
   const matches = (
     needle.length === 0 ? options : options.filter((o) => o.label.toLowerCase().includes(needle))
-  ).slice(0, REGION_MATCHES);
+  ).slice(0, REGION_SEARCH_MAX);
   const chosen = options.find((o) => o.value === value?.id);
   const pick = (next: { readonly id: string; readonly label: string } | null): void => {
     onChange(next);
@@ -683,7 +673,6 @@ function RegionFilter({
   );
 }
 
-// Types the Data page has no grid for: the name search, ten at a time.
 function QuickList({
   type,
   heading,

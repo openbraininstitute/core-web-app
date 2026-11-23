@@ -1,4 +1,3 @@
-// The block goes in before the upload (the name is the content hash); a failure removes it.
 import { isNil, isNotNil } from 'es-toolkit';
 import { useSyncExternalStore } from 'react';
 
@@ -18,7 +17,6 @@ import type { Node as PmNode } from '@tiptap/pm/model';
 import type { Editor } from '@tiptap/react';
 import type { IUploadTarget } from '@/features/logbook/types';
 
-// Saved names uploading from this tab; blocks subscribe to one name.
 const uploading = new Set<string>();
 const listeners = new Set<() => void>();
 const changed = (): void => {
@@ -35,7 +33,6 @@ export const useUploading = (path: string): boolean =>
 const pointsAt = (node: PmNode, path: string): boolean =>
   node.attrs['src'] === path || node.attrs['path'] === path;
 
-// UniqueID may move ids, so read it back; null means not ours, so nothing gets removed.
 export function insertedBlockId(doc: PmNode, pos: number, path: string): string | null {
   const node = doc.nodeAt(pos);
   const id: unknown = node?.attrs['id'];
@@ -51,7 +48,6 @@ export function blockRange(doc: PmNode, id: string): { from: number; to: number 
   return found;
 }
 
-// Only the block this upload inserted; the same file elsewhere stays.
 function removeBlock(editor: Editor, id: string): void {
   if (editor.isDestroyed) return;
   const range = blockRange(editor.state.doc, id);
@@ -61,7 +57,6 @@ function removeBlock(editor: Editor, id: string): void {
 
 export async function uploadIntoPage(target: IUploadTarget, file: File): Promise<void> {
   const { editor, logId, project, client, notify } = target;
-  // Checked on file.size before reading, so a refused file never hits memory.
   if (isTooLarge(file.size)) {
     notify({
       kind: NoticeKind.Warning,
@@ -74,7 +69,6 @@ export async function uploadIntoPage(target: IUploadTarget, file: File): Promise
   try {
     planned = await planFile(file);
   } catch (error) {
-    // Unreadable or out of memory: nothing inserted yet.
     notify({
       kind: NoticeKind.Error,
       title: `${file.name} can't be read`,
@@ -110,7 +104,6 @@ export async function uploadIntoPage(target: IUploadTarget, file: File): Promise
   }
 }
 
-// Limit: one file at a time. Upgrade: parallel uploads.
 export async function uploadFiles(target: IUploadTarget, files: FileList | null): Promise<void> {
   if (isNil(files)) return;
   for (const file of files) await uploadIntoPage(target, file);

@@ -6,7 +6,6 @@ import { getClientSession } from '@/hooks/session';
 
 import type { IMe, IProject, TClaims } from '@/features/logbook/types';
 
-/** next-auth's `useSession().status` values. */
 export const SessionStatus = { Authenticated: 'authenticated', Loading: 'loading' } as const;
 
 export async function accessToken(): Promise<string> {
@@ -15,13 +14,11 @@ export async function accessToken(): Promise<string> {
   return session.accessToken;
 }
 
-// Through the app's sign-in page, so preview deployments take the proxy detour; then back here.
 export const signIn = (): void => {
   const back = `${location.pathname}${location.search}`;
   location.assign(`/app/log-in?callbackUrl=${encodeURIComponent(back)}`);
 };
 
-// Keycloak group `/proj/<lab>/<project>/<role>`: a project the person is in.
 const PROJECT_GROUP = /^\/proj\/([0-9a-f-]{36})\/([0-9a-f-]{36})\/[a-z]+$/;
 
 export function projectsOf(groups: readonly string[]): IProject[] {
@@ -34,7 +31,6 @@ export function projectsOf(groups: readonly string[]): IProject[] {
 
 const isClaims = (value: unknown): value is TClaims => typeof value === 'object' && isNotNil(value);
 
-// Display and routing only: services check the signature, the browser never decides access.
 function claimsOf(token: string): TClaims {
   const payload = (token.split('.')[1] ?? '').replaceAll('-', '+').replaceAll('_', '/');
   try {

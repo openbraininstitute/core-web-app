@@ -1,4 +1,3 @@
-// Author = clients whose clock moved (or the delete set); Yjs fires this before the PM transaction.
 import { Extension } from '@tiptap/core';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
@@ -8,6 +7,11 @@ import { match } from 'ts-pattern';
 
 import { entityLookOf } from '@/features/logbook/blocks/kinds';
 import { UNKNOWN_ACTOR } from '@/features/logbook/collaboration/actors';
+import {
+  CHANGE_COALESCE_MS,
+  CHANGE_HIGHLIGHT_MS,
+  CHANGE_MAX_EVENTS,
+} from '@/features/logbook/constants';
 
 import type { Node as PmNode } from '@tiptap/pm/model';
 import type * as Y from 'yjs';
@@ -19,10 +23,6 @@ import type {
   IHighlight,
   IPluginState,
 } from '@/features/logbook/types';
-
-export const HL_MS = 5200;
-const COALESCE_MS = 8000;
-const MAX_EVENTS = 30;
 
 export class ChangeFeed {
   #state: IChangeSnapshot = { events: [], toast: null, seen: {} };
@@ -41,7 +41,7 @@ export class ChangeFeed {
       isNotNil(last) &&
       last.actor.key === change.actor.key &&
       last.blockId === change.blockId &&
-      change.at - last.at < COALESCE_MS &&
+      change.at - last.at < CHANGE_COALESCE_MS &&
       last.removed.length === 0 &&
       change.removed.length === 0;
     const merged: IChange = sameRun
@@ -50,13 +50,12 @@ export class ChangeFeed {
           id: last.id,
           from: Math.min(last.from, change.from),
           to: Math.max(last.to, change.to),
-          // Keep the run's first summary; it says best what it was.
           summary: last.summary,
         }
       : change;
     const events = sameRun ? [merged, ...rest] : [merged, ...this.#state.events];
     this.#state = {
-      events: events.slice(0, MAX_EVENTS),
+      events: events.slice(0, CHANGE_MAX_EVENTS),
       toast: change.actor.agent ? merged : this.#state.toast,
       seen: { ...this.#state.seen, [change.actor.key]: change.at },
     };
@@ -117,7 +116,6 @@ export function diffOf(before: PmNode, after: PmNode): IDiff | null {
   if (isNil(start)) return null;
   const end = before.content.findDiffEnd(after.content);
   if (isNil(end)) return null;
-  // Repeated nearby text can make the ends cross; back both off by the overlap.
   const overlap = start - Math.min(end.a, end.b);
   const endA = overlap > 0 ? end.a + overlap : end.a;
   const endB = overlap > 0 ? end.b + overlap : end.b;
@@ -170,7 +168,7 @@ export const CollaborationChanges = Extension.create<ICollaborationChangesOption
           apply(tr, old, before) {
             let decorations = old.decorations.map(tr.mapping, tr.doc);
             if (tr.getMeta(key) === EXPIRE) {
-              const cutoff = Date.now() - HL_MS;
+              const cutoff = Date.now() - CHANGE_HIGHLIGHT_MS;
               const stale = decorations.find(
                 undefined,
                 undefined,
@@ -185,7 +183,6 @@ export const CollaborationChanges = Extension.create<ICollaborationChangesOption
             const added = isNil(diff)
               ? ''
               : tr.doc.textBetween(diff.from, diff.to, ' ', ' ').trim();
-            // Attribute-only change (e.g. UniqueID stamps): not a content edit.
             if (
               isNil(diff) ||
               (tr.doc.content.size === before.doc.content.size && added === diff.removed)

@@ -1,20 +1,13 @@
-// The editor's open tabs as plain data: which tabs are open, which page is on screen, which file
-// sits over it, and which pages stay mounted. Pure functions, so every rule is testable alone;
-// each returns the same object when nothing changes, so React skips the render.
 import { isNil, isNotNil } from 'es-toolkit';
 
 import { PageKind } from '@/api/logbook/types';
+import { WARM_KEEP_MS, WARM_PAGES } from '@/features/logbook/constants';
 import { TabKind } from '@/features/logbook/types';
 
 import type { IPage } from '@/api/logbook/types';
 import type { IOpenTabs, ITabRef } from '@/features/logbook/types';
 
 export const NO_TABS: IOpenTabs = { open: [], live: [], artifactId: null, followed: null };
-
-/** Pages left recently stay mounted, so going back is instant. */
-export const WARM_PAGES = 2;
-/** How long a warm page keeps its editor and socket before they are freed. */
-export const WARM_KEEP_MS = 60_000;
 
 export const tabKey = (tab: ITabRef): string => `${tab.kind}:${tab.id}`;
 
@@ -23,7 +16,6 @@ const isOpen = (tabs: IOpenTabs, tab: ITabRef): boolean => tabs.open.some((t) =>
 const withTab = (tabs: IOpenTabs, tab: ITabRef): readonly ITabRef[] =>
   isOpen(tabs, tab) ? tabs.open : [...tabs.open, tab];
 
-/** Puts a page on screen (its tab already open, or the main page) and the file away. */
 function front(tabs: IOpenTabs, pageId: string, open = tabs.open): IOpenTabs {
   if (tabs.live[0] === pageId && isNil(tabs.artifactId) && open === tabs.open) return tabs;
   return {
@@ -46,11 +38,6 @@ export function showArtifact(tabs: IOpenTabs, artifactId: string): IOpenTabs {
   return { ...tabs, open, artifactId };
 }
 
-/**
- * Follows the address once per change: its page shows, or the main page when the log lacks it
- * (shown later if the list gains it). Pages gone from the log lose their tab and view, except
- * the one on screen.
- */
 export function settleTabs(
   tabs: IOpenTabs,
   pages: readonly IPage[],
@@ -76,7 +63,6 @@ export function settleTabs(
   return { ...next, live, open };
 }
 
-/** Closes a tab; when it was on screen, its right neighbour shows, else its left one. */
 export function closeTab(tabs: IOpenTabs, tab: ITabRef, mainId: string): IOpenTabs {
   const at = tabs.open.findIndex((t) => sameTab(t, tab));
   if (at < 0) return tabs;
@@ -87,7 +73,6 @@ export function closeTab(tabs: IOpenTabs, tab: ITabRef, mainId: string): IOpenTa
       : tabs.live[0] === tab.id && isNil(tabs.artifactId);
   const underFile = tab.kind === TabKind.Page && tabs.live[0] === tab.id;
   if (!onScreen && !underFile) return { ...tabs, open };
-  // The page that goes under a file: the nearest page tab to the left, else the main page.
   const leftPage = open.slice(0, at).findLast((t) => t.kind === TabKind.Page)?.id ?? mainId;
   if (!onScreen) {
     const shown = front(tabs, leftPage, open);
@@ -104,10 +89,6 @@ export function closeTab(tabs: IOpenTabs, tab: ITabRef, mainId: string): IOpenTa
   return { ...under, artifactId: neighbour.id };
 }
 
-/**
- * How long a page stays mounted once off screen: null while on screen, WARM_KEEP_MS for the
- * last WARM_PAGES left (if their tab is still open), else 0.
- */
 export function keepMsOf(tabs: IOpenTabs, page: IPage): number | null {
   const at = tabs.live.indexOf(page.id);
   if (at === 0) return null;
@@ -115,7 +96,6 @@ export function keepMsOf(tabs: IOpenTabs, page: IPage): number | null {
   return at > 0 && at <= WARM_PAGES && tabOpen ? WARM_KEEP_MS : 0;
 }
 
-/** Lets a warm page go; the page on screen is never let go. */
 export function coolPage(tabs: IOpenTabs, pageId: string): IOpenTabs {
   const at = tabs.live.indexOf(pageId);
   if (at <= 0) return tabs;

@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest';
 
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { putHeadersOf } from '@/api/logbook/queries/research';
 import {
   artifactsOf,
@@ -12,8 +13,8 @@ import {
   sha256Hex,
   shortPathOf,
   toLogFiles,
-  UPLOAD_MAX_BYTES,
 } from '@/features/logbook/api/log-files';
+import { UPLOAD_MAX_BYTES } from '@/features/logbook/constants';
 import { savedNameOf } from '@/features/logbook/shared/files';
 import { ArtifactKind } from '@/features/logbook/types';
 
@@ -26,12 +27,11 @@ test('the hash is the full SHA-256; the PUT sends the signed headers but Content
     'Content-Length': '12',
     'x-amz-checksum-sha256': 'Qmu43bglKFgHkuSdp8Dsnph/vEbMTeSaEn3z/IeGPUE=',
   };
-  // The browser sets Content-Length itself.
   expect(putHeadersOf(signed)).toEqual({
     'If-None-Match': '*',
     'x-amz-checksum-sha256': 'Qmu43bglKFgHkuSdp8Dsnph/vEbMTeSaEn3z/IeGPUE=',
   });
-  expect(putHeadersOf({})).toEqual({}); // a folder's first file: no conditions
+  expect(putHeadersOf({})).toEqual({});
 });
 
 test('a file is read and hashed once: its name and the hash sent to add-files agree', async () => {
@@ -55,19 +55,17 @@ test('the short name drops the 12-hex hash part, and only that', () => {
   expect(shortPathOf('data/a.tar.3fa9c1d2e4b7.gz')).toBe('data/a.tar.gz');
   expect(shortPathOf('results/README.3fa9c1d2e4b7')).toBe('results/README');
   expect(shortPathOf('code/.env.3fa9c1d2e4b7')).toBe('code/.env');
-  expect(shortPathOf('plots/rate.png')).toBe('plots/rate.png'); // saved before the hash rule
-  expect(shortPathOf('plots/3fa9c1d2e4b7.png')).toBe('plots/3fa9c1d2e4b7.png'); // the stem is a hash
-  expect(shortPathOf('plots/rate.3FA9C1D2E4B7.png')).toBe('plots/rate.3FA9C1D2E4B7.png'); // lower case only
+  expect(shortPathOf('plots/rate.png')).toBe('plots/rate.png');
+  expect(shortPathOf('plots/3fa9c1d2e4b7.png')).toBe('plots/3fa9c1d2e4b7.png');
+  expect(shortPathOf('plots/rate.3FA9C1D2E4B7.png')).toBe('plots/rate.3FA9C1D2E4B7.png');
 });
 
 test('an upload is saved under its content hash, before the extension', () => {
   const hash = '3fa9c1d2e4b7aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
-  // a web upload has no folder: saved at the top
   expect(savedNameOf('rate.png', hash)).toBe('rate.3fa9c1d2e4b7.png');
   expect(savedNameOf('a.tar.gz', hash)).toBe('a.tar.3fa9c1d2e4b7.gz');
   expect(savedNameOf('README', hash)).toBe('README.3fa9c1d2e4b7');
   expect(savedNameOf('.env', hash)).toBe('.env.3fa9c1d2e4b7');
-  // an agent's file keeps its folder
   expect(savedNameOf('rate.png', hash, 'results/control')).toBe(
     'results/control/rate.3fa9c1d2e4b7.png'
   );
@@ -124,7 +122,6 @@ test('artifacts: the published document first, then the files newest first, with
     ['plots/rate.3fa9c1d2e4b7.png', 'rate.png', 'plots', ArtifactKind.Image],
   ]);
   expect(searchArtifacts(artifacts, ' RATE ').map((a) => a.name)).toEqual(['rate.png']);
-  // The folder isn't shown, so it isn't searched.
   expect(searchArtifacts(artifacts, 'plots')).toEqual([]);
   expect(searchArtifacts(artifacts, '')).toHaveLength(3);
 });
@@ -144,7 +141,7 @@ test('a synced copy is named by its page title, else its file name, and knows it
     path: 'exp-1-abc.md',
     size: 5,
     is_directory: false,
-    label: 'research_log_document',
+    label: AssetLabel.research_log_document,
   };
   expect(
     documentsOf([
@@ -155,7 +152,7 @@ test('a synced copy is named by its page title, else its file name, and knows it
       },
       { ...row, id: 'a2', meta: null },
       { ...row, id: 'a3', meta: { logbook_page_title: '  ' } },
-      { ...row, id: 'f1', label: 'research_log_files', is_directory: true },
+      { ...row, id: 'f1', label: AssetLabel.research_log_files, is_directory: true, meta: null },
     ]).map((d) => [d.assetId, d.title, d.pageId])
   ).toEqual([
     ['a1', 'Exp 1 — Morphology', 'p1'],

@@ -1,7 +1,3 @@
-/* ProseMirror renders this DOM, so utility classes can't reach it.
-   Not in a layer: core loads its reset and the utilities unlayered, and a layered rule loses to
-   both. `:where()` keeps a rule as weak as the reset's own (the later one wins, and this file
-   loads later) and weaker than a utility class, so node views keep their utilities. */
 .rl-editor .ProseMirror {
   min-height: 100%;
   padding: 20px 48px 64px 32px;
@@ -130,14 +126,12 @@
 :where(.rl-editor) td p {
   margin: 0;
 }
-/* One outline per selected block: on the card if it has one, else on the node. */
 :where(.rl-editor) .ProseMirror-selectednode:not(:has([data-selected])),
 :where(.rl-editor) [data-selected="true"] {
   outline: 2px solid var(--color-primary-4);
   outline-offset: 2px;
 }
 
-/* Syntax highlight tokens */
 [data-tok="comment"] {
   color: var(--color-label);
   font-style: italic;
@@ -153,7 +147,6 @@
   font-weight: 700;
 }
 
-/* Fresh text from others, fading out */
 .rl-hl {
   border-radius: 2px;
   animation: rl-hl-fade 5.2s linear forwards;
@@ -162,7 +155,6 @@
   animation: rl-bar-fade 5.2s linear forwards;
 }
 
-/* Remote carets */
 .rl-caret {
   position: relative;
   margin: 0 -1px;

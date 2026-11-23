@@ -1,4 +1,3 @@
-// Every insert lands after the block the caret is in.
 import { useQueryClient } from '@tanstack/react-query';
 import { useRef } from 'react';
 
@@ -26,7 +25,6 @@ export function InsertMenu({ editor, at, onClose, onPicker, onNotice }: IInsertM
   const { project, logId } = useLogContext();
   const client = useQueryClient();
   const input = useRef<HTMLInputElement>(null);
-  // The upload outlives the menu, which closes at once.
   const upload = (list: FileList | null): void => {
     onClose();
     void uploadFiles({ editor, logId, project, client, notify: onNotice }, list);
@@ -75,7 +73,6 @@ export function InsertMenu({ editor, at, onClose, onPicker, onNotice }: IInsertM
   );
 }
 
-// The whole row is the label, so it toggles anywhere on it.
 function Switch({
   title,
   sub,

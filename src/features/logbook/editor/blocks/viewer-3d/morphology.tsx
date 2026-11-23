@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { match } from 'ts-pattern';
 
 import { getCellMorphology } from '@/api/entitycore/queries/experimental/cell-morphology';
 import { CellMorphologyViewer } from '@/features/entities/cell-morphology/detail-view';
@@ -14,11 +15,13 @@ export default function MorphologyViewer3d({ entityId, project }: IViewer3dProps
     queryFn: () => getCellMorphology({ id: entityId, context: project }),
     staleTime: Number.POSITIVE_INFINITY,
   });
-  if (morphology.isPending) return <ViewerMessage text="Loading the morphology…" />;
-  if (morphology.isError) return <ViewerMessage text="This morphology can't be shown." />;
-  return (
-    <ViewerFrame>
-      <CellMorphologyViewer entity={morphology.data} />
-    </ViewerFrame>
-  );
+  return match(morphology)
+    .with({ status: 'pending' }, () => <ViewerMessage text="Loading the morphology…" />)
+    .with({ status: 'error' }, () => <ViewerMessage text="This morphology can't be shown." />)
+    .with({ status: 'success' }, ({ data }) => (
+      <ViewerFrame>
+        <CellMorphologyViewer entity={data} />
+      </ViewerFrame>
+    ))
+    .exhaustive();
 }

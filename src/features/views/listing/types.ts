@@ -89,7 +89,6 @@ export type BrowseEntityScopeProps = {
     onSelect: (value: TExtendedEntitiesTypeDict) => void;
   };
   extraQueryParams?: Record<string, unknown>;
-  /** Extra controls in the grid toolbar (e.g. a picker's own filters), passed to the grid. */
   extraToolbarSlots?: Partial<IDataGridToolbarSlots>;
   detailVariant?: TViewVariant;
   /** When true, list content sits on a white inset panel — use default pagination styling */

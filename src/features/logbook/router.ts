@@ -1,5 +1,3 @@
-// /app/virtual-lab/<lab>/<project>/logbook[/<log id>[/page/<page id>]], the address agents link to.
-
 import { isNil } from 'es-toolkit';
 import { usePathname } from 'next/navigation';
 import { useMemo } from 'react';

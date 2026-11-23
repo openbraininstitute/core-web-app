@@ -12,7 +12,6 @@ export const defaultFlags: FeatureFlags = flags.reduce((acc, flag) => {
   return acc;
 }, {} as FeatureFlags);
 
-/** The defaults of the flags this deployment cannot change; they go over the cookie's values. */
 export const lockedFlags = (): Partial<FeatureFlags> =>
   Object.fromEntries(
     flags

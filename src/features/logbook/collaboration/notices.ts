@@ -1,9 +1,9 @@
-// An external store, so a notice re-renders only its field, never the editor.
 import { isNil, isNotNil } from 'es-toolkit';
 import { useSyncExternalStore } from 'react';
 import { match } from 'ts-pattern';
 
 import { CollaborationNotice, ReadOnlyReason } from '@/api/logbook/types';
+import { NOTICES_MAX_WRITERS } from '@/features/logbook/constants';
 
 import type { TCollaborationNotice, TReadOnlyReason } from '@/api/logbook/types';
 import type {
@@ -42,54 +42,50 @@ function toNotice(value: unknown): TNotice | null {
   if (!isRecord(value)) return null;
   const type = value['type'];
   if (!isNoticeType(type)) return null;
-  return (
-    match<TCollaborationNotice, TNotice | null>(type)
-      .with(CollaborationNotice.Peers, () => {
-        const { seq, peers } = value;
-        return typeof seq === 'number' && Array.isArray(peers) && peers.every(isPeer)
-          ? { type: CollaborationNotice.Peers, seq, peers }
-          : null;
-      })
-      .with(CollaborationNotice.Present, () => {
-        const { actor, blockIds, ttlSeconds } = value;
-        return isRecord(actor) &&
-          isString(actor['label']) &&
-          isString(actor['via']) &&
-          strings(blockIds) &&
-          typeof ttlSeconds === 'number'
-          ? {
-              type: CollaborationNotice.Present,
-              actor: { label: actor['label'], via: actor['via'] },
-              blockIds,
-              ttlSeconds,
-            }
-          : null;
-      })
-      .with(CollaborationNotice.Writer, () => {
-        const { clientIds, actor } = value;
-        return numbers(clientIds) && isWriterActor(actor)
-          ? {
-              type: CollaborationNotice.Writer,
-              clientIds,
-              actor: { userId: actor.userId, label: actor.label, via: actor.via },
-            }
-          : null;
-      })
-      .with(CollaborationNotice.ReadOnly, () => ({
-        type: CollaborationNotice.ReadOnly,
-        reason: isReason(value['reason']) ? value['reason'] : ReadOnlyReason.ReadAccess,
-      }))
-      // Older servers omit `own` and only sent `saved` to covered writers.
-      .with(CollaborationNotice.Saved, () => ({
-        type: CollaborationNotice.Saved,
-        own: value['own'] !== false,
-      }))
-      .with(CollaborationNotice.Closing, () => ({ type: CollaborationNotice.Closing }))
-      .exhaustive()
-  );
+  return match<TCollaborationNotice, TNotice | null>(type)
+    .with(CollaborationNotice.Peers, () => {
+      const { seq, peers } = value;
+      return typeof seq === 'number' && Array.isArray(peers) && peers.every(isPeer)
+        ? { type: CollaborationNotice.Peers, seq, peers }
+        : null;
+    })
+    .with(CollaborationNotice.Present, () => {
+      const { actor, blockIds, ttlSeconds } = value;
+      return isRecord(actor) &&
+        isString(actor['label']) &&
+        isString(actor['via']) &&
+        strings(blockIds) &&
+        typeof ttlSeconds === 'number'
+        ? {
+            type: CollaborationNotice.Present,
+            actor: { label: actor['label'], via: actor['via'] },
+            blockIds,
+            ttlSeconds,
+          }
+        : null;
+    })
+    .with(CollaborationNotice.Writer, () => {
+      const { clientIds, actor } = value;
+      return numbers(clientIds) && isWriterActor(actor)
+        ? {
+            type: CollaborationNotice.Writer,
+            clientIds,
+            actor: { userId: actor.userId, label: actor.label, via: actor.via },
+          }
+        : null;
+    })
+    .with(CollaborationNotice.ReadOnly, () => ({
+      type: CollaborationNotice.ReadOnly,
+      reason: isReason(value['reason']) ? value['reason'] : ReadOnlyReason.ReadAccess,
+    }))
+    .with(CollaborationNotice.Saved, () => ({
+      type: CollaborationNotice.Saved,
+      own: value['own'] !== false,
+    }))
+    .with(CollaborationNotice.Closing, () => ({ type: CollaborationNotice.Closing }))
+    .exhaustive();
 }
 
-// Unknown notices are dropped: a newer server may add some.
 export function noticeOf(payload: string): TNotice | null {
   try {
     return toNotice(JSON.parse(payload));
@@ -97,9 +93,6 @@ export function noticeOf(payload: string): TNotice | null {
     return null;
   }
 }
-
-// Capped: agents may use a new Yjs client per call; the writers API still names evicted ones.
-const MAX_WRITERS = 1000;
 
 const EMPTY: ICollaborationSnapshot = {
   peersSeq: -1,
@@ -114,7 +107,6 @@ const EMPTY: ICollaborationSnapshot = {
 export class CollaborationNotices {
   #state: ICollaborationSnapshot = EMPTY;
   readonly #listeners = new Set<() => void>();
-  // Kept out of the snapshot: nothing renders from it.
   readonly #writers = new Map<number, IWriterActor>();
 
   readonly writerOf = (clientId: number): IWriterActor | undefined => this.#writers.get(clientId);
@@ -131,8 +123,6 @@ export class CollaborationNotices {
     for (const listener of this.#listeners) listener();
   }
 
-  // Read-only is per join; the server resends it if still true. The peer count is per join too:
-  // the server's counter may have started again (its key expired, or Redis restarted).
   connected(): void {
     this.#set({ readOnly: null, peersSeq: -1 });
   }
@@ -155,7 +145,6 @@ export class CollaborationNotices {
     if (isNil(notice)) return null;
     match(notice)
       .with({ type: CollaborationNotice.Peers }, ({ seq, peers }) => {
-        // Several server tasks send lists; keep the newest.
         if (seq > this.#state.peersSeq) this.#set({ peersSeq: seq, peers });
       })
       .with({ type: CollaborationNotice.Saved }, ({ own }) => {
@@ -168,11 +157,11 @@ export class CollaborationNotices {
       })
       .with({ type: CollaborationNotice.Writer }, ({ clientIds, actor }) => {
         for (const clientId of clientIds) {
-          this.#writers.delete(clientId); // re-insert as newest
+          this.#writers.delete(clientId);
           this.#writers.set(clientId, actor);
         }
         for (const oldest of this.#writers.keys()) {
-          if (this.#writers.size <= MAX_WRITERS) break;
+          if (this.#writers.size <= NOTICES_MAX_WRITERS) break;
           this.#writers.delete(oldest);
         }
       })

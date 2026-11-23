@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 
 const SVG = 'image/svg+xml';
 
-/** A URL for a Blob, revoked when the Blob changes or the component goes; `type` overrides the Blob's. */
 export function useObjectUrl(blob: Blob | null | undefined, type?: string): string | null {
   const [url, setUrl] = useState<string | null>(null);
   // An effect, not a memo: StrictMode replays effects, and a memoised URL would be revoked in use.

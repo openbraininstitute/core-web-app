@@ -29,7 +29,6 @@ import type { IPage } from '@/api/logbook/types';
 import type { LocalCopy } from '@/features/logbook/collaboration/local-copy';
 import type { ILogViewProps, IOpenTabs, IPageViewProps, ITabRef } from '@/features/logbook/types';
 
-// Local copy of the page; null while it loads.
 function useLocalCopy(pageId: string | undefined, userId: string): LocalCopy | null {
   const [copy, setCopy] = useState<LocalCopy | null>(null);
   useEffect(() => {
@@ -54,20 +53,17 @@ export function LogView(props: ILogViewProps) {
   const { project, logId } = props;
   const pages = usePages(logId, project);
   const list = useMemo(() => pages.data ?? [], [pages.data]);
-  // Tabs decide the page on screen; the address is followed when it changes (settleTabs).
   const [held, setTabs] = useState<IOpenTabs>(NO_TABS);
   const tabs = settleTabs(held, list, props.pageId);
   if (tabs !== held) setTabs(tabs);
   const [shownId] = tabs.live;
   const listed = list.find((item) => item.id === shownId) ?? null;
-  // A page deleted while shown stays, read-only, instead of the main page swapping in.
   const [last, setLast] = useState<IPage | null>(null);
   if (isNotNil(listed) && listed !== last) setLast(listed);
   const deleted = isNil(listed) && isNotNil(last) && last.id === shownId;
   const page = listed ?? (deleted ? last : null);
   const cool = useCallback((pageId: string): void => setTabs((now) => coolPage(now, pageId)), []);
 
-  // The address follows the page on screen.
   const show = (next: IOpenTabs): void => {
     setTabs(next);
     const target = list.find((item) => item.id === next.live[0]);
@@ -87,7 +83,6 @@ export function LogView(props: ILogViewProps) {
   };
 
   if (pages.isPending) return <PageSkeleton />;
-  // A failed re-read keeps the pages already shown.
   if (pages.isError && isNil(pages.data))
     return (
       <section className={OPENING}>
@@ -100,7 +95,6 @@ export function LogView(props: ILogViewProps) {
         </button>
       </section>
     );
-  // A reader opening a log nobody has written in yet: no page.
   if (isNil(page))
     return (
       <section className={OPENING}>
@@ -113,7 +107,6 @@ export function LogView(props: ILogViewProps) {
         </button>
       </section>
     );
-  // Sorted by id, so showing another page never moves a mounted editor in the DOM.
   const views = tabs.live.toSorted().flatMap((id) => {
     const view = id === page.id ? page : list.find((item) => item.id === id);
     return isNil(view) ? [] : [view];
@@ -144,11 +137,9 @@ function PageView(props: IPageViewProps) {
   const copy = useLocalCopy(page.id, props.me.userId);
   const [notices] = useState(() => new CollaborationNotices());
   const [feed] = useState(() => new ChangeFeed());
-  // When this visit began: History lists the saved activity up to here.
   const [openedAt] = useState(() => new Date().toISOString());
   const [authFailed, setAuthFailed] = useState<string | null>(null);
   const context = useMemo(() => ({ project, logId }), [project, logId]);
-  // A refused page lets go once off screen, so coming back asks the server again.
   useEffect(() => {
     if (isNotNil(authFailed) && !shown) onCool(page.id);
   }, [authFailed, shown, onCool, page.id]);
@@ -169,16 +160,13 @@ function PageView(props: IPageViewProps) {
     <LogContext.Provider value={context}>
       {/* One socket per page; the component ignores later `url` changes, hence the key on PageView's wrapper. */}
       <HocuspocusProviderWebsocketComponent url={collaborationUrl(page.id)}>
-        {/* No flushDelay on purpose: the server already batches, and a delay would slow every ack. */}
         <HocuspocusRoom
           name={page.id}
           document={copy.document}
           token={accessToken}
           onStateless={({ payload }) => notices.receive(payload)}
           onConnect={() => notices.connected()}
-          // Server-side refusals (busy, unavailable) are retried in LogPage; client ones are final.
           onAuthenticationFailed={({ reason }) => {
-            // A deleted page refuses a new join; it stays shown, read-only.
             if (!RetryableRefusal.has(reason) && !props.deleted)
               setAuthFailed(`The live page refused this sign-in (${reason}).`);
           }}

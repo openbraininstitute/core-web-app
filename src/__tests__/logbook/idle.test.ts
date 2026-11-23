@@ -1,7 +1,8 @@
 import { WebSocketStatus } from '@hocuspocus/provider';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
-import { coolWhenAcked, pauseWhenHidden, RECHECK_MS } from '@/features/logbook/collaboration/idle';
+import { coolWhenAcked, pauseWhenHidden } from '@/features/logbook/collaboration/idle';
+import { RECHECK_MS } from '@/features/logbook/constants';
 
 import type { IPausableSocket } from '@/features/logbook/types';
 

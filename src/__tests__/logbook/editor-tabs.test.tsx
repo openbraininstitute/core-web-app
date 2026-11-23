@@ -35,7 +35,7 @@ test('arrow keys move between tabs, Home and End jump to the ends, Enter opens',
   expect(document.activeElement).toBe(a);
   fireEvent.keyDown(a as HTMLElement, { key: 'End' });
   expect(document.activeElement).toBe(b);
-  fireEvent.keyDown(b as HTMLElement, { key: 'ArrowRight' }); // wraps
+  fireEvent.keyDown(b as HTMLElement, { key: 'ArrowRight' });
   expect(document.activeElement).toBe(main);
   fireEvent.keyDown(main as HTMLElement, { key: 'ArrowLeft' });
   expect(document.activeElement).toBe(b);

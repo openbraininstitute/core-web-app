@@ -19,6 +19,12 @@ import { useLayout } from '@/features/logbook/board/layout';
 import { PageOutline } from '@/features/logbook/board/page-outline';
 import { Rail } from '@/features/logbook/board/rail';
 import { UnsentCopies } from '@/features/logbook/board/unsent-copies';
+import {
+  RAIL_FLOOR,
+  RAIL_MAX,
+  RAIL_SHUT_BELOW,
+  SEARCH_WAIT_MS,
+} from '@/features/logbook/constants';
 import { PageSkeleton } from '@/features/logbook/elements/skeletons';
 import { dragHandle } from '@/features/logbook/helpers';
 import { EntityDetailContext } from '@/features/logbook/log/context';
@@ -38,17 +44,9 @@ import type {
   TViewMode,
 } from '@/features/logbook/types';
 
-// The editor is most of the code: load it lazily, prefetched once the list shows.
 const loadLogView = () => import('@/features/logbook/log/log-view');
 const LogView = lazy(() => loadLogView().then((m) => ({ default: m.LogView })));
 
-const SEARCH_WAIT_MS = 250;
-
-const RAIL_MAX = 364;
-const RAIL_FLOOR = 220;
-const RAIL_SHUT_BELOW = 110;
-
-// Container query: the rail header follows the rail's dragged width, not the window.
 const RAIL = '@container/rail flex min-h-0 flex-none flex-col gap-3 overflow-hidden p-3';
 
 export function Board({ me, project, logId, pageId }: IBoardProps) {
@@ -65,18 +63,15 @@ export function Board({ me, project, logId, pageId }: IBoardProps) {
     const timer = setTimeout(() => setSearched(search), SEARCH_WAIT_MS);
     return () => clearTimeout(timer);
   }, [search]);
-  // A cleared search applies at once; only typing waits.
   const filter = { ...scope, order, search: search.trim() === '' ? '' : searched };
   const off = noFilterOf(filter);
-  // Keep the last list on screen while a new search loads.
   const logs = useInfiniteQuery({
     ...researchLogsQuery(project, filter),
     placeholderData: keepPreviousData,
   });
-  const listed = useMemo(() => (off ? [] : logsOf(logs.data?.pages ?? [])), [off, logs.data]);
-  const total = off ? 0 : (logs.data?.pages[0]?.pagination.total_items ?? 0);
+  const listed = off ? [] : (logs.data?.logs ?? []);
+  const total = off ? 0 : (logs.data?.total ?? 0);
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = logs;
-  // No next page while the list itself reloads; it would be dropped or stale.
   const listLoading = logs.isFetching && !isFetchingNextPage;
   const more: IMore = {
     has: !off && hasNextPage && !listLoading,
@@ -87,7 +82,6 @@ export function Board({ me, project, logId, pageId }: IBoardProps) {
     },
   };
   const loading = !off && logs.isPending;
-  // A failed next page keeps the pages already shown.
   const error = !off && logs.isError && isNil(logs.data) ? logs.error.message : null;
   useEffect(() => {
     if (logs.isSuccess) void loadLogView();
@@ -95,7 +89,6 @@ export function Board({ me, project, logId, pageId }: IBoardProps) {
   const create = useCreateLog(project);
   const update = useUpdateLog(project);
   const remove = useDeleteLog(project);
-  // Read the open log on its own when a search hides it from the list.
   const inList = listed.find((log) => log.id === logId);
   const opened = useQuery({
     ...researchLogQuery(project, logId ?? ''),
@@ -105,13 +98,11 @@ export function Board({ me, project, logId, pageId }: IBoardProps) {
 
   const [railW, setRailW] = useState(RAIL_MAX);
   const [railShut, setRailShut] = useState(() => layout === Layout.Compact);
-  // The entity open in the detail panel, tied to its log so switching logs closes it.
   const [detail, setDetail] = useState<(IEntityTarget & { readonly logId: string }) | null>(null);
   const [railHeldOpen, setRailHeldOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [mode, setMode] = useState<TViewMode>(ViewMode.Read);
 
-  // Fold the rail in compact; close the drawer when the phone layout comes or goes.
   const [seenLayout, setSeenLayout] = useState(layout);
   if (seenLayout !== layout) {
     setSeenLayout(layout);
@@ -125,7 +116,6 @@ export function Board({ me, project, logId, pageId }: IBoardProps) {
     navigate(pathOf(project, id));
   };
 
-  // Each section gets its own address; a just-added one opens in the editor.
   const openPage = (page: IPage, edit = false): void => {
     if (edit) setMode(ViewMode.Edit);
     setDrawerOpen(false);
@@ -200,7 +190,6 @@ export function Board({ me, project, logId, pageId }: IBoardProps) {
   };
 
   const shownDetail = isNotNil(detail) && detail.logId === logId ? detail : null;
-  // The panel needs room: the rail folds while it is open, unless the user unfolds it.
   const railFolded = railShut || (isNotNil(shownDetail) && layout === Layout.Wide && !railHeldOpen);
   const openDetail = (target: IEntityTarget): void => {
     if (isNotNil(logId)) setDetail({ ...target, logId });
@@ -296,7 +285,6 @@ export function Board({ me, project, logId, pageId }: IBoardProps) {
                   </button>
                 ) : null}
                 <Suspense fallback={<PageSkeleton />}>
-                  {/* The key matters: a new log needs a new LogView to get its own socket. */}
                   <LogView
                     key={logId}
                     me={me}

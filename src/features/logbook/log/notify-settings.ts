@@ -1,4 +1,3 @@
-// Kept in this browser only; storage access is guarded and the defaults stand when blocked.
 import { isNil, isNotNil } from 'es-toolkit';
 import { useSyncExternalStore } from 'react';
 
@@ -27,7 +26,7 @@ function read(): INotifySettings {
   }
 }
 
-let current: INotifySettings | null = null; // read on first use, not at import
+let current: INotifySettings | null = null;
 const listeners = new Set<() => void>();
 
 const snapshot = (): INotifySettings => (current ??= read());
@@ -41,9 +40,7 @@ export function updateNotifySettings(patch: Partial<INotifySettings>): void {
   current = { ...snapshot(), ...patch };
   try {
     localStorage.setItem(KEY, JSON.stringify(current));
-  } catch {
-    // storage blocked: the setting holds for this visit
-  }
+  } catch {}
   for (const listener of listeners) listener();
 }
 

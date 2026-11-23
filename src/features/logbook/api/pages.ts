@@ -1,4 +1,3 @@
-// The server makes the main page when a writer opens the log; the browser only manages sections.
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { isNil } from 'es-toolkit';
 
@@ -6,18 +5,17 @@ import { ApiError } from '@/api/error';
 import { createPage, deletePage, renamePage } from '@/api/logbook/queries/page';
 import { getResearch } from '@/api/logbook/queries/research';
 import { PageKind } from '@/api/logbook/types';
+import { PAGES_REFRESH_MS } from '@/features/logbook/constants';
 import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
 
 import type { IPage } from '@/api/logbook/types';
 import type { INewSection, IProject } from '@/features/logbook/types';
 
-// Null only for a log no writer has opened yet.
 export const pageToShow = (pages: readonly IPage[], wanted: string | null): IPage | null =>
   pages.find((page) => page.id === wanted) ??
   pages.find((page) => page.kind === PageKind.Main) ??
   null;
 
-// Re-sort so locally patched lists keep their order.
 const inOrder = (pages: readonly IPage[]): IPage[] =>
   pages.toSorted((a, b) => a.position - b.position);
 
@@ -25,9 +23,6 @@ async function pagesOf(researchId: string, project: IProject): Promise<IPage[]> 
   const research = await getResearch({ id: researchId, context: project });
   return inOrder(research.pages);
 }
-
-// Re-read every 30 s so sections others add show up. Upgrade: a server `pages` notice.
-export const PAGES_REFRESH_MS = 30_000;
 
 export const pagesQuery = (researchId: string, project: IProject) =>
   queryOptions({
@@ -59,7 +54,6 @@ export function useCreateSection(researchId: string, project: IProject) {
   });
 }
 
-// If-Match: a stale rename gets a 412, so re-read the list for the next try.
 export function useRenamePage(researchId: string, project: IProject) {
   const queries = useQueryClient();
   return useMutation({
@@ -73,7 +67,6 @@ export function useRenamePage(researchId: string, project: IProject) {
   });
 }
 
-// Permanent; safe to resend if it didn't answer.
 export function useDeleteSection(researchId: string, project: IProject) {
   const queries = useQueryClient();
   return useMutation({

@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest';
 
 import { PageKind } from '@/api/logbook/types';
+import { WARM_KEEP_MS, WARM_PAGES } from '@/features/logbook/constants';
 import {
   closeTab,
   coolPage,
@@ -9,8 +10,6 @@ import {
   settleTabs,
   showArtifact,
   showPage,
-  WARM_KEEP_MS,
-  WARM_PAGES,
 } from '@/features/logbook/log/open-tabs';
 import { TabKind } from '@/features/logbook/types';
 

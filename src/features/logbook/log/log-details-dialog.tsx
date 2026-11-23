@@ -1,4 +1,3 @@
-// Native <dialog> + showModal() gives backdrop, focus trap, Escape and top layer for free.
 import { isNil } from 'es-toolkit';
 import { useEffect, useRef, useState } from 'react';
 
@@ -16,7 +15,6 @@ export function LogDetailsDialog(props: ILogDetailsDialogProps) {
   const [description, setDescription] = useState(props.description);
   const [failed, setFailed] = useState<string | null>(null);
 
-  // Reset to the saved values on each open.
   useEffect(() => {
     const el = dialog.current;
     if (isNil(el)) return;

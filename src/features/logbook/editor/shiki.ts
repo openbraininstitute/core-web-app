@@ -1,6 +1,6 @@
-// Shiki for saved files, loaded on first use with the JS regex engine (no WASM).
-// Editor code blocks use highlight.ts instead: decorations can't wait.
 import { isNil } from 'es-toolkit';
+
+import { HIGHLIGHT_MAX_CHARS } from '@/features/logbook/constants';
 
 import type { HighlighterCore, ThemedToken } from 'shiki/core';
 import type { IGrammar } from '@/features/logbook/types';
@@ -12,7 +12,6 @@ const yaml: IGrammar = { id: 'yaml', load: () => import('shiki/langs/yaml.mjs') 
 const javascript: IGrammar = { id: 'javascript', load: () => import('shiki/langs/javascript.mjs') };
 const typescript: IGrammar = { id: 'typescript', load: () => import('shiki/langs/typescript.mjs') };
 
-// By file extension.
 const GRAMMARS: Readonly<Record<string, IGrammar>> = {
   py: python,
   sh: shell,
@@ -31,8 +30,6 @@ const GRAMMARS: Readonly<Record<string, IGrammar>> = {
 };
 
 export const THEME = 'github-light';
-// Past this size, show plain: grammars cost linear time and nobody reads that as code.
-export const HIGHLIGHT_MAX_CHARS = 200_000;
 
 export const extensionOf = (name: string): string =>
   /\.([^./]+)$/.exec(name)?.[1]?.toLowerCase() ?? '';
@@ -51,13 +48,12 @@ function highlighter(): Promise<HighlighterCore> {
       engine: createJavaScriptRegexEngine(),
     });
   })().catch((error: unknown) => {
-    core = null; // a failed load (offline) is tried again next time
+    core = null;
     throw error;
   });
   return core;
 }
 
-// null: show plain (no grammar, or too large).
 export async function highlightLines(text: string, name: string): Promise<ThemedToken[][] | null> {
   const grammar = GRAMMARS[extensionOf(name)];
   if (isNil(grammar) || text.length > HIGHLIGHT_MAX_CHARS) return null;

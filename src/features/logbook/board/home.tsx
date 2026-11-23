@@ -68,7 +68,6 @@ function LogCard({
   readonly onPick: (id: string) => void;
 }) {
   return (
-    // A stretched button covers the card, so the +N button sits beside it, not inside.
     <article className="group relative flex min-h-[188px] flex-col rounded-2xl bg-white p-5 shadow-card transition-[box-shadow,translate] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-pop focus-within:shadow-pop">
       <button
         type="button"
@@ -108,7 +107,6 @@ const STATE = 'flex flex-1 flex-col items-center justify-center gap-3 px-6 py-12
 
 export function Home(props: IHomeProps) {
   const { logs, scope } = props;
-  // No logs at all, not just no match for a filter or search.
   const noLogs =
     !props.loading &&
     isNil(props.error) &&

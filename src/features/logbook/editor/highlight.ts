@@ -1,4 +1,5 @@
-// One regex highlighter, Python-ish, for every language.
+import { isNotNil } from 'es-toolkit';
+import { match, P } from 'ts-pattern';
 
 import { TokenKind } from '@/features/logbook/types';
 
@@ -14,19 +15,16 @@ const TOKEN = /(#.*$)|("(?:\\.|[^"\\])*"?|'(?:\\.|[^'\\])*'?)|(\b\d+(?:\.\d+)?\b
 export function tokenize(line: string): IToken[] {
   const tokens: IToken[] = [];
   let at = 0;
-  for (const match of line.matchAll(TOKEN)) {
-    const index = match.index;
+  for (const found of line.matchAll(TOKEN)) {
+    const index = found.index;
     if (index > at) tokens.push({ kind: TokenKind.Text, text: line.slice(at, index), from: at });
-    const [text, comment, string, number, word] = match;
-    const kind = comment
-      ? TokenKind.Comment
-      : string
-        ? TokenKind.String
-        : number
-          ? TokenKind.Number
-          : word && KEYWORDS.has(word)
-            ? TokenKind.Keyword
-            : TokenKind.Text;
+    const [text, comment, string, number, word] = found;
+    const kind = match({ comment, string, number, word })
+      .with({ comment: P.string.minLength(1) }, () => TokenKind.Comment)
+      .with({ string: P.string.minLength(1) }, () => TokenKind.String)
+      .with({ number: P.string.minLength(1) }, () => TokenKind.Number)
+      .with({ word: P.when((w) => isNotNil(w) && KEYWORDS.has(w)) }, () => TokenKind.Keyword)
+      .otherwise(() => TokenKind.Text);
     tokens.push({ kind, text, from: index });
     at = index + text.length;
   }

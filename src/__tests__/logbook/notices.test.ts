@@ -48,10 +48,10 @@ test('after a re-join, the server’s new peer list counts even with a smaller n
     });
   const Notices = new CollaborationNotices();
   Notices.receive(peers(57, 'left long ago'));
-  Notices.connected(); // the server's counter started again meanwhile
+  Notices.connected();
   Notices.receive(peers(1, 'here now'));
   expect(Notices.snapshot().peers.map((p) => p.label)).toEqual(['here now']);
-  Notices.receive(peers(0, 'an older list')); // within one join, older lists still lose
+  Notices.receive(peers(0, 'an older list'));
   expect(Notices.snapshot().peers.map((p) => p.label)).toEqual(['here now']);
 });
 
@@ -66,7 +66,7 @@ test('refused(at) sets rejoinAt and notifies; joined() clears it', () => {
   expect(Notices.snapshot().rejoinAt).toBe(1234);
   Notices.joined();
   expect(Notices.snapshot().rejoinAt).toBeNull();
-  Notices.joined(); // nothing to clear: no render
+  Notices.joined();
   expect(renders).toBe(2);
 });
 
@@ -76,7 +76,6 @@ test('saved: own moves both times, a save of others only the page time, no field
   expect(Notices.snapshot()).toMatchObject({ savedAt: null, pageSavedAt: 1000 });
   Notices.receive(JSON.stringify({ type: 'saved', own: true }), 2000);
   expect(Notices.snapshot()).toMatchObject({ savedAt: 2000, pageSavedAt: 2000 });
-  // Older servers sent `saved` with no field.
   Notices.receive(JSON.stringify({ type: 'saved' }), 3000);
   expect(Notices.snapshot()).toMatchObject({ savedAt: 3000, pageSavedAt: 3000 });
 });

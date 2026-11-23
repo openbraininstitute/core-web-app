@@ -1,15 +1,13 @@
-// Each Yjs item carries the client id that typed it; only the selected blocks are walked.
 import { Node as PmNode } from '@tiptap/pm/model';
 import { ySyncPluginKey } from '@tiptap/y-tiptap';
 import { isNil, isNotNil } from 'es-toolkit';
 import * as Y from 'yjs';
 
+import { HISTORY_MAX_PIECES } from '@/features/logbook/constants';
 import { clip } from '@/features/logbook/helpers';
 
 import type { EditorState } from '@tiptap/pm/state';
 import type { IActor, IPiece, IRun } from '@/features/logbook/types';
-
-const MAX_PIECES = 6;
 
 export const cardLabelOf = (node: PmNode): string => {
   const label: unknown = node.attrs['name'] ?? node.attrs['alt'] ?? node.attrs['src'];
@@ -21,7 +19,7 @@ function runsOfBlock(element: Y.XmlElement, from: number, to: number): IRun[] {
   let offset = 0;
   for (const child of element.toArray()) {
     if (!(child instanceof Y.XmlText)) {
-      offset += 1; // inline node (hard break): one position
+      offset += 1;
       continue;
     }
     // Yjs has no public item walk; _start is its documented head.
@@ -59,7 +57,6 @@ export function piecesOf(
   });
   const runs: IRun[] = [];
   state.doc.nodesBetween(from, to, (node, pos) => {
-    // A card has no text: its writer is whoever added its element.
     if (node.isBlock && node.isAtom) {
       // oxlint-disable-next-line eslint/no-underscore-dangle
       const client = elements.get(node)?._item?.id.client;
@@ -80,7 +77,6 @@ export function piecesOf(
     }
     return false;
   });
-  // Merge consecutive runs by the same author.
   const pieces: { actor: IActor; text: string }[] = [];
   for (const run of runs) {
     const actor = resolve(run.client);
@@ -90,6 +86,6 @@ export function piecesOf(
   }
   return pieces
     .filter((piece) => piece.text.trim().length > 0)
-    .slice(0, MAX_PIECES)
+    .slice(0, HISTORY_MAX_PIECES)
     .map((piece) => ({ actor: piece.actor, text: clip(piece.text, 70) }));
 }

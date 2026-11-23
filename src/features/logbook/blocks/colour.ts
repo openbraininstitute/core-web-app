@@ -1,3 +1,5 @@
+import { FNV_OFFSET, FNV_PRIME } from '@/features/logbook/constants';
+
 // Same colour for a user on every screen: FNV-1a of the user id picks one.
 const PALETTE = [
   '#1677c9',
@@ -14,8 +16,6 @@ const PALETTE = [
   '#15803d',
 ] as const;
 
-const FNV_OFFSET = 0x811c9dc5;
-const FNV_PRIME = 0x01000193;
 const encoder = new TextEncoder();
 
 export function fnv1a(text: string): number {

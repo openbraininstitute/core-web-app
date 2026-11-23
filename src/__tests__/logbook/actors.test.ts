@@ -10,8 +10,8 @@ import {
 
 import type { IActorSources } from '@/features/logbook/types';
 
-const LIVE = 1; // a peer on the page now
-const GONE = 2; // writer left; the server named it
+const LIVE = 1;
+const GONE = 2;
 const NOBODY = 3;
 
 const sources = (agents: readonly { readonly label: string }[]): IActorSources => ({
@@ -25,8 +25,8 @@ const sources = (agents: readonly { readonly label: string }[]): IActorSources =
 test('a writer is named by the live page first, then by the server, then guessed', () => {
   const one = sources([{ label: 'alice-claude' }]);
   expect(resolveActor(LIVE, one).name).toBe('bob');
-  expect(resolveActor(GONE, one).name).toBe('alice'); // not the agent at work now
-  expect(resolveActor(NOBODY, one).name).toBe('alice-claude'); // the one agent at work
+  expect(resolveActor(GONE, one).name).toBe('alice');
+  expect(resolveActor(NOBODY, one).name).toBe('alice-claude');
   expect(resolveActor(NOBODY, sources([]))).toBe(UNKNOWN_ACTOR);
 });
 
@@ -37,7 +37,6 @@ test('a stored agent writer is an agent', () => {
     via: 'agent',
   });
   expect(agent).toMatchObject({ name: 'u-claude', agent: true, initials: 'U' });
-  // Initials of the person it works for.
   expect(agentActor('bob-claude').initials).toBe('BO');
 });
 
@@ -46,7 +45,6 @@ test('an agent keeps the person it works for, and never shares that person’s k
   expect(worksFor(agent, 'u-bob')).toBe(true);
   expect(worksFor(agent, 'u-alice')).toBe(false);
   expect(agent.key).not.toBe('u-bob');
-  // Only a label known (a present notice): nobody to match.
   expect(worksFor(agentActor('bob-claude'), 'u-bob')).toBe(false);
 });
 
@@ -61,7 +59,6 @@ test('a person and their socket agent share a user id; the server’s writer nam
           [AGENT, { user: { userId: 'u-bob' } }],
         ]),
     } as never,
-    // The agent joined first, so a lookup by user id alone finds it first.
     peers: () => [
       { joinId: 'j2', userId: 'u-bob', label: 'bob-claude', via: 'agent' },
       { joinId: 'j1', userId: 'u-bob', label: 'bob', via: 'ui' },

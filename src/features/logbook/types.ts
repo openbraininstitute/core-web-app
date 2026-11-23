@@ -7,7 +7,7 @@ import type { CSSProperties, MouseEvent as ReactMouseEvent, ReactNode } from 're
 import type { LanguageInput } from 'shiki/core';
 import type { IndexeddbPersistence } from 'y-indexeddb';
 import type * as Y from 'yjs';
-import type { IResearchLog, IResearchLogDraft } from '@/api/entitycore/types/entities/research-log';
+import type { IResearchLog, TResearchLogDraft } from '@/api/entitycore/types/entities/research-log';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { CollaborationNotice, IPage, TReadOnlyReason, TValueOf } from '@/api/logbook/types';
@@ -22,18 +22,15 @@ export interface IActor {
   readonly initials: string;
   readonly colour: string;
   readonly agent: boolean;
-  /** The person this is, or the agent works for; null when only an agent label is known. */
   readonly ownerId: string | null;
 }
 
-/** Which edge of its anchor a popover lines up with. */
 export const PopoverAlign = { Start: 'start', End: 'end', Center: 'center' } as const;
 export type TPopoverAlign = TValueOf<typeof PopoverAlign>;
 
 export const PopoverSide = { Below: 'bottom', Above: 'top' } as const;
 export type TPopoverSide = TValueOf<typeof PopoverSide>;
 
-// One writer's rows on one page, merged while at most GAP_MS apart.
 export interface IActivityRun {
   readonly key: string;
   readonly pageId: string;
@@ -59,13 +56,12 @@ export interface IEntity {
 
 export interface ILogFile {
   readonly path: string;
-  readonly localPath: string; // saved name without the hash part
+  readonly localPath: string;
   readonly name: string;
   readonly size: number;
   readonly lastModified: string;
 }
 
-// A page's markdown copy written by the server's EntityCore sync; read-only here.
 export interface ILogDocument {
   readonly assetId: string;
   readonly path: string;
@@ -94,7 +90,7 @@ export type TArtifactKind = TValueOf<typeof ArtifactKind>;
 export interface IArtifact {
   readonly id: string;
   readonly name: string;
-  readonly where: string; // folder, or 'synced' for a page's copy
+  readonly where: string;
   readonly size: number;
   readonly savedAt: string | null;
   readonly kind: TArtifactKind;
@@ -109,7 +105,6 @@ export interface IPlannedFile {
   readonly sha256: string;
 }
 
-// The key is made once per add, so a retry never makes two sections.
 export interface INewSection {
   readonly title: string;
   readonly key: string;
@@ -132,7 +127,6 @@ export interface ILogOrder {
   readonly direction: TOrderDirection;
 }
 
-// Public: public logs of any project. Project: this project's. Both on: everything.
 export interface ILogFilter {
   readonly public: boolean;
   readonly project: boolean;
@@ -182,14 +176,13 @@ export const CalloutKind = { Note: 'note', Tip: 'tip', Warning: 'warning' } as c
 
 export type TCalloutKind = TValueOf<typeof CalloutKind>;
 
-// For packages that don't depend on Tiptap.
 export type TBlockJson = JSONContent;
 
 export interface IBoardProps {
   readonly me: IMe;
   readonly project: IProject;
   readonly logId: string | null;
-  readonly pageId: string | null; // a section of the open log; null: its main page
+  readonly pageId: string | null;
 }
 
 export interface IEntityDetailProps {
@@ -201,7 +194,6 @@ export interface IEntityDetailProps {
 
 export interface IHomeProps {
   readonly logs: readonly IResearchLog[];
-  // All matches, loaded or not.
   readonly total: number;
   readonly more: IMore;
   readonly loading: boolean;
@@ -226,12 +218,10 @@ export interface IPageOutlineProps {
   readonly project: IProject;
   readonly logId: string;
   readonly logName: string;
-  readonly pageId: string | null; // the page the address names; null: the main page
-  // `edit` opens it in the editor.
+  readonly pageId: string | null;
   readonly onOpen: (page: IPage, edit?: boolean) => void;
 }
 
-// No heading in a wide rail; a title and X in the phone drawer.
 export const RailHeading = { None: 'none', Drawer: 'drawer' } as const;
 
 export type TRailHeading = TValueOf<typeof RailHeading>;
@@ -249,7 +239,6 @@ export interface IMore {
 }
 
 export interface IRailProps {
-  // The pages read so far.
   readonly logs: readonly IResearchLog[];
   readonly more: IMore;
   readonly loading: boolean;
@@ -266,10 +255,8 @@ export interface IRailProps {
   readonly onSearch: (search: string) => void;
   readonly onPick: (id: string) => void;
   readonly onNew: () => void;
-  // The open log's pages, shown under its card.
   readonly outline?: ReactNode;
   readonly onClose: () => void;
-  // Each rejects with the reason shown on the card.
   readonly onRename: (id: string, name: string) => Promise<unknown>;
   readonly onDelete: (id: string) => Promise<unknown>;
 }
@@ -280,7 +267,6 @@ export interface IActorSources {
   readonly awareness: TAwareness;
   readonly peers: () => readonly IPeer[];
   readonly agents: () => readonly { readonly label: string }[];
-  // The server's writer of a client: exact, and the only source for clients no longer online.
   readonly written: (clientId: number) => IActor | undefined;
 }
 
@@ -297,9 +283,9 @@ export interface IChange {
 }
 
 export interface IChangeSnapshot {
-  readonly events: readonly IChange[]; // newest first
+  readonly events: readonly IChange[];
   readonly toast: IChange | null;
-  readonly seen: Readonly<Record<string, number>>; // actor key → last change time
+  readonly seen: Readonly<Record<string, number>>;
 }
 
 export interface IHighlight {
@@ -317,13 +303,12 @@ export interface ICollaborationChangesOptions {
   readonly me: IActor;
   readonly resolve: (clientId: number) => IActor;
   readonly highlights: () => boolean;
-  readonly ready: () => boolean; // false until first sync, so the loaded page isn't "new"
+  readonly ready: () => boolean;
 }
 
-// Diff the docs: the Yjs binding replaces a whole paragraph per keystroke, so steps can't tell.
 export interface IDiff {
   readonly from: number;
-  readonly to: number; // in the new document
+  readonly to: number;
   readonly removed: string;
 }
 
@@ -344,7 +329,6 @@ export interface IPausableProvider {
   readonly configuration: { readonly websocketProvider: IPausableSocket };
 }
 
-// Both throw an ApiError when refused.
 export interface IPageDocs {
   readonly read: (pageId: string) => Promise<Uint8Array>;
   readonly send: (pageId: string, update: Uint8Array) => Promise<void>;
@@ -354,10 +338,10 @@ export const CopySync = {
   Clean: 'clean',
   Sent: 'sent',
   NothingToSend: 'nothing-to-send',
-  Open: 'open', // its provider sends it
-  Gone: 'gone', // 404
-  Refused: 'refused', // 403
-  Failed: 'failed', // kept, retried at the next start
+  Open: 'open',
+  Gone: 'gone',
+  Refused: 'refused',
+  Failed: 'failed',
 } as const;
 
 export type TCopySync = TValueOf<typeof CopySync>;
@@ -386,7 +370,6 @@ export type TNotice =
       readonly seq: number;
       readonly peers: readonly IPeer[];
     }
-  // own: this connection's changes are in that save; only then may the device copy go clean.
   | { readonly type: typeof CollaborationNotice.Saved; readonly own: boolean }
   | {
       readonly type: typeof CollaborationNotice.Present;
@@ -408,7 +391,6 @@ export interface IWriterActor {
   readonly via: string;
 }
 
-// Hand-written guards, not TypeBox, to keep the bundle small.
 export type TRecord = Readonly<Record<string, unknown>>;
 
 export interface IPresentAgent {
@@ -420,11 +402,10 @@ export interface IPresentAgent {
 export interface ICollaborationSnapshot {
   readonly peersSeq: number;
   readonly peers: readonly IPeer[];
-  readonly savedAt: number | null; // this connection's changes
-  readonly pageSavedAt: number | null; // anyone's changes
+  readonly savedAt: number | null;
+  readonly pageSavedAt: number | null;
   readonly agents: readonly IPresentAgent[];
   readonly readOnly: TReadOnlyReason | null;
-  // When a refused join is retried; the editor is read-only until then.
   readonly rejoinAt: number | null;
 }
 
@@ -474,7 +455,6 @@ export interface IFormat {
   readonly key: TFormat;
   readonly label: string;
   readonly icon: TIconName;
-  // Tiptap shortcut like `Mod-b`.
   readonly keys: string | null;
   readonly run: (editor: Editor) => void;
 }
@@ -488,7 +468,6 @@ export const TextStyle = {
 
 export type TTextStyle = TValueOf<typeof TextStyle>;
 
-// Left is the default: choosing it removes the attribute.
 export const Align = {
   Left: 'left',
   Center: 'center',
@@ -498,12 +477,10 @@ export const Align = {
 
 export type TAlign = TValueOf<typeof Align>;
 
-// useEditorState compares this, so changes that alter none of it render nothing.
 export interface IFormatState {
   readonly active: Readonly<Record<TFormat, boolean>>;
   readonly style: TTextStyle;
   readonly align: TAlign;
-  // A list item's paragraph can align; a code block can't.
   readonly canAlign: boolean;
   readonly canUndo: boolean;
   readonly canRedo: boolean;
@@ -529,7 +506,7 @@ export interface IToken {
 
 export interface IGrammar {
   readonly id: string;
-  readonly load: LanguageInput; // a getter: the grammar loads only when asked
+  readonly load: LanguageInput;
 }
 
 export interface IArtifactLook {
@@ -540,7 +517,7 @@ export interface IArtifactLook {
 
 export interface IView {
   readonly scale: number;
-  readonly x: number; // offset from the box's centre, px
+  readonly x: number;
   readonly y: number;
 }
 
@@ -555,7 +532,6 @@ export interface IPickedEntity {
   readonly name: string;
 }
 
-/** Opens the link-entity picker; `onPick` gets the chosen entity. Null where the log can't be edited. */
 export type TOpenEntityPicker = (onPick: (entity: IPickedEntity) => void) => void;
 
 export interface IEntityTarget {
@@ -563,13 +539,11 @@ export interface IEntityTarget {
   readonly entityId: string;
 }
 
-/** Opens core's detail panel for an entity, beside the log. */
 export type TOpenEntityDetail = (target: IEntityTarget) => void;
 
 export interface IDeleteLogDialogProps {
   readonly log: IResearchLog;
   readonly project: IProject;
-  // Rejects with a reason the dialog shows; a 503 is safe to retry.
   readonly onDelete: () => Promise<unknown>;
   readonly onClose: () => void;
 }
@@ -608,13 +582,13 @@ export interface IEditorTab {
   readonly label: string;
   readonly hint: string;
   readonly icon: ReactNode;
-  readonly pinned: boolean; // the main page: named after the log, never closed
+  readonly pinned: boolean;
 }
 
 export interface IEditorTabsProps {
   readonly tabs: readonly IEditorTab[];
   readonly active: ITabRef;
-  readonly page: ITabRef; // the page behind the editor: its tab shows the save status
+  readonly page: ITabRef;
   readonly status: ReactNode;
   readonly canRename: boolean;
   readonly onRename: (name: string) => Promise<unknown>;
@@ -622,7 +596,6 @@ export interface IEditorTabsProps {
   readonly onClose: (tab: ITabRef) => void;
 }
 
-// A type in the left navigator: a Data grid, or the name search for types core has no grid for.
 export type TNavItem =
   | { readonly key: string; readonly label: string; readonly coreType: TExtendedEntitiesTypeDict }
   | { readonly key: string; readonly label: string; readonly blockType: TEntityType };
@@ -638,7 +611,6 @@ export interface INavSection {
 export type TPicks = Readonly<Record<string, readonly IPickedEntity[]>>;
 
 export interface IEntityGridPickerProps {
-  /** One pick (replacing a card) or many (linking). */
   readonly multiple: boolean;
   readonly onPick: (entities: readonly IPickedEntity[]) => void;
   readonly onClose: () => void;
@@ -659,7 +631,7 @@ export interface ILogDetailsDialogProps {
   readonly name: string;
   readonly description: string;
   readonly saving: boolean;
-  readonly onSave: (draft: IResearchLogDraft) => Promise<unknown>;
+  readonly onSave: (draft: TResearchLogDraft) => Promise<unknown>;
   readonly onClose: () => void;
 }
 
@@ -667,7 +639,7 @@ export interface ILogViewProps {
   readonly me: IMe;
   readonly project: IProject;
   readonly logId: string;
-  readonly pageId: string | null; // null: the main page
+  readonly pageId: string | null;
   readonly log: IResearchLog | null;
   readonly layout: TLayout;
   readonly mode: TViewMode;
@@ -679,13 +651,12 @@ export interface ILogViewProps {
 export interface IPageViewProps extends ILogViewProps {
   readonly page: IPage;
   readonly pages: readonly IPage[];
-  // Deleted while open: shown read-only from the local copy.
   readonly deleted: boolean;
-  readonly shown: boolean; // on screen; false: mounted but hidden (warm)
-  readonly keepMs: number | null; // how long it stays mounted off screen; null: on screen
+  readonly shown: boolean;
+  readonly keepMs: number | null;
   readonly onCool: (pageId: string) => void;
   readonly tabs: readonly ITabRef[];
-  readonly artifactId: string | null; // the file shown over the page
+  readonly artifactId: string | null;
   readonly onOpenPage: (page: IPage) => void;
   readonly onOpenArtifact: (id: string) => void;
   readonly onSelectTab: (tab: ITabRef) => void;
@@ -742,25 +713,21 @@ export interface ITabRef {
 }
 
 export interface IOpenTabs {
-  /** Tabs in strip order. The main page has no tab: it is always there. */
   readonly open: readonly ITabRef[];
-  /** Mounted pages, the one on screen first, then the most recently left. */
   readonly live: readonly string[];
-  /** The file shown over the page on screen, if any. */
   readonly artifactId: string | null;
-  /** The address last acted on, and whether the log had its page; null before the first one. */
   readonly followed: { readonly pageId: string | null; readonly found: boolean } | null;
 }
 
 export interface INeighbours {
-  readonly index: number; // -1 when deleted
+  readonly index: number;
   readonly previous: IPage | null;
   readonly next: IPage | null;
 }
 
 export interface IPageNavProps {
   readonly pages: readonly IPage[];
-  readonly page: IPage; // may be deleted (not in the list)
+  readonly page: IPage;
   readonly onOpen: (page: IPage) => void;
 }
 
@@ -797,10 +764,10 @@ export interface ISidePaneProps extends ILogShared {
 
 export interface IKindLook {
   readonly icon: string;
-  readonly badge: string; // tinted square behind the icon
-  readonly bar: string; // the draining time bar
+  readonly badge: string;
+  readonly bar: string;
   readonly card: string;
-  readonly lifeMs: number | null; // null: stays until closed
+  readonly lifeMs: number | null;
 }
 
 export interface IAgentToastProps {
@@ -856,7 +823,7 @@ export type TViewMode = TValueOf<typeof ViewMode>;
 export interface IRoute {
   readonly project: IProject | null;
   readonly logId: string | null;
-  readonly pageId: string | null; // null: the main page
+  readonly pageId: string | null;
 }
 
 export interface IProject {
@@ -874,7 +841,6 @@ export interface IMe {
 
 export type TClaims = Readonly<Record<string, unknown>>;
 
-// `failed` retries next start; `lost` were refused (404/403) and stay on the device.
 export interface IUnsent {
   readonly failed: number;
   readonly lost: number;
@@ -882,7 +848,6 @@ export interface IUnsent {
 
 export interface IUnsentCopiesProps {
   readonly userId: string;
-  // Starts once the list of logs is on screen.
   readonly enabled: boolean;
 }
 
@@ -897,7 +862,6 @@ export interface ILocalCopyDeps {
   release?: () => void;
 }
 
-// Shared per tab; close waits a tick so React's dev double mount reuses the copy.
 export interface IHeld {
   readonly copy: Promise<LocalCopy>;
   users: number;
@@ -915,7 +879,6 @@ export interface IEditorOptions {
   readonly me: IActor;
   readonly feed: ChangeFeed;
   readonly resolve: (clientId: number) => IActor;
-  // The server's label for the user id, never the awareness text.
   readonly caretName: (user: Record<string, unknown>) => string;
   readonly highlights: () => boolean;
   readonly ready: () => boolean;
@@ -925,7 +888,6 @@ export interface ILogPageProps extends IPageViewProps {
   readonly notices: CollaborationNotices;
   readonly feed: ChangeFeed;
   readonly copy: LocalCopy;
-  // When this visit began (ISO): saved activity ends here, the live feed starts.
   readonly openedAt: string;
 }
 

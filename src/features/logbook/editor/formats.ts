@@ -1,5 +1,5 @@
-// One table of format commands for the toolbar and the selection menu.
 import { isNil } from 'es-toolkit';
+import { match } from 'ts-pattern';
 
 import { Align, Format, TextStyle } from '@/features/logbook/types';
 
@@ -31,7 +31,6 @@ export const keysOf = (keys: string): string =>
 export const titleOf = (format: { label: string; keys: string | null }): string =>
   isNil(format.keys) ? format.label : `${format.label} (${keysOf(format.keys)})`;
 
-// An empty address removes the link; the Link extension rejects unsafe ones.
 function editLink(editor: Editor): void {
   const current: unknown = editor.getAttributes(TIPTAP_NAMES[Format.Link])['href'];
   const href = window.prompt('Link address', typeof current === 'string' ? current : 'https://');
@@ -125,10 +124,20 @@ const LEVELS = {
 } as const;
 
 export function textStyleOf(editor: Editor): TTextStyle {
-  if (editor.isActive('heading', { level: 1 })) return TextStyle.Heading1;
-  if (editor.isActive('heading', { level: 2 })) return TextStyle.Heading2;
-  if (editor.isActive('heading', { level: 3 })) return TextStyle.Heading3;
-  return TextStyle.Paragraph;
+  return match(editor)
+    .when(
+      (e) => e.isActive('heading', { level: 1 }),
+      () => TextStyle.Heading1
+    )
+    .when(
+      (e) => e.isActive('heading', { level: 2 }),
+      () => TextStyle.Heading2
+    )
+    .when(
+      (e) => e.isActive('heading', { level: 3 }),
+      () => TextStyle.Heading3
+    )
+    .otherwise(() => TextStyle.Paragraph);
 }
 
 export function setTextStyle(editor: Editor, style: TTextStyle): void {
@@ -150,10 +159,20 @@ export const ALIGNMENTS: readonly {
 ];
 
 export function alignOf(editor: Editor): TAlign {
-  if (editor.isActive({ textAlign: Align.Center })) return Align.Center;
-  if (editor.isActive({ textAlign: Align.Right })) return Align.Right;
-  if (editor.isActive({ textAlign: Align.Justify })) return Align.Justify;
-  return Align.Left;
+  return match(editor)
+    .when(
+      (e) => e.isActive({ textAlign: Align.Center }),
+      () => Align.Center
+    )
+    .when(
+      (e) => e.isActive({ textAlign: Align.Right }),
+      () => Align.Right
+    )
+    .when(
+      (e) => e.isActive({ textAlign: Align.Justify }),
+      () => Align.Justify
+    )
+    .otherwise(() => Align.Left);
 }
 
 export function setAlign(editor: Editor, align: TAlign): void {
@@ -162,7 +181,6 @@ export function setAlign(editor: Editor, align: TAlign): void {
   else chain.setTextAlign(align).run();
 }
 
-// For the selection menu (no dry-run commands).
 export const activeOf = (editor: Editor): Readonly<Record<TFormat, boolean>> => ({
   [Format.Bold]: isFormatActive(editor, Format.Bold),
   [Format.Italic]: isFormatActive(editor, Format.Italic),

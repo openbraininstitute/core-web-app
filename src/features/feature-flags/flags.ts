@@ -103,7 +103,6 @@ export const emodelValidationFlag = defineFlag<boolean>({
 
 const LOGBOOK_ENVIRONMENTS: readonly TDeploymentEnv[] = ['local', 'staging'];
 
-/** Logbook: its button in the top menu, after Reports, and its pages. Off outside staging and local. */
 export const logbookFlag = defineFlag<boolean>({
   key: 'logbook',
   defaultValue: false,

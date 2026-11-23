@@ -1,4 +1,3 @@
-// Every tool of the format bar and the selection menu, run on the editor's real schema.
 import { Collaboration } from '@tiptap/extension-collaboration';
 import { Editor } from '@tiptap/react';
 import { afterEach, expect, test, vi } from 'vitest';
@@ -20,8 +19,6 @@ import {
 import { Format } from '@/features/logbook/types';
 
 let editor: Editor;
-// The words of the first block are selected, as after a drag over them. (Not "select all": the
-// editor keeps an empty paragraph after a last block that is not one.)
 const open = (html: string): Editor => {
   editor = new Editor({
     extensions: [
@@ -33,7 +30,6 @@ const open = (html: string): Editor => {
   select(Object.assign(document.createElement('div'), { innerHTML: html }).textContent ?? '');
   return editor;
 };
-// Selects the first place these words are at; an empty text puts the caret at the start.
 function select(words: string): void {
   let from = 1;
   editor.state.doc.descendants((node, pos) => {

@@ -1,4 +1,3 @@
-// Reads the same pages list as the outline, so nothing here makes a request.
 import { isNil } from 'es-toolkit';
 
 import { Icon } from '@/ui/molecules/icon';
@@ -13,7 +12,6 @@ export function neighboursOf(pages: readonly IPage[], pageId: string): INeighbou
   return { index, previous: pages[index - 1] ?? null, next: pages[index + 1] ?? null };
 }
 
-// Nothing for a one-page log or a deleted page.
 export function PagePlace({ pages, page }: Omit<IPageNavProps, 'onOpen'>) {
   const { index } = neighboursOf(pages, page.id);
   if (pages.length <= 1 || index < 0) return null;

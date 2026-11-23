@@ -3,7 +3,6 @@ import { cn } from '@/utils/css-class';
 
 import type { CSSProperties } from 'react';
 
-/** What an avatar draws: white initials on a colour; an agent is a rounded square with a badge. */
 export interface IAvatarPerson {
   readonly initials: string;
   readonly colour: string;
@@ -14,7 +13,6 @@ export interface IAvatarProps {
   readonly actor: IAvatarPerson;
   readonly size?: number;
   readonly title?: string;
-  // Writing now: the turning ring.
   readonly ring?: boolean;
   readonly stacked?: boolean;
 }

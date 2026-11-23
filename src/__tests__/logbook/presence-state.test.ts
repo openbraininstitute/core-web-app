@@ -22,8 +22,8 @@ test('my own agent on a socket is listed next to me, and my other tab is not', (
     me,
     ViewMode.Edit,
     live([
-      { joinId: 'j1', userId: 'u-me', label: 'Me', via: 'ui' }, // this tab
-      { joinId: 'j2', userId: 'u-me', label: 'Me', via: 'ui' }, // another tab of mine
+      { joinId: 'j1', userId: 'u-me', label: 'Me', via: 'ui' },
+      { joinId: 'j2', userId: 'u-me', label: 'Me', via: 'ui' },
       { joinId: 'j3', userId: 'u-me', label: 'me-claude', via: 'agent' },
       { joinId: 'j4', userId: 'u-ann', label: 'Ann', via: 'ui' },
     ]),

@@ -15,7 +15,6 @@ async function clearDataCaches() {
   await Promise.allSettled(DATA_CACHES.map((name) => caches.delete(name)));
 }
 
-/** The logbook pages kept in IndexedDB that the server already has. Loaded only here. */
 async function clearLogbookCopies() {
   const { dropCleanCopies } = await import('@/features/logbook/collaboration/local-sync');
   await dropCleanCopies();

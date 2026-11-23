@@ -2,8 +2,9 @@ import { act, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { PageKind } from '@/api/logbook/types';
+import { WARM_KEEP_MS } from '@/features/logbook/constants';
 import { LogView } from '@/features/logbook/log/log-view';
-import { tabKey, WARM_KEEP_MS } from '@/features/logbook/log/open-tabs';
+import { tabKey } from '@/features/logbook/log/open-tabs';
 import { Layout, TabKind, ViewMode } from '@/features/logbook/types';
 
 import type { IPage } from '@/api/logbook/types';
@@ -89,7 +90,6 @@ const props = (pageId: string | null): ILogViewProps => ({
   onOpenList: () => undefined,
 });
 const view = (id: string): HTMLElement => screen.getByTestId(`view-${id}`);
-// The class decides, not the hidden attribute: core's `[hidden]` rule loses to a display class.
 const onScreen = (id: string): boolean => view(id).parentElement?.className === 'contents';
 const offScreen = (id: string): boolean => view(id).parentElement?.className === 'hidden';
 const data = (id: string, name: string): string | null => view(id).getAttribute(`data-${name}`);

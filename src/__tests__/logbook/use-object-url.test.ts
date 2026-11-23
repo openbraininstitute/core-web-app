@@ -3,7 +3,6 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import { useObjectUrl } from '@/features/logbook/hooks/use-object-url';
 
-// jsdom has no object URLs.
 beforeEach(() => {
   URL.createObjectURL = vi.fn(() => 'blob:fake');
   URL.revokeObjectURL = vi.fn();

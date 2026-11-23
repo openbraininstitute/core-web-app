@@ -1,4 +1,3 @@
-// One call to the logbook server, then the bytes straight to S3 with no token.
 import { afterEach, expect, test, vi } from 'vitest';
 
 vi.mock('@/auth-fetch', () => ({ getSession: () => Promise.resolve({ accessToken: 'token' }) }));
@@ -61,7 +60,7 @@ test('one call names the file; the PUT goes to S3 with the signed headers, no to
   });
   expect(sent[0]?.headers.get('project-id')).toBe('project');
   expect(sent[1]?.headers.get('authorization')).toBeNull();
-  expect(sent[1]?.headers.get('content-length')).toBeNull(); // the browser sets it
+  expect(sent[1]?.headers.get('content-length')).toBeNull();
   expect(sent[1]?.headers.get('x-amz-checksum-sha256')).toBe('c');
 });
 

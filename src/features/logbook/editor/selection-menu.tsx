@@ -17,7 +17,6 @@ import type { Editor } from '@tiptap/react';
 
 const OPTIONS = { placement: 'top', offset: 8 } as const;
 
-// Real text selected in an editable editor: not a caret, a selected block or code.
 const shows = ({ editor, state }: { readonly editor: Editor; readonly state: EditorState }) => {
   const { selection, doc } = state;
   return (

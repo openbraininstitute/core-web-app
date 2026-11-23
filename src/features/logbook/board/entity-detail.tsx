@@ -1,6 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { isNil } from 'es-toolkit';
 import { useState } from 'react';
+import { match } from 'ts-pattern';
 
 import { WorkspaceSection } from '@/constants';
 import { coreTypeOf, entityQuery } from '@/features/logbook/api/entities';
@@ -10,16 +11,12 @@ import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { IEntityDetailProps } from '@/features/logbook/types';
 
-/** Core's mini detail view, light variant, beside the log (a drawer on narrow screens). */
 export function EntityDetail({ target, project, narrow, onClose }: IEntityDetailProps) {
   const dataType = coreTypeOf(target.type);
-  // Same cache entry as the card, so opening the panel costs no new request. The panel stays
-  // mounted across entities: the last record shows until the next lands, so it never re-enters.
   const record = useQuery({
     ...entityQuery(target.type, target.entityId, project),
     placeholderData: keepPreviousData,
   });
-  // The type of the record on screen: it moves with the record, not ahead of it.
   const [shownType, setShownType] = useState(dataType);
   if (!record.isPlaceholderData && shownType !== dataType) setShownType(dataType);
   if (isNil(shownType)) return null;
@@ -56,15 +53,14 @@ export function EntityDetail({ target, project, narrow, onClose }: IEntityDetail
       className="flex min-h-0 w-[clamp(320px,30%,420px)] flex-none flex-col"
       aria-label="Entity details"
     >
-      {record.isPending ? (
-        <PanelSkeleton />
-      ) : record.isError ? (
-        <p className="logbook-card grid h-full place-items-center p-6 text-center text-[13px] text-neutral-4">
-          This entity can't be shown here.
-        </p>
-      ) : (
-        panel
-      )}
+      {match(record)
+        .with({ status: 'pending' }, () => <PanelSkeleton />)
+        .with({ status: 'error' }, () => (
+          <p className="logbook-card grid h-full place-items-center p-6 text-center text-[13px] text-neutral-4">
+            This entity can't be shown here.
+          </p>
+        ))
+        .otherwise(() => panel)}
     </aside>
   );
 }

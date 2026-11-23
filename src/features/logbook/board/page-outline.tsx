@@ -1,5 +1,3 @@
-// Limit: readers see the actions too; the server refuses them. Upgrade: hide them for readers.
-// Limit: no reordering, a move can't renumber atomically. Upgrade: a server move that renumbers.
 import { isNil, isNotNil } from 'es-toolkit';
 import { useEffect, useRef, useState } from 'react';
 
@@ -18,7 +16,6 @@ import { Icon } from '@/ui/molecules/icon';
 import type { IPage } from '@/api/logbook/types';
 import type { IPageOutlineProps } from '@/features/logbook/types';
 
-// Tree lines are CSS borders: ::before is the branch, ::after the trunk, so they follow the rows.
 const BRANCH =
   "group relative pb-1 pl-5 first:pt-2 first:before:h-[26px] before:pointer-events-none before:absolute before:top-0 before:left-0 before:h-[18px] before:w-4 before:rounded-bl-[12px] before:border-b-2 before:border-l-2 before:border-neutral-2 before:content-[''] after:pointer-events-none after:absolute after:top-0 after:bottom-0 after:left-0 after:border-l-2 after:border-neutral-2 after:content-[''] last:after:hidden";
 const ROW =
@@ -37,12 +34,10 @@ export function PageOutline(props: IPageOutlineProps) {
   const remove = useDeleteSection(logId, project);
   const [menuFor, setMenuFor] = useState<string | null>(null);
   const [renaming, setRenaming] = useState<string | null>(null);
-  // One idempotency key per add, so a retry never makes two sections.
   const [adding, setAdding] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<IPage | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
   const list = pages.data ?? [];
-  // It often opens below a short rail, so scroll it into view on load and log change.
   const outline = useRef<HTMLDivElement>(null);
   const shown = list.length > 0;
   // biome-ignore lint/correctness/useExhaustiveDependencies: runs again on purpose when the log changes
@@ -71,14 +66,12 @@ export function PageOutline(props: IPageOutlineProps) {
   };
   const removeSection = (page: IPage): Promise<unknown> =>
     remove.mutateAsync(page.id).then(() => {
-      // The deleter goes to the main page; others on it keep it, read-only.
       const main = list.find((p) => p.kind === PageKind.Main);
       if (current?.id === page.id && isNotNil(main)) props.onOpen(main);
     });
 
   return (
     <div ref={outline} className="-mt-2 mb-1 flex scroll-mb-2 flex-col">
-      {/* Pulled up by the list's gap, so the trunk starts at the card's edge. */}
       <ul className="m-0 ml-[22px] flex list-none flex-col p-0" aria-label={`Pages of ${logName}`}>
         {list.map((page) => {
           const isSection = page.kind === PageKind.Section;

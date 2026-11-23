@@ -3,6 +3,7 @@ import { EditorContent, useEditor, useEditorState } from '@tiptap/react';
 import { isNil, isNotNil } from 'es-toolkit';
 import { useEffect, useId, useMemo, useState, useSyncExternalStore } from 'react';
 import { useInView } from 'react-intersection-observer';
+import { match } from 'ts-pattern';
 
 import { ActorVia } from '@/api/logbook/types';
 import { activityQuery, runsOf, summaryOf } from '@/features/logbook/api/activity';
@@ -29,7 +30,6 @@ const PIECE = 'flex items-start gap-[10px]';
 const SEGMENT =
   'relative h-[30px] rounded-full bg-transparent px-[14px] text-[12px] font-bold tracking-[0.06em] text-neutral-4 uppercase aria-pressed:bg-white aria-pressed:text-primary-9 aria-pressed:shadow-seg-on';
 
-// A second read-only editor on the same Yjs doc, mounted only while its tab shows.
 function PreviewTab() {
   const { document } = useLivePage();
   const preview = useEditor({ extensions: previewExtensions(document), editable: false }, [
@@ -82,7 +82,6 @@ function ActivityRow({
   );
 }
 
-// The server keeps counts only for saved lines, so no text and no Show.
 function SavedRow({
   run,
   me,
@@ -109,7 +108,6 @@ function SavedRow({
           {liveAgoOf(run.to, now)}
         </div>
         {removed.length > 0 ? (
-          // Animates grid rows 0fr to 1fr: no measuring, no JS.
           <div
             id={box}
             className="grid grid-rows-[0fr] transition-[grid-template-rows] duration-200 ease-out motion-reduce:transition-none data-[open=true]:grid-rows-[1fr]"
@@ -124,7 +122,6 @@ function SavedRow({
           </div>
         ) : null}
       </div>
-      {/* Removed text, folded until asked for. Older rows have none. */}
       {removed.length > 0 ? (
         <button
           type="button"
@@ -148,10 +145,7 @@ function HistoryTab(props: ILogShared) {
   const { editor, selection, resolve, feed } = props;
   const now = useNow(1000);
   const changes = useSyncExternalStore(feed.subscribe, feed.snapshot);
-  // Mounted only while History shows, so the first page loads when it opens.
   const saved = useInfiniteQuery(activityQuery(props.project, props.logId, props.openedAt));
-  // Only this page's rows of the log's activity.
-  // Limit: a quiet page may need several list pages to fill. Upgrade: a server-side page filter.
   const earlier = useMemo(
     () =>
       runsOf(
@@ -161,23 +155,19 @@ function HistoryTab(props: ILogShared) {
       ),
     [saved.data, props.page.id]
   );
-  // Near the end, read the next page (one at a time).
   const { ref: end, inView: atEnd } = useInView({ rootMargin: '300px', fallbackInView: true });
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = saved;
   useEffect(() => {
     if (atEnd && hasNextPage && !isFetchingNextPage) void fetchNextPage();
   }, [atEnd, hasNextPage, isFetchingNextPage, fetchNextPage]);
-  // A new state only when the text changes, so a remote rewrite of the selection shows at once.
   const state = useEditorState({
     editor,
     selector: ({ editor: current }) => current.state,
     equalityFn: (a, b) => a.doc === b?.doc,
   });
-  // Kept inside the text: a remote delete can shorten it under the selection.
   const size = state.doc.content.size;
   const from = isNil(selection) ? null : Math.min(selection.from, size);
   const to = isNil(selection) ? null : Math.min(selection.to, size);
-  // Each client is asked of the server once per view, in one batched call.
   const { pieces, clients } = useMemo(() => {
     const seen = new Set<number>();
     const found =
@@ -361,13 +351,13 @@ export function SidePane(props: ISidePaneProps) {
           </div>
         </header>
       )}
-      {props.tab === RightTab.History ? (
-        <HistoryTab {...props} />
-      ) : props.tab === RightTab.Artifacts ? (
-        <ArtifactsTab active={props.artifactId} onOpen={props.openArtifact} />
-      ) : (
-        <PreviewTab />
-      )}
+      {match(props.tab)
+        .with(RightTab.History, () => <HistoryTab {...props} />)
+        .with(RightTab.Artifacts, () => (
+          <ArtifactsTab active={props.artifactId} onOpen={props.openArtifact} />
+        ))
+        .with(RightTab.Preview, () => <PreviewTab />)
+        .exhaustive()}
     </section>
   );
 }

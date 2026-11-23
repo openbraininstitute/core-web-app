@@ -1,5 +1,4 @@
 'use client';
-// beui.dev/components/motion/bouncy-accordion
 
 import { motion, type Transition, useReducedMotion } from 'motion/react';
 import { type ReactNode, useCallback, useId, useLayoutEffect, useRef, useState } from 'react';
@@ -37,10 +36,8 @@ export interface IBouncyAccordionProps {
   classNames?: TBouncyAccordionClassNames;
 }
 
-// The gap spring must not overshoot, or a row drifts below its rest and overlaps the next one.
 const ROW_TRANSITION: Transition = { type: 'spring', duration: 0.55, bounce: 0.38 };
 const CONTENT_OPEN_TRANSITION: Transition = { type: 'spring', duration: 0.58, bounce: 0.32 };
-// Card, panel and rows below share one curve on close, so they bounce together.
 const CLOSE_TRANSITION: Transition = { type: 'spring', duration: 0.55, bounce: 0.38 };
 const DESCRIPTION_TRANSITION: Transition = { duration: 0.18, ease: EASE_OUT };
 const CHEVRON_TRANSITION: Transition = { type: 'spring', duration: 0.42, bounce: 0.28 };
@@ -120,7 +117,6 @@ function BouncyAccordionRow({
       transition={rowTransition}
     >
       <motion.div
-        // The card resizes with its panel, so its fill never snaps ahead of it.
         layout={!reduce}
         data-state={open ? 'open' : 'closed'}
         initial={false}
@@ -138,7 +134,6 @@ function BouncyAccordionRow({
         )}
       >
         <motion.button
-          // Counter-scales the header while the card resizes, so it never stretches.
           layout={!reduce}
           transition={reduce ? { duration: 0 } : { layout: contentTransition }}
           id={triggerId}
@@ -202,7 +197,6 @@ function BouncyAccordionRow({
         >
           <motion.div
             ref={contentRef}
-            // Counter-scales the content so it stays sharp.
             layout={!reduce}
             animate={{ opacity: open ? 1 : 0 }}
             transition={
@@ -238,7 +232,6 @@ export function BouncyAccordion({
   });
   const activeIndex = items.findIndex((item) => item.id === activeValue);
 
-  // Tracked during render, so the rows moving because of a close pick its curve in the same commit.
   const [previousValue, setPreviousValue] = useState(activeValue);
   const [closedValue, setClosedValue] = useState<string | null>(null);
   if (previousValue !== activeValue) {
@@ -278,7 +271,6 @@ export function BouncyAccordion({
             contentId={`${baseId}-${item.id}-content`}
             triggerId={`${baseId}-${item.id}-trigger`}
             reduce={reduce}
-            // Rows at or below a closing item move with it, on its curve.
             closing={closedIndex !== -1 && index >= closedIndex}
             classNames={classNames}
             onToggle={() => toggleItem(item.id)}

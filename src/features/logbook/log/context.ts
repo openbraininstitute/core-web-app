@@ -1,11 +1,9 @@
-// Node views render through portals, so they read the project and log from context.
 import { useHocuspocusProvider } from '@hocuspocus/provider-react';
 import { isNil } from 'es-toolkit';
 import { createContext, useContext } from 'react';
 
 import type { ILogContext, TOpenEntityDetail, TOpenEntityPicker } from '@/features/logbook/types';
 
-/** The open page's collaboration provider; the one wrapper of `useHocuspocusProvider`. */
 export const useLivePage = () => useHocuspocusProvider();
 
 export const LogContext = createContext<ILogContext | null>(null);

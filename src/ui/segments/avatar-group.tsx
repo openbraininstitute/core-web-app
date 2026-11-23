@@ -1,7 +1,5 @@
 'use client';
 
-// beui.dev/components/motion/avatar-group
-
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { type ComponentPropsWithRef, type MouseEvent, type PointerEvent, useState } from 'react';
 
@@ -16,13 +14,9 @@ export interface IAvatarGroupMember {
   name: string;
   /** Without one, or if it fails, initials show. */
   src?: string;
-  /** Background for white initials. */
   colour?: string;
-  /** Initials when the name is a longer label. */
   initials?: string;
-  /** Drawn as a rounded square with a badge. */
   agent?: boolean;
-  /** Writing now: shows the turning ring. */
   active?: boolean;
 }
 
@@ -34,7 +28,6 @@ const SIZES = {
 
 type TAvatarSize = keyof typeof SIZES;
 
-/** +N button labels, worded by each caller. */
 export interface IAvatarGroupLabels {
   readonly showFewer?: string;
   readonly showMore?: (count: number) => string;
@@ -117,7 +110,6 @@ export interface IAvatarGroupProps extends Omit<ComponentPropsWithRef<'div'>, 'c
   moreOpen?: boolean | undefined;
 }
 
-/** Overlapping avatars that fan apart on hover and expand from +N. */
 export function AvatarGroup({
   members,
   max = 4,
@@ -138,14 +130,12 @@ export function AvatarGroup({
   const canHover = useHoverCapable();
   const [internalExpanded, setInternalExpanded] = useState(defaultExpanded);
   const isExpanded = onMore ? false : (expanded ?? internalExpanded);
-  // Avatar under the mouse; +N counts as the last slot.
   const [hovered, setHovered] = useState<number | null>(null);
 
   const limit = Math.max(1, max);
   const overflow = Math.max(0, members.length - limit);
   const visible = isExpanded ? members : members.slice(0, limit);
   const px = SIZES[size].px;
-  // Hovering one parts the row around it so it shows in full.
   const overlap = Math.round(px / 3);
   const push = Math.round(overlap * 0.75);
   const parting = !reduce && canHover && hovered !== null;
@@ -190,7 +180,6 @@ export function AvatarGroup({
                 scale: SPRING_LAYOUT,
                 opacity: { duration: 0.18, ease: EASE_OUT },
               }}
-              // Later avatars sit on top, except the hovered one.
               style={{
                 marginLeft: index === 0 ? 0 : -overlap,
                 zIndex: parting && hovered === index ? visible.length + 1 : index,

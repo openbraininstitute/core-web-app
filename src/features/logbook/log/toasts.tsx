@@ -10,6 +10,7 @@ import {
 
 import { SettingsButton } from '@/features/logbook/board/rail';
 import { worksFor } from '@/features/logbook/collaboration/actors';
+import { AGENT_TOAST_MS } from '@/features/logbook/constants';
 import { useNow } from '@/features/logbook/helpers';
 import { NoticeKind, PopoverAlign, PopoverSide, ToastSource } from '@/features/logbook/types';
 import { Icon } from '@/ui/molecules/icon';
@@ -23,9 +24,6 @@ import type {
   TNoticeKind,
 } from '@/features/logbook/types';
 
-const AGENT_TOAST_MS = 7000;
-
-// Errors stay until closed, so nobody misses one; the rest leave on their own.
 const looks: Readonly<Record<TNoticeKind, IKindLook>> = {
   [NoticeKind.Success]: {
     icon: 'check',
@@ -64,7 +62,6 @@ const TEXT =
   'mt-0.5 line-clamp-4 text-[13px] leading-[18px] text-neutral-4 select-text [overflow-wrap:anywhere]';
 const ICON_BUTTON = 'icon-btn size-7 rounded-lg';
 
-/** Bottom-right corner of the log page; toasts stack upward, newest at the bottom. */
 export function ToastStack({
   narrow,
   children,
@@ -83,7 +80,6 @@ export function ToastStack({
   );
 }
 
-// Counts down `ms`, paused while `paused`; time left carries over a pause.
 function useCountdown(ms: number | null, paused: boolean, onEnd: () => void) {
   const left = useRef(ms ?? 0);
   const end = useEffectEvent(onEnd);
@@ -155,11 +151,9 @@ export function NoticeToast({
   );
 }
 
-/** An agent just wrote in the page; the accent is the agent's own caret colour. */
 export function AgentToast(props: IAgentToastProps) {
   const { feed } = props;
   const toast = useSyncExternalStore(feed.subscribe, () => feed.snapshot().toast);
-  // The change time of a toast that has run its course: no card, so no clock ticking for it.
   const [goneAt, setGoneAt] = useState<number | null>(null);
   if (isNil(toast) || toast.at === goneAt) return null;
   return <AgentToastCard {...props} toast={toast} onGone={() => setGoneAt(toast.at)} />;
@@ -174,11 +168,9 @@ function AgentToastCard({
   onGone,
 }: IAgentToastProps & { readonly toast: IChange; readonly onGone: () => void }) {
   const now = useNow();
-  // The toast stays while its settings are open, so the panel keeps its anchor.
   const [settingsOpen, setSettingsOpen] = useState(false);
   const card = useRef<HTMLDivElement>(null);
   const gone = useEffectEvent(onGone);
-  // One timer to the end of the newest change's time on screen; a new change moves it.
   useEffect(() => {
     if (settingsOpen) return;
     const timer = setTimeout(gone, Math.max(0, toast.at + AGENT_TOAST_MS - Date.now()));
@@ -186,11 +178,9 @@ function AgentToastCard({
   }, [toast.at, settingsOpen]);
   if (!settingsOpen) {
     if (!settings.toasts) return null;
-    // "Only my agents": an agent signed in as this person, over a socket or HTTPS.
     if (settings.from === ToastSource.Mine && !worksFor(toast.actor, me.userId)) return null;
   }
   const ago = now - toast.at < 5000 ? 'just now' : `${Math.round((now - toast.at) / 1000)}s ago`;
-  // No key on the card: the agent writing again updates it in place, its settings stay open.
   return (
     <div ref={card} className={CARD} role="status">
       <span

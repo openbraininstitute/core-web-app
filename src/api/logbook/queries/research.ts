@@ -15,7 +15,6 @@ import type { WorkspaceContext } from '@/types/common';
 
 const JSON_BODY = { 'content-type': 'application/json' };
 
-/** A research log's anchor on the server, with its pages in order. */
 export async function getResearch({
   id,
   context,

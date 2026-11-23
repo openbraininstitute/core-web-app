@@ -24,7 +24,6 @@ import { CopySync } from '@/features/logbook/types';
 
 import type { IPageDocs } from '@/features/logbook/types';
 
-// jsdom has no Web Locks: a small one, so copies in two "tabs" see each other.
 function fakeLocks(): LockManager {
   const held = new Map<string, { mode: LockMode; count: number }>();
   const free = (name: string, mode: LockMode): boolean => {
@@ -137,7 +136,6 @@ test('a reopened copy holds the text; a saved notice marks it clean only when no
   copy.markClean(SYNCED);
   expect(copy.dirty).toBe(false);
   await copy.close();
-  // The first visit's edits were never confirmed: still unsent as far as the device knows.
   expect(await dirtyOf(user)).toBe(true);
 });
 
@@ -149,7 +147,7 @@ test('two tabs offline: one tab saved does not mark the other tab’s edits clea
   type(tabB.document, 'typed in B, never sent');
   tabA.markClean(SYNCED);
   await tabA.close();
-  await tabB.close(); // closed before its socket came back
+  await tabB.close();
   expect(await dirtyOf(user)).toBe(true);
 
   const server = fakeServer();
@@ -210,7 +208,7 @@ test('a lost answer or a 5xx: the same bytes are sent again until 200', async ()
     send: async (pageId, update) => {
       sends += 1;
       if (sends === 1) throw new ApiError('HTTP 503', { status: 503 });
-      if (sends === 2) throw new TypeError('Failed to fetch'); // no answer at all
+      if (sends === 2) throw new TypeError('Failed to fetch');
       await server.port.send(pageId, update);
     },
   };
@@ -253,7 +251,6 @@ test('a copy open in this tab is left to its provider', async () => {
 
 test('a copy open in another tab is left to that tab, and its later edits still count', async () => {
   const user = nextUser();
-  // Another tab: open, not in this tab's list of held copies.
   const other = await LocalCopy.open(PAGE, user);
   type(other.document, 'typed in the other tab');
   const server = fakeServer();
@@ -279,7 +276,7 @@ test('sign-out drops every copy the server has, and keeps the ones with unsent e
 
   expect(await localCopies(clean)).toEqual([]);
   expect((await localCopies(dirty)).map((c) => c.pageId)).toEqual([PAGE]);
-  expect((await localCopies(open)).map((c) => c.pageId)).toEqual([PAGE]); // another tab has it
+  expect((await localCopies(open)).map((c) => c.pageId)).toEqual([PAGE]);
   await held.close();
 });
 

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { NodeViewWrapper } from '@tiptap/react';
 import { isNil, isNotNil } from 'es-toolkit';
 import { useEffect, useState } from 'react';
+import { match } from 'ts-pattern';
 
 import {
   fileTextQuery,
@@ -119,14 +120,17 @@ export function FileBody({
   readonly csv: boolean;
 }) {
   const text = useQuery(fileTextQuery(logId, folderId, path, project));
-  if (text.isPending)
-    return (
+  return match(text)
+    .with({ status: 'pending' }, () => (
       <div className={NOTE}>
         <LinesSkeleton />
       </div>
-    );
-  if (text.isError) return <div className={NOTE}>The file could not be read.</div>;
-  return csv ? <CsvTable text={text.data} /> : <CodeView text={text.data} name={path} />;
+    ))
+    .with({ status: 'error' }, () => <div className={NOTE}>The file could not be read.</div>)
+    .with({ status: 'success' }, ({ data }) =>
+      csv ? <CsvTable text={data} /> : <CodeView text={data} name={path} />
+    )
+    .exhaustive();
 }
 
 export const TEXT_LANGS = new Set<string>([
@@ -188,7 +192,10 @@ export function FileView({ node, selected }: NodeViewProps) {
             aria-expanded={open}
             onClick={() => setOpen((o) => !o)}
           >
-            {open ? 'Hide' : csv ? 'View table' : 'View code'}
+            {match({ open, csv })
+              .with({ open: true }, () => 'Hide')
+              .with({ csv: true }, () => 'View table')
+              .otherwise(() => 'View code')}
           </button>
         ) : null}
       </div>

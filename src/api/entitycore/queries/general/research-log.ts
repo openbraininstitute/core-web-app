@@ -1,13 +1,12 @@
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 
-import type { IResearchLog, IResearchLogDraft } from '@/api/entitycore/types/entities/research-log';
+import type { IResearchLog, TResearchLogDraft } from '@/api/entitycore/types/entities/research-log';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/research-log';
 const JSON_BODY = { 'content-type': 'application/json' };
 
-/** One page of research logs; EntityCore filters, searches and orders them. */
 export async function getResearchLogs({
   context,
   queryParams,
@@ -46,7 +45,7 @@ export async function createResearchLog({
   draft,
 }: {
   context: WorkspaceContext;
-  draft: IResearchLogDraft;
+  draft: TResearchLogDraft;
 }) {
   const api = await entityCoreApi();
   return api.post<IResearchLog>(baseUri, {
@@ -62,7 +61,7 @@ export async function updateResearchLog({
 }: {
   id: string;
   context: WorkspaceContext;
-  patch: Partial<IResearchLogDraft>;
+  patch: Partial<TResearchLogDraft>;
 }) {
   const api = await entityCoreApi();
   return api.patch<IResearchLog>(`${baseUri}/${id}`, {

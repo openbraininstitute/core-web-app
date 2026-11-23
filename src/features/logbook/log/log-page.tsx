@@ -1,4 +1,3 @@
-// The editor never re-renders React on a keystroke; toolbars subscribe to the one field they show.
 import { useQueryClient } from '@tanstack/react-query';
 import { useEditor } from '@tiptap/react';
 import { clamp, isNil, isNotNil } from 'es-toolkit';
@@ -11,12 +10,14 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react';
+import { match, P } from 'ts-pattern';
 
 import { PageKind, ReadOnlyReason } from '@/api/logbook/types';
 import { writersQuery } from '@/features/logbook/api/writers';
 import { peerActor, personActor, resolveActor } from '@/features/logbook/collaboration/actors';
 import { useCoolWhenAcked, usePauseWhenHidden } from '@/features/logbook/collaboration/idle';
 import { useRejoin } from '@/features/logbook/collaboration/rejoin';
+import { PANE_FLOOR, PANE_SHUT_BELOW } from '@/features/logbook/constants';
 import { editorExtensions } from '@/features/logbook/editor/extensions';
 import { insertAfterBlock } from '@/features/logbook/editor/insert';
 import { dragHandle, Latest } from '@/features/logbook/helpers';
@@ -46,14 +47,10 @@ import type {
   TSplitShut,
 } from '@/features/logbook/types';
 
-const PANE_FLOOR = 300;
-const PANE_SHUT_BELOW = 150;
-
 const SHUT =
   'logbook-card flex w-[42px] flex-none justify-center border-0 px-0 py-5 transition-[background] duration-150 ease-[ease] hover:bg-soft';
 const SHUT_LABEL = 'label-caps [writing-mode:vertical-rl]';
 
-// The phone's Write tab has no side pane; other tabs map to the pane tab of the same name.
 const RIGHT_TAB_OF_MOBILE: Readonly<Record<TMobileTab, TRightTab>> = {
   [MobileTab.Write]: RightTab.Preview,
   [MobileTab.Preview]: RightTab.Preview,
@@ -70,9 +67,7 @@ export function LogPage(props: ILogPageProps) {
   const { me, log, layout, mode, notices, feed, logId, copy, shown, keepMs, onCool } = props;
   const pageId = props.page.id;
   const provider = useLivePage();
-  // A tab hidden for a while drops its socket so the server can unload the page.
   usePauseWhenHidden(provider);
-  // Off screen, the page lets go of its editor and socket; a change the server can still take waits.
   const unsent = useCallback((): boolean => {
     const { readOnly } = notices.snapshot();
     return (
@@ -82,7 +77,6 @@ export function LogPage(props: ILogPageProps) {
   const cool = useCallback(() => onCool(pageId), [onCool, pageId]);
   useCoolWhenAcked(unsent, keepMs, cool);
 
-  // On `saved`, the local copy is clean once the provider has nothing unsent.
   useEffect(() => {
     let last = notices.snapshot().savedAt;
     return notices.subscribe(() => {
@@ -95,18 +89,14 @@ export function LogPage(props: ILogPageProps) {
   const narrow = layout === Layout.Narrow;
   const meActor = useMemo(() => personActor(me.userId, me.name), [me.userId, me.name]);
   const [settings] = useNotifySettings();
-  // The editor is built once; it reads the newest settings through this holder.
   const [liveSettings] = useState(() => new Latest(settings));
   useLayoutEffect(() => liveSettings.set(settings), [liveSettings, settings]);
 
-  // Awareness maps a Yjs client to a user id; the server's list names the user.
   const { awareness } = provider;
   if (isNil(awareness)) throw new Error('The live page has no awareness');
-  // Off screen, the others no longer see this caret.
   useEffect(() => {
     if (!shown) awareness.setLocalStateField('cursor', null);
   }, [shown, awareness]);
-  // Writers the server named for unknown clients; asked once per view, a failed ask retries.
   const queries = useQueryClient();
   const [written, setWritten] = useState<ReadonlyMap<number, IActor>>(() => new Map());
   const asked = useRef(new Set<number>());
@@ -125,7 +115,7 @@ export function LogPage(props: ILogPageProps) {
             wanted.toSorted((a, b) => a - b)
           )
         )
-        .then((items) => {
+        .then(({ items }) => {
           if (items.length === 0) return;
           setWritten((known) => {
             const next = new Map(known);
@@ -147,7 +137,6 @@ export function LogPage(props: ILogPageProps) {
             awareness,
             peers: () => notices.snapshot().peers,
             agents: () => notices.snapshot().agents,
-            // `writer` notices name changes as they land; the writers API fills in the rest later.
             written: (id) => {
               const announced = notices.writerOf(id);
               return isNil(announced) ? written.get(id) : peerActor(announced);
@@ -155,7 +144,6 @@ export function LogPage(props: ILogPageProps) {
           }),
     [provider, awareness, notices, meActor, written]
   );
-  // The editor is built once; it names writers through the newest resolver, as for settings.
   const [liveResolve] = useState(() => new Latest(resolve));
   useLayoutEffect(() => liveResolve.set(resolve), [liveResolve, resolve]);
 
@@ -180,7 +168,6 @@ export function LogPage(props: ILogPageProps) {
     [provider]
   );
 
-  // A new log starts with its title as the first heading, main page only.
   const isMain = props.page.kind === PageKind.Main;
   useEffect(() => {
     const seed = (): void => {
@@ -198,7 +185,6 @@ export function LogPage(props: ILogPageProps) {
   }, [provider, editor, logId, log?.name, isMain]);
 
   const readOnly = useSyncExternalStore(notices.subscribe, () => notices.snapshot().readOnly);
-  // Read-only until rejoined: the server resets a socket after 1000 messages sent before join.
   useRejoin(provider, notices);
   const rejoinAt = useSyncExternalStore(notices.subscribe, () => notices.snapshot().rejoinAt);
   const canEdit = mode === ViewMode.Edit && isNil(readOnly) && isNil(rejoinAt) && !props.deleted;
@@ -207,18 +193,15 @@ export function LogPage(props: ILogPageProps) {
   }, [editor, canEdit]);
 
   const [menu, setMenu] = useState<TMenu>(Menu.None);
-  // Set when a card replaces its entity; otherwise a pick inserts a new card.
   const [pickTarget, setPickTarget] = useState<((entity: IPickedEntity) => void) | null>(null);
   const openEntityPicker = useCallback<TOpenEntityPicker>((onPick) => {
     setPickTarget(() => onPick);
     setMenu(Menu.Picker);
   }, []);
-  // Any other menu change drops a pending replace, so a later plain link never replaces a card.
   const changeMenu = useCallback((next: TMenu): void => {
     setPickTarget(null);
     setMenu(next);
   }, []);
-  // All picks go in with one edit, in the order picked.
   const insertEntities = (entities: readonly IPickedEntity[]): void => {
     insertAfterBlock(
       editor,
@@ -233,7 +216,6 @@ export function LogPage(props: ILogPageProps) {
   const [rightTab, setRightTab] = useState<TRightTab>(RightTab.Preview);
   const [mTab, setMTab] = useState<TMobileTab>(MobileTab.Write);
   const [selection, setSelection] = useState<ISelection | null>(null);
-  // Each notice gets its own id, so a new one restarts the timer even with the same words.
   const [notice, setShownNotice] = useState<(INotice & { readonly id: number }) | null>(null);
   const noticeId = useRef(0);
   const setNotice = useCallback((next: INotice | null): void => {
@@ -251,7 +233,6 @@ export function LogPage(props: ILogPageProps) {
     [onOpenArtifact]
   );
 
-  // For History: set on a real selection, cleared when it collapses.
   useEffect(() => {
     const onSelection = (): void => {
       const { from, to } = editor.state.selection;
@@ -271,7 +252,6 @@ export function LogPage(props: ILogPageProps) {
     setSplitShut(SplitShut.None);
   }, []);
 
-  // "Show" from the toast or the activity.
   const flash = useCallback(
     (from: number, to: number): void => {
       changeMenu(Menu.None);
@@ -292,8 +272,10 @@ export function LogPage(props: ILogPageProps) {
       if (isNil(box)) return;
       const left = move.clientX - box.left;
       const right = box.width - left;
-      const shut =
-        left < PANE_SHUT_BELOW ? SplitShut.Editor : right < PANE_SHUT_BELOW ? SplitShut.Side : null;
+      const shut = match({ left, right })
+        .with({ left: P.number.lt(PANE_SHUT_BELOW) }, () => SplitShut.Editor)
+        .with({ right: P.number.lt(PANE_SHUT_BELOW) }, () => SplitShut.Side)
+        .otherwise(() => null);
       if (isNotNil(shut)) {
         setSplitShut(shut);
         stop();
@@ -421,7 +403,6 @@ export function LogPage(props: ILogPageProps) {
             <span className="h-11 w-[5px] rounded-full bg-neutral-2 transition-[background,height] duration-150 ease-[ease] group-hover:h-16 group-hover:bg-primary-4" />
           </button>
         ) : null}
-        {/* Off screen, only the editor stays: no second editor for Preview, no History clock. */}
         {sideVisible && shown ? (
           <SidePane
             {...shared}

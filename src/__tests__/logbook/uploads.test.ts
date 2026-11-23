@@ -1,4 +1,3 @@
-// A failed upload takes out the block it inserted, never another block of the same file.
 import { expect, test } from 'vitest';
 
 import { schema } from '@/features/logbook/blocks/markdown';
@@ -25,7 +24,7 @@ test('the block an upload inserted is found by the id it got, the same file else
 });
 
 test('when the block at the position is not the upload, or is gone, nothing is to be removed', () => {
-  expect(insertedBlockId(page, page.child(0).nodeSize, PATH)).toBeNull(); // a paragraph there
-  expect(insertedBlockId(page, 0, 'other.png')).toBeNull(); // another file
+  expect(insertedBlockId(page, page.child(0).nodeSize, PATH)).toBeNull();
+  expect(insertedBlockId(page, 0, 'other.png')).toBeNull();
   expect(blockRange(page, 'gone')).toBeNull();
 });

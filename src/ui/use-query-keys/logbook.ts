@@ -1,11 +1,9 @@
-// One prefix, so the whole logbook cache can be cleared or inspected at once.
 const prefix = 'logbook';
 
 const logs = (projectId: string) => [prefix, 'research-logs', { projectId }] as const;
 
 export const keyBuilderLogbook = {
   me: (email: string | null) => [prefix, 'me', { email }] as const,
-  /** Every page of a project's log list, for invalidation. */
   logs,
   logsPage: (projectId: string, params: string) => [...logs(projectId), { params }] as const,
   log: (projectId: string, id: string) => [prefix, 'research-log', { projectId, id }] as const,
