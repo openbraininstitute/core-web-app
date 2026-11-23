@@ -34,6 +34,7 @@ import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements
 import {
   buildBuildConfigureUrlFromDataViewEntity,
   buildSimulateConfigureUrlFromDataViewEntity,
+  findBuildWorkflowForEntity,
 } from '@/ui/segments/workflows/config';
 import { cn } from '@/utils/css-class';
 
@@ -143,8 +144,9 @@ export default function ActionMenu({
   const workflowBlockReason = getWorkflowLifecycleBlockReason(entity);
   const workflowDisabled = Boolean(workflowBlockReason);
 
-  // the URL is built on click, not in render: building it writes the pre-selection to
-  // sessionStorage, which must not run on the server or on every re-render
+  const canBuild = Boolean(entityType.isBuildable && findBuildWorkflowForEntity(type, flags));
+
+  // built on click: the URL writes the pre-selection to sessionStorage
   const startBuild = () => {
     const href = buildBuildConfigureUrlFromDataViewEntity({
       workspace: ctx,
@@ -152,15 +154,7 @@ export default function ActionMenu({
       entityId: entity.id,
       flags,
     });
-    if (href) {
-      push(href);
-      return;
-    }
-    notifyError({
-      message: 'Build unavailable',
-      description: 'No build workflow is available for this entity.',
-      placement: 'topRight',
-    });
+    if (href) push(href);
   };
 
   return (
@@ -216,7 +210,7 @@ export default function ActionMenu({
           </Action>
         ))}
 
-      {entityType.isBuildable && (
+      {canBuild && (
         <Action
           variant={variant}
           kind={ActionKind.Button}

@@ -29,6 +29,7 @@ export {
   buildWorkflowCrumbs,
   buildWorkflowHomeHref,
   buildWorkflowStartingPageUrl,
+  findBuildWorkflowForEntity,
   resolveSimulateSourceTypeFromDataView,
   WORKFLOW_HOME_QUERY_KEYS,
 } from './routes';

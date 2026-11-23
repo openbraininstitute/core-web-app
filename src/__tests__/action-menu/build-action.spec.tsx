@@ -16,7 +16,7 @@ import type { EntityTypeValue } from '@/entity-configuration/domain';
 
 const push = vi.fn();
 const buildHref = vi.fn();
-const notifyError = vi.fn();
+const findBuildWorkflow = vi.fn();
 
 vi.mock('next/navigation', () => ({
   notFound: vi.fn(),
@@ -28,7 +28,7 @@ vi.mock('@/features/feature-flags', () => ({
 }));
 
 vi.mock('@/components/notification', () => ({
-  useAppNotification: () => ({ error: notifyError, success: vi.fn() }),
+  useAppNotification: () => ({ error: vi.fn(), success: vi.fn() }),
 }));
 
 vi.mock('@/hooks/useCopyClipboard', () => ({
@@ -38,6 +38,7 @@ vi.mock('@/hooks/useCopyClipboard', () => ({
 vi.mock('@/ui/segments/workflows/config', () => ({
   buildSimulateConfigureUrlFromDataViewEntity: () => null,
   buildBuildConfigureUrlFromDataViewEntity: (...args: unknown[]) => buildHref(...args),
+  findBuildWorkflowForEntity: (...args: unknown[]) => findBuildWorkflow(...args),
 }));
 
 const workspace = { virtualLabId: 'vl-1', projectId: 'proj-1' };
@@ -67,7 +68,8 @@ describe('ActionMenu Build action', () => {
   beforeEach(() => {
     push.mockReset();
     buildHref.mockReset();
-    notifyError.mockReset();
+    findBuildWorkflow.mockReset();
+    findBuildWorkflow.mockReturnValue({ sourceType: ExtendedEntitiesTypeDict.IonChannelRecording });
   });
 
   it('starts the build workflow with the recording selected', () => {
@@ -91,14 +93,18 @@ describe('ActionMenu Build action', () => {
     expect(push).toHaveBeenCalledWith('/workflows/build/configure/ion-channel-build-campaign/wf_1');
   });
 
-  it('tells the user when no build workflow is available', () => {
-    buildHref.mockReturnValue(null);
-    renderActionMenu(makeIonChannelRecording(), ExtendedEntitiesTypeDict.IonChannelRecording);
+  it('hides Build when no build workflow is available', () => {
+    findBuildWorkflow.mockReturnValue(null);
+    renderActionMenu(
+      makeIonChannelRecording(EntityLifecycleStatus.Active),
+      ExtendedEntitiesTypeDict.IonChannelRecording
+    );
 
-    fireEvent.click(screen.getByTestId('data-view-action-build'));
-
-    expect(push).not.toHaveBeenCalled();
-    expect(notifyError).toHaveBeenCalledOnce();
+    expect(findBuildWorkflow).toHaveBeenCalledWith(
+      ExtendedEntitiesTypeDict.IonChannelRecording,
+      {}
+    );
+    expect(screen.queryByTestId('data-view-action-build')).not.toBeInTheDocument();
   });
 
   it('disables Build for a draft recording', () => {

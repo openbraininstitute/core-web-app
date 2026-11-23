@@ -15,6 +15,7 @@ import {
   featuresSatisfied,
   getWorkflow,
   getWorkflowEntityLabel,
+  listWorkflows,
 } from '@/ui/segments/workflows/config/helpers';
 import {
   type TWorkflowInitialStage,
@@ -37,6 +38,7 @@ import type { WorkspaceContext } from '@/types/common';
 import type { BreadcrumbTrailItem } from '@/ui/molecules/breadcrumb';
 import type {
   IWorkflowDescriptor,
+  ResolvedWorkflow,
   TActivityEntry,
   TActivityValue,
 } from '@/ui/segments/workflows/config/types';
@@ -432,6 +434,18 @@ export function buildSimulateConfigureUrlFromDataViewEntity({
   });
 }
 
+/** The enabled build workflow for an entity type, resolved like the Build menu. Pure, safe in render. */
+export function findBuildWorkflowForEntity(
+  extendedType: TExtendedEntitiesTypeDict,
+  flags?: FeatureFlags
+): ResolvedWorkflow | null {
+  return (
+    listWorkflows({ activity: WorkflowActivityDictValue.build, flags }).find(
+      (workflow) => workflow.sourceType === extendedType && !workflow.disabled
+    ) ?? null
+  );
+}
+
 /**
  * configure URL for "build" on entity detail pages (data view action menu), with the entity
  * pre-selected. Persists the selection to `sessionStorage`, so call it from an event handler.
@@ -447,12 +461,8 @@ export function buildBuildConfigureUrlFromDataViewEntity({
   entityId: string;
   flags?: FeatureFlags;
 }): string | null {
-  const workflow = getWorkflow({
-    activity: WorkflowActivityDictValue.build,
-    sourceType: extendedType,
-  });
-
-  if (!workflow || workflow.disabled || !featuresSatisfied(workflow.requiredFeatures, flags)) {
+  const workflow = findBuildWorkflowForEntity(extendedType, flags);
+  if (!workflow) {
     return null;
   }
 

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -9,6 +9,7 @@ import {
 import {
   buildBuildConfigureUrlFromDataViewEntity,
   buildSimulateConfigureUrlFromDataViewEntity,
+  findBuildWorkflowForEntity,
   resolveSimulateSourceTypeFromDataView,
 } from '@/ui/segments/workflows/config/routes';
 
@@ -119,5 +120,19 @@ describe('buildBuildConfigureUrlFromDataViewEntity', () => {
         entityId: 'morphology-id',
       })
     ).toBeNull();
+  });
+});
+
+describe('findBuildWorkflowForEntity', () => {
+  it('finds the build workflow of a buildable type without writing a selection', () => {
+    const setItem = vi.spyOn(Storage.prototype, 'setItem');
+
+    expect(
+      findBuildWorkflowForEntity(ExtendedEntitiesTypeDict.IonChannelRecording)?.targetType
+    ).toBe(ExtendedEntitiesTypeDict.IonChannelBuildCampaign);
+    expect(findBuildWorkflowForEntity(ExtendedEntitiesTypeDict.CellMorphology)).toBeNull();
+    expect(setItem).not.toHaveBeenCalled();
+
+    setItem.mockRestore();
   });
 });
