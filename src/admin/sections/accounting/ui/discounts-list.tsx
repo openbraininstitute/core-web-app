@@ -1,15 +1,15 @@
 'use client';
 
 import { adminQueryKeys } from '../../../query-keys';
-import { formatDateTime } from '../../../shared/format';
 import { AdminPagedGrid, pagedSource } from '../../../shared/grid';
 import { PageHeader } from '../../../shared/page-header';
-import { StatusPill } from '../../../shared/status-pill';
 import { AdminLink } from '../../../shell/admin-link';
 import { CapabilityGate } from '../../../shell/capability-gate';
 import { listDiscounts } from '../api';
-import { DISCOUNT_STATUSES, discountStatus, fractionToPercent } from '../helpers';
+import { fractionToPercent, windowStatus } from '../helpers';
 import { AccountingFilter } from '../types';
+import { WindowStatusPill } from './cells';
+import { validityColumns } from './columns';
 import { DiscountActions, NewDiscountButton } from './discount-actions';
 import { useIdFilter } from './filters';
 
@@ -17,11 +17,6 @@ import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { TDiscount, TDiscountFilters } from '../types';
 
 const DISCOUNTS_SOURCE = pagedSource(listDiscounts);
-
-function DiscountStatusPill({ discount }: { discount: TDiscount }) {
-  const { label, tone } = DISCOUNT_STATUSES[discountStatus(discount)];
-  return <StatusPill tone={tone}>{label}</StatusPill>;
-}
 
 const COLUMNS: Array<ISimpleColumn<TDiscount>> = [
   {
@@ -40,20 +35,9 @@ const COLUMNS: Array<ISimpleColumn<TDiscount>> = [
     id: 'status',
     header: 'Status',
     width: { width: 120 },
-    renderCell: (discount) => <DiscountStatusPill discount={discount} />,
+    renderCell: (discount) => <WindowStatusPill window={discount} />,
   },
-  {
-    id: 'valid_from',
-    header: 'Starts',
-    width: { width: 170 },
-    getValue: (discount) => formatDateTime(discount.valid_from),
-  },
-  {
-    id: 'valid_to',
-    header: 'Ends',
-    width: { width: 170 },
-    getValue: (discount) => (discount.valid_to ? formatDateTime(discount.valid_to) : 'No end'),
-  },
+  ...validityColumns<TDiscount>(),
   {
     id: 'actions',
     header: '',
@@ -90,7 +74,7 @@ export function DiscountsList() {
         what="discounts"
         columns={COLUMNS}
         getRowId={(discount) =>
-          `${discount.id}:${discountStatus(discount)}:${discount.discount}:${discount.valid_from}:${discount.valid_to}`
+          `${discount.id}:${windowStatus(discount)}:${discount.discount}:${discount.valid_from}:${discount.valid_to}`
         }
         dataSource={DISCOUNTS_SOURCE}
         queryKey={adminQueryKeys.accountingDiscounts()}

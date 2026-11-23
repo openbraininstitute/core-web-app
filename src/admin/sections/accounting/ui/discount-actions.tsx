@@ -6,24 +6,24 @@ import { ApiError } from '@/api/error';
 import { Button } from '@/ui/molecules/button';
 
 import { adminQueryKeys } from '../../../query-keys';
-import { createDiscount, deleteDiscount, listDiscounts, updateDiscount } from '../api';
+import { createDiscount, deleteDiscount, listLabDiscounts, updateDiscount } from '../api';
 import {
-  discountStatus,
   discountSummary,
   discountUpdate,
   endField,
   fractionToPercent,
+  isCurrent,
   percentField,
   percentToFraction,
   startField,
+  windowStatus,
 } from '../helpers';
-import { DiscountStatus } from '../types';
+import { WindowStatus } from '../types';
 import { ActionButton } from './action-button';
 import { useAccount } from './queries';
 
 import type { TDiscount, TDiscountValues } from '../types';
 
-const LAB_DISCOUNTS = { page: 1, page_size: 100 };
 const NOT_ADDED_UP = "Discounts don't add up: at any time, the one that started last applies.";
 
 function newDiscountDescription(current: TDiscount[]) {
@@ -45,7 +45,7 @@ export function NewDiscountButton({ vlabId }: { vlabId: string }) {
   const account = useAccount(vlabId);
   const discounts = useQuery({
     queryKey: adminQueryKeys.accountingLabDiscounts(vlabId),
-    queryFn: ({ signal }) => listDiscounts({ vlab_id: vlabId, ...LAB_DISCOUNTS }, signal),
+    queryFn: ({ signal }) => listLabDiscounts(vlabId, signal),
   });
   if (account.isPending || discounts.isPending) {
     return (
@@ -57,9 +57,7 @@ export function NewDiscountButton({ vlabId }: { vlabId: string }) {
   if (account.isError || discounts.isError) {
     return <span className="text-destructive text-sm">Couldn't load the lab's discounts</span>;
   }
-  const current = discounts.data.data.filter(
-    (discount) => discountStatus(discount) !== DiscountStatus.Expired
-  );
+  const current = discounts.data.data.filter(isCurrent);
 
   return (
     <ActionButton<TDiscountValues, TDiscount | null>
@@ -85,9 +83,9 @@ export function NewDiscountButton({ vlabId }: { vlabId: string }) {
 }
 
 export function DiscountActions({ discount }: { discount: TDiscount }) {
-  const status = discountStatus(discount);
-  if (status === DiscountStatus.Expired) return null;
-  const scheduled = status === DiscountStatus.Scheduled;
+  const status = windowStatus(discount);
+  if (status === WindowStatus.Expired) return null;
+  const scheduled = status === WindowStatus.Scheduled;
 
   return (
     <span className="flex items-center gap-2">
@@ -114,7 +112,7 @@ export function DiscountActions({ discount }: { discount: TDiscount }) {
           },
           okText: 'Save',
           write: async (values) => {
-            if (discountStatus(discount) === DiscountStatus.Expired) {
+            if (windowStatus(discount) === WindowStatus.Expired) {
               throw new ApiError('It has ended since the page loaded, so it can no longer change.');
             }
             const update = discountUpdate(discount, values);

@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  assertPriceAfter,
+  assertPriceEdit,
   assignBudget,
   depleteProject,
   depleteVlab,
@@ -15,12 +17,13 @@ import {
   listVlabAccounts,
   moveBudget,
   refundJob,
+  replacePrice,
   reportPath,
   reverseBudget,
   setAccountEnabled,
   topUp,
 } from '@/admin/sections/accounting/api';
-import { isOutcomeUnknown } from '@/admin/sections/accounting/helpers';
+import { closesDialog, isOutcomeUnknown } from '@/admin/sections/accounting/helpers';
 import {
   AccountingSubtype,
   ChargeType,
@@ -34,6 +37,8 @@ import { ApiError } from '@/api/error';
 import type {
   TJobFilters,
   TJournalFilters,
+  TPrice,
+  TPriceBody,
   TReportFilters,
   TVlabAccountFilters,
 } from '@/admin/sections/accounting/types';
@@ -257,5 +262,200 @@ describe('reportPath', () => {
     expect(reportPath({ vlabId: 'v', projectId: 'p' })).toBe('report/project/p');
     expect(reportPath({ vlabId: 'v' })).toBe('report/virtual-lab/v');
     expect(reportPath({})).toBe('report/system');
+  });
+});
+
+const OLD: TPrice = {
+  id: 3,
+  service_type: 'oneshot',
+  service_subtype: 'ml-llm',
+  vlab_id: null,
+  valid_from: '2026-01-01T00:00:00Z',
+  valid_to: null,
+  tiers: [{ min_quantity: 0, max_quantity: null, fixed_cost: '0', multiplier: '0.1' }],
+  created_at: '2026-01-01T00:00:00Z',
+  updated_at: '2026-01-01T00:00:00Z',
+};
+const START = new Date(Date.now() + 3_600_000).toISOString();
+const NEXT: TPriceBody = {
+  service_type: 'oneshot',
+  service_subtype: 'ml-llm',
+  vlab_id: null,
+  valid_from: START,
+  valid_to: null,
+  tiers: OLD.tiers,
+};
+const CREATED: TPrice = { ...OLD, id: 9, valid_from: START };
+
+const page = (items: TPrice[]) =>
+  json({
+    message: 'ok',
+    data: { items, meta: { page: 1, page_size: 100, total_pages: 1, total_items: items.length } },
+  });
+
+// Answers by method and path; `listed` is what the price list returns.
+function accounting({
+  listed = [CREATED, OLD],
+  create = () => json({ message: 'Price added', data: CREATED }, 201),
+  expire = () => json({ message: 'Price expired', data: OLD }),
+}: {
+  listed?: TPrice[];
+  create?: () => Response | Promise<Response>;
+  expire?: () => Response | Promise<Response>;
+} = {}) {
+  fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
+    if (url.includes('/expire')) return expire();
+    if (init?.method === 'POST') return create();
+    return page(listed);
+  });
+}
+
+const posted = (part: string) =>
+  fetchMock.mock.calls.filter(([url, init]) => url.includes(part) && init?.method === 'POST');
+
+describe('replacePrice', () => {
+  it('ends the old price when the new one starts, once the new one is listed', async () => {
+    accounting();
+
+    await expect(replacePrice(OLD, NEXT)).resolves.toEqual(CREATED);
+
+    const [[url, init]] = posted('/expire');
+    expect(url).toBe('/api/admin/accounting/admin/price/3/expire');
+    expect(JSON.parse(init.body)).toEqual({ valid_to: START });
+  });
+
+  it('stops before ending anything when the new price may not exist', async () => {
+    accounting({ create: () => Promise.reject(new TypeError('Failed to fetch')) });
+
+    const error = await replacePrice(OLD, NEXT).catch((caught) => caught);
+
+    expect(isOutcomeUnknown(error)).toBe(true);
+    expect(posted('/expire')).toEqual([]);
+  });
+
+  it('does not end the old price when the new one is not listed yet', async () => {
+    accounting({ listed: [OLD] });
+
+    const error = await replacePrice(OLD, NEXT).catch((caught) => caught);
+
+    expect(closesDialog(error)).toBe(true);
+    expect(error.message).toMatch(/#9 was added but isn't listed yet/);
+    expect(posted('/expire')).toEqual([]);
+  });
+
+  it('says the new price is in when the old one could not be ended', async () => {
+    accounting({ expire: () => json({ message: 'Price already expired.' }, 400) });
+
+    const error = await replacePrice(OLD, NEXT).catch((caught) => caught);
+
+    expect(closesDialog(error)).toBe(true);
+    expect(error.message).toMatch(
+      /#9 was added, but this one couldn't be ended: Price already expired\. The new one/
+    );
+  });
+
+  it('refuses a new price with an end that nothing follows, before adding it', async () => {
+    accounting({ listed: [OLD] });
+
+    const error = await replacePrice(OLD, {
+      ...NEXT,
+      valid_to: new Date(Date.now() + 7_200_000).toISOString(),
+    }).catch((caught) => caught);
+
+    expect(error.message).toMatch(/No other price would apply/);
+    expect(closesDialog(error)).toBe(false);
+    expect(posted('admin/price')).toEqual([]);
+  });
+});
+
+describe('assertPriceAfter', () => {
+  const end = new Date(Date.now() + 3_600_000).toISOString();
+
+  it('lets a lab price end into the default', async () => {
+    fetchMock.mockImplementation(async (url: string) =>
+      page(url.includes('only_default=true') ? [OLD] : [])
+    );
+
+    await expect(assertPriceAfter({ ...OLD, vlab_id: 'lab' }, end, 4)).resolves.toBeUndefined();
+  });
+
+  it('refuses to end the only default price', async () => {
+    fetchMock.mockResolvedValue(page([OLD]));
+
+    await expect(assertPriceAfter(OLD, end, OLD.id)).rejects.toThrow(/No other price would apply/);
+  });
+
+  it('checks nothing for a price with no end', async () => {
+    await expect(assertPriceAfter(OLD, null)).resolves.toBeUndefined();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('price start and end checks', () => {
+  it('refuses a replacement about to start, before adding anything', async () => {
+    accounting();
+
+    const error = await replacePrice(OLD, {
+      ...NEXT,
+      valid_from: new Date(Date.now() + 30_000).toISOString(),
+    }).catch((caught) => caught);
+
+    expect(error.message).toMatch(/within a minute/);
+    expect(closesDialog(error)).toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('refuses to start a replacement after the price it replaces has ended', async () => {
+    accounting();
+    const ending = { ...OLD, valid_to: new Date(Date.now() + 1_800_000).toISOString() };
+
+    const error = await replacePrice(ending, NEXT).catch((caught) => caught);
+
+    expect(error.message).toMatch(/Start the new one by then/);
+    expect(posted('admin/price')).toEqual([]);
+  });
+
+  it('refuses a later start that leaves a gap after the price before it', async () => {
+    const before = { ...OLD, id: 1, valid_from: '2026-01-01T00:00:00Z', valid_to: START };
+    const scheduled = { ...OLD, id: 2, valid_from: START };
+    fetchMock.mockImplementation(async () => page([scheduled, before]));
+    const later = new Date(Date.parse(START) + 7_200_000).toISOString();
+
+    await expect(assertPriceEdit(scheduled, { ...scheduled, valid_from: later })).rejects.toThrow(
+      /No other price would apply/
+    );
+  });
+
+  it('refuses a later start that leaves a gap before the next price starts', async () => {
+    const at = (hours: number) => new Date(Date.parse(START) + hours * 3_600_000).toISOString();
+    const before = { ...OLD, id: 1, valid_from: '2026-01-01T00:00:00Z', valid_to: START };
+    const scheduled = { ...OLD, id: 2, valid_from: START, valid_to: null };
+    const following = { ...OLD, id: 3, valid_from: at(1), valid_to: null };
+    fetchMock.mockImplementation(async () => page([following, scheduled, before]));
+
+    await expect(assertPriceEdit(scheduled, { ...scheduled, valid_from: at(2) })).rejects.toThrow(
+      /No other price would apply/
+    );
+  });
+
+  it('lets an edit keep an end it does not move', async () => {
+    const scheduled = { ...OLD, id: 2, valid_from: START, valid_to: '2030-01-01T00:00:00Z' };
+
+    await expect(
+      assertPriceEdit(scheduled, { ...scheduled, valid_to: '2030-01-01T00:00:00.000Z' })
+    ).resolves.toBeUndefined();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('lets a first price start later, since nothing applied before it', async () => {
+    const scheduled = { ...OLD, id: 2, valid_from: START };
+    fetchMock.mockImplementation(async () => page([scheduled]));
+
+    await expect(
+      assertPriceEdit(scheduled, {
+        ...scheduled,
+        valid_from: new Date(Date.parse(START) + 7_200_000).toISOString(),
+      })
+    ).resolves.toBeUndefined();
   });
 });

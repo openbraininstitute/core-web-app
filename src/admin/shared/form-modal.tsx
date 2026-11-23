@@ -4,8 +4,9 @@ import { DatePicker, Form, Input, InputNumber, Modal, Select, Switch } from 'ant
 import dayjs from 'dayjs';
 import { match } from 'ts-pattern';
 
+import { dateTimeItemProps, lockWhilePending } from './form-props';
+
 import type { Rule, RuleObject } from 'antd/es/form';
-import type { Dayjs } from 'dayjs';
 import type { ReactNode } from 'react';
 
 export type FormModalField = {
@@ -104,13 +105,7 @@ export function FormModal<Values extends Record<string, unknown>>({
       okButtonProps={{ danger }}
       confirmLoading={pending}
       onOk={() => form.submit()}
-      // A save in flight finishes in this dialog, so nothing closes it until then.
-      onCancel={() => {
-        if (!pending) onClose();
-      }}
-      closable={!pending}
-      maskClosable={!pending}
-      keyboard={!pending}
+      {...lockWhilePending(pending, onClose)}
       cancelButtonProps={{ disabled: pending }}
     >
       {description && <div className="text-neutral-4 mb-4">{description}</div>}
@@ -133,11 +128,7 @@ export function FormModal<Values extends Record<string, unknown>>({
               rules={field.rules}
               dependencies={field.dependencies}
               valuePropName={field.kind === 'switch' ? 'checked' : 'value'}
-              // A date is held as the API's ISO string, so an untouched one compares equal.
-              {...(field.kind === 'datetime' && {
-                getValueProps: (value?: string) => ({ value: value ? dayjs(value) : undefined }),
-                normalize: (date?: Dayjs | null) => date?.toISOString(),
-              })}
+              {...(field.kind === 'datetime' && dateTimeItemProps)}
               style={{ marginBottom: 0 }}
             >
               {fieldControl(field)}

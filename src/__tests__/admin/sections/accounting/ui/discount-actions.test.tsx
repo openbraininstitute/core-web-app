@@ -38,7 +38,9 @@ vi.mock('@/admin/sections/accounting/api', () => ({
   updateDiscount: updateMock,
   deleteDiscount: deleteMock,
   getAccount: vi.fn().mockResolvedValue({ id: LAB_ID, name: 'Lab one' }),
-  listDiscounts: vi.fn().mockResolvedValue({ data: [ACTIVE, EXPIRED], pagination: { total: 2 } }),
+  listLabDiscounts: vi
+    .fn()
+    .mockResolvedValue({ data: [ACTIVE, EXPIRED], pagination: { total: 2 } }),
 }));
 vi.mock('@/components/notification', () => ({
   useAppNotification: () => ({ success: vi.fn(), error: errorMock }),

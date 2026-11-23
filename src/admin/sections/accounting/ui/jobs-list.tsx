@@ -13,38 +13,21 @@ import { AdminPagedGrid, pagedSource } from '../../../shared/grid';
 import { PageHeader } from '../../../shared/page-header';
 import { AdminLink, adminHref } from '../../../shell/admin-link';
 import { listJobs } from '../api';
-import { dayBounds } from '../helpers';
-import { AccountingFilter, AccountingSubtype, ChargeType, JobStatusFilter } from '../types';
+import { dayBounds, SERVICE_TYPE_OPTIONS, SUBTYPE_OPTIONS } from '../helpers';
+import { AccountingFilter, JobStatusFilter } from '../types';
 import { JobPhasePill } from './cells';
 import { useIdFilter, useOptionFilter } from './filters';
 
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
-import type {
-  TAccountingJob,
-  TAccountingSubtype,
-  TChargeType,
-  TJobFilters,
-  TJobStatusFilter,
-} from '../types';
+import type { TAccountingJob, TJobFilters, TJobStatusFilter } from '../types';
 
 const JOBS_SOURCE = pagedSource(listJobs);
-
-const TYPE_OPTIONS: Array<{ value: TChargeType; label: string }> = [
-  { value: ChargeType.Oneshot, label: 'One-shot' },
-  { value: ChargeType.Longrun, label: 'Long-running' },
-  { value: ChargeType.Storage, label: 'Storage' },
-];
 
 const STATUS_OPTIONS: Array<{ value: TJobStatusFilter; label: string }> = [
   { value: JobStatusFilter.Open, label: 'Open' },
   { value: JobStatusFilter.Finished, label: 'Finished' },
   { value: JobStatusFilter.Cancelled, label: 'Cancelled' },
 ];
-
-const SUBTYPE_OPTIONS = Object.values(AccountingSubtype).map((value: TAccountingSubtype) => ({
-  value,
-  label: value,
-}));
 
 const COLUMNS: Array<ISimpleColumn<TAccountingJob>> = [
   {
@@ -92,7 +75,7 @@ export function JobsList() {
   const type = useOptionFilter({
     key: 'type',
     placeholder: 'Any type',
-    options: TYPE_OPTIONS,
+    options: SERVICE_TYPE_OPTIONS,
     width: 'w-40!',
   });
   const subtype = useOptionFilter({

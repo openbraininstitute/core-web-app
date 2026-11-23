@@ -5,20 +5,27 @@ import {
   accountingHref,
   accountLinks,
   amountField,
+  chargedTiers,
   dayBounds,
   describeStatusChange,
-  discountStatus,
   discountUpdate,
   fractionToPercent,
   jobPhase,
   percentField,
   percentToFraction,
   plainDecimal,
+  priceAt,
+  priceBody,
+  priceKey,
+  priceValues,
   reportUsage,
   shiftDecimal,
   splitLedgers,
+  tierCost,
+  tierSummary,
+  windowStatus,
 } from '@/admin/sections/accounting/helpers';
-import { AccountingPage, DiscountStatus, JobPhase } from '@/admin/sections/accounting/types';
+import { AccountingPage, JobPhase, WindowStatus } from '@/admin/sections/accounting/types';
 
 import type {
   TAccount,
@@ -26,6 +33,8 @@ import type {
   TDiscount,
   TJobReport,
   TLedgerEntry,
+  TPrice,
+  TPriceTier,
 } from '@/admin/sections/accounting/types';
 
 describe('dayBounds', () => {
@@ -189,19 +198,19 @@ const DISCOUNT: TDiscount = {
   valid_to: '2026-11-20T00:00:00Z',
 };
 
-describe('discountStatus', () => {
+describe('windowStatus', () => {
   it.each([
-    ['2026-11-09T23:59:59Z', DiscountStatus.Scheduled],
-    ['2026-11-10T00:00:00Z', DiscountStatus.Active],
-    ['2026-11-19T23:59:59Z', DiscountStatus.Active],
-    ['2026-11-20T00:00:00Z', DiscountStatus.Expired],
+    ['2026-11-09T23:59:59Z', WindowStatus.Scheduled],
+    ['2026-11-10T00:00:00Z', WindowStatus.Active],
+    ['2026-11-19T23:59:59Z', WindowStatus.Active],
+    ['2026-11-20T00:00:00Z', WindowStatus.Expired],
   ])('at %s is %s, with the start in and the end out', (now, status) => {
-    expect(discountStatus(DISCOUNT, new Date(now))).toBe(status);
+    expect(windowStatus(DISCOUNT, new Date(now))).toBe(status);
   });
 
   it('never ends without an end', () => {
-    expect(discountStatus({ ...DISCOUNT, valid_to: null }, new Date('2099-01-01'))).toBe(
-      DiscountStatus.Active
+    expect(windowStatus({ ...DISCOUNT, valid_to: null }, new Date('2099-01-01'))).toBe(
+      WindowStatus.Active
     );
   });
 });
@@ -264,5 +273,137 @@ describe('percentField', () => {
 
   it('lets an untouched stored share through, so the dates can still change', async () => {
     await expect(check('12.34567', '12.34567')).resolves.toBeUndefined();
+  });
+});
+
+const tier = (min: number, max: number | null, multiplier: string, fixed = '0'): TPriceTier => ({
+  min_quantity: min,
+  max_quantity: max,
+  fixed_cost: fixed,
+  multiplier,
+});
+
+describe('tierCost', () => {
+  it("follows accounting's documented examples", () => {
+    const steps = [tier(0, 20, '0', '5'), tier(20, null, '0', '45')];
+    expect(tierCost(steps, BigInt(20))).toBe('5.00');
+    expect(tierCost(steps, BigInt(21))).toBe('50.00');
+    const volume = [tier(0, 1000, '0.10'), tier(1000, null, '0.05')];
+    expect(tierCost(volume, BigInt(1500))).toBe('125.00');
+    expect(tierCost(volume, BigInt(0))).toBe('0.00');
+  });
+
+  it('prices a month of storage from a per byte-second rate, with no float loss', () => {
+    const gibMonth = BigInt(2 ** 30) * BigInt(30 * 24 * 3600);
+    expect(tierCost([tier(0, null, '8.873E-18')], gibMonth * BigInt(100))).toBe('2.47');
+  });
+
+  it('reads at most 30 decimals of a stored figure', () => {
+    expect(tierCost([tier(0, null, `0.${'0'.repeat(29)}19`)], BigInt(`1${'0'.repeat(30)}`))).toBe(
+      '1.00'
+    );
+  });
+
+  it('rounds half up to cents', () => {
+    expect(tierCost([tier(0, null, '0.005')], BigInt(1))).toBe('0.01');
+    expect(tierCost([tier(0, null, '0.0049')], BigInt(1))).toBe('0.00');
+  });
+});
+
+const PRICE: TPrice = {
+  id: 3,
+  service_type: 'oneshot',
+  service_subtype: 'ml-llm',
+  vlab_id: null,
+  valid_from: '2026-11-10T00:00:00Z',
+  valid_to: null,
+  tiers: [tier(0, 100, '1E-7', '2'), tier(100, null, '0.05')],
+  created_at: '2026-11-01T00:00:00Z',
+  updated_at: '2026-11-01T00:00:00Z',
+};
+
+describe('price form values', () => {
+  it('saves an untouched price with the same figures, written without exponents', () => {
+    expect(priceBody(priceValues(PRICE), null)).toEqual({
+      service_type: 'oneshot',
+      service_subtype: 'ml-llm',
+      valid_from: PRICE.valid_from,
+      valid_to: null,
+      vlab_id: null,
+      tiers: [tier(0, 100, '0.0000001', '2'), tier(100, null, '0.05')],
+    });
+  });
+
+  it('chains tiers from the form and keeps storage to its rate', () => {
+    const body = priceBody(
+      {
+        service_type: 'storage',
+        service_subtype: 'storage',
+        tiers: [{ multiplier: '0.1', fixed_cost: '3' }],
+      },
+      'lab'
+    );
+    expect(body.tiers).toEqual([tier(0, null, '0.1')]);
+    expect(body.vlab_id).toBe('lab');
+  });
+});
+
+describe('priceAt', () => {
+  const older = { ...PRICE, id: 1, valid_from: '2026-11-01T00:00:00Z' };
+  const newer = {
+    ...PRICE,
+    id: 2,
+    valid_from: '2026-11-05T00:00:00Z',
+    valid_to: '2026-11-08T00:00:00Z',
+  };
+  const list = [newer, older];
+
+  it('takes the one that started last among those in their dates', () => {
+    expect(priceAt(list, new Date('2026-11-06'))?.id).toBe(2);
+    expect(priceAt(list, new Date('2026-11-08'))?.id).toBe(1);
+    expect(priceAt(list, new Date('2026-10-01'))).toBeUndefined();
+  });
+
+  it('leaves out the price being ended', () => {
+    expect(priceAt(list, new Date('2026-11-06'), 2)?.id).toBe(1);
+    expect(priceAt(list, new Date('2026-11-06'), 1)?.id).toBe(2);
+  });
+});
+
+describe('price labels', () => {
+  it('shows a dash for a price with no tiers', () => {
+    expect(tierSummary({ ...PRICE, tiers: [] })).toBe('—');
+  });
+
+  it('summarizes one tier or counts several', () => {
+    expect(tierSummary(PRICE)).toBe('2 tiers');
+    expect(tierSummary({ ...PRICE, tiers: [tier(0, null, '0.05', '1')] })).toBe(
+      '1 + 0.05 per unit'
+    );
+    expect(tierSummary({ service_type: 'storage', tiers: [tier(0, null, '1E-7')] })).toBe(
+      '0.0000001 per byte-second'
+    );
+  });
+
+  it('reads a zero fixed cost in exponent form as zero', () => {
+    expect(tierSummary({ ...PRICE, tiers: [tier(0, null, '0.05', '0E-8')] })).toBe('0.05 per unit');
+  });
+
+  it("shows and costs storage by its first tier's rate, as accounting charges it", () => {
+    const storage = {
+      service_type: 'storage' as const,
+      tiers: [tier(0, 10, '1', '5'), tier(10, null, '2')],
+    };
+    expect(tierSummary(storage)).toBe('1 per byte-second');
+    expect(tierCost(chargedTiers(storage), BigInt(20))).toBe('20.00');
+  });
+
+  it("keys a lab's prices by the lab and the default by only_default", () => {
+    expect(priceKey(PRICE)).toEqual({
+      service_type: 'oneshot',
+      service_subtype: 'ml-llm',
+      only_default: true,
+    });
+    expect(priceKey({ ...PRICE, vlab_id: 'lab' })).toMatchObject({ vlab_id: 'lab' });
   });
 });

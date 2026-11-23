@@ -1,5 +1,7 @@
 import * as z from 'zod';
 
+import { AccountingSubtype, ChargeType } from './types';
+
 export const REASON_MAX_LENGTH = 500;
 
 const id = z.guid();
@@ -70,3 +72,64 @@ export const DiscountPatchBody = z
   .refine(endsAfterStart, END_AFTER_START);
 
 export const EmptyBody = z.strictObject({});
+
+/** Accounting's own subtypes it refuses new prices for. */
+export const LEGACY_SUBTYPES: string[] = [AccountingSubtype.MlRag, AccountingSubtype.MlRetrieval];
+export const MAX_TIERS = 20;
+export const MAX_QUANTITY = 2 ** 31 - 1;
+
+/** A price figure as a decimal string; storage rates per byte-second need about 30 decimals. */
+export const PriceDecimal = z
+  .string()
+  .regex(/^\d{1,15}(\.\d{1,30})?$/, 'Use a number like 0.05, with at most 30 decimals');
+
+const quantity = z.number().int().min(0).max(MAX_QUANTITY);
+
+const PriceTier = z.strictObject({
+  min_quantity: quantity,
+  max_quantity: quantity.nullable(),
+  fixed_cost: PriceDecimal,
+  multiplier: PriceDecimal,
+});
+
+function tierProblem(tiers: z.infer<typeof PriceTier>[], serviceType: string) {
+  const last = tiers.length - 1;
+  if (last < 0) return null;
+  const open = tiers.findIndex(
+    ({ min_quantity: min, max_quantity: max }, index) =>
+      index < last && (max === null || max <= min)
+  );
+  const apart = tiers.findIndex(
+    ({ min_quantity: min }, index) => index > 0 && min !== tiers[index - 1].max_quantity
+  );
+  const checks: Array<[boolean, string]> = [
+    [tiers[0].min_quantity !== 0, 'The first tier starts at 0'],
+    [tiers[last].max_quantity !== null, 'The last tier has no upper end'],
+    [
+      serviceType === ChargeType.Storage && (last > 0 || /[1-9]/.test(tiers[0].fixed_cost)),
+      'Storage takes one tier with no fixed cost',
+    ],
+    [open !== -1, `Tier ${open + 1} needs an end above its start`],
+    [apart !== -1, `Tier ${apart + 1} has to start where the one before ends`],
+  ];
+  return checks.find(([failed]) => failed)?.[1] ?? null;
+}
+
+export const PriceBody = z
+  .strictObject({
+    service_type: z.enum(Object.values(ChargeType)),
+    service_subtype: z
+      .enum(Object.values(AccountingSubtype))
+      .refine((subtype) => !LEGACY_SUBTYPES.includes(subtype), 'No new prices for this subtype'),
+    valid_from: notPast,
+    valid_to: notPast.nullable(),
+    vlab_id: id.nullable(),
+    tiers: z.array(PriceTier).min(1).max(MAX_TIERS),
+  })
+  .refine(endsAfterStart, END_AFTER_START)
+  .superRefine((body, context) => {
+    const problem = tierProblem(body.tiers, body.service_type);
+    if (problem) context.addIssue({ code: 'custom', message: problem, path: ['tiers'] });
+  });
+
+export const ExpirePriceBody = z.strictObject({ valid_to: notPast.optional() });

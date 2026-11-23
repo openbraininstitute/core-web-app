@@ -63,4 +63,5 @@ async function write(request: NextRequest, { params }: TContext) {
 
 export const POST = write;
 export const PATCH = write;
+export const PUT = write;
 export const DELETE = write;
