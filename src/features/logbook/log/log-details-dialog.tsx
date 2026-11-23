@@ -97,7 +97,7 @@ export function LogDetailsDialog(props: ILogDetailsDialogProps) {
           >
             Cancel
           </button>
-          <button type="submit" className="btn-navy h-10" disabled={props.saving}>
+          <button type="submit" className="logbook-btn-navy h-10" disabled={props.saving}>
             {props.saving ? 'Saving…' : 'Save'}
           </button>
         </div>

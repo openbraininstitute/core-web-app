@@ -418,7 +418,7 @@ export function EntityGridPicker({ multiple, onPick, onClose }: IEntityGridPicke
         </button>
         <button
           type="button"
-          className="btn-navy inline-flex items-center gap-2 aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
+          className="logbook-btn-navy inline-flex items-center gap-2 aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
           aria-disabled={all.length === 0}
           onClick={confirm}
         >

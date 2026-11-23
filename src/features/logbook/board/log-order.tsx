@@ -109,7 +109,7 @@ export function OrderButton({
         <button
           ref={button}
           type="button"
-          className="icon-btn relative size-7 hover:bg-white aria-expanded:bg-white aria-expanded:text-primary-9"
+          className="logbook-icon-btn relative size-7 hover:bg-white aria-expanded:bg-white aria-expanded:text-primary-9"
           aria-label={`Sort logs: ${summary}`}
           title={`Sorted by ${summary}`}
         >

@@ -203,7 +203,7 @@ function HereNow(props: ILogShared) {
               {canJump ? (
                 <button
                   type="button"
-                  className="icon-btn size-7"
+                  className="logbook-icon-btn size-7"
                   aria-label={`Go to ${p.actor.name}`}
                   title="Go to their cursor"
                   onClick={() => jump(p.actor.key)}

@@ -157,6 +157,10 @@
   --shadow-pop: 0 0 0 1px rgba(0, 39, 102, 0.08), 0 16px 40px -12px rgba(0, 39, 102, 0.28);
   --shadow-red-btn: 0 4px 10px -4px rgba(235, 51, 51, 0.45);
   --shadow-block-btn: 0 1px 4px rgba(0, 39, 102, 0.18);
+  --shadow-navy-btn: 0 4px 10px -4px rgba(0, 39, 102, 0.45);
+  --shadow-card:
+    0 0 0 1px rgba(0, 39, 102, 0.05), 0 4px 12px -6px rgba(0, 39, 102, 0.08),
+    0 1px 2px rgba(0, 39, 102, 0.04);
   --ease-in-expo: cubic-bezier(0.95, 0.05, 0.795, 0.035);
   --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
   --ease-out-back: cubic-bezier(0.68, -0.55, 0.265, 1.55);
@@ -513,6 +517,43 @@
     opacity: 0.5;
     cursor: not-allowed;
   }
+}
+
+/* Unlayered on purpose: the preflight button reset is unlayered too. */
+@utility logbook-card {
+  background-color: var(--color-white);
+  border-radius: 24px;
+  box-shadow: var(--shadow-card);
+}
+
+@utility logbook-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  border: 0;
+  padding: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-neutral-4);
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+  &:hover {
+    background-color: var(--color-fill-2);
+    color: var(--color-primary-9);
+  }
+}
+
+@utility logbook-btn-navy {
+  height: 40px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 999px;
+  background-color: var(--color-primary-9);
+  color: var(--color-white);
+  font-weight: 700;
+  box-shadow: var(--shadow-navy-btn);
 }
 
 @utility label-caps {

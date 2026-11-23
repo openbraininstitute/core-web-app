@@ -202,7 +202,7 @@ function HistoryTab(props: ILogShared) {
             <span className="label-caps">Selected text</span>
             <button
               type="button"
-              className="icon-btn size-[26px]"
+              className="logbook-icon-btn size-[26px]"
               aria-label="Clear selection"
               onClick={() => props.setSelection(null)}
             >
@@ -345,7 +345,7 @@ export function SidePane(props: ISidePaneProps) {
             {props.canShut ? (
               <button
                 type="button"
-                className="icon-btn size-8"
+                className="logbook-icon-btn size-8"
                 aria-label="Close the side pane"
                 title="Close the side pane"
                 onClick={props.onShut}

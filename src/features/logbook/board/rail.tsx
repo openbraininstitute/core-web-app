@@ -189,7 +189,7 @@ export function NewButton({
 export function SettingsButton({
   align = PopoverAlign.Start,
   side = PopoverSide.Below,
-  className = 'icon-btn size-10 flex-none aria-expanded:bg-fill-2',
+  className = 'logbook-icon-btn size-10 flex-none aria-expanded:bg-fill-2',
   iconSize = 18,
   anchor,
   onOpenChange,
@@ -276,7 +276,7 @@ export function SearchField({
       {value.length > 0 ? (
         <button
           type="button"
-          className="icon-btn size-7 hover:bg-white"
+          className="logbook-icon-btn size-7 hover:bg-white"
           aria-label="Clear the search"
           title="Clear"
           onClick={clear}
@@ -475,7 +475,7 @@ export function Rail(props: IRailProps) {
           {props.heading === RailHeading.Drawer ? (
             <button
               type="button"
-              className="icon-btn size-10"
+              className="logbook-icon-btn size-10"
               aria-label="Close the list of logs"
               onClick={props.onClose}
             >

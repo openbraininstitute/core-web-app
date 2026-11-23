@@ -63,7 +63,7 @@ export function UnsentCopies({ userId, enabled }: IUnsentCopiesProps) {
       {failed > 0 ? (
         <button
           type="button"
-          className="btn-navy"
+          className="logbook-btn-navy"
           disabled={unsent.isFetching}
           onClick={() => void unsent.refetch()}
         >
@@ -73,7 +73,7 @@ export function UnsentCopies({ userId, enabled }: IUnsentCopiesProps) {
       {lost.length > 0 ? (
         <button
           type="button"
-          className="btn-navy"
+          className="logbook-btn-navy"
           disabled={unsent.isFetching}
           onClick={() => setDiscarding(true)}
         >
