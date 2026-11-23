@@ -21,7 +21,10 @@ import { useAppNotification } from '@/components/notification';
 import { type TViewVariant, ViewVariant } from '@/constants';
 import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
 import { SessionSizePanel } from '@/features/notebooks/components/session-size-panel';
-import { useRunNotebook } from '@/features/notebooks/hooks/use-run-notebook';
+import {
+  type SessionPanelProps,
+  useRunNotebook,
+} from '@/features/notebooks/hooks/use-run-notebook';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive, downloadFailedNotification } from '@/services/entity-download';
 import { Action, ActionKind } from '@/ui/molecules/side-menu-action';
@@ -44,6 +47,7 @@ function SizePicker({
   busy,
   profiles,
   defaultProfile,
+  sessionPanel,
   onSelect,
   children,
 }: {
@@ -51,6 +55,7 @@ function SizePicker({
   busy: boolean;
   profiles: NotebookProfile[];
   defaultProfile: string | null;
+  sessionPanel: SessionPanelProps;
   onSelect: (profileName?: string) => void;
   children: ReactNode;
 }) {
@@ -71,6 +76,7 @@ function SizePicker({
             <SessionSizePanel
               profiles={profiles}
               defaultProfile={defaultProfile}
+              sessionPanel={sessionPanel}
               onSelect={(profileName) => {
                 setOpen(false);
                 onSelect(profileName);
@@ -117,6 +123,8 @@ export function NotebookActionMenu({
     profiles,
     defaultProfile,
     virtualLabData,
+    runSessionPanel,
+    hubSessionPanel,
   } = useRunNotebook({ id: entity.id, assets: entity.assets });
 
   // Course students run with the backend default size instead of choosing one.
@@ -251,12 +259,13 @@ export function NotebookActionMenu({
             busy={running}
             profiles={profiles}
             defaultProfile={defaultProfile}
+            sessionPanel={runSessionPanel}
             onSelect={(profileName) => run(target, profileName)}
           >
             <Action
               variant={variant}
               kind={ActionKind.Button}
-              onClick={isCourseStudentProject ? () => run(target) : undefined}
+              onClick={isCourseStudentProject ? () => run(target, undefined, true) : undefined}
               testId={`notebook-run-${target.key}-button`}
               icon={
                 runningTarget === target.key ? (
@@ -284,12 +293,13 @@ export function NotebookActionMenu({
             busy={running}
             profiles={profiles}
             defaultProfile={defaultProfile}
+            sessionPanel={runSessionPanel}
             onSelect={(profileName) => run(undefined, profileName)}
           >
             <Action
               variant={variant}
               kind={ActionKind.Button}
-              onClick={isCourseStudentProject ? () => run() : undefined}
+              onClick={isCourseStudentProject ? () => run(undefined, undefined, true) : undefined}
               icon={running ? <LoadingOutlined /> : <RiPlayFill />}
             >
               {running ? 'Starting...' : 'Run notebook'}
@@ -300,12 +310,13 @@ export function NotebookActionMenu({
             busy={opening}
             profiles={profiles}
             defaultProfile={defaultProfile}
+            sessionPanel={hubSessionPanel}
             onSelect={(profileName) => openJupyterHub(profileName)}
           >
             <Action
               variant={variant}
               kind={ActionKind.Button}
-              onClick={isCourseStudentProject ? () => openJupyterHub() : undefined}
+              onClick={isCourseStudentProject ? () => openJupyterHub(undefined, true) : undefined}
               icon={opening ? <LoadingOutlined /> : <ExportOutlined />}
             >
               {opening ? 'Opening...' : 'Open notebook'}

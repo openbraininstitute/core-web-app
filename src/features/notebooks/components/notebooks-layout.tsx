@@ -10,13 +10,14 @@ import { type ReactNode, useCallback, useRef, useState } from 'react';
 import { isNotebook } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { useAppNotification } from '@/components/notification';
 import { type TWorkspaceScope, WorkspaceScope } from '@/constants';
 import { NotebookLeftMenu } from '@/features/notebooks/components/notebook-left-menu';
 import { SessionSizePanel } from '@/features/notebooks/components/session-size-panel';
 import { SyncNotebookModal } from '@/features/notebooks/components/update-notebook-modal';
-import { useNotebookProfiles } from '@/features/notebooks/hooks/use-run-notebook';
-import { startEmptyNotebook } from '@/services/notebooks';
+import {
+  useJupyterHubSessions,
+  useNotebookProfiles,
+} from '@/features/notebooks/hooks/use-run-notebook';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useScope } from '@/ui/hooks/use-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -54,8 +55,6 @@ export function NotebooksLayout({ children }: Props) {
   const { scope, changeScope } = useScope({
     defaultScope: WorkspaceScope.Public,
   });
-  const notification = useAppNotification();
-  const [loading, setLoading] = useState(false);
   const [sizeMenuOpen, setSizeMenuOpen] = useState(false);
   const [isGridAnimating, setIsGridAnimating] = useState(false);
   const breakpoint = useDefaultBreakpoint();
@@ -79,42 +78,12 @@ export function NotebooksLayout({ children }: Props) {
 
   const { profiles, defaultProfile } = useNotebookProfiles();
 
-  async function handleRunNotebook(profile?: string) {
-    setLoading(true);
-    if (virtualLabData == null) {
-      setLoading(false);
-      throw new Error(`Could not fetch virtual lab data`);
-    }
-    try {
-      const retval = await startEmptyNotebook(
-        virtualLabId,
-        projectId,
-        virtualLabData.compute_cell,
-        profile
-      );
-      notification.success({
-        message: `Notebook starting`,
-        key: 'notebook-started-successfully',
-        placement: 'topRight',
-      });
-      window.open(retval.url, '_blank');
-    } catch (error) {
-      if (error instanceof Error && 'cause' in error) {
-        notification.error({
-          message: (error.cause as { error_code: string; hint: string }).hint,
-          key: 'notebook-error',
-          placement: 'topRight',
-        });
-      } else {
-        notification.error({
-          message: `Failed to start notebook`,
-          key: 'notebook-unknown-error',
-          placement: 'topRight',
-        });
-      }
-    }
-    setLoading(false);
-  }
+  const {
+    panel: sessionPanel,
+    openJupyterHub,
+    opening: loading,
+    creditsModal,
+  } = useJupyterHubSessions({ cloud: virtualLabData?.compute_cell });
 
   const course = virtualLabData?.course;
   // Students (course projects that aren't the instructor's template project) don't choose a
@@ -185,9 +154,10 @@ export function NotebooksLayout({ children }: Props) {
                 <SessionSizePanel
                   profiles={profiles}
                   defaultProfile={defaultProfile}
+                  sessionPanel={sessionPanel}
                   onSelect={(profile) => {
                     setSizeMenuOpen(false);
-                    handleRunNotebook(profile);
+                    openJupyterHub(profile);
                   }}
                 />
               )}
@@ -197,7 +167,7 @@ export function NotebooksLayout({ children }: Props) {
                 type="button"
                 className="flex h-[40px] items-center justify-between gap-2 rounded-full border border-[#F37726] bg-white px-5 text-[#F37726] transition-colors hover:bg-orange-50"
                 data-testid="open-jupyterhub-button"
-                onClick={isCourseStudentProject ? () => handleRunNotebook() : undefined}
+                onClick={isCourseStudentProject ? () => openJupyterHub(undefined, true) : undefined}
               >
                 <div>Open JupyterHub</div>
                 {loading ? (
@@ -248,6 +218,7 @@ export function NotebooksLayout({ children }: Props) {
           {children}
         </m.div>
 
+        {creditsModal}
         <ContributionModal onCreateSuccess={onNotebookCreateSuccess} />
         {syncRecord && course && (
           <SyncNotebookModal
