@@ -4,7 +4,9 @@ import { isNil } from 'es-toolkit/compat';
 
 import { useFieldError } from '@/features/scan-config/components/hooks/field-errors';
 import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
-import ParameterSweep from '@/features/scan-config/components/ui-elements/parameter-sweep';
+import ParameterSweep, {
+  SweepCollapseButton,
+} from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { cn } from '@/utils/css-class';
 
 import 'katex/dist/katex.min.css';
@@ -69,7 +71,10 @@ function SectionConfigRow({
   useFieldError(fieldPath, limitsError(value, min, max));
 
   return (
-    <div data-scan-config-block-element-item={`${uiElement}_editor_item`}>
+    <div
+      data-scan-config-block-element-item={`${uiElement}_editor_item`}
+      data-testid={`scan-config-section-list-${entry.section_list}`}
+    >
       <div className="mb-1.5 flex items-center gap-2">
         <span className="flex items-center">
           <span
@@ -85,6 +90,12 @@ function SectionConfigRow({
         {!isNil(entry.value) && (
           <span className="text-sm text-gray-400">Default: {entry.value}</span>
         )}
+        <SweepCollapseButton
+          value={value}
+          name={entry.section_list}
+          disabled={disabled}
+          onChange={onChange}
+        />
       </div>
 
       <div data-scan-config-block-element-item={`${uiElement}_editor_item_input`}>
