@@ -12,48 +12,11 @@ import { SettingsButton } from '@/features/logbook/board/rail';
 import { worksFor } from '@/features/logbook/collaboration/actors';
 import { AGENT_TOAST_MS } from '@/features/logbook/constants';
 import { useNow } from '@/features/logbook/helpers';
-import { NoticeKind, PopoverAlign, PopoverSide, ToastSource } from '@/features/logbook/types';
+import { PopoverAlign, PopoverSide, ToastSource } from '@/features/logbook/types';
 import { Icon } from '@/ui/molecules/icon';
 import { cn } from '@/utils/css-class';
 
-import type {
-  IAgentToastProps,
-  IChange,
-  IKindLook,
-  INotice,
-  TNoticeKind,
-} from '@/features/logbook/types';
-
-const looks: Readonly<Record<TNoticeKind, IKindLook>> = {
-  [NoticeKind.Success]: {
-    icon: 'check',
-    badge: 'bg-green-main/10 text-green-main',
-    bar: 'bg-green-main',
-    card: '',
-    lifeMs: 4500,
-  },
-  [NoticeKind.Info]: {
-    icon: 'info',
-    badge: 'bg-primary-6/10 text-primary-6',
-    bar: 'bg-primary-6',
-    card: '',
-    lifeMs: 6000,
-  },
-  [NoticeKind.Warning]: {
-    icon: 'warning',
-    badge: 'bg-warning/12 text-warning',
-    bar: 'bg-warning',
-    card: '',
-    lifeMs: 9000,
-  },
-  [NoticeKind.Error]: {
-    icon: 'error',
-    badge: 'bg-destructive/10 text-destructive animate-shake',
-    bar: '',
-    card: 'ring-1 ring-destructive/25',
-    lifeMs: null,
-  },
-};
+import type { IAgentToastProps, IChange } from '@/features/logbook/types';
 
 const CARD =
   'pointer-events-auto relative flex w-full animate-up items-start gap-3 overflow-hidden rounded-[14px] bg-white p-3 pr-2 shadow-pop';
@@ -77,77 +40,6 @@ export function ToastStack({
     >
       {children}
     </section>
-  );
-}
-
-function useCountdown(ms: number | null, paused: boolean, onEnd: () => void) {
-  const left = useRef(ms ?? 0);
-  const end = useEffectEvent(onEnd);
-  useEffect(() => {
-    if (isNil(ms) || paused) return;
-    const started = Date.now();
-    const timer = setTimeout(end, left.current);
-    return () => {
-      clearTimeout(timer);
-      left.current -= Date.now() - started;
-    };
-  }, [ms, paused]);
-}
-
-function TimeBar({ ms, className, paused }: { ms: number; className: string; paused: boolean }) {
-  return (
-    <span
-      aria-hidden="true"
-      className={cn(
-        'absolute inset-x-0 bottom-0 h-0.5 origin-left animate-drain opacity-60',
-        className
-      )}
-      style={{ animationDuration: `${ms}ms`, animationPlayState: paused ? 'paused' : 'running' }}
-    />
-  );
-}
-
-export function NoticeToast({
-  notice,
-  onClose,
-}: {
-  readonly notice: INotice;
-  readonly onClose: () => void;
-}) {
-  const look = looks[notice.kind];
-  const [hovered, setHovered] = useState(false);
-  const [focused, setFocused] = useState(false);
-  const paused = hovered || focused;
-  useCountdown(look.lifeMs, paused, onClose);
-  return (
-    <div
-      className={cn(CARD, look.card)}
-      role={notice.kind === NoticeKind.Error ? 'alert' : 'status'}
-      onPointerEnter={() => setHovered(true)}
-      onPointerLeave={() => setHovered(false)}
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
-    >
-      <span className={cn('grid size-8 flex-none place-items-center rounded-[10px]', look.badge)}>
-        <Icon name={look.icon} size={16} stroke={2.2} />
-      </span>
-      <div className="min-w-0 flex-1 pt-1.5">
-        <p className={TITLE}>{notice.title}</p>
-        {isNil(notice.description) ? null : <p className={TEXT}>{notice.description}</p>}
-      </div>
-      <button
-        type="button"
-        className={ICON_BUTTON}
-        aria-label="Dismiss notification"
-        title="Dismiss"
-        onClick={onClose}
-      >
-        <Icon name="close" size={12} stroke={2.4} />
-      </button>
-      {isNil(look.lifeMs) ? null : (
-        <TimeBar ms={look.lifeMs} className={look.bar} paused={paused} />
-      )}
-    </div>
   );
 }
 

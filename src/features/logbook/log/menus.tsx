@@ -13,7 +13,6 @@ import type { TIconName } from '@/ui/molecules/icon';
 
 const ITEM = 'rounded-[10px] text-left text-primary-9 transition-colors hover:bg-fill-item-hover';
 const MENU_ITEM = cn(ITEM, 'flex items-center gap-2.5 px-2.5 py-2');
-const MENU = 'pop absolute z-41 flex max-w-[calc(100%-16px)] flex-col p-1.5';
 const LABEL = 'px-2.5 pb-1 text-[11px] font-bold tracking-[0.06em] text-neutral-4 uppercase';
 const TILE = 'grid size-[30px] flex-none place-items-center rounded-[9px] text-[10px]';
 const TEXT = 'flex min-w-0 flex-1 flex-col';
@@ -21,7 +20,7 @@ const TITLE = 'truncate text-[14px] font-semibold';
 const SUB = 'text-[12px] text-neutral-4';
 const HEAD = 'flex items-center justify-between';
 
-export function InsertMenu({ editor, at, onClose, onPicker, onNotice }: IInsertMenuProps) {
+export function InsertMenu({ editor, onClose, onPicker, onNotice }: IInsertMenuProps) {
   const { project, logId } = useLogContext();
   const client = useQueryClient();
   const input = useRef<HTMLInputElement>(null);
@@ -30,14 +29,9 @@ export function InsertMenu({ editor, at, onClose, onPicker, onNotice }: IInsertM
     void uploadFiles({ editor, logId, project, client, notify: onNotice }, list);
   };
   return (
-    <div
-      className={cn(MENU, 'w-[292px]')}
-      role="menu"
-      aria-label="Insert"
-      style={{ top: at.top, left: at.left }}
-    >
+    <>
       <div className={cn(LABEL, 'pt-2')}>From the platform</div>
-      <button type="button" role="menuitem" className={MENU_ITEM} onClick={onPicker}>
+      <button type="button" className={MENU_ITEM} onClick={onPicker}>
         <span className={cn(TILE, 'bg-primary-0 text-primary-6')}>
           <Icon name="link" size={16} />
         </span>
@@ -55,12 +49,7 @@ export function InsertMenu({ editor, at, onClose, onPicker, onNotice }: IInsertM
         hidden
         onChange={(event) => upload(event.target.files)}
       />
-      <button
-        type="button"
-        role="menuitem"
-        className={MENU_ITEM}
-        onClick={() => input.current?.click()}
-      >
+      <button type="button" className={MENU_ITEM} onClick={() => input.current?.click()}>
         <span className={cn(TILE, 'bg-scope-public-bg text-scope-public-fg')}>
           <Icon name="upload" size={16} />
         </span>
@@ -69,7 +58,7 @@ export function InsertMenu({ editor, at, onClose, onPicker, onNotice }: IInsertM
           <span className={SUB}>Picture, data, notebook, PDF, model, archive</span>
         </span>
       </button>
-    </div>
+    </>
   );
 }
 

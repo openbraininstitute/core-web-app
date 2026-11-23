@@ -6,7 +6,7 @@ import { PageKind, ReadOnlyReason } from '@/api/logbook/types';
 import { useArtifacts } from '@/features/logbook/api/log-files';
 import { useUpdateLog } from '@/features/logbook/api/research-logs';
 import { useCollaboration } from '@/features/logbook/collaboration/notices';
-import { CONTROL } from '@/features/logbook/constants';
+import { CONTROL, POPOVER_PANEL } from '@/features/logbook/constants';
 import { FormatBar } from '@/features/logbook/editor/format-bar';
 import { SelectionMenu } from '@/features/logbook/editor/selection-menu';
 import { ArtifactIcon } from '@/features/logbook/log/artifact-icon';
@@ -14,9 +14,8 @@ import { ArtifactBar, ArtifactView } from '@/features/logbook/log/artifact-view'
 import { EditorTabs } from '@/features/logbook/log/editor-tabs';
 import { InsertMenu } from '@/features/logbook/log/menus';
 import { reasonOf } from '@/features/logbook/log/notice';
-import { HereNow, PresenceButton } from '@/features/logbook/log/presence';
+import { PresenceButton } from '@/features/logbook/log/presence';
 import { SaveStatus } from '@/features/logbook/log/save-status';
-import { CARD_MENUS } from '@/features/logbook/log/ui-state';
 import {
   Layout,
   Menu,
@@ -27,6 +26,7 @@ import {
   ViewMode,
 } from '@/features/logbook/types';
 import { Icon } from '@/ui/molecules/icon';
+import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
 
 import type { MouseEvent as ReactMouseEvent } from 'react';
@@ -34,25 +34,9 @@ import type {
   IClock,
   IEditorCardProps,
   IEditorTab,
-  IPopAt,
   ITabRef,
-  TMenu,
   TMobileTab,
 } from '@/features/logbook/types';
-
-const WIDTHS: Readonly<Partial<Record<TMenu, number>>> = {
-  [Menu.Insert]: 292,
-  [Menu.Who]: 320,
-};
-
-function popAtOf(button: HTMLElement, card: HTMLElement, width: number): IPopAt {
-  const b = button.getBoundingClientRect();
-  const c = card.getBoundingClientRect();
-  return {
-    top: b.bottom - c.top + 8,
-    left: Math.max(8, Math.min(b.right - c.left - width, c.width - width - 8)),
-  };
-}
 
 const MOBILE_TABS: readonly { readonly tab: TMobileTab; readonly label: string }[] = [
   { tab: MobileTab.Write, label: 'Write' },
@@ -78,9 +62,7 @@ const KIND_NAMES: Readonly<Record<string, string>> = {
 export function EditorCard(props: IEditorCardProps) {
   const { editor, layout, menu, setMenu, selection, log } = props;
   const narrow = layout === Layout.Narrow;
-  const card = useRef<HTMLElement>(null);
   const body = useRef<HTMLDivElement>(null);
-  const [popAt, setPopAt] = useState<IPopAt>({ top: 52, left: 8 });
   const [clock, setClock] = useState<IClock | null>(null);
   const rejoinAt = useCollaboration(props.notices, (state) => state.rejoinAt);
   const update = useUpdateLog(props.project);
@@ -129,16 +111,6 @@ export function EditorCard(props: IEditorCardProps) {
       ];
     }),
   ];
-
-  const toggle = (which: TMenu, event: ReactMouseEvent<HTMLButtonElement>): void => {
-    if (menu === which) {
-      setMenu(Menu.None);
-      return;
-    }
-    if (isNotNil(card.current))
-      setPopAt(popAtOf(event.currentTarget, card.current, WIDTHS[which] ?? 280));
-    setMenu(which);
-  };
 
   const offsets = useRef<{ doc: unknown; list: number[] }>({ doc: null, list: [] });
   const blockAt = (y: number): number | null => {
@@ -193,7 +165,6 @@ export function EditorCard(props: IEditorCardProps) {
 
   return (
     <section
-      ref={card}
       className="logbook-card @container/pane relative z-2 flex min-h-0 min-w-0 flex-col overflow-hidden data-[collapsed=true]:overflow-visible"
       data-collapsed={!writeTab}
       style={props.style}
@@ -250,26 +221,47 @@ export function EditorCard(props: IEditorCardProps) {
           <ArtifactBar artifact={artifact} onOpenPage={openCopiedPage} />
         ) : (
           <>
-            <PresenceButton
-              {...props}
-              expanded={menu === Menu.Who}
-              onToggle={(event) => toggle(Menu.Who, event)}
-            />
-            <button
-              type="button"
-              className={cn(
-                CONTROL,
-                'ml-auto bg-fill-2 text-primary-9 hover:bg-fill-item-hover disabled:cursor-not-allowed disabled:opacity-50'
-              )}
-              aria-label="Insert"
-              aria-expanded={menu === Menu.Insert}
-              title="Link entities or upload a file"
-              disabled={isNotNil(props.readOnly) || props.deleted}
-              onClick={(event) => toggle(Menu.Insert, event)}
+            <PresenceButton {...props} />
+            <Popover
+              open={menu === Menu.Insert}
+              onOpenChange={(open) => setMenu(open ? Menu.Insert : Menu.None)}
             >
-              <Icon name="plus" size={15} stroke={2.4} />
-              <span className="@max-[420px]/pane:hidden!">Insert</span>
-            </button>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className={cn(
+                    CONTROL,
+                    'ml-auto bg-fill-2 text-primary-9 hover:bg-fill-item-hover disabled:cursor-not-allowed disabled:opacity-50'
+                  )}
+                  aria-label="Insert"
+                  title="Link entities or upload a file"
+                  disabled={isNotNil(props.readOnly) || props.deleted}
+                >
+                  <Icon name="plus" size={15} stroke={2.4} />
+                  <span className="@max-[420px]/pane:hidden!">Insert</span>
+                </button>
+              </PopoverTrigger>
+              <PopoverContent
+                align="end"
+                sideOffset={8}
+                collisionPadding={8}
+                className={cn(
+                  POPOVER_PANEL,
+                  'z-71 flex w-[292px] max-w-[calc(100vw-16px)] flex-col p-1.5 text-primary-9'
+                )}
+                aria-label="Insert"
+                onCloseAutoFocus={(event) => {
+                  if (menu === Menu.Picker) event.preventDefault();
+                }}
+              >
+                <InsertMenu
+                  editor={editor}
+                  onClose={() => setMenu(Menu.None)}
+                  onPicker={() => setMenu(Menu.Picker)}
+                  onNotice={props.setNotice}
+                />
+              </PopoverContent>
+            </Popover>
           </>
         )}
         <button
@@ -364,25 +356,6 @@ export function EditorCard(props: IEditorCardProps) {
           Who wrote this?
         </button>
       ) : null}
-      {CARD_MENUS.has(menu) ? (
-        <button
-          type="button"
-          className="absolute inset-0 z-40 cursor-default border-0 bg-transparent"
-          aria-label="Close menu"
-          tabIndex={-1}
-          onClick={() => setMenu(Menu.None)}
-        />
-      ) : null}
-      {menu === Menu.Insert ? (
-        <InsertMenu
-          editor={editor}
-          at={popAt}
-          onClose={() => setMenu(Menu.None)}
-          onPicker={() => setMenu(Menu.Picker)}
-          onNotice={props.setNotice}
-        />
-      ) : null}
-      {menu === Menu.Who ? <HereNow {...props} at={popAt} states={props.awarenessStates} /> : null}
     </section>
   );
 }

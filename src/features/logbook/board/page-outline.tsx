@@ -21,7 +21,7 @@ const BRANCH =
 const ROW =
   'flex h-9 w-full items-center gap-2 rounded-full border-0 bg-transparent pr-9 pl-3 text-left text-[13px] font-semibold text-primary-9 transition-colors duration-150 hover:bg-fill-pill-hover aria-[current=page]:bg-primary-0 aria-[current=page]:font-bold';
 const DOTS =
-  'absolute top-1.5 right-1 grid size-6 place-items-center rounded-full border-0 bg-transparent text-neutral-4 opacity-0 transition-opacity duration-150 group-focus-within:opacity-100 group-hover:opacity-100 hover:bg-fill-2 data-[open=true]:opacity-100';
+  'absolute top-1.5 right-1 grid size-6 place-items-center rounded-full border-0 bg-transparent text-neutral-4 opacity-0 transition-opacity duration-150 group-focus-within:opacity-100 group-hover:opacity-100 hover:bg-fill-2 data-[state=open]:opacity-100';
 const FIELD = 'h-9 rounded-full px-3 text-[13px] font-semibold';
 const ADD =
   'flex h-9 w-full items-center gap-2 rounded-full border border-primary-2 bg-primary-0 pl-3 text-left text-[13px] font-semibold text-primary-6 transition-colors duration-150 hover:bg-primary-1/50';
@@ -32,7 +32,6 @@ export function PageOutline(props: IPageOutlineProps) {
   const create = useCreateSection(logId, project);
   const rename = useRenamePage(logId, project);
   const remove = useDeleteSection(logId, project);
-  const [menuFor, setMenuFor] = useState<string | null>(null);
   const [renaming, setRenaming] = useState<string | null>(null);
   const [adding, setAdding] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<IPage | null>(null);
@@ -100,35 +99,23 @@ export function PageOutline(props: IPageOutlineProps) {
                     <span className="min-w-0 truncate">{page.title}</span>
                   </button>
                   {isSection ? (
-                    <button
-                      type="button"
-                      className={DOTS}
-                      aria-label={`Actions for ${page.title}`}
-                      aria-haspopup="menu"
-                      aria-expanded={menuFor === page.id}
-                      data-open={menuFor === page.id}
-                      onClick={() => setMenuFor(menuFor === page.id ? null : page.id)}
+                    <CardMenu
+                      name={page.title}
+                      deleteLabel="Delete section"
+                      onRename={() => setRenaming(page.id)}
+                      onDelete={() => setDeleting(page)}
                     >
-                      <Icon name="dots" size={14} stroke={2.4} />
-                    </button>
+                      <button
+                        type="button"
+                        className={DOTS}
+                        aria-label={`Actions for ${page.title}`}
+                      >
+                        <Icon name="dots" size={14} stroke={2.4} />
+                      </button>
+                    </CardMenu>
                   ) : null}
                 </>
               )}
-              {menuFor === page.id ? (
-                <CardMenu
-                  name={page.title}
-                  deleteLabel="Delete section"
-                  onRename={() => {
-                    setMenuFor(null);
-                    setRenaming(page.id);
-                  }}
-                  onDelete={() => {
-                    setMenuFor(null);
-                    setDeleting(page);
-                  }}
-                  onClose={() => setMenuFor(null)}
-                />
-              ) : null}
             </li>
           );
         })}

@@ -46,9 +46,3 @@ export const contentExtensions: AnyExtension[] = [
   Figure,
   Callout,
 ];
-
-// Headless list (agents, server, tests), ids included.
-export const blockExtensions: AnyExtension[] = [
-  ...contentExtensions,
-  UniqueID.configure({ types: [...BLOCK_TYPES] }),
-];

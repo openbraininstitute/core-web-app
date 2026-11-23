@@ -2,7 +2,14 @@ import { isNil } from 'es-toolkit';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 
+import { DROPDOWN_ITEM, POPOVER_PANEL } from '@/features/logbook/constants';
 import { tabKey } from '@/features/logbook/log/open-tabs';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/ui/molecules/dropdown-menu';
 import { Icon } from '@/ui/molecules/icon';
 import { cn } from '@/utils/css-class';
 
@@ -61,60 +68,53 @@ function TabList({
   active,
   onSelect,
   onClose,
-  onDone,
 }: {
   readonly tabs: readonly IEditorTab[];
   readonly active: string;
   readonly onSelect: (tab: ITabRef) => void;
   readonly onClose: (tab: ITabRef) => void;
-  readonly onDone: () => void;
 }) {
   return (
-    <>
-      <button
-        type="button"
-        className="fixed inset-0 z-40 cursor-default border-0 bg-transparent"
-        aria-label="Close the list of tabs"
-        onClick={onDone}
-      />
-      <div
-        className="pop absolute top-11 right-0 z-41 flex max-h-[min(420px,70vh)] w-[280px] flex-col overflow-y-auto p-1.5"
-        role="menu"
-        aria-label="Open tabs"
-        onKeyDown={(event) => event.key === 'Escape' && onDone()}
-      >
-        {tabs.map((item) => (
-          <div
-            key={tabKey(item.tab)}
-            className="flex items-center gap-1 rounded-[10px] pr-1 hover:bg-fill-item-hover data-[on=true]:bg-fill-2"
-            data-on={tabKey(item.tab) === active}
+    <DropdownMenuContent
+      align="end"
+      sideOffset={8}
+      collisionPadding={8}
+      className={cn(POPOVER_PANEL, 'z-71 flex max-h-[min(420px,70vh)] w-[280px] flex-col p-1.5')}
+      aria-label="Open tabs"
+    >
+      {tabs.map((item) => (
+        <div
+          key={tabKey(item.tab)}
+          className="flex items-center gap-1 rounded-[10px] pr-1 hover:bg-fill-item-hover data-[on=true]:bg-fill-2"
+          data-on={tabKey(item.tab) === active}
+        >
+          <DropdownMenuItem
+            className={cn(
+              DROPDOWN_ITEM,
+              'min-w-0 flex-1 gap-2.5 rounded-[10px] px-2.5 py-2 text-[13px] font-semibold text-primary-9'
+            )}
+            onSelect={() => onSelect(item.tab)}
+            onKeyDown={(event) => {
+              if ((event.key === 'Delete' || event.key === 'Backspace') && !item.pinned)
+                onClose(item.tab);
+            }}
           >
+            <span className="flex flex-none">{item.icon}</span>
+            <span className="truncate">{item.label}</span>
+          </DropdownMenuItem>
+          {item.pinned ? null : (
             <button
               type="button"
-              role="menuitem"
-              className="flex min-w-0 flex-1 items-center gap-2.5 px-2.5 py-2 text-left text-[13px] font-semibold text-primary-9"
-              onClick={() => {
-                onSelect(item.tab);
-                onDone();
-              }}
+              className={CLOSE}
+              aria-label={`Close ${item.label}`}
+              onClick={() => onClose(item.tab)}
             >
-              <span className="flex flex-none">{item.icon}</span>
-              <span className="truncate">{item.label}</span>
+              <Icon name="close" size={11} stroke={2.6} />
             </button>
-            {item.pinned ? null : (
-              <button
-                type="button"
-                className={CLOSE}
-                aria-label={`Close ${item.label}`}
-                onClick={() => onClose(item.tab)}
-              >
-                <Icon name="close" size={11} stroke={2.6} />
-              </button>
-            )}
-          </div>
-        ))}
-      </div>
-    </>
+          )}
+        </div>
+      ))}
+    </DropdownMenuContent>
   );
 }
 
@@ -130,7 +130,6 @@ export function EditorTabs(props: IEditorTabsProps) {
   const activeAt = tabs.findIndex((item) => tabKey(item.tab) === active);
   const strip = useRef<HTMLDivElement>(null);
   const [overflow, setOverflow] = useState(false);
-  const [listOpen, setListOpen] = useState(false);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: re-run when tabs open or close
   useEffect(() => {
@@ -245,27 +244,25 @@ export function EditorTabs(props: IEditorTabsProps) {
       </div>
       {overflow ? (
         <div className="relative mb-1.5 flex-none">
-          <button
-            type="button"
-            className="inline-flex h-9 items-center gap-1 rounded-full px-2.5 text-[12px] font-bold text-primary-9 hover:bg-white aria-expanded:bg-white"
-            aria-label={`All ${tabs.length} open tabs`}
-            aria-haspopup="menu"
-            aria-expanded={listOpen}
-            title="All open tabs"
-            onClick={() => setListOpen((open) => !open)}
-          >
-            {tabs.length}
-            <Icon name="chevronDown" size={14} stroke={2.4} />
-          </button>
-          {listOpen ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="inline-flex h-9 items-center gap-1 rounded-full px-2.5 text-[12px] font-bold text-primary-9 hover:bg-white aria-expanded:bg-white"
+                aria-label={`All ${tabs.length} open tabs`}
+                title="All open tabs"
+              >
+                {tabs.length}
+                <Icon name="chevronDown" size={14} stroke={2.4} />
+              </button>
+            </DropdownMenuTrigger>
             <TabList
               tabs={tabs}
               active={active}
               onSelect={props.onSelect}
               onClose={props.onClose}
-              onDone={() => setListOpen(false)}
             />
-          ) : null}
+          </DropdownMenu>
         </div>
       ) : null}
     </div>

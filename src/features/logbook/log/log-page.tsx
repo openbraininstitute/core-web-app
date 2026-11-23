@@ -13,11 +13,12 @@ import {
 import { match, P } from 'ts-pattern';
 
 import { PageKind, ReadOnlyReason } from '@/api/logbook/types';
+import { useAppNotification } from '@/components/notification';
 import { writersQuery } from '@/features/logbook/api/writers';
 import { peerActor, personActor, resolveActor } from '@/features/logbook/collaboration/actors';
 import { useCoolWhenAcked, usePauseWhenHidden } from '@/features/logbook/collaboration/idle';
 import { useRejoin } from '@/features/logbook/collaboration/rejoin';
-import { PANE_FLOOR, PANE_SHUT_BELOW } from '@/features/logbook/constants';
+import { NOTICE_SECONDS, PANE_FLOOR, PANE_SHUT_BELOW } from '@/features/logbook/constants';
 import { editorExtensions } from '@/features/logbook/editor/extensions';
 import { insertAfterBlock } from '@/features/logbook/editor/insert';
 import { dragHandle, Latest } from '@/features/logbook/helpers';
@@ -27,8 +28,8 @@ import { EntityGridPicker } from '@/features/logbook/log/entity-grid-picker';
 import { useNotifySettings } from '@/features/logbook/log/notify-settings';
 import { ReadCard } from '@/features/logbook/log/read-card';
 import { SidePane } from '@/features/logbook/log/side-pane';
-import { AgentToast, NoticeToast, ToastStack } from '@/features/logbook/log/toasts';
-import { CARD_MENUS, takeSeed } from '@/features/logbook/log/ui-state';
+import { AgentToast, ToastStack } from '@/features/logbook/log/toasts';
+import { takeSeed } from '@/features/logbook/log/ui-state';
 import { Layout, Menu, MobileTab, RightTab, SplitShut, ViewMode } from '@/features/logbook/types';
 import { cn } from '@/utils/css-class';
 
@@ -216,12 +217,19 @@ export function LogPage(props: ILogPageProps) {
   const [rightTab, setRightTab] = useState<TRightTab>(RightTab.Preview);
   const [mTab, setMTab] = useState<TMobileTab>(MobileTab.Write);
   const [selection, setSelection] = useState<ISelection | null>(null);
-  const [notice, setShownNotice] = useState<(INotice & { readonly id: number }) | null>(null);
-  const noticeId = useRef(0);
-  const setNotice = useCallback((next: INotice | null): void => {
-    noticeId.current += 1;
-    setShownNotice(next && { ...next, id: noticeId.current });
-  }, []);
+  const notification = useAppNotification();
+  const setNotice = useCallback(
+    (notice: INotice): void =>
+      notification.open({
+        key: `logbook-notice:${notice.kind}`,
+        type: notice.kind,
+        message: notice.title,
+        description: notice.description,
+        duration: NOTICE_SECONDS[notice.kind],
+        placement: 'bottomRight',
+      }),
+    [notification]
+  );
   const splitRef = useRef<HTMLDivElement>(null);
   const { onOpenArtifact } = props;
   const openArtifact = useCallback(
@@ -305,17 +313,6 @@ export function LogPage(props: ILogPageProps) {
 
   const overlays = (
     <>
-      {menu === Menu.None ? null : (
-        <button
-          type="button"
-          className={cn(
-            'fixed inset-0 cursor-default border-0 bg-transparent',
-            CARD_MENUS.has(menu) ? 'z-1' : 'z-40'
-          )}
-          aria-label="Close menu"
-          onClick={() => changeMenu(Menu.None)}
-        />
-      )}
       {menu === Menu.Picker ? (
         <EntityGridPicker
           multiple={isNil(pickTarget)}
@@ -334,9 +331,6 @@ export function LogPage(props: ILogPageProps) {
           me={me}
           onShow={(change) => flash(change.from, change.to)}
         />
-        {isNil(notice) ? null : (
-          <NoticeToast key={notice.id} notice={notice} onClose={() => setNotice(null)} />
-        )}
       </ToastStack>
     </>
   );

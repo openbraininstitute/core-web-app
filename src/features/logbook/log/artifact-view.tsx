@@ -15,13 +15,15 @@ import { CONTROL, ZOOM_MAX, ZOOM_MIN, ZOOM_STEP } from '@/features/logbook/const
 import { CodeView, CsvTable } from '@/features/logbook/editor/blocks/file-view';
 import { withViews } from '@/features/logbook/editor/extensions';
 import { LinesSkeleton } from '@/features/logbook/elements/skeletons';
-import { agoOf, savedOf, sizeOf } from '@/features/logbook/helpers';
+import { savedOf } from '@/features/logbook/helpers';
 import { useObjectUrl } from '@/features/logbook/hooks/use-object-url';
 import { ArtifactIcon } from '@/features/logbook/log/artifact-icon';
 import { useLogContext } from '@/features/logbook/log/context';
 import { ArtifactKind } from '@/features/logbook/types';
 import { Icon } from '@/ui/molecules/icon';
+import timeElapsedFromToday from '@/util/date';
 import { cn } from '@/utils/css-class';
+import { formatBytes } from '@/utils/format';
 
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import type { IArtifact, IView } from '@/features/logbook/types';
@@ -225,9 +227,12 @@ export function ArtifactBar({
       <span className="min-w-0 flex-1 truncate text-[13px] text-neutral-4">
         <b className="font-semibold text-primary-9">{artifact.where}</b>
         {' · '}
-        {sizeOf(artifact.size)}
+        {formatBytes(artifact.size, 1)}
         {isNil(artifact.savedAt) ? null : (
-          <span title={savedOf(artifact.savedAt)}> · saved {agoOf(artifact.savedAt)}</span>
+          <span title={savedOf(artifact.savedAt)}>
+            {' '}
+            · saved {timeElapsedFromToday(artifact.savedAt)}
+          </span>
         )}
         {' · read-only'}
       </span>

@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 import * as Y from 'yjs';
 
 import { colourOf, fnv1a } from '@/features/logbook/blocks/colour';
+
 import {
   appendMarkdown,
   changeOf,
@@ -10,7 +11,7 @@ import {
   markdownToJson,
   writeJson,
   writeMarkdown,
-} from '@/features/logbook/blocks/markdown';
+} from './markdown';
 
 const LOG = [
   '# HCN block in CA1',

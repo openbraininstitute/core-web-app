@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 
-import { schema } from '@/features/logbook/blocks/markdown';
+import { schema } from '@/__tests__/logbook/blocks/markdown';
 import { blockRange, insertedBlockId } from '@/features/logbook/log/uploads';
 
 const PATH = 'rate.426bb8ddb825.png';

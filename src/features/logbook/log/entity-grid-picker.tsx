@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { isNil, isNotNil } from 'es-toolkit';
 import { LayoutGroup, motion } from 'motion/react';
-import { useDeferredValue, useId, useMemo, useState } from 'react';
+import { useDeferredValue, useEffect, useEffectEvent, useId, useMemo, useState } from 'react';
 import { match, P } from 'ts-pattern';
 
 import { dataBrowseListingUsesBrainRegionHierarchy } from '@/api/entitycore/types/extended-entity-type';
@@ -22,6 +22,7 @@ import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import { DATA_BROWSE_ALLOWED_ENTITIES } from '@/features/views/listing/data-browse-entities';
 import { BouncyAccordion } from '@/ui/molecules/bouncy-accordion';
 import { Icon } from '@/ui/molecules/icon';
+import { Modal } from '@/ui/molecules/modal';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import {
   Select,
@@ -65,7 +66,7 @@ const gridItems = (configs: Readonly<Record<string, { title: string; extendedTyp
       coreType: c.extendedType as TExtendedEntitiesTypeDict,
     }));
 const lookOf = (group: TEntityTypeGroup) =>
-  groupLooks[group] ?? { colour: '#002766', tint: '#f0f2f5' };
+  groupLooks[group] ?? { colour: 'var(--color-primary-9)', tint: 'var(--color-rule-soft)' };
 
 const SECTIONS: readonly INavSection[] = [
   {
@@ -189,229 +190,246 @@ export function EntityGridPicker({ multiple, onPick, onClose }: IEntityGridPicke
     setNavOpen(false);
   };
 
-  return (
-    <div className="fixed inset-0 z-41 grid place-items-center bg-[rgba(0,16,38,0.32)] p-4">
-      <section
-        className="logbook-card relative flex h-[min(860px,calc(100vh-32px))] w-[min(1360px,calc(100vw-32px))] flex-col overflow-hidden"
-        role="dialog"
-        aria-modal="true"
-        aria-label={multiple ? 'Link entities' : 'Replace the entity'}
-      >
-        <header className="flex flex-none items-center gap-3 border-b border-rule-soft px-5 py-3.5 max-sm:px-3">
-          <span className="grid size-[34px] flex-none place-items-center rounded-full bg-primary-0 text-primary-7 max-sm:hidden">
-            <Icon name={multiple ? 'link' : 'replace'} size={16} />
-          </span>
-          <h2 className="mr-auto min-w-0 truncate text-[17px] font-bold text-primary-9">
-            {multiple ? 'Link entities' : 'Replace the entity'}
-          </h2>
-          {/* biome-ignore lint/a11y/useSemanticElements: a segmented button group, not a form fieldset */}
-          <div
-            className="flex h-[34px] items-center rounded-full bg-neutral-1 p-0.5"
-            role="group"
-            aria-label="Scope"
-          >
-            {SCOPES.map((s) => (
-              <button
-                key={s.value}
-                type="button"
-                className={PILL}
-                aria-pressed={scope === s.value}
-                aria-label={s.label}
-                title={s.label}
-                onClick={() => setScope(s.value)}
-              >
-                <Icon name={s.icon} size={14} />
-                <span className="max-sm:hidden">{s.label}</span>
-              </button>
-            ))}
-          </div>
-          <button type="button" className="modal-close" aria-label="Close" onClick={onClose}>
-            <Icon name="close" size={14} stroke={2.4} />
-          </button>
-        </header>
+  const closeOnEscape = useEffectEvent((event: KeyboardEvent): void => {
+    if (event.key === 'Escape' && !event.defaultPrevented) onClose();
+  });
+  useEffect(() => {
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, []);
+  const title = multiple ? 'Link entities' : 'Replace the entity';
 
-        <div className="flex min-h-0 flex-1">
-          {navOpen ? (
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title={title}
+      closable={false}
+      keyboard={false}
+      size="auto"
+      zIndex={41}
+      container={() => document.querySelector<HTMLElement>('.logbook-root') ?? document.body}
+      overlayClassName="bg-primary-10/32 backdrop-blur-none"
+      headerClassName="sr-only"
+      className="logbook-card flex h-[min(860px,calc(100vh-32px))] w-[min(1360px,calc(100vw-32px))] flex-col overflow-hidden rounded-[24px] shadow-card"
+      bodyClassName="relative flex max-h-none min-h-0 flex-1 flex-col overflow-hidden p-0"
+    >
+      <header className="flex flex-none items-center gap-3 border-b border-rule-soft px-5 py-3.5 max-sm:px-3">
+        <span className="grid size-[34px] flex-none place-items-center rounded-full bg-primary-0 text-primary-7 max-sm:hidden">
+          <Icon name={multiple ? 'link' : 'replace'} size={16} />
+        </span>
+        <h2 className="mr-auto min-w-0 truncate text-[17px] font-bold text-primary-9">{title}</h2>
+        {/* biome-ignore lint/a11y/useSemanticElements: a segmented button group, not a form fieldset */}
+        <div
+          className="flex h-[34px] items-center rounded-full bg-neutral-1 p-0.5"
+          role="group"
+          aria-label="Scope"
+        >
+          {SCOPES.map((s) => (
+            <button
+              key={s.value}
+              type="button"
+              className={PILL}
+              aria-pressed={scope === s.value}
+              aria-label={s.label}
+              title={s.label}
+              onClick={() => setScope(s.value)}
+            >
+              <Icon name={s.icon} size={14} />
+              <span className="max-sm:hidden">{s.label}</span>
+            </button>
+          ))}
+        </div>
+        <button type="button" className="modal-close" aria-label="Close" onClick={onClose}>
+          <Icon name="close" size={14} stroke={2.4} />
+        </button>
+      </header>
+
+      <div className="flex min-h-0 flex-1">
+        {navOpen ? (
+          <button
+            type="button"
+            className="absolute inset-0 z-55 cursor-default border-0 bg-primary-10/32 md:hidden"
+            aria-label="Close the list of types"
+            onClick={() => setNavOpen(false)}
+          />
+        ) : null}
+        <nav
+          className="scroll-thin w-[264px] flex-none overflow-y-auto bg-white p-3 max-md:drawer max-md:absolute max-md:z-60 max-md:w-[min(360px,calc(100%-40px))]"
+          data-open={navOpen}
+          aria-label="Entity types"
+          onKeyDown={(event) => {
+            if (event.key !== 'Escape' || !navOpen) return;
+            event.preventDefault();
+            setNavOpen(false);
+          }}
+        >
+          <div className="mb-2 flex items-center justify-between pl-1 md:hidden">
+            <span className="label-caps">Entity types</span>
             <button
               type="button"
-              className="absolute inset-0 z-55 cursor-default border-0 bg-[rgba(0,16,38,0.32)] md:hidden"
+              className="modal-close"
               aria-label="Close the list of types"
               onClick={() => setNavOpen(false)}
-            />
-          ) : null}
-          <nav
-            className="scroll-thin w-[264px] flex-none overflow-y-auto bg-white p-3 max-md:drawer max-md:absolute max-md:z-60 max-md:w-[min(360px,calc(100%-40px))]"
-            data-open={navOpen}
-            aria-label="Entity types"
-            onKeyDown={(event) => event.key === 'Escape' && setNavOpen(false)}
-          >
-            <div className="mb-2 flex items-center justify-between pl-1 md:hidden">
-              <span className="label-caps">Entity types</span>
-              <button
-                type="button"
-                className="modal-close"
-                aria-label="Close the list of types"
-                onClick={() => setNavOpen(false)}
-              >
-                <Icon name="close" size={14} stroke={2.4} />
-              </button>
-            </div>
-            <LayoutGroup id={`${gridId}-types`}>
-              <BouncyAccordion
-                value={openSection}
-                onValueChange={setOpenSection}
-                classNames={{ item: 'shadow-block-btn' }}
-                items={SECTIONS.map((section) => ({
-                  id: section.id,
-                  icon: (
-                    <span
-                      className="grid size-7 place-items-center rounded-full"
-                      style={{ background: section.look.tint, color: section.look.colour }}
-                    >
-                      <Icon name={section.icon} size={15} />
-                    </span>
-                  ),
-                  title: (
-                    <span className="flex items-center gap-2">
-                      <span className="flex min-w-0 flex-col">
-                        {section.title}
-                        {section === activeSection && openSection !== section.id ? (
-                          <span
-                            className="truncate text-[12px] font-semibold"
-                            style={{ color: section.look.colour }}
-                          >
-                            {active?.label}
-                          </span>
-                        ) : null}
-                      </span>
-                      <PickCount
-                        count={section.items.reduce((n, i) => n + (picks[i.key]?.length ?? 0), 0)}
-                      />
-                    </span>
-                  ),
-                  description: (
-                    <TypeList
-                      section={section}
-                      activeKey={active?.key}
-                      picks={picks}
-                      onSelect={select}
-                    />
-                  ),
-                }))}
-              />
-            </LayoutGroup>
-          </nav>
-
-          <div
-            className={cn(
-              'grid min-h-0 min-w-0 flex-1 gap-3 p-3',
-              isNil(preview)
-                ? "grid-cols-1 [grid-template-areas:'body']"
-                : "grid-cols-[minmax(0,1fr)_minmax(320px,400px)] [grid-template-areas:'body_mini-view']"
-            )}
-          >
-            {match(active)
-              .with(P.nullish, () => null)
-              .with({ blockType: P.string }, (item) => (
-                <QuickList
-                  type={item.blockType}
-                  heading={heading}
-                  picked={picks[item.key] ?? []}
-                  onToggle={toggle}
-                />
-              ))
-              .with({ coreType: P.string }, (item) => (
-                <BrowseEntityScope
-                  id={`${gridId}-${item.key}`}
-                  section={WorkspaceSection.Data}
-                  dataType={item.coreType}
-                  scope={scope}
-                  extraQueryParams={regionParams}
-                  extraToolbarSlots={{
-                    entityType: heading,
-                    brainRegion: (
-                      <>
-                        <SpeciesFilter
-                          value={hierarchyId}
-                          hierarchies={hierarchies}
-                          onChange={(value) => {
-                            setHierarchyId(value);
-                            setRegion(null);
-                          }}
-                        />
-                        <RegionFilter
-                          options={isNil(species) ? [] : tree.result.options}
-                          value={region}
-                          disabled={isNil(species) || !usesRegion}
-                          hint={
-                            usesRegion
-                              ? 'Pick a species to filter by brain region.'
-                              : 'This type has no brain region to filter by.'
-                          }
-                          onChange={setRegion}
-                        />
-                      </>
-                    ),
-                  }}
-                  requireBrainRegion={false}
-                  requireSpeciesSelector={false}
-                  requireScopeSelector={false}
-                  requireMiniDetailView={false}
-                  allowDownload={false}
-                  allowDelete={false}
-                  mainTableProps={{
-                    selectionType: multiple ? 'checkbox' : 'radio',
-                    selectedRows: rows[item.key] ?? [],
-                    onRowsSelected: chooseRows,
-                    hideSelectAll: !multiple,
-                    onCellClick: (_basePath, record, recordType) =>
-                      setPreview({ record: record as EntityCoreObjectTypes, dataType: recordType }),
-                  }}
-                  classNames={{
-                    container: 'h-full min-h-0 w-full min-w-0 overflow-hidden [grid-area:body]',
-                  }}
-                />
-              ))
-              .exhaustive()}
-            {isNil(preview) ? null : (
-              <div className="h-full min-h-0 [grid-area:mini-view]">
-                <MiniDetailViewRenderer
-                  section={WorkspaceSection.Data}
-                  record={preview.record}
-                  dataType={preview.dataType}
-                  theme="light"
-                  onClose={() => setPreview(null)}
-                  openDetailsInNewTab
-                  hideUseModelAction
-                />
-              </div>
-            )}
+            >
+              <Icon name="close" size={14} stroke={2.4} />
+            </button>
           </div>
-        </div>
+          <LayoutGroup id={`${gridId}-types`}>
+            <BouncyAccordion
+              value={openSection}
+              onValueChange={setOpenSection}
+              classNames={{ item: 'shadow-block-btn' }}
+              items={SECTIONS.map((section) => ({
+                id: section.id,
+                icon: (
+                  <span
+                    className="grid size-7 place-items-center rounded-full"
+                    style={{ background: section.look.tint, color: section.look.colour }}
+                  >
+                    <Icon name={section.icon} size={15} />
+                  </span>
+                ),
+                title: (
+                  <span className="flex items-center gap-2">
+                    <span className="flex min-w-0 flex-col">
+                      {section.title}
+                      {section === activeSection && openSection !== section.id ? (
+                        <span
+                          className="truncate text-[12px] font-semibold"
+                          style={{ color: section.look.colour }}
+                        >
+                          {active?.label}
+                        </span>
+                      ) : null}
+                    </span>
+                    <PickCount
+                      count={section.items.reduce((n, i) => n + (picks[i.key]?.length ?? 0), 0)}
+                    />
+                  </span>
+                ),
+                description: (
+                  <TypeList
+                    section={section}
+                    activeKey={active?.key}
+                    picks={picks}
+                    onSelect={select}
+                  />
+                ),
+              }))}
+            />
+          </LayoutGroup>
+        </nav>
 
-        <footer className="flex flex-none items-center justify-end gap-3 border-t border-rule-soft px-5 py-3">
-          <button
-            type="button"
-            className="h-10 rounded-full border-0 px-4 text-[14px] font-semibold text-primary-9 hover:bg-fill-2"
-            onClick={onClose}
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            className="btn-navy inline-flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={all.length === 0}
-            onClick={confirm}
-          >
-            <Icon name={multiple ? 'link' : 'replace'} size={16} />
-            {match({ multiple, count: all.length })
-              .with({ multiple: false }, () => 'Replace')
-              .with({ count: 0 }, () => 'Link entities')
-              .otherwise(({ count }) => `Link ${count} ${count === 1 ? 'entity' : 'entities'}`)}
-          </button>
-        </footer>
-      </section>
-    </div>
+        <div
+          className={cn(
+            'grid min-h-0 min-w-0 flex-1 gap-3 p-3',
+            isNil(preview)
+              ? "grid-cols-1 [grid-template-areas:'body']"
+              : "grid-cols-[minmax(0,1fr)_minmax(320px,400px)] [grid-template-areas:'body_mini-view']"
+          )}
+        >
+          {match(active)
+            .with(P.nullish, () => null)
+            .with({ blockType: P.string }, (item) => (
+              <QuickList
+                type={item.blockType}
+                heading={heading}
+                picked={picks[item.key] ?? []}
+                onToggle={toggle}
+              />
+            ))
+            .with({ coreType: P.string }, (item) => (
+              <BrowseEntityScope
+                id={`${gridId}-${item.key}`}
+                section={WorkspaceSection.Data}
+                dataType={item.coreType}
+                scope={scope}
+                extraQueryParams={regionParams}
+                extraToolbarSlots={{
+                  entityType: heading,
+                  brainRegion: (
+                    <>
+                      <SpeciesFilter
+                        value={hierarchyId}
+                        hierarchies={hierarchies}
+                        onChange={(value) => {
+                          setHierarchyId(value);
+                          setRegion(null);
+                        }}
+                      />
+                      <RegionFilter
+                        options={isNil(species) ? [] : tree.result.options}
+                        value={region}
+                        disabled={isNil(species) || !usesRegion}
+                        hint={
+                          usesRegion
+                            ? 'Pick a species to filter by brain region.'
+                            : 'This type has no brain region to filter by.'
+                        }
+                        onChange={setRegion}
+                      />
+                    </>
+                  ),
+                }}
+                requireBrainRegion={false}
+                requireSpeciesSelector={false}
+                requireScopeSelector={false}
+                requireMiniDetailView={false}
+                allowDownload={false}
+                allowDelete={false}
+                mainTableProps={{
+                  selectionType: multiple ? 'checkbox' : 'radio',
+                  selectedRows: rows[item.key] ?? [],
+                  onRowsSelected: chooseRows,
+                  hideSelectAll: !multiple,
+                  onCellClick: (_basePath, record, recordType) =>
+                    setPreview({ record: record as EntityCoreObjectTypes, dataType: recordType }),
+                }}
+                classNames={{
+                  container: 'h-full min-h-0 w-full min-w-0 overflow-hidden [grid-area:body]',
+                }}
+              />
+            ))
+            .exhaustive()}
+          {isNil(preview) ? null : (
+            <div className="h-full min-h-0 [grid-area:mini-view]">
+              <MiniDetailViewRenderer
+                section={WorkspaceSection.Data}
+                record={preview.record}
+                dataType={preview.dataType}
+                theme="light"
+                onClose={() => setPreview(null)}
+                openDetailsInNewTab
+                hideUseModelAction
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
+      <footer className="flex flex-none items-center justify-end gap-3 border-t border-rule-soft px-5 py-3">
+        <button
+          type="button"
+          className="h-10 rounded-full border-0 px-4 text-[14px] font-semibold text-primary-9 hover:bg-fill-2"
+          onClick={onClose}
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          className="btn-navy inline-flex items-center gap-2 aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
+          aria-disabled={all.length === 0}
+          onClick={confirm}
+        >
+          <Icon name={multiple ? 'link' : 'replace'} size={16} />
+          {match({ multiple, count: all.length })
+            .with({ multiple: false }, () => 'Replace')
+            .with({ count: 0 }, () => 'Link entities')
+            .otherwise(({ count }) => `Link ${count} ${count === 1 ? 'entity' : 'entities'}`)}
+        </button>
+      </footer>
+    </Modal>
   );
 }
 
@@ -467,7 +485,7 @@ function TypeList({
               ) : null}
               <span
                 className="relative size-2 flex-none rounded-full transition-transform duration-300 ease-out group-hover:scale-150 group-aria-[current=page]:scale-125"
-                style={{ background: current ? '#ffffff' : section.look.colour }}
+                style={{ background: current ? 'var(--color-white)' : section.look.colour }}
               />
               <span className="relative min-w-0 flex-1 truncate transition-transform duration-300 ease-out group-hover:translate-x-1 group-aria-[current=page]:translate-x-0.5">
                 {item.label}

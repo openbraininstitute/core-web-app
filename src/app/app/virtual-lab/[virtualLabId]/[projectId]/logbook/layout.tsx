@@ -5,6 +5,8 @@ import { Logbook } from '@/features/logbook/logbook';
 
 import type { ReactNode } from 'react';
 
+import '@/features/logbook/logbook.css';
+
 export default async function LogbookLayout({ children }: { children: ReactNode }) {
   if ((await getAllFlags())[logbookFlag.key] !== true) notFound();
 

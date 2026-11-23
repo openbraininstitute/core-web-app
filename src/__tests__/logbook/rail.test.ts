@@ -12,23 +12,12 @@ import {
 } from '@/features/logbook/api/research-logs';
 import { colourOf } from '@/features/logbook/blocks/colour';
 import { membersOf } from '@/features/logbook/board/rail';
-import { agoOf } from '@/features/logbook/helpers';
 import { LogOrderField, OrderDirection } from '@/features/logbook/types';
 
 import type { IResearchLog } from '@/api/entitycore/types/entities/research-log';
 import type { TActorVia } from '@/api/logbook/types';
 import type { ILogOrder } from '@/features/logbook/types';
 import type { WorkspaceContext } from '@/types/common';
-
-test('the log card says how long ago a log changed, then its date after a week', () => {
-  const now = Date.parse('2026-11-14T12:00:00Z');
-  const at = (ms: number) => new Date(now - ms).toISOString();
-  expect(agoOf(at(10_000), now)).toBe('just now');
-  expect(agoOf(at(5 * 60_000), now)).toContain('5');
-  expect(agoOf(at(3 * 3_600_000), now)).toContain('3');
-  expect(agoOf(at(10 * 86_400_000), now)).toContain('2026');
-  expect(agoOf(new Date(now + 60_000).toISOString(), now)).toBe('just now');
-});
 
 const user = (id: string, prefLabel: string) => ({
   id,

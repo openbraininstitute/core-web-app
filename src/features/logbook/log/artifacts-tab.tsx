@@ -5,11 +5,13 @@ import { match } from 'ts-pattern';
 import { searchArtifacts, useArtifacts } from '@/features/logbook/api/log-files';
 import { SearchField } from '@/features/logbook/board/rail';
 import { RowsSkeleton } from '@/features/logbook/elements/skeletons';
-import { agoOf, savedOf, sizeOf } from '@/features/logbook/helpers';
+import { savedOf } from '@/features/logbook/helpers';
 import { ArtifactIcon } from '@/features/logbook/log/artifact-icon';
 import { useLogContext } from '@/features/logbook/log/context';
 import { Icon } from '@/ui/molecules/icon';
+import timeElapsedFromToday from '@/util/date';
 import { cn } from '@/utils/css-class';
+import { formatBytes } from '@/utils/format';
 
 import type { IArtifact } from '@/features/logbook/types';
 
@@ -37,14 +39,14 @@ function ArtifactCard({
         <span className="flex min-w-0 flex-1 flex-col gap-1">
           <span className="truncate text-[14px] font-semibold text-primary-9">{artifact.name}</span>
           <span className="flex min-w-0 items-center gap-2 text-[12px] text-neutral-4">
-            <span className="flex-none tabular-nums">{sizeOf(artifact.size)}</span>
+            <span className="flex-none tabular-nums">{formatBytes(artifact.size, 1)}</span>
             {isNil(artifact.savedAt) ? null : (
               <span
                 className="inline-flex min-w-0 items-center gap-1 truncate"
                 title={`Saved ${savedOf(artifact.savedAt)}`}
               >
                 <Icon name="clock" size={11} />
-                {agoOf(artifact.savedAt)}
+                {timeElapsedFromToday(artifact.savedAt)}
               </span>
             )}
           </span>

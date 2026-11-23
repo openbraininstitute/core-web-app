@@ -3,7 +3,7 @@ import type { InfiniteData, QueryClient } from '@tanstack/react-query';
 import type { Mapping } from '@tiptap/pm/transform';
 import type { DecorationSet } from '@tiptap/pm/view';
 import type { Editor } from '@tiptap/react';
-import type { CSSProperties, MouseEvent as ReactMouseEvent, ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import type { LanguageInput } from 'shiki/core';
 import type { IndexeddbPersistence } from 'y-indexeddb';
 import type * as Y from 'yjs';
@@ -549,11 +549,6 @@ export interface IDeletePageDialogProps {
   readonly onClose: () => void;
 }
 
-export interface IPopAt {
-  readonly top: number;
-  readonly left: number;
-}
-
 export interface IClock {
   readonly top: number;
   readonly from: number;
@@ -659,7 +654,6 @@ export interface IPageViewProps extends ILogViewProps {
 
 export interface IInsertMenuProps {
   readonly editor: Editor;
-  readonly at: IPopAt;
   readonly onClose: () => void;
   readonly onPicker: () => void;
   readonly onNotice: (notice: INotice) => void;
@@ -754,14 +748,6 @@ export interface ISidePaneProps extends ILogShared {
   readonly editorShut: boolean;
   readonly canShut: boolean;
   readonly onShut: () => void;
-}
-
-export interface IKindLook {
-  readonly icon: TIconName;
-  readonly badge: string;
-  readonly bar: string;
-  readonly card: string;
-  readonly lifeMs: number | null;
 }
 
 export interface IAgentToastProps {
@@ -902,19 +888,9 @@ export interface ILogShared extends ILogPageProps {
   readonly setSelection: (selection: ISelection | null) => void;
   readonly showHistory: (range: ISelection | null) => void;
   readonly flash: (from: number, to: number) => void;
-  readonly setNotice: (notice: INotice | null) => void;
+  readonly setNotice: (notice: INotice) => void;
   readonly openArtifact: (id: string) => void;
   readonly readOnly: TReadOnlyReason | null;
   readonly awarenessStates: () => Map<number, Record<string, unknown>>;
   readonly learnWriters: (clientIds: readonly number[]) => void;
-}
-
-export interface IPresenceButtonProps extends ILogShared {
-  readonly expanded: boolean;
-  readonly onToggle: (event: ReactMouseEvent<HTMLButtonElement>) => void;
-}
-
-export interface IHereNowProps extends ILogShared {
-  readonly at: IPopAt;
-  readonly states: () => Map<number, Record<string, unknown>>;
 }

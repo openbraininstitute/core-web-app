@@ -1,4 +1,7 @@
 import { config } from '@/config';
+import { NoticeKind } from '@/features/logbook/types';
+
+import type { TNoticeKind } from '@/features/logbook/types';
 
 /** One minute in milliseconds. */
 export const MINUTE_MS = 60_000;
@@ -87,6 +90,14 @@ export const HISTORY_MAX_PIECES = 6;
 /** How long an agent toast stays on screen. */
 export const AGENT_TOAST_MS = 7000;
 
+/** Seconds a notice stays on screen; 0 keeps it until dismissed. */
+export const NOTICE_SECONDS: Readonly<Record<TNoticeKind, number>> = {
+  [NoticeKind.Success]: 4.5,
+  [NoticeKind.Info]: 6,
+  [NoticeKind.Warning]: 9,
+  [NoticeKind.Error]: 0,
+};
+
 /** Disconnected this long, the save status shows offline. */
 export const OFFLINE_AFTER_MS = 2000;
 
@@ -146,6 +157,9 @@ export const FNV_PRIME = 0x01000193;
 
 /** Shared look of the logbook's popover panels. */
 export const POPOVER_PANEL = 'w-auto rounded-2xl border-0 bg-white shadow-(--shadow-pop)';
+
+/** Logbook look of a dropdown menu item; keeps each icon at its own size. */
+export const DROPDOWN_ITEM = "focus:bg-fill-item-hover [&_svg:not([class*='size-'])]:size-auto";
 
 /** Version part of the logbook's browser storage keys. */
 export const STORAGE_VERSION = '202611201';

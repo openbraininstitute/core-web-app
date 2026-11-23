@@ -44,7 +44,7 @@ export function LogDetailsDialog(props: ILogDetailsDialogProps) {
     // biome-ignore lint/a11y/useKeyWithClickEvents: backdrop click closes; Escape is the dialog's own
     <dialog
       ref={dialog}
-      className="scroll-thin m-auto max-h-[calc(100dvh-24px)] w-[min(480px,calc(100vw-32px))] overflow-y-auto rounded-[20px] border-0 bg-white p-0 text-primary-9 shadow-pop backdrop:bg-[rgba(4,21,48,0.35)]"
+      className="scroll-thin m-auto max-h-[calc(100dvh-24px)] w-[min(480px,calc(100vw-32px))] overflow-y-auto rounded-[20px] border-0 bg-white p-0 text-primary-9 shadow-pop backdrop:bg-primary-10/35"
       aria-labelledby={titleId}
       onClose={props.onClose}
       onClick={(event) => event.target === event.currentTarget && props.onClose()}

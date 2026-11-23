@@ -13,10 +13,10 @@ import {
 import { fileLangOf, fileLooks } from '@/features/logbook/blocks/kinds';
 import { highlightLines } from '@/features/logbook/editor/shiki';
 import { LinesSkeleton } from '@/features/logbook/elements/skeletons';
-import { sizeOf } from '@/features/logbook/helpers';
 import { useLogContext } from '@/features/logbook/log/context';
 import { useUploading } from '@/features/logbook/log/uploads';
 import { FileLang } from '@/features/logbook/types';
+import { formatBytes } from '@/utils/format';
 
 import type { NodeViewProps } from '@tiptap/react';
 import type { IShikiToken } from '@/features/logbook/types';
@@ -153,7 +153,7 @@ export function FileView({ node, selected }: NodeViewProps) {
   const meta = [
     look.name,
     match({ saved, uploading, pending: files.isPending })
-      .with({ saved: P.nonNullable }, ({ saved: file }) => sizeOf(file.size))
+      .with({ saved: P.nonNullable }, ({ saved: file }) => formatBytes(file.size, 1))
       .with({ uploading: true }, () => 'uploading…')
       .with({ pending: true }, () => null)
       .otherwise(() => 'not uploaded yet'),

@@ -7,16 +7,23 @@ import { ActorVia } from '@/api/logbook/types';
 import { useContributors } from '@/features/logbook/api/contributors';
 import { colourOf } from '@/features/logbook/blocks/colour';
 import { OrderButton } from '@/features/logbook/board/log-order';
-import { POPOVER_PANEL } from '@/features/logbook/constants';
+import { DROPDOWN_ITEM, POPOVER_PANEL } from '@/features/logbook/constants';
 import { PillSkeletons } from '@/features/logbook/elements/skeletons';
-import { agoOf, dateOf } from '@/features/logbook/helpers';
+import { dateOf } from '@/features/logbook/helpers';
 import { DeleteLogDialog } from '@/features/logbook/log/delete-log-dialog';
 import { NotifyPopover } from '@/features/logbook/log/menus';
 import { useNotifySettings } from '@/features/logbook/log/notify-settings';
 import { PopoverAlign, PopoverSide, RailHeading } from '@/features/logbook/types';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/ui/molecules/dropdown-menu';
 import { Icon } from '@/ui/molecules/icon';
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { AvatarGroup } from '@/ui/segments/avatar-group';
+import timeElapsedFromToday from '@/util/date';
 import { cn } from '@/utils/css-class';
 
 import type { ReactNode, RefObject } from 'react';
@@ -343,52 +350,54 @@ export function LogsEmpty({
   );
 }
 
-const MENU_ITEM =
-  'flex w-full items-center gap-2.5 rounded-[9px] px-2.5 py-2 text-left text-[14px] font-semibold text-primary-9 transition-colors hover:bg-fill-item-hover';
+const MENU_ITEM = cn(
+  DROPDOWN_ITEM,
+  'flex w-full items-center gap-2.5 rounded-[9px] px-2.5 py-2 text-left text-[14px] font-semibold text-primary-9 transition-colors hover:bg-fill-item-hover'
+);
 
 export function CardMenu({
   name,
   deleteLabel = 'Delete',
   onRename,
   onDelete,
-  onClose,
+  children,
 }: {
   readonly name: string;
   readonly deleteLabel?: string;
   readonly onRename: () => void;
   readonly onDelete: () => void;
-  readonly onClose: () => void;
+  readonly children: ReactNode;
 }) {
+  const chosen = useRef<(() => void) | null>(null);
   return (
-    <>
-      <button
-        type="button"
-        className="fixed inset-0 z-30 cursor-default border-0 bg-transparent"
-        aria-label="Close menu"
-        onClick={onClose}
-      />
-      <div
-        className="pop absolute top-10 right-2 z-31 flex w-[168px] flex-col p-1.5"
-        role="menu"
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        className={cn(POPOVER_PANEL, 'z-71 flex w-[168px] flex-col p-1.5')}
         aria-label={`Actions for ${name}`}
-        onKeyDown={(event) => event.key === 'Escape' && onClose()}
+        onCloseAutoFocus={(event) => {
+          const action = chosen.current;
+          chosen.current = null;
+          if (isNil(action)) return;
+          event.preventDefault();
+          action();
+        }}
       >
-        {/* biome-ignore lint/a11y/noAutofocus: the menu or field this click opened takes focus */}
-        <button type="button" role="menuitem" className={MENU_ITEM} autoFocus onClick={onRename}>
+        <DropdownMenuItem className={MENU_ITEM} onSelect={() => (chosen.current = onRename)}>
           <Icon name="pencil" size={15} />
           Rename
-        </button>
-        <button
-          type="button"
-          role="menuitem"
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          variant="destructive"
           className={cn(MENU_ITEM, 'text-destructive hover:bg-destructive/10')}
-          onClick={onDelete}
+          onSelect={() => (chosen.current = onDelete)}
         >
           <Icon name="trash" size={15} />
           {deleteLabel}
-        </button>
-      </div>
-    </>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -445,7 +454,6 @@ export function RenameField({
 
 export function Rail(props: IRailProps) {
   const { logs: shown, scope, activeId } = props;
-  const [menuFor, setMenuFor] = useState<string | null>(null);
   const [renaming, setRenaming] = useState<string | null>(null);
   const [failed, setFailed] = useState<{ readonly id: string; readonly text: string } | null>(null);
   const run = (id: string, write: Promise<unknown>): void => {
@@ -459,10 +467,6 @@ export function Rail(props: IRailProps) {
     run(id, props.onRename(id, name));
   };
   const [deleting, setDeleting] = useState<IResearchLog | null>(null);
-  const remove = (log: IResearchLog): void => {
-    setMenuFor(null);
-    setDeleting(log);
-  };
   return (
     <>
       {props.heading === RailHeading.None ? null : (
@@ -550,31 +554,22 @@ export function Rail(props: IRailProps) {
                   title={`Created ${dateOf(log.creation_date)} by ${log.created_by.pref_label}. Updated ${dateOf(log.update_date)}.`}
                 >
                   <LogWriters project={props.project} log={log} />
-                  <span className="ml-auto flex-none">{agoOf(log.update_date)}</span>
+                  <span className="ml-auto flex-none">{timeElapsedFromToday(log.update_date)}</span>
                 </span>
               </div>
-              <button
-                type="button"
-                className="absolute top-2 right-2 grid size-7 place-items-center rounded-[8px] border-0 bg-transparent text-neutral-4 opacity-0 transition-opacity duration-150 ease-[ease] group-focus-within:opacity-100 group-hover:opacity-100 data-[open=true]:opacity-100 group-data-[on=true]:bg-white/14 group-data-[on=true]:text-white"
-                aria-label={`Actions for ${log.name}`}
-                aria-haspopup="menu"
-                aria-expanded={menuFor === log.id}
-                data-open={menuFor === log.id}
-                onClick={() => setMenuFor(menuFor === log.id ? null : log.id)}
+              <CardMenu
+                name={log.name}
+                onRename={() => setRenaming(log.id)}
+                onDelete={() => setDeleting(log)}
               >
-                <Icon name="dots" size={16} stroke={2.4} />
-              </button>
-              {menuFor === log.id ? (
-                <CardMenu
-                  name={log.name}
-                  onRename={() => {
-                    setMenuFor(null);
-                    setRenaming(log.id);
-                  }}
-                  onDelete={() => remove(log)}
-                  onClose={() => setMenuFor(null)}
-                />
-              ) : null}
+                <button
+                  type="button"
+                  className="absolute top-2 right-2 grid size-7 place-items-center rounded-[8px] border-0 bg-transparent text-neutral-4 opacity-0 transition-opacity duration-150 ease-[ease] group-focus-within:opacity-100 group-hover:opacity-100 data-[state=open]:opacity-100 group-data-[on=true]:bg-white/14 group-data-[on=true]:text-white"
+                  aria-label={`Actions for ${log.name}`}
+                >
+                  <Icon name="dots" size={16} stroke={2.4} />
+                </button>
+              </CardMenu>
             </div>
             {log.id === activeId ? props.outline : null}
           </Fragment>

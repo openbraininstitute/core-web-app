@@ -1,7 +1,7 @@
 import { StepMap } from '@tiptap/pm/transform';
 import { describe, expect, test } from 'vitest';
 
-import { markdownToJson, schema } from '@/features/logbook/blocks/markdown';
+import { markdownToJson, schema } from '@/__tests__/logbook/blocks/markdown';
 import { UNKNOWN_ACTOR } from '@/features/logbook/collaboration/actors';
 import { ChangeFeed, diffOf, summaryOf } from '@/features/logbook/collaboration/changes';
 

@@ -1,10 +1,10 @@
 import { useEditorState } from '@tiptap/react';
 import { relativePositionToAbsolutePosition, ySyncPluginKey } from '@tiptap/y-tiptap';
 import { isNil, isNotNil } from 'es-toolkit';
-import { useEffect, useMemo, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 import * as Y from 'yjs';
 
-import { CLOCK_MS, PRESENCE_STACK } from '@/features/logbook/constants';
+import { CLOCK_MS, POPOVER_PANEL, PRESENCE_STACK } from '@/features/logbook/constants';
 import { useNow } from '@/features/logbook/helpers';
 import {
   presentList,
@@ -16,15 +16,13 @@ import {
 import { Menu } from '@/features/logbook/types';
 import { Avatar } from '@/ui/molecules/avatar';
 import { Icon } from '@/ui/molecules/icon';
+import { Popover, PopoverAnchor, PopoverContent } from '@/ui/molecules/popover';
 import { AvatarGroup } from '@/ui/segments/avatar-group';
+import { cn } from '@/utils/css-class';
 
 import type { Editor } from '@tiptap/react';
-import type {
-  IHereNowProps,
-  ILogShared,
-  IPresenceButtonProps,
-  IPresent,
-} from '@/features/logbook/types';
+import type { MouseEvent as ReactMouseEvent } from 'react';
+import type { ILogShared, IPresent } from '@/features/logbook/types';
 
 function usePresent(props: ILogShared): IPresent[] {
   const now = useNow(CLOCK_MS, props.shown);
@@ -38,8 +36,16 @@ function usePresent(props: ILogShared): IPresent[] {
   );
 }
 
-export function PresenceButton(props: IPresenceButtonProps) {
+export function PresenceButton(props: ILogShared) {
+  const { menu, setMenu } = props;
   const present = usePresent(props);
+  const anchor = useRef<HTMLSpanElement>(null);
+  const opener = useRef<HTMLButtonElement | null>(null);
+  const expanded = menu === Menu.Who;
+  const toggle = (event: ReactMouseEvent<HTMLButtonElement>): void => {
+    opener.current = event.currentTarget;
+    setMenu(expanded ? Menu.None : Menu.Who);
+  };
   const stacked = stackOrder(present);
   const people = present.filter((p) => !p.actor.agent).length;
   const members = stacked.map((p) => ({
@@ -57,38 +63,62 @@ export function PresenceButton(props: IPresenceButtonProps) {
       size="md"
       label="Here now"
       labels={{ showMore: (count) => `Show all ${count} more here now` }}
-      onMore={props.onToggle}
-      moreOpen={props.expanded}
+      onMore={toggle}
+      moreOpen={expanded}
     />
   );
   return (
-    <>
-      <span className="inline-flex h-9 flex-none items-center @max-[470px]/pane:hidden!">
-        {stacked.length > PRESENCE_STACK ? (
-          group
-        ) : (
+    <Popover open={expanded} onOpenChange={(open) => setMenu(open ? Menu.Who : Menu.None)}>
+      <PopoverAnchor asChild>
+        <span ref={anchor} className="inline-flex flex-none">
+          <span className="inline-flex h-9 flex-none items-center @max-[470px]/pane:hidden!">
+            {stacked.length > PRESENCE_STACK ? (
+              group
+            ) : (
+              <button
+                type="button"
+                className="inline-flex items-center rounded-full"
+                aria-label={whoLabelOf(present)}
+                aria-expanded={expanded}
+                onClick={toggle}
+              >
+                {group}
+              </button>
+            )}
+          </span>
           <button
             type="button"
-            className="inline-flex items-center rounded-full"
+            className="inline-flex h-9 flex-none items-center gap-1.5 rounded-full bg-fill-2 px-3.5 text-[13px] font-bold @min-[471px]/pane:hidden!"
             aria-label={whoLabelOf(present)}
-            aria-expanded={props.expanded}
-            onClick={props.onToggle}
+            aria-expanded={expanded}
+            onClick={toggle}
           >
-            {group}
+            <Icon name="person" size={14} />
+            {people}
           </button>
+        </span>
+      </PopoverAnchor>
+      <PopoverContent
+        align="start"
+        sideOffset={8}
+        collisionPadding={8}
+        className={cn(
+          POPOVER_PANEL,
+          'z-71 flex w-[320px] max-w-[calc(100vw-16px)] flex-col p-2 text-primary-9'
         )}
-      </span>
-      <button
-        type="button"
-        className="inline-flex h-9 flex-none items-center gap-1.5 rounded-full bg-fill-2 px-3.5 text-[13px] font-bold @min-[471px]/pane:hidden!"
-        aria-label={whoLabelOf(present)}
-        aria-expanded={props.expanded}
-        onClick={props.onToggle}
+        aria-label="Who is here"
+        onInteractOutside={(event) => {
+          if (event.target instanceof Node && anchor.current?.contains(event.target))
+            event.preventDefault();
+        }}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          if (document.activeElement === document.body) opener.current?.focus();
+        }}
       >
-        <Icon name="person" size={14} />
-        {people}
-      </button>
-    </>
+        <HereNow {...props} />
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -120,9 +150,9 @@ function cursorOf(
   return null;
 }
 
-export function HereNow(props: IHereNowProps) {
+function HereNow(props: ILogShared) {
   const present = usePresent(props);
-  const { editor, states } = props;
+  const { editor, awarenessStates: states } = props;
   // Rerun per transaction: the caret plugin dispatches one when someone's caret moves.
   const jumpable = useEditorState({
     editor,
@@ -141,12 +171,7 @@ export function HereNow(props: IHereNowProps) {
     editor.chain().setTextSelection(pos).scrollIntoView().focus().run();
   };
   return (
-    <div
-      className="pop absolute z-41 flex w-[320px] max-w-[calc(100%-16px)] flex-col p-2"
-      role="dialog"
-      aria-label="Who is here"
-      style={{ top: props.at.top, left: props.at.left }}
-    >
+    <>
       <div className="flex items-baseline gap-1.5 px-2.5 pt-2 pb-2.5 text-[14px]">
         <strong>Here now</strong>
         <span className="text-[12px] font-semibold text-neutral-4">({summaryOf(present)})</span>
@@ -190,6 +215,6 @@ export function HereNow(props: IHereNowProps) {
           );
         })}
       </div>
-    </div>
+    </>
   );
 }

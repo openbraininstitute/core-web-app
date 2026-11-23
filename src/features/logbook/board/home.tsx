@@ -12,9 +12,9 @@ import {
   SettingsButton,
 } from '@/features/logbook/board/rail';
 import { CardSkeletons } from '@/features/logbook/elements/skeletons';
-import { agoOf } from '@/features/logbook/helpers';
 import { PopoverAlign } from '@/features/logbook/types';
 import { Icon } from '@/ui/molecules/icon';
+import timeElapsedFromToday from '@/util/date';
 
 import type { IResearchLog } from '@/api/entitycore/types/entities/research-log';
 import type { IHomeProps } from '@/features/logbook/types';
@@ -98,7 +98,7 @@ function LogCard({
         <div className="mt-auto flex items-center gap-3 border-t border-rule-soft pt-3 text-[12px] text-neutral-4">
           <LogWriters project={project} log={log} />
           <span className="min-w-0 truncate">by {log.created_by.pref_label}</span>
-          <span className="ml-auto flex-none">{agoOf(log.update_date)}</span>
+          <span className="ml-auto flex-none">{timeElapsedFromToday(log.update_date)}</span>
         </div>
       </div>
     </article>

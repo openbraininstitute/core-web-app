@@ -1,7 +1,8 @@
 import { LogWriters } from '@/features/logbook/board/rail';
-import { agoOf } from '@/features/logbook/helpers';
+import { dateOf } from '@/features/logbook/helpers';
 import { Icon } from '@/ui/molecules/icon';
 import { ConfirmDeleteDialog } from '@/ui/segments/confirm-delete-dialog';
+import timeElapsedFromToday from '@/util/date';
 
 import type { IDeleteLogDialogProps } from '@/features/logbook/types';
 import type { IGoesWith } from '@/ui/segments/confirm-delete-dialog';
@@ -11,9 +12,6 @@ const GOES: readonly IGoesWith[] = [
   { icon: 'clock', text: 'Its activity and the list of who wrote in it' },
   { icon: 'sparkle', text: 'Agent runs and published versions' },
 ];
-
-const dateOf = (iso: string): string =>
-  new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
 
 export function DeleteLogDialog({ log, project, onDelete, onClose }: IDeleteLogDialogProps) {
   return (
@@ -57,7 +55,7 @@ export function DeleteLogDialog({ log, project, onDelete, onClose }: IDeleteLogD
               <Icon name="clock" size={13} stroke={2} />
               Updated
             </dt>
-            <dd className="m-0 font-semibold">{agoOf(log.update_date)}</dd>
+            <dd className="m-0 font-semibold">{timeElapsedFromToday(log.update_date)}</dd>
             <dt className="flex items-center gap-1.5 text-neutral-4">
               <Icon name="people" size={13} stroke={2} />
               Written by

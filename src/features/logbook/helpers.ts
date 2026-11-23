@@ -16,12 +16,6 @@ export const clip = (text: string, length: number): string => {
   return flat.length <= length ? flat : `${flat.slice(0, length - 1)}…`;
 };
 
-export const sizeOf = (bytes: number): string =>
-  match(bytes)
-    .with(P.number.lt(1024), () => `${bytes} B`)
-    .with(P.number.lt(1024 * 1024), () => `${(bytes / 1024).toFixed(1)} KB`)
-    .otherwise(() => `${(bytes / 1024 / 1024).toFixed(1)} MB`);
-
 export const hexOf = (colour: string | undefined): string =>
   match(colour)
     .with(P.nullish, '', () => '#c4cdd9')
@@ -42,21 +36,10 @@ const dayTimeFormat = new Intl.DateTimeFormat(undefined, {
   minute: '2-digit',
 });
 const timeFormat = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' });
-const relative = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto', style: 'short' });
 
 export const dateOf = (iso: string): string => dayFormat.format(new Date(iso));
 export const savedOf = (iso: string): string => dayTimeFormat.format(new Date(iso));
 export const timeOf = (at: number): string => timeFormat.format(at);
-
-export function agoOf(iso: string, now = Date.now()): string {
-  const ms = Math.max(0, now - new Date(iso).getTime());
-  return match(ms)
-    .with(P.number.lt(MINUTE_MS), () => 'just now')
-    .with(P.number.lt(HOUR_MS), () => relative.format(-Math.floor(ms / MINUTE_MS), 'minute'))
-    .with(P.number.lt(DAY_MS), () => relative.format(-Math.floor(ms / HOUR_MS), 'hour'))
-    .with(P.number.lt(7 * DAY_MS), () => relative.format(-Math.floor(ms / DAY_MS), 'day'))
-    .otherwise(() => dateOf(iso));
-}
 
 export function liveAgoOf(at: number, now: number): string {
   const seconds = Math.max(0, Math.round((now - at) / 1000));
