@@ -113,7 +113,7 @@ Conventional prefix, then a plain sentence that says what changes for the user:
 
 ### 22. Run React Doctor before pushing
 - `git push` runs React Doctor on the changes versus `main` (the `pre-push` hook in `lefthook.yml`). A new error blocks the push; warnings are shown but do not block.
-- Run it yourself after a change: `npx -y react-doctor@0.9.23 . --scope changed --no-supply-chain --no-score --verbose`
+- Run it yourself after a change: `pnpm exec react-doctor . --scope changed --no-supply-chain --no-score --verbose`
 - Fix what it finds before pushing. Do not skip the hook (`--no-verify`) to get past it.
 
 ### 23. Merge classes with `cn`
