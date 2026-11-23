@@ -1,6 +1,5 @@
 import type { ColumnMeta, ColumnValues } from '@/features/circuit-nodes/types';
-import type { CompartmentPlaces } from '@/features/sonata-viewer/hooks/use-compartment-places';
-import type { PopulationMetadata } from '@/features/sonata-viewer/types';
+import type { PopulationMetadata, TCompartmentPlaces } from '@/features/sonata-viewer/types';
 import type { CellStatistic } from '@/features/spike-viewer/spike-statistics/statistics';
 
 /** What the statistics' menus list a compartment's own variables under. */
@@ -44,7 +43,7 @@ export function compartmentStatistics({
   statistics: readonly CellStatistic[];
   traceValues: Readonly<Record<string, Float64Array>>;
   traces: number;
-  places: CompartmentPlaces | null;
+  places: TCompartmentPlaces | null;
   offsets: ReadonlyMap<number, number> | undefined;
 }): { statistics: CellStatistic[]; values: Record<string, Float64Array> } {
   const byTrace = (known: ReadonlyMap<number, number>) => {
@@ -66,7 +65,7 @@ export function compartmentStatistics({
 }
 
 /** The grouping a compartment has of its own, besides its cell's: its section's type. */
-export function sectionTypeColumn(places: CompartmentPlaces | null): ColumnMeta[] {
+export function sectionTypeColumn(places: TCompartmentPlaces | null): ColumnMeta[] {
   if (!places || places.types.size === 0) return [];
   return [
     {
@@ -86,7 +85,7 @@ export function sectionTypeColumn(places: CompartmentPlaces | null): ColumnMeta[
 export async function compartmentColumn(
   name: string,
   population: PopulationMetadata,
-  places: CompartmentPlaces | null,
+  places: TCompartmentPlaces | null,
   nodeColumn: (name: string) => Promise<ColumnValues>
 ): Promise<ColumnValues> {
   const { traces } = population;
