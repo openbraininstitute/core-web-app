@@ -22,6 +22,7 @@ import { useLogContext } from '@/features/logbook/log/context';
 import { CONTROL } from '@/features/logbook/log/controls';
 import { ArtifactKind } from '@/features/logbook/types';
 import { Icon } from '@/ui/molecules/icon';
+import { cn } from '@/utils/css-class';
 
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import type { IArtifact, IView } from '@/features/logbook/types';
@@ -234,7 +235,7 @@ export function ArtifactBar({
       {isNil(onOpenPage) ? null : (
         <button
           type="button"
-          className={`${CONTROL} bg-primary-0 text-primary-7 hover:bg-primary-1/50`}
+          className={cn(CONTROL, 'bg-primary-0 text-primary-7 hover:bg-primary-1/50')}
           title="Open the live page, where it is edited"
           onClick={onOpenPage}
         >
@@ -244,7 +245,7 @@ export function ArtifactBar({
       )}
       <button
         type="button"
-        className={`${CONTROL} bg-fill-2 text-primary-9 hover:bg-fill-item-hover`}
+        className={cn(CONTROL, 'bg-fill-2 text-primary-9 hover:bg-fill-item-hover')}
         aria-label={`Download ${artifact.name}`}
         onClick={() => void download()}
       >
@@ -304,12 +305,12 @@ export function ArtifactView({ artifact }: { readonly artifact: IArtifact }) {
       </div>
     ))
     .with({ kind: ArtifactKind.Table }, () => (
-      <div className={`${scroll} p-4`}>
+      <div className={cn(scroll, 'p-4')}>
         <CsvTable text={content} />
       </div>
     ))
     .otherwise(() => (
-      <div className={`${scroll} bg-code-bg`}>
+      <div className={cn(scroll, 'bg-code-bg')}>
         <CodeView text={content} name={artifact.name} />
       </div>
     ));

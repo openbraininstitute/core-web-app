@@ -16,6 +16,7 @@ import { cardLabelOf, piecesOf } from '@/features/logbook/log/history';
 import { Layout, RightTab, ViewMode } from '@/features/logbook/types';
 import { Avatar } from '@/ui/molecules/avatar';
 import { Icon } from '@/ui/molecules/icon';
+import { cn } from '@/utils/css-class';
 
 import type {
   IActivityRun,
@@ -258,7 +259,7 @@ function HistoryTab(props: ILogShared) {
         ))}
       </ol>
       {changes.events.length === 0 ? (
-        <p className={`${SUB} mt-0 mb-4`}>Changes made while this log is open show here.</p>
+        <p className={cn(SUB, 'mt-0 mb-4')}>Changes made while this log is open show here.</p>
       ) : null}
       <div className="mt-2 mb-2 flex items-center justify-between border-t border-rule-soft pt-4">
         <span className="label-caps">Earlier</span>

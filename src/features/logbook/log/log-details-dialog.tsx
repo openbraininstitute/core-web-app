@@ -2,6 +2,7 @@ import { isNil } from 'es-toolkit';
 import { useEffect, useRef, useState } from 'react';
 
 import { Icon } from '@/ui/molecules/icon';
+import { cn } from '@/utils/css-class';
 
 import type { ILogDetailsDialogProps } from '@/features/logbook/types';
 
@@ -76,7 +77,7 @@ export function LogDetailsDialog(props: ILogDetailsDialogProps) {
         <label className={LABEL}>
           Description
           <textarea
-            className={`${FIELD} resize-y`}
+            className={cn(FIELD, 'resize-y')}
             value={description}
             rows={4}
             onChange={(event) => setDescription(event.target.value)}

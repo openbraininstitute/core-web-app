@@ -28,6 +28,7 @@ import {
   ViewMode,
 } from '@/features/logbook/types';
 import { Icon } from '@/ui/molecules/icon';
+import { cn } from '@/utils/css-class';
 
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import type {
@@ -261,7 +262,10 @@ export function EditorCard(props: IEditorCardProps) {
             />
             <button
               type="button"
-              className={`${CONTROL} ml-auto bg-fill-2 text-primary-9 hover:bg-fill-item-hover disabled:cursor-not-allowed disabled:opacity-50`}
+              className={cn(
+                CONTROL,
+                'ml-auto bg-fill-2 text-primary-9 hover:bg-fill-item-hover disabled:cursor-not-allowed disabled:opacity-50'
+              )}
               aria-label="Insert"
               aria-expanded={menu === Menu.Insert}
               title="Link entities or upload a file"
@@ -275,7 +279,7 @@ export function EditorCard(props: IEditorCardProps) {
         )}
         <button
           type="button"
-          className={`${CONTROL} bg-green-main text-white shadow-green-btn`}
+          className={cn(CONTROL, 'bg-green-main text-white shadow-green-btn')}
           onClick={() => props.onMode(ViewMode.Read)}
         >
           <Icon name="check" size={15} stroke={2.6} />

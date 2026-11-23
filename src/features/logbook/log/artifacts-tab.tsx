@@ -9,6 +9,7 @@ import { agoOf, savedOf, sizeOf } from '@/features/logbook/helpers';
 import { ArtifactIcon } from '@/features/logbook/log/artifact-icon';
 import { useLogContext } from '@/features/logbook/log/context';
 import { Icon } from '@/ui/molecules/icon';
+import { cn } from '@/utils/css-class';
 
 import type { IArtifact } from '@/features/logbook/types';
 
@@ -98,7 +99,7 @@ export function ArtifactsTab({
               <Icon name="upload" size={22} />
             </span>
             <strong className="text-[15px]">No artifacts yet</strong>
-            <p className={`${NOTE} max-w-[280px]`}>
+            <p className={cn(NOTE, 'max-w-[280px]')}>
               Files uploaded with Insert, or saved by an agent, show up here.
             </p>
           </div>

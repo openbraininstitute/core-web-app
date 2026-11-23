@@ -12,7 +12,7 @@ import type { IInsertMenuProps, INotifyPopoverProps, TToastSource } from '@/feat
 import type { TIconName } from '@/ui/molecules/icon';
 
 const ITEM = 'rounded-[10px] text-left text-primary-9 transition-colors hover:bg-fill-item-hover';
-const MENU_ITEM = `${ITEM} flex items-center gap-2.5 px-2.5 py-2`;
+const MENU_ITEM = cn(ITEM, 'flex items-center gap-2.5 px-2.5 py-2');
 const MENU = 'pop absolute z-41 flex max-w-[calc(100%-16px)] flex-col p-1.5';
 const LABEL = 'px-2.5 pb-1 text-[11px] font-bold tracking-[0.06em] text-neutral-4 uppercase';
 const TILE = 'grid size-[30px] flex-none place-items-center rounded-[9px] text-[10px]';
@@ -31,14 +31,14 @@ export function InsertMenu({ editor, at, onClose, onPicker, onNotice }: IInsertM
   };
   return (
     <div
-      className={`${MENU} w-[292px]`}
+      className={cn(MENU, 'w-[292px]')}
       role="menu"
       aria-label="Insert"
       style={{ top: at.top, left: at.left }}
     >
-      <div className={`${LABEL} pt-2`}>From the platform</div>
+      <div className={cn(LABEL, 'pt-2')}>From the platform</div>
       <button type="button" role="menuitem" className={MENU_ITEM} onClick={onPicker}>
-        <span className={`${TILE} bg-primary-0 text-primary-6`}>
+        <span className={cn(TILE, 'bg-primary-0 text-primary-6')}>
           <Icon name="link" size={16} />
         </span>
         <span className={TEXT}>
@@ -46,7 +46,7 @@ export function InsertMenu({ editor, at, onClose, onPicker, onNotice }: IInsertM
           <span className={SUB}>Circuit, morphology, model, result and more</span>
         </span>
       </button>
-      <div className={`${LABEL} pt-2.5`}>From your computer</div>
+      <div className={cn(LABEL, 'pt-2.5')}>From your computer</div>
       <input
         ref={input}
         type="file"
@@ -61,7 +61,7 @@ export function InsertMenu({ editor, at, onClose, onPicker, onNotice }: IInsertM
         className={MENU_ITEM}
         onClick={() => input.current?.click()}
       >
-        <span className={`${TILE} bg-scope-public-bg text-scope-public-fg`}>
+        <span className={cn(TILE, 'bg-scope-public-bg text-scope-public-fg')}>
           <Icon name="upload" size={16} />
         </span>
         <span className={TEXT}>

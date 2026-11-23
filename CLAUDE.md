@@ -115,3 +115,8 @@ Conventional prefix, then a plain sentence that says what changes for the user:
 - `git push` runs React Doctor on the changes versus `main` (the `pre-push` hook in `lefthook.yml`). A new error blocks the push; warnings are shown but do not block.
 - Run it yourself after a change: `npx -y react-doctor@0.9.23 . --scope changed --no-supply-chain --no-score --verbose`
 - Fix what it finds before pushing. Do not skip the hook (`--no-verify`) to get past it.
+
+### 23. Merge classes with `cn`
+- When classes are combined or depend on a condition, use `cn` from `src/utils/css-class.tsx` (clsx + tailwind-merge).
+- No template strings (`` `${BASE} px-2` ``), `+` or `[...].join(' ')` to build a `className`: write `cn(BASE, 'px-2', open && 'bg-primary-0')`.
+- A fixed class list with no condition stays a plain string.

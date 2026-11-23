@@ -4,6 +4,7 @@ import { match } from 'ts-pattern';
 
 import { tabKey } from '@/features/logbook/log/open-tabs';
 import { Icon } from '@/ui/molecules/icon';
+import { cn } from '@/utils/css-class';
 
 import type { KeyboardEvent as ReactKeyboardEvent, WheelEvent } from 'react';
 import type { IEditorTab, IEditorTabsProps, ITabRef } from '@/features/logbook/types';
@@ -201,7 +202,10 @@ export function EditorTabs(props: IEditorTabsProps) {
                 role="tab"
                 aria-selected={selected}
                 tabIndex={selected ? 0 : -1}
-                className={`${TAB} ${item.pinned ? 'min-w-[150px] flex-[0_1_280px]' : 'min-w-[124px] flex-[0_1_200px]'}`}
+                className={cn(
+                  TAB,
+                  item.pinned ? 'min-w-[150px] flex-[0_1_280px]' : 'min-w-[124px] flex-[0_1_200px]'
+                )}
                 title={item.hint}
                 data-testid="logbook-tab"
                 onClick={() => props.onSelect(item.tab)}
@@ -221,7 +225,10 @@ export function EditorTabs(props: IEditorTabsProps) {
                 {item.pinned ? null : (
                   <button
                     type="button"
-                    className={`${CLOSE} opacity-0 transition-opacity group-hover:opacity-100 group-aria-selected:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100`}
+                    className={cn(
+                      CLOSE,
+                      'opacity-0 transition-opacity group-hover:opacity-100 group-aria-selected:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100'
+                    )}
                     aria-label={`Close ${item.label}`}
                     onClick={(event) => {
                       event.stopPropagation();
