@@ -11,6 +11,15 @@ test('reconstructed and synthesized morphologies both offer the 3D view', () => 
 });
 
 test.each([
+  ExtendedEntitiesTypeDict.EMCellMesh,
+  ExtendedEntitiesTypeDict.Memodel,
+  ExtendedEntitiesTypeDict.MemodelCircuit,
+  ExtendedEntitiesTypeDict.UniversalCellMorphology,
+])('a %s card offers the 3D view, as on the workflows page', (type) => {
+  expect(has3dView(type)).toBe(true);
+});
+
+test.each([
   'circuit',
   ExtendedEntitiesTypeDict.SingleNeuronCircuit,
   ExtendedEntitiesTypeDict.PairedNeuronCircuit,

@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 /** The fixed-height box every 3D viewer draws in; the viewers need a definite height. */
 export function ViewerFrame({ children }: { readonly children: ReactNode }) {
   return (
-    <div className="relative h-[440px] w-full border-t border-block-border [&>*]:rounded-t-none">
+    <div className="relative h-[440px] w-full border-t border-block-border select-none [&>*]:rounded-t-none">
       {children}
     </div>
   );

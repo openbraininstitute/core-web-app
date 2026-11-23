@@ -33,13 +33,35 @@ const views: Readonly<Record<string, ComponentType<ReactNodeViewProps>>> = {
   callout: CalloutView,
 };
 
-export const withViews = (): AnyExtension[] =>
-  contentExtensions.map((extension) => {
+/** Cancels a drag that starts inside a block card's own UI; page text in a callout still drags. */
+export function stopInnerDrag(event: Event): void {
+  const target = event.target;
+  const from = target instanceof Element ? target : (target as Node | null)?.parentElement;
+  if (isNil(from?.closest('[data-node-view-wrapper]'))) return;
+  if (isNil(from?.closest('[data-node-view-content]'))) event.preventDefault();
+}
+
+const InnerDragGuard = Extension.create({
+  name: 'innerDragGuard',
+  addProseMirrorPlugins: () => [
+    new Plugin({
+      view: (view) => {
+        view.dom.addEventListener('dragstart', stopInnerDrag, true);
+        return { destroy: () => view.dom.removeEventListener('dragstart', stopInnerDrag, true) };
+      },
+    }),
+  ],
+});
+
+export const withViews = (): AnyExtension[] => [
+  ...contentExtensions.map((extension) => {
     const view = views[extension.name];
     return isNil(view)
       ? extension
       : extension.extend({ addNodeView: () => ReactNodeViewRenderer(view) });
-  });
+  }),
+  InnerDragGuard,
+];
 
 const CODE_BLOCK = 'codeBlock';
 

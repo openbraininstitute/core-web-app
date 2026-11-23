@@ -13,11 +13,11 @@ const GOES: readonly IGoesWith[] = [
 export function DeletePageDialog({ page, logName, onDelete, onClose }: IDeletePageDialogProps) {
   return (
     <ConfirmDeleteDialog
-      title="Delete this section?"
+      title="Delete this page?"
       lead="It goes for good, for everyone in the project, people and agents alike. The rest of the log stays. This cannot be undone."
       goes={GOES}
-      button="Delete section"
-      failedText="The section was not deleted."
+      button="Delete page"
+      failedText="The page was not deleted."
       onDelete={onDelete}
       onClose={onClose}
       ticket={
@@ -27,7 +27,7 @@ export function DeletePageDialog({ page, logName, onDelete, onClose }: IDeletePa
           </span>
           <span className="flex min-w-0 flex-col">
             <span className="truncate text-[16px] leading-snug font-bold">{page.title}</span>
-            <span className="truncate text-[12.5px] text-neutral-4">A section of {logName}</span>
+            <span className="truncate text-[12.5px] text-neutral-4">A page of {logName}</span>
           </span>
         </article>
       }
