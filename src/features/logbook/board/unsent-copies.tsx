@@ -10,11 +10,12 @@ interface IUnsent {
 }
 
 async function syncAtStart(userId: string): Promise<IUnsent> {
-  const [{ syncCopies, CopySync }, { pageDocs }] = await Promise.all([
+  const [{ syncCopies, dropOthersCleanCopies, CopySync }, { pageDocs }] = await Promise.all([
     import('@/features/logbook/collaboration/local-sync'),
     import('@/features/logbook/api/page-docs'),
   ]);
   const reports = await syncCopies(pageDocs, userId);
+  await dropOthersCleanCopies(userId);
   const count = (...results: readonly string[]) =>
     reports.filter((report) => results.includes(report.result)).length;
   return { failed: count(CopySync.Failed), lost: count(CopySync.Gone, CopySync.Refused) };

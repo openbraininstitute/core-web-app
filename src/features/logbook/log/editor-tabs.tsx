@@ -1,5 +1,6 @@
 import { isNil } from 'es-toolkit';
 import { Fragment, useEffect, useRef, useState } from 'react';
+import { match } from 'ts-pattern';
 
 import { tabKey } from '@/features/logbook/log/open-tabs';
 import { Icon } from '@/features/logbook/ui/icons';
@@ -169,8 +170,28 @@ export function EditorTabs(props: IEditorTabsProps) {
       ?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }, [active, tabs.length]);
 
+  // WAI-ARIA tabs with manual activation: arrows, Home and End move focus, Enter or Space opens,
+  // so passing over a tab never loads its page.
+  const moveFocus = (from: HTMLElement, key: string): boolean => {
+    const all = [...(strip.current?.querySelectorAll<HTMLElement>('[role="tab"]') ?? [])];
+    const at = all.indexOf(from);
+    const to = match(key)
+      .with('ArrowRight', () => (at + 1) % all.length)
+      .with('ArrowLeft', () => (at - 1 + all.length) % all.length)
+      .with('Home', () => 0)
+      .with('End', () => all.length - 1)
+      .otherwise(() => null);
+    if (isNil(to) || at < 0) return false;
+    all[to]?.focus();
+    return true;
+  };
+
   const keys = (item: IEditorTab) => (event: ReactKeyboardEvent<HTMLDivElement>) => {
     if (event.target !== event.currentTarget) return;
+    if (moveFocus(event.currentTarget, event.key)) {
+      event.preventDefault();
+      return;
+    }
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       props.onSelect(item.tab);

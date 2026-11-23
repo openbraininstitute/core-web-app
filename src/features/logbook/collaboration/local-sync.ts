@@ -1,5 +1,5 @@
 // Push edits only this device has, at app start and before sign-out; clean copies cost no request.
-import { isNil, noop } from 'es-toolkit';
+import { delay, isNil, noop } from 'es-toolkit';
 import { clearDocument, IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
 
@@ -8,8 +8,7 @@ import { ProblemType } from '@/api/logbook/types';
 import {
   COPY_PREFIX,
   closeAllCopies,
-  DIRTY_KEY,
-  Dirty,
+  DIRTY_PREFIX,
   openCopies,
   whenCopyFree,
   whenLoaded,
@@ -40,13 +39,6 @@ export interface ICopyReport {
   readonly result: TCopySync;
 }
 
-const SAFE: ReadonlySet<TCopySync> = new Set([
-  CopySync.Clean,
-  CopySync.Sent,
-  CopySync.NothingToSend,
-]);
-export const isSafe = (report: ICopyReport): boolean => SAFE.has(report.result);
-
 const statusOf = (error: unknown): number | null =>
   error instanceof ApiError ? (error.cause?.status ?? null) : null;
 const typeOf = (error: unknown): string | null =>
@@ -75,15 +67,13 @@ const transient = (error: unknown): boolean => {
   const status = statusOf(error);
   return isNil(status) || status >= 500 || status === 429;
 };
-const pause = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
-
 async function withRetry<T>(call: () => Promise<T>, pauseMs: number): Promise<T> {
   for (let attempt = 1; ; attempt += 1) {
     try {
       return await call();
     } catch (error) {
       if (attempt >= TRIES || !transient(error)) throw error;
-      await pause(pauseMs * 2 ** (attempt - 1));
+      await delay(pauseMs * 2 ** (attempt - 1));
     }
   }
 }
@@ -128,19 +118,58 @@ async function sendMissing(
   return CopySync.Sent;
 }
 
+// y-indexeddb keeps `persistence.set` keys in this store, next to the page's updates.
+const CUSTOM_STORE = 'custom';
+
+// The dirty keys, read without loading the page: a clean copy costs one small read, not its text.
+// A database that is gone reads as none and is not made again.
+function dirtyKeysOf(name: string): Promise<string[]> {
+  return new Promise((resolve, reject) => {
+    const open = indexedDB.open(name);
+    open.onupgradeneeded = () => open.transaction?.abort();
+    open.onerror = () => (open.error?.name === 'AbortError' ? resolve([]) : reject(open.error));
+    open.onsuccess = () => {
+      const db = open.result;
+      if (!db.objectStoreNames.contains(CUSTOM_STORE)) {
+        db.close();
+        resolve([]);
+        return;
+      }
+      const read = db
+        .transaction(CUSTOM_STORE, 'readonly')
+        .objectStore(CUSTOM_STORE)
+        .getAllKeys(IDBKeyRange.bound(DIRTY_PREFIX, `${DIRTY_PREFIX}￿`));
+      read.onsuccess = () => {
+        db.close();
+        resolve(read.result.map(String));
+      };
+      read.onerror = () => {
+        db.close();
+        reject(read.error);
+      };
+    };
+  });
+}
+
+/** A tab, open or crashed, wrote edits to this copy that the server has not confirmed. */
+export const isCopyDirty = async (name: string): Promise<boolean> =>
+  (await dirtyKeysOf(name)).length > 0;
+
 async function syncCopy(
   docs: IPageDocs,
   name: string,
   pageId: string,
   pauseMs: number
 ): Promise<TCopySync> {
+  // Unreadable keys count as dirty: sending again is harmless, skipping could lose edits.
+  if (!(await isCopyDirty(name).catch(() => true))) return CopySync.Clean;
   const local = new Y.Doc();
   const persistence = new IndexeddbPersistence(name, local);
   try {
     await whenLoaded(persistence);
-    if ((await persistence.get(DIRTY_KEY)) === Dirty.No) return CopySync.Clean;
     const result = await sendMissing(docs, pageId, local, pauseMs);
-    await persistence.set(DIRTY_KEY, Dirty.No);
+    // No tab has the copy open (its lock is ours), so every key's edits were just sent.
+    for (const key of await dirtyKeysOf(name)) await persistence.del(key);
     return result;
   } catch (error) {
     const status = statusOf(error);
@@ -181,46 +210,25 @@ export async function syncCopies(
   return reports;
 }
 
-// Delete only copies the server fully has; return the rest so the user decides.
-export async function clearSyncedCopies(
-  docs: IPageDocs,
-  userId: string,
-  options: Omit<ISyncOptions, 'skip'> = {}
-): Promise<ICopyReport[]> {
-  // A database can't be deleted while this tab holds it open.
-  await closeAllCopies();
-  const reports = await syncCopies(docs, userId, { ...options, skip: new Set() });
-  // Each copy is its own database, so they clear side by side.
-  await Promise.all(reports.filter(isSafe).map((report) => clearDocument(report.name)));
-  return reports.filter((report) => !isSafe(report));
-}
-
-async function isClean(name: string): Promise<boolean> {
-  const persistence = new IndexeddbPersistence(name, new Y.Doc());
-  try {
-    await whenLoaded(persistence);
-    return (await persistence.get(DIRTY_KEY)) === Dirty.No;
-  } finally {
-    await persistence.destroy().catch(noop);
-  }
-}
-
-/**
- * Sign-out: deletes every user's copy that the server already has. A copy with unsent edits
- * stays (deleting it loses work) and is sent at that user's next start; so does one open in a tab.
- * One at a time, so at most one page is loaded. Never throws.
- */
-export async function dropCleanCopies(): Promise<void> {
-  await closeAllCopies().catch(noop);
-  for (const name of await copyNames().catch(() => [])) {
+// A copy with unsent edits stays (deleting it loses work); so does one open in a tab.
+async function dropClean(names: readonly string[]): Promise<void> {
+  for (const name of names) {
     const drop = async (): Promise<void> => {
-      if (await isClean(name)) await clearDocument(name);
+      if (!(await isCopyDirty(name))) await clearDocument(name);
     };
     await whenCopyFree(name, drop, undefined).catch(noop);
   }
 }
 
-// The user chose to sign out anyway; unsent edits are lost.
-export async function discardCopies(reports: readonly ICopyReport[]): Promise<void> {
-  await Promise.all(reports.map((report) => clearDocument(report.name)));
+/** Sign-out: deletes every user's copy that the server already has. Never throws. */
+export async function dropCleanCopies(): Promise<void> {
+  await closeAllCopies().catch(noop);
+  await dropClean(await copyNames().catch(() => []));
+}
+
+/** App start: deletes other users' saved copies, for a sign-out that skipped the log-out page. */
+export async function dropOthersCleanCopies(userId: string): Promise<void> {
+  const mine = `:${userId}`;
+  const names = await copyNames().catch(() => []);
+  await dropClean(names.filter((name) => !name.endsWith(mine)));
 }

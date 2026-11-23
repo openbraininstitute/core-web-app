@@ -9,14 +9,15 @@ import { ApiError } from '@/api/error';
 import {
   acquireCopy,
   copyName,
-  DIRTY_KEY,
+  DIRTY_PREFIX,
   LocalCopy,
   releaseCopy,
 } from '@/features/logbook/collaboration/local-copy';
 import {
   CopySync,
-  clearSyncedCopies,
   dropCleanCopies,
+  dropOthersCleanCopies,
+  isCopyDirty,
   localCopies,
   syncCopies,
 } from '@/features/logbook/collaboration/local-sync';
@@ -76,13 +77,8 @@ function type(document: Y.Doc, s: string): void {
   });
 }
 
-const flagOf = async (userId: string, pageId = PAGE): Promise<unknown> => {
-  const persistence = new IndexeddbPersistence(copyName(pageId, userId), new Y.Doc());
-  await persistence.whenSynced;
-  const flag: unknown = await persistence.get(DIRTY_KEY);
-  await persistence.destroy();
-  return flag;
-};
+const dirtyOf = (userId: string, pageId = PAGE): Promise<boolean> =>
+  isCopyDirty(copyName(pageId, userId));
 
 async function typedCopy(userId: string, s: string, pageId = PAGE): Promise<void> {
   const copy = await LocalCopy.open(pageId, userId);
@@ -121,28 +117,10 @@ test('a local change marks the copy dirty; a change applied from elsewhere does 
   type(other, 'from the server');
   Y.applyUpdate(copy.document, Y.encodeStateAsUpdate(other));
   await copy.close();
-  expect(await flagOf(user)).toBe(0);
+  expect(await dirtyOf(user)).toBe(false);
 
   await typedCopy(user, 'typed here');
-  expect(await flagOf(user)).toBe(1);
-});
-
-test('a copy from before the flag (text, no key) counts as dirty and is sent once', async () => {
-  const user = nextUser();
-  const old = new Y.Doc();
-  const persistence = new IndexeddbPersistence(copyName(PAGE, user), old);
-  await persistence.whenSynced;
-  type(old, 'typed before the flag existed');
-  await persistence.destroy();
-  expect(await flagOf(user)).toBeUndefined();
-
-  const server = fakeServer();
-  const results = [
-    ...(await syncCopies(server.port, user, { skip: new Set() })),
-    ...(await syncCopies(server.port, user, { skip: new Set() })),
-  ];
-  expect(results.map((r) => r.result)).toEqual([CopySync.Sent, CopySync.Clean]);
-  expect(textOf(server.docs.get(PAGE) ?? new Y.Doc())).toBe('typed before the flag existed');
+  expect(await dirtyOf(user)).toBe(true);
 });
 
 test('a reopened copy holds the text; a saved notice marks it clean only when nothing is unsent', async () => {
@@ -151,6 +129,7 @@ test('a reopened copy holds the text; a saved notice marks it clean only when no
   const copy = await LocalCopy.open(PAGE, user);
   expect(textOf(copy.document)).toBe('kept on this device');
   expect(copy.restored).toBe(true);
+  type(copy.document, 'more');
   expect(copy.dirty).toBe(true);
   copy.markClean({ isSynced: true, hasUnsyncedChanges: true });
   copy.markClean({ isSynced: false, hasUnsyncedChanges: false });
@@ -158,7 +137,26 @@ test('a reopened copy holds the text; a saved notice marks it clean only when no
   copy.markClean(SYNCED);
   expect(copy.dirty).toBe(false);
   await copy.close();
-  expect(await flagOf(user)).toBe(0);
+  // The first visit's edits were never confirmed: still unsent as far as the device knows.
+  expect(await dirtyOf(user)).toBe(true);
+});
+
+test('two tabs offline: one tab saved does not mark the other tab’s edits clean', async () => {
+  const user = nextUser();
+  const tabA = await LocalCopy.open(PAGE, user);
+  const tabB = await LocalCopy.open(PAGE, user);
+  type(tabA.document, 'typed in A');
+  type(tabB.document, 'typed in B, never sent');
+  tabA.markClean(SYNCED);
+  await tabA.close();
+  await tabB.close(); // closed before its socket came back
+  expect(await dirtyOf(user)).toBe(true);
+
+  const server = fakeServer();
+  const [result] = await syncCopies(server.port, user, { skip: new Set() });
+  expect(result?.result).toBe(CopySync.Sent);
+  expect(textOf(server.docs.get(PAGE) ?? new Y.Doc())).toContain('typed in B, never sent');
+  expect(await dirtyOf(user)).toBe(false);
 });
 
 test('a copy taken again within the same tick is not reloaded (React double mount)', async () => {
@@ -180,7 +178,7 @@ test('at start a dirty copy is sent once and is clean after; the next start make
     { name: copyName(PAGE, user), pageId: PAGE, result: CopySync.Sent },
   ]);
   expect(textOf(server.docs.get(PAGE) ?? new Y.Doc())).toBe('typed while offline');
-  expect(await flagOf(user)).toBe(0);
+  expect(await dirtyOf(user)).toBe(false);
 
   const [again] = await syncCopies(server.port, user, { skip: new Set() });
   expect(again?.result).toBe(CopySync.Clean);
@@ -195,7 +193,7 @@ test('a copy the server already has is read once and nothing is sent', async () 
   expect(result?.result).toBe(CopySync.Sent);
   const persistence = new IndexeddbPersistence(copyName(PAGE, user), new Y.Doc());
   await persistence.whenSynced;
-  await persistence.set(DIRTY_KEY, 1);
+  await persistence.set(`${DIRTY_PREFIX}crashed-tab`, 1);
   await persistence.destroy();
   const [second] = await syncCopies(server.port, user, { skip: new Set() });
   expect(second?.result).toBe(CopySync.NothingToSend);
@@ -239,8 +237,8 @@ test('server down: the copy stays dirty and is reported; a gone page is reported
     [PAGE]: CopySync.Failed,
     'page-gone': CopySync.Gone,
   });
-  expect(await flagOf(user)).toBe(1);
-  expect(await flagOf(user, 'page-gone')).toBe(1);
+  expect(await dirtyOf(user)).toBe(true);
+  expect(await dirtyOf(user, 'page-gone')).toBe(true);
   expect((await localCopies(user)).map((c) => c.pageId).toSorted()).toEqual([PAGE, 'page-gone']);
 });
 
@@ -263,7 +261,7 @@ test('a copy open in another tab is left to that tab, and its later edits still 
   expect(result?.result).toBe(CopySync.Open);
   type(other.document, 'typed offline, then the tab crashed');
   await other.close();
-  expect(await flagOf(user)).toBe(1);
+  expect(await dirtyOf(user)).toBe(true);
 });
 
 test('sign-out drops every copy the server has, and keeps the ones with unsent edits', async () => {
@@ -271,11 +269,11 @@ test('sign-out drops every copy the server has, and keeps the ones with unsent e
   const dirty = nextUser();
   const open = nextUser();
   const copy = await LocalCopy.open(PAGE, clean);
+  type(copy.document, 'saved');
   copy.markClean(SYNCED);
   await copy.close();
   await typedCopy(dirty, 'not on the server yet');
   const held = await LocalCopy.open(PAGE, open);
-  held.markClean(SYNCED);
 
   await dropCleanCopies();
 
@@ -285,20 +283,25 @@ test('sign-out drops every copy the server has, and keeps the ones with unsent e
   await held.close();
 });
 
-test('sign-out deletes the copies the server has and keeps the others', async () => {
-  const user = nextUser();
-  await typedCopy(user, 'will be sent');
-  await typedCopy(user, 'cannot be sent', 'page-2');
-  const server = fakeServer([PAGE, 'page-2']);
-  const halfDown: IPageDocs = {
-    read: async (pageId) => {
-      if (pageId === 'page-2') throw new TypeError('Failed to fetch');
-      return server.port.read(pageId);
-    },
-    send: server.port.send,
-  };
-  const kept = await clearSyncedCopies(halfDown, user, { pauseMs: 1 });
-  expect(kept.map((r) => [r.pageId, r.result])).toEqual([['page-2', CopySync.Failed]]);
-  expect((await localCopies(user)).map((c) => c.pageId)).toEqual(['page-2']);
-  expect(textOf(server.docs.get(PAGE) ?? new Y.Doc())).toBe('will be sent');
+test('at start, another user’s saved copies go; theirs with unsent edits and mine stay', async () => {
+  const me = nextUser();
+  const other = nextUser();
+  const mine = await LocalCopy.open(PAGE, me);
+  mine.markClean(SYNCED);
+  await mine.close();
+  const theirs = await LocalCopy.open(PAGE, other);
+  theirs.markClean(SYNCED);
+  await theirs.close();
+  await typedCopy(other, 'their unsent edit', 'page-2');
+
+  await dropOthersCleanCopies(me);
+
+  expect((await localCopies(me)).map((c) => c.pageId)).toEqual([PAGE]);
+  expect((await localCopies(other)).map((c) => c.pageId)).toEqual(['page-2']);
+});
+
+test('a copy that is gone reads as clean and is not made again', async () => {
+  const name = copyName('page-never-opened', nextUser());
+  expect(await isCopyDirty(name)).toBe(false);
+  expect((await indexedDB.databases()).map((d) => d.name)).not.toContain(name);
 });

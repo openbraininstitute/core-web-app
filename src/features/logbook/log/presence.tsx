@@ -5,7 +5,7 @@ import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import * as Y from 'yjs';
 
 import { AvatarGroup } from '@/features/logbook/elements/motion/avatar-group';
-import { useNow } from '@/features/logbook/helpers';
+import { CLOCK_MS, useNow } from '@/features/logbook/helpers';
 import {
   presentList,
   stackOrder,
@@ -27,7 +27,8 @@ import type { IPresent } from '@/features/logbook/log/presence-state';
 const STACK = 2;
 
 export function usePresent(props: ILogShared): IPresent[] {
-  const now = useNow();
+  // A warm page kept hidden doesn't tick.
+  const now = useNow(CLOCK_MS, props.shown);
   const live = useSyncExternalStore(props.notices.subscribe, props.notices.snapshot);
   const changes = useSyncExternalStore(props.feed.subscribe, props.feed.snapshot);
   const { notices } = props;

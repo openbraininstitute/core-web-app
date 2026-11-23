@@ -99,7 +99,7 @@ const SECTIONS: readonly INavSection[] = [
 ];
 const sectionOf = (key: string | undefined) =>
   SECTIONS.find((s) => s.items.some((i) => i.key === key));
-const FIRST = SECTIONS[1]?.items.find((i) => i.key === 'circuit') ?? SECTIONS[0]?.items[0];
+const FIRST = SECTIONS[1]?.items.find((i) => i.key === EntityType.Circuit) ?? SECTIONS[0]?.items[0];
 const FIRST_SECTION = sectionOf(FIRST?.key)?.id ?? null;
 
 const SCOPES: readonly {

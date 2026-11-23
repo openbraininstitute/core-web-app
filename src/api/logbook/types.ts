@@ -6,51 +6,8 @@ export type TValueOf<TDict> = TDict[keyof TDict];
 export const ActorVia = { Ui: 'ui', Agent: 'agent' } as const;
 export type TActorVia = TValueOf<typeof ActorVia>;
 
-export const AgentSurface = {
-  Mcp: 'mcp',
-  Assistant: 'assistant',
-  ResearchAgent: 'research-agent',
-} as const;
-export type TAgentSurface = TValueOf<typeof AgentSurface>;
-
 export const PageKind = { Main: 'main', Section: 'section' } as const;
 export type TPageKind = TValueOf<typeof PageKind>;
-
-export const VersionReason = {
-  Manual: 'manual',
-  BeforeAgent: 'before-agent',
-  BeforeRestore: 'before-restore',
-} as const;
-export type TVersionReason = TValueOf<typeof VersionReason>;
-
-export const CollaborationMode = { Read: 'read', Write: 'write' } as const;
-export type TCollaborationMode = TValueOf<typeof CollaborationMode>;
-
-export const RunStatus = {
-  Running: 'running',
-  Succeeded: 'succeeded',
-  Failed: 'failed',
-  Cancelled: 'cancelled',
-  Expired: 'expired',
-} as const;
-export type TRunStatus = TValueOf<typeof RunStatus>;
-
-export const GrantScope = {
-  DocRead: 'doc.read',
-  DocWrite: 'doc.write',
-  PresenceWrite: 'presence.write',
-  RunReport: 'run.report',
-} as const;
-export type TGrantScope = TValueOf<typeof GrantScope>;
-
-export const RequestKind = { Http: 'http', Ws: 'ws', Join: 'join' } as const;
-export type TRequestKind = TValueOf<typeof RequestKind>;
-
-export const AccessLevel = { Read: 'read', Write: 'write' } as const;
-export type TAccessLevel = TValueOf<typeof AccessLevel>;
-
-export const ChangeSource = { Connection: 'connection', Http: 'http', Relay: 'relay' } as const;
-export type TChangeSource = TValueOf<typeof ChangeSource>;
 
 export const CollaborationNotice = {
   Saved: 'saved',

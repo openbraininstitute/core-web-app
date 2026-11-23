@@ -39,6 +39,22 @@ test('the oldest writers leave once 1000 are known', () => {
   expect(Notices.writerOf(1000)).toBeDefined();
 });
 
+test('after a re-join, the server’s new peer list counts even with a smaller number', () => {
+  const peers = (seq: number, label: string) =>
+    JSON.stringify({
+      type: 'peers',
+      seq,
+      peers: [{ joinId: 'j1', userId: 'u-1', label, via: 'ui' }],
+    });
+  const Notices = new CollaborationNotices();
+  Notices.receive(peers(57, 'left long ago'));
+  Notices.connected(); // the server's counter started again meanwhile
+  Notices.receive(peers(1, 'here now'));
+  expect(Notices.snapshot().peers.map((p) => p.label)).toEqual(['here now']);
+  Notices.receive(peers(0, 'an older list')); // within one join, older lists still lose
+  expect(Notices.snapshot().peers.map((p) => p.label)).toEqual(['here now']);
+});
+
 test('refused(at) sets rejoinAt and notifies; joined() clears it', () => {
   const Notices = new CollaborationNotices();
   expect(Notices.snapshot().rejoinAt).toBeNull();

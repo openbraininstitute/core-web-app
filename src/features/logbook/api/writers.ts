@@ -2,14 +2,11 @@
 import { queryOptions } from '@tanstack/react-query';
 
 import { getPageAuthorship } from '@/api/logbook/queries/page';
-import { peerActor } from '@/features/logbook/collaboration/actors';
 import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
 
 import type { IProject } from '@/features/logbook/auth/session';
 
-export const WRITERS_MAX_CLIENTS = 100;
-
-export const actorOfWriter = peerActor;
+const WRITERS_MAX_CLIENTS = 100;
 
 export const writersQuery = (project: IProject, pageId: string, clientIds: readonly number[]) =>
   queryOptions({

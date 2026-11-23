@@ -13,9 +13,9 @@ import {
 } from 'react';
 
 import { PageKind, ReadOnlyReason } from '@/api/logbook/types';
-import { actorOfWriter, writersQuery } from '@/features/logbook/api/writers';
+import { writersQuery } from '@/features/logbook/api/writers';
 import { Layout } from '@/features/logbook/board/layout';
-import { personActor, resolveActor } from '@/features/logbook/collaboration/actors';
+import { peerActor, personActor, resolveActor } from '@/features/logbook/collaboration/actors';
 import { useCoolWhenAcked, usePauseWhenHidden } from '@/features/logbook/collaboration/idle';
 import { useRejoin } from '@/features/logbook/collaboration/rejoin';
 import { editorExtensions } from '@/features/logbook/editor/extensions';
@@ -139,7 +139,7 @@ export function LogPage(props: ILogPageProps) {
           if (items.length === 0) return;
           setWritten((known) => {
             const next = new Map(known);
-            for (const item of items) next.set(item.clientId, actorOfWriter(item));
+            for (const item of items) next.set(item.clientId, peerActor(item));
             return next;
           });
         })
@@ -160,7 +160,7 @@ export function LogPage(props: ILogPageProps) {
             // `writer` notices name changes as they land; the writers API fills in the rest later.
             written: (id) => {
               const announced = notices.writerOf(id);
-              return isNil(announced) ? written.get(id) : actorOfWriter(announced);
+              return isNil(announced) ? written.get(id) : peerActor(announced);
             },
           }),
     [provider, awareness, notices, meActor, written]

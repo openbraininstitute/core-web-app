@@ -178,9 +178,10 @@ export class CollaborationNotices {
     for (const listener of this.#listeners) listener();
   }
 
-  // Read-only is per join; the server resends it if still true.
+  // Read-only is per join; the server resends it if still true. The peer count is per join too:
+  // the server's counter may have started again (its key expired, or Redis restarted).
   connected(): void {
-    if (isNotNil(this.#state.readOnly)) this.#set({ readOnly: null });
+    this.#set({ readOnly: null, peersSeq: -1 });
   }
 
   refused(at: number): void {

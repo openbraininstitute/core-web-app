@@ -32,7 +32,7 @@ const SIZES = {
   lg: { box: 'size-11 text-sm', px: 44 },
 } as const;
 
-type AvatarSize = keyof typeof SIZES;
+type TAvatarSize = keyof typeof SIZES;
 
 /** +N button labels, worded by each caller. */
 export interface IAvatarGroupLabels {
@@ -52,7 +52,7 @@ function initials(name: string) {
 export interface IAvatarProps extends Omit<ComponentPropsWithRef<'span'>, 'children'> {
   name: string;
   src?: string | undefined;
-  size?: AvatarSize;
+  size?: TAvatarSize;
   colour?: string | undefined;
   initials?: string | undefined;
 }
@@ -103,7 +103,7 @@ export interface IAvatarGroupProps extends Omit<ComponentPropsWithRef<'div'>, 'c
   members: IAvatarGroupMember[];
   /** Shown before the rest collapse into +N. */
   max?: number;
-  size?: AvatarSize;
+  size?: TAvatarSize;
   /** Pair with `onExpandedChange`. */
   expanded?: boolean;
   defaultExpanded?: boolean;

@@ -3,7 +3,7 @@ import { isNil, isNotNil } from 'es-toolkit';
 import { useSession } from 'next-auth/react';
 import { useEffect, useRef } from 'react';
 
-import { accessToken, meOf, signIn } from '@/features/logbook/auth/session';
+import { accessToken, meOf, SessionStatus, signIn } from '@/features/logbook/auth/session';
 import { Board } from '@/features/logbook/board/board';
 import { BoardSkeleton } from '@/features/logbook/elements/skeletons';
 import { navigate, pathOf, useRoute } from '@/features/logbook/router';
@@ -24,8 +24,8 @@ function Centered({ children }: { readonly children: ReactNode }) {
 export function LogbookRoot() {
   const session = useSession();
   const route = useRoute();
-  const signedIn = session.status === 'authenticated';
-  const pending = session.status === 'loading';
+  const signedIn = session.status === SessionStatus.Authenticated;
+  const pending = session.status === SessionStatus.Loading;
   // next-auth marks a failed token refresh on the session.
   const sessionError = session.data?.error ?? null;
   // Who this is, from the Keycloak access token.

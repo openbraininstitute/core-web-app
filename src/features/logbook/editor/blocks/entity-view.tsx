@@ -32,16 +32,11 @@ const dateOf = (iso: string | undefined): string | null =>
         year: 'numeric',
       });
 
-export function EntityView({
-  node,
-  selected,
-  editor,
-  updateAttributes,
-  deleteNode,
-}: NodeViewProps) {
+export function EntityView({ node, selected, updateAttributes, deleteNode }: NodeViewProps) {
   const { project } = useLogContext();
   const openPicker = useEntityPicker();
-  const canEdit = isNotNil(openPicker) && editor.isEditable;
+  // The picker is null wherever the page can't be edited; `editor.isEditable` would go stale here.
+  const canEdit = isNotNil(openPicker);
   const type = String(node.attrs['type']);
   const entityId = String(node.attrs['entityId']);
   const label = String(node.attrs['label']);

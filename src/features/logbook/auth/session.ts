@@ -4,6 +4,9 @@ import { colourOf } from '@/features/logbook/blocks/colour';
 import { initialsOf } from '@/features/logbook/helpers';
 import { getClientSession } from '@/hooks/session';
 
+/** next-auth's `useSession().status` values. */
+export const SessionStatus = { Authenticated: 'authenticated', Loading: 'loading' } as const;
+
 export async function accessToken(): Promise<string> {
   const session = await getClientSession();
   if (isNil(session?.accessToken)) throw new Error('Not signed in');

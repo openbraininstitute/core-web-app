@@ -1,8 +1,8 @@
 import { expect, test } from 'vitest';
 
-import { actorOfWriter } from '@/features/logbook/api/writers';
 import {
   agentActor,
+  peerActor,
   resolveActor,
   UNKNOWN_ACTOR,
   worksFor,
@@ -19,7 +19,7 @@ const sources = (agents: readonly { readonly label: string }[]): IActorSources =
   peers: () => [{ userId: 'u-bob', label: 'bob', via: 'ui' }] as never,
   agents: () => agents,
   written: (id) =>
-    id === GONE ? actorOfWriter({ userId: 'u-alice', label: 'alice', via: 'ui' }) : undefined,
+    id === GONE ? peerActor({ userId: 'u-alice', label: 'alice', via: 'ui' }) : undefined,
 });
 
 test('a writer is named by the live page first, then by the server, then guessed', () => {
@@ -31,7 +31,7 @@ test('a writer is named by the live page first, then by the server, then guessed
 });
 
 test('a stored agent writer is an agent', () => {
-  const agent = actorOfWriter({
+  const agent = peerActor({
     userId: 'u',
     label: 'u-claude',
     via: 'agent',
@@ -42,7 +42,7 @@ test('a stored agent writer is an agent', () => {
 });
 
 test('an agent keeps the person it works for, and never shares that person’s key', () => {
-  const agent = actorOfWriter({ userId: 'u-bob', label: 'bob-claude', via: 'agent' });
+  const agent = peerActor({ userId: 'u-bob', label: 'bob-claude', via: 'agent' });
   expect(worksFor(agent, 'u-bob')).toBe(true);
   expect(worksFor(agent, 'u-alice')).toBe(false);
   expect(agent.key).not.toBe('u-bob');
@@ -68,9 +68,7 @@ test('a person and their socket agent share a user id; the server’s writer nam
     ],
     agents: () => [],
     written: (id) =>
-      id === AGENT
-        ? actorOfWriter({ userId: 'u-bob', label: 'bob-claude', via: 'agent' })
-        : undefined,
+      id === AGENT ? peerActor({ userId: 'u-bob', label: 'bob-claude', via: 'agent' }) : undefined,
   };
   expect(resolveActor(AGENT, shared)).toMatchObject({ name: 'bob-claude', agent: true });
   expect(resolveActor(PERSON, shared)).toMatchObject({ name: 'bob', agent: false });

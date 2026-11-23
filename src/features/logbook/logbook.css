@@ -196,13 +196,16 @@
   color: var(--color-neutral-4);
 }
 
+/* Unlayered, or core's unlayered reset (`a { color: inherit }`) wins; `:where` keeps it as weak
+   as that reset, so a utility class on a link still wins. */
+:where(.logbook-root) a {
+  color: var(--color-primary-6);
+}
+:where(.logbook-root) a:where(:hover) {
+  color: var(--color-primary-7);
+}
+
 @layer base {
-  .logbook-root a {
-    color: var(--color-primary-6);
-  }
-  .logbook-root a:hover {
-    color: var(--color-primary-7);
-  }
   .logbook-root :focus-visible {
     outline: 2px solid var(--color-primary-4);
     outline-offset: 2px;

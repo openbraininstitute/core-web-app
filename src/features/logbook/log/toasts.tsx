@@ -170,21 +170,43 @@ export interface IAgentToastProps {
 }
 
 /** An agent just wrote in the page; the accent is the agent's own caret colour. */
-export function AgentToast({ feed, settings, me, onShow }: IAgentToastProps) {
+export function AgentToast(props: IAgentToastProps) {
+  const { feed } = props;
   const toast = useSyncExternalStore(feed.subscribe, () => feed.snapshot().toast);
+  // The change time of a toast that has run its course: no card, so no clock ticking for it.
+  const [goneAt, setGoneAt] = useState<number | null>(null);
+  if (isNil(toast) || toast.at === goneAt) return null;
+  return <AgentToastCard {...props} toast={toast} onGone={() => setGoneAt(toast.at)} />;
+}
+
+function AgentToastCard({
+  feed,
+  settings,
+  me,
+  onShow,
+  toast,
+  onGone,
+}: IAgentToastProps & { readonly toast: IChange; readonly onGone: () => void }) {
   const now = useNow();
   // The toast stays while its settings are open, so the panel keeps its anchor.
   const [settingsOpen, setSettingsOpen] = useState(false);
   const card = useRef<HTMLDivElement>(null);
-  if (isNil(toast)) return null;
+  const gone = useEffectEvent(onGone);
+  // One timer to the end of the newest change's time on screen; a new change moves it.
+  useEffect(() => {
+    if (settingsOpen) return;
+    const timer = setTimeout(gone, Math.max(0, toast.at + AGENT_TOAST_MS - Date.now()));
+    return () => clearTimeout(timer);
+  }, [toast.at, settingsOpen]);
   if (!settingsOpen) {
-    if (!settings.toasts || now - toast.at > AGENT_TOAST_MS) return null;
+    if (!settings.toasts) return null;
     // "Only my agents": an agent signed in as this person, over a socket or HTTPS.
     if (settings.from === ToastSource.Mine && !worksFor(toast.actor, me.userId)) return null;
   }
   const ago = now - toast.at < 5000 ? 'just now' : `${Math.round((now - toast.at) / 1000)}s ago`;
+  // No key on the card: the agent writing again updates it in place, its settings stay open.
   return (
-    <div ref={card} key={toast.at} className={CARD} role="status">
+    <div ref={card} className={CARD} role="status">
       <span
         className="grid size-8 flex-none place-items-center rounded-[10px] text-white"
         style={{ background: toast.actor.colour }}
@@ -227,6 +249,7 @@ export function AgentToast({ feed, settings, me, onShow }: IAgentToastProps) {
       </div>
       {settingsOpen ? null : (
         <span
+          key={toast.at}
           aria-hidden="true"
           className="absolute inset-x-0 bottom-0 h-0.5 origin-left animate-drain opacity-60"
           style={{

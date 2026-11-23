@@ -33,9 +33,11 @@ export async function whenCopyFree<T>(name: string, use: () => Promise<T>, busy:
   return locks.request(name, { ifAvailable: true }, (lock) => (isNil(lock) ? busy : use()));
 }
 
-// Set when the copy may hold edits the server lacks. A number: the store keeps no booleans.
-export const DIRTY_KEY = 'dirty';
-export const Dirty = { Yes: 1, No: 0 } as const;
+// `dirty:<writer>`: this open copy (a tab) wrote edits the server may lack; the copy is clean
+// when no such key is left. One key per writer, so a tab's saved notice never clears another
+// tab's unsent edits; a crashed tab's key stays until the start-up sync has sent its copy.
+export const DIRTY_PREFIX = 'dirty:';
+export const DIRTY_YES = 1;
 
 export interface IEntityCoreSyncState {
   readonly isSynced: boolean;
@@ -52,7 +54,6 @@ export async function whenLoaded(persistence: IndexeddbPersistence): Promise<voi
 export interface ILocalCopyDeps {
   document: Y.Doc;
   persistence: IndexeddbPersistence | null;
-  dirty: boolean;
   release?: () => void;
 }
 
@@ -62,16 +63,16 @@ export class LocalCopy {
   readonly restored: boolean;
   // Null without IndexedDB (e.g. private window): online only.
   readonly #persistence: IndexeddbPersistence | null;
-  // Cached so the flag is written only on clean → dirty, not every keystroke.
-  #dirty: boolean;
-  // close() waits for this so a closed tab keeps the flag.
+  readonly #dirtyKey = `${DIRTY_PREFIX}${crypto.randomUUID()}`;
+  // Cached so the key is written only on clean → dirty, not every keystroke.
+  #dirty = false;
+  // close() waits for this so a closed tab keeps its key.
   #written: Promise<unknown> = Promise.resolve();
   readonly #release: () => void;
 
-  private constructor({ document, persistence, dirty, release = noop }: ILocalCopyDeps) {
+  private constructor({ document, persistence, release = noop }: ILocalCopyDeps) {
     this.document = document;
     this.#persistence = persistence;
-    this.#dirty = dirty;
     this.#release = release;
     this.restored = document.getXmlFragment('default').length > 0;
     document.on('update', this.#onUpdate);
@@ -80,28 +81,22 @@ export class LocalCopy {
   // Load before use, so the first sync carries what only this device has. Never throws.
   static async open(pageId: string, userId: string): Promise<LocalCopy> {
     const document = new Y.Doc();
-    if (typeof indexedDB === 'undefined')
-      return new LocalCopy({ document, persistence: null, dirty: false });
+    if (typeof indexedDB === 'undefined') return new LocalCopy({ document, persistence: null });
     const name = copyName(pageId, userId);
     const release = await holdCopyLock(name);
     const persistence = new IndexeddbPersistence(name, document);
     try {
       await whenLoaded(persistence);
-      const flag: unknown = await persistence.get(DIRTY_KEY);
-      // An empty new copy starts clean, or a read-only page gets re-synced at every app start.
-      if (isNil(flag) && document.store.clients.size === 0) {
-        await persistence.set(DIRTY_KEY, Dirty.No);
-        return new LocalCopy({ document, persistence, dirty: false, release });
-      }
-      return new LocalCopy({ document, persistence, dirty: flag !== Dirty.No, release });
+      return new LocalCopy({ document, persistence, release });
     } catch (error) {
       console.warn('This page has no copy on this device:', error);
       void persistence.destroy().catch(noop);
       release();
-      return new LocalCopy({ document, persistence: null, dirty: false });
+      return new LocalCopy({ document, persistence: null });
     }
   }
 
+  /** This tab has edits the server has not confirmed. */
   get dirty(): boolean {
     return this.#dirty;
   }
@@ -110,15 +105,15 @@ export class LocalCopy {
   readonly #onUpdate = (_update: Uint8Array, _origin: unknown, _doc: Y.Doc, tr: Y.Transaction) => {
     if (!tr.local || this.#dirty || isNil(this.#persistence)) return;
     this.#dirty = true;
-    this.#written = this.#persistence.set(DIRTY_KEY, Dirty.Yes);
+    this.#written = this.#persistence.set(this.#dirtyKey, DIRTY_YES);
   };
 
-  // Clean only if synced with nothing unsent when the `saved` notice lands.
+  // Clean only if synced with nothing unsent when the `saved` notice lands; only this tab's key.
   markClean(provider: IEntityCoreSyncState): void {
     if (!this.#dirty || isNil(this.#persistence)) return;
     if (!provider.isSynced || provider.hasUnsyncedChanges) return;
     this.#dirty = false;
-    this.#written = this.#persistence.set(DIRTY_KEY, Dirty.No);
+    this.#written = this.#persistence.del(this.#dirtyKey);
   }
 
   // The copy stays on the device; only the handle and doc go.

@@ -11,6 +11,9 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 import type { IProject } from '@/features/logbook/auth/session';
 import type { TEntityType } from '@/features/logbook/blocks/kinds';
 
+// EntityCore ids are UUIDs; anything else in a card (page text anyone wrote) never reaches a URL.
+const ENTITY_ID = /^[0-9a-f-]{36}$/;
+
 // Routes for the two types core's entity configuration doesn't list.
 const routes: Readonly<Partial<Record<TEntityType, string>>> = {
   [EntityType.Simulation]: 'simulation-result',
@@ -72,7 +75,7 @@ export const entityQuery = (type: string, id: string, project: IProject) => {
   const route = routeOfType(type);
   return queryOptions({
     queryKey: keyBuilderLogbook.entity(type, id),
-    enabled: (isNotNil(config) || isNotNil(route)) && id.length > 0,
+    enabled: (isNotNil(config) || isNotNil(route)) && ENTITY_ID.test(id),
     queryFn: async ({ signal }): Promise<IEntity> =>
       isNotNil(config)
         ? // Any core entity; the card reads only the fields IEntity names.
