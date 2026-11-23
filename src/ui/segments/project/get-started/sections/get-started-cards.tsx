@@ -9,6 +9,7 @@ import {
 } from '@/ui/segments/project/get-started/query';
 import { keyBuilder as keyBuilderExternal } from '@/ui/use-query-keys/third-parties';
 
+import { AiAssistantsBlock } from './ai-assistants-block';
 import { GetStartedCard, GetStartedCardSkeleton } from './get-started-card';
 import { ObiAssistantBlock } from './obi-assistant-block';
 
@@ -46,6 +47,7 @@ export function GetStartedCards() {
           ))}
         </section>
       )}
+      <AiAssistantsBlock />
       <ObiAssistantBlock topics={assistantTopics} />
     </div>
   );
