@@ -2,14 +2,26 @@
  * Visual renderer adapted from the user-supplied HexaTile_Export_V2.
  * Its UI, text, global layout, embedded scripts and font loaders are intentionally excluded.
  * Images and shine frames are local, decoded data assets; no external code is loaded.
+ * Timeline as the supplied infoPage.html: the tiles open on picture `first`, then turn every FLIP_INTERVAL to another
+ * picture in random order, every one once a round. `show(i)` turns them to picture i straight away, the same turn
+ * (as a chapter picked on infoPage.html): the information pages share one renderer and call it as they open.
  * @param {HTMLCanvasElement} canvas
- * @param {{ onReady?: () => void, onError?: (error: Error) => void, onFlip?: (cycle: number) => void, imageOrder?: number[] }} options
+ * @param {{ onReady?: () => void, onError?: (error: Error) => void,
+ *   pictures: ReadonlyArray<{ src: string, w?: number, full?: boolean }>, first?: number,
+ *   onPicture?: (index: number) => void }} options
+ *   `full`: a 1920 x 1080 composition, drawn over the whole stage; otherwise a picture `w` px wide round IMG_CX.
+ *   `onPicture` hears of every picture turned to (to carry it over to the next page).
  */
 export function createHexaTileRenderer(
   canvas,
-  { onReady = () => {}, onError = () => {}, onFlip = () => {}, imageOrder = [0, 1, 2] } = {}
+  {
+    onReady = () => {},
+    onError = () => {},
+    pictures,
+    first = 0,
+    onPicture = (/** @type {number} */ _index) => {},
+  }
 ) {
-  canvas.dataset.imageOrder = imageOrder.join(',');
   // ---------- Config (same values as the Canvas 2D page) ----------
   const W = 1920,
     H = 1080;
@@ -55,7 +67,7 @@ export function createHexaTileRenderer(
     IMG_MAX_H = 0.45;
   const IMG_CX = 1340,
     IMG_CY = 520;
-  const FLIP_INTERVAL = 6000,
+  const FLIP_INTERVAL = 10000,
     FLIP_DUR = 600,
     FLIP_SPREAD = 600;
   const SHINE_HMAX = 1.5,
@@ -83,19 +95,12 @@ export function createHexaTileRenderer(
   const SEQ_PASS_EVERY = SEQ_WAVE + (SEQ_FRAMES * 1000) / SEQ_FPS + SEQ_PASS_GAP;
   const SEQ_MODES = ['Screen', 'Add', 'Off'];
 
-  // pictures, shown in this order on successive turns (w = drawn width in px)
-  const imageLayers = [
-    { src: '/static/hexa-tiles/flywire.png', w: 1000 },
-    { src: '/static/hexa-tiles/full-brain.png', w: 1300 },
-    { src: '/static/hexa-tiles/microcircuit.png', w: 1300 },
-  ];
-  const layers = imageOrder
-    .map((index) => imageLayers[index])
-    .map((l) => {
-      const img = new Image();
-      img.src = l.src;
-      return { ...l, initialWidth: l.w, img, h: 0, x: 0, y: 0, tex: null };
-    });
+  // pictures, each loaded once; the page and the turns point at them by index
+  const layers = pictures.map((l) => {
+    const img = new Image();
+    img.src = l.src;
+    return { ...l, initialWidth: l.w ?? 1300, img, h: 0, x: 0, y: 0, tex: null };
+  });
 
   // test switches (buttons at the bottom left; keys in brackets)
   // chosen settings (the test buttons are gone)
@@ -567,10 +572,18 @@ void main() {
   function build() {
     tiles.length = 0;
     for (const l of layers) {
-      l.w = Math.min(l.initialWidth, Math.max(320, 2 * (view.width - view.x - IMG_CX - R * 3)));
-      l.h = (l.w * l.img.naturalHeight) / l.img.naturalWidth;
-      l.x = IMG_CX - l.w / 2;
-      l.y = IMG_CY - l.h / 2;
+      if (l.full) {
+        // a composition made for the stage: its subject already where the pictures go
+        l.w = W;
+        l.h = H;
+        l.x = 0;
+        l.y = 0;
+      } else {
+        l.w = Math.min(l.initialWidth, Math.max(320, 2 * (view.width - view.x - IMG_CX - R * 3)));
+        l.h = (l.w * l.img.naturalHeight) / l.img.naturalWidth;
+        l.x = IMG_CX - l.w / 2;
+        l.y = IMG_CY - l.h / 2;
+      }
       if (l.tex) gl.deleteTexture(l.tex);
       l.tex = makeTexture(l.img);
     }
@@ -615,12 +628,12 @@ void main() {
           prevH: base,
           motion: 0,
           lastH: -1,
-          lastTurns: 0,
+          lastE: 0,
           lastShine: false,
           active: base > 0.03,
           delay: Math.random() * FLIP_SPREAD,
           flips: onImage,
-          turns: 0,
+          e: 0,
           busy: false,
         });
       }
@@ -660,49 +673,84 @@ void main() {
 
   let forceDraw = true;
 
-  // ---------- frame ----------
-  let lastFlip = -1;
+  // ---------- which picture is shown, and the turn from one to the next (as infoPage.html) ----------
+  const N = layers.length;
+  let cur = first; // picture shown now
+  let parity = 0; // pose the tiles rest in: 0 = hexagon "up", 1 = "down"; it flips with every turn
+  let trans = null; // turn in progress: { to, start }
+  let pending = -1; // picture asked for during a turn: turned to as soon as that one is done
+  let nextAuto = FLIP_INTERVAL; // when the next automatic turn starts
+  let lastTurnStart = -Infinity; // the shine sequence is timed from here
+  let queue = []; // random order of the coming automatic turns
+  const shuffle = (a) => {
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  };
+  function nextRandom() {
+    const here = trans ? trans.to : cur;
+    for (let k = 0; k < 2; k++) {
+      if (!queue.length) queue = shuffle(layers.map((_, i) => i));
+      const i = queue.shift();
+      if (i !== here) return i;
+    }
+    return (here + 1) % N;
+  }
+  function startTurn(i, now) {
+    trans = { to: i, start: now };
+    lastTurnStart = now;
+    nextAuto = now + FLIP_INTERVAL; // the new picture then stays a full interval
+    canvas.dataset.picture = String(i);
+    onPicture(i);
+    forceDraw = true;
+  }
+  canvas.dataset.picture = String(cur);
 
   function frame() {
-    const now = reduced ? 0 : elapsed;
-    const cycle = Math.floor(now / FLIP_INTERVAL);
-    if (cycle !== lastFlip) {
-      lastFlip = cycle;
-      canvas.dataset.imageCycle = String(cycle);
-      onFlip(cycle);
-    }
+    const now = elapsed;
     let changed = false;
 
+    // timeline: finish the turn in progress (all tiles are done after FLIP_SPREAD + FLIP_DUR), then a picture asked
+    // for during it, if any, otherwise the next random one when its time comes
+    if (trans && now - trans.start >= FLIP_SPREAD + FLIP_DUR) {
+      cur = trans.to;
+      parity = 1 - parity;
+      trans = null;
+      if (pending >= 0) {
+        const i = pending;
+        pending = -1;
+        if (i !== cur) startTurn(i, now);
+      }
+    }
+    if (!reduced && !trans && now >= nextAuto) startTurn(nextRandom(), now);
+
     for (const t of tiles) {
-      // flip timeline: t.turns = turns finished (+ eased fraction of the turn in progress)
-      let turns = 0,
+      // this tile's part of the turn: t.e = 0 before it starts, eased 0..1 while it turns, 1 when done
+      let e = 0,
         turning = false;
-      const u = now - t.delay - FLIP_INTERVAL;
-      if (t.flips && u >= 0) {
-        const n = Math.floor(u / FLIP_INTERVAL);
-        const v = u - n * FLIP_INTERVAL;
-        turns = n + 1;
-        if (v < FLIP_DUR) {
+      if (trans && t.flips) {
+        const v = (now - trans.start - t.delay) / FLIP_DUR;
+        if (v >= 1) e = 1;
+        else if (v > 0) {
+          e = turnEase(v);
           turning = true;
-          turns = n + turnEase(v / FLIP_DUR);
         }
       }
-      t.turns = turns;
+      t.e = e;
       t.busy = turning;
 
-      // shine sequence: measured from the start of the latest turn window (same for all tiles),
-      // so it begins only once every tile has finished turning, and ends long before the next turn
+      // shine sequence: measured from the start of the latest turn (same for all tiles), so it begins only once
+      // every tile has finished turning; a new turn cuts it off
       t.seq = -1;
-      if (t.flips && SEQ_MODES[seqMode] !== 'Off') {
-        const w = now - FLIP_INTERVAL;
-        if (w >= 0) {
-          const local = w - Math.floor(w / FLIP_INTERVAL) * FLIP_INTERVAL - t.seqStart;
-          for (let k = 0; k < SEQ_PASSES; k++) {
-            const f = ((local - k * SEQ_PASS_EVERY) * SEQ_FPS) / 1000;
-            if (f >= 0 && f < SEQ_FRAMES) {
-              t.seq = Math.min(f, SEQ_FRAMES - 1);
-              break;
-            }
+      if (t.flips && SEQ_MODES[seqMode] !== 'Off' && !trans) {
+        const local = now - lastTurnStart - t.seqStart;
+        for (let k = 0; k < SEQ_PASSES; k++) {
+          const f = ((local - k * SEQ_PASS_EVERY) * SEQ_FPS) / 1000;
+          if (f >= 0 && f < SEQ_FRAMES) {
+            t.seq = Math.min(f, SEQ_FRAMES - 1);
+            break;
           }
         }
       }
@@ -732,7 +780,7 @@ void main() {
         t.lastSeq >= 0 ||
         t.motion > 0.02 ||
         t.lastShine ||
-        t.turns !== t.lastTurns ||
+        t.e !== t.lastE ||
         Math.abs(t.h - t.lastH) > REDRAW_EPS
       )
         changed = true;
@@ -749,22 +797,12 @@ void main() {
       if (t.h < 0.01 && !t.busy) continue; // flat tiles are the floor itself: not drawn
       const s = 1 + t.h * SCALE_PER_H;
       const par = 1 + t.h * SCALE_PER_H * PARALLAX * 0.15;
-      const n = Math.floor(t.turns + 1e-9);
-      let fe = t.turns - n;
+      let fe = t.e;
       if (fe < 1e-4) fe = 0;
-      const a = n % layers.length,
-        b = (n + 1) % layers.length;
-      let p, L0, L1;
-      if (n % 2 === 0) {
-        p = fe;
-        L0 = a;
-        L1 = b;
-      } // hexagon "up" -> "down"
-      else {
-        p = 1 - fe;
-        L0 = b;
-        L1 = a;
-      } // and back
+      // view 0 / view 1 of the cube: the two pictures of this moment, in texture slots 0 and 1
+      const p = parity === 0 ? fe : 1 - fe,
+        L0 = 0,
+        L1 = 1;
       const o = count * FLOATS;
       instData[o] = cx + (t.x - cx) * par;
       instData[o + 1] = cy + (t.y - cy) * par;
@@ -812,22 +850,26 @@ void main() {
       faceShadingOn ? 1 : 0,
       0
     );
-    layers.forEach((l, i) => {
+    // the two pictures of this moment (no turn going on: both the one shown); slot 2 unused
+    const to = trans ? trans.to : cur;
+    const views = parity === 0 ? [cur, to, to] : [to, cur, cur];
+    views.forEach((index, i) => {
+      const l = layers[index];
       gl.activeTexture(gl.TEXTURE0 + i);
       gl.bindTexture(gl.TEXTURE_2D, l.tex);
       gl.uniform1i(U[`uTex${i}`], i);
       gl.uniform4f(U[`uRect${i}`], l.x, l.y, l.w, l.h);
     });
-    gl.activeTexture(gl.TEXTURE0 + layers.length);
+    gl.activeTexture(gl.TEXTURE0 + 3);
     gl.bindTexture(gl.TEXTURE_2D_ARRAY, seqTex);
-    gl.uniform1i(U.uSeq, layers.length);
+    gl.uniform1i(U.uSeq, 3);
     gl.uniform2f(U.uSeqFx, [1, 2, 0][seqMode], SEQ_STRENGTH);
     gl.drawArraysInstanced(gl.TRIANGLES, 0, VERTS, count);
 
     for (const t of tiles) {
       t.lastSeq = t.seq;
       t.lastH = t.h;
-      t.lastTurns = t.turns;
+      t.lastE = t.e;
       t.lastShine = t.motion > 0.02;
     }
   }
@@ -836,7 +878,7 @@ void main() {
   let previous = 0;
   let lastDraw = 0;
   // Start the first tile turn immediately once the decoded artwork is visible.
-  let elapsed = FLIP_INTERVAL;
+  let elapsed = 0;
   let ready = false;
   let visible = false;
   let reduced = false;
@@ -883,6 +925,31 @@ void main() {
         build();
         schedule();
       }
+    },
+    /** Turn to picture `i` (an information page opening), as a chapter picked on infoPage.html: straight away, or
+     * once a turn in progress is done; without motion, at once. */
+    show(i) {
+      if (!(i >= 0 && i < N)) return;
+      queue = queue.filter((k) => k !== i); // the random order will not bring it back right away
+      if (!ready || reduced) {
+        trans = null;
+        pending = -1;
+        cur = i;
+        canvas.dataset.picture = String(i);
+        nextAuto = elapsed + FLIP_INTERVAL;
+        schedule();
+        return;
+      }
+      if (trans) {
+        pending = i === trans.to ? -1 : i;
+        return;
+      }
+      if (i === cur) {
+        nextAuto = elapsed + FLIP_INTERVAL;
+        return;
+      }
+      startTurn(i, elapsed);
+      schedule();
     },
     setVisible(value, motionReduced = false) {
       visible = value;

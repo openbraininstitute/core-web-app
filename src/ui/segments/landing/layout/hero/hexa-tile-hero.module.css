@@ -16,6 +16,8 @@
   display: block;
   width: 100%;
   height: 100%;
+  /* the tiles come up over the still picture rather than in one frame */
+  transition: opacity 280ms ease;
 }
 .fallback {
   pointer-events: none;
@@ -25,4 +27,16 @@
   width: 1000px;
   height: 666px;
   object-fit: contain;
+  transition: opacity 280ms ease 120ms;
+}
+/* a page's own picture: a composition for the whole 1920 x 1080 stage, centred in it */
+.fallbackFull {
+  pointer-events: none;
+  position: absolute;
+  left: calc(50% - 960px);
+  top: calc(50% - 540px);
+  width: 1920px;
+  height: 1080px;
+  object-fit: contain;
+  transition: opacity 280ms ease 120ms;
 }

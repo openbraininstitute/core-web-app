@@ -4,6 +4,14 @@ import { useEffect, useRef } from 'react';
 
 import styles from './public-tour.module.css';
 
+/** Where the chapters' films are painted on the tiles, in the 1920 x 1080 stage's px (16:9). */
+const FRAME = { x: 792, y: 209, w: 1040, h: 585 };
+/** Chapters whose film is drawn larger: Get Started's mosaic, a little further left into the space beside its
+ * words, its right edge and its middle where the others' are. */
+const CHAPTER_FRAMES: Record<string, typeof FRAME> = {
+  join: { x: 672, y: 176, w: 1160, h: 652 },
+};
+
 /** How long a chapter's media layer may be up without a video before its tiles rise white, ms. */
 const NO_VIDEO_AFTER = 200;
 
@@ -100,7 +108,10 @@ export function FeatureTileBackground({
         selected = current.current.chapterId;
         surface.dataset.featureChapter = selected;
         const source = chapterVideoSource(tour, after);
-        engine.setSource(source.read, { empty: source.empty });
+        engine.setSource(source.read, {
+          empty: source.empty,
+          frame: CHAPTER_FRAMES[selected] ?? FRAME,
+        });
       }
       frame = requestAnimationFrame(tick);
     };
@@ -111,7 +122,7 @@ export function FeatureTileBackground({
       if (disposed) return;
       try {
         engine = createFeatureTileRenderer(surface, tour, {
-          frameRect: { x: 792, y: 209, w: 1040, h: 585 },
+          frameRect: FRAME,
           reduced: preference.matches,
           onReady: () => {
             surface.dataset.featureTilesReady = 'true';

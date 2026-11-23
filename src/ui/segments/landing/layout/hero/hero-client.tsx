@@ -72,7 +72,7 @@ export default function HeroClient({
           className={classNames(styles.media, tileAnimation && styles.hexagonMedia)}
           data-header-media
         >
-          {tileAnimation && <HexaTileHero key={sectionSlug} />}
+          {tileAnimation && <HexaTileHero key={sectionSlug} page={sectionSlug} />}
           {!tileAnimation && backgroundType === 'video' && (
             <>
               {posterURL && posterWidth && posterHeight && (
