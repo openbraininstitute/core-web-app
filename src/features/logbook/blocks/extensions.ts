@@ -4,7 +4,7 @@ import { TextAlign } from '@tiptap/extension-text-align';
 import { UniqueID } from '@tiptap/extension-unique-id';
 import { StarterKit } from '@tiptap/starter-kit';
 
-import { Callout, Entity, Figure, FileBlock } from '@/features/logbook/blocks/nodes';
+import { Callout, Entity, Figure, FileBlock, PageLink } from '@/features/logbook/blocks/nodes';
 
 import type { AnyExtension } from '@tiptap/core';
 
@@ -45,4 +45,5 @@ export const contentExtensions: AnyExtension[] = [
   FileBlock,
   Figure,
   Callout,
+  PageLink,
 ];

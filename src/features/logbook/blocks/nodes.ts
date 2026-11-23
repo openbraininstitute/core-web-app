@@ -4,9 +4,10 @@ import { isNil } from 'es-toolkit';
 import get from 'es-toolkit/compat/get';
 
 import { calloutKindOf } from '@/features/logbook/blocks/kinds';
-import { CalloutKind } from '@/features/logbook/types';
+import { CalloutKind, DirectiveLevel } from '@/features/logbook/types';
 
 import type { MarkdownToken, MarkdownTokenizer } from '@tiptap/core';
+import type { TDirectiveLevel } from '@/features/logbook/types';
 
 // Backslash escapes: `\]` in a label, `\"` in a quoted value, `\\` for a backslash.
 const unescapeText = (text: string): string => text.replace(/\\(.)/g, '$1');
@@ -34,15 +35,21 @@ const startOf =
   (src: string): number =>
     src.indexOf(marker);
 
-// One whole line: `::name[label]{attributes}`.
-function directiveTokenizer(name: string): MarkdownTokenizer {
-  const line = new RegExp(
-    `^::${name}\\[((?:[^\\]\\\\\\n]|\\\\.)*)\\]\\{((?:[^}"\\n]|"(?:[^"\\\\\\n]|\\\\.)*")*)\\}[ \\t]*(?:\\n|$)`
-  );
+// `[label]{attributes}`: a label with `\]` escapes, then key=value pairs, quoted values allowed.
+const DIRECTIVE_BODY = `\\[((?:[^\\]\\\\\\n]|\\\\.)*)\\]\\{((?:[^}"\\n]|"(?:[^"\\\\\\n]|\\\\.)*")*)\\}`;
+
+// One whole line, `::name[label]{attributes}`, or inside a line, `:name[label]{attributes}`.
+function directiveTokenizer(
+  name: string,
+  level: TDirectiveLevel = DirectiveLevel.Block
+): MarkdownTokenizer {
+  const block = level === DirectiveLevel.Block;
+  const marker = block ? `::${name}` : `:${name}`;
+  const line = new RegExp(`^${marker}${DIRECTIVE_BODY}${block ? '[ \\t]*(?:\\n|$)' : ''}`);
   return {
     name,
-    level: 'block',
-    start: startOf(`::${name}[`),
+    level,
+    start: startOf(`${marker}[`),
     tokenize(src) {
       const match = line.exec(src);
       if (isNil(match)) return undefined;
@@ -101,6 +108,39 @@ export const Entity = Node.create({
   },
   renderMarkdown: (node) =>
     `::entity[${labelText(node.attrs?.['label'])}]{type=${valueText(node.attrs?.['type'] ?? 'entity')} id=${valueText(node.attrs?.['entityId'])}}`,
+});
+
+// A link to another page of the same log, inside a line: `:page[Results]{id=0193f2c4-…}`.
+// The id links, so a rename keeps the link; the label is the name when the link was written.
+export const PageLink = Node.create({
+  name: 'pageLink',
+  group: 'inline',
+  inline: true,
+  atom: true,
+  addAttributes: () => ({ label: { default: '' }, pageId: { default: '' } }),
+  parseHTML: () => [
+    {
+      tag: 'span[data-page-link]',
+      getAttrs: (el) => ({
+        label: el.textContent ?? '',
+        pageId: el.getAttribute('data-page-link') ?? '',
+      }),
+    },
+  ],
+  renderHTML: ({ node }) => [
+    'span',
+    { 'data-page-link': node.attrs['pageId'] },
+    String(node.attrs['label']),
+  ],
+  renderText: ({ node }) => String(node.attrs['label']),
+  markdownTokenName: 'page',
+  markdownTokenizer: directiveTokenizer('page', DirectiveLevel.Inline),
+  parseMarkdown: (token) => ({
+    type: 'pageLink',
+    attrs: { label: labelOf(token), pageId: attributesOf(token)['id'] ?? '' },
+  }),
+  renderMarkdown: (node) =>
+    `:page[${labelText(node.attrs?.['label'])}]{id=${valueText(node.attrs?.['pageId'])}}`,
 });
 
 // A file of the log: `::file[firing_rate.py]{path=code/firing_rate.py}`.

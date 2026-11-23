@@ -9,6 +9,7 @@ import { useUpdateLog } from '@/features/logbook/api/research-logs';
 import { useCollaboration } from '@/features/logbook/collaboration/notices';
 import { CONTROL, POPOVER_PANEL } from '@/features/logbook/constants';
 import { FormatBar } from '@/features/logbook/editor/format-bar';
+import { PageLinkMenu } from '@/features/logbook/editor/page-link-menu';
 import { SelectionMenu } from '@/features/logbook/editor/selection-menu';
 import { ArtifactIcon } from '@/features/logbook/log/artifact-icon';
 import { ArtifactBar, ArtifactView } from '@/features/logbook/log/artifact-view';
@@ -339,6 +340,7 @@ export function EditorCard(props: IEditorCardProps) {
       >
         <EditorContent editor={editor} className="rl-editor" data-flags={props.settings.flags} />
         <SelectionMenu editor={editor} />
+        <PageLinkMenu editor={editor} pageId={props.page.id} />
         {isNotNil(clock) ? (
           <button
             type="button"

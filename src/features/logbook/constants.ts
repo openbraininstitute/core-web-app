@@ -107,6 +107,12 @@ export const OTHERS_SAVE_WAIT_MS = 5000;
 /** Most brain regions listed for one search. */
 export const REGION_SEARCH_MAX = 60;
 
+/** Longest page name typed after `[[` that still keeps the page list open. */
+export const PAGE_QUERY_MAX = 60;
+
+/** Most pages shown in the `[[` list; typing more of the name narrows it. */
+export const PAGE_LINK_LIST_MAX = 8;
+
 /** Pages left recently stay mounted, so going back is instant. */
 export const WARM_PAGES = 2;
 

@@ -195,6 +195,11 @@ export const CalloutKind = { Note: 'note', Tip: 'tip', Warning: 'warning' } as c
 
 export type TCalloutKind = TValueOf<typeof CalloutKind>;
 
+/** A directive on its own line (`::entity[…]{…}`) or inside a line (`:page[…]{…}`). */
+export const DirectiveLevel = { Block: 'block', Inline: 'inline' } as const;
+
+export type TDirectiveLevel = TValueOf<typeof DirectiveLevel>;
+
 export interface IBoardProps {
   readonly me: IMe;
   readonly project: WorkspaceContext;
@@ -527,6 +532,16 @@ export interface IView {
 export interface ILogContext {
   readonly project: WorkspaceContext;
   readonly logId: string;
+}
+
+/** The open page list's key handler: true when the list used the key. */
+export type TPageListKeys = (event: KeyboardEvent) => boolean;
+
+/** `[[name` typed at the caret: the range it covers and the name so far. */
+export interface IPageQuery {
+  readonly from: number;
+  readonly to: number;
+  readonly text: string;
 }
 
 export interface IPickedEntity {

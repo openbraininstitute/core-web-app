@@ -15,7 +15,9 @@ import { CalloutView } from '@/features/logbook/editor/blocks/callout-view';
 import { EntityView } from '@/features/logbook/editor/blocks/entity-view';
 import { FigureView } from '@/features/logbook/editor/blocks/figure-view';
 import { FileView } from '@/features/logbook/editor/blocks/file-view';
+import { PageLinkView } from '@/features/logbook/editor/blocks/page-link-view';
 import { tokenize } from '@/features/logbook/editor/highlight';
+import { PageLinkKeys } from '@/features/logbook/editor/page-link';
 import { TokenKind } from '@/features/logbook/types';
 
 import type { HocuspocusProvider } from '@hocuspocus/provider';
@@ -31,6 +33,7 @@ const views: Readonly<Record<string, ComponentType<ReactNodeViewProps>>> = {
   file: FileView,
   figure: FigureView,
   callout: CalloutView,
+  pageLink: PageLinkView,
 };
 
 /** Cancels a drag that starts inside a block card's own UI; page text in a callout still drags. */
@@ -155,6 +158,7 @@ export function editorExtensions(options: IEditorOptions): AnyExtension[] {
     }),
     Markdown,
     CodeHighlight,
+    PageLinkKeys,
     CollaborationChanges.configure({
       doc: provider.document,
       feed: options.feed,

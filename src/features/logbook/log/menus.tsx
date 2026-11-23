@@ -40,6 +40,24 @@ export function InsertMenu({ editor, onClose, onPicker, onNotice }: IInsertMenuP
           <span className={SUB}>Circuit, morphology, model, result and more</span>
         </span>
       </button>
+      <div className={cn(LABEL, 'pt-2.5')}>This log</div>
+      <button
+        type="button"
+        className={MENU_ITEM}
+        onClick={() => {
+          onClose();
+          // After the popover hands focus back: `[[` at the caret opens the page list there.
+          requestAnimationFrame(() => editor.chain().focus().insertContent('[[').run());
+        }}
+      >
+        <span className={cn(TILE, 'bg-fill-2 text-primary-9')}>
+          <Icon name="page" size={16} />
+        </span>
+        <span className={TEXT}>
+          <span className={TITLE}>Link a page</span>
+          <span className={SUB}>Or type [[ in the text</span>
+        </span>
+      </button>
       <div className={cn(LABEL, 'pt-2.5')}>From your computer</div>
       <input
         ref={input}
