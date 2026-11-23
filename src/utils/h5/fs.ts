@@ -1,5 +1,7 @@
 import { ready } from 'h5wasm';
 
+import { type CacheBounds, deleteEntry, openEntry, writeEntry } from '@/utils/asset-cache';
+
 /**
  * Download progress reported from a worker's fetch loop. `total` is null when the response
  * carries no Content-Length.
@@ -237,24 +239,25 @@ async function restoreFromCache({
   filename,
 }: {
   FS: EmscriptenFS;
-  cache: Cache;
+  cache: CacheBounds;
   url: string;
   filename: string;
 }): Promise<boolean> {
-  const cached = await cache.match(url);
+  const cached = await openEntry(cache, url);
   if (!cached) return false;
 
   try {
-    if (!cached.body) throw new AssetFetchError(0, 'Cached asset has no body stream');
     // No progress reporting: a cache hit reads from disk fast enough that the bar would only
-    // flicker, so the UI shows its quick spinner instead.
-    await streamToFS({ FS, filename, body: cached.body, total: contentLength(cached) });
+    // flicker, so the UI shows its quick spinner instead. The size is what the response declared,
+    // which for an encoded one is less than what it decodes to, so `streamToFS` takes a longer
+    // body; only a shorter one is an interrupted write.
+    await streamToFS({ FS, filename, body: cached.body, total: cached.size || null });
 
     return true;
   } catch {
     // Whatever the entry turned out to be, it can not be trusted. Drop it and let the caller
     // download afresh, rather than reporting an error whose only answer is a reload.
-    await cache.delete(url);
+    await deleteEntry(cache, url);
 
     return false;
   }
@@ -274,7 +277,7 @@ export async function fetchToFS({
   url,
   headers,
   fileKey,
-  cacheName,
+  cache,
   extension = '.h5',
   onProgress,
 }: {
@@ -282,14 +285,11 @@ export async function fetchToFS({
   headers: Record<string, string>;
   fileKey: string;
   /** `CacheStorage` bucket to read from and write to. Keep one per asset kind. */
-  cacheName: string;
+  cache: CacheBounds;
   extension?: string;
   onProgress?: (progress: DownloadProgress) => void;
 }): Promise<{ filename: string }> {
-  // Instantiating the WASM module and opening the CacheStorage bucket are independent, and on a
-  // cold worker the former is the slower of the two — running them in series would add it to the
-  // front of every download.
-  const [{ FS }, cache] = await Promise.all([ready, caches.open(cacheName)]);
+  const { FS } = await ready;
   if (!FS) throw new Error('h5wasm FS not initialized');
 
   const filename = `${fileKey}${extension}`;
@@ -305,9 +305,14 @@ export async function fetchToFS({
   if (await restoreFromCache({ FS, cache, url, filename })) return { filename };
 
   const stall = watchForStall();
-  let cachePut: Promise<void> | null = null;
+  // Apart from the stall's, so that stopping the download for another reason isn't reported as a stall.
+  const abort = new AbortController();
+  let stored: Promise<boolean> | null = null;
   try {
-    const fresh = await fetch(url, { headers, signal: stall.signal });
+    const fresh = await fetch(url, {
+      headers,
+      signal: AbortSignal.any([stall.signal, abort.signal]),
+    });
     stall.alive();
     if (!fresh.ok) {
       throw new AssetFetchError(fresh.status, `Asset fetch failed (${fresh.status})`);
@@ -331,23 +336,21 @@ export async function fetchToFS({
     let body = fresh.body;
     if (total) {
       const [toFs, toCache] = fresh.body.tee();
-      // Best-effort cross-session cache. The .catch keeps this from becoming an unhandled rejection
-      // if the FS-write loop below throws and we bail before awaiting it; a failed write just
+      // Best-effort cross-session cache: `writeEntry` never rejects, and a failed write just
       // re-downloads.
-      cachePut = cache
-        .put(url, new Response(toCache, { headers: fresh.headers, status: 200 }))
-        .catch(() => {});
+      stored = writeEntry(cache, url, toCache, total);
       body = toFs;
     }
 
     try {
       await streamToFS({ FS, filename, body, total, onProgress, onChunk: stall.alive });
     } catch (err) {
-      // Anything the put committed is a partial of the same download. Awaited before the delete
-      // because it would otherwise be free to land after it; the tee's source has ended by here, so
-      // it settles at once.
-      await cachePut;
-      await cache.delete(url);
+      // The FS write can fail with the download still going, and the tee would then buffer the
+      // rest of it for this branch, so it is stopped first. Whatever the cache took is a partial
+      // or a bad copy, so the delete waits for the write, which is otherwise free to land after it.
+      abort.abort();
+      await stored;
+      await deleteEntry(cache, url);
       throw err;
     }
   } catch (err) {
@@ -360,7 +363,7 @@ export async function fetchToFS({
   // Awaited: a second population stored in the same file opens its own worker as soon as this one
   // is released, and `cache.match` cannot see an entry whose put has not committed. Returning
   // first costs a second download of the whole file.
-  await cachePut;
+  await stored;
 
   return { filename };
 }

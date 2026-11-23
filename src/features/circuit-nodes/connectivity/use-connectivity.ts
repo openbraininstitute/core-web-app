@@ -9,9 +9,10 @@ import {
 } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { CONNECTIVITY_H5_CACHE } from '@/features/circuit-nodes/connectivity/cache-name';
 import { LatestOnly } from '@/features/circuit-nodes/connectivity/latest-only';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { hasEntry } from '@/utils/asset-cache';
+import { CONNECTIVITY_H5_CACHE } from '@/utils/h5/caches';
 
 import type {
   CircuitConnectivityMatricesConfiguration,
@@ -351,8 +352,7 @@ export function useConnectivityDownloadGate(
         id: assetId,
         assetPath: path,
       });
-      const cache = await caches.open(CONNECTIVITY_H5_CACHE);
-      return Boolean(await cache.match(url));
+      return hasEntry(CONNECTIVITY_H5_CACHE, url);
     },
     enabled: asks,
     staleTime: Number.POSITIVE_INFINITY,

@@ -41,7 +41,7 @@ sequenceDiagram
    A stream that ends short is asked once more, from where it stopped, with `Range` and headers the page makes again (`freshHeaders`), as the token may have run out during a long download. The rest is taken only as a 206 of exactly the bytes missing. Every byte of the pack's size in is the whole pack, whatever broke the stream after.
 
    The size Bluenaas gives must be a whole number of bytes up to 2 GiB (`MOST_PACK_BYTES`), or nothing is downloaded. A body longer than the size is read no further, and the pack is taken as changed (`PackChanged`).
-4. **The cache.** The bucket `circuit-morphology-mpack` (`PACK_CACHE` in [worker-api.ts](worker-api.ts)), keyed by the pack's SHA-256 (`packCacheKey`): Bluenaas serves a circuit's pack under one URL, and builds it again whenever its cache is cleared. It keeps entries 30 days and 1 GiB in all, the least recently opened going first (`bucket` in [asset-cache.ts](../../../viewer-3d/load/asset-cache.ts), shared with the EM cell mesh viewer).
+4. **The cache.** The bucket `ProjectDataCache.MorphologyPack` (`PACK_CACHE` in [worker-api.ts](worker-api.ts)), keyed by the pack's SHA-256 (`packCacheKey`): Bluenaas serves a circuit's pack under one URL, and builds it again whenever its cache is cleared. It keeps entries 30 days and 1 GiB in all, the least recently opened going first (`bucket` in [asset-cache.ts](../../../../utils/asset-cache.ts), shared with the EM cell mesh viewer).
    - Once the whole pack is in, its SHA-256 is checked against the one Bluenaas gave, whatever its size. A mismatch is `PackChanged`: Bluenaas built the pack again since it answered.
    - Only a pack that matches and fits the bucket's 1 GiB is kept. A larger one is checked but downloaded again at every visit.
    - An entry of the wrong length, as an interrupted write leaves in Firefox, is deleted on the way out. So is one the reader refuses (`PackError`), and the pack is downloaded again.
@@ -57,6 +57,7 @@ sequenceDiagram
    - Each block inflates to no more than its contents could take, and a chunk's segments must each have a byte at least of it: a damaged block or an index claiming impossible counts is refused before anything is made for its segments.
    - The grids of the levels others are read over are kept, 64 MiB of them, the least recently read going first (`Kept`), so that a box's finer levels don't read its base again.
    - A box of such a level is handed to the page as a copy, as the kept grid is still read. Any other box is turned into micrometres where it lies and transferred.
+   - For the WebGPU tier the ends are packed instead ([packed-ends.ts](packed-ends.ts)), 20 bytes a segment where the floats take 32: the near end in micrometres, the far end as whole grid steps from it in 15 bits an axis, and each radius as its step in a byte. The far end is exact up to 16,383 steps on an axis (409 µm on a 25 nm grid); a longer segment is in steps 4, 16 or 64 times coarser, off by half of one on an axis at most, under an eight-thousandth of its longest axis.
 7. **Number the cells as the page does** ([cells.ts](cells.ts)). The pack numbers cells through its populations sorted by name, the page in its own order. `pageCells` maps one to the other, and a population the page lacks maps to `NONE` and is dropped. A population with another number of cells than the page's fails the load.
 8. **Morton order** ([morton.ts](morton.ts)). Each box's segments are sorted by the Morton code of their midpoints, in 10 bits an axis. WebGPU culls them in blocks of 64 by the box round each block, and in this order those boxes are small.
 9. **Failures.**
@@ -96,6 +97,7 @@ pack-source.ts        what the reader reads from, a part at a time: that buffer,
 pack.ts               the reader: header, index, somas, boxes, readableAt, a box read over its base
 cells.ts              the pack's cells numbered as the page numbers them
 morton.ts             a box's segments in Morton order
+packed-ends.ts        a segment's ends in five words, as the WebGPU tier holds them
 crowding.ts           how crowded each soma is, on a grid
 crowding.worker.ts    worker entry: the crowding, terminated after
 load-crowding.ts      the crowding in its worker, aborted with the somas
@@ -105,12 +107,13 @@ place-trees.ts        the cells placed in the circuit
 dendrogram.ts         an ME-model's dendrogram
 ```
 
-Shared with the EM cell mesh viewer, in `src/features/viewer-3d/load/`: [asset-cache.ts](../../../viewer-3d/load/asset-cache.ts) and [worker-handle.ts](../../../viewer-3d/load/worker-handle.ts).
+Shared with the EM cell mesh viewer: [asset-cache.ts](../../../../utils/asset-cache.ts) in `src/utils/`, and [worker-handle.ts](../../../viewer-3d/load/worker-handle.ts).
 
-Tests: `src/__tests__/circuit-morphologies/`: `load.test.ts` (the load end to end, with a fake worker and cache: resume, digest, cache hits and damaged entries, abort, a dead worker), `pack.test.ts` (every level against OBI-One's own reader, every `PackError`, streaming), and one file each for the cells, Morton order, crowding, sections, trees and dendrograms. The packs in `fixtures/` are written by OBI-One.
+Tests: `src/__tests__/circuit-morphologies/`: `load.test.ts` (the load end to end, with a fake worker and cache: resume, digest, cache hits and damaged entries, abort, a dead worker), `pack.test.ts` (every level against OBI-One's own reader, every `PackError`, streaming), and one file each for the cells, the packed ends, Morton order, crowding, sections, trees and dendrograms. The packs in `fixtures/` are written by OBI-One.
 
 ## Limitations
 
+- Packed ends hold no segment longer than 1,048,512 grid steps on an axis (26 mm on a 25 nm grid) and no radius step outside a byte (0.004 to 245 µm at 16 steps to a doubling). Such a segment is drawn cut short along its line, or with the nearest radius a byte holds, and the page warns once, with how many the first such read had (`BoxSegments.clamped`). No pack built so far has one.
 - The pack is downloaded whole, even where the view will only ever want its coarsest level. A request for each chunk's bytes, by range, would download only what is drawn, at a round trip a box.
 - A download cut short twice is not kept, and Try again starts it over.
 - A pack larger than the cache's 1 GiB is downloaded again at every visit (its digest is still checked), and held in memory while it is open.

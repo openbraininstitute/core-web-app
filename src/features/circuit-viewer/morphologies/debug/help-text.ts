@@ -45,6 +45,24 @@ export const HELP = {
     ],
     applies: 'view',
   },
+  wide: {
+    text:
+      "The occlusion's wide term, on WebGPU: it shades the circuit's shape, its lobes and clefts, where the fine " +
+      'term shades a soma against its neighbours. Moving frames drawn without the occlusion have neither.',
+    effects: [
+      ['Higher', 'Darker hollows and lighter open surfaces.'],
+      ['Off', 'The fine term alone.'],
+    ],
+    applies: 'view',
+  },
+  wideReach: {
+    text: "How far the wide term looks for what hides a surface, as a share of the view's height.",
+    effects: [
+      ['Higher', 'Larger shapes, shaded more softly.'],
+      ['Lower', 'Smaller shapes, nearer what the fine term shades.'],
+    ],
+    applies: 'view',
+  },
   readout: {
     text: 'Keeps the numbers above over the view once the menu is closed, as a drag on the view closes it.',
     applies: 'view',

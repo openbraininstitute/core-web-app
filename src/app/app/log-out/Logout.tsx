@@ -3,30 +3,23 @@
 import { signOut } from 'next-auth/react';
 import { useEffect } from 'react';
 
-import { CONNECTIVITY_H5_CACHE } from '@/features/circuit-nodes/connectivity/cache-name';
-import { CIRCUIT_H5_CACHE } from '@/features/circuit-nodes/types';
-import { NWB_H5_CACHE } from '@/features/ephys-viewer/constants';
-
-/** The project files the viewers keep in the browser, which must not stay for whoever is next. */
-const DATA_CACHES = [CIRCUIT_H5_CACHE, CONNECTIVITY_H5_CACHE, NWB_H5_CACHE];
-
-async function clearDataCaches() {
-  if (!('caches' in globalThis)) return;
-  await Promise.allSettled(DATA_CACHES.map((name) => caches.delete(name)));
-}
+import { clearProjectDataCaches } from '@/utils/project-data-caches';
 
 async function clearLogbookCopies() {
   const { dropCleanCopies } = await import('@/features/logbook/collaboration/local-sync');
   await dropCleanCopies();
 }
 
-/** How long signing out waits for the caches to go: gigabytes of them can take a while. */
+/**
+ * How long signing out waits for the caches to go: gigabytes of them can take a while. The marker of whose they are is
+ * left as it is, so that whatever is left is deleted when someone else signs in.
+ */
 const CLEAR_TIMEOUT_MS = 2000;
 
 export default function Logout() {
   useEffect(() => {
     const timeout = new Promise<void>((resolve) => setTimeout(resolve, CLEAR_TIMEOUT_MS));
-    const cleared = Promise.allSettled([clearDataCaches(), clearLogbookCopies()]);
+    const cleared = Promise.allSettled([clearProjectDataCaches(), clearLogbookCopies()]);
     Promise.race([cleared, timeout]).finally(() => signOut({ callbackUrl: '/' }));
   }, []);
 

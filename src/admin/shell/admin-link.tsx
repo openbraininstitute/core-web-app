@@ -11,6 +11,7 @@ const ROUTES = {
   project: 'projects',
   user: 'users',
   promotion: 'promotions',
+  course: 'courses',
 };
 
 export function adminHref(kind: keyof typeof ROUTES, id: string) {

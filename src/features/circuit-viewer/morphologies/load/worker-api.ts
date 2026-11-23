@@ -9,13 +9,8 @@
  */
 import * as Comlink from 'comlink';
 
-import {
-  blobEntry,
-  bucket,
-  type CacheBounds,
-  deleteEntry,
-  writeEntry,
-} from '@/features/viewer-3d/load/asset-cache';
+import { blobEntry, bucket, type CacheBounds, deleteEntry, writeEntry } from '@/utils/asset-cache';
+import { ProjectDataCache } from '@/utils/project-data-caches';
 
 import { pageCells, renumberSegments, renumberSomas } from './cells';
 import {
@@ -31,15 +26,16 @@ import { blobSource, type PackSource, Unreadable } from './pack-source';
 
 import type {
   BoxRead,
+  BoxSegments,
   CircuitMorphologyData,
-  MorphologySegments,
   PackBoxes,
+  Packing,
   Population,
 } from '../types';
 import type { Arriving } from './arriving';
 
 /** Packs by their digest: Bluenaas serves a circuit's pack under one URL and rebuilds it when its cache is cleared. */
-export const PACK_CACHE = { ...bucket('circuit-morphology-mpack'), maxBytes: 2 ** 30 };
+export const PACK_CACHE = { ...bucket(ProjectDataCache.MorphologyPack), maxBytes: 2 ** 30 };
 
 /** A pack's key in the cache, which must be a URL. */
 export const packCacheKey = (sha256: string) =>
@@ -52,6 +48,7 @@ export const packCacheKey = (sha256: string) =>
 export type Opened = {
   data: CircuitMorphologyData;
   fromCache: boolean;
+  packing: Packing;
   readableAt: Float64Array[];
 } & PackBoxes;
 
@@ -106,8 +103,8 @@ class Held implements PackSource {
   watching({ readBox, ...pack }: Pack): Pack {
     return {
       ...pack,
-      readBox: (level, box) => {
-        const read = readBox(level, box);
+      readBox: (level, box, packed) => {
+        const read = readBox(level, box, packed);
         const over = () => this.reads.delete(read);
         this.reads.add(read);
         read.then(over, over);
@@ -146,15 +143,19 @@ async function readStored(
   download.release();
 }
 
-const buffersOf = ({ segments, segmentCells, segmentTypes }: MorphologySegments) => [
+const buffersOf = ({ segments, segmentCells, segmentTypes }: BoxSegments) => [
   segments.buffer,
   segmentCells.buffer,
   segmentTypes.buffer,
 ];
 
 export function createPackApi(cache: CacheBounds) {
-  let opened: { readBox: Pack['readBox']; numbers: Uint32Array; whole: Promise<void> } | null =
-    null;
+  let opened: {
+    readBox: Pack['readBox'];
+    packing: Packing;
+    numbers: Uint32Array;
+    whole: Promise<void>;
+  } | null = null;
 
   return {
     async open(
@@ -176,11 +177,11 @@ export function createPackApi(cache: CacheBounds) {
         whole.catch(() => {});
       }
       const numbers = pageCells(pack.data.populations, populations);
-      opened = { readBox: pack.readBox, numbers, whole };
+      opened = { readBox: pack.readBox, packing: pack.packing, numbers, whole };
       const data = renumberSomas(pack.data, numbers, populations);
       // The boxes and the levels are copied, not handed over: the pack still reads by them.
-      const { boxes, levels, readableAt } = pack;
-      return Comlink.transfer({ data, boxes, levels, readableAt, fromCache }, [
+      const { boxes, levels, packing, readableAt } = pack;
+      return Comlink.transfer({ data, boxes, levels, packing, readableAt, fromCache }, [
         data.somas.buffer as ArrayBuffer,
       ]);
     },
@@ -194,13 +195,15 @@ export function createPackApi(cache: CacheBounds) {
       await opened.whole;
     },
 
-    async read(wanted: BoxRead[]): Promise<MorphologySegments[]> {
+    async read(wanted: BoxRead[], packed = false): Promise<BoxSegments[]> {
       if (!opened) throw new Error('no morphology pack is open');
-      const { readBox, numbers } = opened;
+      const { readBox, packing, numbers } = opened;
       const read = await Promise.all(
-        wanted.map(async ({ level, box }) =>
-          mortonOrder(renumberSegments(await readBox(level, box), numbers))
-        )
+        wanted.map(async ({ level, box }) => {
+          const read = await readBox(level, box, packed);
+          const ordered = mortonOrder(renumberSegments(read, numbers), packing);
+          return read.clamped ? { ...ordered, clamped: read.clamped } : ordered;
+        })
       );
       return Comlink.transfer(read, read.flatMap(buffersOf) as ArrayBuffer[]);
     },

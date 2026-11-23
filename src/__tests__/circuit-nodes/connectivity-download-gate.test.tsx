@@ -26,7 +26,12 @@ const cachedUrls = new Set<string>();
 beforeEach(() => {
   cachedUrls.clear();
   vi.stubGlobal('caches', {
-    open: async () => ({ match: async (url: string) => (cachedUrls.has(url) ? {} : undefined) }),
+    open: async () => ({
+      match: async (url: string) =>
+        cachedUrls.has(url)
+          ? new Response('', { headers: { 'x-cache-timestamp': String(Date.now()) } })
+          : undefined,
+    }),
   });
 });
 afterEach(() => vi.unstubAllGlobals());

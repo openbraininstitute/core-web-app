@@ -10,6 +10,8 @@ import {
 } from '@/features/circuit-viewer/morphologies/engine/impostors';
 import { BLOCK, SegmentArena } from '@/features/circuit-viewer/morphologies/engine/segment-arena';
 
+import { PACKING } from './packed';
+
 import type { DetailView } from '@/features/circuit-viewer/morphologies/engine/detail';
 import type { MorphologyChunks } from '@/features/circuit-viewer/morphologies/types';
 
@@ -46,6 +48,7 @@ describe('DetailStream, over a long run of views', () => {
     const chunks: MorphologyChunks = {
       boxes,
       levels,
+      packing: PACKING,
       read: async (wanted) =>
         wanted.map(({ level, box }) => {
           const n = levels[level].segments[box];

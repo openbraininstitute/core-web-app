@@ -8,31 +8,31 @@ import { errorReason } from './errors';
 
 import type { QueryKey } from '@tanstack/react-query';
 
-export type AdminWriteOptions<Args> = {
-  write: (args: Args) => Promise<unknown>;
+export type AdminWriteOptions<Args, Result = unknown> = {
+  write: (args: Args) => Promise<Result>;
   done: string;
   failed: string;
-  onSuccess?: () => void;
+  onSuccess?: (result: Result) => void;
 };
 
-// `refreshes` is the query key prefix of everything the write can change.
-export function useAdminWrite<Args>({
+// `refreshes` is the query key prefix of everything the write can change, if the page shows any.
+export function useAdminWrite<Args, Result = unknown>({
   refreshes,
   write,
   done,
   failed,
   onSuccess,
-}: AdminWriteOptions<Args> & { refreshes: QueryKey }) {
+}: AdminWriteOptions<Args, Result> & { refreshes?: QueryKey }) {
   const notification = useAppNotification();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: write,
     // Awaited so a dialog stays pending until the page shows the new data.
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: refreshes });
+    onSuccess: async (result) => {
+      if (refreshes) await queryClient.invalidateQueries({ queryKey: refreshes });
       notification.success({ message: done, placement: 'topRight' });
-      onSuccess?.();
+      onSuccess?.(result);
     },
     onError: (error) =>
       notification.error({

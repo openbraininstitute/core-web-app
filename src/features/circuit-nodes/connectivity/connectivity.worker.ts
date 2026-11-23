@@ -1,6 +1,5 @@
 import * as Comlink from 'comlink';
 
-import { CONNECTIVITY_H5_CACHE } from '@/features/circuit-nodes/connectivity/cache-name';
 import {
   countConnectivity,
   includedNeurons,
@@ -8,6 +7,7 @@ import {
   summarizeConnectivity,
 } from '@/features/circuit-nodes/connectivity/connectivity-groups';
 import { readConnectivityMatrix } from '@/features/circuit-nodes/connectivity/connectivity-h5';
+import { CONNECTIVITY_H5_CACHE } from '@/utils/h5/caches';
 import { fetchToFS, unlinkFromFS } from '@/utils/h5/fs';
 
 import type {
@@ -44,7 +44,7 @@ const api = {
   ): Promise<ConnectivitySummary> {
     const { filename } = await fetchToFS({
       ...request,
-      cacheName: CONNECTIVITY_H5_CACHE,
+      cache: CONNECTIVITY_H5_CACHE,
       onProgress,
     });
     // Read whole, then the file let go: the arrays are a fraction of its size.

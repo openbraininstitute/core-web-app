@@ -5,7 +5,9 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { Arriving } from '@/features/circuit-viewer/morphologies/load/arriving';
 import { openPack, PackError } from '@/features/circuit-viewer/morphologies/load/pack';
+import { MOST_STEP } from '@/features/circuit-viewer/morphologies/load/packed-ends';
 
+import { unpackedOf } from './packed';
 import {
   COUNTS_BYTES,
   expected,
@@ -360,6 +362,48 @@ describe('openPack', () => {
     expect(one.segmentCells).toHaveLength(0);
     expect(one.segmentCells.buffer).not.toBe(other.segmentCells.buffer);
     expect(one.segments.buffer).not.toBe(other.segments.buffer);
+  });
+
+  it('reads a box with its ends packed, to the step where they are as floats, with the same cells and types', async () => {
+    const opened = await openPack(pack('two-cells'));
+    expect(opened.packing).toEqual({ gridUm: 0.025, radiusSteps: 16 });
+    for (let level = 0; level < opened.levels.length; level++) {
+      for (let box = 0; box < opened.boxes.length / 6; box++) {
+        const floats = await opened.readBox(level, box);
+        const packed = await opened.readBox(level, box, true);
+        expect(packed.segments).toBeInstanceOf(Uint32Array);
+        expect(packed.clamped).toBeUndefined();
+        const unpacked = unpackedOf(packed.segments as Uint32Array, opened.packing);
+        expect(unpacked).toHaveLength(floats.segments.length);
+        const off = unpacked.map((value, k) => Math.abs(value - floats.segments[k]));
+        expect(Math.max(0, ...off)).toBeLessThan(0.001);
+        expect(packed.segmentCells).toEqual(floats.segmentCells);
+        expect(packed.segmentTypes).toEqual(floats.segmentTypes);
+      }
+    }
+  });
+
+  it('rounds a long segment to coarser steps, cuts short one too long for packed ends, and counts those', async () => {
+    const opened = await openPack(pack('wide'));
+    const { gridUm } = opened.packing;
+    let clamped = 0;
+    let rounded = 0;
+    for (let box = 0; box < opened.boxes.length / 6; box++) {
+      const floats = (await opened.readBox(0, box)).segments;
+      const packed = await opened.readBox(0, box, true);
+      const unpacked = unpackedOf(packed.segments as Uint32Array, opened.packing);
+      clamped += packed.clamped ?? 0;
+      for (let o = 0; o < floats.length; o += 8) {
+        const axes = [0, 1, 2].map((k) => Math.abs(floats[o + 4 + k] - floats[o + k]));
+        const longest = Math.max(...axes) / gridUm;
+        if (longest > 64 * MOST_STEP) continue;
+        if (longest > MOST_STEP) rounded++;
+        const off = [4, 5, 6].map((k) => Math.abs(unpacked[o + k] - floats[o + k]));
+        expect(Math.max(...off)).toBeLessThan(0.001 + (2 / MOST_STEP) * longest * gridUm);
+      }
+    }
+    expect(clamped).toBe(2);
+    expect(rounded).toBeGreaterThan(0);
   });
 
   it('hands over a box of a base kept for the finer levels as a copy', async () => {

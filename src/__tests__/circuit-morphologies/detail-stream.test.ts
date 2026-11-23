@@ -15,25 +15,26 @@ import {
 
 import { arrivalOf } from './arrival';
 import { boxesAt } from './boxes';
+import { PACKING } from './packed';
 
 import type { DetailView } from '@/features/circuit-viewer/morphologies/engine/detail';
 import type {
   BoxRead,
+  BoxSegments,
   DetailRules,
   MorphologyChunks,
-  MorphologySegments,
 } from '@/features/circuit-viewer/morphologies/types';
 
-const h = vi.hoisted(() => ({ logError: vi.fn() }));
-vi.mock('@/utils/logger', () => ({ logError: h.logError }));
+const h = vi.hoisted(() => ({ logError: vi.fn(), logWarn: vi.fn() }));
+vi.mock('@/utils/logger', () => ({ logError: h.logError, logWarn: h.logWarn }));
 
 const RULES: DetailRules = { budget: Infinity, pixels: 2, culling: true };
 /** Each box's segments at each level, the finest first. */
 const COUNTS = [100, 50, 10];
 const DEPTHS = [20, 40, 60, 80];
 
-const segmentsOf = (count: number): MorphologySegments => ({
-  segments: new Float32Array(8 * count),
+const segmentsOf = (count: number, packed = false): BoxSegments => ({
+  segments: packed ? new Uint32Array(5 * count) : new Float32Array(8 * count),
   segmentCells: new Uint32Array(count),
   segmentTypes: new Uint8Array(count),
 });
@@ -42,23 +43,25 @@ const segmentsOf = (count: number): MorphologySegments => ({
 function chunksOf() {
   const reads: {
     wanted: BoxRead[];
-    handed: MorphologySegments[];
+    handed: BoxSegments[];
+    packed: boolean;
     resolve(): void;
     reject(e: unknown): void;
   }[] = [];
   const chunks: MorphologyChunks = {
     ...boxesAt(DEPTHS, COUNTS),
-    read: (wanted) =>
+    packing: PACKING,
+    read: (wanted, packed = false) =>
       new Promise((resolve, reject) => {
-        const handed = wanted.map(({ level }) => segmentsOf(COUNTS[level]));
-        reads.push({ wanted, handed, resolve: () => resolve(handed), reject });
+        const handed = wanted.map(({ level }) => segmentsOf(COUNTS[level], packed));
+        reads.push({ wanted, handed, packed, resolve: () => resolve(handed), reject });
       }),
   };
   return { chunks, reads };
 }
 
 /** Whether each of the boxes read has been let go of: every array of it detached, or none. */
-const letGo = (boxes: MorphologySegments[]) =>
+const letGo = (boxes: BoxSegments[]) =>
   boxes.map(({ segments, segmentCells, segmentTypes }) => {
     const gone = [segments, segmentCells, segmentTypes].map(
       ({ buffer }) => (buffer as ArrayBuffer).detached
@@ -328,6 +331,44 @@ describe('DetailStream', () => {
       expect(asked(reads)).toEqual([[1, 1, 1, 1]]);
       expect(levelsDrawn(stream)).toEqual([0, 4, 0]);
     });
+  });
+
+  it('asks for the ends packed where its arena is uploaded, and places them; as floats where three draws from it', async () => {
+    const { chunks, reads } = chunksOf();
+    const { uploadsOf } = uploadsSaid();
+    const geometry = () => new THREE.InstancedBufferGeometry();
+    const uploaded = DetailStream.of(chunks, 8 * BLOCK, geometry(), vi.fn(), uploadsOf);
+    const drawn = DetailStream.of(chunks, 8 * BLOCK, geometry(), vi.fn());
+    uploaded.update(viewOf(500), RULES, true);
+    drawn.update(viewOf(500), RULES, true);
+
+    expect(reads.map(({ packed }) => packed)).toEqual([true, false]);
+    for (const [k, stream] of [uploaded, drawn].entries()) {
+      reads[k].resolve();
+      await settled();
+      stream.apply();
+      expect(levelsDrawn(stream)).toEqual([0, 0, 4]);
+    }
+    const again = uploaded.remade(16 * BLOCK, 0, geometry());
+    again.update(viewOf(500), RULES, true);
+    expect(reads[2].packed).toBe(true);
+  });
+
+  it('warns once of packed segments that did not fit', async () => {
+    const { stream, reads } = make();
+    stream.update(viewOf(500), RULES, true);
+    reads[0].handed[1].clamped = 3;
+    reads[0].handed[2].clamped = 2;
+    reads[0].resolve();
+    await settled();
+    stream.apply();
+    stream.update(viewOf(20), RULES, true);
+    reads[1].handed[0].clamped = 1;
+    reads[1].resolve();
+    await settled();
+
+    expect(h.logWarn).toHaveBeenCalledOnce();
+    expect(h.logWarn.mock.calls[0][0]).toContain('5 segments');
   });
 
   it('is made again for a larger budget, its arena let go of before the new one is made, uploaded alike', () => {

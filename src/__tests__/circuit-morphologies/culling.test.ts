@@ -5,7 +5,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { HOLE, MIN_RADIUS } from '@/features/circuit-viewer/morphologies/engine/impostors';
 import { arenaStorage } from '@/features/circuit-viewer/morphologies/engine/webgpu/arena-gpu';
 import { Culling, DRAWS } from '@/features/circuit-viewer/morphologies/engine/webgpu/culling';
-import { MOST_SEEN } from '@/features/circuit-viewer/morphologies/engine/webgpu/culling-wgsl';
+import {
+  MOST_SEEN,
+  SEGMENTS,
+  seenRoom,
+} from '@/features/circuit-viewer/morphologies/engine/webgpu/culling-wgsl';
 import { DepthPyramid } from '@/features/circuit-viewer/morphologies/engine/webgpu/depth-pyramid';
 
 import { fakeGpu } from './fake-gpu';
@@ -271,5 +275,19 @@ describe('the culling while the cell table hides cells', () => {
     const [, offset, data] = writes.mock.calls.at(-1) ?? [];
     expect(offset).toBe(0);
     expect((data as Uint32Array).length).toBe(20);
+  });
+});
+
+describe('the seen list', () => {
+  it('has room for the most seen of each kind, and is no longer than the arena', () => {
+    expect(seenRoom(640)).toBe(640);
+    expect(seenRoom(MOST_SEEN + 64)).toBe(MOST_SEEN + 64);
+    expect(seenRoom(3 * MOST_SEEN)).toBe(2 * MOST_SEEN);
+  });
+
+  it('is as long for the test, which writes no more of a kind than its draw takes', () => {
+    expect(SEGMENTS).toContain(`let room = min(cap, ${2 * MOST_SEEN}u);`);
+    expect(SEGMENTS).toContain(`if (k < ${MOST_SEEN}u) { lists[cap + room - 1u - k] = i; }`);
+    expect(SEGMENTS).toContain(`if (k < ${MOST_SEEN}u) { lists[cap + k] = i; }`);
   });
 });

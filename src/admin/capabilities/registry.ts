@@ -39,6 +39,10 @@ export const CAPABILITY_REGISTRY = {
   promotions: {
     admin: [VLAB_ADMIN_GROUP],
   },
+  // virtual_labs/routes/course.py, institution.py and seat.py: the same exact membership.
+  education: {
+    admin: [VLAB_ADMIN_GROUP],
+  },
   accounting: {
     admin: [ACCOUNTING_ADMIN_GROUP, WILDCARD_ADMIN_GROUP],
   },
