@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -6,11 +6,12 @@ import {
   readWorkflowSessionSelection,
   WorkflowSessionSelectionMode,
 } from '@/features/scan-config/workflow/workflow-session-selection';
-
 import {
+  buildBuildConfigureUrlFromDataViewEntity,
   buildSimulateConfigureUrlFromDataViewEntity,
+  findBuildWorkflowForEntity,
   resolveSimulateSourceTypeFromDataView,
-} from './routes';
+} from '@/ui/segments/workflows/config/routes';
 
 const workspace = { virtualLabId: 'lab-1', projectId: 'project-1' };
 
@@ -89,5 +90,49 @@ describe('buildSimulateConfigureUrlFromDataViewEntity', () => {
         ],
       },
     });
+  });
+});
+
+describe('buildBuildConfigureUrlFromDataViewEntity', () => {
+  it('opens the ion channel build editor with the recording pre-selected', () => {
+    const href = buildBuildConfigureUrlFromDataViewEntity({
+      workspace,
+      extendedType: ExtendedEntitiesTypeDict.IonChannelRecording,
+      entityId: 'recording-id',
+    });
+
+    const match = href?.match(
+      /\/workflows\/build\/configure\/ion-channel-build-campaign\/(wf_[a-z0-9]{10})$/
+    );
+    expect(match).not.toBeNull();
+
+    expect(readWorkflowSessionSelection(match?.[1] as string)).toEqual({
+      mode: WorkflowSessionSelectionMode.Single,
+      item: { type: ExtendedEntitiesTypeDict.IonChannelRecording, id: 'recording-id' },
+    });
+  });
+
+  it('returns null for a type with no build workflow', () => {
+    expect(
+      buildBuildConfigureUrlFromDataViewEntity({
+        workspace,
+        extendedType: ExtendedEntitiesTypeDict.CellMorphology,
+        entityId: 'morphology-id',
+      })
+    ).toBeNull();
+  });
+});
+
+describe('findBuildWorkflowForEntity', () => {
+  it('finds the build workflow of a buildable type without writing a selection', () => {
+    const setItem = vi.spyOn(Storage.prototype, 'setItem');
+
+    expect(
+      findBuildWorkflowForEntity(ExtendedEntitiesTypeDict.IonChannelRecording)?.targetType
+    ).toBe(ExtendedEntitiesTypeDict.IonChannelBuildCampaign);
+    expect(findBuildWorkflowForEntity(ExtendedEntitiesTypeDict.CellMorphology)).toBeNull();
+    expect(setItem).not.toHaveBeenCalled();
+
+    setItem.mockRestore();
   });
 });

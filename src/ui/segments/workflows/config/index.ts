@@ -22,12 +22,14 @@ export {
   workflowHasMultipleSources,
 } from './helpers';
 export {
+  buildBuildConfigureUrlFromDataViewEntity,
   buildConfigureUrlForEntity,
   buildScanConfigConfigureHref,
   buildSimulateConfigureUrlFromDataViewEntity,
   buildWorkflowCrumbs,
   buildWorkflowHomeHref,
   buildWorkflowStartingPageUrl,
+  findBuildWorkflowForEntity,
   resolveSimulateSourceTypeFromDataView,
   WORKFLOW_HOME_QUERY_KEYS,
 } from './routes';
