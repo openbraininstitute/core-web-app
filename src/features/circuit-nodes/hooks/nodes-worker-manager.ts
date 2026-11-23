@@ -14,9 +14,9 @@ import type {
   GetRowsResponse,
   NodeGeometry,
   NodeGeometryOptions,
-  OfferedProperties,
   OpenRequest,
   SortItem,
+  TOfferedProperties,
   TPropertyFilter,
 } from '@/features/circuit-nodes/types';
 import type { NodesWorkerApi } from '@/features/circuit-nodes/worker/nodes.worker';
@@ -63,8 +63,8 @@ interface Session {
   epoch: number;
   disposed: boolean;
   disposeTimer: ReturnType<typeof setTimeout> | null;
-  /** Ends each export under way, which a worker that is gone would leave waiting. */
-  exportEnders: Set<(error: Error) => void>;
+  /** Ends each long call under way, which a worker that is gone would leave waiting. */
+  callEnders: Set<(error: Error) => void>;
 }
 
 /**
@@ -110,7 +110,7 @@ class NodesWorkerRegistry {
         epoch: 0,
         disposed: false,
         disposeTimer: null,
-        exportEnders: new Set(),
+        callEnders: new Set(),
       };
       this.sessions.set(key, session);
     }
@@ -150,14 +150,7 @@ class NodesWorkerRegistry {
   exportCsv(key: string, request: CsvRequest, onPart: CsvPartHandler): Promise<void> {
     const session = this.sessions.get(key);
     if (!session?.proxy) return Promise.reject(new Error('Nodes worker not ready'));
-    const { proxy } = session;
-    return new Promise<void>((resolve, reject) => {
-      session.exportEnders.add(reject);
-      proxy
-        .exportCsv(request, Comlink.proxy(onPart))
-        .then(resolve, reject)
-        .finally(() => session.exportEnders.delete(reject));
-    });
+    return this.untilClosed(session, session.proxy.exportCsv(request, Comlink.proxy(onPart)));
   }
 
   getColumn(key: string, name: string): Promise<ColumnValues> {
@@ -169,11 +162,18 @@ class NodesWorkerRegistry {
   neuronSetFilter(
     key: string,
     cells: Uint32Array,
-    offered: OfferedProperties
+    offered: TOfferedProperties
   ): Promise<TPropertyFilter | null> {
     const session = this.sessions.get(key);
     if (!session?.proxy) return Promise.reject(new Error('Nodes worker not ready'));
-    return session.proxy.neuronSetFilter(cells, offered);
+    return this.untilClosed(session, session.proxy.neuronSetFilter(cells, offered));
+  }
+
+  private untilClosed<T>(session: Session, call: Promise<T>): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      session.callEnders.add(reject);
+      call.then(resolve, reject).finally(() => session.callEnders.delete(reject));
+    });
   }
 
   /**
@@ -301,8 +301,8 @@ class NodesWorkerRegistry {
     const { proxy, worker } = session;
     session.proxy = null;
     session.worker = null;
-    for (const end of session.exportEnders) end(new Error('The nodes were closed'));
-    session.exportEnders.clear();
+    for (const end of session.callEnders) end(new Error('The nodes were closed'));
+    session.callEnders.clear();
     // terminating the worker frees the whole WASM heap (the ~700MB file); a
     // release of the comlink proxy first avoids dangling message ports.
     if (proxy) {

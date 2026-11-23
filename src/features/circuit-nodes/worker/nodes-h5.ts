@@ -17,10 +17,10 @@ import {
   type NodeGeometry,
   type NodeGeometryOptions,
   type NumberFilter,
-  type OfferedProperties,
   POSITION_COLUMNS,
   type SortItem,
   type TextFilter,
+  type TOfferedProperties,
   type TPropertyFilter,
 } from '@/features/circuit-nodes/types';
 
@@ -698,7 +698,7 @@ export class NodesSession {
     return out;
   }
 
-  neuronSetFilter(cells: Uint32Array, offered: OfferedProperties): TPropertyFilter | null {
+  neuronSetFilter(cells: Uint32Array, offered: TOfferedProperties): TPropertyFilter | null {
     return propertyFilterOf({
       cells,
       rowCount: this.rowCount,

@@ -211,7 +211,7 @@ export type EdgePopulation = {
 };
 
 /** Each property a neuron set's form offers, with its values; obi-one leaves out one with too many. */
-export type OfferedProperties = Readonly<Record<string, readonly string[]>>;
+export type TOfferedProperties = Readonly<Record<string, readonly string[]>>;
 
 /** A property neuron set's `filter_dict`: the values kept per property. */
 export type TPropertyFilter = Record<string, string[]>;

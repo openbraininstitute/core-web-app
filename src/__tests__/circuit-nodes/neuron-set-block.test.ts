@@ -6,7 +6,7 @@ import {
   propertyFilterOf,
 } from '@/features/circuit-nodes/neuron-set-block';
 
-import type { ColumnMeta, OfferedProperties } from '@/features/circuit-nodes/types';
+import type { ColumnMeta, TOfferedProperties } from '@/features/circuit-nodes/types';
 
 // Six cells: two L5_TPC in layer 5, one L5_MC in layer 5, three L6_BPC in layer 6.
 const MTYPE = { library: ['L5_TPC', 'L5_MC', 'L6_BPC'], indices: Uint32Array.of(0, 0, 1, 2, 2, 2) };
@@ -33,7 +33,7 @@ const read = (name: string) => {
 };
 const filterOver =
   (rowCount: number, readColumn: typeof read = read) =>
-  async (cells: Uint32Array, offered: OfferedProperties) =>
+  async (cells: Uint32Array, offered: TOfferedProperties) =>
     propertyFilterOf({ cells, rowCount, columns: COLUMNS, offered, read: readColumn });
 const population = { name: 'S1', type: 'biophysical', file: 'nodes.h5' };
 const build = (cells: number[], ticked: boolean, filterModel = {}, offered: object = OFFERED) =>
@@ -43,7 +43,7 @@ const build = (cells: number[], ticked: boolean, filterModel = {}, offered: obje
     ticked,
     filterModel,
     columns: COLUMNS,
-    offered: offered as OfferedProperties,
+    offered: offered as TOfferedProperties,
     propertyFilter: filterOver(6),
   });
 
@@ -137,6 +137,17 @@ describe('neuronSetBlock', () => {
   it('takes the ids of cells a blank value picks out, which the form cannot show', async () => {
     const { by } = await build([5], true, {}, { cell_type: CELL_TYPE.library });
     expect(by).toBe('id');
+  });
+
+  it('leaves out a column named like an object property the form does not offer', () => {
+    const filter = propertyFilterOf({
+      cells: Uint32Array.of(0, 1),
+      rowCount: 6,
+      columns: [...COLUMNS, { name: 'constructor', kind: 'categorical' }],
+      offered: OFFERED,
+      read: (name) => (name === 'constructor' ? MTYPE : read(name)),
+    });
+    expect(filter).toEqual({ mtype: ['L5_TPC'] });
   });
 
   describe('around the most ids a set may hold', () => {

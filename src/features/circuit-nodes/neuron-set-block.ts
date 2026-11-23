@@ -6,7 +6,7 @@ import type {
   ColumnMeta,
   FilterModel,
   NodePopulation,
-  OfferedProperties,
+  TOfferedProperties,
   TPropertyFilter,
 } from './types';
 
@@ -68,8 +68,12 @@ function idBlock(population: NodePopulation, cells: Uint32Array) {
 }
 
 /** Whether the form can show `property` with all of `values`; it drops blank values. */
-function canShow(offered: OfferedProperties, property: string, values: readonly string[]): boolean {
-  const listed = offered[property];
+function canShow(
+  offered: TOfferedProperties,
+  property: string,
+  values: readonly string[]
+): boolean {
+  const listed = Object.hasOwn(offered, property) ? offered[property] : undefined;
   return listed !== undefined && values.every((v) => v.trim() !== '' && listed.includes(v));
 }
 
@@ -80,7 +84,7 @@ function canShow(offered: OfferedProperties, property: string, values: readonly 
 function filterAsProperties(
   filterModel: FilterModel,
   columns: readonly ColumnMeta[],
-  offered: OfferedProperties
+  offered: TOfferedProperties
 ): Record<string, string[]> | null {
   const entries = Object.entries(filterModel);
   if (entries.length === 0) return null;
@@ -129,13 +133,12 @@ export function propertyFilterOf({
   cells: Uint32Array;
   rowCount: number;
   columns: readonly ColumnMeta[];
-  offered: OfferedProperties;
-  /** A categorical column's library and its code per node. */
+  offered: TOfferedProperties;
   read: (name: string) => { library: string[]; indices: Uint32Array };
 }): TPropertyFilter | null {
   const narrowings: Narrowing[] = [];
   for (const meta of columns.filter(
-    (c) => c.kind === ColumnKindDict.Categorical && c.name in offered
+    (c) => c.kind === ColumnKindDict.Categorical && Object.hasOwn(offered, c.name)
   )) {
     const values = read(meta.name);
     const kept = new Uint8Array(values.library.length);
@@ -199,16 +202,16 @@ export async function neuronSetBlock({
   ticked: boolean;
   filterModel: FilterModel;
   columns: readonly ColumnMeta[];
-  offered: OfferedProperties;
+  offered: TOfferedProperties;
   propertyFilter: (
     cells: Uint32Array,
-    offered: OfferedProperties
+    offered: TOfferedProperties
   ) => Promise<TPropertyFilter | null>;
 }): Promise<{ block: NeuronSetBlock; by: 'property' | 'id' } | { block: null; by: null }> {
   const asFiltered = ticked ? null : filterAsProperties(filterModel, columns, offered);
   if (asFiltered) return { block: propertyBlock(population, asFiltered), by: 'property' };
 
-  const byValues = await propertyFilter(cells, offered);
+  const byValues = Object.keys(offered).length > 0 ? await propertyFilter(cells, offered) : null;
   if (byValues) return { block: propertyBlock(population, byValues), by: 'property' };
   return cells.length > MAX_ID_SET_CELLS
     ? { block: null, by: null }

@@ -19,8 +19,8 @@ import type {
   FilterModel,
   NodeGeometryOptions,
   NodePopulation,
-  OfferedProperties,
   SortItem,
+  TOfferedProperties,
 } from '@/features/circuit-nodes/types';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -142,7 +142,7 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
   );
 
   const neuronSetFilter = useCallback(
-    async (cells: Uint32Array, offered: OfferedProperties) => {
+    async (cells: Uint32Array, offered: TOfferedProperties) => {
       if (!key) throw new Error('Nodes worker not ready');
       return nodesWorkerRegistry.neuronSetFilter(key, cells, offered);
     },

@@ -15,10 +15,10 @@ import type {
   GetRowsResponse,
   NodeGeometry,
   NodeGeometryOptions,
-  OfferedProperties,
   OpenRequest,
   OpenResponse,
   SortItem,
+  TOfferedProperties,
   TPropertyFilter,
 } from '@/features/circuit-nodes/types';
 
@@ -79,7 +79,7 @@ const api = {
 
   async neuronSetFilter(
     cells: Uint32Array,
-    offered: OfferedProperties
+    offered: TOfferedProperties
   ): Promise<TPropertyFilter | null> {
     if (!session) throw new Error('NodesSession not initialized; call open() first');
     return session.neuronSetFilter(cells, offered);

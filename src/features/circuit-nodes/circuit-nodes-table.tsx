@@ -27,7 +27,7 @@ import { logError } from '@/utils/logger';
 import type { ComponentProps } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { NeuronSetBlock } from '@/features/circuit-nodes/neuron-set-block';
-import type { OfferedProperties, ViewMode } from '@/features/circuit-nodes/types';
+import type { TOfferedProperties, ViewMode } from '@/features/circuit-nodes/types';
 
 import styles from '@/features/circuit-nodes/circuit-nodes-table.module.css';
 
@@ -59,7 +59,7 @@ export type TableCells = {
    */
   onCreateNeuronSet?: (block: NeuronSetBlock) => void;
   /** What the form's property neuron sets can show, by population; only those go in a property set. */
-  neuronSetProperties?: Readonly<Record<string, OfferedProperties>>;
+  neuronSetProperties?: Readonly<Record<string, TOfferedProperties>>;
   /** Told the connectivity matrix's pathway under the pointer, and null once it leaves. */
   onPathwayChange?: (pathway: TablePathway | null) => void;
   /** Told what the table shows, its nodes or the connectivity matrix: nodes once it is gone. */

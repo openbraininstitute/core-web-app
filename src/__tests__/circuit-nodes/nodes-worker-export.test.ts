@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const remote = vi.hoisted(() => ({
   open: vi.fn(async () => ({ rowCount: 3, columns: [] })),
   exportCsv: vi.fn(),
+  neuronSetFilter: vi.fn(),
 }));
 
 vi.mock('comlink', () => ({
@@ -54,6 +55,18 @@ describe('a CSV export through the nodes registry', () => {
     vi.useFakeTimers();
     const exported = nodesWorkerRegistry.exportCsv(KEY, { columns: ['node_id'] }, () => true);
     const failed = expect(exported).rejects.toThrow('The nodes were closed');
+    nodesWorkerRegistry.release(KEY);
+    nodesWorkerRegistry.release(KEY);
+    await vi.runAllTimersAsync();
+    await failed;
+  });
+
+  it('fails a neuron set filter rather than wait on a worker that is gone', async () => {
+    await ready();
+    remote.neuronSetFilter.mockReturnValueOnce(new Promise(() => {}));
+    vi.useFakeTimers();
+    const filtered = nodesWorkerRegistry.neuronSetFilter(KEY, Uint32Array.of(0), { mtype: ['A'] });
+    const failed = expect(filtered).rejects.toThrow('The nodes were closed');
     nodesWorkerRegistry.release(KEY);
     nodesWorkerRegistry.release(KEY);
     await vi.runAllTimersAsync();
