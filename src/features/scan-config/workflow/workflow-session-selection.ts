@@ -1,6 +1,7 @@
 import superjson from 'superjson';
 import { z } from 'zod';
 
+import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 import { createWorkflowSessionId } from '@/features/scan-config/workflow/session';
 import { findInitializeModelProperty } from '@/features/scan-config/workflow/workflow-schema-selection';
 
@@ -205,6 +206,24 @@ function buildModelValueFromSessionSelection(opts: {
   }
 }
 
+/** A detail page launches with one entity; a `model_identifier_multiple` field still takes a list. */
+function selectionShapedForField(
+  sessionSelection: TWorkflowSessionSelectionPayload,
+  uiElement: string
+): TWorkflowSessionSelectionPayload {
+  if (
+    uiElement === ScanConfigUIElementDict.ModelIdentifierMultiple &&
+    sessionSelection.mode === WorkflowSessionSelectionMode.Single
+  ) {
+    return {
+      mode: WorkflowSessionSelectionMode.List,
+      items: [sessionSelection.item],
+      prerequisites: sessionSelection.prerequisites,
+    };
+  }
+  return sessionSelection;
+}
+
 /** Overwrites only the schema's initialize model field with browse session selection. */
 export function applyWorkflowSessionSelectionPatch(opts: {
   config: Config;
@@ -218,7 +237,10 @@ export function applyWorkflowSessionSelectionPatch(opts: {
   }
 
   const modelValue = buildModelValueFromSessionSelection({
-    sessionSelection: opts.sessionSelection,
+    sessionSelection: selectionShapedForField(
+      opts.sessionSelection,
+      modelProperty.field.ui_element
+    ),
     resolveFromIdType: opts.resolveFromIdType,
   });
   if (modelValue === null) {
