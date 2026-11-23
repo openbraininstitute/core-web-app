@@ -79,7 +79,7 @@ export function PageOutline(props: IPageOutlineProps) {
               {renaming === page.id ? (
                 <RenameField
                   name={page.title}
-                  label="Name of the section"
+                  label="Name of the page"
                   className={FIELD}
                   onSave={(title) => saveTitle(page, title)}
                   onCancel={() => setRenaming(null)}
@@ -101,7 +101,7 @@ export function PageOutline(props: IPageOutlineProps) {
                   {isSection ? (
                     <CardMenu
                       name={page.title}
-                      deleteLabel="Delete section"
+                      deleteLabel="Delete page"
                       onRename={() => setRenaming(page.id)}
                       onDelete={() => setDeleting(page)}
                     >

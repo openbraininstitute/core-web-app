@@ -33,13 +33,40 @@ const views: Readonly<Record<string, ComponentType<ReactNodeViewProps>>> = {
   callout: CalloutView,
 };
 
-export const withViews = (): AnyExtension[] =>
-  contentExtensions.map((extension) => {
+/**
+ * Cancels a drag that starts in a block card's own UI (selected text, an image): the browser
+ * carried the card's rendered HTML, and a drop in the page inserted it as paragraphs. Moving the
+ * card starts on the node's element, outside the wrapper, and text inside a callout is page text.
+ */
+export function stopInnerDrag(event: Event): void {
+  const target = event.target;
+  const from = target instanceof Element ? target : (target as Node | null)?.parentElement;
+  if (isNil(from?.closest('[data-node-view-wrapper]'))) return;
+  if (isNil(from?.closest('[data-node-view-content]'))) event.preventDefault();
+}
+
+const InnerDragGuard = Extension.create({
+  name: 'innerDragGuard',
+  addProseMirrorPlugins: () => [
+    new Plugin({
+      // Capture phase: the node view's stopEvent keeps this event from ProseMirror's handlers.
+      view: (view) => {
+        view.dom.addEventListener('dragstart', stopInnerDrag, true);
+        return { destroy: () => view.dom.removeEventListener('dragstart', stopInnerDrag, true) };
+      },
+    }),
+  ],
+});
+
+export const withViews = (): AnyExtension[] => [
+  ...contentExtensions.map((extension) => {
     const view = views[extension.name];
     return isNil(view)
       ? extension
       : extension.extend({ addNodeView: () => ReactNodeViewRenderer(view) });
-  });
+  }),
+  InnerDragGuard,
+];
 
 const CODE_BLOCK = 'codeBlock';
 

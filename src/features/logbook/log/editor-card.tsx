@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 
 import { PageKind, ReadOnlyReason } from '@/api/logbook/types';
 import { useArtifacts } from '@/features/logbook/api/log-files';
+import { useRenamePage } from '@/features/logbook/api/pages';
 import { useUpdateLog } from '@/features/logbook/api/research-logs';
 import { useCollaboration } from '@/features/logbook/collaboration/notices';
 import { CONTROL, POPOVER_PANEL } from '@/features/logbook/constants';
@@ -66,11 +67,22 @@ export function EditorCard(props: IEditorCardProps) {
   const [clock, setClock] = useState<IClock | null>(null);
   const rejoinAt = useCollaboration(props.notices, (state) => state.rejoinAt);
   const update = useUpdateLog(props.project);
+  const renamePage = useRenamePage(props.logId, props.project);
   const files = useArtifacts(props.logId, props.project).data ?? [];
   const artifact = files.find((file) => file.id === props.artifactId) ?? null;
   const title = log?.name ?? 'Research log';
   const main = props.pages.find((page) => page.kind === PageKind.Main);
   const pageTab: ITabRef = { kind: TabKind.Page, id: props.page.id };
+  const canRename = isNotNil(log) && props.readOnly !== ReadOnlyReason.ReadAccess;
+  const notSaved = (error: unknown): never => {
+    props.setNotice({
+      kind: NoticeKind.Error,
+      title: 'The new name was not saved',
+      description: reasonOf(error),
+    });
+    throw error;
+  };
+  const renameLog = (name: string) => update.mutateAsync({ id: props.logId, name }).catch(notSaved);
   const tabs: IEditorTab[] = [
     ...(isNil(main)
       ? []
@@ -81,13 +93,16 @@ export function EditorCard(props: IEditorCardProps) {
             hint: title,
             icon: <Icon name="notebook" size={15} />,
             pinned: true,
+            onRename: canRename ? renameLog : null,
           },
         ]),
     ...props.tabs.flatMap((tab): IEditorTab[] => {
       if (tab.kind === TabKind.Page) {
-        const page =
-          tab.id === props.page.id ? props.page : props.pages.find((item) => item.id === tab.id);
+        const listed = props.pages.find((item) => item.id === tab.id);
+        const page = tab.id === props.page.id ? props.page : listed;
         if (isNil(page)) return [];
+        // The listed copy carries the version the rename is checked against.
+        const target = listed ?? page;
         return [
           {
             tab,
@@ -95,6 +110,9 @@ export function EditorCard(props: IEditorCardProps) {
             hint: `${title} / ${page.title}`,
             icon: <Icon name="page" size={15} />,
             pinned: false,
+            onRename: canRename
+              ? (name) => renamePage.mutateAsync({ page: target, title: name }).catch(notSaved)
+              : null,
           },
         ];
       }
@@ -107,6 +125,7 @@ export function EditorCard(props: IEditorCardProps) {
           hint: `${file.name} (read-only)`,
           icon: <ArtifactIcon artifact={file} size={20} />,
           pinned: false,
+          onRename: null,
         },
       ];
     }),
@@ -187,17 +206,6 @@ export function EditorCard(props: IEditorCardProps) {
           active={isNil(artifact) ? pageTab : { kind: TabKind.Artifact, id: artifact.id }}
           page={pageTab}
           status={<SaveStatus notices={props.notices} copy={props.copy} iconOnly={narrow} />}
-          canRename={isNotNil(log) && props.readOnly !== ReadOnlyReason.ReadAccess}
-          onRename={(name) =>
-            update.mutateAsync({ id: props.logId, name }).catch((error: unknown) => {
-              props.setNotice({
-                kind: NoticeKind.Error,
-                title: 'The new name was not saved',
-                description: reasonOf(error),
-              });
-              throw error;
-            })
-          }
           onSelect={props.onSelectTab}
           onClose={props.onCloseTab}
         />

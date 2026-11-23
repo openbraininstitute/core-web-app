@@ -12,6 +12,8 @@ import type { IResearchLog, TResearchLogDraft } from '@/api/entitycore/types/ent
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type {
   EntityCoreIdentifiableNamed,
+  EntityCoreResource,
+  IAsset,
   IPlatformUser,
   NestedSpecies,
   Timestamps,
@@ -60,11 +62,18 @@ export interface IActivityRun {
 
 export interface IEntity
   extends Readonly<Pick<EntityCoreIdentifiableNamed, 'id' | 'name'>>,
-    Readonly<Partial<Pick<Timestamps, 'creation_date'>>> {
+    Readonly<Partial<Pick<Timestamps, 'creation_date'>>>,
+    Readonly<Partial<Pick<EntityCoreResource, 'type' | 'assets'>>> {
   readonly created_by?: Readonly<Pick<IPlatformUser, 'pref_label'>>;
   readonly brain_region?: Readonly<Pick<BrainRegionHierarchyBase, 'name'>> | null;
   readonly subject?: { readonly species?: Readonly<Pick<NestedSpecies, 'name'>> | null } | null;
 }
+
+/** Where an entity card's picture comes from: the thumbnail service draws it, or the entity holds one. */
+export const ThumbnailFrom = { Service: 'service', Asset: 'asset' } as const;
+export type TThumbnailSource =
+  | { readonly from: typeof ThumbnailFrom.Service }
+  | { readonly from: typeof ThumbnailFrom.Asset; readonly asset: IAsset };
 
 export interface ILogFile {
   readonly path: string;
@@ -572,6 +581,8 @@ export interface IEditorTab {
   readonly hint: string;
   readonly icon: ReactNode;
   readonly pinned: boolean;
+  /** Null when the tab's name cannot be changed (a file, or no write access). */
+  readonly onRename: ((name: string) => Promise<unknown>) | null;
 }
 
 export interface IEditorTabsProps {
@@ -579,8 +590,6 @@ export interface IEditorTabsProps {
   readonly active: ITabRef;
   readonly page: ITabRef;
   readonly status: ReactNode;
-  readonly canRename: boolean;
-  readonly onRename: (name: string) => Promise<unknown>;
   readonly onSelect: (tab: ITabRef) => void;
   readonly onClose: (tab: ITabRef) => void;
 }

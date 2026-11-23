@@ -11,6 +11,7 @@ import {
   routeOfType,
 } from '@/features/logbook/api/entities';
 import { lookOfType } from '@/features/logbook/editor/blocks/entity-look';
+import { EntityThumbnail } from '@/features/logbook/editor/blocks/entity-thumbnail';
 import { ViewerMessage } from '@/features/logbook/editor/blocks/viewer-3d/frame';
 import { has3dView, Viewer3d } from '@/features/logbook/editor/blocks/viewers-3d';
 import { Bone } from '@/features/logbook/elements/skeletons';
@@ -154,6 +155,8 @@ export function EntityView({ node, selected, updateAttributes, deleteNode }: Nod
         <Suspense fallback={<ViewerMessage text="Loading the 3D view…" />}>
           <Viewer3d type={type} entityId={entityId} project={project} />
         </Suspense>
+      ) : entity.isSuccess ? (
+        <EntityThumbnail entity={entity.data} project={project} />
       ) : null}
     </NodeViewWrapper>
   );

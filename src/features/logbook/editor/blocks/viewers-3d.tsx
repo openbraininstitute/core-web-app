@@ -15,6 +15,12 @@ const VIEWERS: Readonly<Partial<Record<string, ComponentType<IViewer3dProps>>>> 
   [EntityTypeDict.CellMorphology]: lazy(
     () => import('@/features/logbook/editor/blocks/viewer-3d/morphology')
   ),
+  [EntityTypeDict.Memodel]: lazy(
+    () => import('@/features/logbook/editor/blocks/viewer-3d/memodel')
+  ),
+  [EntityTypeDict.EMCellMesh]: lazy(
+    () => import('@/features/logbook/editor/blocks/viewer-3d/em-cell-mesh')
+  ),
 };
 
 const viewerKeyOf = (type: string): string | null => {

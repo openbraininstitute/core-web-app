@@ -1,4 +1,4 @@
-import { isNil } from 'es-toolkit';
+import { isNil, isNotNil } from 'es-toolkit';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 
@@ -23,18 +23,32 @@ const CLOSE =
 
 function TitleField({
   title,
+  label,
+  focus,
   onRename,
+  onDone,
 }: {
   readonly title: string;
+  readonly label: string;
+  readonly focus: boolean;
   readonly onRename: (name: string) => Promise<unknown>;
+  readonly onDone: () => void;
 }) {
+  const field = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState(title);
   const [seen, setSeen] = useState(title);
   if (seen !== title) {
     setSeen(title);
     setValue(title);
   }
+  // biome-ignore lint/correctness/useExhaustiveDependencies: only when the field opens
+  useEffect(() => {
+    if (!focus) return;
+    field.current?.focus();
+    field.current?.select();
+  }, []);
   const save = (): void => {
+    onDone();
     const name = value.trim();
     if (name.length === 0 || name === title) {
       setValue(title);
@@ -42,21 +56,25 @@ function TitleField({
     }
     onRename(name).catch(() => setValue(title));
   };
+  // Enter and Escape hand focus back to the tab, so the keyboard stays in the strip.
+  const backToTab = (input: HTMLInputElement): void =>
+    input.closest<HTMLElement>('[role="tab"]')?.focus();
   return (
     <input
+      ref={field}
       className="w-full min-w-0 truncate rounded-[6px] border-0 bg-transparent p-0 text-[13px] font-bold text-primary-9 outline-none focus:bg-soft"
-      aria-label="Name of the log"
-      title="Rename the log"
+      aria-label={label}
+      title={label}
       value={value}
       maxLength={300}
       onChange={(event) => setValue(event.target.value)}
       onBlur={save}
       onKeyDown={(event) => {
-        if (event.key === 'Enter') event.currentTarget.blur();
+        if (event.key === 'Enter') backToTab(event.currentTarget);
         if (event.key === 'Escape') {
-          const field = event.currentTarget;
+          const input = event.currentTarget;
           setValue(title);
-          requestAnimationFrame(() => field.blur());
+          requestAnimationFrame(() => backToTab(input));
         }
       }}
     />
@@ -130,6 +148,7 @@ export function EditorTabs(props: IEditorTabsProps) {
   const activeAt = tabs.findIndex((item) => tabKey(item.tab) === active);
   const strip = useRef<HTMLDivElement>(null);
   const [overflow, setOverflow] = useState(false);
+  const [editing, setEditing] = useState<string | null>(null);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: re-run when tabs open or close
   useEffect(() => {
@@ -162,6 +181,11 @@ export function EditorTabs(props: IEditorTabsProps) {
     return true;
   };
 
+  // The main tab's name is a field whenever it is selected; other pages open one on double click or F2.
+  const startRename = (item: IEditorTab): void => {
+    if (!item.pinned && isNotNil(item.onRename)) setEditing(tabKey(item.tab));
+  };
+
   const keys = (item: IEditorTab) => (event: ReactKeyboardEvent<HTMLDivElement>) => {
     if (event.target !== event.currentTarget) return;
     if (moveFocus(event.currentTarget, event.key)) {
@@ -172,6 +196,7 @@ export function EditorTabs(props: IEditorTabsProps) {
       event.preventDefault();
       props.onSelect(item.tab);
     }
+    if (event.key === 'F2') startRename(item);
     if ((event.key === 'Delete' || event.key === 'Backspace') && !item.pinned)
       props.onClose(item.tab);
   };
@@ -208,12 +233,23 @@ export function EditorTabs(props: IEditorTabsProps) {
                 title={item.hint}
                 data-testid="logbook-tab"
                 onClick={() => props.onSelect(item.tab)}
+                onDoubleClick={(event) => {
+                  if (event.target instanceof Element && isNotNil(event.target.closest('button')))
+                    return;
+                  startRename(item);
+                }}
                 onKeyDown={keys(item)}
               >
                 <span className="flex flex-none">{item.icon}</span>
                 <span className="flex min-w-0 flex-1">
-                  {item.pinned && selected && props.canRename ? (
-                    <TitleField title={item.label} onRename={props.onRename} />
+                  {isNotNil(item.onRename) && (item.pinned ? selected : editing === key) ? (
+                    <TitleField
+                      title={item.label}
+                      label={item.pinned ? 'Name of the log' : 'Name of the page'}
+                      focus={!item.pinned}
+                      onRename={item.onRename}
+                      onDone={() => setEditing(null)}
+                    />
                   ) : (
                     <span className="truncate">{item.label}</span>
                   )}
