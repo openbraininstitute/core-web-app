@@ -21,8 +21,6 @@ const STATUS_TONES: Record<TJobStatus, TStatusTone> = {
   [JobStatusDict.Cancelled]: 'neutral',
 };
 
-const when = (iso: string | null) => iso && formatDateTime(iso);
-
 export function JobDetail({ job }: { job: TLaunchSystemJob }) {
   const { code, resources, meta, logs } = job;
 
@@ -45,10 +43,10 @@ export function JobDetail({ job }: { job: TLaunchSystemJob }) {
         <Detail label="Project">
           <AdminLink kind="project" id={job.project_id} />
         </Detail>
-        <Detail label="Created">{when(job.creation_date)}</Detail>
-        <Detail label="Started">{when(job.start_time)}</Detail>
-        <Detail label="Ended">{when(job.end_time)}</Detail>
-        <Detail label="Updated">{when(job.update_date)}</Detail>
+        <Detail label="Created">{formatDateTime(job.creation_date)}</Detail>
+        <Detail label="Started">{formatDateTime(job.start_time)}</Detail>
+        <Detail label="Ended">{formatDateTime(job.end_time)}</Detail>
+        <Detail label="Updated">{formatDateTime(job.update_date)}</Detail>
         <Detail label="Code">{code.type}</Detail>
         <Detail label="Resources">{resources.type}</Detail>
         <Detail label="Ran on">{meta?.type}</Detail>

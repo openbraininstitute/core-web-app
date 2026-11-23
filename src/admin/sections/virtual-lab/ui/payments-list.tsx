@@ -1,9 +1,9 @@
 'use client';
 
-import { DatePicker, Segmented } from 'antd';
-import dayjs from 'dayjs';
-import { parseAsString, parseAsStringLiteral, useQueryState } from 'nuqs';
+import { Segmented } from 'antd';
+import { parseAsStringLiteral, useQueryState } from 'nuqs';
 
+import { parseDay, useDayRange } from '../../../shared/day';
 import { PageHeader } from '../../../shared/page-header';
 import { PaymentsGrid } from './billing';
 import { shallow, useListFilters } from './list-filters';
@@ -18,15 +18,6 @@ const TYPE_OPTIONS = [
   { value: 'subscription', label: 'Subscription' },
   { value: 'standalone', label: 'Standalone' },
 ];
-
-const DATE_FORMAT = 'YYYY-MM-DD';
-
-// The dates come from the URL, so a mangled link is ignored rather than sent. dayjs rolls an
-// impossible date such as month 13 over into a real one, so it has to format back unchanged.
-function parseDay(value: string) {
-  const day = dayjs(value);
-  return day.isValid() && day.format(DATE_FORMAT) === value ? day : null;
-}
 
 // The payment date column is naive UTC, and the API fails on a date with an offset. A picked
 // local day goes out as its UTC bounds, the same day the grid shows in local time.
@@ -61,8 +52,7 @@ export function PaymentsList() {
     'type',
     parseAsStringLiteral(TYPES).withDefault('any').withOptions(shallow)
   );
-  const [from, setFrom] = useQueryState('from', parseAsString.withDefault('').withOptions(shallow));
-  const [to, setTo] = useQueryState('to', parseAsString.withDefault('').withOptions(shallow));
+  const range = useDayRange();
   const { params, controls } = useListFilters({ placeholder: 'Last 4 digits of the card' });
 
   return (
@@ -75,18 +65,12 @@ export function PaymentsList() {
           options={TYPE_OPTIONS}
           onChange={(value) => setType(value as PaymentTypeFilter)}
         />
-        <DatePicker.RangePicker
-          value={[parseDay(from), parseDay(to)]}
-          onChange={(dates) => {
-            setFrom(dates?.[0]?.format(DATE_FORMAT) ?? '');
-            setTo(dates?.[1]?.format(DATE_FORMAT) ?? '');
-          }}
-        />
+        {range.control}
       </div>
       {isCardSearchable(params.query) ? (
         <PaymentsGrid
           acrossOwners
-          params={paymentFilters({ card: params.query, type, from, to })}
+          params={paymentFilters({ card: params.query, type, from: range.from, to: range.to })}
         />
       ) : (
         <p className="border-neutral-2 text-neutral-4 rounded-lg border bg-white p-5">

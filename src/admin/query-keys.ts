@@ -2,6 +2,7 @@ const SERVICES = ['admin', 'services'] as const;
 const TENANCY = ['admin', 'tenancy'] as const;
 const BILLING = ['admin', 'billing'] as const;
 const PROMOTIONS = [...BILLING, 'promotions'] as const;
+const ACCOUNTING = ['admin', 'accounting'] as const;
 
 export const adminQueryKeys = {
   services: () => SERVICES,
@@ -32,4 +33,12 @@ export const adminQueryKeys = {
   promotion: (promotionId: string) => [...PROMOTIONS, 'code', promotionId] as const,
   // Outside `promotions()`: no promotion write changes the redemptions.
   promotionUsage: (promotionId: string) => [...BILLING, 'promotion-usage', promotionId] as const,
+  accountingLabs: () => [...ACCOUNTING, 'labs'] as const,
+  accountingAccount: (accountId: string) => [...ACCOUNTING, 'account', accountId] as const,
+  accountingProjects: (vlabId: string) => [...ACCOUNTING, 'account', vlabId, 'projects'] as const,
+  accountingJobs: () => [...ACCOUNTING, 'jobs'] as const,
+  accountingJob: (jobId: string) => [...ACCOUNTING, 'job', jobId] as const,
+  accountingJournal: () => [...ACCOUNTING, 'journal'] as const,
+  accountingReport: (path: string) => [...ACCOUNTING, 'report', path] as const,
+  accountingSystemBalance: () => [...ACCOUNTING, 'balance', 'system'] as const,
 };
