@@ -6,15 +6,23 @@ export type SonataReportMetadata = {
  * Where each of a report's compartments is on its cell, by trace: how far along its
  * neurites from the soma, in µm, and its section's type.
  */
-export type CompartmentPlaces = {
+export type TCompartmentPlaces = {
   distances: ReadonlyMap<number, number>;
   types: ReadonlyMap<number, string>;
 };
 
+/** Which limit left a report's compartments unmeasured. */
+export const UnmeasuredBy = {
+  Report: 'report',
+  ReportInContainer: 'report-in-container',
+  Container: 'container',
+} as const;
+export type TUnmeasuredBy = (typeof UnmeasuredBy)[keyof typeof UnmeasuredBy];
+
 export type TCompartmentPlacesState = {
-  places: CompartmentPlaces | null;
-  /** Set where the report has more morphologies than the limit, so none were measured. */
-  unmeasured: { morphologies: number; limit: number } | null;
+  places: TCompartmentPlaces | null;
+  /** Set where a limit is passed, so none were measured: the morphologies counted against it. */
+  unmeasured: { by: TUnmeasuredBy; morphologies: number; limit: number } | null;
 };
 
 /** One recorded column of the data matrix. */

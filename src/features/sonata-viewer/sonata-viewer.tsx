@@ -4,6 +4,7 @@ import { atom, useAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ErrorBoundary } from 'react-error-boundary';
+import { match } from 'ts-pattern';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import { useReportTableView } from '@/features/circuit-nodes/connectivity/report-table-view';
@@ -55,6 +56,7 @@ import {
   traceGroupsOf,
   useTracePicks,
 } from '@/features/sonata-viewer/trace-picks';
+import { UnmeasuredBy } from '@/features/sonata-viewer/types';
 import { CollapsingControls } from '@/features/spike-viewer/components/collapsing-controls';
 import { PlotHelp } from '@/features/spike-viewer/components/raster-plot-controls';
 import { useNeuronSetColumns } from '@/features/spike-viewer/neuron-set-columns';
@@ -976,9 +978,23 @@ export function SonataReportView({
               </button>
             </TooltipTrigger>
             <TooltipContent>
-              Path distance and section type are measured on reports of up to{' '}
-              {unmeasuredPlaces.limit.toLocaleString()} morphologies; this one records{' '}
-              {unmeasuredPlaces.morphologies.toLocaleString()}.
+              {match(unmeasuredPlaces.by)
+                .with(
+                  UnmeasuredBy.Report,
+                  () =>
+                    `Path distance and section type are measured on reports of up to ${unmeasuredPlaces.limit.toLocaleString()} morphologies; this one records ${unmeasuredPlaces.morphologies.toLocaleString()}.`
+                )
+                .with(
+                  UnmeasuredBy.ReportInContainer,
+                  () =>
+                    `Where a circuit keeps its morphologies in one file, path distance and section type are measured on reports of up to ${unmeasuredPlaces.limit.toLocaleString()} morphologies; this one records ${unmeasuredPlaces.morphologies.toLocaleString()}.`
+                )
+                .with(
+                  UnmeasuredBy.Container,
+                  () =>
+                    `Path distance and section type are measured where a circuit keeps up to ${unmeasuredPlaces.limit.toLocaleString()} morphologies in one file; this one keeps ${unmeasuredPlaces.morphologies.toLocaleString()}.`
+                )
+                .exhaustive()}
             </TooltipContent>
           </Tooltip>
         )}

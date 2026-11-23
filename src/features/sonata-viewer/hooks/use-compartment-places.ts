@@ -3,6 +3,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import pLimit from 'p-limit';
 import { useEffect, useState } from 'react';
+import { match, P } from 'ts-pattern';
 
 import { circuitMorphologyPath } from '@/api/one/circuit-visualization';
 import { loadSections } from '@/features/circuit-viewer/morphologies/load/read-sections';
@@ -12,7 +13,9 @@ import {
   resolveMorphologyLocation,
 } from '@/features/scan-config/components/circuit-viz/sources/resolve-morphology-path';
 import { sectionPaths } from '@/features/sonata-viewer/path-distance';
+import { UnmeasuredBy } from '@/features/sonata-viewer/types';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { keyBuilderSonataViewer } from '@/ui/use-query-keys/sonata-viewer';
 import { logError } from '@/utils/logger';
 
 import type { ColumnValues, ParsedCircuitConfig } from '@/features/circuit-nodes/types';
@@ -26,16 +29,53 @@ const MORPHOLOGY_LOADS = 8;
 export const MAX_MEASURED_MORPHOLOGIES = 200;
 /** Lower: OBI-One downloads the whole container for each morphology read from it. */
 export const MAX_MEASURED_IN_CONTAINER = 20;
+/** The most morphologies a population may keep in its container for any to be read from it. */
+export const MAX_CONTAINER_MORPHOLOGIES = 200;
+
+const PATHS_KEPT_FOR_MS = 60 * 60 * 1000;
+const MORPHOLOGY_KEPT_FOR_MS = 60 * 1000;
 
 const NO_PLACES: TCompartmentPlacesState = { places: null, unmeasured: null };
 
+function morphologyCount(column: ColumnValues): number {
+  return match(column)
+    .with({ kind: 'categorical' }, ({ indices }) => new Set(indices).size)
+    .with({ kind: 'string' }, ({ values }) => new Set(values).size)
+    .otherwise(() => 0);
+}
+
+function passedLimit(
+  container: boolean,
+  inReport: number,
+  inContainer: number
+): TCompartmentPlacesState['unmeasured'] {
+  return match({ container, inReport, inContainer })
+    .with({ container: true, inContainer: P.number.gt(MAX_CONTAINER_MORPHOLOGIES) }, () => ({
+      by: UnmeasuredBy.Container,
+      morphologies: inContainer,
+      limit: MAX_CONTAINER_MORPHOLOGIES,
+    }))
+    .with({ container: true, inReport: P.number.gt(MAX_MEASURED_IN_CONTAINER) }, () => ({
+      by: UnmeasuredBy.ReportInContainer,
+      morphologies: inReport,
+      limit: MAX_MEASURED_IN_CONTAINER,
+    }))
+    .with({ container: false, inReport: P.number.gt(MAX_MEASURED_MORPHOLOGIES) }, () => ({
+      by: UnmeasuredBy.Report,
+      morphologies: inReport,
+      limit: MAX_MEASURED_MORPHOLOGIES,
+    }))
+    .otherwise(() => null);
+}
+
 /**
  * The places of a report's compartments, measured on their cells' morphologies once those
- * load: through the 3D view's cache, so one it has drawn is not asked for again. A
+ * load: through the 3D view's cache, so one it has drawn is not asked for again. Each
+ * morphology's section paths are kept an hour, and the morphology itself only a minute. A
  * compartment set's offset says where along its section each one is; without one, a
  * section's compartments are at its segments' centres, as NEURON reports them. Places are
- * null until they are in, where the circuit has no morphologies to measure on, and where the
- * report has more morphologies than the limit.
+ * null until they are in, where the circuit has no morphologies to measure on, and where a
+ * limit is passed.
  */
 export function useCompartmentPlaces({
   enabled,
@@ -86,15 +126,10 @@ export function useCompartmentPlaces({
         const name = nameOf(nodeId);
         if (name) names.add(name);
       }
-      const most = location.container ? MAX_MEASURED_IN_CONTAINER : MAX_MEASURED_MORPHOLOGIES;
-      if (names.size > most) {
-        if (!cancelled) {
-          setFound({
-            compartments,
-            offsets,
-            state: { places: null, unmeasured: { morphologies: names.size, limit: most } },
-          });
-        }
+      const inContainer = location.container ? morphologyCount(morphologies) : 0;
+      const unmeasured = passedLimit(location.container, names.size, inContainer);
+      if (unmeasured) {
+        if (!cancelled) setFound({ compartments, offsets, state: { places: null, unmeasured } });
         return;
       }
       const pathsOf = new Map<string, Promise<Map<number, SectionPath> | null>>();
@@ -107,19 +142,23 @@ export function useCompartmentPlaces({
           if (!name) return;
           let pending = pathsOf.get(name);
           if (!pending) {
+            const request = {
+              path: circuitMorphologyPath(circuitId, morphologyFileOf(location, name), name),
+              virtualLabId,
+              projectId,
+            };
             pending = limit(() =>
-              loadSections(
-                queryClient,
-                {
-                  path: circuitMorphologyPath(circuitId, morphologyFileOf(location, name), name),
-                  virtualLabId,
-                  projectId,
-                },
-                // only the paths are kept; the 3D view's own reads still stay an hour
-                { gcTime: 0 }
-              )
+              queryClient.fetchQuery({
+                queryKey: keyBuilderSonataViewer.sectionPaths(request),
+                queryFn: () =>
+                  loadSections(queryClient, request, { gcTime: MORPHOLOGY_KEPT_FOR_MS }).then(
+                    sectionPaths
+                  ),
+                staleTime: Number.POSITIVE_INFINITY,
+                gcTime: PATHS_KEPT_FOR_MS,
+                retry: false,
+              })
             )
-              .then(sectionPaths)
               // one morphology that will not load leaves its cells unmeasured, and no other
               .catch(() => {
                 if (!cancelled) failed.add(name);

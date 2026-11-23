@@ -10,9 +10,9 @@ export type SectionsRequest = { path: string; virtualLabId: string; projectId: s
 const KEPT_FOR_MS = 60 * 60 * 1000;
 
 /**
- * A morphology's sections, parsed, kept in `client` an hour once read, or `gcTime` where a caller only needs them
- * once (the longest any caller asks for wins). Rejects where they cannot be read or parsed, and is then read again
- * the next time, so a retry reads them anew.
+ * A morphology's sections, parsed, kept in `client` an hour once read, or `gcTime` where the caller that reads them
+ * first asks for less: later callers do not change it. Rejects where they cannot be read or parsed, and is then read
+ * again the next time, so a retry reads them anew.
  */
 export function loadSections(
   client: QueryClient,
