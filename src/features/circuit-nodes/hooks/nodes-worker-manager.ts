@@ -31,6 +31,14 @@ export interface NodesSessionState {
   error: Error | null;
 }
 
+/** A call ended because its nodes worker went before answering. */
+export class NodesClosedError extends Error {
+  constructor() {
+    super('The nodes were closed');
+    this.name = 'NodesClosedError';
+  }
+}
+
 /** stable reference for "no session yet" so React reads don't loop on identity */
 export const IDLE_SESSION_STATE: NodesSessionState = Object.freeze({
   status: 'idle',
@@ -156,7 +164,7 @@ class NodesWorkerRegistry {
   getColumn(key: string, name: string): Promise<ColumnValues> {
     const session = this.sessions.get(key);
     if (!session?.proxy) return Promise.reject(new Error('Nodes worker not ready'));
-    return session.proxy.getColumn(name);
+    return this.untilClosed<ColumnValues>(session, session.proxy.getColumn(name));
   }
 
   neuronSetFilter(
@@ -215,7 +223,7 @@ class NodesWorkerRegistry {
   getGeometry(key: string, options?: NodeGeometryOptions): Promise<NodeGeometry> {
     const session = this.sessions.get(key);
     if (!session?.proxy) return Promise.reject(new Error('Nodes worker not ready'));
-    return session.proxy.getGeometry(options);
+    return this.untilClosed(session, session.proxy.getGeometry(options));
   }
 
   private setState(session: Session, patch: Partial<NodesSessionState>): void {
@@ -301,7 +309,7 @@ class NodesWorkerRegistry {
     const { proxy, worker } = session;
     session.proxy = null;
     session.worker = null;
-    for (const end of session.callEnders) end(new Error('The nodes were closed'));
+    for (const end of session.callEnders) end(new NodesClosedError());
     session.callEnders.clear();
     // terminating the worker frees the whole WASM heap (the ~700MB file); a
     // release of the comlink proxy first avoids dangling message ports.

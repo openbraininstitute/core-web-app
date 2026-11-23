@@ -1,10 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import {
-  MAX_ID_SET_CELLS,
-  neuronSetBlock,
-  propertyFilterOf,
-} from '@/features/circuit-nodes/neuron-set-block';
+import { MAX_ID_SET_CELLS, neuronSetBlock } from '@/features/circuit-nodes/neuron-set-block';
+import { propertyFilterOf } from '@/features/circuit-nodes/property-filter';
 
 import type { ColumnMeta, TOfferedProperties } from '@/features/circuit-nodes/types';
 
@@ -83,6 +80,21 @@ describe('neuronSetBlock', () => {
     });
     expect(by).toBe('property');
     expect(block).toMatchObject({ property_filter: { filter_dict: { mtype: ['L6_BPC'] } } });
+  });
+
+  it('asks the worker nothing when the form offers no properties', async () => {
+    const propertyFilter = vi.fn();
+    const { by } = await neuronSetBlock({
+      population,
+      cells: Uint32Array.of(0),
+      ticked: true,
+      filterModel: {},
+      columns: COLUMNS,
+      offered: {},
+      propertyFilter,
+    });
+    expect(propertyFilter).not.toHaveBeenCalled();
+    expect(by).toBe('id');
   });
 
   it('names point populations', async () => {

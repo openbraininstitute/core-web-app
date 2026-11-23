@@ -4,6 +4,7 @@ const remote = vi.hoisted(() => ({
   open: vi.fn(async () => ({ rowCount: 3, columns: [] })),
   exportCsv: vi.fn(),
   neuronSetFilter: vi.fn(),
+  getColumn: vi.fn(),
 }));
 
 vi.mock('comlink', () => ({
@@ -13,7 +14,10 @@ vi.mock('comlink', () => ({
   releaseProxy: Symbol('releaseProxy'),
 }));
 
-import { nodesWorkerRegistry } from '@/features/circuit-nodes/hooks/nodes-worker-manager';
+import {
+  NodesClosedError,
+  nodesWorkerRegistry,
+} from '@/features/circuit-nodes/hooks/nodes-worker-manager';
 
 const KEY = 'circuit-asset-population';
 
@@ -61,12 +65,24 @@ describe('a CSV export through the nodes registry', () => {
     await failed;
   });
 
+  it('fails a column read rather than wait on a worker that is gone', async () => {
+    await ready();
+    remote.getColumn.mockReturnValueOnce(new Promise(() => {}));
+    vi.useFakeTimers();
+    const read = nodesWorkerRegistry.getColumn(KEY, 'mtype');
+    const failed = expect(read).rejects.toBeInstanceOf(NodesClosedError);
+    nodesWorkerRegistry.release(KEY);
+    nodesWorkerRegistry.release(KEY);
+    await vi.runAllTimersAsync();
+    await failed;
+  });
+
   it('fails a neuron set filter rather than wait on a worker that is gone', async () => {
     await ready();
     remote.neuronSetFilter.mockReturnValueOnce(new Promise(() => {}));
     vi.useFakeTimers();
     const filtered = nodesWorkerRegistry.neuronSetFilter(KEY, Uint32Array.of(0), { mtype: ['A'] });
-    const failed = expect(filtered).rejects.toThrow('The nodes were closed');
+    const failed = expect(filtered).rejects.toBeInstanceOf(NodesClosedError);
     nodesWorkerRegistry.release(KEY);
     nodesWorkerRegistry.release(KEY);
     await vi.runAllTimersAsync();

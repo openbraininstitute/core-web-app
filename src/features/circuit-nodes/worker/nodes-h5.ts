@@ -1,8 +1,8 @@
 import { Dataset, File, Group } from 'h5wasm';
 import { match } from 'ts-pattern';
 
-import { propertyFilterOf } from '@/features/circuit-nodes/neuron-set-block';
 import { csvLines } from '@/features/circuit-nodes/nodes-csv';
+import { propertyFilterOf } from '@/features/circuit-nodes/property-filter';
 import {
   type ColumnFilter,
   type ColumnKind,
