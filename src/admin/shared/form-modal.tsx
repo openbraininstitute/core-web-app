@@ -2,6 +2,7 @@
 
 import { DatePicker, Form, Input, InputNumber, Modal, Select, Switch } from 'antd';
 import dayjs from 'dayjs';
+import { match } from 'ts-pattern';
 
 import type { Rule, RuleObject } from 'antd/es/form';
 import type { Dayjs } from 'dayjs';
@@ -10,7 +11,7 @@ import type { ReactNode } from 'react';
 export type FormModalField = {
   name: string;
   label: string;
-  kind?: 'multiline' | 'integer' | 'switch' | 'select' | 'datetime';
+  kind?: 'multiline' | 'integer' | 'amount' | 'switch' | 'select' | 'datetime';
   min?: number;
   max?: number;
   options?: { value: string; label: string }[];
@@ -21,30 +22,19 @@ export type FormModalField = {
   dependencies?: string[];
 };
 
-function fieldControl({ kind, min, max, options, placeholder }: FormModalField) {
-  switch (kind) {
-    case 'multiline':
-      return <Input.TextArea rows={3} />;
-    case 'integer':
-      return (
-        <InputNumber
-          min={min}
-          max={max}
-          precision={0}
-          placeholder={placeholder}
-          className="w-full"
-        />
-      );
-    case 'switch':
-      return <Switch />;
-    case 'select':
-      return <Select showSearch optionFilterProp="label" options={options} />;
-    case 'datetime':
-      return <DatePicker showTime className="w-full" />;
-    default:
-      return <Input />;
-  }
-}
+const fieldControl = ({ kind, min, max, options, placeholder }: FormModalField) =>
+  match(kind)
+    .with('multiline', () => <Input.TextArea rows={3} />)
+    .with('integer', () => (
+      <InputNumber min={min} max={max} precision={0} placeholder={placeholder} className="w-full" />
+    ))
+    .with('amount', () => (
+      <InputNumber<string> stringMode min="0" placeholder={placeholder} className="w-full" />
+    ))
+    .with('switch', () => <Switch />)
+    .with('select', () => <Select showSearch optionFilterProp="label" options={options} />)
+    .with('datetime', () => <DatePicker showTime className="w-full" />)
+    .otherwise(() => <Input placeholder={placeholder} />);
 
 export const REQUIRED = { required: true, message: 'Required' };
 

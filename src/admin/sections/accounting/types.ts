@@ -1,3 +1,19 @@
+import type { ReactNode } from 'react';
+import type * as z from 'zod';
+import type { ZodType } from 'zod';
+import type { FormModalField } from '../../shared/form-modal';
+import type {
+  AccountStatusBody,
+  AssignBody,
+  DepleteProjectBody,
+  DepleteVlabBody,
+  GrantBody,
+  MoveBody,
+  RefundBody,
+  ReverseBody,
+  TopUpBody,
+} from './schemas';
+
 export const AccountType = {
   System: 'sys',
   VirtualLab: 'vlab',
@@ -225,11 +241,67 @@ export type TAccountingFilter = (typeof AccountingFilter)[keyof typeof Accountin
 export const EnabledFilter = { Any: 'any', Enabled: 'enabled', Disabled: 'disabled' } as const;
 export type TEnabledFilter = (typeof EnabledFilter)[keyof typeof EnabledFilter];
 
+export const AccountingMethod = { Get: 'GET', Post: 'POST', Patch: 'PATCH' } as const;
+export type TAccountingMethod = (typeof AccountingMethod)[keyof typeof AccountingMethod];
+
 export type TAccountingRoute = {
+  method: TAccountingMethod;
   pattern: RegExp;
   query: string[];
+  body?: ZodType;
 };
 
+export const AuditPhase = { Sent: 'sent', Answered: 'answered', Refused: 'refused' } as const;
+
+export const AccountingErrorCode = { OutcomeUnknown: 'OUTCOME_UNKNOWN' } as const;
+
+/** What came back from accounting when there's no status to log. */
+export const UpstreamOutcome = {
+  NotSent: 'not sent',
+  Timeout: 'timeout',
+  NoReply: 'no reply',
+} as const;
+export type TUpstreamOutcome = (typeof UpstreamOutcome)[keyof typeof UpstreamOutcome];
+
+export type TAccountingWrite = { method: TAccountingMethod; body: string };
+
 export type TAccountingTarget =
-  | { path: string; search: URLSearchParams }
+  | { path: string; search: URLSearchParams; body?: ZodType }
   | { status: number; message: string };
+
+export type TTopUpBody = z.infer<typeof TopUpBody>;
+export type TAssignBody = z.infer<typeof AssignBody>;
+export type TReverseBody = z.infer<typeof ReverseBody>;
+export type TMoveBody = z.infer<typeof MoveBody>;
+export type TGrantBody = z.infer<typeof GrantBody>;
+export type TDepleteProjectBody = z.infer<typeof DepleteProjectBody>;
+export type TDepleteVlabBody = z.infer<typeof DepleteVlabBody>;
+export type TAccountStatusBody = z.infer<typeof AccountStatusBody>;
+export type TRefundBody = z.infer<typeof RefundBody>;
+
+export type TAccountStatus = { accounts: TAccount[]; open_job_ids: string[] };
+export type TDepleted = { total_amount: string };
+export type TRefund = {
+  journal_id: number;
+  job_id: string;
+  vlab_id: string;
+  proj_id: string;
+  amount: string;
+};
+
+export type TAccountActionValues = { amount: string; credited_to: string; name: string };
+export type TRefundValues = { amount?: string | null; reason: string };
+
+/** A write behind a button and a form dialog; `done` is the message once it's through. */
+export type TAction<Values, Result = null> = {
+  label: string;
+  title: string;
+  description: ReactNode;
+  fields?: FormModalField[];
+  okText: string;
+  danger?: boolean;
+  buttonVariant?: 'outline' | 'destructive';
+  write: (values: Values) => Promise<Result>;
+  done: string | ((result: Result) => string);
+  failed: string;
+};

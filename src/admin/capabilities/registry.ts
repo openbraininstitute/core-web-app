@@ -45,6 +45,8 @@ export const CAPABILITY_REGISTRY = {
   },
   accounting: {
     admin: [ACCOUNTING_ADMIN_GROUP, WILDCARD_ADMIN_GROUP],
+    // Moving money takes the literal group: a wildcard admin can read accounting, not write it.
+    write: [ACCOUNTING_ADMIN_GROUP],
   },
   simulator: {
     admin: [SIMULATOR_ADMIN_GROUP, WILDCARD_ADMIN_GROUP],

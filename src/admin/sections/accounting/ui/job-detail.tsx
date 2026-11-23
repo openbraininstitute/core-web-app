@@ -19,6 +19,7 @@ import { accountingHref } from '../helpers';
 import { AccountingFilter, AccountingPage } from '../types';
 import { Credits, JobPhasePill } from './cells';
 import { JOURNAL_COLUMNS, journalRowId } from './columns';
+import { RefundJob } from './refund-job';
 
 import type { TAccountingJobDetail } from '../types';
 
@@ -29,11 +30,18 @@ function JobView({ job }: { job: TAccountingJobDetail }) {
         title={job.name ?? `Job ${job.id.slice(0, 8)}`}
         parent={{ label: 'Jobs', href: accountingHref(AccountingPage.Jobs) }}
         actions={
-          <Button rounded variant="outline" size="sm" asChild>
-            <Link href={accountingHref(AccountingPage.Journal, { [AccountingFilter.Job]: job.id })}>
-              Journal
-            </Link>
-          </Button>
+          <>
+            <CapabilityGate need="accounting.write">
+              <RefundJob job={job} />
+            </CapabilityGate>
+            <Button rounded variant="outline" size="sm" asChild>
+              <Link
+                href={accountingHref(AccountingPage.Journal, { [AccountingFilter.Job]: job.id })}
+              >
+                Journal
+              </Link>
+            </Button>
+          </>
         }
       />
       <DetailList>

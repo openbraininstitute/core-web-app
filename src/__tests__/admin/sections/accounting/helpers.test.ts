@@ -3,14 +3,21 @@ import { describe, expect, it } from 'vitest';
 
 import {
   accountingHref,
+  amountField,
   dayBounds,
+  describeStatusChange,
   jobPhase,
   reportUsage,
   splitLedgers,
 } from '@/admin/sections/accounting/helpers';
 import { AccountingPage, JobPhase } from '@/admin/sections/accounting/types';
 
-import type { TAccountingJob, TJobReport, TLedgerEntry } from '@/admin/sections/accounting/types';
+import type {
+  TAccount,
+  TAccountingJob,
+  TJobReport,
+  TLedgerEntry,
+} from '@/admin/sections/accounting/types';
 
 describe('dayBounds', () => {
   it('turns local days into an inclusive start and an exclusive end with an offset', () => {
@@ -62,6 +69,64 @@ describe('accountingHref', () => {
       '/app/admin/accounting/jobs?project=p+1'
     );
     expect(accountingHref(AccountingPage.Accounts)).toBe('/app/admin/accounting/accounts');
+  });
+});
+
+describe('describeStatusChange', () => {
+  const account = (enabled: boolean, account_type = 'proj') =>
+    ({ enabled, account_type }) as TAccount;
+
+  it('counts the accounts it changed', () => {
+    expect(describeStatusChange({ accounts: [account(true)], open_job_ids: [] })).toBe(
+      'Enabled 1 account'
+    );
+  });
+
+  it('warns about open jobs that can no longer be charged', () => {
+    expect(
+      describeStatusChange({ accounts: [account(false), account(false)], open_job_ids: ['j1'] })
+    ).toBe("Disabled 2 accounts. 1 open job can't be charged until it's enabled again.");
+  });
+
+  it('says nothing about open jobs on an enable', () => {
+    expect(describeStatusChange({ accounts: [account(true)], open_job_ids: ['j1'] })).toBe(
+      'Enabled 1 account'
+    );
+  });
+
+  it('leaves reservation accounts out of the count', () => {
+    expect(
+      describeStatusChange({
+        accounts: [account(false), account(false, 'rsv')],
+        open_job_ids: [],
+      })
+    ).toBe('Disabled 1 account');
+  });
+});
+
+describe('amountField', () => {
+  const [required, check] = amountField().rules as Array<{
+    required?: boolean;
+    validator: (rule: unknown, value: unknown) => Promise<void>;
+  }>;
+
+  it('is required unless optional', () => {
+    expect(required.required).toBe(true);
+    expect((amountField({ optional: true }).rules?.[0] as { required: boolean }).required).toBe(
+      false
+    );
+  });
+
+  it.each(['12', '12.5', '0.01'])('takes %s', async (value) => {
+    await expect(check.validator(null, value)).resolves.toBeUndefined();
+  });
+
+  it.each(['0', '0.00', '-1', '1e3', '1.005'])('refuses %s', async (value) => {
+    await expect(check.validator(null, value)).rejects.toThrow();
+  });
+
+  it('leaves an empty optional amount alone', async () => {
+    await expect(check.validator(null, null)).resolves.toBeUndefined();
   });
 });
 

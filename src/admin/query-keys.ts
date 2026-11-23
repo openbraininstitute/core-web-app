@@ -33,9 +33,12 @@ export const adminQueryKeys = {
   promotion: (promotionId: string) => [...PROMOTIONS, 'code', promotionId] as const,
   // Outside `promotions()`: no promotion write changes the redemptions.
   promotionUsage: (promotionId: string) => [...BILLING, 'promotion-usage', promotionId] as const,
+  accounting: () => ACCOUNTING,
   accountingLabs: () => [...ACCOUNTING, 'labs'] as const,
   accountingAccount: (accountId: string) => [...ACCOUNTING, 'account', accountId] as const,
   accountingProjects: (vlabId: string) => [...ACCOUNTING, 'account', vlabId, 'projects'] as const,
+  accountingProjectOptions: (vlabId: string) =>
+    [...ACCOUNTING, 'account', vlabId, 'project-options'] as const,
   accountingJobs: () => [...ACCOUNTING, 'jobs'] as const,
   accountingJob: (jobId: string) => [...ACCOUNTING, 'job', jobId] as const,
   accountingJournal: () => [...ACCOUNTING, 'journal'] as const,

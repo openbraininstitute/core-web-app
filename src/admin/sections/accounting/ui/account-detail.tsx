@@ -17,6 +17,7 @@ import { CapabilityGate } from '../../../shell/capability-gate';
 import { getAccount, listProjectAccounts } from '../api';
 import { ACCOUNT_TYPE_LABELS, accountingHref, accountLinks } from '../helpers';
 import { AccountingPage, AccountType } from '../types';
+import { AccountActions } from './account-actions';
 import { Credits, EnabledPill } from './cells';
 import { accountNameColumn, createdColumn, creditsColumn } from './columns';
 
@@ -72,6 +73,9 @@ function AccountView({ account }: { account: TAccount }) {
         <Detail label="Created">{formatDateTime(account.created_at)}</Detail>
         <Detail label="Updated">{formatDateTime(account.updated_at)}</Detail>
       </DetailList>
+      <CapabilityGate need="accounting.write">
+        <AccountActions account={account} />
+      </CapabilityGate>
       {isLab && (
         <>
           <h2 className="text-primary-9 font-semibold">Projects</h2>
