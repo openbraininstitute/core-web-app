@@ -14,8 +14,8 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 
+import ObiLogo from '@/components/logo/obi-logo';
 import { config } from '@/config';
-import ObiLogo from '@/features/learn/components/ui/ObiLogo';
 import { learnFonts } from '@/features/learn/fonts';
 import { BareViewers } from '@/features/viewer-3d/bare';
 import { useWorkspace } from '@/ui/hooks/use-workspace';

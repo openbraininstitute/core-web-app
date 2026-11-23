@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import dynamic from 'next/dynamic';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import { getEmCellMesh } from '@/api/entitycore/queries/experimental/em-cell-mesh';
@@ -10,7 +10,6 @@ import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { withErrorConfig } from '@/components/GenericErrorFallback';
 import { EmCellMeshViewer } from '@/features/entities/em-cell-mesh/viewer/em-mesh-viewer';
 import { meshAsset } from '@/features/entities/em-cell-mesh/viewer/mesh-asset';
-import { circuitMorphologiesFlag, FlagsProvider, useFlags } from '@/features/feature-flags';
 import { CANVAS_WHITE } from '@/features/scan-config/components/color-by/contrast';
 import { useSessionAtomValue } from '@/hooks/hooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -29,8 +28,8 @@ import { MemodelCard, MeshCard, NodeCard } from './neuron-card';
 import { useModelCircuit } from './use-model-circuit';
 
 import type { NodePopulation } from '@/features/circuit-nodes/types';
-import type { ICircuitExample, IMeshExample } from '@/ui/segments/project/start/items';
 import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
+import type { ICircuitExample, IMeshExample } from '@/ui/segments/project/start/items';
 import type { TModel } from './models';
 
 // The viewer brings workers, WebGPU and h5wasm, none of which can be rendered on the server.
@@ -104,7 +103,9 @@ export function ModelView({
             viewerDefaults: {
               ...example.viewerDefaults,
               ...(color && {
-                colorByProperty: Object.fromEntries(Object.keys(byProperty).map((pop) => [pop, null])),
+                colorByProperty: Object.fromEntries(
+                  Object.keys(byProperty).map((pop) => [pop, null])
+                ),
                 neuronColor: color,
               }),
               ...(colorBy && {
@@ -148,12 +149,6 @@ function CircuitModelView({
   onCellPick?: (cell: number | null) => void;
 }) {
   const { circuit, isError, readable } = useModelCircuit(example);
-  const flags = useFlags();
-  // Drawn as morphologies whatever the user's own setting of the flag.
-  const withMorphologies = useMemo(
-    () => ({ ...flags, [circuitMorphologiesFlag.key]: true }),
-    [flags]
-  );
   const [population, setPopulation] = useState<NodePopulation | undefined>();
   const [own, setOwn] = useState<number | null>(null);
   // Picked by the host, or here, with its card.
@@ -167,23 +162,21 @@ function CircuitModelView({
   return (
     <>
       <ErrorBoundary FallbackComponent={viewerFallback}>
-        <FlagsProvider flags={withMorphologies}>
-          <CircuitScene
-            circuit={circuit}
-            largeCircuit
-            viewerDefaults={example.viewerDefaults}
-            frameZoom={example.frameZoom}
-            spikes={spikes}
-            features={NO_TABLE}
-            colorByTarget={colorSlot}
-            onCellClick={pickable ? setPicked : undefined}
-            onEmptyClick={pickable ? () => setPicked(null) : undefined}
-            highlightedCell={picked ?? undefined}
-            onPopulationChange={setPopulation}
-            populationName={example.population}
-            showUnselectedPopulations={example.population === undefined}
-          />
-        </FlagsProvider>
+        <CircuitScene
+          circuit={circuit}
+          largeCircuit
+          viewerDefaults={example.viewerDefaults}
+          frameZoom={example.frameZoom}
+          spikes={spikes}
+          features={NO_TABLE}
+          colorByTarget={colorSlot}
+          onCellClick={pickable ? setPicked : undefined}
+          onEmptyClick={pickable ? () => setPicked(null) : undefined}
+          highlightedCell={picked ?? undefined}
+          onPopulationChange={setPopulation}
+          populationName={example.population}
+          showUnselectedPopulations={example.population === undefined}
+        />
       </ErrorBoundary>
       {!hosted && picked !== null && population && (
         <NodeCard

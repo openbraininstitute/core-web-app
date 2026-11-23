@@ -3,7 +3,7 @@
 import { RiArrowLeftLine, RiCheckLine, RiCloseLine } from '@remixicon/react';
 import { useEffect, useRef, useState } from 'react';
 
-import ObiLogo from '@/features/learn/components/ui/ObiLogo';
+import ObiLogo from '@/components/logo/obi-logo';
 import { cn } from '@/utils/css-class';
 
 import styles from './account-flow.module.css';
