@@ -77,9 +77,10 @@ async function pictureOf(
   return new Blob([bytes], { type: source.asset.content_type });
 }
 
-const PICTURE = 'mx-4 mb-4 h-[220px] overflow-hidden rounded-xl border border-rule-soft bg-white';
+// Most pictures are small: a tile beside the card's text, not a band across it.
+const PICTURE = 'h-24 w-32 flex-none overflow-hidden rounded-xl border border-rule-soft bg-white';
 
-/** The entity's picture under its card; a click opens it full size, with zoom and rotate. */
+/** The entity's picture, a small tile at the card's right; a click opens it full size. */
 export function EntityThumbnail({
   entity,
   project,
@@ -124,14 +125,9 @@ export function EntityThumbnail({
           src={url}
           alt={`Picture of ${entity.name}`}
           rootClassName="block! size-full!"
-          className="size-full! cursor-zoom-in object-contain p-3"
+          className="size-full! cursor-zoom-in object-contain p-1.5"
           preview={{
-            mask: (
-              <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold">
-                <Icon name="search" size={14} stroke={2.2} />
-                View full size
-              </span>
-            ),
+            mask: <Icon name="search" size={16} stroke={2.2} />,
             maskClassName: 'rounded-xl',
             // White on the zoomed image itself: zoom and rotate transform that element.
             rootClassName: cn(

@@ -150,13 +150,12 @@ export function EntityView({ node, selected, updateAttributes, deleteNode }: Nod
             </button>
           ) : null}
         </div>
+        {entity.isSuccess ? <EntityThumbnail entity={entity.data} project={project} /> : null}
       </div>
       {open3d && viewable ? (
         <Suspense fallback={<ViewerMessage text="Loading the 3D view…" />}>
           <Viewer3d type={type} entityId={entityId} project={project} />
         </Suspense>
-      ) : entity.isSuccess ? (
-        <EntityThumbnail entity={entity.data} project={project} />
       ) : null}
     </NodeViewWrapper>
   );
