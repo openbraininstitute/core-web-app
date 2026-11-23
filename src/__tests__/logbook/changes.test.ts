@@ -1,7 +1,9 @@
+import { StepMap } from '@tiptap/pm/transform';
 import { describe, expect, test } from 'vitest';
 
 import { markdownToJson, schema } from '@/features/logbook/blocks/markdown';
-import { diffOf, summaryOf } from '@/features/logbook/collaboration/changes';
+import { UNKNOWN_ACTOR } from '@/features/logbook/collaboration/actors';
+import { ChangeFeed, diffOf, summaryOf } from '@/features/logbook/collaboration/changes';
 
 const docOf = (markdown: string) => schema.nodeFromJSON(markdownToJson(markdown));
 const withIdsOf = (from: ReturnType<typeof docOf>, markdown: string) => {
@@ -49,4 +51,25 @@ describe('what a change did', () => {
   test('no change, no diff', () => {
     expect(diffOf(before, before)).toBeNull();
   });
+});
+
+test('a change keeps pointing at its text after an edit above it', () => {
+  const feed = new ChangeFeed();
+  feed.push({
+    id: 1,
+    actor: { ...UNKNOWN_ACTOR, agent: true },
+    local: false,
+    at: 0,
+    from: 10,
+    to: 20,
+    blockId: 'b1',
+    summary: 'reworded a sentence',
+    removed: 'old',
+  });
+  feed.remap(new StepMap([0, 0, 5]));
+  expect(feed.snapshot().events.map((e) => [e.from, e.to])).toEqual([[15, 25]]);
+  expect([feed.snapshot().toast?.from, feed.snapshot().toast?.to]).toEqual([15, 25]);
+  const before = feed.snapshot();
+  feed.remap(new StepMap([40, 0, 3]));
+  expect(feed.snapshot()).toBe(before);
 });

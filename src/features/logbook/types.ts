@@ -1,5 +1,6 @@
 import type { HocuspocusProvider, WebSocketStatus } from '@hocuspocus/provider';
 import type { InfiniteData, QueryClient } from '@tanstack/react-query';
+import type { Mapping } from '@tiptap/pm/transform';
 import type { DecorationSet } from '@tiptap/pm/view';
 import type { Editor } from '@tiptap/react';
 import type { CSSProperties, MouseEvent as ReactMouseEvent, ReactNode } from 'react';
@@ -16,7 +17,13 @@ import type {
   Timestamps,
 } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import type { CollaborationNotice, IPage, TReadOnlyReason, TValueOf } from '@/api/logbook/types';
+import type {
+  CollaborationNotice,
+  IContributor,
+  IPage,
+  TReadOnlyReason,
+  TValueOf,
+} from '@/api/logbook/types';
 import type { ChangeFeed } from '@/features/logbook/collaboration/changes';
 import type { LocalCopy } from '@/features/logbook/collaboration/local-copy';
 import type { CollaborationNotices } from '@/features/logbook/collaboration/notices';
@@ -285,6 +292,7 @@ export interface IHighlight {
 export interface IPluginState {
   readonly decorations: DecorationSet;
   readonly change: IChange | null;
+  readonly mapping: Mapping;
 }
 
 export interface ICollaborationChangesOptions {
@@ -819,9 +827,19 @@ export interface IMe {
   readonly colour: string;
 }
 
+export interface IContributorsWaiter {
+  readonly resolve: (contributors: readonly IContributor[]) => void;
+  readonly reject: (error: unknown) => void;
+}
+
+export interface IContributorsBatch {
+  readonly project: WorkspaceContext;
+  readonly waiters: Map<string, IContributorsWaiter[]>;
+}
+
 export interface IUnsent {
   readonly failed: number;
-  readonly lost: number;
+  readonly lost: readonly string[];
 }
 
 export interface IUnsentCopiesProps {

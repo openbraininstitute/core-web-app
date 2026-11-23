@@ -184,6 +184,10 @@ async function dropClean(names: readonly string[]): Promise<void> {
   }
 }
 
+export async function dropCopies(names: readonly string[]): Promise<void> {
+  for (const name of names) await whenCopyFree(name, () => clearDocument(name), undefined);
+}
+
 export async function dropCleanCopies(): Promise<void> {
   await closeAllCopies().catch(noop);
   await dropClean(await copyNames().catch(() => []));

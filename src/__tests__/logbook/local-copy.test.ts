@@ -15,6 +15,7 @@ import {
 } from '@/features/logbook/collaboration/local-copy';
 import {
   dropCleanCopies,
+  dropCopies,
   dropOthersCleanCopies,
   isCopyDirty,
   localCopies,
@@ -276,6 +277,21 @@ test('sign-out drops every copy the server has, and keeps the ones with unsent e
 
   expect(await localCopies(clean)).toEqual([]);
   expect((await localCopies(dirty)).map((c) => c.pageId)).toEqual([PAGE]);
+  expect((await localCopies(open)).map((c) => c.pageId)).toEqual([PAGE]);
+  await held.close();
+});
+
+test('discarding drops a copy with unsent edits, and leaves one open in a tab', async () => {
+  const lost = nextUser();
+  const open = nextUser();
+  await typedCopy(lost, 'can no longer be saved');
+  const held = await LocalCopy.open(PAGE, open);
+  type(held.document, 'still being edited');
+  const names = [...(await localCopies(lost)), ...(await localCopies(open))].map((c) => c.name);
+
+  await dropCopies(names);
+
+  expect(await localCopies(lost)).toEqual([]);
   expect((await localCopies(open)).map((c) => c.pageId)).toEqual([PAGE]);
   await held.close();
 });

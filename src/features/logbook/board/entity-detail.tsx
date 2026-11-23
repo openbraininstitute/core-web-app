@@ -20,17 +20,24 @@ export function EntityDetail({ target, project, narrow, onClose }: IEntityDetail
   const [shownType, setShownType] = useState(dataType);
   if (!record.isPlaceholderData && shownType !== dataType) setShownType(dataType);
   if (isNil(shownType)) return null;
-  const panel = (
-    <MiniDetailViewRenderer
-      section={WorkspaceSection.Data}
-      record={(record.data as EntityCoreObjectTypes | undefined) ?? null}
-      dataType={shownType}
-      theme="light"
-      onClose={onClose}
-      dismissOnOutsideInteraction
-      openDetailsInNewTab
-    />
-  );
+  const body = match(record)
+    .with({ status: 'pending' }, () => <PanelSkeleton />)
+    .with({ status: 'error' }, () => (
+      <p className="logbook-card grid h-full place-items-center p-6 text-center text-[13px] text-neutral-4">
+        This entity can't be shown here.
+      </p>
+    ))
+    .otherwise(() => (
+      <MiniDetailViewRenderer
+        section={WorkspaceSection.Data}
+        record={(record.data as EntityCoreObjectTypes | undefined) ?? null}
+        dataType={shownType}
+        theme="light"
+        onClose={onClose}
+        dismissOnOutsideInteraction
+        openDetailsInNewTab
+      />
+    ));
   if (narrow)
     return (
       <>
@@ -44,7 +51,7 @@ export function EntityDetail({ target, project, narrow, onClose }: IEntityDetail
           className="fixed top-2 right-2 bottom-2 z-60 w-[min(420px,calc(100vw-16px))]"
           aria-label="Entity details"
         >
-          {panel}
+          {body}
         </aside>
       </>
     );
@@ -53,14 +60,7 @@ export function EntityDetail({ target, project, narrow, onClose }: IEntityDetail
       className="flex min-h-0 w-[clamp(320px,30%,420px)] flex-none flex-col"
       aria-label="Entity details"
     >
-      {match(record)
-        .with({ status: 'pending' }, () => <PanelSkeleton />)
-        .with({ status: 'error' }, () => (
-          <p className="logbook-card grid h-full place-items-center p-6 text-center text-[13px] text-neutral-4">
-            This entity can't be shown here.
-          </p>
-        ))
-        .otherwise(() => panel)}
+      {body}
     </aside>
   );
 }

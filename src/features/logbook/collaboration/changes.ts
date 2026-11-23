@@ -1,5 +1,6 @@
 import { Extension } from '@tiptap/core';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
+import { Mapping } from '@tiptap/pm/transform';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { ySyncPluginKey } from '@tiptap/y-tiptap';
 import { clamp, isNil, isNotNil } from 'es-toolkit';
@@ -14,6 +15,7 @@ import {
 } from '@/features/logbook/constants';
 
 import type { Node as PmNode } from '@tiptap/pm/model';
+import type { Mappable } from '@tiptap/pm/transform';
 import type * as Y from 'yjs';
 import type {
   IChange,
@@ -59,6 +61,20 @@ export class ChangeFeed {
       toast: change.actor.agent ? merged : this.#state.toast,
       seen: { ...this.#state.seen, [change.actor.key]: change.at },
     };
+    for (const listener of this.#listeners) listener();
+  }
+
+  remap(mapping: Mappable): void {
+    const moved = (change: IChange): IChange => {
+      const from = mapping.map(change.from, 1);
+      const to = Math.max(from, mapping.map(change.to, -1));
+      return from === change.from && to === change.to ? change : { ...change, from, to };
+    };
+    const events = this.#state.events.map(moved);
+    const toast = isNil(this.#state.toast) ? null : moved(this.#state.toast);
+    if (toast === this.#state.toast && events.every((event, i) => event === this.#state.events[i]))
+      return;
+    this.#state = { ...this.#state, events, toast };
     for (const listener of this.#listeners) listener();
   }
 
@@ -164,8 +180,13 @@ export const CollaborationChanges = Extension.create<ICollaborationChangesOption
       new Plugin<IPluginState>({
         key,
         state: {
-          init: () => ({ decorations: DecorationSet.empty, change: null }),
+          init: () => ({ decorations: DecorationSet.empty, change: null, mapping: new Mapping() }),
           apply(tr, old, before) {
+            const mapping = new Mapping(
+              isNotNil(tr.getMeta('appendedTransaction'))
+                ? [...old.mapping.maps, ...tr.mapping.maps]
+                : tr.mapping.maps
+            );
             let decorations = old.decorations.map(tr.mapping, tr.doc);
             if (tr.getMeta(key) === EXPIRE) {
               const cutoff = Date.now() - CHANGE_HIGHLIGHT_MS;
@@ -176,7 +197,7 @@ export const CollaborationChanges = Extension.create<ICollaborationChangesOption
               );
               decorations = decorations.remove(stale);
             }
-            if (!tr.docChanged) return { decorations, change: null };
+            if (!tr.docChanged) return { decorations, change: null, mapping };
             const sync: unknown = tr.getMeta(ySyncPluginKey);
             const remote = isNotNil(sync) && Boolean(Reflect.get(Object(sync), 'isChangeOrigin'));
             const diff = diffOf(before.doc, tr.doc);
@@ -187,9 +208,9 @@ export const CollaborationChanges = Extension.create<ICollaborationChangesOption
               isNil(diff) ||
               (tr.doc.content.size === before.doc.content.size && added === diff.removed)
             )
-              return { decorations, change: null };
+              return { decorations, change: null, mapping };
             const { from, to, removed } = diff;
-            if (remote && !options.ready()) return { decorations, change: null };
+            if (remote && !options.ready()) return { decorations, change: null, mapping };
             const [author] = authors;
             const actor = match({ remote, author })
               .with({ remote: false }, () => options.me)
@@ -229,7 +250,7 @@ export const CollaborationChanges = Extension.create<ICollaborationChangesOption
               summary: summaryOf(tr.doc, from, to, removed),
               removed,
             };
-            return { decorations, change };
+            return { decorations, change, mapping };
           },
         },
         props: {
@@ -250,7 +271,14 @@ export const CollaborationChanges = Extension.create<ICollaborationChangesOption
           return {
             update: (_view, previous) => {
               const state = key.getState(view.state);
-              if (isNotNil(state?.change) && state.change !== key.getState(previous)?.change)
+              const before = key.getState(previous);
+              if (
+                isNotNil(state) &&
+                state.mapping !== before?.mapping &&
+                state.mapping.maps.length > 0
+              )
+                options.feed?.remap(state.mapping);
+              if (isNotNil(state?.change) && state.change !== before?.change)
                 options.feed?.push(state.change);
               scheduleExpiry();
             },

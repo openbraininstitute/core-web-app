@@ -162,3 +162,9 @@ export const COPY_STORAGE_VERSION = '202611201';
 
 /** Grey for an unknown person, entity or caret colour (palette neutral-4). */
 export const FALLBACK_COLOUR = '#595959';
+
+/** Most log ids in one contributors request; the server's limit. */
+export const CONTRIBUTORS_MAX_IDS = 100;
+
+/** Wait before sending a contributors request, so the cards shown together share one request. */
+export const CONTRIBUTORS_BATCH_WAIT_MS = 10;
