@@ -968,10 +968,7 @@ export function SonataReportView({
         {unmeasuredPlaces && (
           <Tooltip>
             <TooltipTrigger asChild>
-              <span
-                className="text-neutral-4 shrink-0 text-xs whitespace-nowrap"
-                data-testid="compartment-places-unmeasured"
-              >
+              <span className="text-neutral-4 shrink-0 text-xs whitespace-nowrap">
                 No path distances
               </span>
             </TooltipTrigger>

@@ -135,25 +135,17 @@ describe('useCompartmentPlaces', () => {
     it('measures nothing and says how many there are', async () => {
       const { result } = places(MAX_MEASURED_MORPHOLOGIES + 1);
 
-      await waitFor(() => expect(result.current.unmeasured).not.toBeNull());
-      expect(result.current.unmeasured).toEqual({
-        morphologies: MAX_MEASURED_MORPHOLOGIES + 1,
-        limit: MAX_MEASURED_MORPHOLOGIES,
-      });
+      await waitFor(() =>
+        expect(result.current.unmeasured).toEqual({
+          morphologies: MAX_MEASURED_MORPHOLOGIES + 1,
+          limit: MAX_MEASURED_MORPHOLOGIES,
+        })
+      );
       expect(result.current.places).toBeNull();
       expect(h.loads).toBe(0);
     });
 
-    it('measures a report at the limit', async () => {
-      const { result } = places(MAX_MEASURED_MORPHOLOGIES);
-
-      await waitFor(() =>
-        expect(result.current.places?.distances.size).toBe(MAX_MEASURED_MORPHOLOGIES)
-      );
-      expect(result.current.unmeasured).toBeNull();
-    });
-
-    it('counts a morphology shared by several cells once', async () => {
+    it('measures a report at the limit, counting a shared morphology once', async () => {
       const { result } = places(MAX_MEASURED_MORPHOLOGIES + 100, MAX_MEASURED_MORPHOLOGIES);
 
       await waitFor(() =>
@@ -166,8 +158,9 @@ describe('useCompartmentPlaces', () => {
       h.container = true;
 
       const over = places(MAX_MEASURED_IN_CONTAINER + 1);
-      await waitFor(() => expect(over.result.current.unmeasured).not.toBeNull());
-      expect(over.result.current.unmeasured?.limit).toBe(MAX_MEASURED_IN_CONTAINER);
+      await waitFor(() =>
+        expect(over.result.current.unmeasured?.limit).toBe(MAX_MEASURED_IN_CONTAINER)
+      );
       expect(h.loads).toBe(0);
 
       const at = places(MAX_MEASURED_IN_CONTAINER);

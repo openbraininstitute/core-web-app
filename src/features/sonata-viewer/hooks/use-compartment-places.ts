@@ -35,12 +35,10 @@ export type CompartmentPlaces = {
   types: ReadonlyMap<number, string>;
 };
 
-export type TUnmeasuredPlaces = { morphologies: number; limit: number };
-
-export type TCompartmentPlacesState = {
+type TCompartmentPlacesState = {
   places: CompartmentPlaces | null;
   /** Set where the report has more morphologies than the limit, so none were measured. */
-  unmeasured: TUnmeasuredPlaces | null;
+  unmeasured: { morphologies: number; limit: number } | null;
 };
 
 const NO_PLACES: TCompartmentPlacesState = { places: null, unmeasured: null };
@@ -101,12 +99,13 @@ export function useCompartmentPlaces({
       }
       const most = location.container ? MAX_MEASURED_IN_CONTAINER : MAX_MEASURED_MORPHOLOGIES;
       if (names.size > most) {
-        if (cancelled) return;
-        setFound({
-          compartments,
-          offsets,
-          state: { places: null, unmeasured: { morphologies: names.size, limit: most } },
-        });
+        if (!cancelled) {
+          setFound({
+            compartments,
+            offsets,
+            state: { places: null, unmeasured: { morphologies: names.size, limit: most } },
+          });
+        }
         return;
       }
       const pathsOf = new Map<string, Promise<Map<number, SectionPath> | null>>();
