@@ -3,8 +3,7 @@ import { NESTED_ROW, NESTING_ROW } from '@/features/circuit-nodes/components/nod
 import type { IDatasource } from 'ag-grid-community';
 import type { NestedRowMark, NestingRowMark } from '@/features/circuit-nodes/components/nodes-grid';
 import type { FilterModel, SortDirection, SortItem } from '@/features/circuit-nodes/types';
-import type { CompartmentPlaces } from '@/features/sonata-viewer/hooks/use-compartment-places';
-import type { PopulationMetadata } from '@/features/sonata-viewer/types';
+import type { CompartmentPlaces, PopulationMetadata } from '@/features/sonata-viewer/types';
 
 /** One of the compartments of a cell recorded in several: its trace, its section, and its name. */
 export type Compartment = { traceIndex: number; section: number | null; label: string };

@@ -39,8 +39,7 @@ import type {
   SortItem,
 } from '@/features/circuit-nodes/types';
 import type { CompartmentNote, NestedLayout } from '@/features/sonata-viewer/compartment-rows';
-import type { CompartmentPlaces } from '@/features/sonata-viewer/hooks/use-compartment-places';
-import type { PopulationMetadata } from '@/features/sonata-viewer/types';
+import type { CompartmentPlaces, PopulationMetadata } from '@/features/sonata-viewer/types';
 
 /** This table's owner name in the shared nodes session, beside any spike statistics. */
 const OWNER = 'voltage-report';

@@ -16,6 +16,7 @@ const h = vi.hoisted(() => ({
   loading: 0,
   most: 0,
   loads: 0,
+  gcTime: undefined as number | undefined,
   container: false,
   load: (_path: string): Promise<unknown> => Promise.resolve([]),
 }));
@@ -36,8 +37,9 @@ vi.mock('@/features/scan-config/components/circuit-viz/sources/resolve-morpholog
   morphologyFileOf: (_: unknown, name: string) => `morphologies/${name}.swc`,
 }));
 vi.mock('@/features/circuit-viewer/morphologies/load/read-sections', () => ({
-  loadSections: async (_: unknown, { path }: { path: string }) => {
+  loadSections: async (_: unknown, { path }: { path: string }, options?: { gcTime?: number }) => {
     h.loads += 1;
+    h.gcTime = options?.gcTime;
     h.loading += 1;
     h.most = Math.max(h.most, h.loading);
     try {
@@ -87,6 +89,13 @@ function places(cells: number, morphologies = cells) {
 }
 
 describe('useCompartmentPlaces', () => {
+  beforeEach(() => {
+    h.loads = 0;
+    h.most = 0;
+    h.container = false;
+    h.load = () => Promise.resolve([]);
+  });
+
   it('measures the other cells when one morphology will not load', async () => {
     h.load = async (path) => {
       if (path.includes('m1.swc')) throw new Error('404');
@@ -115,7 +124,6 @@ describe('useCompartmentPlaces', () => {
   });
 
   it('asks for a few morphologies at a time, not every cell’s at once', async () => {
-    h.most = 0;
     h.load = () => new Promise((resolve) => setTimeout(() => resolve([]), 1));
 
     const { result } = places(40);
@@ -126,12 +134,6 @@ describe('useCompartmentPlaces', () => {
   });
 
   describe('over the morphology limit', () => {
-    beforeEach(() => {
-      h.loads = 0;
-      h.container = false;
-      h.load = () => Promise.resolve([]);
-    });
-
     it('measures nothing and says how many there are', async () => {
       const { result } = places(MAX_MEASURED_MORPHOLOGIES + 1);
 
@@ -152,10 +154,14 @@ describe('useCompartmentPlaces', () => {
         expect(result.current.places?.distances.size).toBe(MAX_MEASURED_MORPHOLOGIES + 100)
       );
       expect(h.loads).toBe(MAX_MEASURED_MORPHOLOGIES);
+      expect(result.current.unmeasured).toBeNull();
+      // measured morphologies leave the cache at once, unless another reader keeps them
+      expect(h.gcTime).toBe(0);
     });
 
-    it('holds a container circuit to its lower limit', async () => {
+    it('holds a container circuit to its lower limit, one morphology at a time', async () => {
       h.container = true;
+      h.load = () => new Promise((resolve) => setTimeout(() => resolve([]), 1));
 
       const over = places(MAX_MEASURED_IN_CONTAINER + 1);
       await waitFor(() =>
@@ -167,6 +173,7 @@ describe('useCompartmentPlaces', () => {
       await waitFor(() =>
         expect(at.result.current.places?.distances.size).toBe(MAX_MEASURED_IN_CONTAINER)
       );
+      expect(h.most).toBe(1);
     });
   });
 });

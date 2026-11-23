@@ -27,15 +27,6 @@ export const MAX_MEASURED_MORPHOLOGIES = 200;
 /** Lower: OBI-One downloads the whole container for each morphology read from it. */
 export const MAX_MEASURED_IN_CONTAINER = 20;
 
-/**
- * Where each of a report's compartments is on its cell, by trace: how far along its
- * neurites from the soma, in µm, and its section's type.
- */
-export type CompartmentPlaces = {
-  distances: ReadonlyMap<number, number>;
-  types: ReadonlyMap<number, string>;
-};
-
 const NO_PLACES: TCompartmentPlacesState = { places: null, unmeasured: null };
 
 /**
@@ -78,7 +69,10 @@ export function useCompartmentPlaces({
     if (!location) return;
     let cancelled = false;
     // rejecting what it drops, so the measuring it leaves behind ends
-    const limit = pLimit({ concurrency: MORPHOLOGY_LOADS, rejectOnClear: true });
+    const limit = pLimit({
+      concurrency: location.container ? 1 : MORPHOLOGY_LOADS,
+      rejectOnClear: true,
+    });
     const measure = async () => {
       const morphologies = await getColumn('morphology');
       const nameOf = (nodeId: number) =>
@@ -114,11 +108,16 @@ export function useCompartmentPlaces({
           let pending = pathsOf.get(name);
           if (!pending) {
             pending = limit(() =>
-              loadSections(queryClient, {
-                path: circuitMorphologyPath(circuitId, morphologyFileOf(location, name), name),
-                virtualLabId,
-                projectId,
-              })
+              loadSections(
+                queryClient,
+                {
+                  path: circuitMorphologyPath(circuitId, morphologyFileOf(location, name), name),
+                  virtualLabId,
+                  projectId,
+                },
+                // only the paths are kept; the 3D view's own reads still stay an hour
+                { gcTime: 0 }
+              )
             )
               .then(sectionPaths)
               // one morphology that will not load leaves its cells unmeasured, and no other

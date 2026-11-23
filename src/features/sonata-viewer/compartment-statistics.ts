@@ -1,6 +1,5 @@
 import type { ColumnMeta, ColumnValues } from '@/features/circuit-nodes/types';
-import type { CompartmentPlaces } from '@/features/sonata-viewer/hooks/use-compartment-places';
-import type { PopulationMetadata } from '@/features/sonata-viewer/types';
+import type { CompartmentPlaces, PopulationMetadata } from '@/features/sonata-viewer/types';
 import type { CellStatistic } from '@/features/spike-viewer/spike-statistics/statistics';
 
 /** What the statistics' menus list a compartment's own variables under. */

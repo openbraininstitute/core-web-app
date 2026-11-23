@@ -1,7 +1,14 @@
-import type { CompartmentPlaces } from '@/features/sonata-viewer/hooks/use-compartment-places';
-
 export type SonataReportMetadata = {
   populations: PopulationMetadata[];
+};
+
+/**
+ * Where each of a report's compartments is on its cell, by trace: how far along its
+ * neurites from the soma, in µm, and its section's type.
+ */
+export type CompartmentPlaces = {
+  distances: ReadonlyMap<number, number>;
+  types: ReadonlyMap<number, string>;
 };
 
 export type TCompartmentPlacesState = {
