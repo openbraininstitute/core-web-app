@@ -7,6 +7,8 @@ import type {
   AssignBody,
   DepleteProjectBody,
   DepleteVlabBody,
+  DiscountBody,
+  DiscountPatchBody,
   GrantBody,
   MoveBody,
   RefundBody,
@@ -217,6 +219,7 @@ export const AccountingPage = {
   Jobs: 'jobs',
   Journal: 'journal',
   Reports: 'reports',
+  Discounts: 'discounts',
 } as const;
 export type TAccountingPage = (typeof AccountingPage)[keyof typeof AccountingPage];
 
@@ -241,7 +244,12 @@ export type TAccountingFilter = (typeof AccountingFilter)[keyof typeof Accountin
 export const EnabledFilter = { Any: 'any', Enabled: 'enabled', Disabled: 'disabled' } as const;
 export type TEnabledFilter = (typeof EnabledFilter)[keyof typeof EnabledFilter];
 
-export const AccountingMethod = { Get: 'GET', Post: 'POST', Patch: 'PATCH' } as const;
+export const AccountingMethod = {
+  Get: 'GET',
+  Post: 'POST',
+  Patch: 'PATCH',
+  Delete: 'DELETE',
+} as const;
 export type TAccountingMethod = (typeof AccountingMethod)[keyof typeof AccountingMethod];
 
 export type TAccountingRoute = {
@@ -263,7 +271,7 @@ export const UpstreamOutcome = {
 } as const;
 export type TUpstreamOutcome = (typeof UpstreamOutcome)[keyof typeof UpstreamOutcome];
 
-export type TAccountingWrite = { method: TAccountingMethod; body: string };
+export type TAccountingWrite = { method: TAccountingMethod; body?: string };
 
 export type TAccountingTarget =
   | { path: string; search: URLSearchParams; body?: ZodType }
@@ -278,6 +286,27 @@ export type TDepleteProjectBody = z.infer<typeof DepleteProjectBody>;
 export type TDepleteVlabBody = z.infer<typeof DepleteVlabBody>;
 export type TAccountStatusBody = z.infer<typeof AccountStatusBody>;
 export type TRefundBody = z.infer<typeof RefundBody>;
+export type TDiscountBody = z.infer<typeof DiscountBody>;
+export type TDiscountPatchBody = z.infer<typeof DiscountPatchBody>;
+
+export type TDiscount = {
+  id: number;
+  vlab_id: string;
+  discount: string;
+  valid_from: string;
+  valid_to: string | null;
+};
+
+export type TDiscountFilters = { vlab_id?: string };
+
+export const DiscountStatus = {
+  Scheduled: 'scheduled',
+  Active: 'active',
+  Expired: 'expired',
+} as const;
+export type TDiscountStatus = (typeof DiscountStatus)[keyof typeof DiscountStatus];
+
+export type TDiscountValues = { percent: string; valid_from?: string; valid_to?: string };
 
 export type TAccountStatus = { accounts: TAccount[]; open_job_ids: string[] };
 export type TDepleted = { total_amount: string };
@@ -298,6 +327,7 @@ export type TAction<Values, Result = null> = {
   title: string;
   description: ReactNode;
   fields?: FormModalField[];
+  initialValues?: Partial<Values>;
   okText: string;
   danger?: boolean;
   buttonVariant?: 'outline' | 'destructive';
