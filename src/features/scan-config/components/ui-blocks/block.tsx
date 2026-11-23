@@ -1,14 +1,10 @@
-import { RiCloseLine } from '@remixicon/react';
 import { isNil } from 'es-toolkit/compat';
 
 import { FieldDescriptionTooltip } from '@/features/scan-config/components/shared/field-description-tooltip';
 import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
 import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import { UIElementRender } from '@/features/scan-config/components/ui-elements';
-import {
-  SweepIconButton,
-  sweepSingleValue,
-} from '@/features/scan-config/components/ui-elements/parameter-sweep';
+import { SweepCollapseButton } from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { isReferenceFieldVisible } from '@/features/scan-config/components/ui-elements/reference';
 import { resolveNeuronFilterProperties } from '@/features/scan-config/helpers';
 import { useBlockDiff } from '@/features/scan-config/hooks/use-block-diff';
@@ -107,11 +103,9 @@ export default function Block({
               // value. It renders on this title row rather than inside the
               // element so it sits level with the label instead of floating
               // above the values card.
-              const canCollapseSweep =
-                !disabled &&
-                Array.isArray(value) &&
-                (blockElementSchema.ui_element === ScanConfigUIElementDict.FloatParameterSweep ||
-                  blockElementSchema.ui_element === ScanConfigUIElementDict.IntParameterSweep);
+              const isSweepField =
+                blockElementSchema.ui_element === ScanConfigUIElementDict.FloatParameterSweep ||
+                blockElementSchema.ui_element === ScanConfigUIElementDict.IntParameterSweep;
 
               return (
                 <div
@@ -137,17 +131,12 @@ export default function Block({
                     {blockElementSchema.units && (
                       <FieldUnit unit={blockElementSchema.units} className="ml-1 text-base" />
                     )}
-                    {canCollapseSweep && (
-                      <SweepIconButton
-                        label="Use a single value"
-                        testId="scan-config-sweep-collapse"
-                        className="ml-auto"
-                        onClick={() => {
-                          setState({ ...state, [k]: sweepSingleValue(value as (number | null)[]) });
-                        }}
-                      >
-                        <RiCloseLine className="size-3.5" />
-                      </SweepIconButton>
+                    {isSweepField && (
+                      <SweepCollapseButton
+                        value={value}
+                        disabled={disabled}
+                        onChange={(single) => setState({ ...state, [k]: single })}
+                      />
                     )}
                   </div>
 

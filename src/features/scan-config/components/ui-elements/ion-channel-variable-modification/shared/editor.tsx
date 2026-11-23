@@ -4,7 +4,9 @@ import { isNil } from 'es-toolkit/compat';
 
 import { useFieldError } from '@/features/scan-config/components/hooks/field-errors';
 import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
-import ParameterSweep from '@/features/scan-config/components/ui-elements/parameter-sweep';
+import ParameterSweep, {
+  SweepCollapseButton,
+} from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { cn } from '@/utils/css-class';
 
 import 'katex/dist/katex.min.css';
@@ -85,6 +87,7 @@ function SectionConfigRow({
         {!isNil(entry.value) && (
           <span className="text-sm text-gray-400">Default: {entry.value}</span>
         )}
+        <SweepCollapseButton value={value} disabled={disabled} onChange={onChange} />
       </div>
 
       <div data-scan-config-block-element-item={`${uiElement}_editor_item_input`}>

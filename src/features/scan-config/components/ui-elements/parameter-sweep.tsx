@@ -1,4 +1,4 @@
-import { RiAddLine, RiDeleteBinLine, RiEyeFill, RiEyeLine } from '@remixicon/react';
+import { RiAddLine, RiCloseLine, RiDeleteBinLine, RiEyeFill, RiEyeLine } from '@remixicon/react';
 import { InputNumber } from 'antd';
 import { isNil } from 'es-toolkit/compat';
 import { useAtomValue, useSetAtom } from 'jotai';
@@ -45,12 +45,7 @@ export function ScanValueSelectorProvider({
   );
 }
 
-/**
- * The scalar a sweep collapses to — its first usable value.
- *
- * Exported because the "back to a single value" control lives on the field's
- * title row, which `Block` owns, not inside this component.
- */
+/** The scalar a sweep collapses to — its first usable value. */
 export function sweepSingleValue(value: null | number | (number | null)[]): number | null {
   if (Array.isArray(value)) return value.find((entry) => !isNil(entry)) ?? null;
   return isNil(value) ? null : value;
@@ -111,6 +106,29 @@ export function SweepIconButton({
     <ScanHintTooltip title={label} hint={hint}>
       {button}
     </ScanHintTooltip>
+  );
+}
+
+/** "Use a single value" for a field's title row: shown while the sweep holds a list. */
+export function SweepCollapseButton({
+  value,
+  disabled,
+  onChange,
+}: {
+  value: unknown;
+  disabled?: boolean;
+  onChange: (value: number | null) => void;
+}) {
+  if (disabled || !Array.isArray(value)) return null;
+  return (
+    <SweepIconButton
+      label="Use a single value"
+      testId="scan-config-sweep-collapse"
+      className="ml-auto"
+      onClick={() => onChange(sweepSingleValue(value))}
+    >
+      <RiCloseLine className="size-3.5" />
+    </SweepIconButton>
   );
 }
 
