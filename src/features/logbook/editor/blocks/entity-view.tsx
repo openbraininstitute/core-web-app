@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { NodeViewWrapper } from '@tiptap/react';
 import { isNil, isNotNil } from 'es-toolkit';
 import { Suspense, useState } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
 import { match } from 'ts-pattern';
 
 import {
@@ -74,7 +75,6 @@ export function EntityView({ node, selected, updateAttributes, deleteNode }: Nod
               >
                 {look.label}
               </span>
-              {/* Kept in the row, shown on hover: the buttons never cover the text or the picture. */}
               <div
                 className={cn(
                   'ml-auto flex flex-none gap-0.5 opacity-0 transition-opacity duration-150 group-focus-within/entity:opacity-100 group-hover/entity:opacity-100 pointer-coarse:opacity-100',
@@ -166,9 +166,11 @@ export function EntityView({ node, selected, updateAttributes, deleteNode }: Nod
         {entity.isSuccess ? <EntityThumbnail entity={entity.data} project={project} /> : null}
       </div>
       {open3d && viewable ? (
-        <Suspense fallback={<ViewerMessage text="Loading the 3D view…" />}>
-          <Viewer3d type={type} entityId={entityId} project={project} />
-        </Suspense>
+        <ErrorBoundary fallback={<ViewerMessage text="The 3D view can't be shown here." />}>
+          <Suspense fallback={<ViewerMessage text="Loading the 3D view…" />}>
+            <Viewer3d type={type} entityId={entityId} project={project} />
+          </Suspense>
+        </ErrorBoundary>
       ) : null}
     </NodeViewWrapper>
   );

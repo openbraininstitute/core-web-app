@@ -21,5 +21,7 @@ export const keyBuilderLogbook = {
   entitySearch: (type: string, search: string, projectId: string) =>
     [prefix, 'entity-search', { type, search, projectId }] as const,
   viewer3d: (kind: string, entityId: string) => [prefix, 'viewer-3d', { kind, entityId }] as const,
+  picture: (entityId: string, from: string | null) =>
+    [prefix, 'picture', { entityId, from }] as const,
   unsentCopies: (userId: string) => [prefix, 'unsent-copies', { userId }] as const,
 };

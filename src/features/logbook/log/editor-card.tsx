@@ -101,7 +101,6 @@ export function EditorCard(props: IEditorCardProps) {
         const listed = props.pages.find((item) => item.id === tab.id);
         const page = tab.id === props.page.id ? props.page : listed;
         if (isNil(page)) return [];
-        // The listed copy carries the version the rename is checked against.
         const target = listed ?? page;
         return [
           {

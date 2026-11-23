@@ -13,7 +13,7 @@ import { Bone } from '@/features/logbook/elements/skeletons';
 import { useObjectUrl } from '@/features/logbook/hooks/use-object-url';
 import { ThumbnailFrom } from '@/features/logbook/types';
 import { Icon } from '@/ui/molecules/icon';
-import { keyBuilder } from '@/ui/use-query-keys/data';
+import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
 import { cn } from '@/utils/css-class';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
@@ -78,7 +78,6 @@ async function pictureOf(
   return new Blob([bytes], { type: source.asset.content_type });
 }
 
-// The card's right edge, top to bottom, like a link preview: the text keeps its room.
 const PANEL =
   'group/picture relative w-[30%] max-w-[208px] min-w-[104px] flex-none overflow-hidden border-0 border-l border-rule-soft bg-white p-0';
 
@@ -91,15 +90,9 @@ export function EntityThumbnail({
   readonly project: WorkspaceContext;
 }) {
   const source = thumbnailSourceOf(entity);
-  // Asked once the card nears the screen: a long page doesn't load every picture at open.
   const { ref, inView } = useInView({ triggerOnce: true, rootMargin: '200px' });
   const picture = useQuery({
-    // The Data pages' key for the same picture, so a picture seen there is not asked again.
-    queryKey: keyBuilder.preview(project, {
-      entityId: entity.id,
-      dpi: source?.from === ThumbnailFrom.Service ? DETAIL_PREVIEW_DPI : undefined,
-      target: source?.from === ThumbnailFrom.Asset ? 'assetLabel' : undefined,
-    }),
+    queryKey: keyBuilderLogbook.picture(entity.id, source?.from ?? null),
     queryFn: () =>
       pictureOf(
         {
@@ -111,9 +104,7 @@ export function EntityThumbnail({
         project
       ),
     enabled: inView && isNotNil(source),
-    // A picture never changes once made; only a picture still being made is asked again.
     staleTime: Number.POSITIVE_INFINITY,
-    gcTime: Number.POSITIVE_INFINITY,
     retry: (failures, error) => failures < 3 && isTransientThumbnailError(error),
   });
   const url = useObjectUrl(picture.data);
@@ -127,7 +118,6 @@ export function EntityThumbnail({
     );
   return (
     <>
-      {/* A button: the keyboard reaches it, and the editor leaves a click on a button alone. */}
       <button
         type="button"
         className={cn(
@@ -146,8 +136,6 @@ export function EntityThumbnail({
           <Icon name="search" size={14} stroke={2.2} />
         </span>
       </button>
-      {/* Only the lightbox, as in antd's "preview from a button" pattern. No classes are shared
-          with it: antd hands an Image's rootClassName to its lightbox too. */}
       <Image
         src={url}
         alt={`Picture of ${entity.name}`}
@@ -155,8 +143,6 @@ export function EntityThumbnail({
         preview={{
           visible: open,
           onVisibleChange: setOpen,
-          // White on the zoomed image itself: zoom and rotate transform that element. A darker
-          // backdrop: the page's text showed through behind the toolbar.
           rootClassName: cn(
             '[&_.ant-image-preview-mask]:bg-black/80',
             '[&_.ant-image-preview-img]:bg-white [&_.ant-image-preview-img]:rounded',

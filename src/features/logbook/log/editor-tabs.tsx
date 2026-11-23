@@ -56,7 +56,6 @@ function TitleField({
     }
     onRename(name).catch(() => setValue(title));
   };
-  // Enter and Escape hand focus back to the tab, so the keyboard stays in the strip.
   const backToTab = (input: HTMLInputElement): void =>
     input.closest<HTMLElement>('[role="tab"]')?.focus();
   return (
@@ -181,7 +180,6 @@ export function EditorTabs(props: IEditorTabsProps) {
     return true;
   };
 
-  // The main tab's name is a field whenever it is selected; other pages open one on double click or F2.
   const startRename = (item: IEditorTab): void => {
     if (!item.pinned && isNotNil(item.onRename)) setEditing(tabKey(item.tab));
   };

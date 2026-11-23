@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { expect, test, vi } from 'vitest';
 
 import { EditorTabs } from '@/features/logbook/log/editor-tabs';
@@ -56,6 +56,41 @@ test('F2 opens the name field; a tab without rename (a file, read-only) never do
   expect(screen.queryByRole('textbox')).toBeNull();
   fireEvent.keyDown(a as HTMLElement, { key: 'F2' });
   expect(screen.getByRole('textbox', { name: 'Name of the page' })).toBeDefined();
+});
+
+const openField = () => {
+  const onRename = vi.fn(async () => {});
+  renderTabs([tab('main', true), tab('a', false, onRename)]);
+  const [, a] = screen.getAllByTestId('logbook-tab');
+  fireEvent.keyDown(a as HTMLElement, { key: 'F2' });
+  const field = screen.getByRole('textbox', { name: 'Name of the page' });
+  return { onRename, a, field };
+};
+
+test('Escape drops the typed name, closes the field and puts focus back on the tab', async () => {
+  const { onRename, a, field } = openField();
+  fireEvent.change(field, { target: { value: 'Typo' } });
+  fireEvent.keyDown(field, { key: 'Escape' });
+  await waitFor(() => expect(document.activeElement).toBe(a));
+  expect(screen.queryByRole('textbox', { name: 'Name of the page' })).toBeNull();
+  expect(onRename).not.toHaveBeenCalled();
+});
+
+test('leaving the field saves the new name', () => {
+  const { onRename, field } = openField();
+  fireEvent.change(field, { target: { value: 'Results' } });
+  fireEvent.blur(field);
+  expect(onRename).toHaveBeenCalledWith('Results');
+});
+
+test.each([
+  ['an empty name', '   '],
+  ['the same name', 'Page a'],
+])('%s saves nothing', (_case, value) => {
+  const { onRename, field } = openField();
+  fireEvent.change(field, { target: { value } });
+  fireEvent.keyDown(field, { key: 'Enter' });
+  expect(onRename).not.toHaveBeenCalled();
 });
 
 test('arrow keys move between tabs, Home and End jump to the ends, Enter opens', () => {
