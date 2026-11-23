@@ -17,12 +17,12 @@ import { AccountingMethod, AuditPhase } from '../sections/accounting/types';
 import { isGatewayReply } from './service-probe';
 
 import type { ZodType } from 'zod';
+import type { TOperator } from '../capabilities/types';
 import type {
   TAccountingMethod,
   TAccountingRoute,
   TAccountingTarget,
   TAccountingWrite,
-  TOperator,
 } from '../sections/accounting/types';
 
 const UUID = '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}';
@@ -188,7 +188,7 @@ export function accountingReply(status: number, message: string) {
   return Response.json({ message }, { status, headers: NO_STORE });
 }
 
-const unanswered = (write?: TAccountingWrite) =>
+const unanswered = (write: boolean) =>
   write
     ? accountingReply(
         502,
@@ -200,8 +200,7 @@ const unanswered = (write?: TAccountingWrite) =>
 export async function forwardToAccounting(
   path: string,
   search: URLSearchParams,
-  signal?: AbortSignal,
-  write?: TAccountingWrite
+  { signal, write }: { signal?: AbortSignal; write?: TAccountingWrite } = {}
 ) {
   const base = serverConfig.ACCOUNTING_URL;
   if (!base) return accountingReply(503, "Accounting isn't configured in this environment.");
@@ -222,7 +221,7 @@ export async function forwardToAccounting(
       signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
     });
   } catch {
-    return unanswered(write);
+    return unanswered(!!write);
   }
 
   if (isGatewayReply(upstream) || upstream.status === 401 || upstream.status === 403) {
@@ -232,7 +231,7 @@ export async function forwardToAccounting(
   // A write can be applied before a gateway gives up on it, so a 5xx leaves the outcome open.
   if (write && upstream.status >= 500) {
     await upstream.body?.cancel();
-    return unanswered(write);
+    return unanswered(true);
   }
   if (!upstream.headers.get('content-type')?.includes('json')) {
     await upstream.body?.cancel();
@@ -246,7 +245,7 @@ export async function forwardToAccounting(
       headers: { 'content-type': 'application/json', ...NO_STORE },
     });
   } catch {
-    return unanswered(write);
+    return unanswered(!!write);
   }
 }
 
@@ -288,9 +287,8 @@ export async function forwardAccountingWrite({
 }) {
   const entry = { operator: operator.id, username: operator.username, method, path, body };
   auditAccountingWrite({ ...entry, phase: AuditPhase.Sent });
-  const reply = await forwardToAccounting(path, new URLSearchParams(), undefined, {
-    method,
-    body: JSON.stringify(body),
+  const reply = await forwardToAccounting(path, new URLSearchParams(), {
+    write: { method, body: JSON.stringify(body) },
   });
   auditAccountingWrite({
     ...entry,

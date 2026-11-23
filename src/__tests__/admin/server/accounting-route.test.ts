@@ -3,27 +3,32 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GET, PATCH, POST } from '@/app/api/admin/accounting/[...path]/route';
 
-const { capabilityDenialMock, authMock } = vi.hoisted(() => ({
+import type { MockInstance } from 'vitest';
+
+const { capabilityDenialMock, writeAccessMock } = vi.hoisted(() => ({
   capabilityDenialMock: vi.fn(),
-  authMock: vi.fn(),
+  writeAccessMock: vi.fn(),
 }));
 
-vi.mock('@/admin/server/require-capability', () => ({ capabilityDenial: capabilityDenialMock }));
-vi.mock('@/auth', () => ({ auth: authMock }));
+vi.mock('@/admin/server/require-capability', () => ({
+  capabilityDenial: capabilityDenialMock,
+  writeAccess: writeAccessMock,
+}));
 vi.mock('@/config/server', () => ({
   serverConfig: { ACCOUNTING_URL: 'https://cell-a/accounting' },
 }));
 
 const ID = '3fa85f64-5717-4562-b3fc-2c963f66afa6';
 const fetchMock = vi.fn();
+let info: MockInstance<typeof console.info>;
 
 beforeEach(() => {
   capabilityDenialMock.mockReset();
-  authMock.mockReset();
-  authMock.mockResolvedValue({ user: { id: 'sub-1', username: 'op' } });
+  writeAccessMock.mockReset();
+  writeAccessMock.mockResolvedValue({ operator: { id: 'sub-1', username: 'op' } });
   fetchMock.mockReset();
   vi.stubGlobal('fetch', fetchMock);
-  vi.spyOn(console, 'info').mockImplementation(() => {});
+  info = vi.spyOn(console, 'info').mockImplementation(() => {});
 });
 
 afterEach(() => {
@@ -96,6 +101,9 @@ describe('accounting proxy route', () => {
 
 describe('accounting proxy writes', () => {
   const topUp = { vlab_id: ID, amount: '10' };
+  const denial = (status: number) => ({
+    denial: Response.json({ message: 'no' }, { status }),
+  });
 
   it('refuses a write from outside the admin pages before checking access', async () => {
     const reply = await send('POST', 'budget/top-up', topUp, {
@@ -105,32 +113,24 @@ describe('accounting proxy writes', () => {
     });
 
     expect(reply.status).toBe(403);
-    expect(capabilityDenialMock).not.toHaveBeenCalled();
+    expect(writeAccessMock).not.toHaveBeenCalled();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('writes no audit line for a caller it has not identified', async () => {
-    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
-    capabilityDenialMock.mockResolvedValue(Response.json({ message: 'no' }, { status: 401 }));
-
-    await send('POST', 'budget/top-up', topUp);
-
-    expect(info).not.toHaveBeenCalled();
-  });
-
-  it('checks access fresh before a write', async () => {
-    capabilityDenialMock.mockResolvedValue(Response.json({ message: 'no' }, { status: 503 }));
+  it.each([
+    401, 403, 503,
+  ])('passes on a %i from the access check, with no audit line', async (status) => {
+    writeAccessMock.mockResolvedValue(denial(status));
 
     const reply = await send('POST', 'budget/top-up', topUp);
 
-    expect(reply.status).toBe(503);
-    expect(capabilityDenialMock).toHaveBeenCalledWith('accounting.admin', { fresh: true });
+    expect(reply.status).toBe(status);
+    expect(writeAccessMock).toHaveBeenCalledWith('accounting.admin');
+    expect(info).not.toHaveBeenCalled();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('refuses a body the route does not take without calling accounting', async () => {
-    capabilityDenialMock.mockResolvedValue(null);
-
     const reply = await send('POST', 'budget/top-up', { ...topUp, debited_from: ID });
 
     expect(reply.status).toBe(400);
@@ -138,28 +138,13 @@ describe('accounting proxy writes', () => {
   });
 
   it('refuses a write method on a read route', async () => {
-    capabilityDenialMock.mockResolvedValue(null);
-
     const reply = await send('POST', 'balance/system', topUp);
 
     expect(reply.status).toBe(405);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('refuses a write with no operator to put in the audit line', async () => {
-    capabilityDenialMock.mockResolvedValue(null);
-    authMock.mockResolvedValue({ user: {} });
-
-    const reply = await send('POST', 'budget/top-up', topUp);
-
-    expect(reply.status).toBe(401);
-    expect(fetchMock).not.toHaveBeenCalled();
-  });
-
   it('logs a refused write', async () => {
-    capabilityDenialMock.mockResolvedValue(null);
-    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
-
     await send('POST', 'budget/top-up', { ...topUp, amount: 10 });
 
     const lines = info.mock.calls.map(([line]) => JSON.parse(line));
@@ -174,7 +159,6 @@ describe('accounting proxy writes', () => {
   });
 
   it('forwards a valid write with its method', async () => {
-    capabilityDenialMock.mockResolvedValue(null);
     const status = { accounts: [], open_job_ids: [] };
     fetchMock.mockResolvedValue(Response.json({ message: 'Account disabled', data: status }));
 

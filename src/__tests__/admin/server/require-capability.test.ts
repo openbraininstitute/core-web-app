@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { capabilityDenial, requireCapability } from '@/admin/server/require-capability';
+import {
+  capabilityDenial,
+  requireCapability,
+  writeAccess,
+} from '@/admin/server/require-capability';
 
 const { authMock, getKeycloakGroupsMock, redirectMock } = vi.hoisted(() => ({
   authMock: vi.fn(),
@@ -100,17 +104,41 @@ describe('capabilityDenial', () => {
 
     await expect(capabilityDenial('launchSystem.admin')).resolves.toBeNull();
   });
+});
 
-  it('asks for fresh groups when told to', async () => {
+describe('writeAccess', () => {
+  it('reads groups past the cache and names the operator', async () => {
+    authMock.mockResolvedValueOnce({ accessToken: 'tok', user: { id: 'sub-1', username: 'op' } });
     getKeycloakGroupsMock.mockResolvedValueOnce(['/service/accounting/admin']);
 
-    await expect(capabilityDenial('accounting.admin', { fresh: true })).resolves.toBeNull();
+    await expect(writeAccess('accounting.admin')).resolves.toEqual({
+      operator: { id: 'sub-1', username: 'op' },
+    });
     expect(getKeycloakGroupsMock).toHaveBeenCalledWith(expect.anything(), { fresh: true });
   });
 
   it('refuses with 503 when fresh groups cannot be read', async () => {
     getKeycloakGroupsMock.mockRejectedValueOnce(new Error('userinfo down'));
 
-    expect((await capabilityDenial('accounting.admin', { fresh: true }))?.status).toBe(503);
+    const access = await writeAccess('accounting.admin');
+
+    expect('denial' in access && access.denial.status).toBe(503);
+  });
+
+  it('refuses with 403 without the capability', async () => {
+    getKeycloakGroupsMock.mockResolvedValueOnce(['/service/entitycore/admin']);
+
+    const access = await writeAccess('accounting.admin');
+
+    expect('denial' in access && access.denial.status).toBe(403);
+  });
+
+  it('refuses with 401 when the session names no operator', async () => {
+    authMock.mockResolvedValueOnce({ accessToken: 'tok', user: {} });
+    getKeycloakGroupsMock.mockResolvedValueOnce(['/service/accounting/admin']);
+
+    const access = await writeAccess('accounting.admin');
+
+    expect('denial' in access && access.denial.status).toBe(401);
   });
 });

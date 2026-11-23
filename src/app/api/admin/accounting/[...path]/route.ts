@@ -8,8 +8,7 @@ import {
   matchAccountingRoute,
   readWriteBody,
 } from '@/admin/server/accounting-proxy';
-import { capabilityDenial } from '@/admin/server/require-capability';
-import { auth } from '@/auth';
+import { capabilityDenial, writeAccess } from '@/admin/server/require-capability';
 
 import type { NextRequest } from 'next/server';
 import type { TAccountingMethod } from '@/admin/sections/accounting/types';
@@ -23,25 +22,23 @@ export async function GET(request: NextRequest, { params }: TContext) {
   const target = matchAccountingRoute((await params).path, request.nextUrl.searchParams);
   if ('status' in target) return accountingReply(target.status, target.message);
 
-  return forwardToAccounting(target.path, target.search, request.signal);
+  return forwardToAccounting(target.path, target.search, { signal: request.signal });
 }
 
 async function write(request: NextRequest, { params }: TContext) {
   if (!isAdminPageWrite(request.headers)) {
     return accountingReply(403, "This change didn't come from the admin pages.");
   }
-  const denial = await capabilityDenial('accounting.admin', { fresh: true });
-  if (denial) return denial;
-  const session = await auth();
-  const operator = session?.user.id;
-  if (!operator) return accountingReply(401, 'Sign in again');
+  const access = await writeAccess('accounting.admin');
+  if ('denial' in access) return access.denial;
+  const { operator } = access;
 
   const method = request.method as TAccountingMethod;
   const segments = (await params).path;
   const refuse = (reply: Response) => {
     auditAccountingWrite({
       phase: AuditPhase.Refused,
-      operator,
+      operator: operator.id,
       method,
       path: segments.join('/').slice(0, 200),
       status: reply.status,
@@ -57,7 +54,7 @@ async function write(request: NextRequest, { params }: TContext) {
   if ('status' in body) return refuse(accountingReply(body.status, body.message));
 
   return forwardAccountingWrite({
-    operator: { id: operator, username: session.user.username },
+    operator,
     method,
     path: target.path,
     body: body.value,

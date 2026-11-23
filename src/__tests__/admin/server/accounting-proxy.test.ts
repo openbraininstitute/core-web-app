@@ -9,6 +9,8 @@ import {
   readWriteBody,
 } from '@/admin/server/accounting-proxy';
 
+import type { MockInstance } from 'vitest';
+
 const { serverConfig } = vi.hoisted(() => ({
   serverConfig: { ACCOUNTING_URL: 'https://cell-a/api/accounting/' as string | undefined },
 }));
@@ -152,7 +154,9 @@ describe('forwardToAccounting', () => {
     const body = { message: 'ok', data: { balance: '10.00' } };
     fetchMock.mockResolvedValue(json(body));
 
-    const reply = await forwardToAccounting('balance/system', new URLSearchParams(), OPEN);
+    const reply = await forwardToAccounting('balance/system', new URLSearchParams(), {
+      signal: OPEN,
+    });
 
     expect(fetchMock).toHaveBeenCalledWith(
       'https://cell-a/api/accounting/balance/system',
@@ -165,7 +169,7 @@ describe('forwardToAccounting', () => {
 
   it('keeps the query string', async () => {
     fetchMock.mockResolvedValue(json({ message: 'ok', data: null }));
-    await forwardToAccounting('admin/job', new URLSearchParams(PAGE), OPEN);
+    await forwardToAccounting('admin/job', new URLSearchParams(PAGE), { signal: OPEN });
     expect(fetchMock.mock.calls[0][0]).toBe(`https://cell-a/api/accounting/admin/job?${PAGE}`);
   });
 
@@ -173,7 +177,9 @@ describe('forwardToAccounting', () => {
     const body = { error_code: 'ENTITY_NOT_FOUND', message: 'Job not found', details: null };
     fetchMock.mockResolvedValue(json(body, 404));
 
-    const reply = await forwardToAccounting(`admin/job/${ID}`, new URLSearchParams(), OPEN);
+    const reply = await forwardToAccounting(`admin/job/${ID}`, new URLSearchParams(), {
+      signal: OPEN,
+    });
 
     expect(reply.status).toBe(404);
     await expect(reply.json()).resolves.toEqual(body);
@@ -187,7 +193,9 @@ describe('forwardToAccounting', () => {
   ])('reads %s as not reachable, never as a denial', async (_, upstream) => {
     fetchMock.mockResolvedValue(upstream());
 
-    const reply = await forwardToAccounting('balance/system', new URLSearchParams(), OPEN);
+    const reply = await forwardToAccounting('balance/system', new URLSearchParams(), {
+      signal: OPEN,
+    });
 
     expect(reply.status).toBe(502);
     await expect(reply.json()).resolves.toEqual({
@@ -199,7 +207,9 @@ describe('forwardToAccounting', () => {
     fetchMock.mockResolvedValue(
       new Response('<html/>', { status: 504, headers: { 'content-type': 'text/html' } })
     );
-    const reply = await forwardToAccounting('balance/system', new URLSearchParams(), OPEN);
+    const reply = await forwardToAccounting('balance/system', new URLSearchParams(), {
+      signal: OPEN,
+    });
     expect(reply.status).toBe(502);
     await expect(reply.json()).resolves.toEqual({ message: 'Accounting failed with status 504.' });
   });
@@ -209,7 +219,9 @@ describe('forwardToAccounting', () => {
     vi.spyOn(stalled, 'text').mockRejectedValue(new DOMException('timed out', 'TimeoutError'));
     fetchMock.mockResolvedValue(stalled);
 
-    const reply = await forwardToAccounting('balance/system', new URLSearchParams(), OPEN);
+    const reply = await forwardToAccounting('balance/system', new URLSearchParams(), {
+      signal: OPEN,
+    });
 
     expect(reply.status).toBe(502);
     await expect(reply.json()).resolves.toEqual({ message: "Accounting didn't answer." });
@@ -219,7 +231,9 @@ describe('forwardToAccounting', () => {
     fetchMock.mockResolvedValue(
       new Response(null, { status: 204, headers: { 'content-type': 'application/json' } })
     );
-    const reply = await forwardToAccounting('balance/system', new URLSearchParams(), OPEN);
+    const reply = await forwardToAccounting('balance/system', new URLSearchParams(), {
+      signal: OPEN,
+    });
     expect(reply.status).toBe(204);
   });
 
@@ -228,20 +242,24 @@ describe('forwardToAccounting', () => {
     const caller = new AbortController();
     caller.abort();
 
-    await forwardToAccounting('balance/system', new URLSearchParams(), caller.signal);
+    await forwardToAccounting('balance/system', new URLSearchParams(), { signal: caller.signal });
 
     expect(fetchMock.mock.calls[0][1].signal.aborted).toBe(true);
   });
 
   it('says when accounting does not answer', async () => {
     fetchMock.mockRejectedValue(new TypeError('fetch failed'));
-    const reply = await forwardToAccounting('balance/system', new URLSearchParams(), OPEN);
+    const reply = await forwardToAccounting('balance/system', new URLSearchParams(), {
+      signal: OPEN,
+    });
     expect(reply.status).toBe(502);
   });
 
   it('says when the URL is not configured, without calling out', async () => {
     serverConfig.ACCOUNTING_URL = undefined;
-    const reply = await forwardToAccounting('balance/system', new URLSearchParams(), OPEN);
+    const reply = await forwardToAccounting('balance/system', new URLSearchParams(), {
+      signal: OPEN,
+    });
     expect(reply.status).toBe(503);
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -322,127 +340,7 @@ describe('readWriteBody', () => {
       readWriteBody(post(JSON.stringify({ job_id: ID, reason: '  ' })), RefundBody)
     ).resolves.toMatchObject({ status: 400 });
   });
-});
 
-describe('forwardAccountingWrite', () => {
-  const operator = { id: 'sub-1', username: 'op' };
-  const body = { vlab_id: ID, amount: '5' };
-
-  it('sends the validated body, logging the attempt and the outcome', async () => {
-    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
-    fetchMock.mockResolvedValue(json({ message: 'Top-up operation executed', data: null }));
-
-    const reply = await forwardAccountingWrite({
-      operator,
-      method: 'POST',
-      path: 'budget/top-up',
-      body,
-    });
-
-    expect(reply.status).toBe(200);
-    const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe('https://cell-a/api/accounting/budget/top-up');
-    expect(init).toMatchObject({
-      method: 'POST',
-      body: JSON.stringify(body),
-      headers: { 'content-type': 'application/json' },
-    });
-    const lines = info.mock.calls.map(([line]) => JSON.parse(line));
-    expect(lines).toEqual([
-      expect.objectContaining({ phase: 'sent', operator: 'sub-1', path: 'budget/top-up', body }),
-      expect.objectContaining({ phase: 'answered', status: 200 }),
-    ]);
-    info.mockRestore();
-  });
-
-  it('says the outcome is unknown when accounting does not answer a write', async () => {
-    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
-    fetchMock.mockRejectedValue(new DOMException('timed out', 'TimeoutError'));
-
-    const reply = await forwardAccountingWrite({
-      operator,
-      method: 'POST',
-      path: 'budget/top-up',
-      body,
-    });
-
-    expect(reply.status).toBe(502);
-    expect((await reply.json()).message).toMatch(/may or may not have gone through/);
-    expect(JSON.parse(info.mock.calls[1][0])).toMatchObject({ phase: 'answered', status: 502 });
-    info.mockRestore();
-  });
-
-  it('keeps going when the page that sent the write goes away', async () => {
-    vi.spyOn(console, 'info').mockImplementation(() => {});
-    fetchMock.mockResolvedValue(json({ message: 'ok', data: null }));
-
-    await forwardAccountingWrite({ operator, method: 'POST', path: 'budget/top-up', body });
-
-    const { signal } = fetchMock.mock.calls[0][1];
-    expect(signal.aborted).toBe(false);
-    vi.restoreAllMocks();
-  });
-
-  it.each([
-    [
-      'a gateway timeout page',
-      () => new Response('<html/>', { status: 504, headers: { 'content-type': 'text/html' } }),
-    ],
-    ['a JSON 502', () => json({ message: 'Bad gateway' }, 502)],
-    ['a JSON 500', () => json({ message: 'Internal error' }, 500)],
-  ])('says the outcome is unknown after %s on a write', async (_, upstream) => {
-    vi.spyOn(console, 'info').mockImplementation(() => {});
-    fetchMock.mockResolvedValue(upstream());
-
-    const reply = await forwardAccountingWrite({
-      operator,
-      method: 'POST',
-      path: 'budget/top-up',
-      body,
-    });
-
-    expect(reply.status).toBe(502);
-    expect((await reply.json()).message).toMatch(/may or may not have gone through/);
-    vi.restoreAllMocks();
-  });
-
-  it('still says not reachable when the gateway refuses a write outright', async () => {
-    vi.spyOn(console, 'info').mockImplementation(() => {});
-    fetchMock.mockResolvedValue(json({ message: 'Forbidden' }, 403));
-
-    const reply = await forwardAccountingWrite({
-      operator,
-      method: 'POST',
-      path: 'budget/top-up',
-      body,
-    });
-
-    expect((await reply.json()).message).toBe("Accounting isn't reachable from this environment.");
-    vi.restoreAllMocks();
-  });
-
-  it('logs what accounting says it moved', async () => {
-    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
-    fetchMock.mockResolvedValue(
-      json({
-        message: 'Refund issued',
-        data: { journal_id: 7, job_id: ID, vlab_id: ID, proj_id: ID, amount: '3.20' },
-      })
-    );
-
-    await forwardAccountingWrite({
-      operator,
-      method: 'POST',
-      path: 'admin/refund',
-      body: { job_id: ID, reason: 'Failed run' },
-    });
-
-    expect(JSON.parse(info.mock.calls[1][0]).moved).toEqual({ journal_id: 7, amount: '3.20' });
-    info.mockRestore();
-  });
-});
-
-describe('readWriteBody limits', () => {
   it('refuses a streamed body over the cap without a content length', async () => {
     const big = new TextEncoder().encode(JSON.stringify({ job_id: ID, reason: 'x'.repeat(5000) }));
     const stream = new ReadableStream({
@@ -463,5 +361,103 @@ describe('readWriteBody limits', () => {
   it('refuses a __proto__ key instead of dropping it', async () => {
     const body = `{"vlab_id":"${ID}","amount":"1","__proto__":{"admin":true}}`;
     await expect(readWriteBody(post(body), TopUpBody)).resolves.toMatchObject({ status: 400 });
+  });
+});
+
+describe('forwardAccountingWrite', () => {
+  const operator = { id: 'sub-1', username: 'op' };
+  const body = { vlab_id: ID, amount: '5' };
+  const topUp = () =>
+    forwardAccountingWrite({ operator, method: 'POST', path: 'budget/top-up', body });
+  let info: MockInstance<typeof console.info>;
+
+  beforeEach(() => {
+    info = vi.spyOn(console, 'info').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  const auditLines = () => info.mock.calls.map(([line]) => JSON.parse(line));
+
+  it('sends the validated body, logging the attempt and the outcome', async () => {
+    fetchMock.mockResolvedValue(json({ message: 'Top-up operation executed', data: null }));
+
+    const reply = await topUp();
+
+    expect(reply.status).toBe(200);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('https://cell-a/api/accounting/budget/top-up');
+    expect(init).toMatchObject({
+      method: 'POST',
+      body: JSON.stringify(body),
+      headers: { 'content-type': 'application/json' },
+    });
+    expect(auditLines()).toEqual([
+      expect.objectContaining({ phase: 'sent', operator: 'sub-1', path: 'budget/top-up', body }),
+      expect.objectContaining({ phase: 'answered', status: 200 }),
+    ]);
+  });
+
+  it('says the outcome is unknown when accounting does not answer a write', async () => {
+    fetchMock.mockRejectedValue(new DOMException('timed out', 'TimeoutError'));
+
+    const reply = await topUp();
+
+    expect(reply.status).toBe(502);
+    expect((await reply.json()).message).toMatch(/may or may not have gone through/);
+    expect(auditLines()[1]).toMatchObject({ phase: 'answered', status: 502 });
+  });
+
+  it('keeps going when the page that sent the write goes away', async () => {
+    fetchMock.mockResolvedValue(json({ message: 'ok', data: null }));
+
+    await topUp();
+
+    const { signal } = fetchMock.mock.calls[0][1];
+    expect(signal.aborted).toBe(false);
+  });
+
+  it.each([
+    [
+      'a gateway timeout page',
+      () => new Response('<html/>', { status: 504, headers: { 'content-type': 'text/html' } }),
+    ],
+    ['a JSON 502', () => json({ message: 'Bad gateway' }, 502)],
+    ['a JSON 500', () => json({ message: 'Internal error' }, 500)],
+  ])('says the outcome is unknown after %s on a write', async (_, upstream) => {
+    fetchMock.mockResolvedValue(upstream());
+
+    const reply = await topUp();
+
+    expect(reply.status).toBe(502);
+    expect((await reply.json()).message).toMatch(/may or may not have gone through/);
+  });
+
+  it('still says not reachable when the gateway refuses a write outright', async () => {
+    fetchMock.mockResolvedValue(json({ message: 'Forbidden' }, 403));
+
+    const reply = await topUp();
+
+    expect((await reply.json()).message).toBe("Accounting isn't reachable from this environment.");
+  });
+
+  it('logs what accounting says it moved', async () => {
+    fetchMock.mockResolvedValue(
+      json({
+        message: 'Refund issued',
+        data: { journal_id: 7, job_id: ID, vlab_id: ID, proj_id: ID, amount: '3.20' },
+      })
+    );
+
+    await forwardAccountingWrite({
+      operator,
+      method: 'POST',
+      path: 'admin/refund',
+      body: { job_id: ID, reason: 'Failed run' },
+    });
+
+    expect(auditLines()[1].moved).toEqual({ journal_id: 7, amount: '3.20' });
   });
 });

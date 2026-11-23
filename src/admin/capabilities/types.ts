@@ -15,3 +15,5 @@ export type CapabilityPath = {
     [Leaf in keyof OperatorCapabilities[Group]]: `${Group & string}.${Leaf & string}`;
   }[keyof OperatorCapabilities[Group]];
 }[keyof OperatorCapabilities];
+
+export type TOperator = { id: string; username?: string };

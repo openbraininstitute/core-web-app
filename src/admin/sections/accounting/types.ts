@@ -1,5 +1,7 @@
+import type { ReactNode } from 'react';
 import type * as z from 'zod';
 import type { ZodType } from 'zod';
+import type { FormModalField } from '../../shared/form-modal';
 import type {
   AccountStatusBody,
   AssignBody,
@@ -253,8 +255,6 @@ export const AuditPhase = { Sent: 'sent', Answered: 'answered', Refused: 'refuse
 
 export type TAccountingWrite = { method: TAccountingMethod; body: string };
 
-export type TOperator = { id: string; username?: string };
-
 export type TAccountingTarget =
   | { path: string; search: URLSearchParams; body?: ZodType }
   | { status: number; message: string };
@@ -277,4 +277,18 @@ export type TRefund = {
   vlab_id: string;
   proj_id: string;
   amount: string;
+};
+
+/** A write behind a button and a form dialog; `done` is the message once it's through. */
+export type TAction<Values, Result = null> = {
+  label: string;
+  title: string;
+  description: ReactNode;
+  fields?: FormModalField[];
+  okText: string;
+  danger?: boolean;
+  buttonVariant?: 'outline' | 'destructive';
+  write: (values: Values) => Promise<Result>;
+  done: string | ((result: Result) => string);
+  failed: string;
 };

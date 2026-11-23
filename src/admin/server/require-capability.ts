@@ -10,44 +10,54 @@ import { hasCapability } from '../capabilities/has-capability';
 import { ADMIN_ROOT } from '../routes';
 import { getKeycloakGroups } from './keycloak-groups';
 
-import type { CapabilityPath, OperatorCapabilities } from '../capabilities/types';
+import type { CapabilityPath, OperatorCapabilities, TOperator } from '../capabilities/types';
 
 // Per request, because a page and its layout both ask during one render. `null` means logged
 // out: a session whose refresh token died still decrypts, so it counts too. A token Keycloak
 // rejects while the session still looks valid throws instead: log-in would send that session
 // straight back here, so the error page offers a fresh sign-in.
-async function resolveCapabilities(fresh: boolean): Promise<OperatorCapabilities | null> {
+async function resolveAccess(fresh: boolean) {
   const session = await auth();
   if (!session || session.error === 'RefreshAccessTokenError') return null;
   const groups = await getKeycloakGroups(session, { fresh });
   if (!groups) throw new Error('keycloak rejected the access token');
-  return deriveCapabilities(groups);
+  return { session, capabilities: deriveCapabilities(groups) };
 }
 
-const currentCapabilities = cache(() => resolveCapabilities(false));
+const currentCapabilities = cache(
+  async (): Promise<OperatorCapabilities | null> =>
+    (await resolveAccess(false))?.capabilities ?? null
+);
 
-/** A 401, 403 or 503 reply, or `null` to let it through; `fresh` skips the groups cache. */
-export async function capabilityDenial(
-  need: CapabilityPath,
-  { fresh = false }: { fresh?: boolean } = {}
-): Promise<Response | null> {
-  let capabilities: OperatorCapabilities | null;
-  try {
-    capabilities = await (fresh ? resolveCapabilities(true) : currentCapabilities());
-  } catch {
-    if (fresh) {
-      return Response.json(
-        { message: "Couldn't confirm your access. Try again, or sign in again." },
-        { status: 503 }
-      );
-    }
-    capabilities = null;
-  }
-  if (!capabilities) return Response.json({ message: 'Sign in again' }, { status: 401 });
-  if (!hasCapability(capabilities, need)) {
-    return Response.json({ message: "Your account isn't allowed to do this" }, { status: 403 });
-  }
+const denied = (status: number, message: string) => Response.json({ message }, { status });
+
+function denialFor(capabilities: OperatorCapabilities | null, need: CapabilityPath) {
+  if (!capabilities) return denied(401, 'Sign in again');
+  if (!hasCapability(capabilities, need))
+    return denied(403, "Your account isn't allowed to do this");
   return null;
+}
+
+/** A 401 or 403 reply, or `null` to let it through. */
+export async function capabilityDenial(need: CapabilityPath): Promise<Response | null> {
+  return denialFor(await currentCapabilities().catch(() => null), need);
+}
+
+/** For a write: access checked past the groups cache, and the operator who asks. */
+export async function writeAccess(
+  need: CapabilityPath
+): Promise<{ denial: Response } | { operator: TOperator }> {
+  let access: Awaited<ReturnType<typeof resolveAccess>>;
+  try {
+    access = await resolveAccess(true);
+  } catch {
+    return { denial: denied(503, "Couldn't confirm your access. Try again, or sign in again.") };
+  }
+  const denial = denialFor(access?.capabilities ?? null, need);
+  if (denial) return { denial };
+  const user = access?.session.user;
+  if (!user?.id) return { denial: denied(401, 'Sign in again') };
+  return { operator: { id: user.id, username: user.username } };
 }
 
 export async function requireCapability(need: CapabilityPath): Promise<OperatorCapabilities> {

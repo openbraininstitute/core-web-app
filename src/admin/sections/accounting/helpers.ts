@@ -113,16 +113,14 @@ export function accountLinks({ id, account_type: type }: TAccount) {
 
 /** An amount of credits, held as a string and checked as the proxy will. */
 export const amountField = ({
-  label = 'Amount',
   optional = false,
   extra,
 }: {
-  label?: string;
   optional?: boolean;
   extra?: string;
 } = {}): FormModalField => ({
   name: 'amount',
-  label,
+  label: 'Amount',
   kind: 'amount',
   placeholder: '0.00',
   extra,
