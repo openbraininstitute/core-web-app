@@ -54,7 +54,11 @@ export function ThemeLine({
             <DropdownMenuTrigger className="flex min-h-11 shrink-0 items-center gap-1 rounded-full border border-neutral-200 bg-white px-4 font-semibold text-primary-9">
               Chapters <RiArrowDownSLine aria-hidden="true" className="size-4" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" sideOffset={8} className="z-[1000] min-w-48">
+            <DropdownMenuContent
+              side="top"
+              sideOffset={8}
+              className="z-[1000] min-w-48 bg-white text-primary-9"
+            >
               {BRAIN_THEMES.map((theme) => (
                 <DropdownMenuItem
                   key={theme}
