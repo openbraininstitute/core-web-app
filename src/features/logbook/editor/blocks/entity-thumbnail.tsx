@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Image } from 'antd';
 import { isNil, isNotNil } from 'es-toolkit';
+import { useState } from 'react';
 import { useInView } from 'react-intersection-observer';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
@@ -77,11 +78,11 @@ async function pictureOf(
   return new Blob([bytes], { type: source.asset.content_type });
 }
 
-// Most pictures are small: a tile beside the card's text, not a band across it.
-const PICTURE =
-  'h-[72px] w-24 flex-none overflow-hidden rounded-xl border border-rule-soft bg-white @md/entity:h-24 @md/entity:w-32';
+// The card's right edge, top to bottom, like a link preview: the text keeps its room.
+const PANEL =
+  'group/picture relative w-[30%] max-w-[208px] min-w-[104px] flex-none overflow-hidden border-0 border-l border-rule-soft bg-white p-0';
 
-/** The entity's picture, a small tile at the card's right; a click opens it full size. */
+/** The entity's picture down the card's right edge; a click or Enter opens it full size. */
 export function EntityThumbnail({
   entity,
   project,
@@ -116,28 +117,45 @@ export function EntityThumbnail({
     retry: (failures, error) => failures < 3 && isTransientThumbnailError(error),
   });
   const url = useObjectUrl(picture.data);
+  const [open, setOpen] = useState(false);
   if (isNil(source) || picture.isError) return null;
+  if (isNil(url))
+    return (
+      <div ref={ref} className={PANEL} aria-hidden="true">
+        <Bone className="absolute inset-3 size-auto animate-pulse rounded-lg" />
+      </div>
+    );
   return (
-    <div ref={ref} className={PICTURE}>
-      {isNil(url) ? (
-        <Bone className="size-full animate-pulse rounded-none" />
-      ) : (
-        <Image
-          src={url}
-          alt={`Picture of ${entity.name}`}
-          rootClassName="block! size-full!"
-          className="size-full! cursor-zoom-in object-contain p-1.5"
-          preview={{
-            mask: <Icon name="search" size={16} stroke={2.2} />,
-            maskClassName: 'rounded-xl',
-            // White on the zoomed image itself: zoom and rotate transform that element.
-            rootClassName: cn(
-              '[&_.ant-image-preview-img]:bg-white [&_.ant-image-preview-img]:rounded',
-              '[&_.ant-image-preview-img]:border-8 [&_.ant-image-preview-img]:border-white'
-            ),
-          }}
-        />
+    // A button: the keyboard reaches it, and the editor doesn't take the click as selecting the card.
+    <button
+      type="button"
+      className={cn(
+        PANEL,
+        'cursor-zoom-in focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary-4'
       )}
-    </div>
+      aria-label={`Open the picture of ${entity.name} full size`}
+      onClick={() => setOpen(true)}
+    >
+      <Image
+        src={url}
+        alt=""
+        // Clicks land on the button itself: the editor leaves a click on a button alone.
+        rootClassName="pointer-events-none absolute! inset-0 block!"
+        className="size-full! object-contain p-2.5 transition-transform duration-300 ease-out group-hover/picture:scale-[1.04]"
+        preview={{
+          visible: open,
+          onVisibleChange: setOpen,
+          mask: false,
+          // White on the zoomed image itself: zoom and rotate transform that element.
+          rootClassName: cn(
+            '[&_.ant-image-preview-img]:bg-white [&_.ant-image-preview-img]:rounded',
+            '[&_.ant-image-preview-img]:border-8 [&_.ant-image-preview-img]:border-white'
+          ),
+        }}
+      />
+      <span className="pointer-events-none absolute right-2 bottom-2 grid size-7 place-items-center rounded-full bg-white/95 text-primary-9 opacity-0 shadow-block-btn transition-opacity duration-150 group-hover/picture:opacity-100 group-focus-visible/picture:opacity-100">
+        <Icon name="search" size={14} stroke={2.2} />
+      </span>
+    </button>
   );
 }
