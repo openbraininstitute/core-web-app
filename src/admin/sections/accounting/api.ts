@@ -3,19 +3,34 @@ import { match, P } from 'ts-pattern';
 import { parseApiError } from '@/api/utils';
 import { compactRecord } from '@/utils/dictionary';
 
+import { AccountingMethod } from './types';
+
 import type {
   TAccount,
   TAccountingJob,
   TAccountingJobDetail,
+  TAccountingMethod,
+  TAccountStatus,
+  TAccountStatusBody,
+  TAssignBody,
+  TDepleted,
+  TDepleteProjectBody,
+  TDepleteVlabBody,
+  TGrantBody,
   TJobFilters,
   TJobReport,
   TJournalEntry,
   TJournalFilters,
+  TMoveBody,
   TPageParams,
   TPaginated,
   TParams,
   TProjectAccount,
+  TRefund,
+  TRefundBody,
   TReportFilters,
+  TReverseBody,
+  TTopUpBody,
   TVlabAccount,
   TVlabAccountFilters,
 } from './types';
@@ -85,3 +100,45 @@ export const listReport = (
   { path, ...params }: { path: string } & TReportFilters & TPageParams,
   signal?: AbortSignal
 ) => paged<TJobReport>(path, params, signal);
+
+/** Budget routes answer with a message and no data, so a write's data may be null. */
+async function accountingWrite<T = null>(method: TAccountingMethod, path: string, body: unknown) {
+  const url = `${PROXY_ROOT}/${path}`;
+  const response = await fetch(url, {
+    method,
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      'x-admin-request': '1',
+    },
+    body: JSON.stringify(body),
+  });
+  const reply = await response.json().catch(() => null);
+  if (!response.ok) throw await parseApiError(url, response.status, reply);
+
+  return (reply?.data ?? null) as T;
+}
+
+const post = AccountingMethod.Post;
+
+export const setAccountEnabled = (accountId: string, body: TAccountStatusBody) =>
+  accountingWrite<TAccountStatus>(AccountingMethod.Patch, `admin/account/${id(accountId)}`, body);
+
+export const refundJob = (body: TRefundBody) =>
+  accountingWrite<TRefund>(post, 'admin/refund', body);
+
+export const topUp = (body: TTopUpBody) => accountingWrite(post, 'budget/top-up', body);
+
+export const assignBudget = (body: TAssignBody) => accountingWrite(post, 'budget/assign', body);
+
+export const reverseBudget = (body: TReverseBody) => accountingWrite(post, 'budget/reverse', body);
+
+export const moveBudget = (body: TMoveBody) => accountingWrite(post, 'budget/move', body);
+
+export const grantBudget = (body: TGrantBody) => accountingWrite(post, 'budget/grant', body);
+
+export const depleteProject = (body: TDepleteProjectBody) =>
+  accountingWrite<TDepleted>(post, 'budget/deplete/project', body);
+
+export const depleteVlab = (body: TDepleteVlabBody) =>
+  accountingWrite<TDepleted>(post, 'budget/deplete/virtual-lab', body);

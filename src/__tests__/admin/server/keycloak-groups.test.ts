@@ -168,6 +168,33 @@ describe('getKeycloakGroups', () => {
     await expect(getKeycloakGroups(SESSION)).resolves.toEqual([]);
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
+
+  it('asks Keycloak again when fresh, even with a cached value', async () => {
+    fetchMock.mockResolvedValueOnce(userinfoOk(['/service/accounting/admin']));
+    await getKeycloakGroups(SESSION);
+
+    fetchMock.mockResolvedValueOnce(userinfoOk([]));
+    await expect(getKeycloakGroups(SESSION, { fresh: true })).resolves.toEqual([]);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('throws on an outage when fresh, instead of serving the cached value', async () => {
+    fetchMock.mockResolvedValueOnce(userinfoOk(['/service/accounting/admin']));
+    await getKeycloakGroups(SESSION);
+
+    fetchMock.mockResolvedValueOnce(userinfoError());
+    await expect(getKeycloakGroups(SESSION, { fresh: true })).rejects.toThrow();
+  });
+
+  it('asks Keycloak when fresh, even right after a failure', async () => {
+    fetchMock.mockRejectedValueOnce(new Error('timeout'));
+    await expect(getKeycloakGroups(SESSION)).rejects.toThrow('timeout');
+
+    fetchMock.mockResolvedValueOnce(userinfoOk(['/service/accounting/admin']));
+    await expect(getKeycloakGroups(SESSION, { fresh: true })).resolves.toEqual([
+      '/service/accounting/admin',
+    ]);
+  });
 });
 
 describe('BoundedCache', () => {

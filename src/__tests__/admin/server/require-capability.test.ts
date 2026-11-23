@@ -100,4 +100,17 @@ describe('capabilityDenial', () => {
 
     await expect(capabilityDenial('launchSystem.admin')).resolves.toBeNull();
   });
+
+  it('asks for fresh groups when told to', async () => {
+    getKeycloakGroupsMock.mockResolvedValueOnce(['/service/accounting/admin']);
+
+    await expect(capabilityDenial('accounting.admin', { fresh: true })).resolves.toBeNull();
+    expect(getKeycloakGroupsMock).toHaveBeenCalledWith(expect.anything(), { fresh: true });
+  });
+
+  it('refuses with 503 when fresh groups cannot be read', async () => {
+    getKeycloakGroupsMock.mockRejectedValueOnce(new Error('userinfo down'));
+
+    expect((await capabilityDenial('accounting.admin', { fresh: true }))?.status).toBe(503);
+  });
 });

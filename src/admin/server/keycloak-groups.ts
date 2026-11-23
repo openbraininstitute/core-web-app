@@ -87,12 +87,16 @@ async function refreshGroups(
 // `null` means the session has no token Keycloak accepts, so the user is logged out. A
 // /userinfo outage serves the cached value up to the stale cap, retrying at most every 30 s,
 // then throws, so it never reads as "this user has no groups". Parallel requests with the same
-// token share one call.
-export async function getKeycloakGroups(session: Session): Promise<string[] | null> {
+// token share one call. `fresh` always asks Keycloak and throws on an outage, for writes.
+export async function getKeycloakGroups(
+  session: Session,
+  { fresh = false }: { fresh?: boolean } = {}
+): Promise<string[] | null> {
   const { accessToken } = session;
   if (!accessToken) return null;
 
   const key = session.user.id || accessToken;
+  if (fresh) return refreshGroups(key, accessToken, undefined);
   const cached = groupsCache.get(key);
   const now = Date.now();
   if (cached && now - cached.fetchedAt < GROUPS_CACHE_TTL_MS) return cached.groups;

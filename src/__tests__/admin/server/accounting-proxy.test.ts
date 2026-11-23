@@ -1,6 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { forwardToAccounting, matchAccountingRoute } from '@/admin/server/accounting-proxy';
+import { RefundBody, TopUpBody } from '@/admin/sections/accounting/schemas';
+import {
+  forwardAccountingWrite,
+  forwardToAccounting,
+  isAdminPageWrite,
+  matchAccountingRoute,
+  readWriteBody,
+} from '@/admin/server/accounting-proxy';
 
 const { serverConfig } = vi.hoisted(() => ({
   serverConfig: { ACCOUNTING_URL: 'https://cell-a/api/accounting/' as string | undefined },
@@ -35,13 +42,11 @@ describe('matchAccountingRoute', () => {
 
   it.each([
     'account/virtual-lab',
-    'budget/top-up',
     'usage/oneshot',
     'reservation/oneshot',
     'estimate/oneshot',
     'job/longrun/open',
     'admin/price',
-    'admin/refund',
     `balance/virtual-lab/${ID}`,
     'admin/job/not-a-uuid',
     `admin/job/${ID}/extra`,
@@ -60,6 +65,41 @@ describe('matchAccountingRoute', () => {
     expect(matchAccountingRoute(segments, new URLSearchParams(PAGE))).toMatchObject({
       status: 404,
     });
+  });
+
+  it.each([
+    ['POST', `admin/account/${ID}`],
+    ['PATCH', 'budget/top-up'],
+    ['PUT', `admin/account/${ID}`],
+    ['DELETE', `admin/account/${ID}`],
+    ['GET', 'budget/top-up'],
+    ['GET', 'admin/refund'],
+  ])('refuses %s on %s, a known path that takes another method', (method, path) => {
+    expect(matchAccountingRoute(path.split('/'), new URLSearchParams(), method)).toMatchObject({
+      status: 405,
+    });
+  });
+
+  it.each([
+    'account/virtual-lab',
+    'account/project',
+    'reservation/oneshot',
+    'reservation/longrun',
+    'usage/oneshot',
+    'usage/longrun',
+    'estimate/oneshot',
+    'admin/price',
+    'admin/discount',
+  ])('refuses POST %s, which belongs to other services or a later change', (path) => {
+    expect(matchAccountingRoute(path.split('/'), new URLSearchParams(), 'POST')).toMatchObject({
+      status: 404,
+    });
+  });
+
+  it('refuses a query on a write', () => {
+    expect(
+      matchAccountingRoute(['budget', 'top-up'], new URLSearchParams('vlab_id=x'), 'POST')
+    ).toMatchObject({ status: 400 });
   });
 
   it('refuses a query parameter the route does not take', () => {
@@ -204,5 +244,142 @@ describe('forwardToAccounting', () => {
     const reply = await forwardToAccounting('balance/system', new URLSearchParams(), OPEN);
     expect(reply.status).toBe(503);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+const adminHeaders = (overrides: Record<string, string | null> = {}) => {
+  const headers = new Headers({
+    'sec-fetch-site': 'same-origin',
+    'x-admin-request': '1',
+    'content-type': 'application/json; charset=utf-8',
+  });
+  for (const [key, value] of Object.entries(overrides)) {
+    if (value === null) headers.delete(key);
+    else headers.set(key, value);
+  }
+  return headers;
+};
+
+describe('isAdminPageWrite', () => {
+  it('lets a write from the admin pages through', () => {
+    expect(isAdminPageWrite(adminHeaders())).toBe(true);
+  });
+
+  it.each([
+    ['from another site', { 'sec-fetch-site': 'cross-site' }],
+    ['from a sibling subdomain', { 'sec-fetch-site': 'same-site' }],
+    ['with no fetch metadata', { 'sec-fetch-site': null }],
+    ['without the admin header', { 'x-admin-request': null }],
+    ['as a form post', { 'content-type': 'application/x-www-form-urlencoded' }],
+    ['as plain text', { 'content-type': 'text/plain' }],
+  ])('refuses a write %s', (_, overrides) => {
+    expect(isAdminPageWrite(adminHeaders(overrides))).toBe(false);
+  });
+});
+
+const post = (body: string, headers: Record<string, string> = {}) =>
+  new Request('http://localhost/x', { method: 'POST', body, headers });
+
+describe('readWriteBody', () => {
+  it('keeps only what the schema reads', async () => {
+    const body = JSON.stringify({ vlab_id: ID, amount: '12.50' });
+    await expect(readWriteBody(post(body), TopUpBody)).resolves.toEqual({
+      value: { vlab_id: ID, amount: '12.50' },
+    });
+  });
+
+  it.each([
+    ['an extra field', { vlab_id: ID, amount: '1', proj_id: ID }],
+    ['a number amount', { vlab_id: ID, amount: 12.5 }],
+    ['a zero amount', { vlab_id: ID, amount: '0.00' }],
+    ['a negative amount', { vlab_id: ID, amount: '-1' }],
+    ['too many decimals', { vlab_id: ID, amount: '1.0000001' }],
+    ['an exponent', { vlab_id: ID, amount: '1e3' }],
+    ['a bad id', { vlab_id: 'lab', amount: '1' }],
+    ['a missing field', { amount: '1' }],
+    ['an array', [ID, '1']],
+  ])('refuses %s', async (_, body) => {
+    await expect(readWriteBody(post(JSON.stringify(body)), TopUpBody)).resolves.toMatchObject({
+      status: 400,
+    });
+  });
+
+  it('refuses a body that is not JSON', async () => {
+    await expect(readWriteBody(post('amount=1'), TopUpBody)).resolves.toMatchObject({
+      status: 400,
+    });
+  });
+
+  it('refuses a body over the size cap', async () => {
+    const reason = 'x'.repeat(5000);
+    await expect(
+      readWriteBody(post(JSON.stringify({ job_id: ID, reason })), RefundBody)
+    ).resolves.toMatchObject({ status: 413 });
+  });
+
+  it('needs a reason for a refund', async () => {
+    await expect(
+      readWriteBody(post(JSON.stringify({ job_id: ID, reason: '  ' })), RefundBody)
+    ).resolves.toMatchObject({ status: 400 });
+  });
+});
+
+describe('forwardAccountingWrite', () => {
+  const operator = { id: 'sub-1', username: 'op' };
+  const body = { vlab_id: ID, amount: '5' };
+
+  it('sends the validated body, logging the attempt and the outcome', async () => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
+    fetchMock.mockResolvedValue(json({ message: 'Top-up operation executed', data: null }));
+
+    const reply = await forwardAccountingWrite({
+      operator,
+      method: 'POST',
+      path: 'budget/top-up',
+      body,
+    });
+
+    expect(reply.status).toBe(200);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('https://cell-a/api/accounting/budget/top-up');
+    expect(init).toMatchObject({
+      method: 'POST',
+      body: JSON.stringify(body),
+      headers: { 'content-type': 'application/json' },
+    });
+    const lines = info.mock.calls.map(([line]) => JSON.parse(line));
+    expect(lines).toEqual([
+      expect.objectContaining({ phase: 'sent', operator: 'sub-1', path: 'budget/top-up', body }),
+      expect.objectContaining({ phase: 'answered', status: 200 }),
+    ]);
+    info.mockRestore();
+  });
+
+  it('says the outcome is unknown when accounting does not answer a write', async () => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
+    fetchMock.mockRejectedValue(new DOMException('timed out', 'TimeoutError'));
+
+    const reply = await forwardAccountingWrite({
+      operator,
+      method: 'POST',
+      path: 'budget/top-up',
+      body,
+    });
+
+    expect(reply.status).toBe(502);
+    expect((await reply.json()).message).toMatch(/may or may not have gone through/);
+    expect(JSON.parse(info.mock.calls[1][0])).toMatchObject({ phase: 'answered', status: 502 });
+    info.mockRestore();
+  });
+
+  it('keeps going when the page that sent the write goes away', async () => {
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    fetchMock.mockResolvedValue(json({ message: 'ok', data: null }));
+
+    await forwardAccountingWrite({ operator, method: 'POST', path: 'budget/top-up', body });
+
+    const { signal } = fetchMock.mock.calls[0][1];
+    expect(signal.aborted).toBe(false);
+    vi.restoreAllMocks();
   });
 });
