@@ -170,6 +170,7 @@
     "monaco-editor": "^0.55.1",
     "postcss": "^8.5.14",
     "raw-loader": "^4.0.2",
+    "react-doctor": "0.9.23",
     "sass": "^1.99.0",
     "tailwindcss": "^4.2.4",
     "typescript": "7.0.2",
