@@ -86,7 +86,7 @@ function start(reduced = false) {
   frames.length = 0;
   return renderer;
 }
-it('fades the old video out and the next video in with one shared opacity', () => {
+it('sinks the old video tiles to white and raises the next set, then settles', () => {
   const renderer = start();
   renderer.setSource(() => null);
   vi.advanceTimersByTime(800);
@@ -95,6 +95,7 @@ it('fades the old video out and the next video in with one shared opacity', () =
   ).toBe(true);
   vi.advanceTimersByTime(1500);
   expect(frames.at(-1)?.every((value, i) => i % 13 !== 12 || value === 0)).toBe(true);
+  expect(canvas.dataset.featurePhase).toBe('playing');
   renderer.dispose();
 });
 it('changes video textures without the wave for reduced motion and releases resources', () => {
@@ -111,41 +112,39 @@ it('changes video textures without the wave for reduced motion and releases reso
   expect(frames.length).toBe(count);
 });
 
-it('keeps every incoming video tile hidden until all outgoing tiles are white', () => {
+it('sinks the tiles in a wave, not all at once', () => {
   const renderer = start();
   renderer.setSource(() => null);
-  vi.advanceTimersByTime(336);
-  expect(canvas.dataset.featurePhase).toBe('white');
-  const floor = frames.at(-1);
-  expect(floor?.every((value, index) => index % 13 !== 7 || value !== 1)).toBe(true);
-  vi.advanceTimersByTime(160);
-  expect(canvas.dataset.featurePhase).toBe('in');
+  vi.advanceTimersByTime(400);
+  expect(canvas.dataset.featurePhase).toBe('out');
+  // a moment into the fall, the video tiles are at different stages of turning white
+  const whites = (frames.at(-1) || []).filter(
+    (_value, i) => i % 13 === 12 && (frames.at(-1)?.[i - 5] ?? -1) >= 0
+  );
+  expect(new Set(whites).size).toBeGreaterThan(1);
   renderer.dispose();
 });
-it('holds the white floor while the next video decodes, then reveals it', () => {
+it('holds the new tiles on the floor while the next video decodes, then raises them', () => {
   const renderer = start();
   let ready = false;
   renderer.setSource(() => (ready ? { image: canvas, stamp: 'ready' } : null), { empty: false });
   vi.advanceTimersByTime(1200);
   expect(canvas.dataset.featurePhase).toBe('white');
   ready = true;
-  vi.advanceTimersByTime(250);
+  vi.advanceTimersByTime(50);
   expect(canvas.dataset.featurePhase).toBe('in');
-  vi.advanceTimersByTime(600);
+  vi.advanceTimersByTime(2000);
   expect(canvas.dataset.featurePhase).toBe('playing');
   renderer.dispose();
 });
-
-it('gives every video tile the same opacity throughout a transition', () => {
+it('starts a change asked for during another once that one is done', () => {
   const renderer = start();
   renderer.setSource(() => null);
-  vi.advanceTimersByTime(160);
-  const whites = (frames.at(-1) || [])
-    .filter((_value, i) => i % 13 === 12)
-    .filter((_value, i) => (frames.at(-1)?.[i * 13 + 7] ?? -1) >= 0);
-  expect(whites.length).toBeGreaterThan(0);
-  expect(new Set(whites).size).toBe(1);
-  expect(Number(canvas.dataset.featureVideoOpacity)).toBeGreaterThan(0);
-  expect(Number(canvas.dataset.featureVideoOpacity)).toBeLessThan(1);
+  vi.advanceTimersByTime(300);
+  renderer.setSource(() => null);
+  vi.advanceTimersByTime(1700);
+  expect(canvas.dataset.featurePhase).not.toBe('playing');
+  vi.advanceTimersByTime(2000);
+  expect(canvas.dataset.featurePhase).toBe('playing');
   renderer.dispose();
 });

@@ -4,6 +4,41 @@ import { useEffect, useRef } from 'react';
 
 import styles from './public-tour.module.css';
 
+/** How long a chapter's media layer may be up without a video before its tiles rise white, ms. */
+const NO_VIDEO_AFTER = 200;
+
+/**
+ * The chapter's film, painted on the tiles as on the supplied features page: found in the media layer that is on
+ * (not the one fading out). The film itself keeps playing there, unseen, for playback and accessibility.
+ */
+function chapterVideoSource(tour: HTMLElement, after: boolean) {
+  const layers = () => [...tour.querySelectorAll<HTMLElement>('[data-feature-media] > div')];
+  // a chapter after another: its layer is a new one, never the one already up (which is leaving)
+  const before = new Set(after ? layers() : []);
+  let layer: HTMLElement | null = null;
+  let video: HTMLVideoElement | null = null;
+  let layerSince = 0;
+  const find = () => {
+    // once found, a source keeps to its own layer and film, even once they have gone: the tiles sinking with the
+    // old chapter (with a film or without, as the AI one) must never pick up the next one's
+    if (video) return video;
+    layer ??=
+      layers().find((element) => !element.hasAttribute('inert') && !before.has(element)) ?? null;
+    if (!layer) return null;
+    layerSince ||= performance.now();
+    video = layer.querySelector<HTMLVideoElement>('[data-chapter-media] video');
+    return video;
+  };
+  return {
+    read: () => {
+      const element = find();
+      if (!element || element.readyState < 2 || element.seeking) return null;
+      return { image: element, stamp: element.currentTime };
+    },
+    empty: () => !find() && layerSince > 0 && performance.now() - layerSince > NO_VIDEO_AFTER,
+  };
+}
+
 /** The supplied feature-page canvas, using the tour's existing videos and playback clock. */
 export function FeatureTileBackground({
   active,
@@ -59,10 +94,13 @@ export function FeatureTileBackground({
       if (!shown) {
         clear();
         selected = '';
-      }
+      } else if (engine) tour.setAttribute('data-feature-canvas-active', '');
       if (engine && shown && selected !== current.current.chapterId) {
+        const after = selected !== '';
         selected = current.current.chapterId;
         surface.dataset.featureChapter = selected;
+        const source = chapterVideoSource(tour, after);
+        engine.setSource(source.read, { empty: source.empty });
       }
       frame = requestAnimationFrame(tick);
     };

@@ -41,6 +41,7 @@ const FEATURES = [
     label: 'Skeletonize morphologies and extract spines',
     alt: 'Riding down a dendrite past its spines, coloured by their distance from the soma',
   },
+  { label: 'Grow a neocortex', alt: 'A neocortex growing' },
 ];
 
 /** How long after the words start coming in "Try it now" does, ms (with the logo and words, user; and in the

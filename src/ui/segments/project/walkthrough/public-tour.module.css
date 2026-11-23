@@ -554,4 +554,9 @@
   .publicTour .publicText {
     padding-top: calc(var(--chapter-frame-y) + var(--chapter-frame-unit) * 209);
   }
+  /* With the tiles drawn, the film is painted on them (as on the supplied features page): the video itself plays on
+     unseen, for its clock and its label. Its titles over it stay. */
+  .publicTour[data-feature-canvas-active] [data-feature-media] [data-chapter-media] video {
+    opacity: 0;
+  }
 }

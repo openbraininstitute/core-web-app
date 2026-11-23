@@ -83,41 +83,51 @@ export function createLandingTileRenderer(
     },
     {
       label: 'Simulate activity',
-      img: '/static/landing-v1/microcircuit.jpg',
-      // a cortical column's activity, from the user's Vid4 (cropped to the column, its white made pure)
-      video: '/static/landing-v1/microcircuit.mp4',
-      zoom: 0.7,
+      img: '/static/landing-v1/microcircuits.jpg',
+      video: '/static/landing-v1/microcircuits.mp4',
+      // shown big, only the centre of the clip (its white margins cropped), so the subject fills the white area
+      crop: 0.85,
+      zoom: 1.7,
       hero: 640,
       alt: 'Simulated cortical microcircuit, its neurons firing',
     },
     {
       label: 'Explore data',
-      img: '/static/landing-v1/explore.png',
-      zoom: 1.35,
+      img: '/static/landing-v1/somatosensory.jpg',
+      video: '/static/landing-v1/somatosensory.mp4',
+      // shown big, only the centre of the clip (its white margins cropped), so the subject fills the white area
+      crop: 0.65,
+      zoom: 1.7,
       hero: 760,
       alt: 'Reconstructed fly neurons',
     },
     {
       label: 'Build models',
-      img: '/static/landing-v1/build.png',
-      zoom: 1.75,
+      img: '/static/landing-v1/hippocampus-growth.jpg',
+      video: '/static/landing-v1/hippocampus-growth.mp4',
+      // shown big, only the centre of the clip (its white margins cropped), so the subject fills the white area
+      crop: 0.65,
+      zoom: 1.7,
       hero: 780,
       alt: 'Whole-brain model',
     },
     {
       label: 'Virtual labs',
-      img: '/static/landing-v1/virtual-labs.png',
-      zoom: 1.45,
+      img: '/static/landing-v1/full-brain.jpg',
+      video: '/static/landing-v1/full-brain.mp4',
+      // shown big, only the centre of the clip (its white margins cropped), so the subject fills the white area
+      crop: 0.65,
+      zoom: 1.7,
       hero: 760,
       alt: 'Brain atlas',
     },
     {
       label: 'Skeletonize meshes',
-      img: '/static/landing-v1/spiny-neuron.jpg',
-      // the learn branch's spiny view: a MICrONS cell's EM mesh as a veil, its spines by path distance from the soma
-      video: '/static/landing-v1/spiny-neuron.mp4',
-      // in close on its soma and spines in a cube: the whole cell is too fine to read at a cube's size
-      zoom: 1.5,
+      img: '/static/landing-v1/thalamus-growth.jpg',
+      video: '/static/landing-v1/thalamus-growth.mp4',
+      // shown big, only the centre of the clip (its white margins cropped), so the subject fills the white area
+      crop: 0.65,
+      zoom: 1.7,
       hero: 700,
       alt: "A neuron's EM mesh, its spines coloured by their distance from the soma",
     },
@@ -133,25 +143,17 @@ export function createLandingTileRenderer(
       hero: 760,
       alt: 'Riding down a dendrite past its spines, coloured by their distance from the soma',
     },
+    {
+      label: 'Grow a neocortex',
+      img: '/static/landing-v1/neocortex-growth.jpg',
+      video: '/static/landing-v1/neocortex-growth.mp4',
+      // shown big, only the centre of the clip (its white margins cropped), so the subject fills the white area
+      crop: 0.65,
+      zoom: 1.7,
+      hero: 700,
+      alt: 'A neocortex growing',
+    },
   ];
-
-  // TEMPORARY (user): every example the blue fly brain, as the first one is, its names kept; all but the blue ride
-  // along a dendrite, which keeps its own cube (user)
-  const ALL_FLY = true;
-  const KEEP_OWN = new Set(['Skeletonize morphologies and extract spines']);
-  if (ALL_FLY) {
-    const fly = FEATURES[0];
-    FEATURES.forEach((f, i) => {
-      if (i && !KEEP_OWN.has(f.label))
-        Object.assign(f, {
-          img: fly.img,
-          video: fly.video,
-          zoom: fly.zoom,
-          hero: fly.hero,
-          alt: fly.alt,
-        });
-    });
-  }
 
   // ---- hex grid (same as index.html): pointy-top, circumradius R; a tile lifted to height h is R * (1 + 0.7 h) ----
   const R = 55,
@@ -1151,6 +1153,7 @@ export function createLandingTileRenderer(
     if (!src) return;
     const nw = src.videoWidth || src.naturalWidth,
       nh = src.videoHeight || src.naturalHeight;
+    const crop = f.crop ?? 1;
     const full = Math.min(f.hero * HERO_K, BIG_W, (BIG_H * nw) / nh);
     const rs = c.baseR;
     const inCube = Math.sqrt(3) * rs * at.k * f.zoom,
@@ -1161,7 +1164,13 @@ export function createLandingTileRenderer(
     ctx.globalAlpha = alpha * (c.appear ?? 1);
     // its white goes, as the page's pictures' does
     ctx.globalCompositeOperation = 'multiply';
-    ctx.drawImage(f.feather ? feathered(src, w, h) : src, x - w / 2, y - h / 2, w, h);
+    if (crop < 1 && !f.feather) {
+      // only the centre of the picture, grown to the same box: the subject is the bigger by 1 / crop
+      const k = 1 - Math.sqrt(Math.min(1, Math.max(0, t))) * (1 - crop),
+        sw = nw * k,
+        sh = nh * k;
+      ctx.drawImage(src, (nw - sw) / 2, (nh - sh) / 2, sw, sh, x - w / 2, y - h / 2, w, h);
+    } else ctx.drawImage(f.feather ? feathered(src, w, h) : src, x - w / 2, y - h / 2, w, h);
     ctx.restore();
   }
   let slices = [];

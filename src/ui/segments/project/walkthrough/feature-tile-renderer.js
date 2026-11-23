@@ -33,11 +33,15 @@ export function createFeatureTileRenderer(
     throw new Error(message);
   }
   const MODE = 'fall';
-  const FALL_DUR = 320,
-    FALL_SPREAD = 160,
-    WHITE_HOLD = 80,
-    RISE_DUR = 420,
-    RISE_SPREAD = 160;
+  // fall (as featuresPage.html): the video tiles sink to the floor and turn white, left to right, then another set
+  // of tiles rises with the new video
+  const FALL_DUR = 600, // ms a tile takes to sink (and, later, to rise)
+    FALL_SPREAD = 450, // ms over which the tiles start to sink (left to right, a bit random)
+    RISE_START = 450, // ms until the first new tiles start to rise
+    RISE_DUR = 700,
+    RISE_SPREAD = 450,
+    FALL_TOTAL = FALL_SPREAD + FALL_DUR + 50 + RISE_DUR, // the whole change
+    VIDEO_WAIT = 1500; // ms the rise waits for the next video's first frame before going on anyway
   const SLIDE_DUR = 1100;
   const skipIdle = true,
     shineOn = true,
@@ -556,7 +560,9 @@ void main() { outColor = vec4(mix(vec3(1.0), GLOW_COL, glow(gl_FragCoord.xy)), 1
     return t;
   }
 
-  const records = [{ tex: makeTexture(), rect: { ...FRAME }, read: () => null, stamp: null }];
+  const records = [
+    { tex: makeTexture(), rect: { ...FRAME }, read: () => null, stamp: null, empty: () => true },
+  ];
   const vidOf = (i) => records[i];
   function uploadVideo(v) {
     const source = v.read();
@@ -565,9 +571,22 @@ void main() { outColor = vec4(mix(vec3(1.0), GLOW_COL, glow(gl_FragCoord.xy)), 1
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
     gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source.image);
+    if (v.stamp === null) {
+      // fit the whole video inside the frame (nothing cropped), centred; the VIDEO_INSET border falls just outside
+      const iw = source.image.videoWidth || source.image.width,
+        ih = source.image.videoHeight || source.image.height;
+      if (iw && ih) {
+        const k = 1 - 2 * VIDEO_INSET;
+        const sc = Math.min(FRAME.w / (iw * k), FRAME.h / (ih * k));
+        const w = iw * sc,
+          h = ih * sc;
+        v.rect = { x: FRAME.x + (FRAME.w - w) / 2, y: FRAME.y + (FRAME.h - h) / 2, w, h };
+      }
+    }
     v.stamp = source.stamp;
     return true;
   }
+  const isReady = (v) => v.stamp !== null || v.empty();
   const tiles = [];
   let mainTiles = [],
     vidOrder = []; // rebuilt for every drawn frame: white tiles, video tiles
@@ -801,6 +820,37 @@ void main() { outColor = vec4(mix(vec3(1.0), GLOW_COL, glow(gl_FragCoord.xy)), 1
       t.rd = (0.55 * along + 0.45 * Math.random()) * RISE_SPREAD;
     }
   }
+  // where a tile is into the change: sinking with the old video (`ms`), then rising with the new one (`rms`, the rise's
+  // clock, held while the next video's first frame is not there yet)
+  function tileFall(t, ms, rms) {
+    const f = t.inOld ? turnEase(clamp01((ms - t.fd) / FALL_DUR)) : 0;
+    const riseAt = Math.max(RISE_START + t.rd, t.fd + FALL_DUR + 50); // never before this tile has sunk
+    const g = t.inNew ? turnEase(clamp01((rms - riseAt) / RISE_DUR)) : 0;
+    if (t.inNew && g > 0) {
+      // rising, with the new video
+      t.video = true;
+      t.edge = t.edgeNew;
+      t.slot = 1;
+      t.h = VIDEO_H * g;
+      t.white = 1 - g;
+    } else if (t.inOld && (f < 1 || t.inNew)) {
+      // sinking with the old video (or waiting on the floor to rise)
+      t.video = true;
+      t.slot = 0;
+      t.h = VIDEO_H * (1 - f);
+      t.white = f;
+    } else {
+      // a plain white tile: sinks to the floor, then rises with its new height
+      t.video = false;
+      t.white = 0;
+      t.slot = 0;
+      t.h =
+        rms < riseAt
+          ? t.hOld * (1 - turnEase(clamp01((ms - t.fd) / FALL_DUR)))
+          : t.wNew * turnEase(clamp01((rms - riseAt) / RISE_DUR));
+    }
+    t.fadeOv = t.video ? (t.white > 0.5 ? Math.min(1, t.h / 0.08) : 1) : -1;
+  }
   function endFall() {
     for (const t of tiles) {
       t.wbase = t.wNew; // the new random heights are the white tiles' heights now
@@ -818,41 +868,57 @@ void main() { outColor = vec4(mix(vec3(1.0), GLOW_COL, glow(gl_FragCoord.xy)), 1
     tiles.sort((a, b) => a.wbase - b.wbase); // stacking order follows the new heights
   }
 
+  let pending = null;
+  function startChange(read, empty) {
+    const old = records[cur];
+    const first = records.length === 1 && cur === 0;
+    for (const record of records) if (record !== old) gl.deleteTexture(record.tex);
+    const record = { tex: makeTexture(), rect: { ...FRAME }, read, stamp: null, empty };
+    records.splice(0, records.length, old, record);
+    cur = 0;
+    if (reduced || first) cur = 1;
+    else {
+      trans = { to: 1, dir: 1, start: clock(), ready: false, wait: 0 };
+      reshape();
+    }
+    wake();
+  }
+  function finishChange() {
+    cur = trans.to;
+    endFall();
+    trans = null;
+    if (pending) {
+      const p = pending;
+      pending = null;
+      startChange(p.read, p.empty);
+    }
+  }
+
   function frame() {
     const now = clock();
     let changed = false;
 
-    // The video is one unbroken image throughout the fade. Geometry and texture change
-    // only at zero opacity; individual colored tiles never lead or trail the transition.
-    let videoOpacity = 1;
+    // the change (as featuresPage.html): the old video's tiles sink left to right turning white, then the new set
+    // rises with the next video. The rise waits for that video's first frame (at most VIDEO_WAIT).
+    let fallMs = 0,
+      riseMs = 0;
     if (trans) {
       changed = true;
       const elapsed = now - trans.start;
-      if (!trans.swapped && elapsed >= FALL_DUR) {
-        const incoming = records[trans.to];
+      const incoming = records[trans.to];
+      if (!trans.ready) {
         uploadVideo(incoming);
-        if (incoming.empty || incoming.stamp !== null) {
-          cur = trans.to;
-          endFall();
-          trans.swapped = true;
-          trans.fadeInAt = now + WHITE_HOLD;
+        if (isReady(incoming) || elapsed > RISE_START + VIDEO_WAIT) {
+          trans.ready = true;
+          trans.wait = Math.max(0, elapsed - RISE_START);
         }
       }
-      videoOpacity = !trans.swapped
-        ? (trans.startOpacity ?? 1) * (1 - smooth(elapsed / FALL_DUR))
-        : smooth((now - trans.fadeInAt) / RISE_DUR);
-      canvas.dataset.featurePhase =
-        !trans.swapped && elapsed < FALL_DUR
-          ? 'out'
-          : !trans.swapped || now < trans.fadeInAt
-            ? 'white'
-            : 'in';
-      if (trans.swapped && videoOpacity >= 1) {
-        trans = null;
-        canvas.dataset.featurePhase = 'playing';
-      }
-    } else canvas.dataset.featurePhase = 'playing';
-    canvas.dataset.featureVideoOpacity = String(videoOpacity);
+      fallMs = elapsed;
+      riseMs = trans.ready ? elapsed - trans.wait : Math.min(elapsed, RISE_START);
+      canvas.dataset.featurePhase = elapsed < RISE_START ? 'out' : !trans.ready ? 'white' : 'in';
+      if (trans.ready && riseMs >= FALL_TOTAL) finishChange();
+    }
+    if (!trans) canvas.dataset.featurePhase = 'playing';
     const sliding = MODE === 'slide' && trans;
     for (const t of tiles) {
       // turn mode: this video tile's part of the turn (t.e = 0 before it starts, eased 0..1 while it turns)
@@ -868,9 +934,10 @@ void main() { outColor = vec4(mix(vec3(1.0), GLOW_COL, glow(gl_FragCoord.xy)), 1
       }
       t.e = e;
       t.busy = turning;
-      t.white = t.video ? 1 - videoOpacity : 0;
 
-      if (!trans && !turning && !reduced) {
+      if (trans)
+        tileFall(t, fallMs, riseMs); // the mouse is ignored while the tiles sink and rise
+      else if (!turning && !reduced) {
         // hover: lift with radial falloff (white tiles); video tiles only grow their shadow
         const d = Math.hypot(t.x - mouse.x, t.y - mouse.y);
         let f = 0;
@@ -1090,21 +1157,18 @@ void main() { outColor = vec4(mix(vec3(1.0), GLOW_COL, glow(gl_FragCoord.xy)), 1
       build();
       wake();
     },
+    /** The next video, `read` giving its current frame (null until it has one); `empty` (or a function saying so)
+     * when there is none, so the tiles need not wait for it. Asked for during a change, it starts after it.
+     * @param {() => ({ image: TexImageSource, stamp: unknown } | null)} read
+     * @param {{ empty?: boolean | (() => boolean) }} [options]
+     */
     setSource(read, { empty = true } = {}) {
-      if (trans) trans = null;
-      const startOpacity = Number(canvas.dataset.featureVideoOpacity ?? 1);
-      const old = records[cur];
-      const first = records.length === 1 && cur === 0;
-      for (const record of records) if (record !== old) gl.deleteTexture(record.tex);
-      const record = { tex: makeTexture(), rect: { ...FRAME }, read, stamp: null, empty };
-      records.splice(0, records.length, old, record);
-      cur = 0;
-      if (reduced || first) cur = 1;
-      else {
-        trans = { to: 1, dir: 1, start: clock(), startOpacity };
-        reshape();
+      const isEmpty = typeof empty === 'function' ? empty : () => empty;
+      if (trans) {
+        pending = { read, empty: isEmpty };
+        return;
       }
-      wake();
+      startChange(read, isEmpty);
     },
     setVisible(value) {
       visible = value;

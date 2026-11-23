@@ -18,6 +18,7 @@ export const SCIENCE_SCENES = [
   { label: 'Virtual labs', group: 'labs' },
   { label: 'Skeletonize meshes', group: 'skeletonize' },
   { label: 'Skeletonize morphologies and extract spines', group: 'dendrites' },
+  { label: 'Grow a neocortex', group: 'neocortex' },
 ] as const;
 /** The scene the opening shows first: the fly's brain and nerve cord turning as its model runs. */
 export const FIRST_SCENE = 0;
