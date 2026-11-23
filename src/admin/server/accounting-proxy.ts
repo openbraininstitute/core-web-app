@@ -13,7 +13,7 @@ import {
   ReverseBody,
   TopUpBody,
 } from '../sections/accounting/schemas';
-import { AccountingMethod } from '../sections/accounting/types';
+import { AccountingMethod, AuditPhase } from '../sections/accounting/types';
 import { isGatewayReply } from './service-probe';
 
 import type { ZodType } from 'zod';
@@ -21,6 +21,8 @@ import type {
   TAccountingMethod,
   TAccountingRoute,
   TAccountingTarget,
+  TAccountingWrite,
+  TOperator,
 } from '../sections/accounting/types';
 
 const UUID = '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}';
@@ -186,9 +188,7 @@ export function accountingReply(status: number, message: string) {
   return Response.json({ message }, { status, headers: NO_STORE });
 }
 
-type TWrite = { method: TAccountingMethod; body: string };
-
-const unanswered = (write?: TWrite) =>
+const unanswered = (write?: TAccountingWrite) =>
   write
     ? accountingReply(
         502,
@@ -196,15 +196,12 @@ const unanswered = (write?: TWrite) =>
       )
     : accountingReply(502, "Accounting didn't answer.");
 
-/**
- * accounting-service has no auth, so a 401 or 403 is the gateway's and reads as not reachable.
- * A write runs to the end even if the page that sent it goes away.
- */
+/** A 401 or 403 is the gateway's, since accounting has no auth; a write ignores the page going away. */
 export async function forwardToAccounting(
   path: string,
   search: URLSearchParams,
   signal?: AbortSignal,
-  write?: TWrite
+  write?: TAccountingWrite
 ) {
   const base = serverConfig.ACCOUNTING_URL;
   if (!base) return accountingReply(503, "Accounting isn't configured in this environment.");
@@ -253,8 +250,6 @@ export async function forwardToAccounting(
   }
 }
 
-type TOperator = { id: string; username?: string };
-
 /** One JSON line per write event, the trail of who moved which credits. */
 export function auditAccountingWrite(entry: Record<string, unknown>) {
   // biome-ignore lint/suspicious/noConsole: the audit trail has to reach production logs
@@ -292,14 +287,14 @@ export async function forwardAccountingWrite({
   body: unknown;
 }) {
   const entry = { operator: operator.id, username: operator.username, method, path, body };
-  auditAccountingWrite({ ...entry, phase: 'sent' });
+  auditAccountingWrite({ ...entry, phase: AuditPhase.Sent });
   const reply = await forwardToAccounting(path, new URLSearchParams(), undefined, {
     method,
     body: JSON.stringify(body),
   });
   auditAccountingWrite({
     ...entry,
-    phase: 'answered',
+    phase: AuditPhase.Answered,
     status: reply.status,
     moved: await movedBy(reply),
   });

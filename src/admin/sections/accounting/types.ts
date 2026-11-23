@@ -249,6 +249,12 @@ export type TAccountingRoute = {
   body?: ZodType;
 };
 
+export const AuditPhase = { Sent: 'sent', Answered: 'answered', Refused: 'refused' } as const;
+
+export type TAccountingWrite = { method: TAccountingMethod; body: string };
+
+export type TOperator = { id: string; username?: string };
+
 export type TAccountingTarget =
   | { path: string; search: URLSearchParams; body?: ZodType }
   | { status: number; message: string };

@@ -26,10 +26,7 @@ async function resolveCapabilities(fresh: boolean): Promise<OperatorCapabilities
 
 const currentCapabilities = cache(() => resolveCapabilities(false));
 
-/**
- * A 401, 403 or 503 JSON reply for a route handler, or `null` to let the request through.
- * `fresh` skips the groups cache, so a write never runs on access the operator has just lost.
- */
+/** A 401, 403 or 503 reply, or `null` to let it through; `fresh` skips the groups cache. */
 export async function capabilityDenial(
   need: CapabilityPath,
   { fresh = false }: { fresh?: boolean } = {}

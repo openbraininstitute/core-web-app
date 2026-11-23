@@ -37,11 +37,14 @@ export function useAdminWrite<Args, Result = unknown>({
       });
       onSuccess?.(result);
     },
-    onError: (error) =>
+    // A failed write may still have changed something, so the page reloads what it shows.
+    onError: (error) => {
+      if (refreshes) queryClient.invalidateQueries({ queryKey: refreshes });
       notification.error({
         message: failed,
         description: errorReason(error),
         placement: 'topRight',
-      }),
+      });
+    },
   });
 }

@@ -109,6 +109,15 @@ describe('accounting proxy writes', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it('writes no audit line for a caller it has not identified', async () => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
+    capabilityDenialMock.mockResolvedValue(Response.json({ message: 'no' }, { status: 401 }));
+
+    await send('POST', 'budget/top-up', topUp);
+
+    expect(info).not.toHaveBeenCalled();
+  });
+
   it('checks access fresh before a write', async () => {
     capabilityDenialMock.mockResolvedValue(Response.json({ message: 'no' }, { status: 503 }));
 

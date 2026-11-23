@@ -1,3 +1,4 @@
+import { AuditPhase } from '@/admin/sections/accounting/types';
 import {
   accountingReply,
   auditAccountingWrite,
@@ -26,11 +27,20 @@ export async function GET(request: NextRequest, { params }: TContext) {
 }
 
 async function write(request: NextRequest, { params }: TContext) {
+  if (!isAdminPageWrite(request.headers)) {
+    return accountingReply(403, "This change didn't come from the admin pages.");
+  }
+  const denial = await capabilityDenial('accounting.admin', { fresh: true });
+  if (denial) return denial;
+  const session = await auth();
+  const operator = session?.user.id;
+  if (!operator) return accountingReply(401, 'Sign in again');
+
   const method = request.method as TAccountingMethod;
   const segments = (await params).path;
-  const refuse = (reply: Response, operator?: string) => {
+  const refuse = (reply: Response) => {
     auditAccountingWrite({
-      phase: 'refused',
+      phase: AuditPhase.Refused,
       operator,
       method,
       path: segments.join('/').slice(0, 200),
@@ -39,21 +49,12 @@ async function write(request: NextRequest, { params }: TContext) {
     return reply;
   };
 
-  if (!isAdminPageWrite(request.headers)) {
-    return refuse(accountingReply(403, "This change didn't come from the admin pages."));
-  }
-  const denial = await capabilityDenial('accounting.admin', { fresh: true });
-  if (denial) return refuse(denial);
-  const session = await auth();
-  const operator = session?.user.id;
-  if (!operator) return refuse(accountingReply(401, 'Sign in again'));
-
   const target = matchAccountingRoute(segments, request.nextUrl.searchParams, method);
-  if ('status' in target) return refuse(accountingReply(target.status, target.message), operator);
-  if (!target.body) return refuse(accountingReply(405, 'Method not allowed'), operator);
+  if ('status' in target) return refuse(accountingReply(target.status, target.message));
+  if (!target.body) return refuse(accountingReply(405, 'Method not allowed'));
 
   const body = await readWriteBody(request, target.body);
-  if ('status' in body) return refuse(accountingReply(body.status, body.message), operator);
+  if ('status' in body) return refuse(accountingReply(body.status, body.message));
 
   return forwardAccountingWrite({
     operator: { id: operator, username: session.user.username },
