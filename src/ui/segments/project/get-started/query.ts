@@ -106,11 +106,6 @@ export const ProjectHomeGetStartedQuery = defineQuery(
         "stagingLink": coalesce(stagingEntityId, stagingLink),
         "productionLink": coalesce(productionEntityId, productionLink)
       }
-    },
-    "obiAssistant": obiAssistant[]{
-      _key,
-      title,
-      question
     }
   }`
 );
@@ -145,13 +140,6 @@ export type TProjectHomeGetStartedCard = {
   resources: Array<TProjectHomeResource>;
 };
 
-export type TObiAssistantTopic = {
-  _key: string;
-  title: string;
-  question: string;
-};
-
 export type TProjectHomeData = {
   getStarted: TProjectHomeGetStartedCard[] | null;
-  obiAssistant: TObiAssistantTopic[] | null;
 };
