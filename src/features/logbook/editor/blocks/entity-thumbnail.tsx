@@ -126,36 +126,44 @@ export function EntityThumbnail({
       </div>
     );
   return (
-    // A button: the keyboard reaches it, and the editor doesn't take the click as selecting the card.
-    <button
-      type="button"
-      className={cn(
-        PANEL,
-        'cursor-zoom-in focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary-4'
-      )}
-      aria-label={`Open the picture of ${entity.name} full size`}
-      onClick={() => setOpen(true)}
-    >
+    <>
+      {/* A button: the keyboard reaches it, and the editor leaves a click on a button alone. */}
+      <button
+        type="button"
+        className={cn(
+          PANEL,
+          'cursor-zoom-in focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary-4'
+        )}
+        aria-label={`Open the picture of ${entity.name} full size`}
+        onClick={() => setOpen(true)}
+      >
+        <img
+          src={url}
+          alt=""
+          className="pointer-events-none absolute inset-0 size-full object-contain p-2.5 transition-transform duration-300 ease-out group-hover/picture:scale-[1.04]"
+        />
+        <span className="pointer-events-none absolute right-2 bottom-2 grid size-7 place-items-center rounded-full bg-white/95 text-primary-9 opacity-0 shadow-block-btn transition-opacity duration-150 group-hover/picture:opacity-100 group-focus-visible/picture:opacity-100">
+          <Icon name="search" size={14} stroke={2.2} />
+        </span>
+      </button>
+      {/* Only the lightbox, as in antd's "preview from a button" pattern. No classes are shared
+          with it: antd hands an Image's rootClassName to its lightbox too. */}
       <Image
         src={url}
-        alt=""
-        // Clicks land on the button itself: the editor leaves a click on a button alone.
-        rootClassName="pointer-events-none absolute! inset-0 block!"
-        className="size-full! object-contain p-2.5 transition-transform duration-300 ease-out group-hover/picture:scale-[1.04]"
+        alt={`Picture of ${entity.name}`}
+        wrapperStyle={{ display: 'none' }}
         preview={{
           visible: open,
           onVisibleChange: setOpen,
-          mask: false,
-          // White on the zoomed image itself: zoom and rotate transform that element.
+          // White on the zoomed image itself: zoom and rotate transform that element. A darker
+          // backdrop: the page's text showed through behind the toolbar.
           rootClassName: cn(
+            '[&_.ant-image-preview-mask]:bg-black/80',
             '[&_.ant-image-preview-img]:bg-white [&_.ant-image-preview-img]:rounded',
             '[&_.ant-image-preview-img]:border-8 [&_.ant-image-preview-img]:border-white'
           ),
         }}
       />
-      <span className="pointer-events-none absolute right-2 bottom-2 grid size-7 place-items-center rounded-full bg-white/95 text-primary-9 opacity-0 shadow-block-btn transition-opacity duration-150 group-hover/picture:opacity-100 group-focus-visible/picture:opacity-100">
-        <Icon name="search" size={14} stroke={2.2} />
-      </span>
-    </button>
+    </>
   );
 }
