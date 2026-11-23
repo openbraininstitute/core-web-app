@@ -1,7 +1,9 @@
+import { parseAsString, useQueryState } from 'nuqs';
 import { useEffect, useMemo, useReducer, useRef } from 'react';
 import { match } from 'ts-pattern';
 
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
+import { ScanConfigConfigSearchParam } from '@/features/scan-config/helpers';
 
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
@@ -136,6 +138,7 @@ export function useTaskTabState<M extends Record<string, unknown>>(
   configs: ITaskConfig<M>[]
 ): ITaskTabStateResult<M> {
   const [state, dispatch] = useReducer(taskTabStateReducer<M>, campaignId, initialTaskTabState<M>);
+  const [initialConfigId] = useQueryState(ScanConfigConfigSearchParam, parseAsString);
 
   if (state.campaignId !== campaignId) {
     dispatch({ type: TaskTabActionDict.CampaignChanged, campaignId });
@@ -195,5 +198,9 @@ export function useTaskTabState<M extends Record<string, unknown>>(
     []
   );
 
-  return { state, act, selectableConfigIds, resolvedSelectedConfigIds };
+  // the config named in the URL is active until the user picks another
+  const activeConfig =
+    state.activeConfig ?? configs.find((config) => config.id === initialConfigId) ?? null;
+
+  return { state: { ...state, activeConfig }, act, selectableConfigIds, resolvedSelectedConfigIds };
 }

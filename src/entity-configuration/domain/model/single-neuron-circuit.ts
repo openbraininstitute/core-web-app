@@ -42,6 +42,7 @@ export const SingleNeuronCircuit: EntityCoreTypeConfig<ICircuit> = {
   },
   detailViewSections: [
     DetailViewSectionsDict.Overview,
+    DetailViewSectionsDict.Configuration,
     DetailViewSectionsDict.RelatedPublications,
     DetailViewSectionsDict.RelatedArtifacts,
   ],

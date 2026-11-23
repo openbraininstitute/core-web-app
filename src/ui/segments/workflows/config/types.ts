@@ -160,6 +160,8 @@ export type IWorkflowDescriptor = {
    * Not used to decide single vs multiple selection (schema only).
    */
   configurationInputs?: readonly IWorkflowConfigurationInput[];
+  /** narrows {@link configurationInputs} to the entities the backend accepts (e.g. circuit scale) */
+  acceptsInput?: (entity: object) => boolean;
   /**
    * optional per-entity-type browse prerequisite + loader configuration
    * lets a browse input require a "parent" pick first (prerequisite) and/or fetch its rows
@@ -171,6 +173,8 @@ export type IWorkflowDescriptor = {
    */
   breadcrumb?: TWorkflowBreadcrumb;
   label?: string;
+  /** action label on the detail page of an input entity (e.g. "Build synaptome"); defaults to the activity label */
+  verb?: string;
   description?: string;
   tags?: readonly string[];
   filters?: Record<string, unknown>;

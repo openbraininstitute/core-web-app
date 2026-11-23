@@ -36,4 +36,6 @@ export type ScanConfigTemplateProps = {
   resolveSessionFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
   seed?: TAnyWorkflowSeed;
   taskTypeBindings?: TWorkflowTaskTypeBindings;
+  /** a specific single-coordinate config to duplicate from instead of the campaign itself */
+  singleScanId?: string;
 };

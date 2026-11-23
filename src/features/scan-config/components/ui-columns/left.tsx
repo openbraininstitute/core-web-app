@@ -28,6 +28,7 @@ export default function Left({
   config,
   setConfig,
   campaignId,
+  singleScanId,
   loading,
   selectedEntry,
   setSelectedEntry,
@@ -56,6 +57,8 @@ export default function Left({
   config: Config;
   setConfig: (newConfig: Config) => void;
   campaignId: string;
+  /** a specific single-coordinate config to duplicate from instead of the campaign itself */
+  singleScanId?: string;
   loading: boolean;
   selectedEntry: string;
   setSelectedEntry: (selectedEntry: string) => void;
@@ -189,7 +192,11 @@ export default function Left({
 
       {readOnly && !!campaignId && (
         <div className="mt-auto w-full border-t border-gray-200 px-2 pt-3 pb-3">
-          <GenerateNewCampaignButton campaignId={campaignId} activity={activity} />
+          <GenerateNewCampaignButton
+            campaignId={campaignId}
+            singleScanId={singleScanId}
+            activity={activity}
+          />
         </div>
       )}
     </div>

@@ -24,10 +24,10 @@ export {
 export {
   buildConfigureUrlForEntity,
   buildScanConfigConfigureHref,
-  buildSimulateConfigureUrlFromDataViewEntity,
   buildWorkflowCrumbs,
   buildWorkflowHomeHref,
   buildWorkflowStartingPageUrl,
+  listLaunchActionsFromDataViewEntity,
   resolveSimulateSourceTypeFromDataView,
   WORKFLOW_HOME_QUERY_KEYS,
 } from './routes';

@@ -1,6 +1,9 @@
+import sortBy from 'es-toolkit/compat/sortBy';
+
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
 import { WorkflowActivityDictValue } from '@/constants';
+import { circuitTypes, getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { createWorkflowSessionId } from '@/features/scan-config/workflow/session';
 import { getSimulateCircuitSourceTypeByScale } from '@/features/scan-config/workflow/simulate-circuit-workflows';
 import { ScanConfigEntitySourceMode } from '@/features/scan-config/workflow/types';
@@ -11,6 +14,7 @@ import {
   type TWorkflowSessionSelectionRef,
   WorkflowSessionSelectionMode,
 } from '@/features/scan-config/workflow/workflow-session-selection';
+import { ActivityRegistry } from '@/ui/segments/workflows/config/activities';
 import {
   featuresSatisfied,
   getWorkflow,
@@ -383,8 +387,19 @@ export function resolveSimulateSourceTypeFromDataView(
   return extendedType;
 }
 
-/** configure URL for "simulate" on entity detail pages (data view action menu) */
-export function buildSimulateConfigureUrlFromDataViewEntity({
+type TDataViewLaunchAction = {
+  activity: TActivityValue;
+  workflow: IWorkflowDescriptor;
+  label: string;
+  href: string;
+};
+
+/**
+ * The workflows an entity detail page can start with the entity as an input, one action each
+ * (Simulate first). A workflow that produced the entity is not an input to it, so workflows
+ * without input types (e-model optimization) never match.
+ */
+export function listLaunchActionsFromDataViewEntity({
   workspace,
   extendedType,
   entityId,
@@ -394,41 +409,67 @@ export function buildSimulateConfigureUrlFromDataViewEntity({
   workspace: WorkspaceContext;
   extendedType: TExtendedEntitiesTypeDict;
   entityId: string;
-  /** the source entity: its `scale` picks the workflow, and the workflow's seed reads the rest */
+  /** the source entity: its `scale` picks the simulate workflow, and each workflow's seed reads the rest */
   entity: object;
   flags?: FeatureFlags;
-}): string | null {
-  const sourceType = resolveSimulateSourceTypeFromDataView(
-    extendedType,
-    entity as { scale?: ICircuit['scale'] }
+}): TDataViewLaunchAction[] {
+  const isCircuit =
+    circuitTypes.includes(extendedType) ||
+    extendedType === ExtendedEntitiesTypeDict.SingleNeuronCircuit;
+  const inputType = isCircuit ? ExtendedEntitiesTypeDict.Circuit : extendedType;
+  const simulatableConfig = getEntityByExtendedType({ type: extendedType })?.isSimulatable;
+  const isSimulatable =
+    typeof simulatableConfig === 'function'
+      ? (simulatableConfig as (entity: object) => boolean)(entity)
+      : Boolean(simulatableConfig);
+
+  const activities = sortBy(Object.values(ActivityRegistry), (activity) =>
+    activity.value === WorkflowActivityDictValue.simulate ? 0 : 1
   );
-  if (!sourceType) {
-    return null;
-  }
 
-  const workflow = getWorkflow({
-    activity: WorkflowActivityDictValue.simulate,
-    sourceType,
-  });
+  return activities.flatMap((activity) => {
+    const isSimulate = activity.value === WorkflowActivityDictValue.simulate;
+    if (activity.disabled || (isSimulate && !isSimulatable)) return [];
+    if (!featuresSatisfied(activity.requiredFeatures, flags)) return [];
 
-  // Gate the simulate entry point on the resolved workflow's feature flags, so the button is
-  // hidden whenever the workflow requires a flag the user doesn't have (e.g. whole-brain sim).
-  if (!workflow || !featuresSatisfied(workflow.requiredFeatures, flags)) {
-    return null;
-  }
+    const type = isSimulate
+      ? resolveSimulateSourceTypeFromDataView(extendedType, entity as { scale?: ICircuit['scale'] })
+      : inputType;
 
-  return buildConfigureUrlForEntity({
-    activity: WorkflowActivityDictValue.simulate,
-    targetType: workflow.targetType,
-    workspace,
-    entityId,
-    entityType: sourceType,
-    // the workflow decides what else travels with the entity (see `workflow/seeding`)
-    seed: workflow.scanConfig?.definition.seed?.build(entity as never),
-    query: {
-      [PanelQueryParam]: WorkflowSimulatePanels.Configuration,
-      [WORKFLOW_SESSION_ID_SEARCH_PARAM]: createWorkflowSessionId(),
-    },
+    return activity.workflows
+      .filter(
+        (workflow) =>
+          !workflow.disabled &&
+          featuresSatisfied(workflow.requiredFeatures, flags) &&
+          (workflow.configurationInputs?.some((input) => input.type === type) ||
+            (workflow.sourceType === type && workflow.sourceType !== workflow.targetType)) &&
+          (workflow.acceptsInput?.(entity) ?? true)
+      )
+      .map((workflow) => ({
+        activity: activity.value,
+        workflow,
+        // a bare activity label ("Extract") means nothing on its own, so name the entity it acts on
+        label:
+          workflow.verb ??
+          [activity.label, getWorkflowEntityLabel(inputType)?.toLowerCase()]
+            .filter(Boolean)
+            .join(' '),
+        href: buildConfigureUrlForEntity({
+          activity: activity.value,
+          targetType: workflow.targetType,
+          workspace,
+          entityId,
+          entityType: type ?? undefined,
+          // the workflow decides what else travels with the entity (see `workflow/seeding`)
+          seed: workflow.scanConfig?.definition.seed?.build(entity as never),
+          query: isSimulate
+            ? {
+                [PanelQueryParam]: WorkflowSimulatePanels.Configuration,
+                [WORKFLOW_SESSION_ID_SEARCH_PARAM]: createWorkflowSessionId(),
+              }
+            : undefined,
+        }),
+      }));
   });
 }
 

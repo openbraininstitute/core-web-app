@@ -29,6 +29,8 @@ export const ValidationWorkflows: readonly IWorkflowDescriptor[] = [
       schemaName: SchemaNameDict.EModelValidationScanConfig,
       configureBinding: validateEModelConfigureBinding(),
     },
+    // the e-model is picked in the editor, listed so its detail page can offer this validation
+    configurationInputs: [{ type: ExtendedEntitiesTypeDict.Emodel }],
     label: 'E-model',
     disabled: false,
   },

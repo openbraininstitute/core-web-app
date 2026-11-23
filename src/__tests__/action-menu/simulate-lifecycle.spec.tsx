@@ -33,7 +33,23 @@ vi.mock('@/hooks/useCopyClipboard', () => ({
 }));
 
 vi.mock('@/ui/segments/workflows/config', () => ({
-  buildSimulateConfigureUrlFromDataViewEntity: () => '/workflows/simulate/configure/test',
+  listLaunchActionsFromDataViewEntity: ({ extendedType }: { extendedType: string }) =>
+    extendedType === 'memodel'
+      ? [
+          {
+            activity: 'simulate',
+            workflow: { targetType: 'me_model_circuit_simulation' },
+            label: 'Simulate',
+            href: '/workflows/simulate/configure/test',
+          },
+          {
+            activity: 'build',
+            workflow: { targetType: 'build_synaptome_campaign' },
+            label: 'Build synaptome',
+            href: '/workflows/build/configure/test',
+          },
+        ]
+      : [],
 }));
 
 const workspace = { virtualLabId: 'vl-1', projectId: 'proj-1' };
@@ -79,14 +95,26 @@ describe('ActionMenu Simulate lifecycle gating', () => {
     expect(simulate).toHaveAttribute('href', '/workflows/simulate/configure/test');
   });
 
+  it('lists one action per launchable workflow', () => {
+    renderActionMenu(
+      makeMemodel({ lifecycle_status: EntityLifecycleStatus.Active }) as EntityTypeValue
+    );
+
+    const build = screen.getByRole('button', { name: /Build synaptome/ });
+    expect(build).toHaveAttribute('href', '/workflows/build/configure/test');
+    expect(build).toHaveAttribute('data-testid', 'data-view-action-build-build_synaptome_campaign');
+  });
+
   it.each([
     EntityLifecycleStatus.Draft,
     EntityLifecycleStatus.Disqualified,
-  ])('shows Simulate disabled for a %s simulatable entity', (status) => {
+  ])('shows every launch action disabled for a %s entity', (status) => {
     renderActionMenu(makeMemodel({ lifecycle_status: status }) as EntityTypeValue);
 
-    const simulate = screen.getByRole('button', { name: /Simulate/ });
-    expect(simulate).toBeDisabled();
-    expect(simulate).not.toHaveAttribute('href');
+    for (const name of [/Simulate/, /Build synaptome/]) {
+      const action = screen.getByRole('button', { name });
+      expect(action).toBeDisabled();
+      expect(action).not.toHaveAttribute('href');
+    }
   });
 });
