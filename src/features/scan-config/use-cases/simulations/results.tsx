@@ -2,15 +2,12 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { get } from 'es-toolkit/compat';
 import { useSearchParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
-import { match } from 'ts-pattern';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { ApiError } from '@/api/error';
 import { runTask } from '@/api/one/runner';
-import { ObiOneTaskTypeDict } from '@/api/one/types/task';
 import { Loader } from '@/components/loader';
 import { useAppNotification } from '@/components/notification';
 import { listAllChildren as listAllSimulationChildren } from '@/entity-configuration/domain/simulation/simulation-campaign';
@@ -31,7 +28,6 @@ import {
   useSimulationResultFiles,
 } from '@/features/scan-config/components/simulation-files';
 import { InOutFilesColumnSkeleton } from '@/features/scan-config/components/skeletons/columns';
-import { errorRegistry } from '@/features/scan-config/error-registry';
 import { ScanConfigItemSearchParam } from '@/features/scan-config/helpers';
 import {
   ActivityCustomFileRenderer,
@@ -54,13 +50,9 @@ import { TaskConfigurationViewer, TaskLogsViewer } from '@/features/task-logs-st
 import { isTerminalActivityStatus } from '@/features/task-runner';
 import { invalidateProjectBalance } from '@/features/task-runner/hooks/use-balance-refresh';
 import { messages } from '@/i18n/en/simulation';
-import { runSimulationBatch } from '@/services/small-scale-simulator/circuit';
-import { MessageType } from '@/services/small-scale-simulator/types';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { getErrorMessage } from '@/utils/error';
 import { log } from '@/utils/logger';
 
-import type { TSimulationLaunchTarget } from '@/entity-configuration/domain/simulation/utils';
 import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import type { TimelineSchema } from '@/features/spike-viewer/config-timeline';
 
@@ -260,11 +252,10 @@ export function SimulationsTab({
     return { names: names.filter((name) => name in nodeSets), nodeSets };
   }, [nodeSets, neuronSetKey]);
 
-  const {
-    notifyLowCredits,
-    reportError: reportLowCredits,
-    creditsModal,
-  } = useLowCredits({ context, subject: 'run the simulation' });
+  const { notifyLowCredits, creditsModal } = useLowCredits({
+    context,
+    subject: 'run the simulation',
+  });
 
   const activeSimulationExecStatus = activeSimulation && localStatusMap.get(activeSimulation.id);
 
@@ -319,10 +310,11 @@ export function SimulationsTab({
     onSimulationStatusLoad,
   } = act;
 
-  const runViaLaunchSystem = async (
-    simIds: string[],
-    { taskType, requiresOfflineTokenConsent }: TSimulationLaunchTarget
-  ) => {
+  const run = async (simIds: string[]) => {
+    if (!launchTarget) return;
+    const { taskType, requiresOfflineTokenConsent } = launchTarget;
+    setSimRequestInProgress(true);
+
     if (requiresOfflineTokenConsent) {
       const consentResult = await ensureOfflineTokenConsent();
       if (!consentResult.ok) {
@@ -379,62 +371,6 @@ export function SimulationsTab({
     }
   };
 
-  // TODO Refactor
-  const run = async (simIds: string[]) => {
-    setSimRequestInProgress(true);
-    if (launchTarget) {
-      return runViaLaunchSystem(simIds, launchTarget);
-    }
-
-    try {
-      await runSimulationBatch({
-        ctx: context,
-        simulationIds: simIds,
-        onInit: () => {
-          // Earliest signal the batch was accepted — credits are reserved from here.
-          invalidateProjectBalance({ queryClient, context });
-          simIds.forEach((simId) => {
-            setSimulationStatus(simId, ActivityStatus.PENDING);
-          });
-          act.onLaunched();
-          setSimRequestInProgress(false);
-        },
-        onMessage: (message) => {
-          match(message)
-            .with({ message_type: MessageType.STATUS }, (msg) => {
-              const simId = msg.ctx?.simulation_id;
-              if (simId) {
-                setSimulationStatus(simId, msg.status as unknown as ActivityStatus);
-              }
-              if (msg.status !== 'done') return;
-              const simulation = simulations.find((s) => s.id === simId);
-              if (!simulation) return;
-              notification.success({
-                message: `Simulation ${simulation?.name} done`,
-              });
-            })
-            .otherwise(() => null);
-        },
-      });
-    } catch (error) {
-      const defaultMsg = messages.RunningSimulationDefaultError;
-
-      if (reportLowCredits(error)) return;
-
-      if (error instanceof ApiError) {
-        const message = getErrorMessage(error.cause?.code, errorRegistry, defaultMsg);
-        return notification.error({ message, duration: 20 });
-      }
-
-      notification.error({ message: defaultMsg, duration: 20 });
-    } finally {
-      setSimRequestInProgress(false);
-    }
-  };
-
-  const simTaskType =
-    launchTarget?.taskType ?? ObiOneTaskTypeDict.IonChannelModelSimulationExecution;
-
   const costModalItems = useMemo(
     () =>
       simulations
@@ -445,16 +381,15 @@ export function SimulationsTab({
 
   const { openModal, modal: costConfirmationModal } = useCostConfirmation({
     items: costModalItems,
-    taskType: simTaskType,
+    taskType: launchTarget?.taskType ?? null,
     workflowLabel: 'simulations',
     context,
     onConfirm: run,
   });
 
-  // Bluenaas only runs ion channel models. Without a target, such as when the model failed to load,
-  // nothing launches.
+  // Without a target, such as when the model failed to load, nothing launches.
   const onLaunch = () => {
-    if (launchTarget || entityType === EntityTypeDict.IonChannelModel) {
+    if (launchTarget) {
       openModal();
       return;
     }
