@@ -1,10 +1,12 @@
 'use client';
 
-import { createContext, use, useSyncExternalStore } from 'react';
+import { createContext, use, useCallback, useSyncExternalStore } from 'react';
+
+import { readBlock, writeBlock } from '@/features/scan-config/store';
 
 import type { ReactNode } from 'react';
 import type { IScanConfigStore } from '@/features/scan-config/store';
-import type { Config } from '@/features/scan-config/types';
+import type { Config, ConfigValue } from '@/features/scan-config/types';
 
 const ScanConfigStoreContext = createContext<IScanConfigStore | null>(null);
 
@@ -33,4 +35,16 @@ export function useConfigValue<TSlice>(selector: (config: Config) => TSlice): TS
 
 export function useSetConfig(): IScanConfigStore['set'] {
   return useScanConfigStore().set;
+}
+
+/** One block of the config and its setter; `entry` selects one entry of a root dictionary. */
+export function useBlockState(rootElement: string, entry?: string) {
+  const { set } = useScanConfigStore();
+  const state = useConfigValue((config) => readBlock(config, rootElement, entry));
+  const setState = useCallback(
+    (next: ConfigValue) => set((config) => writeBlock(config, rootElement, entry, next)),
+    [set, rootElement, entry]
+  );
+
+  return [state, setState] as const;
 }
