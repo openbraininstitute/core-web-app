@@ -53,7 +53,8 @@ export function linkTargetOf(editor: Editor): ILinkTarget {
   const range = mark
     ? { from: Math.min(from, mark.from), to: Math.max(to, mark.to) }
     : { from, to };
-  let onlyText = state.doc.resolve(range.from).sameParent(state.doc.resolve(range.to));
+  const $from = state.doc.resolve(range.from);
+  let onlyText = $from.parent.isTextblock && $from.sameParent(state.doc.resolve(range.to));
   state.doc.nodesBetween(range.from, range.to, (node) => {
     if (node.isInline && !node.isText) onlyText = false;
   });
@@ -65,26 +66,23 @@ export function linkTargetOf(editor: Editor): ILinkTarget {
   };
 }
 
-/** A typed address without a scheme ("example.org") is read as https. */
+// `name:` then a digit is a host and port (localhost:3000); tel: and sms: may start with one.
+const SCHEME = /^(?:[a-z][a-z\d+.-]*:(?!\d)|(?:tel|sms):)/i;
+
+/** An address without a scheme ("example.org", "localhost:3000") is read as https. */
 export const hrefOf = (url: string): string => {
   const trimmed = url.trim();
-  return trimmed.length === 0 || /^[a-z][a-z\d+.-]*:/i.test(trimmed)
-    ? trimmed
-    : `https://${trimmed}`;
+  return trimmed.length === 0 || SCHEME.test(trimmed) ? trimmed : `https://${trimmed}`;
 };
 
 /** False for an address the link mark refuses (a `javascript:` one, say). */
 export const canLink = (editor: Editor, href: string): boolean =>
   href.length > 0 && editor.can().setLink({ href });
 
-/**
- * Sets the link on the target. Unchanged text keeps its other marks (bold, code); a new or
- * edited text replaces the target with plain linked text. Empty text shows the address.
- * The cursor ends after the link, so typing goes on outside it.
- */
+/** Links the target as it is now; renamed text is replaced by plain linked text. */
 export function saveLink(editor: Editor, target: ILinkTarget, edit: ILinkEdit): void {
   const text = edit.text.length > 0 ? edit.text : edit.href;
-  const keep = target.from !== target.to && (text === target.text || !target.textEditable);
+  const keep = target.from !== target.to && (!edit.renamed || !target.textEditable);
   const end = keep ? target.to : target.from + text.length;
   const chain = editor.chain().focus();
   if (!keep) chain.insertContentAt({ from: target.from, to: target.to }, { type: 'text', text });

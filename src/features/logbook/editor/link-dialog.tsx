@@ -15,11 +15,7 @@ const FIELD =
   'w-full rounded-[12px] border border-block-border bg-white px-3 py-2.5 text-[15px] text-primary-9 outline-none focus:border-primary-4 focus:ring-2 focus:ring-primary-1 disabled:bg-fill-2 disabled:text-neutral-4';
 const LABEL = 'flex flex-col gap-1.5 text-[13px] font-bold text-neutral-4';
 
-/**
- * The link dialog, the same modal shell as the log's other dialogs. Opened on a selection it
- * links that text (and may rename it); opened in a link it edits it; opened on nothing it
- * inserts a new named link at the cursor. Mount it to open it.
- */
+/** Adds, edits or removes the link at the selection or cursor. */
 export function LinkDialog({
   editor,
   onClose,
@@ -37,7 +33,6 @@ export function LinkDialog({
   const href = hrefOf(url);
   const valid = canLink(editor, href);
 
-  // showModal() focuses the first field; a selected text goes straight to the address.
   useEffect(() => {
     dialog.current?.showModal();
     (target.text.length > 0 ? urlRef : textRef).current?.focus();
@@ -68,7 +63,10 @@ export function LinkDialog({
         className="flex flex-col gap-4 p-6"
         onSubmit={(event) => {
           event.preventDefault();
-          if (valid) finish(() => saveLink(editor, target, { text, href }));
+          if (valid)
+            finish(() =>
+              saveLink(editor, linkTargetOf(editor), { text, href, renamed: text !== target.text })
+            );
         }}
       >
         <div className="flex items-center justify-between">
@@ -112,7 +110,7 @@ export function LinkDialog({
             <button
               type="button"
               className="mr-auto h-10 rounded-full px-4 text-[14px] font-bold text-destructive hover:bg-fill-2"
-              onClick={() => finish(() => removeLink(editor, target))}
+              onClick={() => finish(() => removeLink(editor, linkTargetOf(editor)))}
             >
               Remove link
             </button>

@@ -478,13 +478,14 @@ export interface ILinkTarget {
   readonly to: number;
   readonly text: string;
   readonly href: string;
-  /** False when the range spans blocks or holds a chip, which a text edit would lose. */
+  /** False unless the range is plain text in one textblock. */
   readonly textEditable: boolean;
 }
 
 export interface ILinkEdit {
   readonly text: string;
   readonly href: string;
+  readonly renamed: boolean;
 }
 
 export const TextStyle = {

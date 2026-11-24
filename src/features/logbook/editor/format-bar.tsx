@@ -106,11 +106,7 @@ export function TextStyleSelect({
   );
 }
 
-/**
- * The link button: it opens the link dialog on the selection or at the cursor. The dialog is
- * portalled to the body: inside the selection bubble it would hide with the bubble, which
- * hides as soon as the editor loses focus to the dialog's fields.
- */
+/** The link button; the dialog is portalled out of the selection bubble, which hides on blur. */
 export function LinkTool({
   editor,
   pressed,

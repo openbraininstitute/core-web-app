@@ -2,16 +2,12 @@ import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
 
-/**
- * The fixed-height box every 3D viewer draws in; the viewers need a definite height. It is
- * platform UI, so the page's text styles stop at it (`data-logbook-foreign`, content.css).
- */
+/** The fixed-height box every 3D viewer draws in; page text styles stop at it. */
 export function ViewerFrame({
   children,
   className,
 }: {
   readonly children: ReactNode;
-  /** A viewer's own height or background, over the default 440px box. */
   readonly className?: string;
 }) {
   return (

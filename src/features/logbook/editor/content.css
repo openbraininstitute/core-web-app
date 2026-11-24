@@ -11,8 +11,7 @@
 .rl-editor-read .ProseMirror {
   padding: 0;
 }
-/* The page's text styles stop at [data-logbook-foreign]: a card's platform UI (a 3D view's
-   lists, headings, tables) keeps its own look. Same specificity as :where(.rl-editor) x. */
+/* Page text styles; not inside [data-logbook-foreign] (platform UI in a card). */
 @scope (.rl-editor) to ([data-logbook-foreign]) {
   h1 {
     margin: 4px 0 12px;

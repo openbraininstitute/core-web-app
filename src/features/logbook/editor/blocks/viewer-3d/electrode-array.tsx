@@ -8,10 +8,7 @@ import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
 
 import type { IViewer3dProps } from '@/features/logbook/types';
 
-/**
- * A recording array as its details page draws it: the electrode list, each one ticked in or
- * out, beside its circuit in 3D with the ticked electrodes overlaid.
- */
+/** A recording array's details-page viewer: electrode list and circuit in 3D. */
 export default function ElectrodeArrayViewer3d({ entityId, project }: IViewer3dProps) {
   const array = useQuery({
     queryKey: keyBuilderLogbook.viewer3d('electrode-array', entityId),
@@ -22,7 +19,6 @@ export default function ElectrodeArrayViewer3d({ entityId, project }: IViewer3dP
     .with({ status: 'pending' }, () => <ViewerMessage text="Loading the array…" />)
     .with({ status: 'error' }, () => <ViewerMessage text="This array can't be shown." />)
     .with({ status: 'success' }, ({ data }) => (
-      // The viewer sets its own height (list and 3D side by side).
       <ViewerFrame className="h-auto bg-neutral-1 p-3">
         <ElectrodeArrayViewer array={data} />
       </ViewerFrame>
