@@ -285,6 +285,11 @@ export default function BlockDictionary({
           </Tooltip>
         );
       })}
+      {/* Fades the cards out at the column's foot; at the list's end it lies under the last one. */}
+      <div
+        aria-hidden
+        className="pointer-events-none sticky -bottom-3 z-10 -mx-3 -mt-2 -mb-3 h-10 shrink-0 self-stretch bg-linear-to-t from-white to-transparent"
+      />
     </div>
   );
 }
