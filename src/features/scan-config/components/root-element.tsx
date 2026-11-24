@@ -1,5 +1,6 @@
 import { WarningFilled } from '@ant-design/icons';
 import { useSetAtom } from 'jotai';
+import { useEffect, useRef } from 'react';
 
 import BlockDictionaryEntries from '@/features/scan-config/components/block-dictionary-entries';
 import { Chevron, CountBadge, LeftMenuTab } from '@/features/scan-config/components/components';
@@ -32,6 +33,54 @@ import type { ErrorObject } from 'ajv';
 import type React from 'react';
 
 import styles from './root-element.module.css';
+
+/** The nearest ancestor that scrolls up and down. */
+function scrollParent(element: HTMLElement): HTMLElement | null {
+  for (let at = element.parentElement; at; at = at.parentElement) {
+    if (/auto|scroll/.test(getComputedStyle(at).overflowY)) return at;
+  }
+  return null;
+}
+
+/** Room left under a dictionary scrolled into view, px. */
+const REVEAL_GAP = 8;
+/** How long a dictionary is followed as it opens: its 0.3 s unfolding and some slack, ms. */
+const REVEAL_FOLLOW = 600;
+
+/** Scrolls the list with a dictionary the user opens, as far as keeps the dictionary's own row. */
+function useRevealOnOpen(isExpanded: boolean) {
+  const ref = useRef<HTMLDivElement>(null);
+  const asked = useRef(false);
+
+  useEffect(() => {
+    if (!isExpanded || !asked.current) return;
+    asked.current = false;
+    const element = ref.current;
+    const scroller = element && scrollParent(element);
+    if (!element || !scroller) return;
+
+    const reveal = () => {
+      const view = scroller.getBoundingClientRect();
+      const box = element.getBoundingClientRect();
+      const hidden = box.bottom + REVEAL_GAP - view.bottom;
+      if (hidden > 0) scroller.scrollTop += Math.max(0, Math.min(hidden, box.top - view.top));
+    };
+    const observer = new ResizeObserver(reveal);
+    observer.observe(element);
+    const stop = window.setTimeout(() => observer.disconnect(), REVEAL_FOLLOW);
+    return () => {
+      observer.disconnect();
+      window.clearTimeout(stop);
+    };
+  }, [isExpanded]);
+
+  return {
+    ref,
+    revealOnOpen: () => {
+      asked.current = true;
+    },
+  };
+}
 
 export function RootElement({
   schema,
@@ -93,6 +142,7 @@ export function RootElement({
   const setExpandedRootElements = useSetAtom(expandedRootElementsAtom);
   const { highlights, hasHighlights, isExpanded, diffClass } = useRootElementDiff(rootElement);
   const hasFieldErrors = useFieldErrorsForPath(rootElement);
+  const { ref, revealOnOpen } = useRevealOnOpen(isExpanded);
   const isSelected = selectedRootElement === rootElement;
   const isBlockDictionary =
     rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary;
@@ -122,7 +172,7 @@ export function RootElement({
   };
 
   return (
-    <div className="w-full flex flex-col gap-0.5">
+    <div ref={ref} className="w-full flex flex-col gap-0.5">
       <Tooltip>
         <TooltipTrigger asChild>
           <span>
@@ -162,6 +212,7 @@ export function RootElement({
                   } else {
                     // Opened, it only shows its blocks: the block picked and its form stay as
                     // they are.
+                    revealOnOpen();
                     setExpandedRootElements((prev) => {
                       const newSet = new Set(prev);
                       newSet.add(rootElement);
