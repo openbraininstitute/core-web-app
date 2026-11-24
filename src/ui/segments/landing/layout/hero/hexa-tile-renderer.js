@@ -613,7 +613,8 @@ void main() {
           smooth((y + view.y - R * 2) / 100);
         let base = mask > ZONE_MIN ? Math.max(0, HEIGHT_MEAN + gauss() * HEIGHT_SD) * mask : 0;
         base *= edgeFactor;
-        const onImage = hasColor.some((f) => f(x, y));
+        const artwork = hasColor.map((hasPixels) => hasPixels(x, y));
+        const onImage = artwork.some(Boolean);
         if (!onImage && base < NOISE_FLOOR_CUT) base = 0;
         if (onImage && base < IMG_MIN_LO)
           base = IMG_MIN_LO + Math.random() * (IMG_MIN_HI - IMG_MIN_LO);
@@ -624,8 +625,8 @@ void main() {
           y,
           base,
           edgeFactor,
-          h: base,
-          prevH: base,
+          h: artwork[cur] ? 0 : base,
+          prevH: artwork[cur] ? 0 : base,
           motion: 0,
           lastH: -1,
           lastE: 0,
@@ -633,6 +634,7 @@ void main() {
           active: base > 0.03,
           delay: Math.random() * FLIP_SPREAD,
           flips: onImage,
+          artwork,
           e: 0,
           busy: false,
         });
@@ -727,6 +729,10 @@ void main() {
     if (!reduced && !trans && now >= nextAuto) startTurn(nextRandom(), now);
 
     for (const t of tiles) {
+      const flatArtwork = t.artwork[cur] || (trans && t.artwork[trans.to]);
+      const distance = Math.hypot(t.x - mouse.x, t.y - mouse.y);
+      const proximity = !reduced && distance < HOVER_RADIUS ? 1 - distance / HOVER_RADIUS : 0;
+      const hover = flatArtwork || t.active ? proximity * proximity * (3 - 2 * proximity) : 0;
       // this tile's part of the turn: t.e = 0 before it starts, eased 0..1 while it turns, 1 when done
       let e = 0,
         turning = false;
@@ -744,7 +750,7 @@ void main() {
       // shine sequence: measured from the start of the latest turn (same for all tiles), so it begins only once
       // every tile has finished turning; a new turn cuts it off
       t.seq = -1;
-      if (t.flips && SEQ_MODES[seqMode] !== 'Off' && !trans) {
+      if (!flatArtwork && t.flips && SEQ_MODES[seqMode] !== 'Off' && !trans) {
         const local = now - lastTurnStart - t.seqStart;
         for (let k = 0; k < SEQ_PASSES; k++) {
           const f = ((local - k * SEQ_PASS_EVERY) * SEQ_FPS) / 1000;
@@ -755,16 +761,19 @@ void main() {
         }
       }
 
+      // Artwork rests at zero height, rising only around the pointer. White tiles keep their layered base.
       if (!turning) {
-        // hover: mouse lift with radial falloff, the same for every active tile
-        const d = Math.hypot(t.x - mouse.x, t.y - mouse.y);
-        let f = 0;
-        if (t.active && d < HOVER_RADIUS) {
-          const k = 1 - d / HOVER_RADIUS;
-          f = k * k * (3 - 2 * k);
-        }
-        t.h += (t.base + f * HOVER_BOOST * t.edgeFactor - t.h) * EASE;
-      } // while turning the mouse is ignored and the tile keeps its height
+        const restingHeight = flatArtwork ? 0 : t.base;
+        t.h += (restingHeight + hover * HOVER_BOOST * t.edgeFactor - t.h) * EASE;
+        if (flatArtwork && hover === 0 && t.h < 0.0001) t.h = 0;
+      }
+      // The exported shining-cube frames play locally on hover instead of running over the idle image.
+      if (flatArtwork && hover > 0.01 && !trans) {
+        if (!t.hovered || t.hoverStarted === undefined) t.hoverStarted = now;
+        const frame = (((now - t.hoverStarted) * SEQ_FPS) / 1000) % (SEQ_FRAMES + SEQ_FPS);
+        t.seq = frame < SEQ_FRAMES ? frame : -1;
+      }
+      t.hovered = hover > 0.01;
 
       // height shine strength: jumps up with the speed, fades out once the tile stops
       const speed = Math.abs(t.h - t.prevH);
@@ -794,7 +803,8 @@ void main() {
       cy = H / 2;
     let count = 0;
     for (const t of tiles) {
-      if (t.h < 0.01 && !t.busy) continue; // flat tiles are the floor itself: not drawn
+      const flatArtwork = t.artwork[cur] || (trans && t.artwork[trans.to]);
+      if (!flatArtwork && t.h < 0.01 && !t.busy) continue; // flat tiles are the floor itself: not drawn
       const s = 1 + t.h * SCALE_PER_H;
       const par = 1 + t.h * SCALE_PER_H * PARALLAX * 0.15;
       let fe = t.e;
@@ -813,7 +823,7 @@ void main() {
       instData[o + 6] = p;
       instData[o + 7] = L0;
       instData[o + 8] = L1;
-      instData[o + 9] = t.busy ? 1 : Math.min(1, t.h / 0.08);
+      instData[o + 9] = flatArtwork || t.busy ? 1 : Math.min(1, t.h / 0.08);
       instData[o + 10] = Math.min(1, Math.max(0, t.h / SHINE_HMAX));
       instData[o + 11] = t.motion;
       instData[o + 12] = t.seq;
