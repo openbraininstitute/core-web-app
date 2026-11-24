@@ -2,7 +2,13 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import BlockDictionaryEntries from '@/features/scan-config/components/block-dictionary-entries';
+import { createScanConfigStore } from '@/features/scan-config/store';
+import {
+  ScanConfigErrorsProvider,
+  ScanConfigStoreProvider,
+} from '@/features/scan-config/use-config-store';
 
+import type { ReactNode } from 'react';
 import type { Config, ConfigSchema, IBlockDictionary } from '@/features/scan-config/types';
 
 // the component only reads `additionalProperties.oneOf` off the schema, so a stub does
@@ -13,13 +19,24 @@ const ROOT_ELEMENT_SCHEMA = {
 const ROOT_ELEMENT = 'stimuli';
 const ENTRY = 'entry_a';
 
-function renderEntries(overrides: Record<string, unknown> = {}) {
-  const config: Config = { [ROOT_ELEMENT]: { [ENTRY]: { type: 'block_type' } } };
+const SCHEMA = { properties: {} } as ConfigSchema;
+
+function renderEntries({
+  config = { [ROOT_ELEMENT]: { [ENTRY]: { type: 'block_type' } } },
+  ...overrides
+}: { config?: Config } & Record<string, unknown> = {}) {
+  const store = createScanConfigStore(config);
+  const withProviders = (children: ReactNode) => (
+    <ScanConfigStoreProvider store={store}>
+      <ScanConfigErrorsProvider schema={SCHEMA}>
+        <input data-testid="outside" />
+        {children}
+      </ScanConfigErrorsProvider>
+    </ScanConfigStoreProvider>
+  );
 
   const props = {
-    config,
-    setConfig: vi.fn(),
-    schema: { properties: {} } as ConfigSchema,
+    schema: SCHEMA,
     rootElementSchema: ROOT_ELEMENT_SCHEMA,
     rootElement: ROOT_ELEMENT,
     selectedEntry: ENTRY,
@@ -33,32 +50,23 @@ function renderEntries(overrides: Record<string, unknown> = {}) {
     setSelectedEntry: vi.fn(),
     setSelectedRootElement: vi.fn(),
     singularName: 'stimulus',
-    allEntries: new Set([ENTRY]),
     newKey: ENTRY,
     setNewKey: vi.fn(),
     isEditingKey: false,
     setIsEditingKey: vi.fn(),
-    errors: null,
     highlights: [],
     visible: true,
     ...overrides,
   } as React.ComponentProps<typeof BlockDictionaryEntries>;
 
-  const utils = render(
-    <>
-      <input data-testid="outside" />
-      <BlockDictionaryEntries {...props} />
-    </>
-  );
+  const utils = render(withProviders(<BlockDictionaryEntries {...props} />));
 
   return {
     ...utils,
+    store,
     rerenderWith: (next: Record<string, unknown> = {}) =>
       utils.rerender(
-        <>
-          <input data-testid="outside" />
-          <BlockDictionaryEntries {...({ ...props, ...next } as typeof props)} />
-        </>
+        withProviders(<BlockDictionaryEntries {...({ ...props, ...next } as typeof props)} />)
       ),
   };
 }
@@ -110,22 +118,19 @@ describe('BlockDictionaryEntries', () => {
       },
     };
     const before = structuredClone(config);
-    const setConfig = vi.fn();
 
-    renderEntries({
+    const { store } = renderEntries({
       config,
-      setConfig,
       rootElement: 'neuron_sets',
       selectedRootElement: 'neuron_sets',
       selectedEntry: 'BioAll',
-      allEntries: new Set(['BioAll', 'Other', 's1', 's2']),
       newKey: 'AllBio123',
       isEditingKey: true,
     });
 
     fireEvent.keyDown(screen.getByDisplayValue('AllBio123'), { key: 'Enter' });
 
-    expect(setConfig).toHaveBeenCalledWith({
+    expect(store.getSnapshot()).toEqual({
       neuron_sets: { AllBio123: { type: 'PredefinedNeuronSet' }, Other: { type: 'IDNeuronSet' } },
       initialize: {
         circuit: { id_str: 'circuit-1' },

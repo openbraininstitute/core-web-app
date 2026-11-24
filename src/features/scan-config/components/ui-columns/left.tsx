@@ -17,7 +17,6 @@ import { EditWithChatButton } from '../edit-with-chat-button';
 import GenerateConfigButton from '../generate-config-button';
 import GenerateNewCampaignButton from '../generate-new-campaign-button';
 
-import type { ErrorObject } from 'ajv';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { Config } from '@/features/scan-config/types';
 
@@ -25,7 +24,6 @@ export default function Left({
   schema,
   selectedRootElement,
   setSelectedRootElement,
-  config,
   setConfig,
   campaignId,
   loading,
@@ -35,9 +33,7 @@ export default function Left({
   readOnly,
   setCampaignId,
   setLoading,
-  errors,
   setTab,
-  allEntries,
   newKey,
   setNewKey,
   isEditingKey,
@@ -53,7 +49,6 @@ export default function Left({
   schema: ConfigSchema;
   selectedRootElement: string;
   setSelectedRootElement: (rootElement: string) => void;
-  config: Config;
   setConfig: (newConfig: Config) => void;
   campaignId: string;
   loading: boolean;
@@ -64,9 +59,6 @@ export default function Left({
   setCampaignId: React.Dispatch<React.SetStateAction<string>>;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
   setTab: (tab: TScanConfigTabs) => void;
-  /** ajv schema errors of the whole config */
-  errors: ErrorObject[] | null;
-  allEntries: Set<string>;
   newKey: string;
   setNewKey: (k: string) => void;
   isEditingKey: boolean;
@@ -143,16 +135,12 @@ export default function Left({
                         rootElementSchema={rootElementSchema}
                         selectedRootElement={selectedRootElement}
                         setSelectedRootElement={setSelectedRootElement}
-                        config={config}
-                        setConfig={setConfig}
                         campaignId={campaignId}
                         loading={loading}
-                        errors={errors}
                         selectedEntry={selectedEntry}
                         setSelectedEntry={setSelectedEntry}
                         setEditing={setEditing}
                         readOnly={readOnly}
-                        allEntries={allEntries}
                         newKey={newKey}
                         setNewKey={setNewKey}
                         isEditingKey={isEditingKey}
@@ -175,8 +163,6 @@ export default function Left({
             loading={loading}
             campaignId={campaignId}
             setCampaignId={setCampaignId}
-            errors={errors}
-            config={config}
             setTab={setTab}
             setLoading={setLoading}
             activity={activity}

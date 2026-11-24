@@ -1,15 +1,20 @@
 'use client';
 
 import { isEqual } from 'es-toolkit';
-import { createContext, use, useCallback, useMemo, useState, useSyncExternalStore } from 'react';
+import { createContext, use, useCallback, useMemo, useSyncExternalStore } from 'react';
 
 import { entryNames } from '@/features/scan-config/commands';
-import { useValidateSchema } from '@/features/scan-config/components/hooks';
-import { createSliceReader, readBlock, writeBlock } from '@/features/scan-config/store';
+import { useConfigValidator } from '@/features/scan-config/components/hooks';
+import {
+  createSliceReader,
+  entrySummariesOf,
+  readBlock,
+  writeBlock,
+} from '@/features/scan-config/store';
 
 import type { ErrorObject } from 'ajv';
 import type { ReactNode } from 'react';
-import type { IScanConfigStore } from '@/features/scan-config/store';
+import type { IScanConfigStore, TEntrySummary } from '@/features/scan-config/store';
 import type { Config, ConfigSchema, ConfigValue } from '@/features/scan-config/types';
 
 const ScanConfigStoreContext = createContext<IScanConfigStore | null>(null);
@@ -56,9 +61,12 @@ export function useWholeConfig(): Config {
 
 type TConfigErrors = ErrorObject[] | null;
 
-const ScanConfigErrorsContext = createContext<TConfigErrors | undefined>(undefined);
+const ScanConfigErrorsContext = createContext<(() => TConfigErrors) | null>(null);
 
-/** Validates the config against the schema in one place; read the result with `useConfigErrors`. */
+/**
+ * Validates the config against the schema once per change, for every reader below it.
+ * Read the result with `useConfigErrors` or `useHasConfigErrors`.
+ */
 export function ScanConfigErrorsProvider({
   schema,
   initialConfig,
@@ -68,24 +76,57 @@ export function ScanConfigErrorsProvider({
   initialConfig?: Config;
   children: ReactNode;
 }) {
-  const config = useWholeConfig();
-  const errors = useValidateSchema({ initialConfig, config, schema });
-  const [stableErrors, setStableErrors] = useState(errors);
-  if (!isEqual(stableErrors, errors)) setStableErrors(errors);
+  const store = useScanConfigStore();
+  const validate = useConfigValidator({ initialConfig, schema });
+  const getErrors = useMemo(() => createSliceReader(store, validate, isEqual), [store, validate]);
 
-  return <ScanConfigErrorsContext value={stableErrors}>{children}</ScanConfigErrorsContext>;
+  return <ScanConfigErrorsContext value={getErrors}>{children}</ScanConfigErrorsContext>;
+}
+
+function useErrorsReader(): () => TConfigErrors {
+  const getErrors = use(ScanConfigErrorsContext);
+  if (!getErrors) {
+    throw new Error('useConfigErrors must be used inside a ScanConfigErrorsProvider');
+  }
+  return getErrors;
 }
 
 export function useConfigErrors(): TConfigErrors {
-  const errors = use(ScanConfigErrorsContext);
-  if (errors === undefined) {
-    throw new Error('useConfigErrors must be used inside a ScanConfigErrorsProvider');
-  }
-  return errors;
+  const getErrors = useErrorsReader();
+  return useSyncExternalStore(useScanConfigStore().subscribe, getErrors, getErrors);
+}
+
+/** Whether a path (`/section` or `/section/entry`) has schema errors; re-renders only when that flips. */
+export function useHasConfigErrors(pathPrefix: string): boolean {
+  const getErrors = useErrorsReader();
+  const hasErrors = () =>
+    getErrors()?.some((error) => error.instancePath.startsWith(pathPrefix)) ?? false;
+  return useSyncExternalStore(useScanConfigStore().subscribe, hasErrors, hasErrors);
 }
 
 export function useSetConfig(): IScanConfigStore['set'] {
   return useScanConfigStore().set;
+}
+
+/** Reads the latest config when called, for event handlers; the component does not subscribe. */
+export function useGetConfig(): () => Config {
+  return useScanConfigStore().getSnapshot;
+}
+
+const sameSummaries = (previous: TEntrySummary[], next: TEntrySummary[]) =>
+  previous.length === next.length &&
+  next.every((entry, index) => {
+    const before = previous[index];
+    return before?.name === entry.name && before.type === entry.type;
+  });
+
+/** The entries of one section, by name and type; re-renders only when that list changes. */
+export function useEntrySummaries(rootElement: string): TEntrySummary[] {
+  const select = useCallback(
+    (config: Config) => entrySummariesOf(config[rootElement]),
+    [rootElement]
+  );
+  return useConfigValue(select, sameSummaries);
 }
 
 /** One block of the config and its setter; `entry` selects one entry of a root dictionary. */
