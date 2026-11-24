@@ -6,7 +6,10 @@ import { useAppNotification } from '@/components/notification';
 import { useLowCredits } from '@/features/low-credits';
 import { useFieldErrors } from '@/features/scan-config/components/hooks/field-errors';
 import { useGenerateScanConfigCampaign } from '@/features/scan-config/components/hooks/use-generate-scan-config-campaign';
-import { LAUNCH_GREEN } from '@/features/scan-config/components/shared/task-launch-button';
+import {
+  LAUNCH_GREEN,
+  TASK_BUTTON_TEXT,
+} from '@/features/scan-config/components/shared/task-launch-button';
 import { ScanConfigResultsTab } from '@/features/scan-config/helpers';
 import {
   ScanConfigActivity,
@@ -124,7 +127,8 @@ export default function GenerateConfigButton({
         data-testid="scan-config-submit"
         className={classNames(
           // The 3D Player button's font in the launch button's green.
-          'flex min-h-12.5 p-2 w-full items-center justify-center rounded-full text-sm font-semibold ring-1 ring-black/5',
+          'flex min-h-12.5 p-2 w-full items-center justify-center rounded-full ring-1 ring-black/5',
+          TASK_BUTTON_TEXT,
           hasBlockingErrors || loading
             ? 'bg-gray-300 text-gray-500'
             : `${LAUNCH_GREEN} ${GENERATE_CLICKABLE} text-white`
