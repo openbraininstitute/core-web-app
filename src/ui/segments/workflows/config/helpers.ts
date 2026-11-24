@@ -103,15 +103,45 @@ export function getWorkflowEntityLabel(
   return getEntityMeta(value)?.label ?? getEntityByExtendedType({ type: value })?.title ?? null;
 }
 
+function workflowEntity(workflow: IWorkflowDescriptor): TEntityTypeMeta {
+  return (
+    EntityTypeCatalog[workflow.sourceType] ?? {
+      value: workflow.sourceType,
+      group: EntityGroupDict.Cellular,
+      label: workflow.label ?? String(workflow.sourceType),
+    }
+  );
+}
+
+function workflowLabel(workflow: IWorkflowDescriptor): string {
+  return workflow.label ?? workflowEntity(workflow).label;
+}
+
+/** The Category and Type a workflow listing is labelled with, as its pickers name them. */
+export function getWorkflowListingLabels(opts: {
+  activity: TActivityValue | string | null | undefined;
+  targetType: TExtendedEntitiesTypeDict | null | undefined;
+}): { category: string; type: string } {
+  const { targetType } = opts;
+  const activity = getActivity(opts.activity);
+  const workflow =
+    activity && targetType
+      ? workflowsFor(activity, WorkflowListContextDict.Browse).find(
+          (each) => each.targetType === targetType
+        )
+      : undefined;
+  const fallbackType = targetType ? getEntityByExtendedType({ type: targetType })?.title : null;
+  return {
+    category: activity?.label ?? '',
+    type: workflow ? workflowLabel(workflow) : (fallbackType ?? '-'),
+  };
+}
+
 function resolveWorkflow(
   workflow: IWorkflowDescriptor,
   flags: FeatureFlags | undefined
 ): ResolvedWorkflow {
-  const entity = EntityTypeCatalog[workflow.sourceType] ?? {
-    value: workflow.sourceType,
-    group: EntityGroupDict.Cellular,
-    label: workflow.label ?? String(workflow.sourceType),
-  };
+  const entity = workflowEntity(workflow);
   const entityFeaturesSatisfied = featuresSatisfied(entity.requiredFeatures, flags);
   const workflowFeaturesSatisfied = featuresSatisfied(workflow.requiredFeatures, flags);
   const disabled =
@@ -120,7 +150,7 @@ function resolveWorkflow(
     ...workflow,
     entity,
     disabled,
-    label: workflow.label ?? entity.label,
+    label: workflowLabel(workflow),
     legacy: workflow.legacy ?? entity.legacy ?? false,
   };
 }
