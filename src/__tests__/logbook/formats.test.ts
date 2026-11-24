@@ -152,6 +152,10 @@ test('an address without a scheme reads as https, and an unsafe one is refused',
   expect(hrefOf('localhost:3000')).toBe('https://localhost:3000');
   expect(hrefOf('example.org:8080/x')).toBe('https://example.org:8080/x');
   expect(hrefOf('tel:123')).toBe('tel:123');
+  expect(hrefOf('mailto:123@b.org')).toBe('mailto:123@b.org');
+  expect(hrefOf('callto:5551234')).toBe('callto:5551234');
+  expect(hrefOf('localhost:3000/x?y#z')).toBe('https://localhost:3000/x?y#z');
+  expect(hrefOf('javascript:alert(1)')).toBe('javascript:alert(1)');
   expect(canLink(editor, hrefOf('localhost:3000'))).toBe(true);
   expect(canLink(editor, 'https://example.org')).toBe(true);
   expect(canLink(editor, 'javascript:alert(1)')).toBe(false);

@@ -66,13 +66,17 @@ export function linkTargetOf(editor: Editor): ILinkTarget {
   };
 }
 
-// `name:` then a digit is a host and port (localhost:3000); tel: and sms: may start with one.
-const SCHEME = /^(?:[a-z][a-z\d+.-]*:(?!\d)|(?:tel|sms):)/i;
+const SCHEME = /^[a-z][a-z\d+.-]*:/i;
+// Digits up to the end or a / ? # after the colon are a port (localhost:3000), not a scheme.
+const HOST_PORT = /^[^:/?#]+:\d+(?:[/?#]|$)/;
+const DIAL = /^(?:tel|sms|callto):/i;
+const hasScheme = (url: string): boolean =>
+  DIAL.test(url) || (SCHEME.test(url) && !HOST_PORT.test(url));
 
 /** An address without a scheme ("example.org", "localhost:3000") is read as https. */
 export const hrefOf = (url: string): string => {
   const trimmed = url.trim();
-  return trimmed.length === 0 || SCHEME.test(trimmed) ? trimmed : `https://${trimmed}`;
+  return trimmed.length === 0 || hasScheme(trimmed) ? trimmed : `https://${trimmed}`;
 };
 
 /** False for an address the link mark refuses (a `javascript:` one, say). */
