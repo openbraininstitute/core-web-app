@@ -1,14 +1,10 @@
-import { type IWalkthrough, WALKTHROUGH_SHOT } from '@/features/learn/walkthroughs';
+import type { IWalkthrough } from '@/features/learn/walkthroughs';
 
 /** A4 on its side, pt. */
 const PAGE = { w: 842, h: 595 };
 const MARGIN = 40;
-const IMAGE = {
-  w: PAGE.w - 2 * MARGIN,
-  h: ((PAGE.w - 2 * MARGIN) * WALKTHROUGH_SHOT.h) / WALKTHROUGH_SHOT.w,
-  y: 26,
-};
-const SCALE = IMAGE.w / WALKTHROUGH_SHOT.w;
+/** The room for a screenshot, under the step's words. */
+const ROOM = { w: PAGE.w - 2 * MARGIN, h: 430, y: 26 };
 const GREEN = '0.22 0.62 0.05';
 const NAVY = '0 0.153 0.4';
 const GREY = '0.45 0.45 0.45';
@@ -69,15 +65,23 @@ export function walkthroughPages(walkthrough: IWalkthrough) {
 type TPage = ReturnType<typeof walkthroughPages>[number];
 
 function pageContent(walkthrough: IWalkthrough, page: TPage, at: number, of: number): string {
-  const top = IMAGE.y + IMAGE.h;
+  const { shot } = walkthrough;
+  const scale = Math.min(ROOM.w / shot.w, ROOM.h / shot.h);
+  const image = {
+    x: (PAGE.w - shot.w * scale) / 2,
+    y: ROOM.y + ROOM.h - shot.h * scale,
+    w: shot.w * scale,
+    h: shot.h * scale,
+  };
+  const top = image.y + image.h;
   const marks = page.clicks.map(({ box, radius, number }) => {
-    const w = box.w * SCALE;
-    const h = box.h * SCALE;
-    const x = MARGIN + box.x * SCALE;
-    const y = top - box.y * SCALE - h;
-    const r = Math.min(w / 2, h / 2, radius === undefined ? Infinity : radius * SCALE);
+    const w = box.w * scale;
+    const h = box.h * scale;
+    const x = image.x + box.x * scale;
+    const y = top - box.y * scale - h;
+    const r = Math.min(w / 2, h / 2, radius === undefined ? Infinity : radius * scale);
     const badge = 8;
-    const bx = Math.max(x, MARGIN + badge);
+    const bx = Math.max(x, image.x + badge);
     const by = Math.min(y + h, top - badge);
     return [
       `q ${GREEN} RG 2 w ${roundedRect(x, y, w, h, r)} S Q`,
@@ -99,8 +103,8 @@ function pageContent(walkthrough: IWalkthrough, page: TPage, at: number, of: num
         '0.15 0.15 0.15'
       )
     ),
-    `q ${n(IMAGE.w)} 0 0 ${n(IMAGE.h)} ${MARGIN} ${IMAGE.y} cm /Im Do Q`,
-    `q 0.85 0.85 0.85 RG 0.75 w ${roundedRect(MARGIN, IMAGE.y, IMAGE.w, IMAGE.h, 0)} S Q`,
+    `q ${n(image.w)} 0 0 ${n(image.h)} ${n(image.x)} ${n(image.y)} cm /Im Do Q`,
+    `q 0.85 0.85 0.85 RG 0.75 w ${roundedRect(image.x, image.y, image.w, image.h, 0)} S Q`,
     ...marks,
   ].join('\n');
 }
@@ -147,7 +151,7 @@ export function walkthroughPdf(
     if (!bytes) throw new Error(`No screenshot for ${image}`);
     object(
       imageId(image),
-      `<< /Type /XObject /Subtype /Image /Width ${WALKTHROUGH_SHOT.w} /Height ${WALKTHROUGH_SHOT.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${bytes.length} >>\nstream\n`,
+      `<< /Type /XObject /Subtype /Image /Width ${walkthrough.shot.w} /Height ${walkthrough.shot.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${bytes.length} >>\nstream\n`,
       bytes,
       '\nendstream'
     );
@@ -179,8 +183,8 @@ export function walkthroughPdf(
   return pdf;
 }
 
-/** Makes the walkthrough's PDF in the browser and saves it. */
-export async function downloadWalkthroughPdf(walkthrough: IWalkthrough) {
+/** Makes the walkthrough's PDF in the browser, from its screenshots. */
+export async function makeWalkthroughPdf(walkthrough: IWalkthrough): Promise<Blob> {
   const images = [...new Set(walkthroughPages(walkthrough).map((page) => page.image))];
   const jpegs = new Map(
     await Promise.all(
@@ -191,12 +195,5 @@ export async function downloadWalkthroughPdf(walkthrough: IWalkthrough) {
       })
     )
   );
-  const url = URL.createObjectURL(
-    new Blob([walkthroughPdf(walkthrough, jpegs)], { type: 'application/pdf' })
-  );
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `${walkthrough.id}.pdf`;
-  link.click();
-  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  return new Blob([walkthroughPdf(walkthrough, jpegs)], { type: 'application/pdf' });
 }
