@@ -125,3 +125,7 @@ export function makeTaskLogsFile({
     renderer: ActivityCustomFileRenderer.TaskLogsViewer,
   };
 }
+
+export function isTaskLogsFile(file: TActivityCustomFile): boolean {
+  return file.renderer === ActivityCustomFileRenderer.TaskLogsViewer;
+}

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 
 import { isAssetBackedFile } from '@/features/scan-config/types';
+import { isTaskLogsFile } from '@/features/task-logs-stream/descriptor';
 
 import type { TActivityCustomFile } from '@/features/scan-config/types';
 
@@ -10,6 +11,11 @@ type Props = {
   inputFiles: TActivityCustomFile[];
   outputFiles: TActivityCustomFile[];
   onSelect: (file: TActivityCustomFile) => void;
+  /**
+   * Whether the run's result is in. While it is `false`, a picked task log gives way to the
+   * first result file once it is `true`; left out, a pick is kept.
+   */
+  resultReady?: boolean;
 };
 
 /** The stable per-row key: every row sets `id`, a file row's asset id, else the entity id. */
@@ -28,19 +34,35 @@ export function useAutoSelectFileOnConfigChange({
   inputFiles,
   outputFiles,
   onSelect,
+  resultReady,
 }: Props) {
   const previousConfigId = useRef<string | null>(null);
   const pendingOutputSelectionForConfigId = useRef<string | null>(null);
+  const provisionalPick = useRef<TActivityCustomFile | null>(null);
 
   useEffect(() => {
+    const pick = (file: TActivityCustomFile) => {
+      if (!isSameFile(selectedFile, file)) onSelect(file);
+      provisionalPick.current = resultReady === false && isTaskLogsFile(file) ? file : null;
+    };
+
     if (previousConfigId.current !== configId) {
       previousConfigId.current = configId;
       pendingOutputSelectionForConfigId.current = configId;
+      provisionalPick.current = null;
 
       const preferred = outputFiles[0] ?? inputFiles[0];
-      if (preferred && !isSameFile(selectedFile, preferred)) {
-        onSelect(preferred);
-      }
+      if (preferred) pick(preferred);
+      return;
+    }
+
+    const provisional = provisionalPick.current;
+    if (provisional && !isSameFile(selectedFile, provisional)) {
+      provisionalPick.current = null;
+    } else if (provisional && resultReady) {
+      provisionalPick.current = null;
+      const result = outputFiles.find((file) => !isTaskLogsFile(file));
+      if (result) onSelect(result);
       return;
     }
 
@@ -48,9 +70,7 @@ export function useAutoSelectFileOnConfigChange({
     const firstOutput = outputFiles[0];
     if (!firstOutput) return;
 
-    if (!isSameFile(selectedFile, firstOutput)) {
-      onSelect(firstOutput);
-    }
+    pick(firstOutput);
     pendingOutputSelectionForConfigId.current = null;
-  }, [configId, inputFiles, onSelect, outputFiles, selectedFile]);
+  }, [configId, inputFiles, onSelect, outputFiles, selectedFile, resultReady]);
 }

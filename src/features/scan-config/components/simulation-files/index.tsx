@@ -180,7 +180,8 @@ export function SimulationFiles({
   // Nothing is picked while the result's files load: the logs row comes in ahead
   // of them, and the pick is made once. Arriving, the tab opens on the spikes (an ion
   // channel model's on its recordings); a pick of another simulation keeps the file
-  // on show until its like is in.
+  // on show until its like is in. A run's log picked while it ran gives way to its
+  // result once it is done.
   const awaitingResult = outputAvailable && outputLoading;
   useAutoSelectFileOnConfigChange({
     configId: simulation.id,
@@ -188,6 +189,7 @@ export function SimulationFiles({
     inputFiles: awaitingResult ? NO_FILES : prioritizedInputFiles,
     outputFiles: awaitingResult ? NO_FILES : prioritizedOutputFiles,
     onSelect,
+    resultReady: execStatus === ActivityStatus.DONE && !outputLoading,
   });
 
   // The circuit's files, the simulation's and its result's, each as one pill that opens to list them.
