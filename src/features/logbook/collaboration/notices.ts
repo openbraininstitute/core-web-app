@@ -102,6 +102,7 @@ const EMPTY: ICollaborationSnapshot = {
   agents: [],
   readOnly: null,
   rejoinAt: null,
+  outdated: false,
 };
 
 export class CollaborationNotices {
@@ -125,6 +126,11 @@ export class CollaborationNotices {
 
   connected(): void {
     this.#set({ readOnly: null, peersSeq: -1 });
+  }
+
+  // Kept through a reconnect, unlike the server's read-only reasons: only a reload loads the schema.
+  outdated(): void {
+    if (!this.#state.outdated) this.#set({ outdated: true });
   }
 
   refused(at: number): void {

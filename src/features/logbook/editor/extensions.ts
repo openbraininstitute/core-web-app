@@ -6,7 +6,7 @@ import { Markdown } from '@tiptap/markdown';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { ReactNodeViewRenderer } from '@tiptap/react';
-import { isNil } from 'es-toolkit';
+import { isNil, noop } from 'es-toolkit';
 
 import { BLOCK_TYPES, contentExtensions } from '@/features/logbook/blocks/extensions';
 import { CollaborationChanges } from '@/features/logbook/collaboration/changes';
@@ -15,7 +15,9 @@ import { CalloutView } from '@/features/logbook/editor/blocks/callout-view';
 import { EntityView } from '@/features/logbook/editor/blocks/entity-view';
 import { FigureView } from '@/features/logbook/editor/blocks/figure-view';
 import { FileView } from '@/features/logbook/editor/blocks/file-view';
+import { PageLinkView } from '@/features/logbook/editor/blocks/page-link-view';
 import { tokenize } from '@/features/logbook/editor/highlight';
+import { PageLinkKeys } from '@/features/logbook/editor/page-link';
 import { TokenKind } from '@/features/logbook/types';
 
 import type { HocuspocusProvider } from '@hocuspocus/provider';
@@ -31,6 +33,7 @@ const views: Readonly<Record<string, ComponentType<ReactNodeViewProps>>> = {
   file: FileView,
   figure: FigureView,
   callout: CalloutView,
+  pageLink: PageLinkView,
 };
 
 /** Cancels a drag that starts inside a block card's own UI; page text in a callout still drags. */
@@ -52,6 +55,13 @@ const InnerDragGuard = Extension.create({
     }),
   ],
 });
+
+/**
+ * A block this build does not know (a newer release wrote it) would otherwise be deleted from the
+ * shared page. With this, the sync skips it and writes nothing more from this tab; `onOutdated`
+ * tells the page to turn read-only and ask for a reload.
+ */
+export const guardedSync = (onOutdated: () => void) => ({ onInvalidContent: onOutdated });
 
 export const withViews = (): AnyExtension[] => [
   ...contentExtensions.map((extension) => {
@@ -144,7 +154,11 @@ export function editorExtensions(options: IEditorOptions): AnyExtension[] {
       types: [...BLOCK_TYPES],
       filterTransaction: (transaction) => !isChangeOrigin(transaction),
     }),
-    Collaboration.configure({ document: provider.document, field: FRAGMENT }),
+    Collaboration.configure({
+      document: provider.document,
+      field: FRAGMENT,
+      ySyncOptions: guardedSync(options.onOutdated),
+    }),
     CollaborationCaret.configure({
       provider,
       user: { userId: me.key, name: me.name, color: me.colour } satisfies ICaretUser,
@@ -155,6 +169,7 @@ export function editorExtensions(options: IEditorOptions): AnyExtension[] {
     }),
     Markdown,
     CodeHighlight,
+    PageLinkKeys,
     CollaborationChanges.configure({
       doc: provider.document,
       feed: options.feed,
@@ -168,6 +183,6 @@ export function editorExtensions(options: IEditorOptions): AnyExtension[] {
 
 export const previewExtensions = (document: HocuspocusProvider['document']): AnyExtension[] => [
   ...withViews(),
-  Collaboration.configure({ document, field: FRAGMENT }),
+  Collaboration.configure({ document, field: FRAGMENT, ySyncOptions: guardedSync(noop) }),
   CodeHighlight,
 ];

@@ -195,6 +195,11 @@ export const CalloutKind = { Note: 'note', Tip: 'tip', Warning: 'warning' } as c
 
 export type TCalloutKind = TValueOf<typeof CalloutKind>;
 
+/** A directive on its own line (`::entity[…]{…}`) or inside a line (`:page[…]{…}`). */
+export const DirectiveLevel = { Block: 'block', Inline: 'inline' } as const;
+
+export type TDirectiveLevel = TValueOf<typeof DirectiveLevel>;
+
 export interface IBoardProps {
   readonly me: IMe;
   readonly project: WorkspaceContext;
@@ -414,6 +419,8 @@ export interface ICollaborationSnapshot {
   readonly agents: readonly IPresentAgent[];
   readonly readOnly: TReadOnlyReason | null;
   readonly rejoinAt: number | null;
+  /** The page holds a block this build does not know: it stays read-only until a reload. */
+  readonly outdated: boolean;
 }
 
 export interface IRejoinProvider {
@@ -527,6 +534,21 @@ export interface IView {
 export interface ILogContext {
   readonly project: WorkspaceContext;
   readonly logId: string;
+}
+
+/** What a key does in the open page list. */
+export const ListKey = { Down: 'down', Up: 'up', Pick: 'pick', Close: 'close' } as const;
+
+export type TListKey = TValueOf<typeof ListKey>;
+
+/** The open page list's key handler: true when the list used the key. */
+export type TPageListKeys = (event: KeyboardEvent) => boolean;
+
+/** `[[name` typed at the caret: the range it covers and the name so far. */
+export interface IPageQuery {
+  readonly from: number;
+  readonly to: number;
+  readonly text: string;
 }
 
 export interface IPickedEntity {
@@ -873,6 +895,7 @@ export interface IEditorOptions {
   readonly caretName: (user: Record<string, unknown>) => string;
   readonly highlights: () => boolean;
   readonly ready: () => boolean;
+  readonly onOutdated: () => void;
 }
 
 export interface ILogPageProps extends IPageViewProps {
@@ -900,6 +923,7 @@ export interface ILogShared extends ILogPageProps {
   readonly setNotice: (notice: INotice) => void;
   readonly openArtifact: (id: string) => void;
   readonly readOnly: TReadOnlyReason | null;
+  readonly outdated: boolean;
   readonly awarenessStates: () => Map<number, Record<string, unknown>>;
   readonly learnWriters: (clientIds: readonly number[]) => void;
 }

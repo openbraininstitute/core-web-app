@@ -161,6 +161,7 @@ export function LogPage(props: ILogPageProps) {
         },
         highlights: () => liveSettings.get().highlights,
         ready: () => provider.isSynced,
+        onOutdated: () => notices.outdated(),
       }),
       editable: mode === ViewMode.Edit,
       shouldRerenderOnTransaction: false,
@@ -188,7 +189,9 @@ export function LogPage(props: ILogPageProps) {
   const readOnly = useSyncExternalStore(notices.subscribe, () => notices.snapshot().readOnly);
   useRejoin(provider, notices);
   const rejoinAt = useSyncExternalStore(notices.subscribe, () => notices.snapshot().rejoinAt);
-  const canEdit = mode === ViewMode.Edit && isNil(readOnly) && isNil(rejoinAt) && !props.deleted;
+  const outdated = useSyncExternalStore(notices.subscribe, () => notices.snapshot().outdated);
+  const canEdit =
+    mode === ViewMode.Edit && isNil(readOnly) && isNil(rejoinAt) && !outdated && !props.deleted;
   useEffect(() => {
     editor.setEditable(canEdit);
   }, [editor, canEdit]);
@@ -307,6 +310,7 @@ export function LogPage(props: ILogPageProps) {
     setNotice,
     openArtifact,
     readOnly,
+    outdated,
     learnWriters,
     awarenessStates: () => awareness.getStates(),
   };
