@@ -19,7 +19,8 @@ import {
 } from '@/features/scan-config/types';
 import { messages } from '@/i18n/en/scan-config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { assertErrorMessage, classNames } from '@/util/utils';
+import { assertErrorMessage } from '@/util/utils';
+import { cn } from '@/utils/css-class';
 
 import type { ErrorObject } from 'ajv';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -125,13 +126,13 @@ export default function GenerateConfigButton({
       <button
         type="button"
         data-testid="scan-config-submit"
-        className={classNames(
+        className={cn(
           // The 3D Player button's font in the launch button's green.
           'flex min-h-12.5 p-2 w-full items-center justify-center rounded-full ring-1 ring-black/5',
           TASK_BUTTON_TEXT,
           hasBlockingErrors || loading
             ? 'bg-gray-300 text-gray-500'
-            : `${LAUNCH_GREEN} ${GENERATE_CLICKABLE} text-white`
+            : [LAUNCH_GREEN, GENERATE_CLICKABLE, 'text-white']
         )}
         onClick={onClick}
         disabled={hasBlockingErrors || loading}

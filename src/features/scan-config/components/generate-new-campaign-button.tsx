@@ -23,7 +23,7 @@ import {
   resolveWorkflowConfigureHrefForEntity,
   WorkflowConfigureOutcomeDict,
 } from '@/ui/segments/workflows/config/entity-entry';
-import { classNames } from '@/util/utils';
+import { cn } from '@/utils/css-class';
 
 import type { TScanConfigActivity } from '@/features/scan-config/types';
 
@@ -89,11 +89,11 @@ export default function GenerateNewCampaignButton({
     <button
       type="button"
       data-testid="scan-config-generate-new-campaign"
-      className={classNames(
+      className={cn(
         // As the generate button an editable configuration has.
         'flex min-h-12.5 p-2 w-full items-center justify-center rounded-full ring-1 ring-black/5',
         TASK_BUTTON_TEXT,
-        loading ? 'bg-gray-300 text-gray-500' : `${LAUNCH_GREEN} ${GENERATE_CLICKABLE} text-white`
+        loading ? 'bg-gray-300 text-gray-500' : [LAUNCH_GREEN, GENERATE_CLICKABLE, 'text-white']
       )}
       onClick={onClick}
       disabled={loading}
