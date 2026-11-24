@@ -11,6 +11,7 @@ import { obioneApi } from '@/api/one/utils';
 import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
+import { useConfigValue } from '@/features/scan-config/use-config-store';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   Select,
@@ -25,6 +26,7 @@ import { cn } from '@/utils/css-class';
 import type {
   Config,
   ConfigSchema,
+  ConfigValue,
   SelectRecordableIonChannelVariable as SelectRecordableIonChannelVariableSchema,
 } from '@/features/scan-config/types';
 
@@ -54,8 +56,9 @@ function encodeValue(channelKey: string, variableName: string): string {
   return `${channelKey}${SEPARATOR}${variableName}`;
 }
 
-function extractIonChannelIds(config: Config): string[] {
-  const ionChannelModels = config.ion_channel_models;
+const selectIonChannelModels = (config: Config) => config.ion_channel_models;
+
+function extractIonChannelIds(ionChannelModels: ConfigValue | undefined): string[] {
   if (!ionChannelModels || typeof ionChannelModels === 'string') return [];
 
   const ids: Array<string> = [];
@@ -186,20 +189,19 @@ export function SelectRecordableIonChannelVariable({
   value,
   onChange,
   disabled,
-  config,
   paramSchema,
   schema,
 }: {
   value: VariableValue | null | undefined;
   onChange: (v: VariableValue | null) => void;
   disabled: boolean;
-  config: Config;
   paramSchema: SelectRecordableIonChannelVariableSchema;
   schema: ConfigSchema;
 }) {
   const context = useWorkspace();
   const [expandedChannels, setExpandedChannels] = useState<Set<string>>(new Set());
-  const ionChannelIds = useMemo(() => extractIonChannelIds(config), [config]);
+  const ionChannelModels = useConfigValue(selectIonChannelModels);
+  const ionChannelIds = useMemo(() => extractIonChannelIds(ionChannelModels), [ionChannelModels]);
   const endpoint = useMemo(() => resolveEndpoint(schema, 'IonChannelModel'), [schema]);
   const valueTypeConst = paramSchema.properties?.type?.const;
 

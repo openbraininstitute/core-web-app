@@ -6,11 +6,6 @@ import {
   MEModelCompatibilityResult,
 } from '@/features/scan-config/components/memodel-compatibility';
 import { Left, Middle } from '@/features/scan-config/components/ui-columns';
-import {
-  useConfigErrors,
-  useEntryNames,
-  useWholeConfig,
-} from '@/features/scan-config/use-config-store';
 import { cn } from '@/utils/css-class';
 
 import type { ScanConfigTemplateProps } from './types';
@@ -60,9 +55,6 @@ export function LeftColumn({ props, state }: ColumnProps) {
  * container (scroll, borders, any sub-column grid) is owned by each layout.
  */
 export function MiddleColumnContent({ props, state }: ColumnProps) {
-  const config = useWholeConfig();
-  const errors = useConfigErrors();
-  const allEntries = useEntryNames(props.schema);
   const { selectedSchema } = state;
   if (!state.editing || selectedSchema === undefined) return null;
 
@@ -80,10 +72,7 @@ export function MiddleColumnContent({ props, state }: ColumnProps) {
         setSelectedEntry={state.setSelectedEntry}
         campaignId={state.campaignId}
         loading={state.loading}
-        config={config}
-        setConfig={state.setConfig}
         entity={props.entity}
-        allEntries={allEntries}
         onNewBlockClick={() => {
           state.setNewKey('');
           state.setIsEditingKey(false);
@@ -94,9 +83,8 @@ export function MiddleColumnContent({ props, state }: ColumnProps) {
         selectedMechanismsTab={state.selectedMechanismsTab}
         selectedRegionChoice={state.selectedRegionChoice}
         setSelectedRegionChoice={state.setSelectedRegionChoice}
-        errors={errors}
       />
-      {showsMEModelCompatibility && <MEModelCompatibilityResult config={config} />}
+      {showsMEModelCompatibility && <MEModelCompatibilityResult />}
     </>
   );
 }

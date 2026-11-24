@@ -21,7 +21,6 @@ export type CircuitGlobalProps = TUseCircuitManipulationDataParams & {
  * @see Global
  */
 export function CircuitGlobal({
-  config,
   state,
   setState,
   sourceField,
@@ -33,7 +32,6 @@ export function CircuitGlobal({
   errorPathPrefix,
 }: CircuitGlobalProps) {
   const { data, loading, reason } = useCircuitManipulationData({
-    config,
     state,
     setState,
     sourceField,

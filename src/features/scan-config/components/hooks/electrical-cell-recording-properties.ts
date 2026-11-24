@@ -71,17 +71,16 @@ export function resolveRecordingPropertiesEndpoint(schema: ConfigSchema): string
  * removing a recording refetches, reordering the same selection does not.
  */
 export function useElectricalCellRecordingProperties({
-  config,
+  recordingIds,
   schema,
   workspace,
   enabled = true,
 }: {
-  config: Config;
+  recordingIds: string[];
   schema: ConfigSchema;
   workspace: WorkspaceContext;
   enabled?: boolean;
 }) {
-  const recordingIds = extractRecordingIds(config);
   const endpoint = resolveRecordingPropertiesEndpoint(schema);
   const sortedIds = [...recordingIds].sort();
 

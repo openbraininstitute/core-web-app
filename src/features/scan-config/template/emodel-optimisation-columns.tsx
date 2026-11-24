@@ -1,5 +1,6 @@
 'use client';
 
+import { isEqual } from 'es-toolkit';
 import { useEffect } from 'react';
 
 import { usePreviewRecord } from '@/features/scan-config/bridge/entity-preview';
@@ -7,7 +8,6 @@ import { IonChannelModelsPanel } from '@/features/scan-config/components/ui-bloc
 import {
   assignedModelIds,
   availableDistributions,
-  errorsUnder,
   nonParameterErrors,
   parameterErrors,
   readMechanisms,
@@ -23,8 +23,8 @@ import {
 } from '@/features/scan-config/types';
 import {
   useBlockState,
-  useConfigErrors,
-  useWholeConfig,
+  useConfigErrorsUnder,
+  useConfigValue,
 } from '@/features/scan-config/use-config-store';
 import { cn } from '@/utils/css-class';
 
@@ -127,13 +127,12 @@ export function EModelOptimisationColumns({ props, state }: Props) {
     Boolean(rootSchema && preview) &&
     selectedMechanismsTab === EModelOptimisationMechanismsTabs.MechanismSelection;
 
-  const config = useWholeConfig();
-  const errors = useConfigErrors();
+  const distributions = useConfigValue(availableDistributions, isEqual);
+  const emodelErrors = useConfigErrorsUnder(`/${selectedRootElement}`);
   const [storedValue, writeValue] = useBlockState(selectedRootElement);
   const value = storedValue ?? null;
   // Each tab's drawers flag only the errors of the keys that tab writes: Region Assignment the region
   // entries, Parameters Selection their parameters.
-  const emodelErrors = errorsUnder(errors, `/${selectedRootElement}`);
   const assignmentErrors = nonParameterErrors(emodelErrors);
   const parametersErrors = parameterErrors(emodelErrors);
 
@@ -229,7 +228,7 @@ export function EModelOptimisationColumns({ props, state }: Props) {
               onChange={writeValue}
               disabled={editingLocked}
               errors={parametersErrors}
-              availableDistributions={availableDistributions(config)}
+              availableDistributions={distributions}
             />
           </DrawerColumn>
         )}

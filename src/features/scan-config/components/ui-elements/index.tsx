@@ -1,5 +1,7 @@
 import { Input } from 'antd';
+import { isEqual } from 'es-toolkit';
 import { get } from 'es-toolkit/compat';
+import { type ComponentProps, useCallback } from 'react';
 import { match, P } from 'ts-pattern';
 
 import { getExtendedTypeByTaskResultType } from '@/entity-configuration/domain/helpers';
@@ -77,6 +79,7 @@ import {
   ScanConfigUIElementDict,
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
+import { useConfigValue } from '@/features/scan-config/use-config-store';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
@@ -89,12 +92,25 @@ const DISCRETE_PROBABILITIES_FIELD = 'probabilities';
 const isStringArray = (value: unknown): value is string[] =>
   Array.isArray(value) && value.every((item) => typeof item === 'string');
 
+/** Resolves the query's dynamic filters (e.g. `circuit_id` from `initialize.circuit`) from the config. */
+function QueriedEntitySelector({
+  query,
+  ...props
+}: { query: TEntityQuery } & Omit<ComponentProps<typeof EntitySelectorSingle>, 'filters'>) {
+  const selectFilters = useCallback(
+    (config: Config) => resolveEntityQueryFilters(query, config),
+    [query]
+  );
+  const filters = useConfigValue(selectFilters, isEqual);
+
+  return <EntitySelectorSingle {...props} filters={filters} />;
+}
+
 export function UIElementRender({
   k,
   disabled,
   paramSchema,
   state,
-  config,
   schema,
   setState,
   entity,
@@ -105,7 +121,6 @@ export function UIElementRender({
   k: string;
   disabled: boolean;
   paramSchema: ParamSchema;
-  config: Config;
   schema: ConfigSchema;
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
   state: Record<string, ConfigValue>;
@@ -332,7 +347,6 @@ export function UIElementRender({
           setState={setState}
           paramSchema={paramSchema}
           schema={schema}
-          config={config}
           disabled={disabled}
           errorPathPrefix={errorPathPrefix}
           // the shared renderer is defined in this module; passing it down keeps the widget
@@ -349,7 +363,6 @@ export function UIElementRender({
               paramSchema={fieldSchema}
               state={fieldState}
               setState={setFieldState}
-              config={config}
               schema={schema}
               entity={entity}
               schemaMappingConfig={schemaMappingConfig}
@@ -364,7 +377,6 @@ export function UIElementRender({
 
       return (
         <Reference
-          config={config}
           schema={schema}
           referenceSchema={paramSchema}
           value={defaultV}
@@ -520,7 +532,6 @@ export function UIElementRender({
         if (isCircuitNeuronalManipulationType(manipulationVariantType)) {
           return (
             <CircuitGlobal
-              config={config}
               state={state}
               setState={setState}
               sourceField={
@@ -575,7 +586,6 @@ export function UIElementRender({
         if (isCircuitNeuronalManipulationType(manipulationVariantType)) {
           return (
             <CircuitRange
-              config={config}
               state={state}
               setState={setState}
               sourceField={
@@ -623,12 +633,10 @@ export function UIElementRender({
           | undefined;
         if (q) {
           return (
-            <EntitySelectorSingle
+            <QueriedEntitySelector
+              query={q}
               entityType={q.type}
               disabled={disabled}
-              // resolve dynamic filters (e.g. circuit_id from `value_from`:
-              // initialize.circuit) against the root config before browsing
-              filters={resolveEntityQueryFilters(q, config)}
               value={value}
               state={state}
               fieldKey={k}
@@ -705,7 +713,6 @@ export function UIElementRender({
           <SelectRecordableIonChannelVariable
             value={currentValue}
             disabled={disabled}
-            config={config}
             paramSchema={paramSchema}
             schema={schema}
             onChange={(v) => {
@@ -938,7 +945,6 @@ export function UIElementRender({
           <NeuronSetCombination
             paramSchema={paramSchema}
             value={v}
-            config={config}
             schema={schema}
             disabled={disabled}
             selfName={selectedEntry}
@@ -954,7 +960,6 @@ export function UIElementRender({
         value={value}
         paramSchema={paramSchema}
         disabled={disabled}
-        config={config}
         schema={schema}
         entity={entity}
         schemaMappingConfig={schemaMappingConfig}

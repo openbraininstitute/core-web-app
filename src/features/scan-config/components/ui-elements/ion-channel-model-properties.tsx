@@ -22,6 +22,7 @@ import {
 import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
+import { useConfigValue, useSetConfig } from '@/features/scan-config/use-config-store';
 import { makeSessionAtomWithDefault } from '@/ui/hooks/use-session-atom';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilderHierarchy } from '@/ui/use-query-keys/atlas';
@@ -294,18 +295,20 @@ function withProperties(
 function ModelPropertiesCheck({
   root,
   propertyKey,
-  config,
-  setConfig,
   locked,
 }: {
   root: string;
   propertyKey: string;
-  config: Config;
-  setConfig: (update: (previous: Config) => Config) => void;
   locked: boolean;
 }) {
   const path = `${root}.${propertyKey}`;
-  const { block, value } = readProperties(config, root, propertyKey);
+  const setConfig = useSetConfig();
+  const rootBlock = useConfigValue((config) => config[root]);
+  const { block, value } = readProperties(
+    rootBlock === undefined ? {} : { [root]: rootBlock },
+    root,
+    propertyKey
+  );
   const {
     loaded,
     failed,
@@ -383,13 +386,9 @@ function ModelPropertiesCheck({
 
 export function IonChannelModelPropertiesChecks({
   schema,
-  config,
-  setConfig,
   locked,
 }: {
   schema: ConfigSchema;
-  config: Config;
-  setConfig: (update: (previous: Config) => Config) => void;
   locked: boolean;
 }) {
   return Object.entries(schema.properties).flatMap(([root, rootSchema]) =>
@@ -400,8 +399,6 @@ export function IonChannelModelPropertiesChecks({
           key={`${root}.${key}`}
           root={root}
           propertyKey={key}
-          config={config}
-          setConfig={setConfig}
           locked={locked}
         />
       ))

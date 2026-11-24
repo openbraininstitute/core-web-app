@@ -5,7 +5,9 @@ import { createContext, use, useCallback, useMemo, useSyncExternalStore } from '
 
 import { entryNames } from '@/features/scan-config/commands';
 import { useConfigValidator } from '@/features/scan-config/components/hooks';
+import { errorsUnder } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import {
+  createDerivedReader,
   createSliceReader,
   entrySummariesOf,
   readBlock,
@@ -104,6 +106,16 @@ export function useHasConfigErrors(pathPrefix: string): boolean {
   return useSyncExternalStore(useScanConfigStore().subscribe, hasErrors, hasErrors);
 }
 
+/** The errors at or below a path, with paths relative to it; re-renders only when they change. */
+export function useConfigErrorsUnder(path: string): ErrorObject[] {
+  const getErrors = useErrorsReader();
+  const getSlice = useMemo(
+    () => createDerivedReader(getErrors, (errors) => errorsUnder(errors, path), isEqual),
+    [getErrors, path]
+  );
+  return useSyncExternalStore(useScanConfigStore().subscribe, getSlice, getSlice);
+}
+
 export function useSetConfig(): IScanConfigStore['set'] {
   return useScanConfigStore().set;
 }
@@ -127,6 +139,17 @@ export function useEntrySummaries(rootElement: string): TEntrySummary[] {
     [rootElement]
   );
   return useConfigValue(select, sameSummaries);
+}
+
+/** The entries of each given dictionary, by name and type; re-renders only when one of the lists changes. */
+export function useDictionaryEntries(dictionaries: string[]): Record<string, TEntrySummary[]> {
+  const signature = dictionaries.join('\n');
+  const select = useCallback(
+    (config: Config) =>
+      Object.fromEntries(signature.split('\n').map((key) => [key, entrySummariesOf(config[key])])),
+    [signature]
+  );
+  return useConfigValue(select, isEqual);
 }
 
 /** One block of the config and its setter; `entry` selects one entry of a root dictionary. */

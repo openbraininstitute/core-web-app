@@ -21,7 +21,6 @@ export type CircuitRangeProps = TUseCircuitManipulationDataParams & {
  * @see Range
  */
 export function CircuitRange({
-  config,
   state,
   setState,
   sourceField,
@@ -33,7 +32,6 @@ export function CircuitRange({
   errorPathPrefix,
 }: CircuitRangeProps) {
   const { data, loading, reason } = useCircuitManipulationData({
-    config,
     state,
     setState,
     sourceField,

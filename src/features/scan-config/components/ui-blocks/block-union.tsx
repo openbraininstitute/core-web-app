@@ -12,7 +12,6 @@ import { isType } from '@/features/scan-config/types';
 import { useBlockState } from '@/features/scan-config/use-config-store';
 
 import type {
-  Config,
   ConfigSchema,
   IRootBlockUnion,
   TBlock,
@@ -27,7 +26,6 @@ type Props = {
   selectedRootElement: string;
   campaignId: string;
   loading: boolean;
-  config: Config;
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
   entityType: TSupportedEntityTypesForScanConfiguration;
@@ -46,7 +44,6 @@ export default function BlockUnion({
   selectedRootElement,
   campaignId,
   loading,
-  config,
   entity,
   schemaMappingConfig,
   errorPathPrefix,
@@ -89,7 +86,6 @@ export default function BlockUnion({
           schema={schema}
           key={`${selectedRootElement}_${selectedType}`}
           disabled={!!campaignId || loading || showingDiffs}
-          config={config}
           blockSchema={selectedBlockSchema}
           state={currentConfig}
           setState={setCurrentConfig}

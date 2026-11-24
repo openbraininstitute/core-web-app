@@ -3,6 +3,7 @@ import { useAtomValue } from 'jotai';
 
 import { useFlag } from '@/features/feature-flags';
 import { electrodeOverlaysFlag } from '@/features/feature-flags/flags';
+import { entryNames } from '@/features/scan-config/commands';
 import { nextEntryName } from '@/features/scan-config/components/hooks';
 import { buildBlockDefaults } from '@/features/scan-config/components/hooks/block-defaults';
 import {
@@ -23,7 +24,7 @@ import { isPlainObject } from '@/features/scan-config/components/utils';
 import { resolveScanConfigEditingLocked } from '@/features/scan-config/hooks/use-config-editing-locked';
 import { useDiffPreview } from '@/features/scan-config/hooks/use-diff-preview-atom';
 import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
-import { useBlockState } from '@/features/scan-config/use-config-store';
+import { useBlockState, useGetConfig, useSetConfig } from '@/features/scan-config/use-config-store';
 import { useAIConfig } from '@/services/ai-agent';
 import { configDiffsAtom } from '@/state/config-highlights';
 import { MarkdownDescription } from '@/ui/molecules/markdown-description';
@@ -31,7 +32,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip'
 import { cn } from '@/utils/css-class';
 
 import type {
-  Config,
   ConfigSchema,
   ConfigValue,
   IBlockDictionary,
@@ -48,11 +48,8 @@ type Props = {
   setSelectedEntry: (entry: string) => void;
   campaignId: string;
   loading: boolean;
-  config: Config;
-  setConfig: (newConfig: Config) => void;
   selectedBlockSchema?: TBlock;
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
-  allEntries: Set<string>;
   onNewBlockClick?: () => void;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
   errorPathPrefix?: string;
@@ -66,10 +63,7 @@ export default function BlockDictionary({
   setSelectedEntry,
   campaignId,
   loading,
-  config,
-  setConfig,
   entity,
-  allEntries,
   onNewBlockClick,
   schemaMappingConfig,
   errorPathPrefix,
@@ -81,12 +75,10 @@ export default function BlockDictionary({
   const previewData = useDiffPreview(selectedRootElement, selectedEntry);
   const [liveState, setEntryState] = useBlockState(selectedRootElement, selectedEntry);
   const electrodeOverlaysEnabled = useFlag(electrodeOverlaysFlag.key);
+  const getConfig = useGetConfig();
+  const setConfig = useSetConfig();
 
-  const selectedBlockLocal =
-    isPlainObject(config[selectedRootElement]) &&
-    isPlainObject(config[selectedRootElement][selectedEntry])
-      ? config[selectedRootElement][selectedEntry]?.type
-      : undefined;
+  const selectedBlockLocal = isPlainObject(liveState) ? liveState.type : undefined;
 
   const selectedBlockAI =
     aiConfig &&
@@ -132,7 +124,6 @@ export default function BlockDictionary({
           isChatReady,
           showingDiffs,
         })}
-        config={config}
         blockSchema={selectedBlockSchema}
         state={state}
         setState={setEntryState}
@@ -223,18 +214,22 @@ export default function BlockDictionary({
                         >)
                       : initial;
 
-                  const newEntry = nextEntryName(schema, selectedRootElement, allEntries, o);
+                  const newEntry = nextEntryName(
+                    schema,
+                    selectedRootElement,
+                    entryNames(getConfig(), schema),
+                    o
+                  );
 
                   setSelectedEntry(newEntry);
 
-                  if (!isPlainObject(config) || !isPlainObject(config[selectedRootElement])) return;
-
-                  setConfig({
-                    ...config,
-                    [selectedRootElement]: {
-                      ...config[selectedRootElement],
-                      [newEntry]: seededInitial,
-                    },
+                  setConfig((previous) => {
+                    const dictionary = previous[selectedRootElement];
+                    if (!isPlainObject(dictionary)) return previous;
+                    return {
+                      ...previous,
+                      [selectedRootElement]: { ...dictionary, [newEntry]: seededInitial },
+                    };
                   });
                 }}
                 data-scan-config-block-element-item={`${blockDictionarySchema.ui_element}_item`}
