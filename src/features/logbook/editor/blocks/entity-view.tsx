@@ -5,6 +5,7 @@ import { Suspense, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { match } from 'ts-pattern';
 
+import { useFlags } from '@/features/feature-flags';
 import {
   coreTypeOf,
   entityConfigOf,
@@ -46,7 +47,7 @@ export function EntityView({ node, selected, updateAttributes, deleteNode }: Nod
   const created = entity.data?.creation_date;
   const date = isNil(created) ? null : dateOf(created);
   const missing = entity.isError || !known;
-  const viewable = has3dView(type);
+  const viewable = has3dView(type, useFlags());
   const openDetail = useEntityDetail();
   const hasDetail = isNotNil(openDetail) && isNotNil(coreTypeOf(type)) && !entity.isError;
 
