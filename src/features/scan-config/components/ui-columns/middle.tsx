@@ -17,6 +17,7 @@ import {
   type TSupportedEntitiesForScanConfiguration,
   type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
+import { useBlockState } from '@/features/scan-config/use-config-store';
 import { useAIConfig } from '@/services/ai-agent';
 import { cn } from '@/utils/css-class';
 
@@ -77,6 +78,7 @@ export default function Middle({
   const { aiConfig, isChatReady } = useAIConfig();
   const showingDiffs = useShowingDiffs();
   const preview = useDiffPreview(selectedRootElement);
+  const [rootState, setRootState] = useBlockState(selectedRootElement);
 
   // Same read-only/locked signal the generic Block uses, so the bespoke emodel widgets disable
   // their editable controls (pickers, checkboxes, inputs) once the campaign is generated / locked.
@@ -119,16 +121,14 @@ export default function Middle({
       )}
 
       {selectedSchema.ui_element === ScanConfigUIElementDict.BlockSingle &&
-        isPlainObject(config[selectedRootElement]) && (
+        isPlainObject(rootState) && (
           <Block
             schema={schema}
             disabled={editingLocked}
             config={config}
             blockSchema={selectedSchema}
-            state={preview ?? config[selectedRootElement] ?? {}}
-            setState={(newState) => {
-              setConfig({ ...config, [selectedRootElement]: newState });
-            }}
+            state={preview ?? rootState}
+            setState={setRootState}
             entity={entity}
             schemaMappingConfig={schemaMappingConfig}
             rootElement={selectedRootElement}

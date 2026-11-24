@@ -23,6 +23,7 @@ import { isPlainObject } from '@/features/scan-config/components/utils';
 import { resolveScanConfigEditingLocked } from '@/features/scan-config/hooks/use-config-editing-locked';
 import { useDiffPreview } from '@/features/scan-config/hooks/use-diff-preview-atom';
 import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
+import { useBlockState } from '@/features/scan-config/use-config-store';
 import { useAIConfig } from '@/services/ai-agent';
 import { configDiffsAtom } from '@/state/config-highlights';
 import { MarkdownDescription } from '@/ui/molecules/markdown-description';
@@ -78,6 +79,7 @@ export default function BlockDictionary({
   const circuitSceneAnchor = useAtomValue(circuitSceneAnchorAtom);
   const showingDiffs = useShowingDiffs();
   const previewData = useDiffPreview(selectedRootElement, selectedEntry);
+  const [liveState, setEntryState] = useBlockState(selectedRootElement, selectedEntry);
   const electrodeOverlaysEnabled = useFlag(electrodeOverlaysFlag.key);
 
   const selectedBlockLocal =
@@ -109,15 +111,10 @@ export default function BlockDictionary({
       d.path[1] === selectedEntry
   );
 
-  if (
-    selectedBlockSchema &&
-    isPlainObject(config[selectedRootElement]) &&
-    isPlainObject(config[selectedRootElement][selectedEntry])
-  ) {
-    const liveState = config[selectedRootElement]?.[selectedEntry];
+  if (selectedBlockSchema && isPlainObject(liveState)) {
     // Preview atom takes priority when showing diffs so the Block displays
     // the new/restored values instead of the current live values.
-    const state = previewData ?? liveState ?? {};
+    const state = previewData ?? liveState;
 
     // Electrode sweeps drive a 3D preview that can only draw one coordinate, so
     // their values get per-value eyes; other workflows render sweeps unchanged.
@@ -138,17 +135,7 @@ export default function BlockDictionary({
         config={config}
         blockSchema={selectedBlockSchema}
         state={state}
-        setState={(newState: Record<string, ConfigValue>) => {
-          if (!isPlainObject(config[selectedRootElement])) return;
-
-          setConfig({
-            ...config,
-            [selectedRootElement]: {
-              ...config[selectedRootElement],
-              [selectedEntry]: newState,
-            },
-          });
-        }}
+        setState={setEntryState}
         entity={entity}
         schemaMappingConfig={schemaMappingConfig}
         rootElement={selectedRootElement}
