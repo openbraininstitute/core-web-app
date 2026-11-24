@@ -109,7 +109,6 @@ export function useScanConfigTemplate({
   const createEntry = useCallback(
     (rootElement: string, block: Record<string, unknown>) => {
       const entry = nextEntryName(schema, rootElement, allEntries);
-      allEntries.add(entry);
 
       setConfig(
         (previous) =>

@@ -11,19 +11,14 @@ import { kebabCase } from 'es-toolkit/compat';
 import { AnimatePresence, motion } from 'motion/react';
 import { Fragment, memo, useEffect, useMemo, useRef } from 'react';
 
+import { deleteEntry, renameEntry } from '@/features/scan-config/commands';
 import { useFieldErrors } from '@/features/scan-config/components/hooks/field-errors';
 import { DESCRIPTION_TOOLTIP_CLASS } from '@/features/scan-config/components/shared/box-class';
-import {
-  DISTANCE_DISTRIBUTIONS_KEY,
-  remapParameterDistributions,
-} from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
-import { clearDeletedBlockReferences } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/state';
 import { useEntryDiff } from '@/features/scan-config/hooks/use-entry-diff';
 import { MarkdownDescription } from '@/ui/molecules/markdown-description';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
-import { RewriteBlockReferencesModeDict, rewriteBlockReferences } from './rewrite-block-references';
 import { isPlainObject } from './utils';
 
 import type { ErrorObject } from 'ajv';
@@ -180,37 +175,15 @@ export default function BlockDictionaryEntries({
     e.stopPropagation();
 
     if (newKeyError) return;
-    if (newKey === selectedEntry) return;
-    if (!isPlainObject(config[selectedRootElement])) return;
 
-    const newConfig = structuredClone(config);
-    const targetSection = newConfig[selectedRootElement];
+    const renamed = renameEntry(config, schema, {
+      dictionary: selectedRootElement,
+      from: selectedEntry,
+      to: newKey,
+    });
+    if (renamed === config) return;
 
-    allEntries.delete(selectedEntry);
-    allEntries.add(newKey);
-
-    if (!isPlainObject(targetSection)) return;
-
-    const targetSectionRenamed = Object.fromEntries(
-      Object.entries(targetSection).map(([k, v]) => (k === selectedEntry ? [newKey, v] : [k, v]))
-    );
-
-    newConfig[selectedRootElement] = targetSectionRenamed;
-
-    rewriteBlockReferences(
-      newConfig,
-      { dictionary: selectedRootElement, name: selectedEntry },
-      { type: RewriteBlockReferencesModeDict.Rename, to: newKey }
-    );
-
-    // Distributions are referenced by plain string in each parameter's `distribution`, not via
-    // block references, so cascade the rename into every parameter that uses the old name.
-    const afterRename =
-      selectedRootElement === DISTANCE_DISTRIBUTIONS_KEY
-        ? remapParameterDistributions(newConfig, schema, selectedEntry, newKey)
-        : newConfig;
-
-    setConfig(afterRename);
+    setConfig(renamed);
 
     setIsEditingKey(false);
     setSelectedEntry(newKey);
@@ -373,53 +346,14 @@ export default function BlockDictionaryEntries({
                                       setEditing(false);
                                       setSelectedRootElement(rootElement);
 
-                                      if (!isPlainObject(config[rootElement])) return;
-
-                                      const newConfig = structuredClone(config);
-                                      const targetSection = newConfig[rootElement];
-
-                                      if (!isPlainObject(targetSection)) return;
-
-                                      delete targetSection[subkey];
-
-                                      // Schema-aware cleanup: clear refs + dependent manipulation fields
-                                      const cleaned = clearDeletedBlockReferences(
-                                        newConfig,
-                                        schema,
-                                        rootElement,
-                                        subkey
-                                      );
-
-                                      // Also clear nested refs (e.g. combination tuples)
-                                      Object.entries(cleaned).forEach(([configK, configV]) => {
-                                        if (configK === 'initialize' || !isPlainObject(configV))
-                                          return;
-
-                                        Object.values(configV).forEach((entryV) => {
-                                          rewriteBlockReferences(
-                                            entryV,
-                                            { dictionary: rootElement, name: subkey },
-                                            { type: RewriteBlockReferencesModeDict.Clear }
-                                          );
-                                        });
+                                      const next = deleteEntry(config, schema, {
+                                        dictionary: rootElement,
+                                        name: subkey,
                                       });
+                                      if (next === config) return;
 
-                                      // Distributions are referenced by plain string, so reset any
-                                      // parameter using the deleted distribution back to uniform.
-                                      const afterDelete =
-                                        rootElement === DISTANCE_DISTRIBUTIONS_KEY
-                                          ? remapParameterDistributions(
-                                              cleaned,
-                                              schema,
-                                              subkey,
-                                              null
-                                            )
-                                          : cleaned;
-
-                                      setConfig(afterDelete);
-
+                                      setConfig(next);
                                       setSelectedEntry('');
-                                      allEntries.delete(subkey);
                                     }}
                                   />
                                 )}

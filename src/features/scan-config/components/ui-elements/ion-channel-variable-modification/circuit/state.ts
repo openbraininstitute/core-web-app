@@ -1,6 +1,11 @@
 import { referencesBlock } from '@/features/scan-config/components/rewrite-block-references';
 import { isPlainObject } from '@/features/scan-config/components/utils';
-import { isType, ScanConfigUIElementDict } from '@/features/scan-config/types';
+import {
+  CIRCUIT_NEURONAL_MANIPULATION_SOURCE_FIELD,
+  isCircuitNeuronalManipulationType,
+  isType,
+  ScanConfigUIElementDict,
+} from '@/features/scan-config/types';
 
 import type {
   Config,
@@ -97,14 +102,23 @@ function getBlockSchemaForState(
   return rootSchema;
 }
 
-function getDependentManipulationFields(blockSchema: TBlock | null, sourceField: string) {
+function getDependentManipulationFields(
+  blockSchema: TBlock | null,
+  sourceField: string,
+  state: ConfigObject
+) {
   if (!blockSchema?.properties) return [];
+
+  const defaultSourceField =
+    typeof state.type === 'string' && isCircuitNeuronalManipulationType(state.type)
+      ? CIRCUIT_NEURONAL_MANIPULATION_SOURCE_FIELD
+      : undefined;
 
   return Object.entries(blockSchema.properties)
     .filter(([, fieldSchema]) => {
       if (isType(fieldSchema)) return false;
       if (!isPlainObject(fieldSchema)) return false;
-      if (fieldSchema.property_source_field !== sourceField) return false;
+      if ((fieldSchema.property_source_field ?? defaultSourceField) !== sourceField) return false;
       return (
         fieldSchema.ui_element === ScanConfigUIElementDict.IonChannelVariableModificationByNeuron ||
         fieldSchema.ui_element ===
@@ -131,7 +145,7 @@ function clearSourceReferenceAndDependents({
     delete state[sourceField];
   }
 
-  for (const dependentField of getDependentManipulationFields(blockSchema, sourceField)) {
+  for (const dependentField of getDependentManipulationFields(blockSchema, sourceField, state)) {
     if (dependentField in state) {
       state[dependentField] = null;
     }

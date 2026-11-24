@@ -1,10 +1,8 @@
 import Ajv, { type AnySchema } from 'ajv';
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef } from 'react';
 
-import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
+import { entryNames } from '@/features/scan-config/commands';
 import { log } from '@/utils/logger';
-
-import { isPlainObject } from '../utils';
 
 import type { Config, ConfigSchema } from '@/features/scan-config/types';
 
@@ -64,12 +62,6 @@ export function useValidateSchema({
   return errors ?? null;
 }
 
-/**
- * Entry names taken across every block dictionary, captured once on first render.
- *
- * Reads the built editor config, so names seeded from a workflow selection are reserved too and
- * the next block the user adds cannot reuse one.
- */
 export function useEntries({
   config,
   schema,
@@ -77,19 +69,8 @@ export function useEntries({
   schema: ConfigSchema | undefined;
   config?: Config;
 }): Set<string> {
-  // lazy state, not a ref: the set is built once and then mutated by callers from event
-  // handlers, so it must not be written during render
-  const [allEntries] = useState(() => {
-    const entries = new Set<string>();
-    if (!config || !schema) return entries;
-
-    for (const [key, value] of Object.entries(config)) {
-      if (isRootBlock(schema, key) || !isPlainObject(value)) continue;
-      for (const entryKey of Object.keys(value)) entries.add(entryKey);
-    }
-
-    return entries;
-  });
-
-  return allEntries;
+  return useMemo(
+    () => (config && schema ? entryNames(config, schema) : new Set<string>()),
+    [config, schema]
+  );
 }
