@@ -6,6 +6,7 @@ import {
   accountLinks,
   amountField,
   chargedTiers,
+  checkPriceEdit,
   dayBounds,
   describeStatusChange,
   discountUpdate,
@@ -321,6 +322,48 @@ const PRICE: TPrice = {
   created_at: '2026-11-01T00:00:00Z',
   updated_at: '2026-11-01T00:00:00Z',
 };
+
+describe('checkPriceEdit', () => {
+  const START = '2030-01-01T00:00:00.000Z';
+  const at = (hours: number) => new Date(Date.parse(START) + hours * 3_600_000).toISOString();
+  const scheduled: TPrice = { ...PRICE, id: 2, vlab_id: 'lab', valid_from: START };
+
+  it('refuses a later start when a list has more prices than it read', () => {
+    expect(() =>
+      checkPriceEdit({ lists: [[scheduled]], truncated: true }, scheduled, {
+        ...scheduled,
+        valid_from: at(2),
+      })
+    ).toThrow(/too many prices/);
+  });
+
+  it('still lets the end move on a list with more prices than it read', () => {
+    const following: TPrice = { ...scheduled, id: 3, valid_from: at(1) };
+
+    expect(() =>
+      checkPriceEdit({ lists: [[following, scheduled]], truncated: true }, scheduled, {
+        ...scheduled,
+        valid_to: at(2),
+      })
+    ).not.toThrow();
+  });
+
+  it("refuses a later start past the end of the default before a lab's price", () => {
+    const fallback: TPrice = {
+      ...PRICE,
+      id: 1,
+      valid_from: '2026-01-01T00:00:00Z',
+      valid_to: at(1),
+    };
+
+    expect(() =>
+      checkPriceEdit({ lists: [[scheduled], [fallback]], truncated: false }, scheduled, {
+        ...scheduled,
+        valid_from: at(2),
+      })
+    ).toThrow(/No other price would apply/);
+  });
+});
 
 describe('price form values', () => {
   it('saves an untouched price with the same figures, written without exponents', () => {

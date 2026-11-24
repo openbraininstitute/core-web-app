@@ -10,7 +10,7 @@ import {
   replacePrice,
   updatePrice,
 } from '../api';
-import { endField, priceValues, windowStatus } from '../helpers';
+import { endField, isPartlyDone, priceValues, windowStatus } from '../helpers';
 import { LEGACY_SUBTYPES } from '../schemas';
 import { WindowStatus } from '../types';
 import { ActionButton, DialogButton } from './action-button';
@@ -111,7 +111,9 @@ function ReplacePriceButton({ price }: { price: TPrice }) {
           okText="Add and end the old one"
           write={(body) => replacePrice(price, body)}
           done={(created) => `Price #${created.id} added; #${price.id} ends when it starts`}
-          failed="Couldn't replace the price"
+          failed={(error) =>
+            isPartlyDone(error) ? 'Price only partly replaced' : "Couldn't replace the price"
+          }
           onClose={close}
         />
       )}

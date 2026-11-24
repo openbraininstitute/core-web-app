@@ -43,6 +43,7 @@ import type {
   TPrice,
   TPriceBody,
   TPriceFilters,
+  TPriceLists,
   TPriceScope,
   TPriceTier,
   TPriceValues,
@@ -175,10 +176,11 @@ export const amountField = ({
 export const isOutcomeUnknown = (error: unknown) =>
   error instanceof ApiError && error.cause?.code === AccountingErrorCode.OutcomeUnknown;
 
+export const isPartlyDone = (error: unknown) =>
+  error instanceof ApiError && error.cause?.code === AccountingErrorCode.PartlyDone;
+
 /** After these, sending the same form again would repeat what went through. */
-export const closesDialog = (error: unknown) =>
-  isOutcomeUnknown(error) ||
-  (error instanceof ApiError && error.cause?.code === AccountingErrorCode.PartlyDone);
+export const closesDialog = (error: unknown) => isOutcomeUnknown(error) || isPartlyDone(error);
 
 const STATUS_ACCOUNT_TYPES: TAccountType[] = [AccountType.VirtualLab, AccountType.Project];
 
@@ -451,3 +453,46 @@ export const priceKey = ({
 /** The price accounting uses at `at`: lists come newest start first, which is its order. */
 export const priceAt = (prices: TPrice[], at: Date, except?: number) =>
   prices.find((price) => price.id !== except && windowStatus(price, at) === WindowStatus.Active);
+
+export function checkPriceAfter(lists: TPrice[][], end: string | null, except?: number) {
+  if (!end || lists.some((prices) => priceAt(prices, new Date(end), except))) return;
+  throw new ApiError(
+    `No other price would apply from ${formatDateTime(end)}, so jobs of this subtype couldn't start. Add the next price first.`,
+    { status: 400 }
+  );
+}
+
+const sameInstant = (a: string | null, b: string | null) =>
+  (a ? Date.parse(a) : null) === (b ? Date.parse(b) : null);
+
+const lapsesBetween = (lists: TPrice[][], from: string, to: string) => [
+  from,
+  ...lists
+    .flat()
+    .flatMap(({ valid_to: end }) =>
+      end && Date.parse(end) > Date.parse(from) && Date.parse(end) < Date.parse(to) ? [end] : []
+    ),
+];
+
+export const editMoves = (price: TPrice, next: TPriceBody) => ({
+  later: Date.parse(next.valid_from) > Date.parse(price.valid_from),
+  endMoved: !sameInstant(next.valid_to, price.valid_to),
+});
+
+/** A scheduled price's edit: a later start mustn't open a gap, nor a new end leave none after it. */
+export function checkPriceEdit({ lists, truncated }: TPriceLists, price: TPrice, next: TPriceBody) {
+  const { later, endMoved } = editMoves(price, next);
+  if (later && truncated) {
+    throw new ApiError(
+      "There are too many prices for this subtype to check that a later start leaves no gap, so it can't move later here.",
+      { status: 400 }
+    );
+  }
+  const justBefore = new Date(Date.parse(price.valid_from) - 1);
+  if (later && lists.some((prices) => priceAt(prices, justBefore, price.id))) {
+    for (const at of lapsesBetween(lists, price.valid_from, next.valid_from)) {
+      checkPriceAfter(lists, at, price.id);
+    }
+  }
+  if (endMoved) checkPriceAfter(lists, next.valid_to, price.id);
+}

@@ -104,7 +104,7 @@ export function PriceDialog<Result>({
   okText: string;
   write: (body: TPriceBody) => Promise<Result>;
   done: string | ((result: Result) => string);
-  failed: string;
+  failed: string | ((error: unknown) => string);
   onClose: () => void;
 }) {
   const [form] = Form.useForm<TPriceValues>();

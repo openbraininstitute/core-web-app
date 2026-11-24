@@ -6,7 +6,7 @@ import { compactRecord } from '@/utils/dictionary';
 
 import { errorReason } from '../../shared/errors';
 import { formatDateTime } from '../../shared/format';
-import { priceAt, priceKey } from './helpers';
+import { checkPriceAfter, checkPriceEdit, editMoves, isOutcomeUnknown, priceKey } from './helpers';
 import { AccountingErrorCode, AccountingMethod } from './types';
 
 import type {
@@ -37,6 +37,7 @@ import type {
   TPrice,
   TPriceBody,
   TPriceFilters,
+  TPriceLists,
   TPriceScope,
   TProjectAccount,
   TRefund,
@@ -204,50 +205,26 @@ export const updatePrice = (priceId: number, body: TPriceBody) =>
 export const expirePrice = (priceId: number, body: TExpirePriceBody) =>
   accountingWrite<TPrice>(`admin/price/${priceId}/expire`, body);
 
-const pricesAround = (scope: TPriceScope) =>
-  Promise.all(
-    (scope.vlab_id ? [scope, { ...scope, vlab_id: null }] : [scope]).map(
-      async (each) => (await listPricesFor(each)).data
+async function pricesAround(scope: TPriceScope): Promise<TPriceLists> {
+  const pages = await Promise.all(
+    (scope.vlab_id ? [scope, { ...scope, vlab_id: null }] : [scope]).map((each) =>
+      listPricesFor(each)
     )
   );
-
-function checkPriceAfter(lists: TPrice[][], end: string | null, except?: number) {
-  if (!end || lists.some((prices) => priceAt(prices, new Date(end), except))) return;
-  throw new ApiError(
-    `No other price would apply from ${formatDateTime(end)}, so jobs of this subtype couldn't start. Add the next price first.`,
-    { status: 400 }
-  );
+  return {
+    lists: pages.map(({ data }) => data),
+    truncated: pages.some(({ data, pagination }) => pagination.total > data.length),
+  };
 }
 
 /** Refuses an end with no price after it, since reservations of that subtype would then fail. */
 export async function assertPriceAfter(price: TPriceScope, end: string | null, except?: number) {
-  if (end) checkPriceAfter(await pricesAround(price), end, except);
+  if (end) checkPriceAfter((await pricesAround(price)).lists, end, except);
 }
 
-const sameInstant = (a: string | null, b: string | null) =>
-  (a ? Date.parse(a) : null) === (b ? Date.parse(b) : null);
-
-const lapsesBetween = (lists: TPrice[][], from: string, to: string) => [
-  from,
-  ...lists
-    .flat()
-    .flatMap(({ valid_to: end }) =>
-      end && Date.parse(end) > Date.parse(from) && Date.parse(end) < Date.parse(to) ? [end] : []
-    ),
-];
-
-/** A scheduled price's edit: a later start mustn't open a gap, nor a new end leave none after it. */
 export async function assertPriceEdit(price: TPrice, next: TPriceBody) {
-  const later = Date.parse(next.valid_from) > Date.parse(price.valid_from);
-  const endMoved = !sameInstant(next.valid_to, price.valid_to);
-  if (!later && !endMoved) return;
-  const lists = await pricesAround(price);
-  if (later && priceAt(lists[0], new Date(Date.parse(price.valid_from) - 1), price.id)) {
-    for (const at of lapsesBetween(lists, price.valid_from, next.valid_from)) {
-      checkPriceAfter(lists, at, price.id);
-    }
-  }
-  if (endMoved) checkPriceAfter(lists, next.valid_to, price.id);
+  const { later, endMoved } = editMoves(price, next);
+  if (later || endMoved) checkPriceEdit(await pricesAround(price), price, next);
 }
 
 const partlyDone = (message: string) =>
@@ -278,7 +255,9 @@ export async function replacePrice(price: TPrice, next: TPriceBody) {
   }
   await expirePrice(price.id, { valid_to: created.valid_from }).catch((error) => {
     throw partlyDone(
-      `Price #${created.id} was added, but this one couldn't be ended: ${errorReason(error).replace(/\.$/, '')}. The new one applies from its start anyway, as it started last.`
+      isOutcomeUnknown(error)
+        ? `Price #${created.id} was added, but no reply came about ending this one. Reload and check whether it ends when the new one starts before ending it again.`
+        : `Price #${created.id} was added, but this one couldn't be ended: ${errorReason(error).replace(/\.$/, '')}. The new one applies from its start anyway, as it started last.`
     );
   });
   return created;

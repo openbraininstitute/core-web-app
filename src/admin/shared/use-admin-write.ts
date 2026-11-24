@@ -11,7 +11,7 @@ import type { QueryKey } from '@tanstack/react-query';
 export type AdminWriteOptions<Args, Result = unknown> = {
   write: (args: Args) => Promise<Result>;
   done: string | ((result: Result) => string);
-  failed: string;
+  failed: string | ((error: unknown) => string);
   onSuccess?: (result: Result) => void;
 };
 
@@ -40,7 +40,7 @@ export function useAdminWrite<Args, Result = unknown>({
     onError: (error) => {
       if (refreshes) queryClient.invalidateQueries({ queryKey: refreshes });
       notification.error({
-        message: failed,
+        message: typeof failed === 'string' ? failed : failed(error),
         description: errorReason(error),
         placement: 'topRight',
       });

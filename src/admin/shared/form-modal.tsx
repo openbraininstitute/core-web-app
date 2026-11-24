@@ -39,7 +39,7 @@ const fieldControl = ({ kind, min, max, options, placeholder }: FormModalField) 
 
 export const REQUIRED = { required: true, message: 'Required' };
 
-// Form.Item's own `extra` shifts the form when a field first shows an error.
+/** One field, its note below it: Form.Item's own `extra` shifts the form when an error shows. */
 export function FormModalItem({ field }: { field: FormModalField }) {
   return (
     <div className="mb-6">

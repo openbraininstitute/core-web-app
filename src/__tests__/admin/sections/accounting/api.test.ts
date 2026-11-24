@@ -23,7 +23,7 @@ import {
   setAccountEnabled,
   topUp,
 } from '@/admin/sections/accounting/api';
-import { closesDialog, isOutcomeUnknown } from '@/admin/sections/accounting/helpers';
+import { closesDialog, isOutcomeUnknown, isPartlyDone } from '@/admin/sections/accounting/helpers';
 import {
   AccountingSubtype,
   ChargeType,
@@ -352,6 +352,18 @@ describe('replacePrice', () => {
     expect(error.message).toMatch(
       /#9 was added, but this one couldn't be ended: Price already expired\. The new one/
     );
+  });
+
+  it('says the old price may have ended when its end gets no reply', async () => {
+    accounting({
+      expire: () =>
+        new Response('<html/>', { status: 502, headers: { 'content-type': 'text/html' } }),
+    });
+
+    const error = await replacePrice(OLD, NEXT).catch((caught) => caught);
+
+    expect(isPartlyDone(error)).toBe(true);
+    expect(error.message).toMatch(/#9 was added, but no reply came about ending this one/);
   });
 
   it('refuses a new price with an end that nothing follows, before adding it', async () => {

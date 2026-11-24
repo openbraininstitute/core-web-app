@@ -340,6 +340,9 @@ export type TAction<Values, Result = null> = {
 };
 
 export type TPriceBody = z.infer<typeof PriceBody>;
+
+/** Price lists that bear on one scope; `truncated` when a list has more rows than it holds. */
+export type TPriceLists = { lists: TPrice[][]; truncated: boolean };
 export type TExpirePriceBody = z.infer<typeof ExpirePriceBody>;
 
 export type TPriceTier = {
