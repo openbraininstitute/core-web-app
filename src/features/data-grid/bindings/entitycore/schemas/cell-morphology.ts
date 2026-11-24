@@ -3,6 +3,7 @@ import {
   CellMorphologyProtocolDesign,
 } from '@/api/entitycore/types/entities/cell-morphology-protocol';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import {
   brainRegionColumn,
   contributionsColumn,
@@ -16,7 +17,10 @@ import {
   yesNo,
 } from '@/features/data-grid/bindings/entitycore/columns/catalog';
 import { lifecycleStatusColumn } from '@/features/data-grid/bindings/entitycore/columns/lifecycle-status';
-import { CellMorphologyPreview } from '@/features/data-grid/bindings/entitycore/renderers/cell-morphology-cells';
+import {
+  CellMorphologyPreview,
+  ProjectOwnershipCell,
+} from '@/features/data-grid/bindings/entitycore/renderers/cell-morphology-cells';
 import { registerSharedRenderers } from '@/features/data-grid/bindings/entitycore/renderers/register';
 import {
   dictLabelByKey,
@@ -29,6 +33,7 @@ import {
   OperatorId,
   SortDirection,
 } from '@/features/data-grid/core';
+import { ProjectOwnership } from '@/utils/workspace-scope';
 
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { IEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
@@ -207,6 +212,22 @@ export const cellMorphologySchema: IGridSchema<Row> = {
   selection: { enabled: true },
   advancedFilters: flatAdvancedFilters(cellMorphologyAdvancedFilters),
   columns: [
+    {
+      id: 'projectOwnership',
+      header: 'Project ownership',
+      available: ({ section, scope }) =>
+        section === WorkspaceSection.Data && scope === WorkspaceScope.Combined,
+      width: { width: 180, minWidth: 155 },
+      sortable: false,
+      cellRenderer: 'projectOwnership',
+      filter: {
+        operators: [OperatorId.Eq],
+        options: {
+          kind: FilterOptionsKind.Static,
+          items: Object.values(ProjectOwnership).map((label) => ({ id: label, label })),
+        },
+      },
+    },
     previewColumn<Row>({
       cellRenderer: 'cellMorphologyPreview',
       width: { width: 184, minWidth: 120, resizable: true },
@@ -333,6 +354,7 @@ export const cellMorphologyGridDefinition: IEntityGridDefinition<Row> = {
   schema: cellMorphologySchema,
   registerCellRenderers: (registry: CellRendererRegistry) => {
     registerSharedRenderers(registry);
+    registry.register('projectOwnership', ProjectOwnershipCell);
     registry.register('cellMorphologyPreview', CellMorphologyPreview);
   },
 };

@@ -1,7 +1,8 @@
 'use client';
 
 import { PlusOutlined } from '@ant-design/icons';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { snakeCase } from 'es-toolkit/compat';
+import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import { config } from '@/config';
 import { SCOPE_QUERY_PARAMS, type TWorkspaceScope, WorkspaceScope } from '@/constants';
@@ -16,6 +17,7 @@ import {
 } from '@/ui/segments/mini-detail-view/event';
 import { TabsSelector } from '@/ui/segments/shared/scope-selector';
 import { cn } from '@/utils/css-class';
+import { usesProjectOwnership } from '@/utils/workspace-scope';
 
 export function DataScopeTabs() {
   const navigate = useRouter().push;
@@ -43,6 +45,8 @@ export function DataScopeTabs() {
 }
 
 export function DataHeader() {
+  const { type } = useParams<{ type?: string }>();
+  const showProjectOwnership = usesProjectOwnership(snakeCase(type));
   const searchParams = useSearchParams();
   const scope = (searchParams.get(SCOPE_QUERY_PARAMS) as TWorkspaceScope) ?? WorkspaceScope.Public;
   const breakpoint = useDefaultBreakpoint();
@@ -58,9 +62,9 @@ export function DataHeader() {
   return (
     <div className="flex w-full items-center justify-between gap-4 pl-3 [grid-area:header]">
       <div className="flex max-w-1/2 items-center justify-center gap-2">
-        <DataScopeTabs />
+        {!showProjectOwnership && <DataScopeTabs />}
       </div>
-      {scope === WorkspaceScope.Project && (
+      {(showProjectOwnership || scope === WorkspaceScope.Project) && (
         <div className="max-w-1/2" id="upload-data-selector" data-testid="upload-data-selector">
           <Button
             rounded

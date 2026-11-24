@@ -53,6 +53,7 @@ export type BrowseEntityScopeProps = {
     };
   };
   scope?: TWorkspaceScope;
+  showProjectOwnership?: boolean;
   defaultBrainRegion?: string;
   dataType: TExtendedEntitiesTypeDict;
   /** Selects a listing variant of `dataType`; see `./variants`. */

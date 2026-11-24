@@ -9,6 +9,7 @@ import {
   DATA_BROWSE_ALLOWED_ENTITIES as AllowedEntities,
   DATA_BROWSE_LISTING_PROPS,
 } from '@/features/views/listing/data-browse-entities';
+import { usesProjectOwnership } from '@/utils/workspace-scope';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TWorkspaceScope } from '@/constants';
@@ -42,6 +43,7 @@ export default async function Page({
           <BrowseEntityScope
             section={WorkspaceSection.Data}
             dataType={dataType}
+            showProjectOwnership={usesProjectOwnership(dataType)}
             {...DATA_BROWSE_LISTING_PROPS}
           />
         );

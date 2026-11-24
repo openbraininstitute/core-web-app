@@ -112,6 +112,43 @@ describe('saved listing filters', () => {
 });
 
 describe('the sidebar count and the grid send the same filters', () => {
+  it.each([
+    ['This project', { authorized_project_id: 'current' }],
+    ['Another project', { authorized_project_id__neq: 'current' }],
+    ['', {}],
+  ] as const)('applies "%s" to morphology rows, facets and the sidebar count', async (text, expected) => {
+    const dataType = ExtendedEntitiesTypeDict.CellMorphology;
+    const definition = getEntityGridDefinition(dataType);
+    if (!definition) throw new Error('morphology grid definition missing');
+    const filters = {
+      projectOwnership: {
+        columnId: 'projectOwnership',
+        operator: OperatorId.Eq,
+        value: { kind: FilterValueKind.Text, text },
+      },
+    };
+    const requests: Array<Record<string, unknown>> = [];
+    const source = createEntitycorePagedDataSource({
+      dataType,
+      schema: definition.schema,
+      context: { virtualLabId: 'lab', projectId: 'current' },
+      listQueryFn: async ({ filters: params }) => {
+        requests.push(params);
+        return undefined;
+      },
+    });
+    const query = { page: 1, pageSize: 20, sort: [], filters };
+    await source.fetch(query);
+    await source.fetchFacets?.(query);
+    expect(requests).toEqual([
+      { page: 1, page_size: 20, ...expected },
+      { page: 1, page_size: 0, ...expected },
+    ]);
+    await expect(
+      savedListingParams(dataType, { filters, freeTextSearch: '' }, undefined, 'current')
+    ).resolves.toEqual(expected);
+  });
+
   it('for a variant listing, after the load-time filter repair', async () => {
     const definition = getEntityGridDefinition(CIRCUIT);
     const variant = resolveListingVariant(CIRCUIT, 'small');

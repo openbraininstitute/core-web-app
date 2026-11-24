@@ -10,7 +10,7 @@ import { dataBrowseListingUsesBrainRegionHierarchy } from '@/api/entitycore/type
 import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
 import { isNotAuthorizedError } from '@/api/error';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { DEFAULT_PAGE_SIZE, FACETS_ONLY_PAGE, WorkspaceSection } from '@/constants';
+import { DEFAULT_PAGE_SIZE, FACETS_ONLY_PAGE, WorkspaceScope, WorkspaceSection } from '@/constants';
 import { mergeOrderByWithOverride } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import {
@@ -146,6 +146,7 @@ export function EntityDataGrid({
   defaultBrainRegion,
   dataType,
   scope: defaultScope,
+  showProjectOwnership,
   miniViewProps,
   mainTableProps,
   allowSearch = true,
@@ -169,7 +170,8 @@ export function EntityDataGrid({
 }: TEntityDataGridProps) {
   const { virtualLabId, projectId } = useWorkspace();
   const pathname = usePathname();
-  const { scope } = useScope({ defaultScope, clearOnDefault: false });
+  const { scope: selectedScope } = useScope({ defaultScope, clearOnDefault: false });
+  const scope = showProjectOwnership ? WorkspaceScope.Combined : selectedScope;
   const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
   const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
   const workspaceSpecies = useAtomValue(workspaceHierarchySpeciesAtom);
