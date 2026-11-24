@@ -3,7 +3,7 @@ import 'server-only';
 import { serverConfig as config } from '@/config/server';
 import { log } from '@/utils/logger';
 
-import type { Session } from 'next-auth';
+import type { TAuthSession } from '@/features/auth/types';
 
 const GROUPS_CACHE_TTL_MS = 5 * 60 * 1000;
 const STALE_MAX_AGE_MS = 15 * 60 * 1000;
@@ -89,7 +89,7 @@ async function refreshGroups(
 // then throws, so it never reads as "this user has no groups". Parallel requests with the same
 // token share one call. `fresh` always asks Keycloak and throws on an outage, for writes.
 export async function getKeycloakGroups(
-  session: Session,
+  session: TAuthSession,
   { fresh = false }: { fresh?: boolean } = {}
 ): Promise<string[] | null> {
   const { accessToken } = session;

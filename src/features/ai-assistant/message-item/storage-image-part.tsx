@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { useAccessToken } from '@/hooks/useAccessToken';
+import { useAuthSession } from '@/features/auth/client';
 import { serviceAiAgentUrl } from '@/services/ai-agent/api/url';
 
 import { ExpandableImage } from './expandable-image';
@@ -29,7 +29,7 @@ interface StorageImagePartProps {
  * Clicking the image opens it in a fullscreen dialog (via ExpandableImage).
  */
 export function StorageImagePart({ url, filename }: StorageImagePartProps) {
-  const accessToken = useAccessToken();
+  const accessToken = useAuthSession().data?.accessToken;
   const [resolvedUrl, setResolvedUrl] = useState<string | null>(
     () => presignedUrlCache[url] ?? null
   );

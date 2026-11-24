@@ -5,7 +5,7 @@ import debounce from 'es-toolkit/compat/debounce';
 import React from 'react';
 
 import { useAppNotification } from '@/components/notification';
-import { useAccessToken } from '@/hooks/useAccessToken';
+import { useAuthSession } from '@/features/auth/client';
 import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
 import { logError, logWarn } from '@/utils/logger';
@@ -207,7 +207,7 @@ export const AiAssistant = new AiAssistantClass();
 export function useAiAssistant() {
   const { error } = useAppNotification();
   const queryClient = useQueryClient();
-  const accessToken = useAccessToken() ?? 'NO-TOKEN';
+  const accessToken = useAuthSession().data?.accessToken ?? 'NO-TOKEN';
   const virtualLabId = useParamVirtualLabId();
   const projectId = useParamProjectId();
   const { error: healthError } = useAiAgentHealthCheck(accessToken);

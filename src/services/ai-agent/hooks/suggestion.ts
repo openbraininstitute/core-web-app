@@ -3,7 +3,7 @@
 import React from 'react';
 
 import { useSnapshot } from '@/features/ai-assistant/chat/suggested-questions/snapshot';
-import { useAccessToken } from '@/hooks/useAccessToken';
+import { useAuthSession } from '@/features/auth/client';
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
 
 import { serviceAiAgentSuggestionFromUserJourney } from '../api/suggestion';
@@ -45,7 +45,7 @@ export function useServiceAiAgentSuggestionFromUserJourney(
   const snapshot = useSnapshot();
   const virtualLabId = useParamVirtualLabId();
   const projectId = useParamProjectId();
-  const accessToken = useAccessToken();
+  const accessToken = useAuthSession().data?.accessToken;
 
   const [suggestions, setSuggestions] = React.useState<string[]>([]);
   const [isRefreshing, setIsRefreshing] = React.useState(true);

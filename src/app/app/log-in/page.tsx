@@ -1,17 +1,30 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { signIn, useSession } from 'next-auth/react';
 import { useEffect, useRef } from 'react';
 
-import { AUTH_PROXY_REDIRECT_TARGET_COOKIE, PREVIEW_DOMAIN_SUFFIX } from '@/auth/constants';
 import { config } from '@/config';
+import { signInWithKeycloak, useAuthSession } from '@/features/auth/client';
+import {
+  AUTH_PROXY_REDIRECT_PATH,
+  AUTH_PROXY_REDIRECT_TARGET_COOKIE,
+  LOG_IN_PATH,
+  PREVIEW_DOMAIN_SUFFIX,
+} from '@/features/auth/constants';
+import { AuthStatus } from '@/features/auth/types';
+import { log } from '@/utils/logger';
 
 const SYNC_PATH = `${config.ROOT_ROUTE}/sync`;
 
 function setAuthProxyRedirectCookie(url: string) {
   // biome-ignore lint/suspicious/noDocumentCookie: Enable auth for preview deployments with only one subdomain registered in Keycloak as redirect_uri
   document.cookie = `${AUTH_PROXY_REDIRECT_TARGET_COOKIE}=${encodeURIComponent(url)}; path=/; domain=${PREVIEW_DOMAIN_SUFFIX}; secure; samesite=lax`;
+}
+
+function hasAuthProxyRedirectCookie(): boolean {
+  return document.cookie
+    .split('; ')
+    .some((cookie) => cookie.startsWith(`${AUTH_PROXY_REDIRECT_TARGET_COOKIE}=`));
 }
 
 function parseCandidate(candidate: string): URL | null {
@@ -34,7 +47,7 @@ function isSameOriginTarget(candidate: string): boolean {
 }
 
 // Pass sync-targeted URLs through unchanged; re-wrapping them under `?redirectUrl=`
-// grows `__Secure-next-auth.callback-url` on every re-auth until it hits 431.
+// grows the callback URL on every re-auth until the request headers hit 431.
 function resolveCallbackUrl(redirectURL: string | null, onboarding: string): string {
   if (!redirectURL) return onboarding;
   if (isSyncTarget(redirectURL)) {
@@ -45,7 +58,7 @@ function resolveCallbackUrl(redirectURL: string | null, onboarding: string): str
 
 export default function Page() {
   const searchParams = useSearchParams();
-  const session = useSession();
+  const session = useAuthSession();
   const hasInitiated = useRef(false);
 
   const redirectURL = searchParams.get('callbackUrl');
@@ -54,14 +67,23 @@ export default function Page() {
   useEffect(() => {
     if (hasInitiated.current) return;
     // Wait for the session probe to skip a redundant OAuth round-trip for an SSO'd user.
-    if (session.status === 'loading') return;
+    if (session.status === AuthStatus.Loading) return;
 
     hasInitiated.current = true;
 
-    // A 'RefreshAccessTokenError' session decrypts as authenticated but can't
-    // mint fresh access tokens — fall through to re-auth instead of bouncing.
-    // `reauth=1` asks for the same when a service has rejected the token.
-    if (session.status === 'authenticated' && !session.data?.error && !reauth) {
+    const onAuthProxy =
+      !!config.AUTH_PROXY_URL && window.location.href.startsWith(config.AUTH_PROXY_URL);
+    // A preview deployment sent the user here to sign in: always finish that detour.
+    const returnsToPreview = onAuthProxy && hasAuthProxyRedirectCookie();
+
+    // A session with an error is signed in but can't mint fresh access tokens — fall through
+    // to re-auth instead of bouncing. `reauth=1` asks for the same when a service has rejected the token.
+    if (
+      session.status === AuthStatus.Authenticated &&
+      !session.data?.error &&
+      !reauth &&
+      !returnsToPreview
+    ) {
       const safeTarget = redirectURL && isSameOriginTarget(redirectURL) ? redirectURL : SYNC_PATH;
       window.location.replace(safeTarget);
       return;
@@ -70,12 +92,15 @@ export default function Page() {
     const onboarding = `${window.location.origin}${SYNC_PATH}`;
     const callbackUrl = resolveCallbackUrl(redirectURL, onboarding);
 
-    if (config.AUTH_PROXY_URL && !window.location.href.startsWith(config.AUTH_PROXY_URL)) {
+    if (config.AUTH_PROXY_URL && !onAuthProxy) {
       setAuthProxyRedirectCookie(callbackUrl);
-      window.location.href = `${config.AUTH_PROXY_URL}/api/auth/signin/keycloak`;
-    } else {
-      signIn('keycloak', { callbackUrl });
+      window.location.href = `${config.AUTH_PROXY_URL}${LOG_IN_PATH}`;
+      return;
     }
+
+    signInWithKeycloak(returnsToPreview ? AUTH_PROXY_REDIRECT_PATH : callbackUrl).catch((error) =>
+      log('error', 'sign-in could not start', error)
+    );
   }, [redirectURL, reauth, session.status, session.data?.error]);
 
   return (

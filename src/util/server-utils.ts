@@ -1,10 +1,10 @@
 'use server';
 
-import { getSession } from '@/auth-fetch';
 import { serverConfig as config } from '@/config/server';
+import { getAuthSession } from '@/features/auth/session';
 
 export async function keycloakLogout() {
-  const session = await getSession();
+  const session = await getAuthSession();
   const idToken = session?.idToken;
   if (!idToken) throw new Error("Couldn't locate id token");
 

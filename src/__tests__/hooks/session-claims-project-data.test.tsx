@@ -3,12 +3,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import useSessionState from '@/hooks/session';
 
-import type { Session } from 'next-auth';
+import type { TAuthSession } from '@/features/auth/types';
 
 const session = vi.hoisted(() => ({ current: { status: 'loading', data: null } as unknown }));
 const claim = vi.hoisted(() => vi.fn(async () => {}));
 
-vi.mock('next-auth/react', () => ({ useSession: () => session.current }));
+vi.mock('@/features/auth/client', () => ({ useAuthSession: () => session.current }));
 vi.mock('next/navigation', () => ({ usePathname: () => '/app/virtual-lab' }));
 const disown = vi.hoisted(() => vi.fn());
 vi.mock('@/utils/project-data-caches', () => ({
@@ -18,7 +18,7 @@ vi.mock('@/utils/project-data-caches', () => ({
 
 const signedIn = (id: string | undefined) => ({
   status: 'authenticated',
-  data: { user: { id }, accessToken: `token-${id}`, expires: '' } as unknown as Session,
+  data: { user: { id }, accessToken: `token-${id}`, expires: '' } as unknown as TAuthSession,
 });
 
 let reload: ReturnType<typeof vi.fn>;

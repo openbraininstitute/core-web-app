@@ -2,7 +2,7 @@ import snakeCase from 'es-toolkit/compat/snakeCase';
 import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { auth } from '@/auth';
+import { getAuthSession } from '@/features/auth/session';
 import { ticketStore } from '@/features/entity-download/ticket-store';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types';
@@ -29,7 +29,7 @@ const createTicketSchema = z.object({
  * }
  */
 export async function POST(request: NextRequest, { params }: { params: { entityType: string } }) {
-  const session = await auth();
+  const session = await getAuthSession();
   if (!session) {
     return new Response('Unauthorized', {
       status: 401,

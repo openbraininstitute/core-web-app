@@ -1,19 +1,5 @@
-import { isServer } from '@/config';
-import { getClientSession } from '@/hooks/session';
+import { getAuthSession } from '@/features/auth/session';
 import { retry } from '@/util/retry';
-
-/**
-  Gets the current session.
-  Works server and client side.
-*/
-export async function getSession() {
-  if (!isServer) return await getClientSession();
-
-  // Only import if running on server
-  const { auth } = await import('@/auth');
-
-  return await auth();
-}
 
 /**
   Adds Authorization header with the accessToken, and calls fetch.
@@ -22,7 +8,7 @@ export async function getSession() {
 export async function authFetchWithoutRetry(
   ...args: Parameters<typeof fetch>
 ): ReturnType<typeof fetch> {
-  const session = await getSession();
+  const session = await getAuthSession();
   if (!session) return fetch(...args); // If no active session fetch, for use in unauthenticated routes
 
   const init = args[1] || {};

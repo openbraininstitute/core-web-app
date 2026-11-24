@@ -1,6 +1,6 @@
 import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
-import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
+import { getAuthSession } from '@/features/auth/session';
 
 import type {
   IVirtualLabExpandedResponse,
@@ -114,7 +114,7 @@ export async function getSelfVirtualLab(): Promise<TGetSelfVirtualLabResponse> {
  */
 export async function checkVirtualLabExists({ name }: { name: string }): Promise<boolean | null> {
   try {
-    const session = await getSession();
+    const session = await getAuthSession();
     const response = await fetch(`${getBaseUrl()}/_check?q=${encodeURIComponent(name)}`, {
       method: 'GET',
       headers: {

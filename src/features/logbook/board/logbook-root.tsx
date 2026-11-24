@@ -1,7 +1,7 @@
 import { isNil, isNotNil } from 'es-toolkit';
 import { notFound } from 'next/navigation';
-import { useSession } from 'next-auth/react';
 
+import { useAuthSession } from '@/features/auth/client';
 import { colourOf } from '@/features/logbook/blocks/colour';
 import { Board } from '@/features/logbook/board/board';
 import { BoardSkeleton } from '@/features/logbook/elements/skeletons';
@@ -11,7 +11,7 @@ import { extractInitials } from '@/util/slugify';
 import type { IMe } from '@/features/logbook/types';
 
 export function LogbookRoot() {
-  const user = useSession().data?.user;
+  const user = useAuthSession().data?.user;
   const route = useRoute();
   if (isNil(route.project)) notFound();
   if (isNil(user?.id)) return <BoardSkeleton withLog={isNotNil(route.logId)} />;

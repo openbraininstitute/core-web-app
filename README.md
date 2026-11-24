@@ -42,7 +42,7 @@ Core web application for the Open Brain Institute. Built with Next.js, it provid
 | UI | Ant Design 5, Radix UI primitives, CSS Modules, Tailwind CSS 4 tooling |
 | Data fetching | TanStack Query 5, custom api client wrapper |
 | State and URL state | Jotai, `nuqs` |
-| Auth | NextAuth 4 with Keycloak OAuth/OIDC and auth-manager refresh-token sync |
+| Auth | Better Auth (no database) with Keycloak OAuth/OIDC and auth-manager refresh-token sync |
 | Runtime config | Zod-validated server/client configuration with browser env injection |
 | Content | Sanity |
 | Payments | Stripe |
@@ -58,7 +58,6 @@ Core web application for the Open Brain Institute. Built with Next.js, it provid
 src/
   app/                    Next.js App Router routes, layouts, route handlers, and errors
   api/                    Typed clients and helpers for platform backend services
-  auth/                   NextAuth and Keycloak integration
   components/             Shared legacy and cross-cutting React components
   config/                 Runtime configuration schema, server/client accessors, and provider
   constants/              Platform constants and static markdown content
@@ -94,7 +93,7 @@ flowchart LR
   Browser["Browser"]
   AppRouter["Next.js App Router"]
   RuntimeConfig["Runtime config"]
-  Auth["NextAuth and Keycloak"]
+  Auth["Better Auth and Keycloak"]
   Query["TanStack Query"]
   Services["Service clients"]
   PlatformApis["Platform APIs"]
@@ -198,8 +197,8 @@ Next.js also loads the standard Next env file cascade for local development.
 | `APP_VERSION` | Application version. Local dev sets this from `make version`; deployment sets it during build. |
 | `DEPLOYMENT_ENV` | One of `local`, `preview`, `development`, `staging`, or `production`. |
 | `ROOT_ROUTE` | Root route prefix used by the app. |
-| `NEXTAUTH_SECRET` | NextAuth JWT/session secret. |
-| `NEXTAUTH_URL` | NextAuth callback origin. Required by NextAuth runtime even though it is not part of the app Zod schema. |
+| `BETTER_AUTH_SECRET` | Secret that encrypts the session cookies; at least 32 random characters. `NEXTAUTH_SECRET` is still read when it is not set. |
+| `BETTER_AUTH_URL` | Public origin of the app, used for the OAuth callback. `NEXTAUTH_URL` is still read when it is not set. |
 | `KEYCLOAK_ISSUER` | Keycloak issuer URL. |
 | `KEYCLOAK_CLIENT_ID` | Keycloak OAuth client ID. |
 | `KEYCLOAK_CLIENT_SECRET` | Keycloak OAuth client secret. |
@@ -307,6 +306,19 @@ When `API_ORIGIN` is set, missing service URLs default to
 - Keep public/static assets in `public`; import source-only assets from feature or UI
   module directories when they are owned by a component.
 
+### Authentication
+
+Authentication lives in `src/features/auth` (Better Auth with Keycloak, no database: the
+session and the Keycloak tokens are kept in encrypted cookies).
+
+- In a React client component, read the session with `useAuthSession()` from
+  `@/features/auth/client`.
+- Everywhere else (server components, route handlers, server actions, query functions on
+  either side), read it with `await getAuthSession()` from `@/features/auth/session`.
+- Both return the same `TAuthSession`: `user`, `accessToken`, `idToken`, `expires`, and
+  `error` when the tokens can no longer be renewed.
+- Do not call Better Auth or read the cookies directly.
+
 ### Feature flags
 
 Feature flags live in `src/features/feature-flags`.
@@ -390,6 +402,11 @@ PR previews are managed by `.github/workflows/deploy-preview.yml` and AWS Amplif
 - Preview URLs use a domain-safe branch name under the configured preview domain.
 - Closing a PR updates the preview comment as deleted; branch cleanup is handled by
   Amplify and repository branch settings.
+- Only the auth proxy (`AUTH_PROXY_URL`) is registered in Keycloak. A preview stores the
+  page to return to in a cookie, sends the user to the proxy's log-in page, and the proxy
+  sends them back after sign-in. The session cookies are set on the shared preview domain,
+  so the proxy and every preview must use the same `BETTER_AUTH_SECRET` and run the same
+  auth library.
 
 ### Amplify build
 
@@ -398,7 +415,7 @@ PR previews are managed by `.github/workflows/deploy-preview.yml` and AWS Amplif
 - Enables Corepack and pnpm.
 - Installs dependencies with `pnpm install --frozen-lockfile`.
 - Sets `APP_VERSION` from `make version`.
-- Derives `NEXTAUTH_URL` for preview domains.
+- Derives `BETTER_AUTH_URL` for preview domains.
 - Copies selected runtime variables into `.env.production`.
 - Builds the standalone Next.js output.
 - Publishes `.next/standalone`, `.next/static`, and `BUILD_ID`.
@@ -440,9 +457,9 @@ The Zod config schema rejected the runtime environment.
 
 ### OAuth callback or login redirect fails locally
 
-Check `NEXTAUTH_URL`, `KEYCLOAK_ISSUER`, `KEYCLOAK_CLIENT_ID`, and the callback URL
-registered in Keycloak. For local development, `NEXTAUTH_URL` should normally point
-to `http://localhost:3000/api/auth`.
+Check `BETTER_AUTH_URL`, `KEYCLOAK_ISSUER`, `KEYCLOAK_CLIENT_ID`, and the callback URL
+registered in Keycloak (`<origin>/api/auth/callback/keycloak`). For local development,
+`BETTER_AUTH_URL` should normally point to `http://localhost:3000`.
 
 ### A new `/api` route works locally but fails in deployed environments
 

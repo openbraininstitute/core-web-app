@@ -3,7 +3,7 @@ import snakeCase from 'es-toolkit/compat/snakeCase';
 import { type NextRequest, NextResponse } from 'next/server';
 import z from 'zod';
 
-import { auth } from '@/auth';
+import { getAuthSession } from '@/features/auth/session';
 import { createDownloadStream } from '@/features/entity-download/download-stream';
 import { getDownloadStreamHeaders } from '@/features/entity-download/utils';
 
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest, { params }: { params: { entityT
   const { entityType: entityTypeRaw } = await params;
   const entityType = snakeCase(entityTypeRaw) as TEntityTypeDict;
 
-  const session = await auth();
+  const session = await getAuthSession();
   if (!session) {
     return new Response('Unauthorized', {
       status: 401,

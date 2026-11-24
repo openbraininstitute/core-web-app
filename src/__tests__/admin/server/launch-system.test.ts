@@ -5,7 +5,7 @@ import { fetchAdminJob, lookupJob } from '@/admin/server/launch-system';
 
 const { authMock } = vi.hoisted(() => ({ authMock: vi.fn() }));
 
-vi.mock('@/auth', () => ({ auth: authMock }));
+vi.mock('@/features/auth/session', () => ({ getAuthSession: authMock }));
 vi.mock('@/config/server', () => ({
   serverConfig: { LAUNCH_SYSTEM_URL: 'https://cell-a/api/launch-system' },
 }));

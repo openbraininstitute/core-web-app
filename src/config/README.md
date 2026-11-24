@@ -237,7 +237,7 @@ The property will automatically be:
 Properties with `public: false` are only available via `serverConfig` (imported from `@/config/server`):
 
 - `KEYCLOAK_ISSUER`, `KEYCLOAK_CLIENT_ID`, `KEYCLOAK_CLIENT_SECRET`
-- `NEXTAUTH_SECRET`
+- `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`
 - `MAILCHIMP_API_KEY`, `MAILCHIMP_AUDIENCE_ID`, `MAILCHIMP_API_SERVER` (optional)
 
 ### Client & Server Properties

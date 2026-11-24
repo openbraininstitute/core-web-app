@@ -5,8 +5,8 @@ import {
   uploadAssetMultipart,
 } from '@/api/entitycore/queries/assets/multipart';
 import { entityAssetsPath, entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
-import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
+import { getAuthSession } from '@/features/auth/session';
 import { compactRecord } from '@/utils/dictionary';
 
 import type { CacheConfiguration } from '@/api/cache-storage';
@@ -100,7 +100,7 @@ export async function buildAssetDownloadRequest({
   id: string;
   assetPath?: string;
 }): Promise<{ url: string; headers: Record<string, string> }> {
-  const session = await getSession();
+  const session = await getAuthSession();
   const url = new URL(
     `${config.ENTITY_CORE_URL}${entityAssetsPath(entityType, entityId)}/${id}/download`
   );

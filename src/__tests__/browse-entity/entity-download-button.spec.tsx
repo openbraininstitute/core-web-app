@@ -5,11 +5,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { downloadArchive } from '@/services/entity-download';
-import sessionAtom from '@/state/session';
 import { EntityDownloadButton } from '@/ui/segments/data-table/elements/download-button';
 
-import type { Session } from 'next-auth';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import type { TAuthSession } from '@/features/auth/types';
+
+const authSession = vi.hoisted(() => ({ current: null as TAuthSession | null }));
+vi.mock('@/features/auth/client', () => ({
+  useAuthSession: () => ({ data: authSession.current }),
+}));
 
 vi.mock('@/ui/hooks/use-scope', () => ({
   useScope: () => ({ scope: 'public' }),
@@ -38,14 +42,14 @@ function makeRow(id: string, name?: string): EntityCoreIdentifiable {
 function renderDownloadButton({
   selectedRows,
   clearSelectedRows = vi.fn(),
-  session = { user: { name: 'tester' } } as Session,
+  session = { user: { name: 'tester' } } as TAuthSession,
 }: {
   selectedRows: EntityCoreIdentifiable[];
   clearSelectedRows?: () => void;
-  session?: Session | null;
+  session?: TAuthSession | null;
 }) {
   const store = createStore();
-  store.set(sessionAtom, session);
+  authSession.current = session;
 
   return {
     clearSelectedRows,

@@ -2,7 +2,7 @@ import snakeCase from 'es-toolkit/compat/snakeCase';
 import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { auth } from '@/auth';
+import { getAuthSession } from '@/features/auth/session';
 import { createDownloadStream } from '@/features/entity-download/download-stream';
 import { ticketStore } from '@/features/entity-download/ticket-store';
 import {
@@ -23,7 +23,7 @@ export async function GET(
 
   const entityType = snakeCase(entityTypeRaw) as TEntityTypeDict;
 
-  const session = await auth();
+  const session = await getAuthSession();
   if (!session) {
     return new Response('Unauthorized', {
       status: 401,

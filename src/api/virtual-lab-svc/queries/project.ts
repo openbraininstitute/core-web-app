@@ -1,6 +1,6 @@
 import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
-import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
+import { getAuthSession } from '@/features/auth/session';
 import { fetchAllPaginatedData } from '@/utils/pagination';
 
 import type {
@@ -37,7 +37,7 @@ export async function checkProjectExists({
   vlabId: string;
   name: string;
 }): Promise<boolean | null> {
-  const session = await getSession();
+  const session = await getAuthSession();
   const response = await fetch(
     `${getBaseUrl()}/${vlabId}/projects/_check?q=${encodeURIComponent(name)}`,
     {
@@ -177,7 +177,7 @@ export async function attachUsersToProject({
   projectId: string;
   users: Array<{ email: string; role: string; id: string }>;
 }): Promise<VlmAttachUsersToProjectResponse> {
-  const session = await getSession();
+  const session = await getAuthSession();
 
   const response = await fetch(
     `${getBaseUrl()}/${virtualLabId}/projects/${projectId}/users/attach`,

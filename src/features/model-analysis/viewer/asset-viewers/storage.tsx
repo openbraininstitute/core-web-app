@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { AssetContentType as ContentType } from '@/api/entitycore/types/shared/global';
-import { getSession } from '@/auth-fetch';
+import { getAuthSession } from '@/features/auth/session';
 import { compactRecord } from '@/utils/dictionary';
 import { log } from '@/utils/logger';
 import { ProjectDataCache } from '@/utils/project-data-caches';
@@ -60,7 +60,7 @@ export const useClientCachedUrl = ({
       try {
         const cache = await caches.open(cacheKey);
         const cachedResponse = await cache.match(urlKey);
-        const session = await getSession();
+        const session = await getAuthSession();
         let isCacheValid = false;
         if (cachedResponse) {
           const cachedDateHeader = cachedResponse.headers.get('x-cache-date');

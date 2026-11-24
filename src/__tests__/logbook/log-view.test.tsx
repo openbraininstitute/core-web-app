@@ -24,7 +24,9 @@ const state = vi.hoisted(() => ({
 vi.mock('@/features/logbook/api/pages', () => ({
   usePages: () => ({ data: state.pages, isPending: false, isError: false, error: null }),
 }));
-vi.mock('@/hooks/session', () => ({ getClientSession: async () => ({ accessToken: 'token' }) }));
+vi.mock('@/features/auth/session', () => ({
+  getAuthSession: async () => ({ accessToken: 'token' }),
+}));
 vi.mock('@/api/logbook/utils', () => ({ collaborationUrl: (pageId: string) => pageId }));
 vi.mock('@/features/logbook/router', async (original) => ({
   ...(await original<typeof import('@/features/logbook/router')>()),

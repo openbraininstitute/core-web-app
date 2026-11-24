@@ -1,11 +1,11 @@
 import { CameraFilled } from '@ant-design/icons';
 import React from 'react';
 
+import { useAuthSession } from '@/features/auth/client';
 import { Settings } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/settings/settings';
 import { useBrainRegionRootHierarchyQuery } from '@/features/brain-region-hierarchy/context';
 import { useHierarchyRuntimeMetadataQuery } from '@/features/brain-region-hierarchy/hooks/use-brain-region-species';
 import { SPECIES_TAXONOMY_IDS } from '@/features/brain-region-hierarchy/types';
-import { useAccessToken } from '@/hooks/useAccessToken';
 import { classNames } from '@/util/utils';
 
 import {
@@ -29,7 +29,7 @@ const ATLAS_LABELS: Record<string, string> = {
 
 export function BrainAtlasViewerGltf({ className, onLoading }: BrainAtlasViewerGltfProps) {
   const [showResetCamera, setShowResetCamera] = React.useState(false);
-  const accessToken = useAccessToken();
+  const accessToken = useAuthSession().data?.accessToken;
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const {

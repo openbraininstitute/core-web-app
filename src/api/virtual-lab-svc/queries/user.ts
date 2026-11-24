@@ -1,6 +1,6 @@
 import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
-import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
+import { getAuthSession } from '@/features/auth/session';
 import { log } from '@/utils/logger';
 
 import type {
@@ -27,7 +27,7 @@ function getBaseUrl() {
 export const getUserProfile = async (): Promise<{
   profile: UserProfileResponse;
 } | null> => {
-  const session = await getSession();
+  const session = await getAuthSession();
   const response = await fetch(`${getBaseUrl()}/profile`, {
     method: 'get',
     headers: {
@@ -124,7 +124,7 @@ export const checkUserProfileEmailAvailability = async (email: string): Promise<
  * @returns list of user's groups
  */
 export const getUserGroups = async (): Promise<VlmUserGroupsResponse> => {
-  const session = await getSession();
+  const session = await getAuthSession();
   const response = await fetch(`${getBaseUrl()}/groups`, {
     method: 'GET',
     headers: {

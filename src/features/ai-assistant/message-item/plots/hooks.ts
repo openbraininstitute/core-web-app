@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { useAccessToken } from '@/hooks/useAccessToken';
+import { useAuthSession } from '@/features/auth/client';
 import { serviceAiAgentStorageGetFileContent } from '@/services/ai-agent/api/storage';
 
 export function usePlotFile(fileIdentifier: string) {
-  const accessToken = useAccessToken() ?? 'NO-TOKEN';
+  const accessToken = useAuthSession().data?.accessToken ?? 'NO-TOKEN';
   const { data, error, isError, isSuccess, isLoading } = useQuery({
     queryKey: ['storage', fileIdentifier],
     queryFn: async () => {

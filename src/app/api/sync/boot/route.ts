@@ -3,7 +3,7 @@ import { tryCatch } from '@/api/utils';
 import { createProject } from '@/api/virtual-lab-svc/queries/project';
 import { updateUserOnboardingProfile } from '@/api/virtual-lab-svc/queries/user';
 import { createVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { auth } from '@/auth';
+import { getAuthSession } from '@/features/auth/session';
 import {
   WorkspaceBootstrap,
   WorkspaceBootstrapStep,
@@ -275,7 +275,7 @@ async function* bootstrapWorkspace(
 
 export async function POST(req: NextRequest) {
   const body = (await req.json()) as BootstrapBody;
-  const session = await auth();
+  const session = await getAuthSession();
 
   if (!session) {
     return new Response('Unauthorized', {

@@ -4,12 +4,12 @@ import { AntdRegistry } from '@ant-design/nextjs-registry';
 import { App, ConfigProvider } from 'antd';
 import { Provider as JotaiProvider } from 'jotai';
 import { MotionConfig } from 'motion/react';
-import { SessionProvider } from 'next-auth/react';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
 import { ProgressBarProvider } from '@/app/app/progress-provider';
 import SessionStateProvider from '@/components/SessionStateProvider';
 import ThemeProvider from '@/components/ThemeProvider';
+import { AuthSessionProvider } from '@/features/auth/auth-session-provider';
 import { type FeatureFlags, FlagsProvider } from '@/features/feature-flags';
 import { QueryProvider } from '@/query-provider/client';
 import { AtomProvider } from '@/state/state';
@@ -17,11 +17,11 @@ import commonAntdTheme from '@/theme/antd';
 import { JotaiDevTools } from '@/utils/jotai-devtools';
 
 import type { ReactNode } from 'react';
-import type { SessionOrNull } from '@/hooks/session';
+import type { TAuthSession } from '@/features/auth/types';
 
 type ProvidersProps = {
   children: ReactNode;
-  session: SessionOrNull;
+  session: TAuthSession | null;
   flags: FeatureFlags;
 };
 
@@ -37,13 +37,13 @@ export function Providers({ children, session, flags }: ProvidersProps) {
                   <JotaiProvider>
                     <JotaiDevTools />
                     <ThemeProvider>
-                      <SessionProvider session={session} refetchInterval={2 * 60}>
+                      <AuthSessionProvider session={session}>
                         <SessionStateProvider>
                           <FlagsProvider flags={flags}>
                             <ProgressBarProvider>{children}</ProgressBarProvider>
                           </FlagsProvider>
                         </SessionStateProvider>
-                      </SessionProvider>
+                      </AuthSessionProvider>
                     </ThemeProvider>
                   </JotaiProvider>
                 </QueryProvider>

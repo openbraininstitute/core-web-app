@@ -15,12 +15,12 @@ import { Color } from 'three';
 
 import { getSingleNeuronSynaptomePlacement } from '@/api/small-scale-simulator';
 import { tryCatch } from '@/api/utils';
-import { getSession } from '@/auth-fetch';
 import {
   sendDisplaySynapses3DEvent,
   sendRemoveSynapses3DEvent,
 } from '@/components/neuron-viewer/hooks/events';
 import { useAppNotification } from '@/components/notification';
+import { getAuthSession } from '@/features/auth/session';
 import { createBubblesInstanced } from '@/services/bluenaas-single-cell/renderer-utils';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
@@ -118,7 +118,7 @@ export function SynapticInputItem({
     setLoadingVisualize(true);
 
     try {
-      const session = await getSession();
+      const session = await getAuthSession();
       if (!session?.accessToken) {
         throw new Error('No session found');
       }

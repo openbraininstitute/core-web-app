@@ -4,8 +4,8 @@ import { getPreviewBlob, isTransientThumbnailError, ThumbnailError } from '@/api
 
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 
-vi.mock('@/auth-fetch', () => ({
-  getSession: vi.fn().mockResolvedValue({ accessToken: 'token' }),
+vi.mock('@/features/auth/session', () => ({
+  getAuthSession: vi.fn().mockResolvedValue({ accessToken: 'token' }),
 }));
 
 // A memodel needs no asset (model-trace route), so no entity configuration is involved.

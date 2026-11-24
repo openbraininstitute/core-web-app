@@ -2,7 +2,7 @@ import { isToolUIPart } from 'ai';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import React from 'react';
 
-import { useAccessToken } from '@/hooks/useAccessToken';
+import { useAuthSession } from '@/features/auth/client';
 import {
   useAiAgentRateLimit,
   useServiceAiAgentChat,
@@ -73,7 +73,7 @@ export default function Chat({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refetchSuggestions]);
 
-  const accessToken = useAccessToken();
+  const accessToken = useAuthSession().data?.accessToken;
   const rateLimit = useAtomValue(atomRateLimit);
   const setRateLimit = useSetAtom(atomRateLimit);
   const [activeDiffMessageId, setActiveDiffMessageId] = useAtom(activeDiffMessageIdAtom);

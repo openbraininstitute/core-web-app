@@ -1,7 +1,7 @@
 'use client';
 
-import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
+import { getAuthSession } from '@/features/auth/session';
 import { StreamHttpError } from '@/features/task-logs-stream/helpers';
 
 import type { IJobRead } from '@/features/task-logs-stream/types';
@@ -16,7 +16,7 @@ export async function fetchTaskJobRead({
   workspace: WorkspaceContext;
   signal?: AbortSignal;
 }): Promise<IJobRead> {
-  const session = await getSession();
+  const session = await getAuthSession();
 
   const response = await fetch(`${config.OBI_ONE_URL}/declared/task/${encodeURIComponent(jobId)}`, {
     method: 'GET',

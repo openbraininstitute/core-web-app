@@ -1,7 +1,7 @@
 'use client';
 
-import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
+import { getAuthSession } from '@/features/auth/session';
 import {
   getReconnectDelayMs,
   isRetryableStreamError,
@@ -23,7 +23,7 @@ export async function fetchTaskLogsStreamEndpoint({
   workspace: WorkspaceContext;
   signal?: AbortSignal;
 }): Promise<AsyncIterable<ILogEntry>> {
-  const session = await getSession();
+  const session = await getAuthSession();
 
   const response = await fetch(
     `${config.OBI_ONE_URL}/declared/task/${encodeURIComponent(jobId)}/stream`,

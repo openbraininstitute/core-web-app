@@ -9,8 +9,8 @@ import {
   storeInCache,
 } from '@/api/cache-storage';
 import { parseApiError } from '@/api/utils';
-import { getSession } from '@/auth-fetch';
 import { INTERNAL_QUERY_CACHE_PREFIX } from '@/constants';
+import { getAuthSession } from '@/features/auth/session';
 import { compactRecord } from '@/utils/dictionary';
 import { log } from '@/utils/logger';
 
@@ -338,7 +338,7 @@ class ApiClient {
  * @returns {Promise<ApiClient>} a promise that resolves to an instance of ApiClient
  */
 export async function authApiClient(rootUri: string, cacheConfig?: CacheConfiguration) {
-  const session = await getSession();
+  const session = await getAuthSession();
 
   return new ApiClient({
     rootUri,
