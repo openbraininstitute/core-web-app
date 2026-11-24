@@ -1,12 +1,7 @@
 import { LoadingOutlined } from '@ant-design/icons';
 
+import { LAUNCH_GREEN, TASK_BUTTON_TEXT } from '@/features/scan-config/components/shared/box-class';
 import { classNames } from '@/util/utils';
-
-/** The launch button's green, which the configuration's generate buttons share. */
-export const LAUNCH_GREEN = 'bg-[linear-gradient(94.93deg,#389E0D_18.84%,#143805_116.7%)]';
-
-/** The text of the launch and generate buttons. */
-export const TASK_BUTTON_TEXT = 'text-sm font-semibold';
 
 type Props = {
   label: string;

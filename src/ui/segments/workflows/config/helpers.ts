@@ -113,6 +113,13 @@ function workflowEntity(workflow: IWorkflowDescriptor): TEntityTypeMeta {
   );
 }
 
+function workflowLabel(
+  workflow: IWorkflowDescriptor,
+  entity: TEntityTypeMeta = workflowEntity(workflow)
+): string {
+  return workflow.label ?? entity.label;
+}
+
 /** The Category and Type a workflow listing is labelled with, as its pickers name them. */
 export function getWorkflowListingLabels(opts: {
   activity: TActivityValue | string | null | undefined;
@@ -124,9 +131,7 @@ export function getWorkflowListingLabels(opts: {
     : null;
   return {
     category: getActivity(activity)?.label ?? '',
-    type: workflow
-      ? (workflow.label ?? workflowEntity(workflow).label)
-      : (getWorkflowEntityLabel(targetType) ?? '-'),
+    type: workflow ? workflowLabel(workflow) : (getWorkflowEntityLabel(targetType) ?? '-'),
   };
 }
 
@@ -143,7 +148,7 @@ function resolveWorkflow(
     ...workflow,
     entity,
     disabled,
-    label: workflow.label ?? entity.label,
+    label: workflowLabel(workflow, entity),
     legacy: workflow.legacy ?? entity.legacy ?? false,
   };
 }

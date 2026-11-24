@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { WorkspaceSection } from '@/constants';
 import { ModelDataExtendedTypes, SimulationDataExtendedTypes } from '@/ui/segments/explore/helpers';
 import {
@@ -217,5 +218,11 @@ describe('workflows table labels', () => {
         getWorkflowListingLabels({ activity: activity.value, targetType: workflow.targetType })
       ).toEqual({ category: activity.label, type: workflow.label });
     }
+  });
+
+  it('names a type with no browse workflow by its workflow catalog label', () => {
+    expect(
+      getWorkflowListingLabels({ activity: null, targetType: ExtendedEntitiesTypeDict.Memodel })
+    ).toEqual({ category: '', type: 'Single neuron' });
   });
 });

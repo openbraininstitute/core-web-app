@@ -1,7 +1,3 @@
-import {
-  LAUNCH_GREEN,
-  TASK_BUTTON_TEXT,
-} from '@/features/scan-config/components/shared/task-launch-button';
 import { cn } from '@/utils/css-class';
 
 /**
@@ -25,6 +21,12 @@ export const DESCRIPTION_TOOLTIP_CLASS = `${HOVER_CARD_CLASS} text-primary-9 max
 /** The blocks-and-form window's two columns: on the grid's tracks where subgrid is supported, halves otherwise. */
 export const BLOCKS_AND_FORM_COLUMNS_CLASS =
   'grid-cols-2 supports-[grid-template-columns:subgrid]:grid-cols-subgrid';
+
+/** The launch button's green, which the configuration's generate buttons share. */
+export const LAUNCH_GREEN = 'bg-[linear-gradient(94.93deg,#389E0D_18.84%,#143805_116.7%)]';
+
+/** The text of the launch and generate buttons. */
+export const TASK_BUTTON_TEXT = 'text-sm font-semibold';
 
 const GENERATE_CLICKABLE =
   'shadow-[0_3px_8px_-1px_rgb(20_56_5/0.3)] transition-[scale] duration-200 ease-out motion-safe:hover:scale-[1.02]';
