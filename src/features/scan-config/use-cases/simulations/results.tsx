@@ -48,6 +48,7 @@ import { configTimeline } from '@/features/spike-viewer/config-timeline';
 import { SimulationProvider } from '@/features/spike-viewer/simulation-context';
 import { TaskConfigurationViewer, TaskLogsViewer } from '@/features/task-logs-stream';
 import { isTerminalActivityStatus } from '@/features/task-runner';
+import { launchErrorMessage } from '@/features/task-runner/helpers';
 import { invalidateProjectBalance } from '@/features/task-runner/hooks/use-balance-refresh';
 import { messages } from '@/i18n/en/simulation';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -331,6 +332,7 @@ export function SimulationsTab({
 
     let nSubmissions = 0;
     let lowFundsError = false;
+    let failureMessage: string | undefined;
 
     for (const simId of simIds) {
       try {
@@ -347,6 +349,8 @@ export function SimulationsTab({
         log('error', 'Failed to submit a simulation', error);
         if (isLowCreditsError(error)) {
           lowFundsError = true;
+        } else {
+          failureMessage ??= launchErrorMessage(error, messages.SimulationLaunchError);
         }
       }
     }
@@ -360,7 +364,7 @@ export function SimulationsTab({
       notifyLowCredits();
     } else if (nSubmissions !== simIds.length) {
       notification.error({
-        message: 'We ran into a problem submitting your simulation(s). Please try again later.',
+        message: failureMessage ?? messages.SimulationLaunchError,
         duration: 10,
       });
     } else {

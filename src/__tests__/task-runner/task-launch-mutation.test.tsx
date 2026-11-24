@@ -3,6 +3,7 @@ import { renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
+import { ApiError } from '@/api/error';
 import { ObiOneTaskTypeDict } from '@/api/one/types/task';
 import { useTaskLaunchMutation } from '@/features/task-runner/hooks/mutations';
 
@@ -61,13 +62,22 @@ describe('useTaskLaunchMutation', () => {
     ]);
   });
 
-  it('keeps launching the other configs when one fails', async () => {
-    mocks.runTask.mockRejectedValueOnce(new Error('boom'));
+  it.each([
+    ['the failure message for a non-API error', new Error('boom'), 'failed'],
+    [
+      "the API's message for an API error",
+      new ApiError('Bad request', { message: 'Config not found' }),
+      'Config not found',
+    ],
+  ])('keeps launching the other configs when one fails, showing %s', async (_, error, message) => {
+    mocks.runTask.mockRejectedValueOnce(error);
     const result = renderLaunchMutation(ObiOneTaskTypeDict.IonChannelFitting);
 
     await result.current.mutateAsync(['c1', 'c2']);
 
     expect(mocks.runTask).toHaveBeenCalledTimes(2);
-    expect(mocks.notificationError).toHaveBeenCalledTimes(1);
+    expect(mocks.notificationError.mock.calls).toEqual([
+      [expect.objectContaining({ message, key: 'launch' })],
+    ]);
   });
 });

@@ -3,15 +3,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 
-import { ApiError } from '@/api/error';
 import { runTask } from '@/api/one/runner';
 import { useAppNotification } from '@/components/notification';
 import { useRunWithOfflineTokenConsent } from '@/features/offline-auth-management';
-import { errorRegistry } from '@/features/scan-config/error-registry';
-import { getErrorMessage } from '@/utils/error';
 import { log } from '@/utils/logger';
 
 import { TASK_ACTIVITIES_QUERY_KEY_HEAD, TASK_RUNNER_QUERY_KEY_HEAD } from '../constants';
+import { launchErrorMessage } from '../helpers';
 import { invalidateProjectBalance } from './use-balance-refresh';
 
 import type { QueryClient } from '@tanstack/react-query';
@@ -70,15 +68,11 @@ export function useTaskLaunchMutation({
   const handleTaskError = useCallback(
     (error: unknown, configId: string) => {
       log('error', `Failed to launch ${logTopicLower} for config ${configId}`, error);
-      if (error instanceof ApiError) {
-        const code = error.cause?.code;
-        const apiMessage = error.cause?.message ?? failureMessage;
-        const message = code ? getErrorMessage(code, errorRegistry, apiMessage) : apiMessage;
-        notification.error({ message, duration: 5, key: notificationKey });
-        return;
-      }
-
-      notification.error({ message: failureMessage, duration: 5, key: notificationKey });
+      notification.error({
+        message: launchErrorMessage(error, failureMessage),
+        duration: 5,
+        key: notificationKey,
+      });
     },
     [failureMessage, logTopicLower, notification, notificationKey]
   );

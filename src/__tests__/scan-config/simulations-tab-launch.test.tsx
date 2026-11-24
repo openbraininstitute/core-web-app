@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
+import { ApiError } from '@/api/error';
 import { ObiOneTaskTypeDict } from '@/api/one/types/task';
 import { SimulationsTab } from '@/features/scan-config/use-cases/simulations/results';
 import { messages } from '@/i18n/en/simulation';
@@ -131,6 +132,23 @@ describe('SimulationsTab launch routing', () => {
     expect(mocks.runTask).toHaveBeenCalledWith(
       expect.objectContaining({ task_type: taskType, config_id: 's1' })
     );
+  });
+
+  it.each([
+    [
+      "the API's message for an API error",
+      new ApiError('Bad request', { message: 'No seats' }),
+      'No seats',
+    ],
+    ['the generic message for any other error', new Error('boom'), messages.SimulationLaunchError],
+  ])('shows %s when a launch fails', async (_, error, message) => {
+    mocks.model = { entityType: EntityTypeDict.IonChannelModel };
+    mocks.runTask.mockRejectedValue(error);
+
+    await clickLaunch();
+    await mocks.costConfirmation.onConfirm?.(['s1']);
+
+    expect(mocks.notificationError).toHaveBeenCalledWith(expect.objectContaining({ message }));
   });
 
   it.each([
