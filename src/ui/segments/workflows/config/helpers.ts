@@ -113,27 +113,20 @@ function workflowEntity(workflow: IWorkflowDescriptor): TEntityTypeMeta {
   );
 }
 
-function workflowLabel(workflow: IWorkflowDescriptor): string {
-  return workflow.label ?? workflowEntity(workflow).label;
-}
-
 /** The Category and Type a workflow listing is labelled with, as its pickers name them. */
 export function getWorkflowListingLabels(opts: {
   activity: TActivityValue | string | null | undefined;
   targetType: TExtendedEntitiesTypeDict | null | undefined;
 }): { category: string; type: string } {
-  const { targetType } = opts;
-  const activity = getActivity(opts.activity);
-  const workflow =
-    activity && targetType
-      ? workflowsFor(activity, WorkflowListContextDict.Browse).find(
-          (each) => each.targetType === targetType
-        )
-      : undefined;
-  const fallbackType = targetType ? getEntityByExtendedType({ type: targetType })?.title : null;
+  const { activity, targetType } = opts;
+  const workflow = targetType
+    ? getWorkflow({ activity, targetType, context: WorkflowListContextDict.Browse })
+    : null;
   return {
-    category: activity?.label ?? '',
-    type: workflow ? workflowLabel(workflow) : (fallbackType ?? '-'),
+    category: getActivity(activity)?.label ?? '',
+    type: workflow
+      ? (workflow.label ?? workflowEntity(workflow).label)
+      : (getWorkflowEntityLabel(targetType) ?? '-'),
   };
 }
 
@@ -150,7 +143,7 @@ function resolveWorkflow(
     ...workflow,
     entity,
     disabled,
-    label: workflowLabel(workflow),
+    label: workflow.label ?? entity.label,
     legacy: workflow.legacy ?? entity.legacy ?? false,
   };
 }

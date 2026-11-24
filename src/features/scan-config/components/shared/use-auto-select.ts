@@ -11,10 +11,7 @@ type Props = {
   inputFiles: TActivityCustomFile[];
   outputFiles: TActivityCustomFile[];
   onSelect: (file: TActivityCustomFile) => void;
-  /**
-   * Whether the run's result is in. While it is `false`, a picked task log gives way to the
-   * first result file once it is `true`; left out, a pick is kept.
-   */
+  /** Opt-in: a task log picked while `false` gives way to the first result file once `true`. */
   resultReady?: boolean;
 };
 
@@ -26,6 +23,10 @@ function fileKey(file: TActivityCustomFile): string {
 function isSameFile(a: TActivityCustomFile | undefined, b: TActivityCustomFile | undefined) {
   if (!a || !b) return false;
   return fileKey(a) === fileKey(b) && a.entity.id === b.entity.id;
+}
+
+function logOrNull(file: TActivityCustomFile | undefined) {
+  return file && isTaskLogsFile(file) ? file : null;
 }
 
 export function useAutoSelectFileOnConfigChange({
@@ -41,18 +42,15 @@ export function useAutoSelectFileOnConfigChange({
   const provisionalPick = useRef<TActivityCustomFile | null>(null);
 
   useEffect(() => {
-    // The outputs are left empty while a finished run's files load, which keeps a log
-    // carried over from another run from counting as this run's.
+    // Relies on the caller leaving the outputs empty while a finished run's files load.
     const tracksLog = resultReady === false && outputFiles.some(isTaskLogsFile);
-    const provisional = (file: TActivityCustomFile | undefined) =>
-      file && isTaskLogsFile(file) ? file : null;
 
     if (previousConfigId.current !== configId) {
       previousConfigId.current = configId;
       pendingOutputSelectionForConfigId.current = configId;
 
       const preferred = outputFiles[0] ?? inputFiles[0];
-      provisionalPick.current = tracksLog ? provisional(preferred) : null;
+      provisionalPick.current = tracksLog ? logOrNull(preferred) : null;
       if (preferred && !isSameFile(selectedFile, preferred)) {
         onSelect(preferred);
       }
@@ -60,7 +58,7 @@ export function useAutoSelectFileOnConfigChange({
     }
 
     if (tracksLog) {
-      provisionalPick.current = provisional(selectedFile);
+      provisionalPick.current = logOrNull(selectedFile);
     } else if (resultReady && provisionalPick.current) {
       if (!isSameFile(selectedFile, provisionalPick.current)) {
         provisionalPick.current = null;

@@ -30,10 +30,11 @@ type THarnessProps = {
   inputFiles: TActivityCustomFile[];
   outputFiles: TActivityCustomFile[];
   resultReady?: boolean;
+  initialSelected?: TActivityCustomFile;
 };
 
-function useHarness(props: THarnessProps) {
-  const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>();
+function useHarness({ initialSelected, ...props }: THarnessProps) {
+  const [selectedFile, setSelectedFile] = useState(initialSelected);
   useAutoSelectFileOnConfigChange({ ...props, selectedFile, onSelect: setSelectedFile });
   return { selectedFile, setSelectedFile };
 }
@@ -111,14 +112,8 @@ describe('useAutoSelectFileOnConfigChange', () => {
   });
 
   it('switches from a log already on show when the simulation is first seen', () => {
-    const { result, rerender } = renderHook(
-      (props: THarnessProps) => {
-        const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(logs);
-        useAutoSelectFileOnConfigChange({ ...props, selectedFile, onSelect: setSelectedFile });
-        return { selectedFile };
-      },
-      { initialProps: running(false) }
-    );
+    const initialProps: THarnessProps = { ...running(false), initialSelected: logs };
+    const { result, rerender } = renderHook(useHarness, { initialProps });
     rerender({ ...running(false), outputFiles: [] });
     rerender(done(true));
     expect(result.current.selectedFile).toBe(spikes);

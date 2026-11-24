@@ -1,3 +1,9 @@
+import {
+  LAUNCH_GREEN,
+  TASK_BUTTON_TEXT,
+} from '@/features/scan-config/components/shared/task-launch-button';
+import { cn } from '@/utils/css-class';
+
 /**
  * The white card a pane of the results or the configuration sits in: the Data
  * page's, rounded, with its faint navy ring and soft navy drop under a white top
@@ -19,3 +25,15 @@ export const DESCRIPTION_TOOLTIP_CLASS = `${HOVER_CARD_CLASS} text-primary-9 max
 /** The blocks-and-form window's two columns: on the grid's tracks where subgrid is supported, halves otherwise. */
 export const BLOCKS_AND_FORM_COLUMNS_CLASS =
   'grid-cols-2 supports-[grid-template-columns:subgrid]:grid-cols-subgrid';
+
+const GENERATE_CLICKABLE =
+  'shadow-[0_3px_8px_-1px_rgb(20_56_5/0.3)] transition-[scale] duration-200 ease-out motion-safe:hover:scale-[1.02]';
+
+/** The generate buttons' pill: the 3D Player button's font in the launch button's green. */
+export function generateButtonClass(disabled: boolean): string {
+  return cn(
+    'flex min-h-12.5 p-2 w-full items-center justify-center rounded-full ring-1 ring-black/5',
+    TASK_BUTTON_TEXT,
+    disabled ? 'bg-gray-300 text-gray-500' : [LAUNCH_GREEN, GENERATE_CLICKABLE, 'text-white']
+  );
+}

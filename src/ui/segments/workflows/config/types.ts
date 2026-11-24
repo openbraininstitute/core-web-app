@@ -340,7 +340,6 @@ export const WorkflowBrowseDefaults = {
 export type TActivityEntry = {
   value: TActivityValue;
   label: string;
-  name: string;
   order?: number;
   disabled?: boolean;
   requiredFeatures?: readonly FlagKey[];
