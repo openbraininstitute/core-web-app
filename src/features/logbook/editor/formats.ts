@@ -1,11 +1,19 @@
-import { isiOS, isMacOS } from '@tiptap/core';
+import { getMarkRange, isiOS, isMacOS } from '@tiptap/core';
 import { isNil } from 'es-toolkit';
 import { match } from 'ts-pattern';
 
 import { Align, Format, TextStyle } from '@/features/logbook/types';
 
 import type { Editor } from '@tiptap/react';
-import type { IFormat, IFormatState, TAlign, TFormat, TTextStyle } from '@/features/logbook/types';
+import type {
+  IFormat,
+  IFormatState,
+  ILinkEdit,
+  ILinkTarget,
+  TAlign,
+  TFormat,
+  TTextStyle,
+} from '@/features/logbook/types';
 import type { TIconName } from '@/ui/molecules/icon';
 
 const TIPTAP_NAMES: Readonly<Record<TFormat, string>> = {
@@ -34,14 +42,68 @@ const keysOf = (keys: string): string => {
 export const titleOf = (format: { label: string; keys: string | null }): string =>
   isNil(format.keys) ? format.label : `${format.label} (${keysOf(format.keys)})`;
 
-function editLink(editor: Editor): void {
-  const current: unknown = editor.getAttributes(TIPTAP_NAMES[Format.Link])['href'];
-  const href = window.prompt('Link address', typeof current === 'string' ? current : 'https://');
-  if (isNil(href)) return;
-  const chain = editor.chain().focus().extendMarkRange(TIPTAP_NAMES[Format.Link]);
-  if (href.trim().length === 0) chain.unsetLink().run();
-  else chain.setLink({ href: href.trim() }).run();
+/** What a link edit works on: the selection, or the whole link the cursor is in. */
+export function linkTargetOf(editor: Editor): ILinkTarget {
+  const { state } = editor;
+  const { from, to } = state.selection;
+  const href: unknown = editor.getAttributes(TIPTAP_NAMES[Format.Link])['href'];
+  const markType = state.schema.marks[TIPTAP_NAMES[Format.Link]];
+  // getMarkRange gives void when the cursor is not in a link.
+  const mark = isNil(markType) ? undefined : getMarkRange(state.doc.resolve(from), markType);
+  const range = mark
+    ? { from: Math.min(from, mark.from), to: Math.max(to, mark.to) }
+    : { from, to };
+  let onlyText = state.doc.resolve(range.from).sameParent(state.doc.resolve(range.to));
+  state.doc.nodesBetween(range.from, range.to, (node) => {
+    if (node.isInline && !node.isText) onlyText = false;
+  });
+  return {
+    ...range,
+    text: state.doc.textBetween(range.from, range.to),
+    href: typeof href === 'string' ? href : '',
+    textEditable: onlyText,
+  };
 }
+
+/** A typed address without a scheme ("example.org") is read as https. */
+export const hrefOf = (url: string): string => {
+  const trimmed = url.trim();
+  return trimmed.length === 0 || /^[a-z][a-z\d+.-]*:/i.test(trimmed)
+    ? trimmed
+    : `https://${trimmed}`;
+};
+
+/** False for an address the link mark refuses (a `javascript:` one, say). */
+export const canLink = (editor: Editor, href: string): boolean =>
+  href.length > 0 && editor.can().setLink({ href });
+
+/**
+ * Sets the link on the target. Unchanged text keeps its other marks (bold, code); a new or
+ * edited text replaces the target with plain linked text. Empty text shows the address.
+ * The cursor ends after the link, so typing goes on outside it.
+ */
+export function saveLink(editor: Editor, target: ILinkTarget, edit: ILinkEdit): void {
+  const text = edit.text.length > 0 ? edit.text : edit.href;
+  const keep = target.from !== target.to && (text === target.text || !target.textEditable);
+  const end = keep ? target.to : target.from + text.length;
+  const chain = editor.chain().focus();
+  if (!keep) chain.insertContentAt({ from: target.from, to: target.to }, { type: 'text', text });
+  chain
+    .setTextSelection({ from: target.from, to: end })
+    .setLink({ href: edit.href })
+    .setTextSelection(end)
+    .run();
+}
+
+export const removeLink = (editor: Editor, target: ILinkTarget): void => {
+  editor
+    .chain()
+    .focus()
+    .setTextSelection({ from: target.from, to: target.to })
+    .unsetLink()
+    .setTextSelection(target.to)
+    .run();
+};
 
 export const INLINE_FORMATS: readonly IFormat[] = [
   {
@@ -79,7 +141,6 @@ export const INLINE_FORMATS: readonly IFormat[] = [
     keys: 'Mod-e',
     run: (e) => e.chain().focus().toggleCode().run(),
   },
-  { key: Format.Link, label: 'Link', icon: 'link', keys: null, run: editLink },
 ];
 
 export const BLOCK_FORMATS: readonly IFormat[] = [
