@@ -18,8 +18,6 @@ export const keyBuilderLogbook = {
   documentText: (logId: string, assetId: string) =>
     [prefix, 'document-text', { logId, assetId }] as const,
   entity: (type: string, id: string) => [prefix, 'entity', { type, id }] as const,
-  entitySearch: (type: string, search: string, projectId: string) =>
-    [prefix, 'entity-search', { type, search, projectId }] as const,
   viewer3d: (kind: string, entityId: string) => [prefix, 'viewer-3d', { kind, entityId }] as const,
   picture: (entityId: string, from: string | null) =>
     [prefix, 'picture', { entityId, from }] as const,

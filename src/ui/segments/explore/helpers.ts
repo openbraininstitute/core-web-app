@@ -26,6 +26,8 @@ import { SingleNeuronSynaptomeSimulation } from '@/entity-configuration/domain/s
 import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import { WholeBrainCircuitSimulation } from '@/entity-configuration/domain/simulation/whole-brain-circuit-simulation';
 
+import type { FeatureFlags, FlagKey } from '@/features/feature-flags';
+
 export const ExploreDataTypeTabs = {
   Experimental: 'experimental',
   Models: 'models',
@@ -91,6 +93,12 @@ export const SimulationDataExtendedTypes = {
   SingleNeuronSimulation,
   SingleNeuronSynaptomeSimulation,
 } as const;
+
+/** A Data nav entry is shown only when every feature flag it requires is on. */
+export const isShownInData = (
+  config: { readonly requiredFeatures?: readonly FlagKey[] },
+  flags: FeatureFlags
+): boolean => !config.requiredFeatures || config.requiredFeatures.every((flag) => flags[flag]);
 
 export function getEntityTypeFromUrlOnEntityScope(url: string) {
   const match = url.match(/\/browse\/entity\/([^/?]+)/);
