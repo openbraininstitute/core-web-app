@@ -1,10 +1,11 @@
 import Ajv, { type AnySchema } from 'ajv';
-import { useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 
 import { entryNames } from '@/features/scan-config/commands';
+import { nextEntryName } from '@/features/scan-config/components/hooks/entry-name';
 import { log } from '@/utils/logger';
 
-import type { Config, ConfigSchema } from '@/features/scan-config/types';
+import type { Config, ConfigSchema, TBlock } from '@/features/scan-config/types';
 
 export { nextEntryName } from '@/features/scan-config/components/hooks/entry-name';
 
@@ -72,5 +73,24 @@ export function useEntries({
   return useMemo(
     () => (config && schema ? entryNames(config, schema) : new Set<string>()),
     [config, schema]
+  );
+}
+
+/** Picks the name of a new entry; names picked before the next render stay distinct. */
+export function useReserveEntryName({ config, schema }: { config: Config; schema: ConfigSchema }) {
+  const names = useEntries({ config, schema });
+  const reservation = useRef({ names, picked: new Set<string>() });
+
+  return useCallback(
+    (rootElement: string, block?: TBlock) => {
+      if (reservation.current.names !== names) {
+        reservation.current = { names, picked: new Set() };
+      }
+      const { picked } = reservation.current;
+      const name = nextEntryName(schema, rootElement, new Set([...names, ...picked]), block);
+      picked.add(name);
+      return name;
+    },
+    [schema, names]
   );
 }
