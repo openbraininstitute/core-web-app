@@ -1,7 +1,7 @@
 import { LoadingOutlined } from '@ant-design/icons';
 
 import { LAUNCH_GREEN, TASK_BUTTON_TEXT } from '@/features/scan-config/components/shared/box-class';
-import { classNames } from '@/util/utils';
+import { cn } from '@/utils/css-class';
 
 type Props = {
   label: string;
@@ -23,7 +23,7 @@ export function TaskLaunchButton({
   return (
     <button
       data-testid="scan-config-launch"
-      className={classNames(
+      className={cn(
         'min-h-12.5 w-full cursor-pointer rounded-full p-2 text-white',
         TASK_BUTTON_TEXT,
         LAUNCH_GREEN,

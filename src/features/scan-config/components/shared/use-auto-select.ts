@@ -11,7 +11,8 @@ type Props = {
   inputFiles: TActivityCustomFile[];
   outputFiles: TActivityCustomFile[];
   onSelect: (file: TActivityCustomFile) => void;
-  /** Opt-in: a task log picked while `false` gives way to the first result file once `true`. */
+  /** Opt-in: a task log picked while `false` gives way to the first result file once `true`; needs
+   * the outputs empty while a finished run's files load. */
   resultReady?: boolean;
 };
 
@@ -42,7 +43,6 @@ export function useAutoSelectFileOnConfigChange({
   const provisionalPick = useRef<TActivityCustomFile | null>(null);
 
   useEffect(() => {
-    // Relies on the caller leaving the outputs empty while a finished run's files load.
     const tracksLog = resultReady === false && outputFiles.some(isTaskLogsFile);
 
     if (previousConfigId.current !== configId) {
