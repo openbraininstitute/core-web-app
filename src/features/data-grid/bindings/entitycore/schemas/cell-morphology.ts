@@ -37,7 +37,12 @@ import { ProjectOwnership } from '@/utils/workspace-scope';
 
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { IEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
-import type { IAdvancedFilterGroup, IColumnModel, IGridSchema } from '@/features/data-grid/core';
+import type {
+  IAdvancedFilterGroup,
+  IColumnModel,
+  IGridContext,
+  IGridSchema,
+} from '@/features/data-grid/core';
 import type { CellRendererRegistry } from '@/features/data-grid/react';
 
 /**
@@ -53,6 +58,12 @@ type Row = ICellMorphology & {
     protocol_document?: string | null;
   } | null;
 };
+
+const visibilityLabels = { true: 'Public', false: 'Private' } as const;
+
+function availableInCombinedData({ section, scope }: IGridContext) {
+  return section === WorkspaceSection.Data && scope === WorkspaceScope.Combined;
+}
 
 const GENERATION_TYPE_LABELS = dictLabelByKey(CellMorphologyGenerationType);
 const PROTOCOL_DESIGN_LABELS = dictLabelByKey(CellMorphologyProtocolDesign);
@@ -215,8 +226,7 @@ export const cellMorphologySchema: IGridSchema<Row> = {
     {
       id: 'projectOwnership',
       header: 'Project ownership',
-      available: ({ section, scope }) =>
-        section === WorkspaceSection.Data && scope === WorkspaceScope.Combined,
+      available: availableInCombinedData,
       width: { width: 180, minWidth: 155 },
       sortable: false,
       cellRenderer: 'projectOwnership',
@@ -336,7 +346,26 @@ export const cellMorphologySchema: IGridSchema<Row> = {
       },
     }),
     registrationDateColumn<Row>({ essential: true }),
-    // Auxiliary — hidden until ticked; each replaces an advanced filter.
+    {
+      id: 'visibility',
+      header: 'Visibility',
+      field: 'authorized_public',
+      auxiliary: true,
+      available: availableInCombinedData,
+      sortable: false,
+      width: { minWidth: 120 },
+      getValue: ({ authorized_public }) => {
+        if (typeof authorized_public !== 'boolean') return null;
+        return authorized_public ? visibilityLabels.true : visibilityLabels.false;
+      },
+      filter: {
+        operators: [OperatorId.Eq],
+        options: {
+          kind: FilterOptionsKind.Static,
+          items: Object.entries(visibilityLabels).map(([id, label]) => ({ id, label })),
+        },
+      },
+    },
     generationTypeColumn,
     protocolDesignColumn,
     protocolNameColumn,

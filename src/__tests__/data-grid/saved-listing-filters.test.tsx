@@ -113,14 +113,27 @@ describe('saved listing filters', () => {
 
 describe('the sidebar count and the grid send the same filters', () => {
   it.each([
-    ['This project', { authorized_project_id: 'current' }],
-    ['Another project', { authorized_project_id__neq: 'current' }],
-    ['', {}],
-  ] as const)('applies "%s" to morphology rows, facets and the sidebar count', async (text, expected) => {
+    ['This project', '', { authorized_project_id: 'current' }],
+    ['Another project', '', { authorized_project_id__neq: 'current' }],
+    ['', '', {}],
+    ['', 'true', { authorized_public: 'true' }],
+    ['This project', 'true', { authorized_project_id: 'current', authorized_public: 'true' }],
+    ['This project', 'false', { authorized_project_id: 'current', authorized_public: 'false' }],
+    [
+      'Another project',
+      'false',
+      { authorized_project_id__neq: 'current', authorized_public: 'false' },
+    ],
+  ] as const)('applies ownership "%s" and visibility "%s" to rows, facets and the sidebar count', async (text, visibility, expected) => {
     const dataType = ExtendedEntitiesTypeDict.CellMorphology;
     const definition = getEntityGridDefinition(dataType);
     if (!definition) throw new Error('morphology grid definition missing');
     const filters = {
+      visibility: {
+        columnId: 'visibility',
+        operator: OperatorId.Eq,
+        value: { kind: FilterValueKind.Text, text: visibility },
+      },
       projectOwnership: {
         columnId: 'projectOwnership',
         operator: OperatorId.Eq,

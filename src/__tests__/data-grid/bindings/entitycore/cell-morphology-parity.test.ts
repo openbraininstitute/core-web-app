@@ -6,9 +6,11 @@ import { viewDefForCellMorphology } from '@/entity-configuration/definitions/vie
 import { serializeQuery } from '@/features/data-grid/bindings/entitycore/query-serializer';
 import { cellMorphologySchema } from '@/features/data-grid/bindings/entitycore/schemas/cell-morphology';
 import {
+  defaultHiddenColumnIds,
   FilterValueKind,
   OperatorId,
   resolveColumns,
+  resolveFilterPanelGroups,
   SortDirection,
 } from '@/features/data-grid/core';
 
@@ -63,9 +65,35 @@ describe('cell_morphology — column parity with the legacy view-def', () => {
     expect(preview.id).toBe('preview');
   });
 
-  it('declares the seven auxiliary columns after the visible ones', () => {
+  it('offers Public and Private in Filters while Visibility is hidden', () => {
+    const context = {
+      dataType: cellMorphologySchema.id,
+      section: WorkspaceSection.Data,
+      scope: WorkspaceScope.Combined,
+    };
+    const hidden = defaultHiddenColumnIds(cellMorphologySchema, context);
+    expect(hidden).toContain('visibility');
+    const entries = resolveFilterPanelGroups(cellMorphologySchema, context, hidden).flatMap(
+      (group) => group.filters
+    );
+    expect(entries.find((entry) => entry.key === 'visibility')).toMatchObject({
+      label: 'Visibility',
+      def: {
+        field: 'authorized_public',
+        options: {
+          items: [
+            { id: 'true', label: 'Public' },
+            { id: 'false', label: 'Private' },
+          ],
+        },
+      },
+    });
+  });
+
+  it('declares the auxiliary columns after the visible ones', () => {
     const auxiliary = cellMorphologySchema.columns.filter((c) => c.auxiliary).map((c) => c.id);
     expect(auxiliary).toEqual([
+      'visibility',
       'generationType',
       'protocolDesign',
       'protocolName',
