@@ -56,8 +56,10 @@ import { PlayChip } from '@/features/learn/ui/play-chip';
 import { ShareButton, ShareChip } from '@/features/learn/ui/share';
 import { TeachCard, TeachIndex } from '@/features/learn/ui/teach';
 import { TutorialCard, TutorialsIndex } from '@/features/learn/ui/tutorials';
+import { WalkthroughCard, WalkthroughsIndex } from '@/features/learn/ui/walkthroughs';
 import { WorkflowCard, WorkflowsIndex } from '@/features/learn/ui/workflows';
 import { useStreamed } from '@/features/learn/use-streamed';
+import { walkthroughOf } from '@/features/learn/walkthroughs';
 import { BOX_CLASS } from '@/features/scan-config/components/shared/box-class';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { cn } from '@/utils/css-class';
@@ -381,6 +383,8 @@ export function LearnPage({
   const [teachId, setTeachId] = useQueryState('topic');
   const teach = teachTopic(teachId) ?? TEACH_TOPICS[0];
   const [tutorialSlug, setTutorialSlug] = useQueryState('tutorial');
+  const [walkthroughId, setWalkthroughId] = useQueryState('walkthrough');
+  const walkthrough = walkthroughOf(walkthroughId);
   // the tutorials in the opposite order to the home page's, but with the third of them first
   const reversed = [...tutorialsAsFetched].reverse();
   const tutorials = reversed.length > 2 ? [reversed[2], ...reversed.toSpliced(2, 1)] : reversed;
@@ -698,6 +702,8 @@ export function LearnPage({
             <TeachIndex selected={teach} onSelect={setTeachId} />
           ) : section === 'tutorials' ? (
             <TutorialsIndex tutorials={tutorials} selected={tutorial} onSelect={setTutorialSlug} />
+          ) : section === 'walkthroughs' ? (
+            <WalkthroughsIndex selected={walkthrough} onSelect={setWalkthroughId} />
           ) : section === 'glossary' ? (
             <GlossaryIndex selected={term} onSelect={setTermId} />
           ) : (
@@ -969,6 +975,13 @@ export function LearnPage({
               tutorial={tutorial}
               tutorials={tutorials}
               onSelect={setTutorialSlug}
+              className={panel}
+            />
+          ) : section === 'walkthroughs' ? (
+            <WalkthroughCard
+              key={walkthrough.id}
+              walkthrough={walkthrough}
+              project={project}
               className={panel}
             />
           ) : section === 'glossary' ? (

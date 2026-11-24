@@ -153,3 +153,12 @@ export function WorkflowsIcon(props: IconProps) {
     </svg>
   );
 }
+
+export function WalkthroughsIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" {...props}>
+      <path {...LINE} strokeLinecap="round" d="M1.8 3.2h3M1.8 7h2.4M1.8 10.8h2.4" />
+      <path {...LINE} strokeLinejoin="round" d="m6.6 4.4 7.4 3-3.2 1.2-1.3 3.2-2.9-7.4Z" />
+    </svg>
+  );
+}

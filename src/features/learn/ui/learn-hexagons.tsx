@@ -244,7 +244,7 @@ export function LearnSectionHexes({ section, onSelect, off = [], hidden = [], cl
   const sections = sectionsOf(off, hidden);
   return (
     // no room over them: their tops level with the card's beside them (the user asked)
-    <nav aria-label="Learn sections" className={cn('no-scrollbar flex shrink-0 gap-2 overflow-x-auto px-1 pb-2', className)}>
+    <nav aria-label="Learn sections" className={cn('no-scrollbar flex shrink-0 items-start gap-2 overflow-x-auto px-1 pb-2', className)}>
       {sections.map(({ category, live }, i) => {
         const on = live && category.key === section;
         return (
@@ -256,7 +256,7 @@ export function LearnSectionHexes({ section, onSelect, off = [], hidden = [], cl
             title={live ? category.label : `${category.label}: coming soon`}
             onClick={() => onSelect(category.key as LearnSection)}
             className={cn(
-              'relative h-[116px] w-[100px] shrink-0 drop-shadow-[0_5px_10px_rgb(28_40_72/0.16)] transition-transform active:scale-95 max-md:h-[92px] max-md:w-[80px]',
+              'relative aspect-[0.866] w-[100px] min-w-[80px] drop-shadow-[0_5px_10px_rgb(28_40_72/0.16)] transition-transform active:scale-95 max-md:w-[80px]',
               !live && 'opacity-50 grayscale'
             )}
           >

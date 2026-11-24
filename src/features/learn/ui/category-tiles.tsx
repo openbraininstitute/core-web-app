@@ -20,6 +20,7 @@ import {
   StandardIcon,
   TeachIcon,
   TutorialsIcon,
+  WalkthroughsIcon,
 } from '@/features/learn/ui/icons';
 import { BOX_CLASS } from '@/features/scan-config/components/shared/box-class';
 import { cn } from '@/utils/css-class';
@@ -30,6 +31,8 @@ export const CATEGORIES = [
   { key: 'glossary', label: 'Glossary', Icon: GlossaryIcon },
   { key: 'teach', label: 'Teach', Icon: TeachIcon },
   { key: 'tutorials', label: 'Tutorials', Icon: TutorialsIcon },
+  // a soft hyphen, for the hexagons it does not fit on one line of
+  { key: 'walkthroughs', label: 'Walk\u00ADthroughs', Icon: WalkthroughsIcon },
   { key: 'standard', label: 'Data & Workflows Standard', Icon: StandardIcon },
   { key: 'features', label: 'Features', Icon: FeaturesIcon },
   { key: 'lectures', label: 'Lectures', Icon: LecturesIcon },
@@ -198,6 +201,7 @@ export const LEARN_SECTIONS = [
   'teach',
   'glossary',
   'tutorials',
+  'walkthroughs',
   'lectures',
   'literature',
   'articles',
