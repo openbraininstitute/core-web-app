@@ -14,13 +14,12 @@ import {
   type TScanConfigTabs,
   type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
+import { useGetConfig, useHasConfigErrors } from '@/features/scan-config/use-config-store';
 import { messages } from '@/i18n/en/scan-config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { assertErrorMessage, classNames } from '@/util/utils';
 
-import type { ErrorObject } from 'ajv';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { Config } from '@/features/scan-config/types';
 
 /**
  * A generate button that can be clicked: a soft shadow in the launch green's dark end, and a
@@ -46,11 +45,9 @@ const FAILURE_MESSAGE_KEY: Record<string, string> = {
 
 export default function GenerateConfigButton({
   loading,
-  errors,
   campaignId,
   setCampaignId,
   setLoading,
-  config,
   setTab,
   activity,
   generatedApiUrl,
@@ -58,11 +55,9 @@ export default function GenerateConfigButton({
   campaignEntityType,
 }: {
   loading: boolean;
-  errors: ErrorObject<string, Record<string, any>, unknown>[] | null | undefined;
   campaignId: string;
   setCampaignId: (campaignId: string) => void;
   setLoading: (loading: boolean) => void;
-  config: Config;
   setTab: (tab: TScanConfigTabs) => void;
   activity: TScanConfigActivity;
   generatedApiUrl: string;
@@ -73,7 +68,9 @@ export default function GenerateConfigButton({
   // ajv schema errors plus field-level errors (e.g. duplicate group names) that
   // schema validation can't catch; either kind blocks generation
   const fieldErrors = useFieldErrors();
-  const hasBlockingErrors = (!!errors && errors.length > 0) || fieldErrors.size > 0;
+  const hasSchemaErrors = useHasConfigErrors('');
+  const getConfig = useGetConfig();
+  const hasBlockingErrors = hasSchemaErrors || fieldErrors.size > 0;
   const notification = useAppNotification();
   // Generation doesn't consume credits (issue #250): don't gate on balance.
   const { reportError: reportLowCredits, creditsModal } = useLowCredits({
@@ -113,7 +110,10 @@ export default function GenerateConfigButton({
     }
 
     setLoading(true);
-    generateCampaign.mutate({ config, generatedApiUrl }, { onSettled: () => setLoading(false) });
+    generateCampaign.mutate(
+      { config: getConfig(), generatedApiUrl },
+      { onSettled: () => setLoading(false) }
+    );
   };
 
   return (

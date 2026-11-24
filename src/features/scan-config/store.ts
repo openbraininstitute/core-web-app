@@ -76,3 +76,15 @@ export function createSliceReader<TSlice>(
     return slice;
   };
 }
+
+export type TEntrySummary = { name: string; type: string | undefined };
+
+/** The name and block type of each entry of a section; empty when it holds no entries. */
+export function entrySummariesOf(section: ConfigValue | undefined): TEntrySummary[] {
+  if (!isPlainObject(section)) return [];
+
+  return Object.entries(section).map(([name, entry]) => ({
+    name,
+    type: isPlainObject(entry) && typeof entry.type === 'string' ? entry.type : undefined,
+  }));
+}

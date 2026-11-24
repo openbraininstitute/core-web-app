@@ -15,16 +15,20 @@ import { deleteEntry, renameEntry } from '@/features/scan-config/commands';
 import { useFieldErrors } from '@/features/scan-config/components/hooks/field-errors';
 import { DESCRIPTION_TOOLTIP_CLASS } from '@/features/scan-config/components/shared/box-class';
 import { useEntryDiff } from '@/features/scan-config/hooks/use-entry-diff';
+import {
+  useEntryNames,
+  useEntrySummaries,
+  useGetConfig,
+  useHasConfigErrors,
+  useSetConfig,
+} from '@/features/scan-config/use-config-store';
 import { MarkdownDescription } from '@/ui/molecules/markdown-description';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
-import { isPlainObject } from './utils';
-
-import type { ErrorObject } from 'ajv';
 import type { InputRef } from 'antd';
 import type React from 'react';
-import type { Config, ConfigSchema, IBlockDictionary, TBlock } from '@/features/scan-config/types';
+import type { ConfigSchema, IBlockDictionary, TBlock } from '@/features/scan-config/types';
 import type { ConfigHighlight } from '@/state/config-highlights';
 
 import styles from './block-dictionary-entries.module.css';
@@ -94,9 +98,18 @@ function EntryTab({
   );
 }
 
+/** The warning sign of one entry: a schema error or a field error under it. */
+function EntryWarning({ rootElement, entry }: { rootElement: string; entry: string }) {
+  const hasSchemaErrors = useHasConfigErrors(`/${rootElement}/${entry}`);
+  const fieldErrors = useFieldErrors();
+  const hasFieldErrors = Array.from(fieldErrors.keys()).some((key) =>
+    key.startsWith(`${rootElement}/${entry}`)
+  );
+
+  return hasSchemaErrors || hasFieldErrors ? <WarningFilled className="text-yellow-400!" /> : null;
+}
+
 export default function BlockDictionaryEntries({
-  config,
-  setConfig,
   rootElement,
   selectedEntry,
   selectedRootElement,
@@ -109,19 +122,15 @@ export default function BlockDictionaryEntries({
   setSelectedEntry,
   setSelectedRootElement,
   singularName,
-  allEntries,
   newKey,
   setNewKey,
   isEditingKey,
   setIsEditingKey,
-  errors,
   highlights = [],
   visible,
   rootElementSchema,
   schema,
 }: {
-  config: Config;
-  setConfig: (newConfig: Config) => void;
   schema: ConfigSchema;
   rootElementSchema: IBlockDictionary;
   rootElement: string;
@@ -136,17 +145,18 @@ export default function BlockDictionaryEntries({
   setSelectedEntry: (entry: string) => void;
   setSelectedRootElement: (rootElement: string) => void;
   singularName: string;
-  allEntries: Set<string>;
   newKey: string;
   setNewKey: (k: string) => void;
   isEditingKey: boolean;
   setIsEditingKey: (k: boolean) => void;
-  errors: ErrorObject<string, Record<string, any>, unknown>[] | null | undefined;
   highlights?: ConfigHighlight[];
   visible: boolean;
 }) {
+  const entries = useEntrySummaries(rootElement);
+  const allEntries = useEntryNames(schema);
+  const getConfig = useGetConfig();
+  const setConfig = useSetConfig();
   const newKeyError = allEntries.has(newKey) || !newKey || newKey === selectedEntry;
-  const fieldErrors = useFieldErrors();
 
   const renameInputRef = useRef<InputRef>(null);
   // Keying the focus effect off the renamed entry (not `isEditingKey`) refocuses only
@@ -159,10 +169,7 @@ export default function BlockDictionaryEntries({
     renameInputRef.current?.focus();
   }, [renamingEntryKey]);
 
-  const configKeys = useMemo(
-    () => new Set(Object.keys(config[rootElement] ?? {})),
-    [config, rootElement]
-  );
+  const configKeys = useMemo(() => new Set(entries.map((entry) => entry.name)), [entries]);
   const {
     getEntryDiffClass,
     deletedEntries: deletedEntriesFromHighlights,
@@ -176,6 +183,7 @@ export default function BlockDictionaryEntries({
 
     if (newKeyError) return;
 
+    const config = getConfig();
     const renamed = renameEntry(config, schema, {
       dictionary: selectedRootElement,
       from: selectedEntry,
@@ -242,12 +250,9 @@ export default function BlockDictionaryEntries({
               {/* Render added entries from highlights (restore flow, aiConfig may be null) */}
               {addedEntriesFromHighlights.map((entry) => renderBlockTab(entry))}
 
-              {Object.entries(config[rootElement] ?? {})
-                .filter(([block_key]) => {
-                  if (deletedConfigKeys.has(block_key)) return false;
-                  return true;
-                })
-                .map(([subkey, subValue]) => {
+              {entries
+                .filter((entry) => !deletedConfigKeys.has(entry.name))
+                .map(({ name: subkey, type: blockType }) => {
                   const isSelected =
                     selectedRootElement === rootElement && subkey === selectedEntry;
                   const entryDiffClass = getEntryDiffClass(subkey, isSelected);
@@ -346,6 +351,7 @@ export default function BlockDictionaryEntries({
                                       setEditing(false);
                                       setSelectedRootElement(rootElement);
 
+                                      const config = getConfig();
                                       const next = deleteEntry(config, schema, {
                                         dictionary: rootElement,
                                         name: subkey,
@@ -358,12 +364,7 @@ export default function BlockDictionaryEntries({
                                   />
                                 )}
 
-                              {(errors?.some((error) =>
-                                error.instancePath.startsWith(`/${rootElement}/${subkey}`)
-                              ) ||
-                                Array.from(fieldErrors.keys()).some((key) =>
-                                  key.startsWith(`${rootElement}/${subkey}`)
-                                )) && <WarningFilled className="text-yellow-400!" />}
+                              <EntryWarning rootElement={rootElement} entry={subkey} />
                             </div>
                           </EntryTab>
                         </TooltipTrigger>
@@ -377,12 +378,10 @@ export default function BlockDictionaryEntries({
                         >
                           <div className="text-base">
                             <BlockDictionaryEntryTooltip
-                              blockType={rootElementSchema.additionalProperties.oneOf.find((v) => {
-                                if (!isPlainObject(subValue)) return null;
-                                if (typeof subValue.type !== 'string') return null;
-
-                                return v.properties.type.const === subValue.type;
-                              })}
+                              blockType={rootElementSchema.additionalProperties.oneOf.find(
+                                (v) =>
+                                  blockType !== undefined && v.properties.type.const === blockType
+                              )}
                             />
                           </div>
                         </TooltipContent>

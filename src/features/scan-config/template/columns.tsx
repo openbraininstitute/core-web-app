@@ -25,16 +25,11 @@ type ColumnProps = {
 
 /** Left tab/tree column, identical across every layout. */
 export function LeftColumn({ props, state }: ColumnProps) {
-  const config = useWholeConfig();
-  const errors = useConfigErrors();
-  const allEntries = useEntryNames(props.schema);
-
   return (
     <Left
       schema={props.schema}
       selectedRootElement={state.selectedRootElement}
       setSelectedRootElement={state.setSelectedRootElement}
-      config={config}
       setConfig={state.setConfig}
       campaignId={state.campaignId}
       loading={state.loading}
@@ -44,9 +39,7 @@ export function LeftColumn({ props, state }: ColumnProps) {
       readOnly={props.readOnly}
       setCampaignId={state.setCampaignId}
       setLoading={state.setLoading}
-      errors={errors}
       setTab={state.setTab}
-      allEntries={allEntries}
       newKey={state.newKey}
       setNewKey={state.setNewKey}
       isEditingKey={state.isEditingKey}
