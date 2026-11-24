@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { GET, PATCH, POST } from '@/app/api/admin/accounting/[...path]/route';
+import { DELETE, GET, PATCH, POST } from '@/app/api/admin/accounting/[...path]/route';
 
 import type { MockInstance } from 'vitest';
 
@@ -186,5 +186,23 @@ describe('accounting proxy writes', () => {
       method: 'PATCH',
       body: '{"enabled":false}',
     });
+  });
+
+  it('forwards a discount delete without a body', async () => {
+    fetchMock.mockResolvedValue(Response.json({ message: 'Discount deleted', data: null }));
+
+    const reply = await DELETE(
+      new NextRequest('http://localhost/api/admin/accounting/admin/discount/7', {
+        method: 'DELETE',
+        headers: ADMIN_HEADERS,
+        body: '{}',
+      }),
+      context('admin/discount/7')
+    );
+
+    expect(reply.status).toBe(200);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('https://cell-a/accounting/admin/discount/7');
+    expect(init).toMatchObject({ method: 'DELETE', body: undefined });
   });
 });

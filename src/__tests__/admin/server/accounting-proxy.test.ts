@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { RefundBody, TopUpBody } from '@/admin/sections/accounting/schemas';
+import {
+  DiscountBody,
+  DiscountPatchBody,
+  RefundBody,
+  TopUpBody,
+} from '@/admin/sections/accounting/schemas';
 import {
   forwardAccountingWrite,
   forwardToAccounting,
@@ -35,6 +40,7 @@ describe('matchAccountingRoute', () => {
     ['report/system', PAGE],
     [`report/virtual-lab/${ID}`, PAGE],
     [`report/project/${ID}`, PAGE],
+    ['admin/discount', `vlab_id=${ID}&${PAGE}`],
   ])('forwards GET %s', (path, query) => {
     expect(match(path, query)).toEqual({
       path,
@@ -52,6 +58,9 @@ describe('matchAccountingRoute', () => {
     `balance/virtual-lab/${ID}`,
     'admin/job/not-a-uuid',
     `admin/job/${ID}/extra`,
+    'admin/discount/0',
+    'admin/discount/abc',
+    'admin/discount/1234567890123456789',
     'health',
   ])('refuses %s', (path) => {
     expect(match(path, PAGE)).toMatchObject({ status: 404 });
@@ -91,10 +100,40 @@ describe('matchAccountingRoute', () => {
     'usage/longrun',
     'estimate/oneshot',
     'admin/price',
-    'admin/discount',
   ])('refuses POST %s, which belongs to other services or a later change', (path) => {
     expect(matchAccountingRoute(path.split('/'), new URLSearchParams(), 'POST')).toMatchObject({
       status: 404,
+    });
+  });
+
+  it.each([
+    ['POST', 'admin/discount', DiscountBody],
+    ['PATCH', 'admin/discount/7', DiscountPatchBody],
+    ['PATCH', 'admin/discount/1000000000', DiscountPatchBody],
+  ])('forwards %s %s with its schema', (method, path, body) => {
+    expect(matchAccountingRoute(path.split('/'), new URLSearchParams(), method)).toMatchObject({
+      path,
+      body,
+    });
+  });
+
+  it('forwards DELETE on one discount, with an empty body', () => {
+    const target = matchAccountingRoute(
+      ['admin', 'discount', '7'],
+      new URLSearchParams(),
+      'DELETE'
+    );
+    expect(target).toMatchObject({ path: 'admin/discount/7' });
+    expect('body' in target && target.body?.safeParse({ discount: '0.1' }).success).toBe(false);
+  });
+
+  it.each([
+    ['DELETE', 'admin/discount'],
+    ['GET', 'admin/discount/7'],
+    ['PUT', 'admin/discount/7'],
+  ])('refuses %s on %s', (method, path) => {
+    expect(matchAccountingRoute(path.split('/'), new URLSearchParams(), method)).toMatchObject({
+      status: 405,
     });
   });
 
@@ -358,6 +397,55 @@ describe('readWriteBody', () => {
     await expect(readWriteBody(request, RefundBody)).resolves.toMatchObject({ status: 413 });
   });
 
+  const SOON = new Date(Date.now() + 3_600_000).toISOString();
+  const LATER = new Date(Date.now() + 7_200_000).toISOString();
+  const discount = { vlab_id: ID, discount: '0.2', valid_from: SOON };
+
+  it('takes a discount with or without an end', async () => {
+    for (const body of [discount, { ...discount, valid_to: LATER }]) {
+      await expect(readWriteBody(post(JSON.stringify(body)), DiscountBody)).resolves.toEqual({
+        value: body,
+      });
+    }
+  });
+
+  it.each([
+    ['a share over 1', { ...discount, discount: '1.5' }],
+    ['a percent', { ...discount, discount: '20' }],
+    ['more than 6 decimals', { ...discount, discount: '0.1234567' }],
+    ['an exponent', { ...discount, discount: '2E-1' }],
+    ['a number', { ...discount, discount: 0.2 }],
+    ['a start in the past', { ...discount, valid_from: '2026-01-01T00:00:00Z' }],
+    ['a start with no zone', { ...discount, valid_from: SOON.slice(0, -1) }],
+    ['an end before the start', { ...discount, valid_from: LATER, valid_to: SOON }],
+    ['no lab', { discount: '0.2', valid_from: SOON }],
+  ])('refuses a discount with %s', async (_, body) => {
+    await expect(readWriteBody(post(JSON.stringify(body)), DiscountBody)).resolves.toMatchObject({
+      status: 400,
+    });
+  });
+
+  it.each([
+    ['a cleared end', { valid_to: null }],
+    ['a new share', { discount: '0.25' }],
+  ])('takes a discount change with %s', async (_, body) => {
+    await expect(readWriteBody(post(JSON.stringify(body)), DiscountPatchBody)).resolves.toEqual({
+      value: body,
+    });
+  });
+
+  it.each([
+    ['nothing', {}],
+    ['a null share', { discount: null }],
+    ['a null start', { valid_from: null }],
+    ['the lab', { vlab_id: ID }],
+    ['an end in the past', { valid_to: '2026-01-01T00:00:00Z' }],
+  ])('refuses a discount change with %s', async (_, body) => {
+    await expect(
+      readWriteBody(post(JSON.stringify(body)), DiscountPatchBody)
+    ).resolves.toMatchObject({ status: 400 });
+  });
+
   it('refuses a __proto__ key instead of dropping it', async () => {
     const body = `{"vlab_id":"${ID}","amount":"1","__proto__":{"admin":true}}`;
     await expect(readWriteBody(post(body), TopUpBody)).resolves.toMatchObject({ status: 400 });
@@ -398,6 +486,23 @@ describe('forwardAccountingWrite', () => {
       expect.objectContaining({ phase: 'sent', operator: 'sub-1', path: 'budget/top-up', body }),
       expect.objectContaining({ phase: 'answered', status: 200 }),
     ]);
+  });
+
+  it('sends a delete with no body', async () => {
+    fetchMock.mockResolvedValue(json({ message: 'Discount deleted', data: null }));
+
+    await forwardAccountingWrite({
+      operator,
+      method: 'DELETE',
+      path: 'admin/discount/7',
+      body: {},
+    });
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('https://cell-a/api/accounting/admin/discount/7');
+    expect(init.method).toBe('DELETE');
+    expect(init.body).toBeUndefined();
+    expect(init.headers).not.toHaveProperty('content-type');
   });
 
   it('says the outcome is unknown when accounting does not answer a write', async () => {

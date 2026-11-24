@@ -28,3 +28,45 @@ export const RefundBody = z.strictObject({
   amount: Amount.optional(),
   reason: z.string().trim().min(1).max(REASON_MAX_LENGTH),
 });
+
+const START_GRACE_MS = 5 * 60_000;
+
+const dateTime = z.iso.datetime({ offset: true });
+const notPast = dateTime.refine(
+  (value) => Date.parse(value) >= Date.now() - START_GRACE_MS,
+  "Can't be in the past"
+);
+
+/** A share of the cost, `0.2` for 20% off, as a decimal string. */
+export const Fraction = z
+  .string()
+  .regex(/^(0(\.\d{1,6})?|1(\.0{1,6})?)$/, 'Use a fraction from 0 to 1, with at most 6 decimals');
+
+const endsAfterStart = ({
+  valid_from: from,
+  valid_to: to,
+}: {
+  valid_from?: string;
+  valid_to?: string | null;
+}) => !from || !to || Date.parse(to) > Date.parse(from);
+const END_AFTER_START = { message: 'Has to end after it starts', path: ['valid_to'] };
+
+export const DiscountBody = z
+  .strictObject({
+    vlab_id: id,
+    discount: Fraction,
+    valid_from: notPast,
+    valid_to: notPast.optional(),
+  })
+  .refine(endsAfterStart, END_AFTER_START);
+
+export const DiscountPatchBody = z
+  .strictObject({
+    discount: Fraction.optional(),
+    valid_from: notPast.optional(),
+    valid_to: notPast.nullable().optional(),
+  })
+  .refine((body) => Object.keys(body).length > 0, 'Change at least one field')
+  .refine(endsAfterStart, END_AFTER_START);
+
+export const EmptyBody = z.strictObject({});

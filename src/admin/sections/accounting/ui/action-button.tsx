@@ -41,6 +41,7 @@ export function ActionButton<Values extends Record<string, unknown>, Result>({
           title={action.title}
           description={action.description}
           fields={action.fields ?? []}
+          initialValues={action.initialValues}
           okText={action.okText}
           danger={action.danger}
           pending={write.isPending}

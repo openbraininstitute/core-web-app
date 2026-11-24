@@ -1,21 +1,27 @@
+import dayjs from 'dayjs';
 import { match, P } from 'ts-pattern';
 
 import { ApiError } from '@/api/error';
 import { formatBytes, formatDurationFromSeconds } from '@/utils/format';
 
 import { ADMIN_ROOT } from '../../routes';
+import { changedFields } from '../../shared/changed-fields';
 import { parseDay } from '../../shared/day';
-import { Amount } from './schemas';
+import { afterDate, REQUIRED } from '../../shared/form-modal';
+import { formatDateTime } from '../../shared/format';
+import { Amount, Fraction } from './schemas';
 import {
   AccountingErrorCode,
   AccountingFilter,
   AccountingPage,
   AccountType,
   ChargeType,
+  DiscountStatus,
   JobPhase,
   TransactionType,
 } from './types';
 
+import type { Rule } from 'antd/es/form';
 import type { FormModalField } from '../../shared/form-modal';
 import type { TStatusTone } from '../../shared/status-pill';
 import type {
@@ -25,6 +31,10 @@ import type {
   TAccountingPage,
   TAccountStatus,
   TAccountType,
+  TDiscount,
+  TDiscountPatchBody,
+  TDiscountStatus,
+  TDiscountValues,
   TJobPhase,
   TJobReport,
   TLedgerEntry,
@@ -110,6 +120,14 @@ export function accountLinks({ id, account_type: type }: TAccount) {
     { label: 'Jobs', href: accountingHref(AccountingPage.Jobs, { [scope]: id }) },
     journal,
     { label: 'Report', href: accountingHref(AccountingPage.Reports, { [scope]: id }) },
+    ...(type === AccountType.VirtualLab
+      ? [
+          {
+            label: 'Discounts',
+            href: accountingHref(AccountingPage.Discounts, { [AccountingFilter.Vlab]: id }),
+          },
+        ]
+      : []),
   ];
 }
 
@@ -160,3 +178,127 @@ export const reportUsage = (report: TJobReport) =>
       ({ size, duration }) => `${formatBytes(size)} for ${formatDurationFromSeconds(duration)}`
     )
     .otherwise(() => '');
+
+function trimDecimal(whole: string, fraction: string) {
+  const integer = whole.replace(/^0+(?=\d)/, '') || '0';
+  const decimals = fraction.replace(/0+$/, '');
+  return decimals ? `${integer}.${decimals}` : integer;
+}
+
+/** Moves the decimal point of a non-negative decimal string, right for positive `places`. */
+export function shiftDecimal(value: string, places: number) {
+  const [whole, fraction = ''] = value.split('.');
+  const digits = whole + fraction;
+  const point = whole.length + places;
+  const padded = point < 0 ? '0'.repeat(-point) + digits : digits.padEnd(point, '0');
+  const at = Math.max(point, 0);
+  return trimDecimal(padded.slice(0, at), padded.slice(at));
+}
+
+const EXPONENT = /^(\d+(?:\.\d*)?)[eE]([+-]?\d+)$/;
+
+/** Accounting writes small decimals as `1E-7`; this is `0.0000001`. */
+export function plainDecimal(value: string) {
+  const exponent = EXPONENT.exec(value);
+  return exponent ? shiftDecimal(exponent[1], Number(exponent[2])) : shiftDecimal(value, 0);
+}
+
+export const fractionToPercent = (fraction: string) => shiftDecimal(plainDecimal(fraction), 2);
+
+export const percentToFraction = (percent: string) => shiftDecimal(percent, -2);
+
+export const discountStatus = ({ valid_from: from, valid_to: to }: TDiscount, now = new Date()) =>
+  match({ from: new Date(from), to: to ? new Date(to) : null })
+    .when(
+      ({ to: end }) => end !== null && end <= now,
+      () => DiscountStatus.Expired
+    )
+    .when(
+      ({ from: start }) => start > now,
+      () => DiscountStatus.Scheduled
+    )
+    .otherwise(() => DiscountStatus.Active);
+
+export const DISCOUNT_STATUSES: Record<TDiscountStatus, { label: string; tone: TStatusTone }> = {
+  [DiscountStatus.Scheduled]: { label: 'Scheduled', tone: 'neutral' },
+  [DiscountStatus.Active]: { label: 'Active', tone: 'good' },
+  [DiscountStatus.Expired]: { label: 'Expired', tone: 'neutral' },
+};
+
+export const percentField = (stored?: string): FormModalField => ({
+  name: 'percent',
+  label: 'Discount (%)',
+  kind: 'amount',
+  placeholder: '20',
+  rules: [
+    REQUIRED,
+    {
+      validator: async (_, value?: string | null) => {
+        if (value == null || value === '' || value === stored) return;
+        if (!Fraction.safeParse(percentToFraction(value)).success) {
+          throw new Error('Use a percent from 0 to 100, with at most 4 decimals');
+        }
+      },
+    },
+  ],
+});
+
+const notPast = (stored?: string): Rule => ({
+  validator: async (_, value?: string) => {
+    if (value && value !== stored && dayjs(value).isBefore(dayjs().subtract(1, 'minute'))) {
+      throw new Error("Can't be in the past");
+    }
+  },
+});
+
+export const startField = (required: boolean, stored?: string): FormModalField => ({
+  name: 'valid_from',
+  label: 'Starts',
+  kind: 'datetime',
+  extra: required ? undefined : 'Empty starts it now.',
+  rules: [...(required ? [REQUIRED] : []), notPast(stored)],
+});
+
+const inFuture: Rule = {
+  validator: async (_, value?: string) => {
+    if (value && !dayjs(value).isAfter(dayjs())) throw new Error('Has to be in the future');
+  },
+};
+
+/** `start` is the stored start, when the form has no start field. */
+export function endField(start?: string): FormModalField {
+  return {
+    name: 'valid_to',
+    label: 'Ends',
+    kind: 'datetime',
+    extra: 'Empty never ends.',
+    ...(!start && { dependencies: ['valid_from'] }),
+    rules: [
+      inFuture,
+      start
+        ? afterDate(start, 'start')
+        : ({ getFieldValue }) => afterDate(getFieldValue('valid_from'), 'start'),
+    ],
+  };
+}
+
+export const discountSummary = (discount: TDiscount) =>
+  `${fractionToPercent(discount.discount)}% from ${formatDateTime(discount.valid_from)}${
+    discount.valid_to ? ` to ${formatDateTime(discount.valid_to)}` : ', no end'
+  }`;
+
+export function discountUpdate(
+  discount: TDiscount,
+  values: Partial<TDiscountValues>
+): TDiscountPatchBody {
+  const next = {
+    ...(values.percent !== undefined && { discount: percentToFraction(values.percent) }),
+    ...(values.valid_from !== undefined && { valid_from: values.valid_from }),
+    valid_to: values.valid_to ?? null,
+  };
+  return changedFields(next, {
+    discount: plainDecimal(discount.discount),
+    valid_from: discount.valid_from,
+    valid_to: discount.valid_to,
+  });
+}

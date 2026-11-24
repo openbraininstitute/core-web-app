@@ -17,6 +17,10 @@ import type {
   TDepleted,
   TDepleteProjectBody,
   TDepleteVlabBody,
+  TDiscount,
+  TDiscountBody,
+  TDiscountFilters,
+  TDiscountPatchBody,
   TGrantBody,
   TJobFilters,
   TJobReport,
@@ -92,6 +96,9 @@ export const getJob = (jobId: string, signal?: AbortSignal) =>
 export const listJournal = (params: TJournalFilters & TPageParams, signal?: AbortSignal) =>
   paged<TJournalEntry>('admin/journal', params, signal);
 
+export const listDiscounts = (params: TDiscountFilters & TPageParams, signal?: AbortSignal) =>
+  paged<TDiscount>('admin/discount', params, signal);
+
 export const getSystemBalance = (signal?: AbortSignal) =>
   accountingGet<{ balance: string }>('balance/system', undefined, signal);
 
@@ -110,7 +117,7 @@ export const listReport = (
 ) => paged<TJobReport>(path, params, signal);
 
 const UNKNOWN_OUTCOME =
-  "The reply didn't arrive, so this change may or may not have gone through. Check the journal before trying again.";
+  "The reply didn't arrive, so this change may or may not have gone through. Check the journal or the discounts list before trying again.";
 
 const isUnanswered = (error: unknown) =>
   !(error instanceof ApiError) || ((error.cause?.status ?? 0) >= 500 && !error.cause?.message);
@@ -157,3 +164,12 @@ export const depleteProject = (body: TDepleteProjectBody) =>
 
 export const depleteVlab = (body: TDepleteVlabBody) =>
   accountingWrite<TDepleted>('budget/deplete/virtual-lab', body);
+
+export const createDiscount = (body: TDiscountBody) =>
+  accountingWrite<TDiscount>('admin/discount', body);
+
+export const updateDiscount = (discountId: number, body: TDiscountPatchBody) =>
+  accountingWrite<TDiscount>(`admin/discount/${discountId}`, body, AccountingMethod.Patch);
+
+export const deleteDiscount = (discountId: number) =>
+  accountingWrite(`admin/discount/${discountId}`, {}, AccountingMethod.Delete);
