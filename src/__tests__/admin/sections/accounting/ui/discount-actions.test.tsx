@@ -10,7 +10,7 @@ import {
 import type { ReactNode } from 'react';
 import type { TDiscount } from '@/admin/sections/accounting/types';
 
-const { createMock, updateMock, deleteMock, LAB_ID, SCHEDULED, ACTIVE, EXPIRED, hours } =
+const { createMock, updateMock, deleteMock, errorMock, LAB_ID, SCHEDULED, ACTIVE, EXPIRED, hours } =
   vi.hoisted(() => {
     const at = (count: number) => new Date(Date.now() + count * 3_600_000).toISOString();
     const scheduled: TDiscount = {
@@ -24,6 +24,7 @@ const { createMock, updateMock, deleteMock, LAB_ID, SCHEDULED, ACTIVE, EXPIRED, 
       createMock: vi.fn(),
       updateMock: vi.fn(),
       deleteMock: vi.fn(),
+      errorMock: vi.fn(),
       LAB_ID: scheduled.vlab_id,
       SCHEDULED: scheduled,
       ACTIVE: { ...scheduled, id: 8, valid_from: at(-24), valid_to: null } as TDiscount,
@@ -40,7 +41,7 @@ vi.mock('@/admin/sections/accounting/api', () => ({
   listDiscounts: vi.fn().mockResolvedValue({ data: [ACTIVE, EXPIRED], pagination: { total: 2 } }),
 }));
 vi.mock('@/components/notification', () => ({
-  useAppNotification: () => ({ success: vi.fn(), error: vi.fn() }),
+  useAppNotification: () => ({ success: vi.fn(), error: errorMock }),
 }));
 
 const renderWithQuery = (children: ReactNode) =>
@@ -48,6 +49,7 @@ const renderWithQuery = (children: ReactNode) =>
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.clearAllMocks();
 });
 
 const buttons = () => screen.queryAllByRole('button').map((button) => button.textContent);
@@ -88,7 +90,7 @@ describe('DiscountActions', () => {
     await waitFor(() => expect(updateMock).toHaveBeenCalledWith(7, { discount: '0.25' }));
   });
 
-  it('still saves when the start passes while the dialog is open', async () => {
+  it("doesn't block the save on the untouched start", async () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     const soon = { ...SCHEDULED, valid_from: hours(2 / 60) };
     updateMock.mockResolvedValue({ ...soon, discount: '0.25' });
@@ -102,6 +104,23 @@ describe('DiscountActions', () => {
 
     await waitFor(() => expect(updateMock).toHaveBeenCalledWith(7, { discount: '0.25' }));
     expect(within(dialog).queryByText("Can't be in the past")).toBeNull();
+  });
+
+  it('refuses a change to a discount that has ended since the page loaded', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    renderWithQuery(<DiscountActions discount={{ ...ACTIVE, valid_to: hours(2 / 60) }} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Change end' }));
+    const dialog = await screen.findByRole('dialog');
+    vi.setSystemTime(Date.now() + 10 * 60_000);
+    const clear = dialog.querySelector('.ant-picker-clear');
+    expect(clear).toBeTruthy();
+    fireEvent.mouseDown(clear as Element);
+    fireEvent.click(clear as Element);
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => expect(errorMock).toHaveBeenCalled());
+    expect(updateMock).not.toHaveBeenCalled();
   });
 
   it('deletes a scheduled discount by its id', async () => {

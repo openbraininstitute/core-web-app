@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 
+import { ApiError } from '@/api/error';
 import { Button } from '@/ui/molecules/button';
 
 import { adminQueryKeys } from '../../../query-keys';
@@ -113,6 +114,9 @@ export function DiscountActions({ discount }: { discount: TDiscount }) {
           },
           okText: 'Save',
           write: async (values) => {
+            if (discountStatus(discount) === DiscountStatus.Expired) {
+              throw new ApiError('It has ended since the page loaded, so it can no longer change.');
+            }
             const update = discountUpdate(discount, values);
             return Object.keys(update).length ? updateDiscount(discount.id, update) : null;
           },
