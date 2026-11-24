@@ -31,16 +31,18 @@ describe('CampaignInfoDialog', () => {
     });
     expect(name).toHaveValue('A name');
     expect(description).toHaveValue('What it is for');
-    expect(submit).toBeEnabled();
+    expect(submit).toHaveAttribute('aria-disabled', 'false');
   });
 
   it('generates only once both are filled in, and hands them over trimmed', () => {
     const { name, description, submit, onDone } = renderDialog();
-    expect(submit).toBeDisabled();
+    expect(submit).toHaveAttribute('aria-disabled', 'true');
+    fireEvent.click(submit);
+    expect(onDone).not.toHaveBeenCalled();
     fireEvent.change(name, { target: { value: '  A name ' } });
-    expect(submit).toBeDisabled();
+    expect(submit).toHaveAttribute('aria-disabled', 'true');
     fireEvent.change(description, { target: { value: 'What it is for\n' } });
-    expect(submit).toBeEnabled();
+    expect(submit).toHaveAttribute('aria-disabled', 'false');
     fireEvent.click(submit);
     expect(onDone).toHaveBeenCalledWith({
       campaign_name: 'A name',
@@ -60,6 +62,16 @@ describe('CampaignInfoDialog', () => {
       campaign_description: 'What it is for',
     });
     expect(onDone).not.toHaveBeenCalled();
+  });
+
+  it('is named, and keeps the focus in while there is nothing to generate yet', () => {
+    const { name, submit } = renderDialog();
+    expect(screen.getByRole('dialog', { name: 'Name your campaign' })).toBeInTheDocument();
+    expect(name).toHaveFocus();
+    fireEvent.keyDown(document, { key: 'Tab', shiftKey: true });
+    expect(submit).toHaveFocus();
+    fireEvent.keyDown(document, { key: 'Tab' });
+    expect(name).toHaveFocus();
   });
 
   it('keeps what was typed when Escape puts it away, too', () => {

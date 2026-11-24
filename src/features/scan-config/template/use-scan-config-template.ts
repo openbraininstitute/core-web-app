@@ -37,6 +37,8 @@ import { usePrevious } from '@/hooks/hooks';
 import { useAgentState, useAIConfig } from '@/services/ai-agent';
 import { clearDiffStateAtom, expandedRootElementsAtom } from '@/state/config-highlights';
 
+import { useFormRevealed } from './use-form-revealed';
+
 import type { ScanConfigTemplateProps } from './types';
 
 /**
@@ -67,6 +69,7 @@ export function useScanConfigTemplate({
   const [selectedRootElement, setSelectedRootElement] = useState(firstRoot ?? '');
   const [editing, setEditing] = useState(true);
   const [selectedEntry, setSelectedEntry] = useState('');
+  const [formRevealed, setFormRevealed] = useFormRevealed(selectedRootElement, selectedEntry);
   // selected inner mechanisms tab when the root element is `emodel_optimisation_parameters`
   const [selectedMechanismsTab, setSelectedMechanismsTab] = useState<string>(
     EModelOptimisationMechanismsTabs.MechanismSelection
@@ -231,6 +234,8 @@ export function useScanConfigTemplate({
     setEditing,
     selectedEntry,
     setSelectedEntry,
+    formRevealed,
+    setFormRevealed,
     selectedMechanismsTab,
     setSelectedMechanismsTab,
     selectedRegionChoice,

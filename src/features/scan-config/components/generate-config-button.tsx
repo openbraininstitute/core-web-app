@@ -1,6 +1,6 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { get } from 'es-toolkit/compat';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { ScanConfigGenerationError, ScanConfigGenerationStep } from '@/api/one/utils';
 import { useAppNotification } from '@/components/notification';
@@ -85,6 +85,7 @@ export default function GenerateConfigButton({
   // are not among `errors`): pressing Generate shows both first, to fill in or to change.
   const infoKey = infoBlockKey(schema);
   const [asking, setAsking] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const notification = useAppNotification();
   // Generation doesn't consume credits (issue #250): don't gate on balance.
   const { reportError: reportLowCredits, creditsModal } = useLowCredits({
@@ -144,6 +145,7 @@ export default function GenerateConfigButton({
     <>
       {creditsModal}
       <button
+        ref={buttonRef}
         type="button"
         data-testid="scan-config-submit"
         className={classNames(
@@ -169,6 +171,7 @@ export default function GenerateConfigButton({
             // kept in the Info block, to go on with there or the next time
             setConfig(withCampaignInfo(config, infoKey, typed));
             setAsking(false);
+            buttonRef.current?.focus();
           }}
           onDone={(info) => {
             const named = withCampaignInfo(config, infoKey, info);

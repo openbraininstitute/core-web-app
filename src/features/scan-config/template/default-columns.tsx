@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { tablePaneTitle } from '@/features/circuit-nodes/types';
 import { PaneSideResizeHandle, ShutPaneBar } from '@/features/circuit-viewer/pane-resize-handle';
@@ -42,16 +42,13 @@ type Props = {
  */
 export function DefaultConfigColumns({ props, state }: Props) {
   const boxed = props.activity === ScanConfigActivity.Simulate;
-  const { gridRef, template, shut, onEdgeDrag, reset } = useCollapsingColumns({ middleBar: false });
+  const { gridRef, template, shut, onEdgeDrag, reset } = useCollapsingColumns();
   // Opening a block, from the list or the table's Neuron Set, shows its form again.
   const opened = `${state.selectedRootElement}/${state.selectedEntry}`;
   const lastOpened = useRef(opened);
-  // Whether a block has been picked yet: the form open on the page's first block waits for that.
-  const [revealed, setRevealed] = useState(false);
   useEffect(() => {
     if (lastOpened.current === opened) return;
     lastOpened.current = opened;
-    setRevealed(true);
     if (shut !== 'none') reset();
   }, [opened, shut, reset]);
   // A pick in the list counts even where it changes nothing: the block already selected.
@@ -59,7 +56,7 @@ export function DefaultConfigColumns({ props, state }: Props) {
     <A extends unknown[]>(set: (...args: A) => void) =>
     (...args: A) => {
       set(...args);
-      setRevealed(true);
+      state.setFormRevealed(true);
       if (shut === 'middle') reset();
     };
   const listState: ScanConfigTemplateState = {
@@ -67,7 +64,7 @@ export function DefaultConfigColumns({ props, state }: Props) {
     setSelectedRootElement: picking(state.setSelectedRootElement),
     setSelectedEntry: picking(state.setSelectedEntry),
   };
-  const alone = shut === 'none' && (!revealed || !state.editing);
+  const alone = shut === 'none' && (!state.formRevealed || !state.editing);
   // Folded, the list is alone whatever width the form had been dragged to: that width is back
   // when it opens again.
   const dragged = template !== null && !alone;
@@ -110,7 +107,7 @@ export function DefaultConfigColumns({ props, state }: Props) {
               state={state}
               className="border-r-0"
               // the × at the form's top right folds it away again, until a block is next picked
-              onClose={() => setRevealed(false)}
+              onClose={() => state.setFormRevealed(false)}
             />
           </div>
         )}

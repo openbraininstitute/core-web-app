@@ -41,14 +41,16 @@ export function CampaignInfoDialog({
     <Modal
       open
       onClose={cancel}
+      title={<span className="text-primary-9 text-base font-bold">Name your campaign</span>}
+      closable={false}
       size="auto"
       className="ring-primary-9/5 w-[460px] max-w-[calc(100vw-2rem)] rounded-3xl shadow-[0_24px_60px_-16px_rgb(0_39_102/0.35)] ring-1"
       overlayClassName="bg-[rgb(240_243_248/0.45)] backdrop-blur-md"
-      bodyClassName="max-h-[calc(100vh-4rem)] p-6"
+      headerClassName="px-6 pt-6 pb-0"
+      bodyClassName="max-h-[calc(100vh-4rem)] px-6 pt-0 pb-6"
     >
       <form
         data-testid="scan-config-campaign-info"
-        aria-label="Name your campaign"
         className="flex flex-col gap-3"
         onSubmit={(e) => {
           e.preventDefault();
@@ -56,10 +58,7 @@ export function CampaignInfoDialog({
           onDone({ campaign_name: name.trim(), campaign_description: description.trim() });
         }}
       >
-        <div className="flex flex-col">
-          <span className="text-primary-9 text-base font-bold">Name your campaign</span>
-          <span className="text-xs text-neutral-500">Both are needed before it is generated.</span>
-        </div>
+        <span className="text-xs text-neutral-500">Both are needed before it is generated.</span>
         <label className="flex flex-col gap-1">
           <span className="text-primary-9 text-xs font-semibold">Campaign name</span>
           <input
@@ -94,12 +93,13 @@ export function CampaignInfoDialog({
           <button
             type="submit"
             data-testid="scan-config-campaign-info-submit"
-            disabled={!ready}
+            // not `disabled`, which would leave the modal's focus trap without its last stop
+            aria-disabled={!ready}
             className={cn(
               'rounded-full px-5 py-2 text-sm font-semibold',
               ready
                 ? `${LAUNCH_GREEN} ${GENERATE_CLICKABLE} text-white`
-                : 'bg-gray-200 text-gray-500'
+                : 'cursor-default bg-gray-200 text-gray-500'
             )}
           >
             {submitLabel}
