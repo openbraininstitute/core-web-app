@@ -55,3 +55,24 @@ export function writeBlock(
   if (!isPlainObject(root)) return config;
   return { ...config, [rootElement]: { ...root, [entry]: state } };
 }
+
+/**
+ * A reader of one slice of the store. It returns the previous slice while the new one is equal,
+ * so `useSyncExternalStore` sees no change and the component does not re-render.
+ */
+export function createSliceReader<TSlice>(
+  store: IScanConfigStore,
+  selector: (config: Config) => TSlice,
+  isEqual: (previous: TSlice, next: TSlice) => boolean
+): () => TSlice {
+  let cached: { config: Config; slice: TSlice } | undefined;
+
+  return () => {
+    const config = store.getSnapshot();
+    if (cached?.config === config) return cached.slice;
+    const next = selector(config);
+    const slice = cached && isEqual(cached.slice, next) ? cached.slice : next;
+    cached = { config, slice };
+    return slice;
+  };
+}

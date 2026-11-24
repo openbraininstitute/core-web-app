@@ -7,21 +7,15 @@ import { diffBarDataAtom } from '@/features/ai-assistant/chat/use-last-message-d
 import { showRestoreAtom } from '@/features/ai-assistant/message-item/collapsible-message/collapsible-message';
 import { useScanConfigWorkflowEditorField } from '@/features/scan-config/bridge/editor-context';
 import { useSetScanConfigEntityPreview } from '@/features/scan-config/bridge/entity-preview';
-import {
-  useEntries,
-  useReserveEntryName,
-  useValidateSchema,
-} from '@/features/scan-config/components/hooks';
-import { useConfig } from '@/features/scan-config/components/hooks/schema';
+import { useReserveEntryName } from '@/features/scan-config/components/hooks';
+import { useConfigStoreSetup } from '@/features/scan-config/components/hooks/schema';
 import { clearScanValueSelectionAtom } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import { withoutEmptyRegions } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import {
-  getConfigKeyForEntity,
   resolveScanConfigTab,
   ScanConfigCampaignOriginActionDict,
 } from '@/features/scan-config/helpers';
 import { useScanConfigEditingLocked } from '@/features/scan-config/hooks/use-config-editing-locked';
-import { useDefaultValidationTargets } from '@/features/scan-config/hooks/use-default-validation-targets';
 import { useScanConfigTab } from '@/features/scan-config/hooks/use-scan-config-tab';
 import {
   type Config,
@@ -33,7 +27,7 @@ import {
   ScanConfigUIElementDict,
 } from '@/features/scan-config/types';
 import { usePrevious } from '@/hooks/hooks';
-import { useAgentState, useAIConfig } from '@/services/ai-agent';
+import { useAIConfig } from '@/services/ai-agent';
 import { clearDiffStateAtom, expandedRootElementsAtom } from '@/state/config-highlights';
 
 import type { ScanConfigTemplateProps } from './types';
@@ -53,8 +47,6 @@ export function useScanConfigTemplate({
   activity = ScanConfigActivity.Simulate,
   schema,
   schemaName,
-  aiEnabled,
-  entityType,
   campaignOriginAction,
   workflowSessionSelection,
   resolveSessionFromIdType,
@@ -87,7 +79,7 @@ export function useScanConfigTemplate({
     () => loadedConfig && withoutEmptyRegions(loadedConfig, schema),
     [loadedConfig, schema]
   );
-  const [config, setConfig, configStore] = useConfig({
+  const configStore = useConfigStoreSetup({
     schema,
     initialConfig,
     model: entity,
@@ -96,10 +88,8 @@ export function useScanConfigTemplate({
     resolveFromIdType: resolveSessionFromIdType,
     seed,
   });
-  useDefaultValidationTargets({ schemaName, config, setConfig });
-  const allEntries = useEntries({ config, schema });
-  const reserveEntryName = useReserveEntryName({ config, schema });
-  const errors = useValidateSchema({ initialConfig, config, schema });
+  const setConfig = configStore.set;
+  const reserveEntryName = useReserveEntryName({ store: configStore, schema });
   const editingLocked = useScanConfigEditingLocked({
     campaignId,
     loading,
@@ -177,17 +167,6 @@ export function useScanConfigTemplate({
     [setDiffBarData, setShowRestore]
   );
 
-  useAgentState(
-    aiEnabled
-      ? getConfigKeyForEntity(
-          entityType,
-          activity,
-          entity as { scale?: string } | undefined,
-          schemaName
-        )
-      : null,
-    config
-  );
   useAIConfig();
 
   // Changing the region choice must drop any model selected under the previous region, so the
@@ -242,11 +221,9 @@ export function useScanConfigTemplate({
     setIsEditingKey,
     newKey,
     setNewKey,
-    allEntries,
-    config,
+    initialConfig,
     setConfig,
     configStore,
-    errors,
     editingLocked,
     createEntry,
     selectedSchema,

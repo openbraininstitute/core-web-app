@@ -14,6 +14,7 @@ import {
 } from '@/features/scan-config/components/shared/box-class';
 import { Right } from '@/features/scan-config/components/ui-columns';
 import { ScanConfigActivity } from '@/features/scan-config/types';
+import { useWholeConfig } from '@/features/scan-config/use-config-store';
 import { StackedPanes } from '@/features/spike-viewer/spike-statistics/stacked-panes';
 import { StackedSplit } from '@/features/spike-viewer/types';
 import { cn } from '@/utils/css-class';
@@ -86,20 +87,7 @@ export function DefaultConfigColumns({ props, state }: Props) {
         />
       )}
       <PreviewColumn boxed={boxed} edge={{ gridRef, onDrag: onEdgeDrag, onReset: reset }}>
-        <Right
-          activity={props.activity}
-          entityType={props.entityType}
-          entity={props.entity}
-          selectedEntry={state.selectedEntry}
-          selectedRootElement={state.selectedRootElement}
-          onCreateEntry={state.createEntry}
-          config={state.config}
-          setConfig={state.setConfig}
-          schema={props.schema}
-          schemaMappingConfig={props.schemaMappingConfig}
-          locked={state.editingLocked}
-          inset={boxed}
-        />
+        <RightColumn props={props} state={state} inset={boxed} />
       </PreviewColumn>
     </div>
   );
@@ -175,3 +163,24 @@ export function PreviewColumn({
 }
 
 export const DEFAULT_COLUMNS_GRID = 'grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)]';
+
+function RightColumn({ props, state, inset }: Props & { inset: boolean }) {
+  const config = useWholeConfig();
+
+  return (
+    <Right
+      activity={props.activity}
+      entityType={props.entityType}
+      entity={props.entity}
+      selectedEntry={state.selectedEntry}
+      selectedRootElement={state.selectedRootElement}
+      onCreateEntry={state.createEntry}
+      config={config}
+      setConfig={state.setConfig}
+      schema={props.schema}
+      schemaMappingConfig={props.schemaMappingConfig}
+      locked={state.editingLocked}
+      inset={inset}
+    />
+  );
+}

@@ -1,9 +1,7 @@
 'use client';
 
-import { isEqual } from 'es-toolkit';
 import { get } from 'es-toolkit/compat';
-import { useSetAtom } from 'jotai';
-import { Activity, Suspense, useEffect, useMemo } from 'react';
+import { Activity, Suspense } from 'react';
 import { match, P } from 'ts-pattern';
 
 import { DefaultLookupProvider } from '@/features/scan-config/bridge/default-lookup-context';
@@ -17,6 +15,7 @@ import {
 } from '@/features/scan-config/components/memodel-compatibility';
 import { ScanConfigTabsPanel } from '@/features/scan-config/components/tabs';
 import { IonChannelModelPropertiesChecks } from '@/features/scan-config/components/ui-elements/ion-channel-model-properties';
+import { ScanConfigConfigEffects } from '@/features/scan-config/template/config-effects';
 import { DefaultConfigColumns } from '@/features/scan-config/template/default-columns';
 import {
   EMODEL_OPTIMISATION_COLUMNS_GRID,
@@ -32,9 +31,13 @@ import {
 } from '@/features/scan-config/use-cases/optimization/results';
 import { SimulationsTab } from '@/features/scan-config/use-cases/simulations/results';
 import { SkeletonizationTab } from '@/features/scan-config/use-cases/skeletonization/results';
-import { ScanConfigStoreProvider } from '@/features/scan-config/use-config-store';
-import { workflowBreadcrumbRefsAtom } from '@/features/scan-config/workflow/breadcrumb-entities';
-import { resolveWorkflowEntityRefs } from '@/features/scan-config/workflow/workflow-schema-selection';
+import {
+  ScanConfigErrorsProvider,
+  ScanConfigStoreProvider,
+  useConfigValue,
+  useSetConfig,
+  useWholeConfig,
+} from '@/features/scan-config/use-config-store';
 import { BreadcrumbChip } from '@/ui/molecules/breadcrumb';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { MiddleEllipsis } from '@/ui/molecules/middle-ellipsis';
@@ -42,6 +45,7 @@ import { cn } from '@/utils/css-class';
 
 import type { ScanConfigTemplateProps } from '@/features/scan-config/template/types';
 import type { ScanConfigTemplateState } from '@/features/scan-config/template/use-scan-config-template';
+import type { Config } from '@/features/scan-config/types';
 
 /** Optimize and Validate share one results tab; this is the only thing that differs. */
 const TASK_NOUN = {
@@ -63,24 +67,6 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
   const state = useScanConfigTemplate(props);
   const browseOverlay = useScanConfigMainOverlayOptional()?.overlay;
   const { isConfigurationTab, isEModelOptimisationParameters } = state;
-  const configuredName = get(state.config, 'info.campaign_name');
-  const campaignName =
-    typeof configuredName === 'string' && configuredName ? configuredName : state.campaignId;
-
-  // the breadcrumb names what the live config points at; this template is its only writer
-  const setBreadcrumbRefs = useSetAtom(workflowBreadcrumbRefsAtom);
-  const entityRefs = useMemo(
-    () => resolveWorkflowEntityRefs(props.schema, state.config),
-    [props.schema, state.config]
-  );
-  // keep the previous array when equal, so edits elsewhere in the config don't re-render it
-  useEffect(() => {
-    setBreadcrumbRefs((current) =>
-      current && isEqual(current, entityRefs) ? current : entityRefs
-    );
-  }, [entityRefs, setBreadcrumbRefs]);
-  // module state outlives the route: hand back to the session / campaign fallbacks on unmount
-  useEffect(() => () => setBreadcrumbRefs(null), [setBreadcrumbRefs]);
 
   const configurationContent = (
     <div
@@ -92,15 +78,7 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
         isEModelOptimisationParameters ? 'px-2' : 'px-0'
       )}
     >
-      {!props.readOnly && (
-        <IonChannelModelPropertiesChecks
-          schema={props.schema}
-          config={state.config}
-          setConfig={state.setConfig}
-          locked={state.editingLocked}
-        />
-      )}
-      {checksMEModelCompatibility(props) && <MEModelCompatibilityCheck config={state.config} />}
+      <ConfigChecks props={props} locked={state.editingLocked} />
       {browseOverlay ? (
         <div
           id="scan-config-model-selection-overlay"
@@ -154,44 +132,78 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
 
   return (
     <ScanConfigStoreProvider store={state.configStore}>
-      <div className={cn('flex h-full min-h-0 flex-col', props.className)}>
-        <ScanConfigTabsPanel
-          className="min-h-0 flex-1"
-          activity={props.activity}
-          tab={state.tab}
-          setTab={state.setTab}
-          disableResultsTab={!state.campaignId || state.loading || Boolean(props.hideTabs)}
-          disableConfigurationTab={Boolean(!props.initialConfig && props.readOnly)}
-          configuration={configurationContent}
-          results={resultsContent}
-          // the centre copy button exists only once a campaign has been generated (its id is known)
-          railCenter={
-            state.campaignId ? (
-              <BreadcrumbChip className="max-w-full px-1">
-                <ButtonCopyId
-                  value={state.campaignId}
-                  label={`Copy ${campaignName}`}
-                  // hover and keyboard focus both show the full name the visible text elides
-                  tooltip={campaignName}
-                  className="min-w-0"
-                  classNames={{
-                    button: 'h-8 min-w-0 shrink gap-1 pr-0 pl-3',
-                    icon: 'size-6 shrink-0 border-transparent',
-                    glyph: 'size-3.5 text-primary-9',
-                    tooltip: 'max-w-72 text-wrap break-words bg-white text-primary-9 shadow-lg',
-                    tooltipArrow: 'bg-white!',
-                  }}
-                >
-                  <b className="flex min-w-0 text-base font-bold">
-                    <MiddleEllipsis text={campaignName} />
-                  </b>
-                </ButtonCopyId>
-              </BreadcrumbChip>
-            ) : undefined
-          }
-        />
-      </div>
+      <ScanConfigErrorsProvider schema={props.schema} initialConfig={state.initialConfig}>
+        <ScanConfigConfigEffects props={props} />
+        <div className={cn('flex h-full min-h-0 flex-col', props.className)}>
+          <ScanConfigTabsPanel
+            className="min-h-0 flex-1"
+            activity={props.activity}
+            tab={state.tab}
+            setTab={state.setTab}
+            disableResultsTab={!state.campaignId || state.loading || Boolean(props.hideTabs)}
+            disableConfigurationTab={Boolean(!props.initialConfig && props.readOnly)}
+            configuration={configurationContent}
+            results={resultsContent}
+            // the centre copy button exists only once a campaign has been generated (its id is known)
+            railCenter={
+              state.campaignId ? <CampaignCopyChip campaignId={state.campaignId} /> : undefined
+            }
+          />
+        </div>
+      </ScanConfigErrorsProvider>
     </ScanConfigStoreProvider>
+  );
+}
+
+function ConfigChecks({ props, locked }: { props: ScanConfigTemplateProps; locked: boolean }) {
+  const config = useWholeConfig();
+  const setConfig = useSetConfig();
+
+  return (
+    <>
+      {!props.readOnly && (
+        <IonChannelModelPropertiesChecks
+          schema={props.schema}
+          config={config}
+          setConfig={setConfig}
+          locked={locked}
+        />
+      )}
+      {checksMEModelCompatibility(props) && <MEModelCompatibilityCheck config={config} />}
+    </>
+  );
+}
+
+const selectCampaignName = (config: Config) => get(config, 'info.campaign_name');
+
+const selectNeuronSets = (config: Config) => config.neuron_sets;
+
+function CampaignCopyChip({ campaignId }: { campaignId: string }) {
+  const configuredName = useConfigValue(selectCampaignName);
+  const campaignName =
+    typeof configuredName === 'string' && configuredName ? configuredName : campaignId;
+
+  return (
+    <BreadcrumbChip className="max-w-full px-1">
+      <ButtonCopyId
+        value={campaignId}
+        label={`Copy ${campaignName}`}
+        // hover and keyboard focus both show the full name the visible text elides
+        tooltip={campaignName}
+        className="min-w-0"
+        classNames={{
+          button: 'h-8 min-w-0 shrink gap-1 pr-0 pl-3',
+          icon: 'size-6 shrink-0 border-transparent',
+          glyph: 'size-3.5 text-primary-9',
+          tooltip: 'max-w-72 text-wrap break-words bg-white text-primary-9 shadow-lg',
+          tooltipArrow: 'bg-white!',
+        }}
+      >
+        <b className="flex min-w-0 text-base font-bold">
+          <MiddleEllipsis text={campaignName} />
+        </b>
+      </ButtonCopyId>
+    </BreadcrumbChip>
   );
 }
 
@@ -203,6 +215,8 @@ function ScanConfigResults({
   props: ScanConfigTemplateProps;
   state: ScanConfigTemplateState;
 }) {
+  const neuronSets = useConfigValue(selectNeuronSets);
+
   return match(props.activity)
     .with(ScanConfigActivity.Simulate, () => (
       <Suspense>
@@ -210,7 +224,7 @@ function ScanConfigResults({
           campaignId={state.campaignId}
           campaignOriginAction={props.campaignOriginAction}
           isCampaignIdChanged={state.isCampaignIdChanged}
-          neuronSetNames={neuronSetNamesOf(props.initialConfig, state.config)}
+          neuronSetNames={neuronSetNamesOf(props.initialConfig, { neuron_sets: neuronSets })}
           configSchema={props.schema}
         />
       </Suspense>

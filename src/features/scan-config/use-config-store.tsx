@@ -1,12 +1,16 @@
 'use client';
 
-import { createContext, use, useCallback, useSyncExternalStore } from 'react';
+import { isEqual } from 'es-toolkit';
+import { createContext, use, useCallback, useMemo, useState, useSyncExternalStore } from 'react';
 
-import { readBlock, writeBlock } from '@/features/scan-config/store';
+import { entryNames } from '@/features/scan-config/commands';
+import { useValidateSchema } from '@/features/scan-config/components/hooks';
+import { createSliceReader, readBlock, writeBlock } from '@/features/scan-config/store';
 
+import type { ErrorObject } from 'ajv';
 import type { ReactNode } from 'react';
 import type { IScanConfigStore } from '@/features/scan-config/store';
-import type { Config, ConfigValue } from '@/features/scan-config/types';
+import type { Config, ConfigSchema, ConfigValue } from '@/features/scan-config/types';
 
 const ScanConfigStoreContext = createContext<IScanConfigStore | null>(null);
 
@@ -26,11 +30,58 @@ function useScanConfigStore(): IScanConfigStore {
   return store;
 }
 
-/** Reads one slice of the config; the component re-renders only when that slice changes. */
-export function useConfigValue<TSlice>(selector: (config: Config) => TSlice): TSlice {
+/**
+ * Reads one slice of the config; the component re-renders only when that slice changes.
+ * Pass `isEqual` when the selector builds a new value each time (a list of names, a filter).
+ */
+export function useConfigValue<TSlice>(
+  selector: (config: Config) => TSlice,
+  isEqual: (previous: TSlice, next: TSlice) => boolean = Object.is
+): TSlice {
   const store = useScanConfigStore();
-  const getSlice = () => selector(store.getSnapshot());
+  const getSlice = useMemo(
+    () => createSliceReader(store, selector, isEqual),
+    [store, selector, isEqual]
+  );
+
   return useSyncExternalStore(store.subscribe, getSlice, getSlice);
+}
+
+const wholeConfig = (config: Config) => config;
+
+/** The whole config: the caller re-renders on every edit. Prefer `useConfigValue` with a slice. */
+export function useWholeConfig(): Config {
+  return useConfigValue(wholeConfig);
+}
+
+type TConfigErrors = ErrorObject[] | null;
+
+const ScanConfigErrorsContext = createContext<TConfigErrors | undefined>(undefined);
+
+/** Validates the config against the schema in one place; read the result with `useConfigErrors`. */
+export function ScanConfigErrorsProvider({
+  schema,
+  initialConfig,
+  children,
+}: {
+  schema: ConfigSchema;
+  initialConfig?: Config;
+  children: ReactNode;
+}) {
+  const config = useWholeConfig();
+  const errors = useValidateSchema({ initialConfig, config, schema });
+  const [stableErrors, setStableErrors] = useState(errors);
+  if (!isEqual(stableErrors, errors)) setStableErrors(errors);
+
+  return <ScanConfigErrorsContext value={stableErrors}>{children}</ScanConfigErrorsContext>;
+}
+
+export function useConfigErrors(): TConfigErrors {
+  const errors = use(ScanConfigErrorsContext);
+  if (errors === undefined) {
+    throw new Error('useConfigErrors must be used inside a ScanConfigErrorsProvider');
+  }
+  return errors;
 }
 
 export function useSetConfig(): IScanConfigStore['set'] {
@@ -47,4 +98,13 @@ export function useBlockState(rootElement: string, entry?: string) {
   );
 
   return [state, setState] as const;
+}
+
+const sameNames = (previous: Set<string>, next: Set<string>) =>
+  previous.size === next.size && [...next].every((name) => previous.has(name));
+
+/** Every entry name in use; the caller re-renders only when a name is added, removed or renamed. */
+export function useEntryNames(schema: ConfigSchema): Set<string> {
+  const selectNames = useCallback((config: Config) => entryNames(config, schema), [schema]);
+  return useConfigValue(selectNames, sameNames);
 }

@@ -2,7 +2,7 @@ import { renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { useEntries } from '@/features/scan-config/components/hooks';
+import { entryNames } from '@/features/scan-config/commands';
 import { nextEntryName } from '@/features/scan-config/components/hooks/entry-name';
 import { useConfig } from '@/features/scan-config/components/hooks/schema';
 import { ScanConfigFromIdType } from '@/features/scan-config/workflow/scan-config-from-id-type';
@@ -397,7 +397,7 @@ describe('editor state built from a seeded session', () => {
         workflowSessionSelection: seededSelection,
         resolveFromIdType: resolveIonChannelFromIdType,
       });
-      return useEntries({ config, schema: ionChannelSimulationSchema });
+      return entryNames(config, ionChannelSimulationSchema);
     });
 
     expect(result.current).toEqual(new Set(['Ion channel model 0', 'Recording 0']));
@@ -425,7 +425,7 @@ describe('editor state built from a seeded session', () => {
         model: null,
         origin: 'campaign-id',
       });
-      return useEntries({ config, schema: ionChannelSimulationSchema });
+      return entryNames(config, ionChannelSimulationSchema);
     });
 
     expect(result.current).toEqual(new Set(['Ion channel model 0', 'Recording 0', 'Recording 1']));

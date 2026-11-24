@@ -1,10 +1,11 @@
 import Ajv, { type AnySchema } from 'ajv';
-import { useCallback, useLayoutEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { entryNames } from '@/features/scan-config/commands';
 import { nextEntryName } from '@/features/scan-config/components/hooks/entry-name';
 import { log } from '@/utils/logger';
 
+import type { IScanConfigStore } from '@/features/scan-config/store';
 import type { Config, ConfigSchema, TBlock } from '@/features/scan-config/types';
 
 export { nextEntryName } from '@/features/scan-config/components/hooks/entry-name';
@@ -63,35 +64,38 @@ export function useValidateSchema({
   return errors ?? null;
 }
 
-export function useEntries({
-  config,
+/** Picks the name of a new entry from the latest config; names picked in a row stay distinct. */
+export function useReserveEntryName({
+  store,
   schema,
 }: {
-  schema: ConfigSchema | undefined;
-  config?: Config;
-}): Set<string> {
-  return useMemo(
-    () => (config && schema ? entryNames(config, schema) : new Set<string>()),
-    [config, schema]
+  store: IScanConfigStore;
+  schema: ConfigSchema;
+}) {
+  const picked = useRef(new Set<string>());
+
+  useEffect(
+    () =>
+      store.subscribe(() => {
+        if (picked.current.size === 0) return;
+        const names = entryNames(store.getSnapshot(), schema);
+        for (const name of picked.current) if (names.has(name)) picked.current.delete(name);
+      }),
+    [store, schema]
   );
-}
-
-/** Picks the name of a new entry; names picked before the next render stay distinct. */
-export function useReserveEntryName({ config, schema }: { config: Config; schema: ConfigSchema }) {
-  const names = useEntries({ config, schema });
-  const pending = useRef({ names, picked: new Set<string>() });
-
-  useLayoutEffect(() => {
-    pending.current = { names, picked: new Set() };
-  }, [names]);
 
   return useCallback(
     (rootElement: string, block?: TBlock) => {
-      const { names: latest, picked } = pending.current;
-      const name = nextEntryName(schema, rootElement, new Set([...latest, ...picked]), block);
-      picked.add(name);
+      const names = entryNames(store.getSnapshot(), schema);
+      const name = nextEntryName(
+        schema,
+        rootElement,
+        new Set([...names, ...picked.current]),
+        block
+      );
+      picked.current.add(name);
       return name;
     },
-    [schema]
+    [store, schema]
   );
 }
