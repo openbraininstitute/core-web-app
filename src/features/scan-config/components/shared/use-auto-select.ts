@@ -41,36 +41,47 @@ export function useAutoSelectFileOnConfigChange({
   const provisionalPick = useRef<TActivityCustomFile | null>(null);
 
   useEffect(() => {
-    const pick = (file: TActivityCustomFile) => {
-      if (!isSameFile(selectedFile, file)) onSelect(file);
-      provisionalPick.current = resultReady === false && isTaskLogsFile(file) ? file : null;
-    };
+    // The outputs are left empty while a finished run's files load, which keeps a log
+    // carried over from another run from counting as this run's.
+    const tracksLog = resultReady === false && outputFiles.some(isTaskLogsFile);
+    const provisional = (file: TActivityCustomFile | undefined) =>
+      file && isTaskLogsFile(file) ? file : null;
 
     if (previousConfigId.current !== configId) {
       previousConfigId.current = configId;
       pendingOutputSelectionForConfigId.current = configId;
-      provisionalPick.current = null;
 
       const preferred = outputFiles[0] ?? inputFiles[0];
-      if (preferred) pick(preferred);
+      provisionalPick.current = tracksLog ? provisional(preferred) : null;
+      if (preferred && !isSameFile(selectedFile, preferred)) {
+        onSelect(preferred);
+      }
       return;
     }
 
-    const provisional = provisionalPick.current;
-    if (provisional && !isSameFile(selectedFile, provisional)) {
-      provisionalPick.current = null;
-    } else if (provisional && resultReady) {
-      provisionalPick.current = null;
-      const result = outputFiles.find((file) => !isTaskLogsFile(file));
-      if (result) onSelect(result);
-      return;
+    if (tracksLog) {
+      provisionalPick.current = provisional(selectedFile);
+    } else if (resultReady && provisionalPick.current) {
+      if (!isSameFile(selectedFile, provisionalPick.current)) {
+        provisionalPick.current = null;
+      } else {
+        const result = outputFiles.find((file) => !isTaskLogsFile(file));
+        if (result) {
+          provisionalPick.current = null;
+          pendingOutputSelectionForConfigId.current = null;
+          onSelect(result);
+          return;
+        }
+      }
     }
 
     if (pendingOutputSelectionForConfigId.current !== configId) return;
     const firstOutput = outputFiles[0];
     if (!firstOutput) return;
 
-    pick(firstOutput);
+    if (!isSameFile(selectedFile, firstOutput)) {
+      onSelect(firstOutput);
+    }
     pendingOutputSelectionForConfigId.current = null;
   }, [configId, inputFiles, onSelect, outputFiles, selectedFile, resultReady]);
 }
