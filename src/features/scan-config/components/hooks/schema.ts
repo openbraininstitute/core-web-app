@@ -3,7 +3,7 @@
 import $RefParser from '@apidevtools/json-schema-ref-parser';
 import { type QueryClient, useQuery } from '@tanstack/react-query';
 import { isEmpty, omit, pick } from 'es-toolkit/compat';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { match } from 'ts-pattern';
 import { z } from 'zod';
 
@@ -14,6 +14,7 @@ import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { obioneApi } from '@/api/one/utils';
 import { config } from '@/config';
 import { isPlainObject } from '@/features/scan-config/components/utils';
+import { createScanConfigStore } from '@/features/scan-config/store';
 import {
   type Config,
   type ConfigSchema,
@@ -473,7 +474,7 @@ function buildConfigState({
  * @param model: entity model
  * @param workflowSessionSelection: optional workflow browse session selection
  * @param resolveFromIdType: optional function to resolve the from_id type from the browse type
- * @returns the scan-config form blob (`config` + `setConfig`)
+ * @returns the scan-config form blob (`config` + `setConfig`) and the store that holds it
  */
 export function useConfig({
   schema,
@@ -493,17 +494,20 @@ export function useConfig({
   /** the workflow's seeding policy; the generic one is used when omitted */
   seed?: TAnyWorkflowSeed;
 }) {
-  const [configState, setConfigState] = useState<Config>(() =>
-    buildConfigState({
-      schema,
-      initialConfig,
-      model,
-      workflowSessionSelection,
-      resolveFromIdType,
-      origin,
-      seed,
-    })
+  const [store] = useState(() =>
+    createScanConfigStore(
+      buildConfigState({
+        schema,
+        initialConfig,
+        model,
+        workflowSessionSelection,
+        resolveFromIdType,
+        origin,
+        seed,
+      })
+    )
   );
+  const config = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
   const appliedInitialConfigRef = useRef<Config | undefined>(initialConfig);
 
   useEffect(() => {
@@ -512,7 +516,7 @@ export function useConfig({
     }
 
     appliedInitialConfigRef.current = initialConfig;
-    setConfigState(
+    store.set(
       buildConfigState({
         schema,
         initialConfig,
@@ -523,9 +527,18 @@ export function useConfig({
         seed,
       })
     );
-  }, [initialConfig, model, origin, resolveFromIdType, schema, seed, workflowSessionSelection]);
+  }, [
+    initialConfig,
+    model,
+    origin,
+    resolveFromIdType,
+    schema,
+    seed,
+    store,
+    workflowSessionSelection,
+  ]);
 
-  return [configState, setConfigState] as const;
+  return [config, store.set, store] as const;
 }
 
 /**

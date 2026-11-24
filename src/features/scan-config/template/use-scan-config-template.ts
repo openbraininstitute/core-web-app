@@ -87,7 +87,7 @@ export function useScanConfigTemplate({
     () => loadedConfig && withoutEmptyRegions(loadedConfig, schema),
     [loadedConfig, schema]
   );
-  const [config, setConfig] = useConfig({
+  const [config, setConfig, configStore] = useConfig({
     schema,
     initialConfig,
     model: entity,
@@ -245,6 +245,7 @@ export function useScanConfigTemplate({
     allEntries,
     config,
     setConfig,
+    configStore,
     errors,
     editingLocked,
     createEntry,

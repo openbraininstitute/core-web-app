@@ -32,6 +32,7 @@ import {
 } from '@/features/scan-config/use-cases/optimization/results';
 import { SimulationsTab } from '@/features/scan-config/use-cases/simulations/results';
 import { SkeletonizationTab } from '@/features/scan-config/use-cases/skeletonization/results';
+import { ScanConfigStoreProvider } from '@/features/scan-config/use-config-store';
 import { workflowBreadcrumbRefsAtom } from '@/features/scan-config/workflow/breadcrumb-entities';
 import { resolveWorkflowEntityRefs } from '@/features/scan-config/workflow/workflow-schema-selection';
 import { BreadcrumbChip } from '@/ui/molecules/breadcrumb';
@@ -152,43 +153,45 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
   );
 
   return (
-    <div className={cn('flex h-full min-h-0 flex-col', props.className)}>
-      <ScanConfigTabsPanel
-        className="min-h-0 flex-1"
-        activity={props.activity}
-        tab={state.tab}
-        setTab={state.setTab}
-        disableResultsTab={!state.campaignId || state.loading || Boolean(props.hideTabs)}
-        disableConfigurationTab={Boolean(!props.initialConfig && props.readOnly)}
-        configuration={configurationContent}
-        results={resultsContent}
-        // the centre copy button exists only once a campaign has been generated (its id is known)
-        railCenter={
-          state.campaignId ? (
-            <BreadcrumbChip className="max-w-full px-1">
-              <ButtonCopyId
-                value={state.campaignId}
-                label={`Copy ${campaignName}`}
-                // hover and keyboard focus both show the full name the visible text elides
-                tooltip={campaignName}
-                className="min-w-0"
-                classNames={{
-                  button: 'h-8 min-w-0 shrink gap-1 pr-0 pl-3',
-                  icon: 'size-6 shrink-0 border-transparent',
-                  glyph: 'size-3.5 text-primary-9',
-                  tooltip: 'max-w-72 text-wrap break-words bg-white text-primary-9 shadow-lg',
-                  tooltipArrow: 'bg-white!',
-                }}
-              >
-                <b className="flex min-w-0 text-base font-bold">
-                  <MiddleEllipsis text={campaignName} />
-                </b>
-              </ButtonCopyId>
-            </BreadcrumbChip>
-          ) : undefined
-        }
-      />
-    </div>
+    <ScanConfigStoreProvider store={state.configStore}>
+      <div className={cn('flex h-full min-h-0 flex-col', props.className)}>
+        <ScanConfigTabsPanel
+          className="min-h-0 flex-1"
+          activity={props.activity}
+          tab={state.tab}
+          setTab={state.setTab}
+          disableResultsTab={!state.campaignId || state.loading || Boolean(props.hideTabs)}
+          disableConfigurationTab={Boolean(!props.initialConfig && props.readOnly)}
+          configuration={configurationContent}
+          results={resultsContent}
+          // the centre copy button exists only once a campaign has been generated (its id is known)
+          railCenter={
+            state.campaignId ? (
+              <BreadcrumbChip className="max-w-full px-1">
+                <ButtonCopyId
+                  value={state.campaignId}
+                  label={`Copy ${campaignName}`}
+                  // hover and keyboard focus both show the full name the visible text elides
+                  tooltip={campaignName}
+                  className="min-w-0"
+                  classNames={{
+                    button: 'h-8 min-w-0 shrink gap-1 pr-0 pl-3',
+                    icon: 'size-6 shrink-0 border-transparent',
+                    glyph: 'size-3.5 text-primary-9',
+                    tooltip: 'max-w-72 text-wrap break-words bg-white text-primary-9 shadow-lg',
+                    tooltipArrow: 'bg-white!',
+                  }}
+                >
+                  <b className="flex min-w-0 text-base font-bold">
+                    <MiddleEllipsis text={campaignName} />
+                  </b>
+                </ButtonCopyId>
+              </BreadcrumbChip>
+            ) : undefined
+          }
+        />
+      </div>
+    </ScanConfigStoreProvider>
   );
 }
 
