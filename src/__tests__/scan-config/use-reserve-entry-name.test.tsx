@@ -44,6 +44,21 @@ describe('useReserveEntryName', () => {
     ]);
   });
 
+  it('never repeats a name when an older callback is used after a newer one', () => {
+    const { result, rerender } = renderHook(
+      ({ config }: { config: Config }) => useReserveEntryName({ config, schema }),
+      { initialProps: { config: { recordings: {} } as Config } }
+    );
+    const older = result.current;
+
+    rerender({ config: { recordings: { 'Recording 0': {} } } });
+
+    expect([result.current('recordings'), older('recordings')]).toEqual([
+      'Recording 1',
+      'Recording 2',
+    ]);
+  });
+
   it('counts on from the entries already in the config', () => {
     const { result } = renderHook(useForm);
 

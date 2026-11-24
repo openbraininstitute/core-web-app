@@ -1,5 +1,5 @@
 import Ajv, { type AnySchema } from 'ajv';
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 
 import { entryNames } from '@/features/scan-config/commands';
 import { nextEntryName } from '@/features/scan-config/components/hooks/entry-name';
@@ -79,18 +79,19 @@ export function useEntries({
 /** Picks the name of a new entry; names picked before the next render stay distinct. */
 export function useReserveEntryName({ config, schema }: { config: Config; schema: ConfigSchema }) {
   const names = useEntries({ config, schema });
-  const reservation = useRef({ names, picked: new Set<string>() });
+  const pending = useRef({ names, picked: new Set<string>() });
+
+  useLayoutEffect(() => {
+    pending.current = { names, picked: new Set() };
+  }, [names]);
 
   return useCallback(
     (rootElement: string, block?: TBlock) => {
-      if (reservation.current.names !== names) {
-        reservation.current = { names, picked: new Set() };
-      }
-      const { picked } = reservation.current;
-      const name = nextEntryName(schema, rootElement, new Set([...names, ...picked]), block);
+      const { names: latest, picked } = pending.current;
+      const name = nextEntryName(schema, rootElement, new Set([...latest, ...picked]), block);
       picked.add(name);
       return name;
     },
-    [schema, names]
+    [schema]
   );
 }
