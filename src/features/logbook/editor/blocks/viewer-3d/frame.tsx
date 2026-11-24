@@ -2,7 +2,10 @@ import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
 
-/** The fixed-height box every 3D viewer draws in; the viewers need a definite height. */
+/**
+ * The fixed-height box every 3D viewer draws in; the viewers need a definite height. It is
+ * platform UI, so the page's text styles stop at it (`data-logbook-foreign`, content.css).
+ */
 export function ViewerFrame({
   children,
   className,
@@ -13,6 +16,7 @@ export function ViewerFrame({
 }) {
   return (
     <div
+      data-logbook-foreign
       className={cn(
         'relative h-[440px] w-full border-t border-block-border select-none [&>*]:rounded-t-none',
         className
