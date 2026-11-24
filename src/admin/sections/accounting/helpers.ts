@@ -243,20 +243,20 @@ export const percentField = (stored?: string): FormModalField => ({
   ],
 });
 
-const notPast: Rule = {
+const notPast = (stored?: string): Rule => ({
   validator: async (_, value?: string) => {
-    if (value && dayjs(value).isBefore(dayjs().subtract(1, 'minute'))) {
+    if (value && value !== stored && dayjs(value).isBefore(dayjs().subtract(1, 'minute'))) {
       throw new Error("Can't be in the past");
     }
   },
-};
+});
 
-export const startField = (required: boolean): FormModalField => ({
+export const startField = (required: boolean, stored?: string): FormModalField => ({
   name: 'valid_from',
   label: 'Starts',
   kind: 'datetime',
   extra: required ? undefined : 'Empty starts it now.',
-  rules: [...(required ? [REQUIRED] : []), notPast],
+  rules: [...(required ? [REQUIRED] : []), notPast(stored)],
 });
 
 const inFuture: Rule = {

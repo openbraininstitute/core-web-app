@@ -98,7 +98,11 @@ export function DiscountActions({ discount }: { discount: TDiscount }) {
             ? "It hasn't started, so everything can still change."
             : 'It has started, so only its end can change. It applies to the next charge of jobs already running.',
           fields: scheduled
-            ? [percentField(fractionToPercent(discount.discount)), startField(true), endField()]
+            ? [
+                percentField(fractionToPercent(discount.discount)),
+                startField(true, discount.valid_from),
+                endField(),
+              ]
             : [endField(discount.valid_from)],
           initialValues: {
             ...(scheduled && {

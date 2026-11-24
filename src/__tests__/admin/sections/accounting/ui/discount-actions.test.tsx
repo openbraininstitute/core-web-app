@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   DiscountActions,
@@ -10,31 +10,34 @@ import {
 import type { ReactNode } from 'react';
 import type { TDiscount } from '@/admin/sections/accounting/types';
 
-const { createMock, updateMock, LAB_ID, SCHEDULED, ACTIVE, hours } = vi.hoisted(() => {
-  const at = (count: number) => new Date(Date.now() + count * 3_600_000).toISOString();
-  const scheduled: TDiscount = {
-    id: 7,
-    vlab_id: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
-    discount: '0.2',
-    valid_from: at(24),
-    valid_to: at(48),
-  };
-  return {
-    createMock: vi.fn(),
-    updateMock: vi.fn(),
-    LAB_ID: scheduled.vlab_id,
-    SCHEDULED: scheduled,
-    ACTIVE: { ...scheduled, id: 8, valid_from: at(-24), valid_to: null } as TDiscount,
-    hours: at,
-  };
-});
+const { createMock, updateMock, deleteMock, LAB_ID, SCHEDULED, ACTIVE, EXPIRED, hours } =
+  vi.hoisted(() => {
+    const at = (count: number) => new Date(Date.now() + count * 3_600_000).toISOString();
+    const scheduled: TDiscount = {
+      id: 7,
+      vlab_id: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+      discount: '0.2',
+      valid_from: at(24),
+      valid_to: at(48),
+    };
+    return {
+      createMock: vi.fn(),
+      updateMock: vi.fn(),
+      deleteMock: vi.fn(),
+      LAB_ID: scheduled.vlab_id,
+      SCHEDULED: scheduled,
+      ACTIVE: { ...scheduled, id: 8, valid_from: at(-24), valid_to: null } as TDiscount,
+      EXPIRED: { ...scheduled, id: 9, discount: '0.5', valid_from: at(-48), valid_to: at(-24) },
+      hours: at,
+    };
+  });
 
 vi.mock('@/admin/sections/accounting/api', () => ({
   createDiscount: createMock,
   updateDiscount: updateMock,
-  deleteDiscount: vi.fn(),
+  deleteDiscount: deleteMock,
   getAccount: vi.fn().mockResolvedValue({ id: LAB_ID, name: 'Lab one' }),
-  listDiscounts: vi.fn().mockResolvedValue({ data: [ACTIVE], pagination: { total: 1 } }),
+  listDiscounts: vi.fn().mockResolvedValue({ data: [ACTIVE, EXPIRED], pagination: { total: 2 } }),
 }));
 vi.mock('@/components/notification', () => ({
   useAppNotification: () => ({ success: vi.fn(), error: vi.fn() }),
@@ -42,6 +45,10 @@ vi.mock('@/components/notification', () => ({
 
 const renderWithQuery = (children: ReactNode) =>
   render(<QueryClientProvider client={new QueryClient()}>{children}</QueryClientProvider>);
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 const buttons = () => screen.queryAllByRole('button').map((button) => button.textContent);
 
@@ -80,6 +87,33 @@ describe('DiscountActions', () => {
 
     await waitFor(() => expect(updateMock).toHaveBeenCalledWith(7, { discount: '0.25' }));
   });
+
+  it('still saves when the start passes while the dialog is open', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    const soon = { ...SCHEDULED, valid_from: hours(2 / 60) };
+    updateMock.mockResolvedValue({ ...soon, discount: '0.25' });
+    renderWithQuery(<DiscountActions discount={soon} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    const dialog = await screen.findByRole('dialog');
+    vi.setSystemTime(Date.now() + 10 * 60_000);
+    fireEvent.change(within(dialog).getByRole('spinbutton'), { target: { value: '25' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => expect(updateMock).toHaveBeenCalledWith(7, { discount: '0.25' }));
+    expect(within(dialog).queryByText("Can't be in the past")).toBeNull();
+  });
+
+  it('deletes a scheduled discount by its id', async () => {
+    deleteMock.mockResolvedValue(null);
+    renderWithQuery(<DiscountActions discount={SCHEDULED} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Delete' }));
+
+    await waitFor(() => expect(deleteMock).toHaveBeenCalledWith(7));
+  });
 });
 
 describe('NewDiscountButton', () => {
@@ -92,6 +126,7 @@ describe('NewDiscountButton', () => {
     fireEvent.click(button());
     const dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByText(/20% from .*, no end/)).toBeTruthy();
+    expect(within(dialog).queryByText(/^50% from/)).toBeNull();
     expect(within(dialog).getByText(/the one that started last applies/)).toBeTruthy();
 
     fireEvent.change(within(dialog).getByRole('spinbutton'), { target: { value: '12.5' } });

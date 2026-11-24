@@ -117,7 +117,7 @@ export const listReport = (
 ) => paged<TJobReport>(path, params, signal);
 
 const UNKNOWN_OUTCOME =
-  "The reply didn't arrive, so this change may or may not have gone through. Check what changed before trying again.";
+  "The reply didn't arrive, so this change may or may not have gone through. Check the journal or the discounts list before trying again.";
 
 const isUnanswered = (error: unknown) =>
   !(error instanceof ApiError) || ((error.cause?.status ?? 0) >= 500 && !error.cause?.message);

@@ -207,7 +207,7 @@ const unanswered = (write: boolean) =>
   write
     ? accountingReply(
         502,
-        "Accounting didn't answer, so this change may or may not have gone through. Check what changed before trying again.",
+        "Accounting didn't answer, so this change may or may not have gone through. Check the journal or the discounts list before trying again.",
         AccountingErrorCode.OutcomeUnknown
       )
     : accountingReply(502, "Accounting didn't answer.");
