@@ -5,8 +5,6 @@ import { useCallback } from 'react';
 
 import { ApiError } from '@/api/error';
 import { runTask } from '@/api/one/runner';
-import { ObiOneTaskTypeDict } from '@/api/one/types/task';
-import { taskConfigRunner } from '@/api/small-scale-simulator/task-config';
 import { useAppNotification } from '@/components/notification';
 import { useRunWithOfflineTokenConsent } from '@/features/offline-auth-management';
 import { errorRegistry } from '@/features/scan-config/error-registry';
@@ -44,17 +42,6 @@ export function invalidateTaskExecutionActivities({
     },
   });
 }
-
-type TTaskLauncher = (params: {
-  ctx: WorkspaceContext;
-  task_type: TObiOneTaskType;
-  config_id: string;
-}) => Promise<unknown>;
-
-// a module-level registry rather than a binding field: bindings cross the server/client boundary
-const LaunchersByTaskType: Partial<Record<TObiOneTaskType, TTaskLauncher>> = {
-  [ObiOneTaskTypeDict.IonChannelFitting]: taskConfigRunner('/ion-channel/build/run'),
-};
 
 export type TTaskLaunchMutationOptions = {
   context: WorkspaceContext;
@@ -102,19 +89,19 @@ export function useTaskLaunchMutation({
     mutationFn: async (configIdsOrId: string[] | string) => {
       const configIds = Array.isArray(configIdsOrId) ? configIdsOrId : [configIdsOrId];
 
-      const launch = LaunchersByTaskType[obiOneTaskType] ?? runTask;
       const runLaunches = async () => {
         let launched = false;
         for (const configId of configIds) {
           try {
-            const executionId = await launch({
+            const { activity_id, job_id } = await runTask({
               ctx: context,
               task_type: obiOneTaskType,
               config_id: configId,
             });
             launched = true;
-            log('info', `${logTopic} for ${configId} launched successfully, execution ID`, {
-              executionId,
+            log('info', `${logTopic} for ${configId} launched successfully`, {
+              activity_id,
+              job_id,
             });
           } catch (error) {
             handleTaskError(error, configId);
