@@ -6,6 +6,11 @@ import {
   MEModelCompatibilityResult,
 } from '@/features/scan-config/components/memodel-compatibility';
 import { Left, Middle } from '@/features/scan-config/components/ui-columns';
+import {
+  useConfigErrors,
+  useEntryNames,
+  useWholeConfig,
+} from '@/features/scan-config/use-config-store';
 import { cn } from '@/utils/css-class';
 
 import type { ScanConfigTemplateProps } from './types';
@@ -20,12 +25,16 @@ type ColumnProps = {
 
 /** Left tab/tree column, identical across every layout. */
 export function LeftColumn({ props, state }: ColumnProps) {
+  const config = useWholeConfig();
+  const errors = useConfigErrors();
+  const allEntries = useEntryNames(props.schema);
+
   return (
     <Left
       schema={props.schema}
       selectedRootElement={state.selectedRootElement}
       setSelectedRootElement={state.setSelectedRootElement}
-      config={state.config}
+      config={config}
       setConfig={state.setConfig}
       campaignId={state.campaignId}
       loading={state.loading}
@@ -35,9 +44,9 @@ export function LeftColumn({ props, state }: ColumnProps) {
       readOnly={props.readOnly}
       setCampaignId={state.setCampaignId}
       setLoading={state.setLoading}
-      errors={state.errors}
+      errors={errors}
       setTab={state.setTab}
-      allEntries={state.allEntries}
+      allEntries={allEntries}
       newKey={state.newKey}
       setNewKey={state.setNewKey}
       isEditingKey={state.isEditingKey}
@@ -58,6 +67,9 @@ export function LeftColumn({ props, state }: ColumnProps) {
  * container (scroll, borders, any sub-column grid) is owned by each layout.
  */
 export function MiddleColumnContent({ props, state }: ColumnProps) {
+  const config = useWholeConfig();
+  const errors = useConfigErrors();
+  const allEntries = useEntryNames(props.schema);
   const { selectedSchema } = state;
   if (!state.editing || selectedSchema === undefined) return null;
 
@@ -75,10 +87,10 @@ export function MiddleColumnContent({ props, state }: ColumnProps) {
         setSelectedEntry={state.setSelectedEntry}
         campaignId={state.campaignId}
         loading={state.loading}
-        config={state.config}
+        config={config}
         setConfig={state.setConfig}
         entity={props.entity}
-        allEntries={state.allEntries}
+        allEntries={allEntries}
         onNewBlockClick={() => {
           state.setNewKey('');
           state.setIsEditingKey(false);
@@ -89,9 +101,9 @@ export function MiddleColumnContent({ props, state }: ColumnProps) {
         selectedMechanismsTab={state.selectedMechanismsTab}
         selectedRegionChoice={state.selectedRegionChoice}
         setSelectedRegionChoice={state.setSelectedRegionChoice}
-        errors={state.errors}
+        errors={errors}
       />
-      {showsMEModelCompatibility && <MEModelCompatibilityResult config={state.config} />}
+      {showsMEModelCompatibility && <MEModelCompatibilityResult config={config} />}
     </>
   );
 }

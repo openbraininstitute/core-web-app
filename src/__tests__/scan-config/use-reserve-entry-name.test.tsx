@@ -1,8 +1,8 @@
-import { act, renderHook } from '@testing-library/react';
-import { useState } from 'react';
+import { renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { useReserveEntryName } from '@/features/scan-config/components/hooks';
+import { createScanConfigStore } from '@/features/scan-config/store';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 
 import type { Config, ConfigSchema } from '@/features/scan-config/types';
@@ -13,62 +13,50 @@ const schema = {
   },
 } as unknown as ConfigSchema;
 
-function useForm() {
-  const [config, setConfig] = useState<Config>({ recordings: { 'Recording 0': {} } });
-  const reserveEntryName = useReserveEntryName({ config, schema });
-
+function setup() {
+  const store = createScanConfigStore({ recordings: { 'Recording 0': {} } });
+  const { result } = renderHook(() => useReserveEntryName({ store, schema }));
+  const write = (recordings: Config[string]) =>
+    store.set((previous) => ({ ...previous, recordings }));
   const addRecording = () => {
-    const name = reserveEntryName('recordings');
-    setConfig((previous) => ({
-      ...previous,
-      recordings: { ...(previous.recordings as object), [name]: {} },
-    }));
+    const name = result.current('recordings');
+    write({ ...(store.getSnapshot().recordings as object), [name]: {} });
   };
+  const names = () => Object.keys(store.getSnapshot().recordings as object);
 
-  return { config, addRecording };
+  return { reserve: () => result.current('recordings'), write, addRecording, names };
 }
 
 describe('useReserveEntryName', () => {
-  it('gives two entries created before a re-render different names', () => {
-    const { result } = renderHook(useForm);
+  it('gives two entries created in a row different names', () => {
+    const { addRecording, names } = setup();
 
-    act(() => {
-      result.current.addRecording();
-      result.current.addRecording();
-    });
+    addRecording();
+    addRecording();
 
-    expect(Object.keys(result.current.config.recordings as object)).toEqual([
-      'Recording 0',
-      'Recording 1',
-      'Recording 2',
-    ]);
+    expect(names()).toEqual(['Recording 0', 'Recording 1', 'Recording 2']);
   });
 
-  it('never repeats a name when an older callback is used after a newer one', () => {
-    const { result, rerender } = renderHook(
-      ({ config }: { config: Config }) => useReserveEntryName({ config, schema }),
-      { initialProps: { config: { recordings: {} } as Config } }
-    );
-    const older = result.current;
+  it('gives two names picked before any write different values', () => {
+    const { reserve } = setup();
 
-    rerender({ config: { recordings: { 'Recording 0': {} } } });
-
-    expect([result.current('recordings'), older('recordings')]).toEqual([
-      'Recording 1',
-      'Recording 2',
-    ]);
+    expect([reserve(), reserve()]).toEqual(['Recording 1', 'Recording 2']);
   });
 
-  it('counts on from the entries already in the config', () => {
-    const { result } = renderHook(useForm);
+  it('counts on from entries that something else added to the config', () => {
+    const { reserve, write } = setup();
 
-    act(() => result.current.addRecording());
-    act(() => result.current.addRecording());
+    write({ 'Recording 0': {}, 'Recording 1': {} });
 
-    expect(Object.keys(result.current.config.recordings as object)).toEqual([
-      'Recording 0',
-      'Recording 1',
-      'Recording 2',
-    ]);
+    expect(reserve()).toBe('Recording 2');
+  });
+
+  it('gives a name again once its entry was written and then removed', () => {
+    const { reserve, addRecording, write } = setup();
+
+    addRecording();
+    write({ 'Recording 0': {} });
+
+    expect(reserve()).toBe('Recording 1');
   });
 });

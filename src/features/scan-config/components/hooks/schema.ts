@@ -474,9 +474,9 @@ function buildConfigState({
  * @param model: entity model
  * @param workflowSessionSelection: optional workflow browse session selection
  * @param resolveFromIdType: optional function to resolve the from_id type from the browse type
- * @returns the scan-config form blob (`config` + `setConfig`) and the store that holds it
+ * @returns the store that holds the scan-config form blob
  */
-export function useConfig({
+export function useConfigStoreSetup({
   schema,
   initialConfig,
   model,
@@ -507,7 +507,6 @@ export function useConfig({
       })
     )
   );
-  const config = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
   const appliedInitialConfigRef = useRef<Config | undefined>(initialConfig);
 
   useEffect(() => {
@@ -537,6 +536,14 @@ export function useConfig({
     store,
     workflowSessionSelection,
   ]);
+
+  return store;
+}
+
+/** The store and its current config; the caller re-renders on every edit. */
+export function useConfig(args: Parameters<typeof useConfigStoreSetup>[0]) {
+  const store = useConfigStoreSetup(args);
+  const config = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
 
   return [config, store.set, store] as const;
 }
