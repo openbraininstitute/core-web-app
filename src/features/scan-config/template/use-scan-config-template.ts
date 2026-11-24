@@ -27,7 +27,6 @@ import {
   ScanConfigUIElementDict,
 } from '@/features/scan-config/types';
 import { usePrevious } from '@/hooks/hooks';
-import { useAIConfig } from '@/services/ai-agent';
 import { clearDiffStateAtom, expandedRootElementsAtom } from '@/state/config-highlights';
 
 import type { ScanConfigTemplateProps } from './types';
@@ -166,8 +165,6 @@ export function useScanConfigTemplate({
     },
     [setDiffBarData, setShowRestore]
   );
-
-  useAIConfig();
 
   // Changing the region choice must drop any model selected under the previous region, so the
   // third (detail) drawer doesn't linger with a stale model when a new region opens.
