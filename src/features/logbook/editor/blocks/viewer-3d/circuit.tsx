@@ -21,7 +21,7 @@ export default function CircuitViewer3d({ entityId, project }: IViewer3dProps) {
     .with({ status: 'error' }, () => <ViewerMessage text="This circuit can't be shown." />)
     .with({ status: 'success' }, ({ data }) => (
       <ViewerFrame className="h-[720px] bg-neutral-1 pt-3 pr-3">
-        <PreviewColumn boxed>
+        <PreviewColumn boxed split="own">
           <ModelPreview model={data} electrodeOverlaysEnabled={false} />
         </PreviewColumn>
       </ViewerFrame>

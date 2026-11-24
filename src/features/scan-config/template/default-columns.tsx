@@ -21,6 +21,7 @@ import { useCollapsingColumns } from './collapsing-columns';
 import { LeftColumn, MiddleColumn } from './columns';
 
 import type { ReactNode, RefObject } from 'react';
+import type { StackedSplit } from '@/features/spike-viewer/spike-statistics/stacked-panes';
 import type { ScanConfigTemplateProps } from './types';
 import type { ScanConfigTemplateState } from './use-scan-config-template';
 
@@ -111,10 +112,13 @@ export function DefaultConfigColumns({ props, state }: Props) {
  */
 export function PreviewColumn({
   boxed,
+  split = 'config',
   edge,
   children,
 }: {
   boxed: boolean;
+  /** Where the 3D view and table keep the bar's place: the configuration's, or this column's own. */
+  split?: Extract<StackedSplit, 'config' | 'own'>;
   /** The grab bar on its left edge, which the columns before it give way to. */
   edge?: {
     gridRef: RefObject<HTMLDivElement | null>;
@@ -147,7 +151,7 @@ export function PreviewColumn({
       <div className="relative h-full min-h-0 min-w-0">
         {handle}
         <StackedPanes
-          split="config"
+          split={split}
           bottomShare={0.4}
           top={{
             title: '3D View',

@@ -42,6 +42,9 @@ const bottomRoomAtoms = {
   config: atom<number | null>(null),
 };
 
+/** Where the panes keep their sizes: a results layout's split, or none of their own. */
+export type StackedSplit = keyof typeof bottomRoomAtoms | 'own';
+
 export type StackedPane = {
   /** What its bar says once it is shut. */
   title: string;
@@ -63,7 +66,9 @@ export type StackedPane = {
  * The configuration's right column (`config`) has no results layout, and keeps
  * which pane is shut itself. Its top box's ring, a pixel outside the box, is
  * level with the top of the rule beside the form, where the page clips; its
- * foot is level with the generate button's.
+ * foot is level with the generate button's. `own` is laid out as `config`, but
+ * keeps the bar's place to itself, so two on one page (a logbook's 3D cards)
+ * are dragged apart and leave the configuration's as it was.
  */
 export function StackedPanes({
   split,
@@ -72,7 +77,7 @@ export function StackedPanes({
   bottomShare = 0.5,
   floors = DEFAULT_FLOORS,
 }: {
-  split: 'file' | 'panel' | 'config';
+  split: StackedSplit;
   top: StackedPane;
   bottom?: StackedPane | null;
   /** The bottom pane's share of the room until the bar is dragged. */
@@ -93,9 +98,11 @@ export function StackedPanes({
     observer.observe(area);
     return () => observer.disconnect();
   }, []);
-  const [chosen, setChosen] = useAtom(bottomRoomAtoms[split]);
+  // An atom per mount for `own`: one hook call either way, and the shared ones stay shared.
+  const [ownRoom] = useState(() => atom<number | null>(null));
+  const [chosen, setChosen] = useAtom(split === 'own' ? ownRoom : bottomRoomAtoms[split]);
   const [ownShut, setOwnShut] = useState<PaneShut>(null);
-  const layoutSplit = split === 'config' ? null : split;
+  const layoutSplit = split === 'config' || split === 'own' ? null : split;
   const panes = useShuttingSplit({
     chosen,
     onChosenChange: setChosen,
