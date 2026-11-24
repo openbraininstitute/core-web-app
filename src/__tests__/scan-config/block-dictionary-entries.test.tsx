@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import BlockDictionaryEntries from '@/features/scan-config/components/block-dictionary-entries';
 
-import type { Config, IBlockDictionary } from '@/features/scan-config/types';
+import type { Config, ConfigSchema, IBlockDictionary } from '@/features/scan-config/types';
 
 // the component only reads `additionalProperties.oneOf` off the schema, so a stub does
 const ROOT_ELEMENT_SCHEMA = {
@@ -19,6 +19,7 @@ function renderEntries(overrides: Record<string, unknown> = {}) {
   const props = {
     config,
     setConfig: vi.fn(),
+    schema: { properties: {} } as ConfigSchema,
     rootElementSchema: ROOT_ELEMENT_SCHEMA,
     rootElement: ROOT_ELEMENT,
     selectedEntry: ENTRY,

@@ -239,7 +239,6 @@ export default function BlockDictionary({
                   const newEntry = nextEntryName(schema, selectedRootElement, allEntries, o);
 
                   setSelectedEntry(newEntry);
-                  allEntries.add(newEntry);
 
                   if (!isPlainObject(config) || !isPlainObject(config[selectedRootElement])) return;
 

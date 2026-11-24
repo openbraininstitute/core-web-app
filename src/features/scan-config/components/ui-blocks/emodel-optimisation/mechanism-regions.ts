@@ -380,7 +380,7 @@ export function pruneRegionsToModelIds(
  */
 export function remapParameterDistributions(
   config: Config,
-  schema: ConfigSchema,
+  schema: Pick<ConfigSchema, 'properties'>,
   oldName: string,
   newName: string | null
 ): Config {
