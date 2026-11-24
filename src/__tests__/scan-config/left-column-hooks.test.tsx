@@ -8,7 +8,7 @@ import {
   ScanConfigStoreProvider,
   useEntrySummaries,
   useGetConfig,
-  useHasConfigErrors,
+  useHasIssues,
 } from '@/features/scan-config/use-config-store';
 
 import type { ReactNode } from 'react';
@@ -100,11 +100,11 @@ describe('useEntrySummaries', () => {
   });
 });
 
-describe('useHasConfigErrors', () => {
+describe('useHasIssues', () => {
   it('says whether a path has schema errors', () => {
     const { wrapper, write } = setup();
-    const info = renderHook(() => useHasConfigErrors('/info'), { wrapper });
-    const sets = renderHook(() => useHasConfigErrors('/neuron_sets'), { wrapper });
+    const info = renderHook(() => useHasIssues('/info'), { wrapper });
+    const sets = renderHook(() => useHasIssues('/neuron_sets'), { wrapper });
 
     expect([info.result.current, sets.result.current]).toEqual([true, false]);
 
@@ -115,7 +115,7 @@ describe('useHasConfigErrors', () => {
 
   it('does not re-render while its answer stays the same', () => {
     const { commits, wrapper, write } = setup();
-    renderHook(() => useHasConfigErrors('/neuron_sets'), { wrapper });
+    renderHook(() => useHasIssues('/neuron_sets'), { wrapper });
     commits.count = 0;
 
     write('info', { campaign_name: 'named' });

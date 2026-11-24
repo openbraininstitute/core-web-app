@@ -1,22 +1,36 @@
 'use client';
 
 import { isEqual } from 'es-toolkit';
-import { createContext, use, useCallback, useMemo, useSyncExternalStore } from 'react';
+import {
+  createContext,
+  use,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 
 import { entryNames } from '@/features/scan-config/commands';
 import { useConfigValidator } from '@/features/scan-config/components/hooks';
 import { errorsUnder } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import {
   createDerivedReader,
+  createReportedIssues,
   createSliceReader,
   entrySummariesOf,
+  isAtOrBelow,
   readBlock,
   writeBlock,
 } from '@/features/scan-config/store';
 
 import type { ErrorObject } from 'ajv';
 import type { ReactNode } from 'react';
-import type { IScanConfigStore, TEntrySummary } from '@/features/scan-config/store';
+import type {
+  IReportedIssues,
+  IScanConfigStore,
+  TEntrySummary,
+} from '@/features/scan-config/store';
 import type { Config, ConfigSchema, ConfigValue } from '@/features/scan-config/types';
 
 const ScanConfigStoreContext = createContext<IScanConfigStore | null>(null);
@@ -63,11 +77,16 @@ export function useWholeConfig(): Config {
 
 type TConfigErrors = ErrorObject[] | null;
 
-const ScanConfigErrorsContext = createContext<(() => TConfigErrors) | null>(null);
+interface IScanConfigIssues {
+  getErrors: () => TConfigErrors;
+  reported: IReportedIssues;
+}
+
+const ScanConfigIssuesContext = createContext<IScanConfigIssues | null>(null);
 
 /**
- * Validates the config against the schema once per change, for every reader below it.
- * Read the result with `useConfigErrors` or `useHasConfigErrors`.
+ * Holds every issue of the form for the readers below it: the schema errors, validated once per
+ * config change, and the issues that fields report with `useReportIssue`.
  */
 export function ScanConfigErrorsProvider({
   schema,
@@ -80,17 +99,25 @@ export function ScanConfigErrorsProvider({
 }) {
   const store = useScanConfigStore();
   const validate = useConfigValidator({ initialConfig, schema });
-  const getErrors = useMemo(() => createSliceReader(store, validate, isEqual), [store, validate]);
+  const [reported] = useState(createReportedIssues);
+  const issues = useMemo(
+    () => ({ getErrors: createSliceReader(store, validate, isEqual), reported }),
+    [store, validate, reported]
+  );
 
-  return <ScanConfigErrorsContext value={getErrors}>{children}</ScanConfigErrorsContext>;
+  return <ScanConfigIssuesContext value={issues}>{children}</ScanConfigIssuesContext>;
+}
+
+function useScanConfigIssues(): IScanConfigIssues {
+  const issues = use(ScanConfigIssuesContext);
+  if (!issues) {
+    throw new Error('The issues of the form must be read inside a ScanConfigErrorsProvider');
+  }
+  return issues;
 }
 
 function useErrorsReader(): () => TConfigErrors {
-  const getErrors = use(ScanConfigErrorsContext);
-  if (!getErrors) {
-    throw new Error('useConfigErrors must be used inside a ScanConfigErrorsProvider');
-  }
-  return getErrors;
+  return useScanConfigIssues().getErrors;
 }
 
 export function useConfigErrors(): TConfigErrors {
@@ -98,12 +125,52 @@ export function useConfigErrors(): TConfigErrors {
   return useSyncExternalStore(useScanConfigStore().subscribe, getErrors, getErrors);
 }
 
-/** Whether a path (`/section` or `/section/entry`) has schema errors; re-renders only when that flips. */
-export function useHasConfigErrors(pathPrefix: string): boolean {
-  const getErrors = useErrorsReader();
-  const hasErrors = () =>
-    getErrors()?.some((error) => error.instancePath.startsWith(pathPrefix)) ?? false;
-  return useSyncExternalStore(useScanConfigStore().subscribe, hasErrors, hasErrors);
+const toIssuePath = (path: string) => (path.startsWith('/') ? path : `/${path}`);
+
+/**
+ * Whether a path (`''` for the whole form, `/section`, `/section/entry`) has an issue, from the
+ * schema or reported by a field; re-renders only when that flips.
+ */
+export function useHasIssues(path: string): boolean {
+  const { subscribe: subscribeToConfig } = useScanConfigStore();
+  const { getErrors, reported } = useScanConfigIssues();
+  const subscribe = useCallback(
+    (listener: () => void) => {
+      const stopConfig = subscribeToConfig(listener);
+      const stopReported = reported.subscribe(listener);
+      return () => {
+        stopConfig();
+        stopReported();
+      };
+    },
+    [subscribeToConfig, reported]
+  );
+  const hasIssues = () =>
+    (getErrors()?.some((error) => isAtOrBelow(error.instancePath, path)) ?? false) ||
+    [...reported.getSnapshot().keys()].some((reportedPath) => isAtOrBelow(reportedPath, path));
+
+  return useSyncExternalStore(subscribe, hasIssues, hasIssues);
+}
+
+/**
+ * Reports an issue the schema cannot express, for as long as the caller is mounted and gives a
+ * message. A path without a leading slash is read as `/path`.
+ */
+export function useReportIssue(path: string | undefined, message: string | undefined) {
+  const { reported } = useScanConfigIssues();
+
+  useEffect(() => {
+    if (!path) return;
+    const issuePath = toIssuePath(path);
+    reported.report(issuePath, message);
+    return () => reported.report(issuePath, undefined);
+  }, [reported, path, message]);
+}
+
+/** The issues reported by fields, message by path. */
+export function useReportedIssues(): ReadonlyMap<string, string> {
+  const { reported } = useScanConfigIssues();
+  return useSyncExternalStore(reported.subscribe, reported.getSnapshot, reported.getSnapshot);
 }
 
 /** The errors at or below a path, with paths relative to it; re-renders only when they change. */

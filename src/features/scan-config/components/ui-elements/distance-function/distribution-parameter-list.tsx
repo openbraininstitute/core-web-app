@@ -3,7 +3,6 @@
 import { Radio } from 'antd';
 import { useEffect } from 'react';
 
-import { useFieldError } from '@/features/scan-config/components/hooks/field-errors';
 import {
   ParameterMode,
   type TBounds,
@@ -13,6 +12,7 @@ import {
 import { functionParameterNames } from '@/features/scan-config/components/ui-elements/distance-function/function-parameters';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
+import { useReportIssue } from '@/features/scan-config/use-config-store';
 import { cn } from '@/utils/css-class';
 
 import type { ConfigValue } from '@/features/scan-config/types';
@@ -102,7 +102,7 @@ export function DistributionParameterList({
   disabled = false,
   errorPath,
 }: DistributionParameterListProps) {
-  useFieldError(errorPath, distributionParameterError(rows) ?? undefined);
+  useReportIssue(errorPath, distributionParameterError(rows) ?? undefined);
 
   // The function changed the parameter set: write the reconciled rows back to the config.
   const rowNames = rows.map((row) => row.name).join('\0');

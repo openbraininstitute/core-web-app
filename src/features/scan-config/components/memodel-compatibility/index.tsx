@@ -6,10 +6,9 @@ import { get } from 'es-toolkit/compat';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { checkSingleNeuronCompatibility } from '@/api/small-scale-simulator';
 import { retrieveEntity } from '@/entity-configuration/domain/requests';
-import { useFieldError } from '@/features/scan-config/components/hooks/field-errors';
 import { extractConfigValueId } from '@/features/scan-config/helpers';
 import { type Config, type SchemaName, SchemaNameDict } from '@/features/scan-config/types';
-import { useConfigValue } from '@/features/scan-config/use-config-store';
+import { useConfigValue, useReportIssue } from '@/features/scan-config/use-config-store';
 import { messages } from '@/i18n/en/me-model';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
@@ -110,7 +109,7 @@ export function MEModelCompatibilityCheck() {
   const { selectionComplete, compatibility } = useMEModelCompatibility();
   const blockingMessage = selectionComplete ? BLOCKING_MESSAGE[compatibility.kind] : undefined;
 
-  useFieldError(`${MEMODEL_INPUTS_BLOCK}.compatibility`, blockingMessage);
+  useReportIssue(`/${MEMODEL_INPUTS_BLOCK}/compatibility`, blockingMessage);
 
   return null;
 }

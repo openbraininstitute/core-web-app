@@ -97,3 +97,39 @@ export function entrySummariesOf(section: ConfigValue | undefined): TEntrySummar
     type: isPlainObject(entry) && typeof entry.type === 'string' ? entry.type : undefined,
   }));
 }
+
+/** Whether `instancePath` is `path` itself or below it, by whole path segments. */
+export function isAtOrBelow(instancePath: string, path: string): boolean {
+  return instancePath === path || instancePath.startsWith(`${path}/`);
+}
+
+export interface IReportedIssues {
+  getSnapshot: () => ReadonlyMap<string, string>;
+  subscribe: (listener: () => void) => () => void;
+  /** Sets the message of a path, or removes the path when there is no message. */
+  report: (path: string, message: string | undefined) => void;
+}
+
+/** The issues that fields report themselves, by path (`/section/entry/field`). */
+export function createReportedIssues(): IReportedIssues {
+  let issues: ReadonlyMap<string, string> = new Map();
+  const listeners = new Set<() => void>();
+
+  return {
+    getSnapshot: () => issues,
+    subscribe: (listener) => {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+    report: (path, message) => {
+      if (issues.get(path) === message) return;
+      const next = new Map(issues);
+      if (message === undefined) next.delete(path);
+      else next.set(path, message);
+      issues = next;
+      for (const listener of listeners) listener();
+    },
+  };
+}

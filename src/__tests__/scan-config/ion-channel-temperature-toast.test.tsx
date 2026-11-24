@@ -6,7 +6,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { IonChannelModelPropertiesChecks } from '@/features/scan-config/components/ui-elements/ion-channel-model-properties';
 import { createScanConfigStore } from '@/features/scan-config/store';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
-import { ScanConfigStoreProvider } from '@/features/scan-config/use-config-store';
+import {
+  ScanConfigErrorsProvider,
+  ScanConfigStoreProvider,
+} from '@/features/scan-config/use-config-store';
 
 import type { Config, ConfigSchema } from '@/features/scan-config/types';
 
@@ -33,6 +36,8 @@ vi.mock('@/api/entitycore/queries/general/brain-region', () => ({
   getBrainRegionHierarchy: () => new Promise(() => {}),
 }));
 
+const ANY_OBJECT = { type: 'object' } as unknown as ConfigSchema;
+
 const SCHEMA = {
   properties: {
     initialize: {
@@ -54,7 +59,9 @@ function renderChecks({ locked = false } = {}) {
     <QueryClientProvider client={new QueryClient()}>
       <JotaiProvider>
         <ScanConfigStoreProvider store={store}>
-          <IonChannelModelPropertiesChecks schema={SCHEMA} locked={locked} />
+          <ScanConfigErrorsProvider schema={ANY_OBJECT}>
+            <IonChannelModelPropertiesChecks schema={SCHEMA} locked={locked} />
+          </ScanConfigErrorsProvider>
         </ScanConfigStoreProvider>
       </JotaiProvider>
     </QueryClientProvider>

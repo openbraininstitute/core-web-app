@@ -17,11 +17,11 @@ import {
   useScanConfigEntityPreview,
   useSetScanConfigEntityPreview,
 } from '@/features/scan-config/bridge/entity-preview';
-import { useFieldError } from '@/features/scan-config/components/hooks/field-errors';
 import { ScanHint, ScanHintTooltip } from '@/features/scan-config/components/shared/scan-hint';
 import { ModelIdentifierEntityCard } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/entity-card';
 import { mergeConfigurationInputs } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/helpers';
 import { getFromIdRefTypeBadgeLabel, type TFromIdRef } from '@/features/scan-config/helpers';
+import { useReportIssue } from '@/features/scan-config/use-config-store';
 import { ModelIdentifierFieldStorageMode } from '@/features/scan-config/workflow/workflow-schema-selection';
 import { Badge } from '@/ui/molecules/badge';
 import { ScrollableList } from '@/ui/molecules/scrollable';
@@ -182,7 +182,7 @@ export function ModelIdentifierSummaryView({
     return duplicates;
   }, [parsedValue]);
 
-  useFieldError(
+  useReportIssue(
     errorPathPrefix ? `${errorPathPrefix}/group-names` : `model-identifier-multiple/${instanceId}`,
     duplicateGroupNames.size > 0 ? 'Group names must be unique.' : undefined
   );

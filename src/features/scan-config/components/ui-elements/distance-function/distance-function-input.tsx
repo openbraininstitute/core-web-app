@@ -17,8 +17,8 @@ import {
   type TDistanceFunctionValidation,
   validateDistanceFunction,
 } from '@/api/one/distance-function';
-import { useFieldError } from '@/features/scan-config/components/hooks/field-errors';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
+import { useReportIssue } from '@/features/scan-config/use-config-store';
 import { cn } from '@/utils/css-class';
 
 export interface DistanceFunctionInputProps {
@@ -136,9 +136,9 @@ export function DistanceFunctionInput({
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Publish the error into the shared field-errors atom so the enclosing dictionary entry shows
+  // Report the error as an issue of the form so the enclosing dictionary entry shows
   // the warning key. Cleared on unmount by the hook.
-  useFieldError(errorPath, errorMessage ?? undefined);
+  useReportIssue(errorPath, errorMessage ?? undefined);
 
   // Create the editor once. `value`/`disabled` seed the initial state; later changes are applied by
   // reconfiguring compartments or dispatching, never by recreating the view.

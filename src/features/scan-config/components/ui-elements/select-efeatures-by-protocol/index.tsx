@@ -8,9 +8,8 @@ import {
   extractRecordingIds,
   useElectricalCellRecordingProperties,
 } from '@/features/scan-config/components/hooks/electrical-cell-recording-properties';
-import { useFieldError } from '@/features/scan-config/components/hooks/field-errors';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
-import { useConfigValue } from '@/features/scan-config/use-config-store';
+import { useConfigValue, useReportIssue } from '@/features/scan-config/use-config-store';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Skeleton } from '@/ui/molecules/skeleton';
 
@@ -29,13 +28,13 @@ import type { ConfigSchema, ConfigValue, ParamSchema } from '@/features/scan-con
 import type { TFeatureDef, TProtocolDef, TProtocolValue } from './types';
 
 /**
- * Publishes one validation error into the shared field-errors atom.
+ * Reports one validation error as an issue of the form.
  *
- * A component per error rather than one call for all of them, because `useFieldError` keys on a
+ * A component per error rather than one call for all of them, because `useReportIssue` keys on a
  * single path — and because unmounting one is what clears it once that error is resolved.
  */
 function FieldErrorRegistrar({ path, message }: { path: string; message: string }) {
-  useFieldError(path, message);
+  useReportIssue(path, message);
   return null;
 }
 
