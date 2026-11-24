@@ -2,7 +2,7 @@ import { queryOptions } from '@tanstack/react-query';
 import { isNil, isNotNil } from 'es-toolkit';
 import z from 'zod';
 
-import { getEntitiesByRoute, getEntityByRoute } from '@/api/entitycore/queries/general/entity';
+import { getEntityByRoute } from '@/api/entitycore/queries/general/entity';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { DAY_MS } from '@/features/logbook/constants';
@@ -10,13 +10,10 @@ import { EntityType } from '@/features/logbook/types';
 import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { IEntity, TEntityType } from '@/features/logbook/types';
 import type { WorkspaceContext } from '@/types/common';
 
 const EntityIdSchema = z.uuid();
-
-const entitiesOfPage = (page: EntityCoreResponse<IEntity>) => page.data;
 
 const routes: Readonly<Partial<Record<TEntityType, string>>> = {
   [EntityType.Simulation]: 'simulation-result',
@@ -53,8 +50,6 @@ export function entityConfigOf(type: string) {
   return isNil(coreType) ? null : (getEntityByExtendedType({ type: coreType }) ?? null);
 }
 
-const searchOrder: Partial<Record<TEntityType, string>> = { [EntityType.BrainRegion]: 'name' };
-
 export const entityQuery = (type: string, id: string, project: WorkspaceContext) => {
   const config = entityConfigOf(type);
   const route = routeOfType(type);
@@ -69,24 +64,3 @@ export const entityQuery = (type: string, id: string, project: WorkspaceContext)
     retry: false,
   });
 };
-
-export const entitySearchQuery = (type: TEntityType, search: string, project: WorkspaceContext) =>
-  queryOptions({
-    queryKey: keyBuilderLogbook.entitySearch(type, search, project.projectId),
-    enabled: isNotNil(routeOfType(type)),
-    queryFn: ({ signal }) => {
-      const queryParams: Record<string, string> = {
-        page_size: '10',
-        order_by: searchOrder[type] ?? '-creation_date',
-      };
-      if (search.trim().length > 0) queryParams.name__ilike = search.trim();
-      return getEntitiesByRoute<IEntity>({
-        route: routeOfType(type) ?? '',
-        queryParams,
-        context: project,
-        signal,
-      });
-    },
-    select: entitiesOfPage,
-    staleTime: 60_000,
-  });

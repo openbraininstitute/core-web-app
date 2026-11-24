@@ -9,9 +9,14 @@ import {
   ALIGNMENTS,
   alignOf,
   BLOCK_FORMATS,
+  canLink,
   formatStateOf,
+  hrefOf,
   INLINE_FORMATS,
   isFormatActive,
+  linkTargetOf,
+  removeLink,
+  saveLink,
   setAlign,
   setTextStyle,
   TEXT_STYLES,
@@ -48,7 +53,7 @@ afterEach(() => {
 
 test('the selection gets bold, italic, underline, strikethrough and inline code, and loses them again', () => {
   open('<p>some words</p>');
-  const marks = INLINE_FORMATS.filter((format) => format.key !== Format.Link);
+  const marks = INLINE_FORMATS;
   expect(marks.map((format) => format.key)).toEqual([
     Format.Bold,
     Format.Italic,
@@ -64,15 +69,97 @@ test('the selection gets bold, italic, underline, strikethrough and inline code,
   }
 });
 
-test('a link is set from the address asked for, and removed with an empty one', () => {
-  open('<p>some words</p>');
-  const link = INLINE_FORMATS.find((format) => format.key === Format.Link);
-  vi.spyOn(window, 'prompt').mockReturnValue('https://example.org');
-  link?.run(editor);
+test('a selected text gets a link and keeps its text and other marks', () => {
+  open('<p>some <strong>bold</strong> words</p>');
+  select('bold');
+  const target = linkTargetOf(editor);
+  expect(target).toMatchObject({ text: 'bold', href: '', textEditable: true });
+  saveLink(editor, target, { text: 'bold', href: 'https://example.org', renamed: false });
+  expect(editor.getHTML()).toContain(
+    '<a target="_blank" rel="noopener noreferrer nofollow" href="https://example.org"><strong>bold</strong></a>'
+  );
+});
+
+test('the selected text can be renamed while it is linked', () => {
+  open('<p>see here please</p>');
+  select('here');
+  saveLink(editor, linkTargetOf(editor), {
+    text: 'the docs',
+    href: 'https://example.org',
+    renamed: true,
+  });
+  expect(editor.state.doc.textContent).toBe('see the docs please');
+  select('the docs');
   expect(editor.getAttributes('link')['href']).toBe('https://example.org');
-  vi.spyOn(window, 'prompt').mockReturnValue('');
-  link?.run(editor);
+  select('please');
   expect(isFormatActive(editor, Format.Link)).toBe(false);
+});
+
+test('with nothing selected a new named link goes in at the cursor, or the address when unnamed', () => {
+  open('<p>ab</p>');
+  editor.commands.setTextSelection(2);
+  saveLink(editor, linkTargetOf(editor), {
+    text: 'docs',
+    href: 'https://example.org',
+    renamed: true,
+  });
+  expect(editor.state.doc.textContent).toBe('adocsb');
+  editor.commands.setTextSelection(1);
+  saveLink(editor, linkTargetOf(editor), { text: '', href: 'https://x.org', renamed: false });
+  expect(editor.state.doc.textContent).toBe('https://x.orgadocsb');
+});
+
+test('the cursor in a link edits the whole link, and remove takes it off', () => {
+  open('<p>go <a href="https://old.org">to the site</a> now</p>');
+  editor.commands.setTextSelection(8);
+  const target = linkTargetOf(editor);
+  expect(target).toMatchObject({ text: 'to the site', href: 'https://old.org' });
+  saveLink(editor, target, { text: 'to the site', href: 'https://new.org', renamed: false });
+  select('to the site');
+  expect(editor.getAttributes('link')['href']).toBe('https://new.org');
+  removeLink(editor, linkTargetOf(editor));
+  select('to the site');
+  expect(isFormatActive(editor, Format.Link)).toBe(false);
+});
+
+test('an edit made while the dialog is open moves the target with it', () => {
+  open('<p>see here please</p>');
+  select('here');
+  const opened = linkTargetOf(editor);
+  editor.commands.insertContentAt(1, 'Earlier text. ', { updateSelection: false });
+  saveLink(editor, linkTargetOf(editor), {
+    text: 'the docs',
+    href: 'https://x.org',
+    renamed: true,
+  });
+  expect(editor.state.doc.textContent).toBe('Earlier text. see the docs please');
+  expect(opened.from).toBeLessThan(linkTargetOf(editor).from);
+});
+
+test('a selection across blocks or of the whole log keeps its text, so nothing is lost', () => {
+  open('<p>one</p><p>two</p>');
+  editor.commands.selectAll();
+  expect(linkTargetOf(editor).textEditable).toBe(false);
+  saveLink(editor, linkTargetOf(editor), { text: 'onetwo!', href: 'https://x.org', renamed: true });
+  expect(editor.getJSON().content).toHaveLength(2);
+  expect(editor.state.doc.textContent).toBe('onetwo');
+});
+
+test('an address without a scheme reads as https, and an unsafe one is refused', () => {
+  open('<p>x</p>');
+  expect(hrefOf(' example.org ')).toBe('https://example.org');
+  expect(hrefOf('mailto:a@b.org')).toBe('mailto:a@b.org');
+  expect(hrefOf('localhost:3000')).toBe('https://localhost:3000');
+  expect(hrefOf('example.org:8080/x')).toBe('https://example.org:8080/x');
+  expect(hrefOf('tel:123')).toBe('tel:123');
+  expect(hrefOf('mailto:123@b.org')).toBe('mailto:123@b.org');
+  expect(hrefOf('callto:5551234')).toBe('callto:5551234');
+  expect(hrefOf('localhost:3000/x?y#z')).toBe('https://localhost:3000/x?y#z');
+  expect(hrefOf('javascript:alert(1)')).toBe('javascript:alert(1)');
+  expect(canLink(editor, hrefOf('localhost:3000'))).toBe(true);
+  expect(canLink(editor, 'https://example.org')).toBe(true);
+  expect(canLink(editor, 'javascript:alert(1)')).toBe(false);
+  expect(canLink(editor, '')).toBe(false);
 });
 
 test('a paragraph becomes a bulleted list, a numbered list, a quote and a code block, and comes back', () => {

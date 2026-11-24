@@ -1,9 +1,23 @@
+import { cn } from '@/utils/css-class';
+
 import type { ReactNode } from 'react';
 
-/** The fixed-height box every 3D viewer draws in; the viewers need a definite height. */
-export function ViewerFrame({ children }: { readonly children: ReactNode }) {
+/** The fixed-height box every 3D viewer draws in; page text styles stop at it. */
+export function ViewerFrame({
+  children,
+  className,
+}: {
+  readonly children: ReactNode;
+  readonly className?: string;
+}) {
   return (
-    <div className="relative h-[440px] w-full border-t border-block-border select-none [&>*]:rounded-t-none">
+    <div
+      data-logbook-foreign
+      className={cn(
+        'relative h-[440px] w-full border-t border-block-border select-none [&>*]:rounded-t-none',
+        className
+      )}
+    >
       {children}
     </div>
   );

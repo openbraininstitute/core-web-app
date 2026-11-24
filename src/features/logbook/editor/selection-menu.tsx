@@ -2,7 +2,12 @@ import { TextSelection } from '@tiptap/pm/state';
 import { useEditorState } from '@tiptap/react';
 import { BubbleMenu } from '@tiptap/react/menus';
 
-import { FormatTools, TextStyleSelect, TOOL_RULE } from '@/features/logbook/editor/format-bar';
+import {
+  FormatTools,
+  LinkTool,
+  TextStyleSelect,
+  TOOL_RULE,
+} from '@/features/logbook/editor/format-bar';
 import {
   activeOf,
   BLOCK_FORMATS,
@@ -30,8 +35,12 @@ const shows = ({ editor, state }: { readonly editor: Editor; readonly state: Edi
 export function SelectionMenu({ editor }: { readonly editor: Editor }) {
   const state = useEditorState({
     editor,
-    selector: ({ editor: e }) => ({ active: activeOf(e), style: textStyleOf(e) }),
+    selector: ({ editor: e }) => ({
+      active: activeOf(e),
+      style: textStyleOf(e),
+    }),
   });
+
   return (
     <BubbleMenu
       editor={editor}
@@ -49,6 +58,7 @@ export function SelectionMenu({ editor }: { readonly editor: Editor }) {
         active={state.active}
         disabled={false}
       />
+      <LinkTool editor={editor} pressed={state.active[Format.Link]} disabled={false} />
       <span className={TOOL_RULE} />
       <FormatTools editor={editor} formats={BLOCK_FORMATS} active={state.active} disabled={false} />
     </BubbleMenu>

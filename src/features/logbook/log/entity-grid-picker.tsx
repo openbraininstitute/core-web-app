@@ -1,7 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
 import { isNil, isNotNil } from 'es-toolkit';
 import { LayoutGroup, motion } from 'motion/react';
-import { useDeferredValue, useEffect, useEffectEvent, useId, useMemo, useState } from 'react';
+import { useEffect, useEffectEvent, useId, useMemo, useState } from 'react';
 import { match, P } from 'ts-pattern';
 
 import { dataBrowseListingUsesBrainRegionHierarchy } from '@/api/entitycore/types/extended-entity-type';
@@ -10,13 +9,11 @@ import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { useBrainRegionRootHierarchyQuery } from '@/features/brain-region-hierarchy/context';
 import { useAvailableHierarchySpeciesQuery } from '@/features/brain-region-hierarchy/hooks';
-import { blockTypeOf, entitySearchQuery } from '@/features/logbook/api/entities';
-import { entityLooks } from '@/features/logbook/blocks/kinds';
+import { useFlags } from '@/features/feature-flags';
+import { blockTypeOf } from '@/features/logbook/api/entities';
 import { REGION_SEARCH_MAX } from '@/features/logbook/constants';
 import { groupLooks } from '@/features/logbook/editor/blocks/entity-look';
 import { hexOf } from '@/features/logbook/helpers';
-import { useLogContext } from '@/features/logbook/log/context';
-import { reasonOf } from '@/features/logbook/log/notice';
 import { EntityType } from '@/features/logbook/types';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import { DATA_BROWSE_ALLOWED_ENTITIES } from '@/features/views/listing/data-browse-entities';
@@ -33,33 +30,38 @@ import {
 } from '@/ui/molecules/select';
 import {
   BrowseExperimentalDataExtendedTypes,
+  isShownInData,
   ModelDataExtendedTypes,
   SimulationDataExtendedTypes,
 } from '@/ui/segments/explore/helpers';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
 import { cn } from '@/utils/css-class';
 
-import type { ReactNode } from 'react';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { TWorkspaceScope } from '@/constants';
 import type { TEntityTypeGroup } from '@/entity-configuration/domain/group';
 import type { TBrainRegionHierarchyOption } from '@/features/brain-region-hierarchy/types';
+import type { FeatureFlags, FlagKey } from '@/features/feature-flags';
 import type {
   IEntityGridPickerProps,
   INavSection,
   IPickedEntity,
-  TEntityType,
   TNavItem,
   TPicks,
 } from '@/features/logbook/types';
 import type { TIconName } from '@/ui/molecules/icon';
 
 const allowed = new Set<string>(DATA_BROWSE_ALLOWED_ENTITIES);
-const gridItems = (configs: Readonly<Record<string, { title: string; extendedType: string }>>) =>
+const gridItems = (
+  configs: Readonly<
+    Record<string, { title: string; extendedType: string; requiredFeatures?: readonly FlagKey[] }>
+  >,
+  flags: FeatureFlags
+) =>
   Object.values(configs)
-    .filter((c) => allowed.has(c.extendedType))
+    .filter((c) => allowed.has(c.extendedType) && isShownInData(c, flags))
     .map((c) => ({
       key: c.extendedType,
       label: c.title,
@@ -68,36 +70,32 @@ const gridItems = (configs: Readonly<Record<string, { title: string; extendedTyp
 const lookOf = (group: TEntityTypeGroup) =>
   groupLooks[group] ?? { colour: 'var(--color-primary-9)', tint: 'var(--color-rule-soft)' };
 
-const SECTIONS: readonly INavSection[] = [
+/** The Data nav's three groups, in its order and with its feature flags, so both list the same types. */
+const sectionsFor = (flags: FeatureFlags): readonly INavSection[] => [
   {
     id: 'experimental',
     title: 'Experimental',
     icon: 'morphology',
     look: lookOf(EntityTypeGroup.Experimental),
-    items: gridItems(BrowseExperimentalDataExtendedTypes),
+    items: gridItems(BrowseExperimentalDataExtendedTypes, flags),
   },
   {
     id: 'model',
     title: 'Model',
     icon: 'circuit',
     look: lookOf(EntityTypeGroup.Models),
-    items: gridItems(ModelDataExtendedTypes),
+    items: gridItems(ModelDataExtendedTypes, flags),
   },
   {
     id: 'simulations',
     title: 'Simulations',
     icon: 'simulation',
     look: lookOf(EntityTypeGroup.Simulations),
-    items: [
-      ...gridItems(SimulationDataExtendedTypes),
-      { key: EntityType.Simulation, label: 'Simulation result', blockType: EntityType.Simulation },
-    ],
+    items: gridItems(SimulationDataExtendedTypes, flags),
   },
 ];
-const sectionOf = (key: string | undefined) =>
-  SECTIONS.find((s) => s.items.some((i) => i.key === key));
-const FIRST = SECTIONS[1]?.items.find((i) => i.key === EntityType.Circuit) ?? SECTIONS[0]?.items[0];
-const FIRST_SECTION = sectionOf(FIRST?.key)?.id ?? null;
+const sectionOf = (sections: readonly INavSection[], key: string | undefined) =>
+  sections.find((s) => s.items.some((i) => i.key === key));
 
 const SCOPES: readonly {
   readonly value: TWorkspaceScope;
@@ -120,8 +118,15 @@ const MENU_ITEM =
 
 export function EntityGridPicker({ multiple, onPick, onClose }: IEntityGridPickerProps) {
   const gridId = useId();
-  const [active, setActive] = useState<TNavItem | undefined>(FIRST);
-  const [openSection, setOpenSection] = useState<string | null>(FIRST_SECTION);
+  const sections = sectionsFor(useFlags());
+  const [active, setActive] = useState<TNavItem | undefined>(
+    () =>
+      sections.flatMap((s) => s.items).find((i) => i.key === EntityType.Circuit) ??
+      sections[0]?.items[0]
+  );
+  const [openSection, setOpenSection] = useState<string | null>(
+    () => sectionOf(sections, active?.key)?.id ?? null
+  );
   const [navOpen, setNavOpen] = useState(false);
   const [scope, setScope] = useState<TWorkspaceScope>(WorkspaceScope.Combined);
   const [hierarchyId, setHierarchyId] = useState<string>(ALL_SPECIES);
@@ -138,7 +143,7 @@ export function EntityGridPicker({ multiple, onPick, onClose }: IEntityGridPicke
   const species = hierarchyId === ALL_SPECIES ? null : hierarchyId;
   const tree = useBrainRegionRootHierarchyQuery(isNil(species) ? undefined : { hId: species });
   const hierarchies = useAvailableHierarchySpeciesQuery().remoteAvailableHierarchies ?? [];
-  const coreType = isNotNil(active) && 'coreType' in active ? active.coreType : null;
+  const coreType = active?.coreType ?? null;
   const usesRegion = isNotNil(coreType) && dataBrowseListingUsesBrainRegionHierarchy(coreType);
   const regionId = region?.id ?? (isNil(species) ? null : (tree.result.root?.id ?? null));
   const regionParams = useMemo(
@@ -151,8 +156,8 @@ export function EntityGridPicker({ multiple, onPick, onClose }: IEntityGridPicke
         : undefined,
     [usesRegion, regionId]
   );
-  const all = SECTIONS.flatMap((s) => s.items).flatMap((i) => picks[i.key] ?? []);
-  const activeSection = sectionOf(active?.key);
+  const all = sections.flatMap((s) => s.items).flatMap((i) => picks[i.key] ?? []);
+  const activeSection = sectionOf(sections, active?.key);
   const heading =
     isNil(active) || isNil(activeSection) ? null : (
       <TypeChip section={activeSection} label={active.label} onOpen={() => setNavOpen(true)} />
@@ -167,16 +172,6 @@ export function EntityGridPicker({ multiple, onPick, onClose }: IEntityGridPicke
     choose(
       active.key,
       kept.map((row) => ({ id: row.id, name: row.name, type: blockTypeOf(coreType) }))
-    );
-  };
-  const toggle = (entity: IPickedEntity): void => {
-    if (isNil(active)) return;
-    const current = picks[active.key] ?? [];
-    choose(
-      active.key,
-      current.some((p) => p.id === entity.id)
-        ? current.filter((p) => p.id !== entity.id)
-        : [...current, entity]
     );
   };
   const confirm = (): void => {
@@ -280,7 +275,7 @@ export function EntityGridPicker({ multiple, onPick, onClose }: IEntityGridPicke
               value={openSection}
               onValueChange={setOpenSection}
               classNames={{ item: 'shadow-block-btn' }}
-              items={SECTIONS.map((section) => ({
+              items={sections.map((section) => ({
                 id: section.id,
                 icon: (
                   <span
@@ -331,14 +326,6 @@ export function EntityGridPicker({ multiple, onPick, onClose }: IEntityGridPicke
         >
           {match(active)
             .with(P.nullish, () => null)
-            .with({ blockType: P.string }, (item) => (
-              <QuickList
-                type={item.blockType}
-                heading={heading}
-                picked={picks[item.key] ?? []}
-                onToggle={toggle}
-              />
-            ))
             .with({ coreType: P.string }, (item) => (
               <BrowseEntityScope
                 id={`${gridId}-${item.key}`}
@@ -688,81 +675,5 @@ function RegionFilter({
         </ul>
       </PopoverContent>
     </Popover>
-  );
-}
-
-function QuickList({
-  type,
-  heading,
-  picked,
-  onToggle,
-}: {
-  readonly type: TEntityType;
-  readonly heading: ReactNode;
-  readonly picked: readonly IPickedEntity[];
-  readonly onToggle: (entity: IPickedEntity) => void;
-}) {
-  const { project } = useLogContext();
-  const [search, setSearch] = useState('');
-  const query = useDeferredValue(search);
-  const results = useQuery(entitySearchQuery(type, query, project));
-  const look = entityLooks[type];
-  return (
-    <div className="flex min-h-0 flex-col gap-2 [grid-area:body]">
-      <div className="flex flex-none px-1 pt-2">{heading}</div>
-      <label className="flex h-10 flex-none items-center gap-2 rounded-full bg-neutral-1 px-4 text-neutral-4">
-        <Icon name="search" size={16} />
-        <span className="sr-only">Search {look.label}</span>
-        <input
-          className="min-w-0 flex-1 bg-transparent text-[14px] text-primary-9 outline-none"
-          value={search}
-          placeholder={`Search ${look.label.toLowerCase()} by name…`}
-          onChange={(event) => setSearch(event.target.value)}
-        />
-      </label>
-      <ul className="scroll-thin flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto">
-        {(results.data ?? []).map((entity) => {
-          const on = picked.some((p) => p.id === entity.id);
-          return (
-            <li key={entity.id}>
-              <button
-                type="button"
-                className="flex w-full items-center gap-3 rounded-[12px] px-3 py-2 text-left hover:bg-fill-item-hover aria-pressed:bg-primary-0"
-                aria-pressed={on}
-                onClick={() => onToggle({ id: entity.id, name: entity.name, type })}
-              >
-                <span
-                  className="grid size-8 flex-none place-items-center rounded-[10px]"
-                  style={{ background: look.tint, color: look.colour }}
-                >
-                  <Icon name={on ? 'check' : type} size={16} stroke={2} />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[14px] font-semibold text-primary-9">
-                    {entity.name}
-                  </span>
-                  <span className="block truncate text-[12px] text-neutral-4">
-                    {[entity.brain_region?.name, entity.created_by?.pref_label]
-                      .filter(Boolean)
-                      .join(' · ')}
-                  </span>
-                </span>
-              </button>
-            </li>
-          );
-        })}
-        {results.isPending ? (
-          <li className="px-3 py-2 text-[13px] text-neutral-4">Searching…</li>
-        ) : null}
-        {results.isError ? (
-          <li className="px-3 py-2 text-[13px] text-destructive">
-            The search failed: {reasonOf(results.error)}
-          </li>
-        ) : null}
-        {results.isSuccess && results.data.length === 0 ? (
-          <li className="px-3 py-2 text-[13px] text-neutral-4">Nothing matches.</li>
-        ) : null}
-      </ul>
-    </div>
   );
 }

@@ -35,6 +35,13 @@ test('a brain region card stays a brain region, not the region circuit of the sa
   expect(has3dView('brain_region')).toBe(false);
 });
 
+test('a recording array card offers its electrodes in 3D only with the electrode overlays flag', () => {
+  const type = ExtendedEntitiesTypeDict.SimulatableExtracellularRecordingArray;
+  expect(has3dView(type)).toBe(false);
+  expect(has3dView(type, { 'electrode-overlays': false })).toBe(false);
+  expect(has3dView(type, { 'electrode-overlays': true })).toBe(true);
+});
+
 test('a simulation card is read from its own route, so it has no core details panel', () => {
   expect(coreTypeOf('simulation')).toBeNull();
 });

@@ -473,6 +473,21 @@ export interface IFormat {
   readonly run: (editor: Editor) => void;
 }
 
+export interface ILinkTarget {
+  readonly from: number;
+  readonly to: number;
+  readonly text: string;
+  readonly href: string;
+  /** False unless the range is plain text in one textblock. */
+  readonly textEditable: boolean;
+}
+
+export interface ILinkEdit {
+  readonly text: string;
+  readonly href: string;
+  readonly renamed: boolean;
+}
+
 export const TextStyle = {
   Paragraph: 'paragraph',
   Heading1: 'h1',
@@ -616,9 +631,11 @@ export interface IEditorTabsProps {
   readonly onClose: (tab: ITabRef) => void;
 }
 
-export type TNavItem =
-  | { readonly key: string; readonly label: string; readonly coreType: TExtendedEntitiesTypeDict }
-  | { readonly key: string; readonly label: string; readonly blockType: TEntityType };
+export type TNavItem = {
+  readonly key: string;
+  readonly label: string;
+  readonly coreType: TExtendedEntitiesTypeDict;
+};
 
 export interface INavSection {
   readonly id: string;
