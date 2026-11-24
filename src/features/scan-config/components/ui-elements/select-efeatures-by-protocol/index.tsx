@@ -1,6 +1,7 @@
 'use client';
 
 import { Alert, Checkbox, Empty } from 'antd';
+import { isEqual } from 'es-toolkit';
 import { useMemo, useState } from 'react';
 
 import {
@@ -9,6 +10,7 @@ import {
 } from '@/features/scan-config/components/hooks/electrical-cell-recording-properties';
 import { useFieldError } from '@/features/scan-config/components/hooks/field-errors';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
+import { useConfigValue } from '@/features/scan-config/use-config-store';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Skeleton } from '@/ui/molecules/skeleton';
 
@@ -23,7 +25,7 @@ import {
 } from './helpers';
 import { ProtocolCard, type TRenderField } from './protocol-card';
 
-import type { Config, ConfigSchema, ConfigValue, ParamSchema } from '@/features/scan-config/types';
+import type { ConfigSchema, ConfigValue, ParamSchema } from '@/features/scan-config/types';
 import type { TFeatureDef, TProtocolDef, TProtocolValue } from './types';
 
 /**
@@ -80,7 +82,6 @@ export function SelectEFeaturesByProtocol({
   setState,
   paramSchema,
   schema,
-  config,
   disabled,
   renderField,
   errorPathPrefix,
@@ -91,7 +92,6 @@ export function SelectEFeaturesByProtocol({
   setState: (next: Record<string, ConfigValue>) => void;
   paramSchema: ParamSchema;
   schema: ConfigSchema;
-  config: Config;
   disabled: boolean;
   renderField: TRenderField;
   errorPathPrefix?: string;
@@ -110,15 +110,19 @@ export function SelectEFeaturesByProtocol({
     [catalogueDefs]
   );
 
+  // recordings are chosen in this editor, not on a browse page before it, so the selection lives
+  // in the config rather than in the route's session entity
+  const selectedRecordingIds = useConfigValue(extractRecordingIds, isEqual);
+
   const {
     data: recordingProperties,
     isLoading,
     isError,
-  } = useElectricalCellRecordingProperties({ config, schema, workspace });
-
-  // recordings are chosen in this editor, not on a browse page before it, so the selection lives
-  // in the config rather than in the route's session entity
-  const selectedRecordingIds = useMemo(() => extractRecordingIds(config), [config]);
+  } = useElectricalCellRecordingProperties({
+    recordingIds: selectedRecordingIds,
+    schema,
+    workspace,
+  });
   const hasSelectedRecordings = selectedRecordingIds.length > 0;
 
   const discoveredProtocols = recordingProperties?.Protocols;

@@ -1,11 +1,12 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, waitFor } from '@testing-library/react';
 import { Provider as JotaiProvider } from 'jotai';
-import { useState } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { IonChannelModelPropertiesChecks } from '@/features/scan-config/components/ui-elements/ion-channel-model-properties';
+import { createScanConfigStore } from '@/features/scan-config/store';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
+import { ScanConfigStoreProvider } from '@/features/scan-config/use-config-store';
 
 import type { Config, ConfigSchema } from '@/features/scan-config/types';
 
@@ -42,34 +43,24 @@ const SCHEMA = {
   },
 } as unknown as ConfigSchema;
 
-function Harness({ locked, onConfig }: { locked: boolean; onConfig: (config: Config) => void }) {
-  const [config, setConfig] = useState<Config>({
+function renderChecks({ locked = false } = {}) {
+  const store = createScanConfigStore({
     initialize: {
       recordings: Object.keys(temperatures.byId).map((id) => ({ id_str: id })),
       model_properties: {},
     },
   } as unknown as Config);
-  onConfig(config);
-  return (
-    <IonChannelModelPropertiesChecks
-      schema={SCHEMA}
-      config={config}
-      setConfig={setConfig}
-      locked={locked}
-    />
-  );
-}
-
-function renderChecks({ locked = false } = {}) {
-  const configs: Config[] = [];
   render(
     <QueryClientProvider client={new QueryClient()}>
       <JotaiProvider>
-        <Harness locked={locked} onConfig={(config) => configs.push(config)} />
+        <ScanConfigStoreProvider store={store}>
+          <IonChannelModelPropertiesChecks schema={SCHEMA} locked={locked} />
+        </ScanConfigStoreProvider>
       </JotaiProvider>
     </QueryClientProvider>
   );
-  return () => configs.at(-1) as { initialize: { model_properties: { temperature?: number } } };
+  return () =>
+    store.getSnapshot() as { initialize: { model_properties: { temperature?: number } } };
 }
 
 describe('ion channel model temperature preselection toast', () => {

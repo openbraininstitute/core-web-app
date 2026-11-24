@@ -9,7 +9,6 @@ import { isReferenceFieldVisible } from '@/features/scan-config/components/ui-el
 import { resolveNeuronFilterProperties } from '@/features/scan-config/helpers';
 import { useBlockDiff } from '@/features/scan-config/hooks/use-block-diff';
 import {
-  type Config,
   type ConfigSchema,
   type ConfigValue,
   isType,
@@ -29,7 +28,6 @@ export default function Block({
   blockSchema,
   state,
   setState,
-  config,
   entity,
   hideTitle,
   schemaMappingConfig,
@@ -39,7 +37,6 @@ export default function Block({
 }: {
   schema: ConfigSchema;
   disabled: boolean;
-  config: Config;
   blockSchema?: TBlock;
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
   state: Record<string, ConfigValue>;
@@ -158,7 +155,6 @@ export default function Block({
                           k={k}
                           disabled={disabled}
                           paramSchema={blockElementSchema}
-                          config={config}
                           schema={schema}
                           entity={entity}
                           schemaMappingConfig={schemaMappingConfig}

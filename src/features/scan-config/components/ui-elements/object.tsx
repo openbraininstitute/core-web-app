@@ -5,7 +5,6 @@ import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
 import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import { UIElementRender } from '@/features/scan-config/components/ui-elements';
 import {
-  type Config,
   type ConfigSchema,
   type ConfigValue,
   isType,
@@ -30,7 +29,6 @@ export function ObjectField({
   value,
   paramSchema,
   disabled,
-  config,
   schema,
   entity,
   schemaMappingConfig,
@@ -40,7 +38,6 @@ export function ObjectField({
   value: ConfigValue;
   paramSchema: ObjectElement;
   disabled: boolean;
-  config: Config;
   schema: ConfigSchema;
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
@@ -83,7 +80,6 @@ export function ObjectField({
                         paramSchema={fieldSchema}
                         state={objectValue}
                         setState={onChange}
-                        config={config}
                         schema={schema}
                         entity={entity}
                         schemaMappingConfig={schemaMappingConfig}

@@ -32,7 +32,6 @@ function renderBlock() {
     <Block
       schema={SCHEMA}
       disabled={false}
-      config={{}}
       blockSchema={BLOCK_SCHEMA}
       entity={null}
       state={{ duration: '1000', minf_eq: '' }}

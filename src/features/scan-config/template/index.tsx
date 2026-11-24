@@ -35,8 +35,6 @@ import {
   ScanConfigErrorsProvider,
   ScanConfigStoreProvider,
   useConfigValue,
-  useSetConfig,
-  useWholeConfig,
 } from '@/features/scan-config/use-config-store';
 import { BreadcrumbChip } from '@/ui/molecules/breadcrumb';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
@@ -156,20 +154,10 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
 }
 
 function ConfigChecks({ props, locked }: { props: ScanConfigTemplateProps; locked: boolean }) {
-  const config = useWholeConfig();
-  const setConfig = useSetConfig();
-
   return (
     <>
-      {!props.readOnly && (
-        <IonChannelModelPropertiesChecks
-          schema={props.schema}
-          config={config}
-          setConfig={setConfig}
-          locked={locked}
-        />
-      )}
-      {checksMEModelCompatibility(props) && <MEModelCompatibilityCheck config={config} />}
+      {!props.readOnly && <IonChannelModelPropertiesChecks schema={props.schema} locked={locked} />}
+      {checksMEModelCompatibility(props) && <MEModelCompatibilityCheck />}
     </>
   );
 }

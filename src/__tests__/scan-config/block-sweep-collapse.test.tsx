@@ -25,7 +25,6 @@ function renderBlock(amplitude: ConfigValue, disabled = false) {
     <Block
       schema={SCHEMA}
       disabled={disabled}
-      config={{}}
       blockSchema={BLOCK_SCHEMA}
       entity={null}
       state={{ amplitude }}

@@ -36,7 +36,6 @@ function renderBlock(overrides: Record<string, unknown> = {}) {
     <Block
       schema={SCHEMA}
       disabled={false}
-      config={{}}
       blockSchema={BLOCK_SCHEMA}
       entity={null}
       state={{ simulation_length: '1000', v_init: '-80' }}

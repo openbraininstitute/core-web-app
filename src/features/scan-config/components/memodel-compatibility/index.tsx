@@ -9,6 +9,7 @@ import { retrieveEntity } from '@/entity-configuration/domain/requests';
 import { useFieldError } from '@/features/scan-config/components/hooks/field-errors';
 import { extractConfigValueId } from '@/features/scan-config/helpers';
 import { type Config, type SchemaName, SchemaNameDict } from '@/features/scan-config/types';
+import { useConfigValue } from '@/features/scan-config/use-config-store';
 import { messages } from '@/i18n/en/me-model';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
@@ -31,10 +32,15 @@ const BLOCKING_MESSAGE: Record<CompatibilityState['kind'], string | undefined> =
 };
 
 // both callers share the queries, so the pair is checked once
-function useMEModelCompatibility(config: Config) {
+const selectMorphologyId = (config: Config) =>
+  extractConfigValueId(get(config, `${MEMODEL_INPUTS_BLOCK}.morphology`));
+const selectEModelId = (config: Config) =>
+  extractConfigValueId(get(config, `${MEMODEL_INPUTS_BLOCK}.emodel`));
+
+function useMEModelCompatibility() {
   const { virtualLabId, projectId } = useWorkspace();
-  const morphologyId = extractConfigValueId(get(config, `${MEMODEL_INPUTS_BLOCK}.morphology`));
-  const emodelId = extractConfigValueId(get(config, `${MEMODEL_INPUTS_BLOCK}.emodel`));
+  const morphologyId = useConfigValue(selectMorphologyId);
+  const emodelId = useConfigValue(selectEModelId);
   const selectionComplete = !!morphologyId && !!emodelId;
 
   const compatibilityCheck = useQuery({
@@ -100,8 +106,8 @@ function useMEModelCompatibility(config: Config) {
  * Blocks Generate until the picked morphology and e-model are compatible. Mounted for the whole
  * editor so the block holds on every tab; the result shows under the pickers.
  */
-export function MEModelCompatibilityCheck({ config }: { config: Config }) {
-  const { selectionComplete, compatibility } = useMEModelCompatibility(config);
+export function MEModelCompatibilityCheck() {
+  const { selectionComplete, compatibility } = useMEModelCompatibility();
   const blockingMessage = selectionComplete ? BLOCKING_MESSAGE[compatibility.kind] : undefined;
 
   useFieldError(`${MEMODEL_INPUTS_BLOCK}.compatibility`, blockingMessage);
@@ -109,7 +115,7 @@ export function MEModelCompatibilityCheck({ config }: { config: Config }) {
   return null;
 }
 
-export function MEModelCompatibilityResult({ config }: { config: Config }) {
-  const { compatibility, retry } = useMEModelCompatibility(config);
+export function MEModelCompatibilityResult() {
+  const { compatibility, retry } = useMEModelCompatibility();
   return <CompatibilityNotice state={compatibility} onRetry={retry} className="pt-6 pb-4" />;
 }
