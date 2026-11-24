@@ -1,5 +1,7 @@
 import { WarningFilled } from '@ant-design/icons';
+import { RiAddLine } from '@remixicon/react';
 import { useSetAtom } from 'jotai';
+import { useEffect, useRef } from 'react';
 
 import BlockDictionaryEntries from '@/features/scan-config/components/block-dictionary-entries';
 import { Chevron, CountBadge, LeftMenuTab } from '@/features/scan-config/components/components';
@@ -17,6 +19,7 @@ import {
   type IBlockSingle,
   type IEModelOptimisationParameters,
   type IRootBlockUnion,
+  isSingleBlockElement,
   isType,
   ScanConfigUIElementDict,
   type TBlock,
@@ -31,6 +34,54 @@ import type { ErrorObject } from 'ajv';
 import type React from 'react';
 
 import styles from './root-element.module.css';
+
+/** The nearest ancestor that scrolls up and down. */
+function scrollParent(element: HTMLElement): HTMLElement | null {
+  for (let at = element.parentElement; at; at = at.parentElement) {
+    if (/auto|scroll/.test(getComputedStyle(at).overflowY)) return at;
+  }
+  return null;
+}
+
+/** Room left under a dictionary scrolled into view, px. */
+const REVEAL_GAP = 8;
+/** How long a dictionary is followed as it opens: its 0.3 s unfolding and some slack, ms. */
+const REVEAL_FOLLOW = 600;
+
+/** Scrolls the list with a dictionary the user opens, as far as keeps the dictionary's own row. */
+function useRevealOnOpen(isExpanded: boolean) {
+  const ref = useRef<HTMLDivElement>(null);
+  const asked = useRef(false);
+
+  useEffect(() => {
+    if (!isExpanded || !asked.current) return;
+    asked.current = false;
+    const element = ref.current;
+    const scroller = element && scrollParent(element);
+    if (!element || !scroller) return;
+
+    const reveal = () => {
+      const view = scroller.getBoundingClientRect();
+      const box = element.getBoundingClientRect();
+      const hidden = box.bottom + REVEAL_GAP - view.bottom;
+      if (hidden > 0) scroller.scrollTop += Math.max(0, Math.min(hidden, box.top - view.top));
+    };
+    const observer = new ResizeObserver(reveal);
+    observer.observe(element);
+    const stop = window.setTimeout(() => observer.disconnect(), REVEAL_FOLLOW);
+    return () => {
+      observer.disconnect();
+      window.clearTimeout(stop);
+    };
+  }, [isExpanded]);
+
+  return {
+    ref,
+    revealOnOpen: () => {
+      asked.current = true;
+    },
+  };
+}
 
 export function RootElement({
   schema,
@@ -54,6 +105,7 @@ export function RootElement({
   setIsEditingKey,
   selectedMechanismsTab,
   setSelectedMechanismsTab,
+  formShown = false,
 }: {
   schema: ConfigSchema | null; // The global schema
   rootElement: string;
@@ -80,23 +132,40 @@ export function RootElement({
   setIsEditingKey: (k: boolean) => void;
   selectedMechanismsTab: string;
   setSelectedMechanismsTab: (tab: string) => void;
+  /**
+   * Whether the form column is showing a form at the moment: a block picked can be picked with
+   * its form folded away, and a click on it then opens the form where it would otherwise put the
+   * block away.
+   */
+  formShown?: boolean;
 }) {
   const { isChatReady } = useAIConfig();
   const setExpandedRootElements = useSetAtom(expandedRootElementsAtom);
   const { highlights, hasHighlights, isExpanded, diffClass } = useRootElementDiff(rootElement);
   const hasFieldErrors = useFieldErrorsForPath(rootElement);
+  const { ref, revealOnOpen } = useRevealOnOpen(isExpanded);
   const isSelected = selectedRootElement === rootElement;
   const isBlockDictionary =
     rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary;
   const entries = isPlainObject(config[rootElement]) ? (config[rootElement] as object) : {};
   // only a dictionary holds sub-entries; the count is what it currently holds
   const entryCount = isBlockDictionary ? Object.keys(entries).length : null;
+  const hasEntries = !!entryCount || hasHighlights;
   // The block picked is one of this dictionary's own.
   const holdsSelected = isSelected && !!selectedEntry && selectedEntry in entries;
-  // A dictionary is lit only while shut on the block picked: open, that block is lit instead.
-  const lit = isBlockDictionary ? holdsSelected && !isExpanded : isSelected;
+  // The form is showing the kinds of block to add to it.
+  const adding = isBlockDictionary && isSelected && !selectedEntry && formShown;
+  // A dictionary is lit while shut on the block picked (open, that block is lit instead) or added to.
+  const lit = isBlockDictionary ? adding || (holdsSelected && !isExpanded) : isSelected;
 
   if (!schema?.properties) return;
+
+  /** Folds the form away and leaves nothing picked: no block, and no dictionary lit for one. */
+  const putAway = () => {
+    setSelectedRootElement('');
+    setSelectedEntry('');
+    setEditing(false);
+  };
 
   const handleEntryClick = (subkey: string) => {
     setSelectedRootElement(rootElement); // Select the parent block
@@ -106,124 +175,170 @@ export function RootElement({
     setNewKey('');
   };
 
+  const canAdd =
+    isBlockDictionary &&
+    isPlainObject(config[rootElement]) &&
+    !campaignId &&
+    !loading &&
+    !readOnly &&
+    isChatReady &&
+    highlights.length === 0;
+
+  const handleAddClick = () => {
+    if (!isExpanded) revealOnOpen();
+    setExpandedRootElements((prev) => new Set(prev).add(rootElement));
+    handleEntryClick('');
+  };
+
   return (
-    <div className="w-full flex flex-col gap-0.5">
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span>
-            <LeftMenuTab
-              tab={rootElement}
-              testId={`scan-config-root-element-${rootElement}`}
-              selectedTab={selectedRootElement}
-              selected={lit}
-              onClick={() => {
-                // emodel_optimisation_parameters: always expanded, keeps its inner tab
-                if (
-                  rootElementSchema.ui_element ===
-                  ScanConfigUIElementDict.EModelOptimisationParameters
-                ) {
-                  setSelectedRootElement(rootElement);
-                  setSelectedEntry('');
-                  setEditing(true);
-                  return;
-                }
-
-                const isDictionary =
-                  !isRootBlock(schema, rootElement) &&
-                  rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion;
-
-                // BlockDictionary: always toggle expand/collapse on click,
-                // regardless of whether this root element is currently selected.
-                if (isDictionary) {
-                  // The block picked stays picked, its form open, as its own dictionary opens or shuts.
-                  if (!holdsSelected) {
+    <div ref={ref} className="w-full flex flex-col gap-0.5">
+      <div className="relative">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span>
+              <LeftMenuTab
+                tab={rootElement}
+                testId={`scan-config-root-element-${rootElement}`}
+                selectedTab={selectedRootElement}
+                selected={lit}
+                onClick={() => {
+                  // emodel_optimisation_parameters: always expanded, keeps its inner tab
+                  if (
+                    rootElementSchema.ui_element ===
+                    ScanConfigUIElementDict.EModelOptimisationParameters
+                  ) {
                     setSelectedRootElement(rootElement);
                     setSelectedEntry('');
-                    setEditing(false);
+                    setEditing(true);
+                    return;
                   }
 
-                  if (isExpanded) {
-                    setExpandedRootElements((prev) => {
-                      const newSet = new Set(prev);
-                      newSet.delete(rootElement);
-                      return newSet;
-                    });
-                  } else {
-                    setExpandedRootElements((prev) => {
-                      const newSet = new Set(prev);
-                      newSet.add(rootElement);
-                      return newSet;
-                    });
+                  const isDictionary =
+                    !isRootBlock(schema, rootElement) &&
+                    rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion;
+
+                  // BlockDictionary: a click only opens or shuts it, whichever block is picked.
+                  if (isDictionary) {
+                    if (canAdd && !hasEntries) {
+                      handleAddClick();
+                      return;
+                    }
+                    if (isExpanded) {
+                      // Shut, it takes the form with it where the form is one of its own: that
+                      // of a block picked in it, or its kinds of block to add. Another block's
+                      // form is left as it is, and that block picked.
+                      if (isSelected) putAway();
+                      setExpandedRootElements((prev) => {
+                        const newSet = new Set(prev);
+                        newSet.delete(rootElement);
+                        return newSet;
+                      });
+                    } else {
+                      // Opened, it only shows its blocks: the block picked and its form stay as
+                      // they are.
+                      revealOnOpen();
+                      setExpandedRootElements((prev) => {
+                        const newSet = new Set(prev);
+                        newSet.add(rootElement);
+                        return newSet;
+                      });
+                    }
+                    return;
                   }
-                  return;
-                }
 
-                // Open: add to expanded set and select
-                setExpandedRootElements((prev) => {
-                  const newSet = new Set(prev);
-                  newSet.add(rootElement);
-                  return newSet;
-                });
+                  // What is left has a form of its own. Clicked again while that form is
+                  // showing, the block is put away.
+                  if (isSelected && formShown) {
+                    putAway();
+                    return;
+                  }
 
-                setSelectedRootElement(rootElement);
-                setSelectedEntry('');
+                  // Open: add to expanded set and select
+                  setExpandedRootElements((prev) => {
+                    const newSet = new Set(prev);
+                    newSet.add(rootElement);
+                    return newSet;
+                  });
 
-                if (
-                  rootElementSchema.ui_element === ScanConfigUIElementDict.BlockSingle ||
-                  rootElementSchema.ui_element === ScanConfigUIElementDict.BlockUnion
-                )
-                  setEditing(true);
-                else setEditing(false);
-              }}
-              extraClass={cn(
-                'w-full flex text-left justify-between min-h-[50px] items-center drop-shadow ml-0.5',
-                styles.rootBase,
-                diffClass
-              )}
-              style={undefined}
-            >
-              <span className="flex items-center gap-2 wrap-break-word min-w-0">
-                <SelectedUnionVariantLabel
-                  rootElementSchema={rootElementSchema}
-                  config={config}
-                  rootElement={rootElement}
-                  fallbackTitle={schema.properties?.[rootElement]?.title}
-                />
-              </span>
-              <div className="flex items-center gap-3">
-                {entryCount ? <CountBadge count={entryCount} selected={lit} /> : null}
+                  setSelectedRootElement(rootElement);
+                  setSelectedEntry('');
 
-                {/* A warning where the block has a problem; one that is fine needs no tick. None on Info, whose name
-                    and description are asked for as the campaign is generated (a stopgap, the user asked). */}
-                {rootElement !== 'info' &&
-                  (errors?.some((error) => error.instancePath.startsWith(`/${rootElement}`)) ||
+                  if (
+                    isSingleBlockElement(rootElementSchema) ||
+                    rootElementSchema.ui_element === ScanConfigUIElementDict.BlockUnion
+                  )
+                    setEditing(true);
+                  else setEditing(false);
+                }}
+                extraClass={cn(
+                  'w-full flex text-left justify-between min-h-[50px] items-center drop-shadow ml-0.5',
+                  styles.rootBase,
+                  diffClass
+                )}
+                style={undefined}
+              >
+                <span className="flex items-center gap-2 wrap-break-word min-w-0">
+                  <SelectedUnionVariantLabel
+                    rootElementSchema={rootElementSchema}
+                    config={config}
+                    rootElement={rootElement}
+                    fallbackTitle={schema.properties?.[rootElement]?.title}
+                  />
+                </span>
+                <div className="flex items-center gap-3">
+                  {/* A warning where the block has a problem; one that is fine needs no tick. */}
+                  {(errors?.some((error) => error.instancePath.startsWith(`/${rootElement}`)) ||
                     hasFieldErrors) && <WarningFilled className="text-yellow-400!" />}
 
-                <Chevron
-                  // A dictionary's points down while open; the e-model's is never shut.
-                  rotate={
-                    (isBlockDictionary && isExpanded) ||
-                    rootElementSchema.ui_element ===
-                      ScanConfigUIElementDict.EModelOptimisationParameters
-                      ? 90
-                      : 0
-                  }
-                />
-              </div>
-            </LeftMenuTab>
-          </span>
-        </TooltipTrigger>
-        <TooltipContent
-          avoidCollisions
-          hideWhenDetached
-          align="center"
-          side="right"
-          showArrow={false}
-          className={DESCRIPTION_TOOLTIP_CLASS}
-        >
-          <MarkdownDescription>{rootElementSchema.description}</MarkdownDescription>
-        </TooltipContent>
-      </Tooltip>
+                  {entryCount ? <CountBadge count={entryCount} selected={lit} /> : null}
+
+                  {!isBlockDictionary && !isSingleBlockElement(rootElementSchema) && (
+                    <Chevron
+                      // The e-model's is never shut.
+                      rotate={
+                        rootElementSchema.ui_element ===
+                        ScanConfigUIElementDict.EModelOptimisationParameters
+                          ? 90
+                          : 0
+                      }
+                    />
+                  )}
+
+                  {canAdd && <span aria-hidden className="size-6 shrink-0" />}
+                </div>
+              </LeftMenuTab>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent
+            avoidCollisions
+            hideWhenDetached
+            align="center"
+            side="right"
+            showArrow={false}
+            className={DESCRIPTION_TOOLTIP_CLASS}
+          >
+            <MarkdownDescription>{rootElementSchema.description}</MarkdownDescription>
+          </TooltipContent>
+        </Tooltip>
+
+        {canAdd && rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary && (
+          <button
+            type="button"
+            data-testid={`scan-config-add-entry-${rootElement}`}
+            aria-label={`Add ${rootElementSchema.singular_name.toLowerCase()}`}
+            title={`Add ${rootElementSchema.singular_name.toLowerCase()}`}
+            onClick={handleAddClick}
+            className={cn(
+              'absolute inset-y-0 right-[18px] my-auto flex size-6 cursor-pointer items-center justify-center rounded-full transition-colors',
+              lit
+                ? 'hover:text-primary-8 bottom-1 text-white hover:bg-white'
+                : 'text-primary-8 hover:bg-primary-8 bg-white hover:text-white'
+            )}
+          >
+            <RiAddLine className="size-4" />
+          </button>
+        )}
+      </div>
 
       {rootElementSchema.ui_element === ScanConfigUIElementDict.EModelOptimisationParameters && (
         <EModelOptimisationMechanismsTabList
@@ -257,7 +372,6 @@ export function RootElement({
             setEditing={setEditing}
             setSelectedEntry={setSelectedEntry}
             setSelectedRootElement={setSelectedRootElement}
-            singularName={rootElementSchema.singular_name}
             allEntries={allEntries}
             newKey={newKey}
             setNewKey={setNewKey}
@@ -265,7 +379,7 @@ export function RootElement({
             setIsEditingKey={setIsEditingKey}
             errors={errors}
             highlights={highlights}
-            visible={isExpanded}
+            visible={isExpanded && hasEntries}
             rootElementSchema={rootElementSchema}
           />
         )}

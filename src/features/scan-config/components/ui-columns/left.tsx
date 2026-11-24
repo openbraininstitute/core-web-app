@@ -49,6 +49,7 @@ export default function Left({
   aiEnabled,
   selectedMechanismsTab,
   setSelectedMechanismsTab,
+  formShown,
 }: {
   schema: ConfigSchema;
   selectedRootElement: string;
@@ -78,6 +79,8 @@ export default function Left({
   aiEnabled?: boolean;
   selectedMechanismsTab: string;
   setSelectedMechanismsTab: (tab: string) => void;
+  /** Whether the form column is showing a form: a second click on its block then puts it away. */
+  formShown?: boolean;
 }) {
   const { aiConfig, setAiConfig } = useAIConfig();
   const [pendingRestoreConfig, setPendingRestoreConfig] = useAtom(pendingRestoreConfigAtom);
@@ -159,6 +162,7 @@ export default function Left({
                         setIsEditingKey={setIsEditingKey}
                         selectedMechanismsTab={selectedMechanismsTab}
                         setSelectedMechanismsTab={setSelectedMechanismsTab}
+                        formShown={formShown}
                       />
                     );
                   })}
@@ -178,6 +182,7 @@ export default function Left({
             errors={errors}
             config={config}
             setConfig={setConfig}
+            schema={schema}
             setTab={setTab}
             setLoading={setLoading}
             activity={activity}

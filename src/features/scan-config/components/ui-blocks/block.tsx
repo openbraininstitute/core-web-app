@@ -3,6 +3,7 @@ import { isNil } from 'es-toolkit/compat';
 
 import { DESCRIPTION_TOOLTIP_CLASS } from '@/features/scan-config/components/shared/box-class';
 import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
+import { CloseFormButton } from '@/features/scan-config/components/shared/form-header-buttons';
 import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import { UIElementRender } from '@/features/scan-config/components/ui-elements';
 import {
@@ -41,6 +42,8 @@ export default function Block({
   rootElement,
   selectedEntry,
   errorPathPrefix,
+  notRequired = false,
+  onClose,
 }: {
   schema: ConfigSchema;
   disabled: boolean;
@@ -54,6 +57,10 @@ export default function Block({
   rootElement?: string;
   selectedEntry?: string;
   errorPathPrefix?: string;
+  /** Its fields are asked for later (obi-one's `block_info`): an empty one is not flagged. */
+  notRequired?: boolean;
+  /** Folds the form column away: an × at the title's right, where the block shows its title. */
+  onClose?: () => void;
 }) {
   const { getFieldDiffClass } = useBlockDiff(rootElement, selectedEntry);
 
@@ -71,8 +78,11 @@ export default function Block({
     >
       {!hideTitle && (
         <>
-          <div className="text-lg text-gray-500 wrap-break-word">
-            {renderMathInText(blockSchema.title)}
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0 text-lg text-gray-500 wrap-break-word">
+              {renderMathInText(blockSchema.title)}
+            </div>
+            {onClose && <CloseFormButton onClose={onClose} />}
           </div>
           <MarkdownDescription className="mb-6 text-gray-500">
             {blockSchema.description}
@@ -214,6 +224,7 @@ export default function Block({
                     }
 
                     return (
+                      !notRequired &&
                       blockSchema.required?.includes(k) &&
                       isNil(value) && <span className="text-red-500">Required</span>
                     );

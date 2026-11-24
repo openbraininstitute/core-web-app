@@ -31,47 +31,56 @@ type Props = {
 
 /**
  * Default scan-config layout: Left tabs, Middle form, Right preview in a
- * `1fr 1fr 2fr` grid. Dragging the preview's left edge left narrows the middle
- * column, then shuts it into a Parameters bar, then shuts the left one into the
- * same bar, so the preview, the 3D view and its table, has the width; the bar
- * opens them again. It never drags right of the middle, so the preview keeps
- * half the width at least.
+ * `1fr 1fr 2fr` grid.
+ *
+ * The page opens on the blocks' list alone, in a slim window on the left, the form folded away
+ * and the preview spread over the rest. The form opens out beside the list, the preview
+ * narrowing to make room, when a block is picked, and folds away again when there is no form to
+ * show, or by the × at its top right.
+ *
+ * Dragging the preview's left edge left narrows the middle column, then shuts it, then shuts the
+ * left one too, into a Parameters bar, so the preview, the 3D view and its table, has the width.
+ * The form shut alone leaves no bar: picking a block opens it again. The bar opens both. The edge
+ * never drags right of the middle, so the preview keeps half the width at least.
  */
 export function DefaultConfigColumns({ props, state }: Props) {
   const boxed = props.activity === ScanConfigActivity.Simulate;
-  // the form dragged shut leaves no Parameters bar: it comes back on a block selected or added (the user asked)
-  const { gridRef, template, shut, onEdgeDrag, reset } = useCollapsingColumns({ middleBar: false });
+  const { gridRef, template, shut, onEdgeDrag, reset } = useCollapsingColumns();
   // Opening a block, from the list or the table's Neuron Set, shows its form again.
   const opened = `${state.selectedRootElement}/${state.selectedEntry}`;
   const lastOpened = useRef(opened);
-  // The blocks' list alone in a slim window on the left, the form folded away and the preview, the 3D view and its
-  // table, spread over the rest, until there is a form to fill: a block with a form of its own selected, one of a
-  // block's entries opened, or a new one added ("Add …"). Then the form opens out beside the list and the preview
-  // narrows to make room; opening a block that is only a list of entries (Stimuli) folds it away again (the user
-  // asked). The form open on the page's first block at the start waits for a click.
-  const [revealed, setRevealed] = useState(false);
   useEffect(() => {
     if (lastOpened.current === opened) return;
     lastOpened.current = opened;
-    setRevealed(true);
     if (shut !== 'none') reset();
   }, [opened, shut, reset]);
-  const alone = shut === 'none' && (!revealed || !state.editing);
+  // A pick in the list counts even where it changes nothing: the block already selected.
+  const picking =
+    <A extends unknown[]>(set: (...args: A) => void) =>
+    (...args: A) => {
+      set(...args);
+      state.setFormRevealed(true);
+      if (shut === 'middle') reset();
+    };
+  const listState: ScanConfigTemplateState = {
+    ...state,
+    setSelectedRootElement: picking(state.setSelectedRootElement),
+    setSelectedEntry: picking(state.setSelectedEntry),
+  };
+  const alone = shut === 'none' && (!state.formRevealed || !state.editing);
+  // Folded, the list is alone whatever width the form had been dragged to: that width is back
+  // when it opens again.
+  const dragged = template !== null && !alone;
   const phone = useMediaQuery('(max-width: 767px)', false);
   if (phone) return <PhoneConfigColumns props={props} state={state} />;
   return (
     <div
       ref={gridRef}
-      className="grid h-full min-h-0 w-full gap-1.25 *:min-w-0"
-      style={
-        template
-          ? { gridTemplateColumns: template }
-          : {
-              // the default tracks, the form's folded to nothing while the list is alone; eased between the two
-              gridTemplateColumns: alone ? ALONE_TRACKS : DEFAULT_TRACKS,
-              transition: `grid-template-columns ${REVEAL_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`,
-            }
-      }
+      className={cn(
+        'grid h-full min-h-0 w-full gap-1.25 *:min-w-0',
+        !dragged && [COLUMNS_EASE, alone ? ALONE_COLUMNS_GRID : DEFAULT_COLUMNS_GRID]
+      )}
+      style={dragged ? { gridTemplateColumns: template } : undefined}
     >
       {/* The blocks and their form in one window, as the preview's views are: its ring a pixel
           under the page's clip, its foot level with theirs. The form keeps only the rule between
@@ -85,43 +94,37 @@ export function DefaultConfigColumns({ props, state }: Props) {
           shut === 'both' && 'hidden'
         )}
       >
-        {/* any click on a block, an entry or "Add …" lets the form show, if the block has one to fill */}
-        <div
-          className="h-full min-h-0"
-          onClickCapture={(e) => {
-            if (
-              (e.target as Element).closest(
-                'button, a, [role="button"], [data-testid^="scan-config-root-element-"]'
-              )
-            ) {
-              setRevealed(true);
-              // a block selected, even the one that already is, or added, opens a form dragged shut
-              if (shut === 'middle') reset();
-            }
-          }}
-        >
-          <LeftColumn props={props} state={state} />
+        <div className="h-full min-h-0">
+          {/* folded, a form is not showing even for a block picked: a click on it opens it */}
+          <LeftColumn props={props} state={listState} formShown={!alone && shut === 'none'} />
         </div>
         {shut === 'none' && (
           <div
-            className={cn('h-full min-h-0 min-w-0', alone && 'pointer-events-none')}
-            aria-hidden={alone || undefined}
-            style={{
-              opacity: alone ? 0 : 1,
-              transition: `opacity ${REVEAL_MS}ms ease ${alone ? 0 : 160}ms`,
-            }}
+            className={cn(
+              'h-full min-h-0 min-w-0 border-l border-gray-200',
+              alone ? 'opacity-0' : 'opacity-100 transition-opacity delay-160 duration-650'
+            )}
+            // folded away, it is not there to read, to click or to tab into either
+            inert={alone}
           >
-            <MiddleColumn props={props} state={state} className="border-r-0" />
+            <MiddleColumn
+              props={props}
+              state={state}
+              // scrolls to the window's edges, over its padding
+              className="-my-3 h-[calc(100%+1.5rem)] border-x-0 py-3"
+              // the × at the form's top right folds it away again, until a block is next picked
+              onClose={() => state.setFormRevealed(false)}
+            />
           </div>
         )}
       </div>
       {shut === 'middle' && (
-        // the form's track, nothing in it, so the preview keeps its own
+        // the form's track with nothing in it, so the preview keeps its own
         <div aria-hidden />
       )}
       {shut === 'both' && (
-        // Its ring a pixel under the page's clip, and its foot level with the preview's boxes: with the list shut
-        // too, the one way back.
+        // Its ring a pixel under the page's clip, and its foot level with the preview's boxes:
+        // with the list shut too, the one way back.
         <ShutPaneBar upright title="Parameters" onOpen={reset} className="mt-px mb-3 ml-px" />
       )}
       <PreviewColumn boxed={boxed} edge={{ gridRef, onDrag: onEdgeDrag, onReset: reset }}>
@@ -144,14 +147,8 @@ export function DefaultConfigColumns({ props, state }: Props) {
   );
 }
 
-/** How long the form takes to open out beside the list (ms). */
-const REVEAL_MS = 650;
 /** How long a loading preview keeps its table's box before deciding none is coming (ms). */
 const TABLE_WAIT_MS = 8000;
-/** The columns as DEFAULT_COLUMNS_GRID has them, and with the form folded to nothing and the preview the wider. */
-const DEFAULT_TRACKS = 'minmax(0,1fr) minmax(0,1fr) minmax(0,2fr)';
-const ALONE_TRACKS = 'minmax(0,1fr) minmax(0,0fr) minmax(0,3fr)';
-
 /**
  * The right column. A simulation's is boxed as its results' views are, so its
  * Configuration and Simulations tabs read as one: the preview in a box, and the
@@ -226,7 +223,10 @@ export function PreviewColumn({
                       <div className="flex h-full min-h-0 flex-col gap-3 pt-2" aria-hidden>
                         {['w-full', 'w-full', 'w-4/5', 'w-3/5'].map((w, i) => (
                           // eslint-disable-next-line react/no-array-index-key -- fixed placeholder lines
-                          <div key={i} className={cn('h-4 animate-pulse rounded-full bg-gray-100', w)} />
+                          <div
+                            key={i}
+                            className={cn('h-4 animate-pulse rounded-full bg-gray-100', w)}
+                          />
                         ))}
                       </div>
                     ),
@@ -240,6 +240,11 @@ export function PreviewColumn({
 }
 
 export const DEFAULT_COLUMNS_GRID = 'grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)]';
+/** The same with the form's track folded to nothing and the preview the wider for it. */
+const ALONE_COLUMNS_GRID = 'grid-cols-[minmax(0,1fr)_minmax(0,0fr)_minmax(0,3fr)]';
+/** The form opening out beside the list, and folding away. */
+const COLUMNS_EASE =
+  'transition-[grid-template-columns] duration-650 ease-[cubic-bezier(0.22,1,0.36,1)]';
 
 /** How much smaller than the screen a preview is drawn in its small tile. */
 const TILE_SCALE = 0.4;
@@ -319,10 +324,17 @@ function PhoneTile({
         away && !open && 'pointer-events-none opacity-0',
         (!rect || !rect.shown) && 'invisible'
       )}
-      style={rect ? { left: rect.left, top: rect.top, width: rect.width, height: rect.height } : undefined}
+      style={
+        rect
+          ? { left: rect.left, top: rect.top, width: rect.width, height: rect.height }
+          : undefined
+      }
     >
       <div
-        className={cn('min-h-0', open ? 'h-full' : 'pointer-events-none absolute top-0 left-0 origin-top-left')}
+        className={cn(
+          'min-h-0',
+          open ? 'h-full' : 'pointer-events-none absolute top-0 left-0 origin-top-left'
+        )}
         style={
           open
             ? undefined
@@ -412,11 +424,16 @@ function PhoneConfigColumns({ props, state }: Props) {
                 <RiArrowLeftLine className="size-4" />
                 Blocks
               </button>
-              <MiddleColumn props={props} state={state} className="min-h-0 flex-1 border-r-0 border-l-0" />
+              <MiddleColumn
+                props={props}
+                state={state}
+                className="min-h-0 flex-1 border-r-0 border-l-0"
+              />
             </div>
           ) : (
             <div className="h-full min-h-0">
-              <LeftColumn props={props} state={listState} />
+              {/* the form takes the list's place here, so a tap in the list always opens it */}
+              <LeftColumn props={props} state={listState} formShown={false} />
             </div>
           )}
         </div>
@@ -440,7 +457,11 @@ function PhoneConfigColumns({ props, state }: Props) {
               <StackedPanes
                 split="config"
                 bottomShare={0.4}
-                top={{ title: '3D View', keepsSize: true, content: <div ref={setViewPane} className="h-full" /> }}
+                top={{
+                  title: '3D View',
+                  keepsSize: true,
+                  content: <div ref={setViewPane} className="h-full" />,
+                }}
                 bottom={
                   withTable
                     ? {
@@ -487,7 +508,10 @@ function PhoneConfigColumns({ props, state }: Props) {
           // no tile of its own over the config: shown only with the 3D view, opened
           away={typing.on || !open}
         >
-          <div ref={table.setTarget} className="flex h-full min-h-0 flex-col bg-white px-3 pt-1 pb-2" />
+          <div
+            ref={table.setTarget}
+            className="flex h-full min-h-0 flex-col bg-white px-3 pt-1 pb-2"
+          />
         </PhoneTile>
       )}
     </SceneTablePaneProvider>
@@ -506,7 +530,8 @@ const FIELD_TOP_GAP = 56;
 function scrollBoxOf(el: HTMLElement, limit: HTMLElement): HTMLElement | null {
   for (let s = el.parentElement; s; s = s.parentElement) {
     const { overflowY } = getComputedStyle(s);
-    if ((overflowY === 'auto' || overflowY === 'scroll') && s.scrollHeight > s.clientHeight) return s;
+    if ((overflowY === 'auto' || overflowY === 'scroll') && s.scrollHeight > s.clientHeight)
+      return s;
     if (s === limit) return null;
   }
   return null;
@@ -542,12 +567,19 @@ function usePhoneTyping() {
       const scroller = scrollBoxOf(field, box);
       if (!scroller || document.activeElement !== field) return;
       const top =
-        field.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop - FIELD_TOP_GAP;
+        field.getBoundingClientRect().top -
+        scroller.getBoundingClientRect().top +
+        scroller.scrollTop -
+        FIELD_TOP_GAP;
       scroller.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
     }, KEYBOARD_MS);
   };
   const onBlur = (e: ReactFocusEvent<HTMLElement>) => {
-    if (!(e.target as HTMLElement).matches?.(TYPED_FIELD) || !e.currentTarget.contains(e.target as Node)) return;
+    if (
+      !(e.target as HTMLElement).matches?.(TYPED_FIELD) ||
+      !e.currentTarget.contains(e.target as Node)
+    )
+      return;
     if (leaving.current) window.clearTimeout(leaving.current);
     leaving.current = window.setTimeout(() => {
       leaving.current = null;
