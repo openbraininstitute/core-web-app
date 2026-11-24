@@ -20,6 +20,8 @@ export interface IWalkthrough {
   id: string;
   title: string;
   short: string;
+  /** The project's sections it is recommended in, by the first segment of their path. */
+  sections: readonly string[];
   /** The size its screenshots were taken at. */
   shot: { w: number; h: number };
   steps: IWalkthroughStep[];
@@ -39,6 +41,7 @@ export const WALKTHROUGHS: IWalkthrough[] = [
     title: 'Start a workflow',
     short:
       'Simulate a single neuron: choose the workflow, pick a neuron, add a stimulus and a recording, and generate.',
+    sections: ['workflows'],
     shot: { w: 1456, h: 819 },
     steps: [
       {
@@ -192,6 +195,7 @@ export const WALKTHROUGHS: IWalkthrough[] = [
     title: 'Browse data',
     short:
       'Find a neuron morphology: choose a species, a region and a type of data, filter the list, and open one.',
+    sections: ['data'],
     shot: { w: 1463, h: 791 },
     steps: [
       {

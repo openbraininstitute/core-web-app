@@ -1,11 +1,20 @@
 'use client';
 
-import { RiArrowLeftLine, RiArrowRightLine, RiCursorFill, RiDownloadLine } from '@remixicon/react';
+import {
+  RiArrowLeftLine,
+  RiArrowRightLine,
+  RiDownloadLine,
+  RiPushpinLine,
+  RiUnpinLine,
+} from '@remixicon/react';
+import { useAtom } from 'jotai';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
+import { pinnedWalkthroughAtom } from '@/features/learn/pinned-walkthrough';
 import { listBox } from '@/features/learn/ui/category-tiles';
+import { WalkthroughStage, walkthroughClicks } from '@/features/learn/ui/walkthrough-stage';
 import { makeWalkthroughPdf } from '@/features/learn/walkthrough-pdf';
 import { type IWalkthrough, WALKTHROUGHS } from '@/features/learn/walkthroughs';
 import { Skeleton } from '@/ui/molecules/skeleton';
@@ -30,8 +39,6 @@ const fitted = (w: number, h: number) => ({
   aspectRatio: `${w} / ${h}`,
   width: `min(100%, calc(100cqh * ${w} / ${h}))`,
 });
-
-const pct = (value: number, of: number) => `${(100 * value) / of}%`;
 
 /** The left-hand side: the walkthroughs in the faint box, each with its first screenshot. */
 export function WalkthroughsIndex({
@@ -101,15 +108,12 @@ export function WalkthroughCard({
   project: string;
   className?: string;
 }) {
-  const clicks = walkthrough.steps.flatMap((step, s) =>
-    step.clicks.map((click, c) => ({ ...click, image: click.image ?? step.image, s, c }))
-  );
+  const clicks = walkthroughClicks(walkthrough);
+  const [pinned, setPinned] = useAtom(pinnedWalkthroughAtom);
   const [at, setAt] = useState(0);
   const now = clicks[at];
   const last = at === clicks.length - 1;
-  const { box } = now;
   const { shot } = walkthrough;
-  const images = [...new Set(clicks.map((click) => click.image))];
   const next = () => setAt((i) => Math.min(i + 1, clicks.length - 1));
   const [view, setView] = useState<TWalkthroughView>(WalkthroughView.Steps);
   // the PDF, made when it is first looked at
@@ -156,7 +160,37 @@ export function WalkthroughCard({
       behavior: 'smooth',
     });
   }, [now.s, view]);
-  const radius = now.radius === undefined ? '999px' : `${now.radius}px`;
+
+  if (pinned?.id === walkthrough.id) {
+    return (
+      <section
+        data-testid="learn-walkthrough-pinned"
+        className={cn(className, 'flex flex-col items-center justify-center gap-[14px] p-[28px]')}
+      >
+        <RiPushpinLine className="size-[34px] text-[#002766]" />
+        <h1 className="text-center text-[22px] leading-[28px] font-bold text-[#002766]">
+          {walkthrough.title} is pinned
+        </h1>
+        <p className="max-w-[420px] text-center text-[14px] leading-[20px] text-[#595959]">
+          It stays on the right of the screen while you use the platform. Open it there to follow it
+          over any page.
+        </p>
+        <button
+          type="button"
+          data-testid="learn-walkthrough-unpin"
+          onClick={() => {
+            setAt(Math.min(Math.max(pinned.at, 0), clicks.length - 1));
+            setView(WalkthroughView.Steps);
+            setPinned(null);
+          }}
+          className="flex h-[38px] items-center gap-[6px] rounded-full bg-[#002766] px-[18px] text-[13px] font-semibold text-white hover:bg-[#003a8c]"
+        >
+          <RiUnpinLine className="size-[16px]" />
+          Unpin and show it here
+        </button>
+      </section>
+    );
+  }
 
   return (
     <section
@@ -245,6 +279,16 @@ export function WalkthroughCard({
               )}
             </>
           )}
+          <button
+            type="button"
+            aria-label="Pin to the side"
+            title="Pin to the side, to follow it over any page"
+            data-testid="learn-walkthrough-pin"
+            onClick={() => setPinned({ id: walkthrough.id, at, open: false })}
+            className="flex size-[38px] items-center justify-center rounded-full border border-[#e8e8e8] text-[#003a8c] hover:bg-[#f5f9ff]"
+          >
+            <RiPushpinLine className="size-[18px]" />
+          </button>
         </div>
       </header>
 
@@ -281,56 +325,12 @@ export function WalkthroughCard({
       {view === WalkthroughView.Steps && (
         <>
           <div className={STAGE}>
-            <div
-              className="relative overflow-hidden rounded-[14px] border border-[#e8e8e8] bg-[#f5f5f5]"
+            <WalkthroughStage
+              walkthrough={walkthrough}
+              at={at}
+              onNext={next}
               style={fitted(shot.w, shot.h)}
-            >
-              {images.map((image) => (
-                // biome-ignore lint/performance/noImgElement: static screenshots, all there to fade between
-                <img
-                  key={image}
-                  src={image}
-                  alt={image === now.image ? `${walkthrough.steps[now.s].title}: ${now.text}` : ''}
-                  draggable={false}
-                  className={cn(
-                    'absolute inset-0 size-full transition-opacity duration-300',
-                    image === now.image ? 'opacity-100' : 'opacity-0'
-                  )}
-                />
-              ))}
-              {/* the place to click, the rest of the screenshot dimmed round it */}
-              <button
-                type="button"
-                data-testid="learn-walkthrough-spot"
-                aria-label={now.text}
-                onClick={next}
-                className={cn(
-                  'absolute shadow-[0_0_0_200vmax_rgb(0_16_38/0.38)] ring-[3px] ring-[#52c41a] transition-[left,top,width,height] duration-500 ease-out motion-reduce:transition-none',
-                  last ? 'cursor-default' : 'cursor-pointer'
-                )}
-                style={{
-                  left: pct(box.x, shot.w),
-                  top: pct(box.y, shot.h),
-                  width: pct(box.w, shot.w),
-                  height: pct(box.h, shot.h),
-                  borderRadius: radius,
-                }}
-              >
-                <span
-                  key={at}
-                  className="absolute inset-0 animate-ping border-[3px] border-[#52c41a] [animation-duration:1.6s] motion-reduce:hidden"
-                  style={{ borderRadius: radius }}
-                />
-              </button>
-              <RiCursorFill
-                aria-hidden
-                className="pointer-events-none absolute size-[28px] text-[#002766] drop-shadow-[0_1px_2px_rgb(255_255_255/0.9)] transition-[left,top] delay-100 duration-700 ease-out motion-reduce:transition-none"
-                style={{
-                  left: pct(box.x + box.w / 2, shot.w),
-                  top: pct(box.y + box.h * 0.62, shot.h),
-                }}
-              />
-            </div>
+            />
           </div>
 
           <ol

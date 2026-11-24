@@ -8,12 +8,13 @@ import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { config } from '@/config';
 import { ChatLauncher } from '@/features/chat/chat-launcher';
 import { ChatStreamProvider } from '@/features/chat/chat-stream';
+import { PinnedWalkthrough } from '@/features/learn/ui/pinned-walkthrough';
 import { makeRoles } from '@/hooks/use-user-membership';
 import { getQueryClient } from '@/query-provider/server';
 import { ProjectRootLayout } from '@/ui/layouts/project-root-layout';
 import { Container as AiContainer } from '@/ui/segments/ai/container';
-import { SpaceManagerContainer } from '@/ui/segments/workspaces/space-manager';
 import { ProjectToolbar } from '@/ui/segments/workspaces/project-toolbar';
+import { SpaceManagerContainer } from '@/ui/segments/workspaces/space-manager';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 import type { ReactNode } from 'react';
@@ -86,6 +87,7 @@ export default async function Layout({ children, params: promisedParams }: Props
           <AiContainer />
         </ProjectRootLayout>
         <ChatLauncher />
+        <PinnedWalkthrough />
       </ChatStreamProvider>
       {/* On a phone, room to scroll the page by exactly the browser's bars while they show (the full height less what
           is seen), so a swipe still tucks them away (the user asked; with the page only the height seen, they never

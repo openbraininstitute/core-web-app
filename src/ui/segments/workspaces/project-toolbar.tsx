@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
 import { WorkspaceMainPages } from '@/constants';
+import { WalkthroughsMenu } from '@/features/learn/ui/walkthroughs-menu';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { AiButton } from '@/ui/segments/ai/button';
 import { Wallet } from '@/ui/segments/project/balance';
@@ -134,7 +135,8 @@ export function ProjectToolbar() {
       <div className="flex min-w-0 flex-1 basis-0 items-center justify-end gap-1.5 max-md:h-14 max-md:flex-none">
         <HydrateWrapper>
           <Wallet plain />
-          <span className="ml-1.5">
+          <span className="ml-1.5 flex items-center gap-2">
+            <WalkthroughsMenu />
             <AiButton />
           </span>
         </HydrateWrapper>
