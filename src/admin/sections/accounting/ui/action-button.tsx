@@ -10,6 +10,7 @@ import { useAdminWrite } from '../../../shared/use-admin-write';
 import { closesDialog } from '../helpers';
 
 import type { ReactNode } from 'react';
+import type { AdminWriteOptions } from '../../../shared/use-admin-write';
 import type { TAction } from '../types';
 
 export function DialogButton({
@@ -33,6 +34,30 @@ export function DialogButton({
   );
 }
 
+/** A dialog's write; it closes once sending the form again would repeat what went through. */
+export function useDialogWrite<Values, Result>(
+  { write, done, failed }: AdminWriteOptions<Values, Result>,
+  onClose: () => void
+) {
+  const mutation = useAdminWrite({
+    refreshes: adminQueryKeys.accounting(),
+    write,
+    done,
+    failed,
+    onSuccess: onClose,
+  });
+
+  return {
+    pending: mutation.isPending,
+    send: (values: Values) =>
+      mutation.mutate(values, {
+        onError: (error) => {
+          if (closesDialog(error)) onClose();
+        },
+      }),
+  };
+}
+
 function ActionModal<Values extends Record<string, unknown>, Result>({
   action,
   onClose,
@@ -40,13 +65,7 @@ function ActionModal<Values extends Record<string, unknown>, Result>({
   action: TAction<Values, Result>;
   onClose: () => void;
 }) {
-  const write = useAdminWrite({
-    refreshes: adminQueryKeys.accounting(),
-    write: action.write,
-    done: action.done,
-    failed: action.failed,
-    onSuccess: onClose,
-  });
+  const { pending, send } = useDialogWrite(action, onClose);
 
   return (
     <FormModal<Values>
@@ -56,14 +75,8 @@ function ActionModal<Values extends Record<string, unknown>, Result>({
       initialValues={action.initialValues}
       okText={action.okText}
       danger={action.danger}
-      pending={write.isPending}
-      onSubmit={(values) =>
-        write.mutate(values, {
-          onError: (error) => {
-            if (closesDialog(error)) onClose();
-          },
-        })
-      }
+      pending={pending}
+      onSubmit={send}
       onClose={onClose}
     />
   );

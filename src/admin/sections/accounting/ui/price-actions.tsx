@@ -73,53 +73,64 @@ function SetEndButton({ price }: { price: TPrice }) {
   );
 }
 
+function EditPriceButton({ price }: { price: TPrice }) {
+  return (
+    <DialogButton label="Edit">
+      {(close) => (
+        <PriceDialog<TPrice | null>
+          title={`Edit price #${price.id}`}
+          vlabId={price.vlab_id}
+          priceId={price.id}
+          initialValues={priceValues(price)}
+          keyLocked
+          okText="Save"
+          write={async (body) => {
+            await assertPriceEdit(price, body);
+            return updatePrice(price.id, body);
+          }}
+          done="Price saved"
+          failed="Couldn't save the price"
+          onClose={close}
+        />
+      )}
+    </DialogButton>
+  );
+}
+
+function ReplacePriceButton({ price }: { price: TPrice }) {
+  return (
+    <DialogButton label="Change price">
+      {(close) => (
+        <PriceDialog<TPrice>
+          title={`Replace price #${price.id}`}
+          vlabId={price.vlab_id}
+          priceId={price.id}
+          initialValues={{ ...priceValues(price), valid_from: undefined, valid_to: undefined }}
+          keyLocked
+          startAhead
+          okText="Add and end the old one"
+          write={(body) => replacePrice(price, body)}
+          done={(created) => `Price #${created.id} added; #${price.id} ends when it starts`}
+          failed="Couldn't replace the price"
+          onClose={close}
+        />
+      )}
+    </DialogButton>
+  );
+}
+
 export function PriceActions({ price }: { price: TPrice }) {
   const status = windowStatus(price);
   if (status === WindowStatus.Expired) return null;
-  const values = priceValues(price);
   const legacy = LEGACY_SUBTYPES.includes(price.service_subtype);
 
   return (
     <span className="flex items-center gap-2">
       {!legacy &&
         (status === WindowStatus.Scheduled ? (
-          <DialogButton label="Edit">
-            {(close) => (
-              <PriceDialog<TPrice | null>
-                title={`Edit price #${price.id}`}
-                vlabId={price.vlab_id}
-                priceId={price.id}
-                initialValues={values}
-                keyLocked
-                okText="Save"
-                write={async (body) => {
-                  await assertPriceEdit(price, body);
-                  return updatePrice(price.id, body);
-                }}
-                done="Price saved"
-                failed="Couldn't save the price"
-                onClose={close}
-              />
-            )}
-          </DialogButton>
+          <EditPriceButton price={price} />
         ) : (
-          <DialogButton label="Change price">
-            {(close) => (
-              <PriceDialog<TPrice>
-                title={`Replace price #${price.id}`}
-                vlabId={price.vlab_id}
-                priceId={price.id}
-                initialValues={{ ...values, valid_from: undefined, valid_to: undefined }}
-                keyLocked
-                startAhead
-                okText="Add and end the old one"
-                write={(body) => replacePrice(price, body)}
-                done={(created) => `Price #${created.id} added; #${price.id} ends when it starts`}
-                failed="Couldn't replace the price"
-                onClose={close}
-              />
-            )}
-          </DialogButton>
+          <ReplacePriceButton price={price} />
         ))}
       <SetEndButton price={price} />
     </span>

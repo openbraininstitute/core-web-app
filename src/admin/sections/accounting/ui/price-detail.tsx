@@ -69,10 +69,10 @@ function PriceView({ price }: { price: TPrice }) {
         <Detail label="Updated">{formatDateTime(price.updated_at)}</Detail>
       </DetailList>
       <h2 className="text-primary-9 font-semibold">Tiers</h2>
-      <PriceTiersTable type={price.service_type} tiers={price.tiers} />
+      <PriceTiersTable pricing={price} />
       <h2 className="text-primary-9 font-semibold">Cost before any lab discount</h2>
       <div className="border-neutral-2 max-w-xl rounded-lg border bg-white p-4">
-        <CostExamples type={price.service_type} tiers={price.tiers} />
+        <CostExamples pricing={price} />
       </div>
     </>
   );

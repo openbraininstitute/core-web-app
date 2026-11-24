@@ -1,15 +1,15 @@
 import { cn } from '@/utils/css-class';
 
-import { COST_EXAMPLES, chargedTiers, plainDecimal, tierCost } from '../helpers';
+import { COST_EXAMPLES, chargedTiers, plainDecimal, rateUnit, tierCost } from '../helpers';
 import { ChargeType } from '../types';
 
-import type { TChargeType, TPriceTier } from '../types';
+import type { TPricing } from '../types';
 
 const CELL = 'border-neutral-2 border-b px-3 py-2 text-left';
 const NUMBER = 'font-mono tabular-nums';
 
-export function PriceTiersTable({ type, tiers }: { type: TChargeType; tiers: TPriceTier[] }) {
-  const storage = type === ChargeType.Storage;
+export function PriceTiersTable({ pricing }: { pricing: TPricing }) {
+  const storage = pricing.service_type === ChargeType.Storage;
 
   return (
     <table className="border-neutral-2 w-full rounded-lg border bg-white text-sm">
@@ -17,11 +17,11 @@ export function PriceTiersTable({ type, tiers }: { type: TChargeType; tiers: TPr
         <tr>
           <th className={CELL}>Usage</th>
           {!storage && <th className={CELL}>Fixed cost</th>}
-          <th className={CELL}>{storage ? 'Per byte-second' : 'Per unit'}</th>
+          <th className={CELL}>Per {rateUnit(pricing.service_type)}</th>
         </tr>
       </thead>
       <tbody className="text-primary-9">
-        {tiers.map((tier) => (
+        {pricing.tiers.map((tier) => (
           <tr key={tier.min_quantity}>
             <td className={CELL}>
               <span className={NUMBER}>{tier.min_quantity}</span>
@@ -43,12 +43,12 @@ export function PriceTiersTable({ type, tiers }: { type: TChargeType; tiers: TPr
   );
 }
 
-export function CostExamples({ type, tiers }: { type: TChargeType; tiers: TPriceTier[] }) {
-  const charged = chargedTiers({ service_type: type, tiers });
+export function CostExamples({ pricing }: { pricing: TPricing }) {
+  const charged = chargedTiers(pricing);
 
   return (
     <ul className="flex flex-col gap-1 text-sm">
-      {COST_EXAMPLES[type].map((example) => (
+      {COST_EXAMPLES[pricing.service_type].map((example) => (
         <li key={example.label} className="flex justify-between gap-4">
           <span className="text-neutral-4">{example.label}</span>
           <span className={NUMBER}>{tierCost(charged, example.quantity)} credits</span>

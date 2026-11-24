@@ -39,6 +39,26 @@ const fieldControl = ({ kind, min, max, options, placeholder }: FormModalField) 
 
 export const REQUIRED = { required: true, message: 'Required' };
 
+// Form.Item's own `extra` shifts the form when a field first shows an error.
+export function FormModalItem({ field }: { field: FormModalField }) {
+  return (
+    <div className="mb-6">
+      <Form.Item
+        name={field.name}
+        label={field.label}
+        rules={field.rules}
+        dependencies={field.dependencies}
+        valuePropName={field.kind === 'switch' ? 'checked' : 'value'}
+        {...(field.kind === 'datetime' && dateTimeItemProps)}
+        style={{ marginBottom: 0 }}
+      >
+        {fieldControl(field)}
+      </Form.Item>
+      {field.extra && <div className="text-neutral-4 mt-1 text-sm">{field.extra}</div>}
+    </div>
+  );
+}
+
 export const NAME_FIELD: FormModalField = {
   name: 'name',
   label: 'Name',
@@ -120,21 +140,7 @@ export function FormModal<Values extends Record<string, unknown>>({
         }}
       >
         {fields.map((field) => (
-          // Form.Item's own `extra` shifts the form when a field first shows an error.
-          <div key={field.name} className="mb-6">
-            <Form.Item
-              name={field.name}
-              label={field.label}
-              rules={field.rules}
-              dependencies={field.dependencies}
-              valuePropName={field.kind === 'switch' ? 'checked' : 'value'}
-              {...(field.kind === 'datetime' && dateTimeItemProps)}
-              style={{ marginBottom: 0 }}
-            >
-              {fieldControl(field)}
-            </Form.Item>
-            {field.extra && <div className="text-neutral-4 mt-1 text-sm">{field.extra}</div>}
-          </div>
+          <FormModalItem key={field.name} field={field} />
         ))}
       </Form>
     </Modal>

@@ -224,8 +224,6 @@ export async function assertPriceAfter(price: TPriceScope, end: string | null, e
   if (end) checkPriceAfter(await pricesAround(price), end, except);
 }
 
-const justBefore = (at: string) => new Date(Date.parse(at) - 1).toISOString();
-
 const sameInstant = (a: string | null, b: string | null) =>
   (a ? Date.parse(a) : null) === (b ? Date.parse(b) : null);
 
@@ -244,7 +242,7 @@ export async function assertPriceEdit(price: TPrice, next: TPriceBody) {
   const endMoved = !sameInstant(next.valid_to, price.valid_to);
   if (!later && !endMoved) return;
   const lists = await pricesAround(price);
-  if (later && priceAt(lists[0], new Date(justBefore(price.valid_from)), price.id)) {
+  if (later && priceAt(lists[0], new Date(Date.parse(price.valid_from) - 1), price.id)) {
     for (const at of lapsesBetween(lists, price.valid_from, next.valid_from)) {
       checkPriceAfter(lists, at, price.id);
     }

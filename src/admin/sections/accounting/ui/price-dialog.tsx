@@ -1,27 +1,25 @@
 'use client';
 
-import { Button, DatePicker, Form, Input, InputNumber, Modal, Select } from 'antd';
+import { Button, Form, Input, InputNumber, Modal, Select } from 'antd';
 import dayjs from 'dayjs';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 
-import { adminQueryKeys } from '../../../query-keys';
-import { REQUIRED } from '../../../shared/form-modal';
-import { dateTimeItemProps, lockWhilePending } from '../../../shared/form-props';
-import { useAdminWrite } from '../../../shared/use-admin-write';
+import { FormModalItem, REQUIRED } from '../../../shared/form-modal';
+import { lockWhilePending } from '../../../shared/form-props';
 import {
-  closesDialog,
   endField,
   isCurrent,
   priceBody,
+  rateUnit,
   SERVICE_TYPE_LABELS,
   SERVICE_TYPE_OPTIONS,
-  START_AHEAD_MS,
   SUBTYPE_OPTIONS,
   schemaRule,
   startField,
 } from '../helpers';
 import { LEGACY_SUBTYPES, MAX_QUANTITY, MAX_TIERS, PriceBody, PriceDecimal } from '../schemas';
 import { ChargeType } from '../types';
+import { useDialogWrite } from './action-button';
 import { CostExamples, PriceTiersTable } from './price-parts';
 import { usePricesFor } from './queries';
 
@@ -32,20 +30,22 @@ const CURRENT_SUBTYPES = SUBTYPE_OPTIONS.filter(({ value }) => !LEGACY_SUBTYPES.
 
 const DECIMAL = schemaRule(PriceDecimal);
 
+const START_AHEAD_MINUTES = 5;
+
 const startsAhead: Rule = {
   validator: async (_, value?: string) => {
-    if (value && dayjs(value).isBefore(dayjs().add(START_AHEAD_MS, 'ms'))) {
-      throw new Error('Has to start at least 5 minutes from now, so the old price can end then');
+    if (value && dayjs(value).isBefore(dayjs().add(START_AHEAD_MINUTES, 'minute'))) {
+      throw new Error(
+        `Has to start at least ${START_AHEAD_MINUTES} minutes from now, so the old price can end then`
+      );
     }
   },
 };
 
-const tierEnd: Rule = {
-  validator: async (_, value?: number | null) => {
-    if (value == null) throw new Error('Required');
-    if (value > MAX_QUANTITY) throw new Error(`At most ${MAX_QUANTITY}`);
-  },
-};
+const TIER_END: Rule[] = [
+  REQUIRED,
+  { type: 'number', max: MAX_QUANTITY, message: `At most ${MAX_QUANTITY}` },
+];
 
 const afterPrevious =
   (index: number): Rule =>
@@ -90,7 +90,7 @@ export function PriceDialog<Result>({
   keyLocked = false,
   startAhead = false,
   okText,
-  write: send,
+  write,
   done,
   failed,
   onClose,
@@ -108,18 +108,11 @@ export function PriceDialog<Result>({
   onClose: () => void;
 }) {
   const [form] = Form.useForm<TPriceValues>();
-  const [review, setReview] = useState<TPriceBody | null>(null);
-  const startsNow = useRef(false);
+  const [reviewed, setReviewed] = useState<TPriceValues | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [confirm, setConfirm] = useState('');
-  const write = useAdminWrite({
-    refreshes: adminQueryKeys.accounting(),
-    write: send,
-    done,
-    failed,
-    onSuccess: onClose,
-  });
-  const pending = write.isPending;
+  const { pending, send } = useDialogWrite({ write, done, failed }, onClose);
+  const review = reviewed && priceBody(reviewed, vlabId);
   const type = Form.useWatch('service_type', form);
   const storage = type === ChargeType.Storage;
   const needsConfirm = vlabId === null;
@@ -128,25 +121,19 @@ export function PriceDialog<Result>({
   const end = endField();
 
   const toReview = (values: TPriceValues) => {
-    const body = priceBody(values, vlabId);
-    const parsed = PriceBody.safeParse(body);
+    const parsed = PriceBody.safeParse(priceBody(values, vlabId));
     if (!parsed.success) {
       setProblem(parsed.error.issues[0].message);
       return;
     }
     setProblem(null);
     setConfirm('');
-    startsNow.current = !values.valid_from;
-    setReview(body);
+    setReviewed(values);
   };
 
   const save = () => {
-    if (!review || pending || !confirmed) return;
-    write.mutate(startsNow.current ? { ...review, valid_from: new Date().toISOString() } : review, {
-      onError: (error) => {
-        if (closesDialog(error)) onClose();
-      },
-    });
+    if (!reviewed || pending || !confirmed) return;
+    send(priceBody(reviewed, vlabId));
   };
 
   return (
@@ -160,7 +147,7 @@ export function PriceDialog<Result>({
           Cancel
         </Button>,
         review && (
-          <Button key="back" disabled={pending} onClick={() => setReview(null)}>
+          <Button key="back" disabled={pending} onClick={() => setReviewed(null)}>
             Back
           </Button>
         ),
@@ -203,25 +190,12 @@ export function PriceDialog<Result>({
                 disabled={keyLocked}
               />
             </Form.Item>
-            <Form.Item
-              name={start.name}
-              label={start.label}
-              extra={start.extra}
-              rules={[...(start.rules ?? []), ...(startAhead ? [startsAhead] : [])]}
-              {...dateTimeItemProps}
-            >
-              <DatePicker showTime className="w-full" />
-            </Form.Item>
-            <Form.Item
-              name={end.name}
-              label={end.label}
-              extra={end.extra}
-              dependencies={end.dependencies}
-              rules={end.rules}
-              {...dateTimeItemProps}
-            >
-              <DatePicker showTime className="w-full" />
-            </Form.Item>
+            <FormModalItem
+              field={
+                startAhead ? { ...start, rules: [...(start.rules ?? []), startsAhead] } : start
+              }
+            />
+            <FormModalItem field={end} />
           </div>
           <Form.List name="tiers">
             {(fields, { add, remove }) => (
@@ -230,7 +204,7 @@ export function PriceDialog<Result>({
                   <span>From</span>
                   <span>To</span>
                   <span>{storage ? '' : 'Fixed cost'}</span>
-                  <span>{storage ? 'Per byte-second' : 'Per unit'}</span>
+                  <span>Per {rateUnit(type)}</span>
                   <span />
                 </div>
                 {fields.map((field, index) => {
@@ -253,7 +227,7 @@ export function PriceDialog<Result>({
                         <Form.Item
                           name={[field.name, 'to']}
                           dependencies={index > 0 ? [['tiers', index - 1, 'to']] : undefined}
-                          rules={[tierEnd, afterPrevious(index)]}
+                          rules={[...TIER_END, afterPrevious(index)]}
                         >
                           <InputNumber
                             aria-label={`Tier ${index + 1} ends at`}
@@ -312,10 +286,10 @@ export function PriceDialog<Result>({
             {SERVICE_TYPE_LABELS[review.service_type]} · {review.service_subtype} ·{' '}
             {review.vlab_id ? 'this lab' : 'default for every lab without its own price'}
           </p>
-          <PriceTiersTable type={review.service_type} tiers={review.tiers} />
+          <PriceTiersTable pricing={review} />
           <div>
             <p className="text-neutral-4 mb-1 text-sm">Cost before any lab discount</p>
-            <CostExamples type={review.service_type} tiers={review.tiers} />
+            <CostExamples pricing={review} />
           </div>
           <OtherPrices body={review} priceId={priceId} />
           {needsConfirm && (

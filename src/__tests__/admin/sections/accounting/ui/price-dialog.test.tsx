@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
+import { MAX_QUANTITY } from '@/admin/sections/accounting/schemas';
 import { PriceDialog } from '@/admin/sections/accounting/ui/price-dialog';
 import { ApiError } from '@/api/error';
 
@@ -122,6 +123,21 @@ describe('PriceDialog', () => {
     click('Review');
 
     expect((await within(dialog()).findAllByText('Required')).length).toBeGreaterThan(0);
+    expect(within(dialog()).queryByText(/Cost before any lab discount/)).toBeNull();
+  });
+
+  it("holds the review back on a tier end past accounting's column", async () => {
+    renderDialog({
+      write: vi.fn(),
+      initialValues: {
+        ...VALUES,
+        tiers: [{ to: MAX_QUANTITY + 1, multiplier: '0.1' }, { multiplier: '0.05' }],
+      },
+    });
+
+    click('Review');
+
+    expect(await within(dialog()).findByText(`At most ${MAX_QUANTITY}`)).toBeTruthy();
     expect(within(dialog()).queryByText(/Cost before any lab discount/)).toBeNull();
   });
 });

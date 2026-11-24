@@ -327,9 +327,6 @@ export function discountUpdate(
   });
 }
 
-/** How far ahead a replacement price starts, so the old one can still end then. */
-export const START_AHEAD_MS = 5 * 60_000;
-
 export const SERVICE_TYPE_LABELS: Record<TChargeType, string> = {
   [ChargeType.Oneshot]: 'One-shot',
   [ChargeType.Longrun]: 'Long-running',
@@ -429,12 +426,14 @@ export const chargedTiers = ({ service_type: type, tiers }: TPricing): TPriceTie
     ? [{ ...tiers[0], max_quantity: null, fixed_cost: '0' }]
     : tiers;
 
+export const rateUnit = (type?: TChargeType) =>
+  type === ChargeType.Storage ? 'byte-second' : 'unit';
+
 export function tierSummary(price: TPricing) {
   const tiers = chargedTiers(price);
   if (tiers.length !== 1) return tiers.length ? `${tiers.length} tiers` : '—';
   const [{ fixed_cost: fixed, multiplier }] = tiers;
-  const unit = price.service_type === ChargeType.Storage ? 'byte-second' : 'unit';
-  const rate = `${plainDecimal(multiplier)} per ${unit}`;
+  const rate = `${plainDecimal(multiplier)} per ${rateUnit(price.service_type)}`;
   return /[1-9]/.test(plainDecimal(fixed)) ? `${plainDecimal(fixed)} + ${rate}` : rate;
 }
 
@@ -451,9 +450,4 @@ export const priceKey = ({
 
 /** The price accounting uses at `at`: lists come newest start first, which is its order. */
 export const priceAt = (prices: TPrice[], at: Date, except?: number) =>
-  prices.find(
-    (price) =>
-      price.id !== except &&
-      new Date(price.valid_from) <= at &&
-      (price.valid_to === null || new Date(price.valid_to) > at)
-  );
+  prices.find((price) => price.id !== except && windowStatus(price, at) === WindowStatus.Active);
