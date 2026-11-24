@@ -56,6 +56,13 @@ const InnerDragGuard = Extension.create({
   ],
 });
 
+/**
+ * A block this build does not know (a newer release wrote it) would otherwise be deleted from the
+ * shared page. With this, the sync skips it and writes nothing more from this tab; `onOutdated`
+ * tells the page to turn read-only and ask for a reload.
+ */
+export const guardedSync = (onOutdated: () => void) => ({ onInvalidContent: onOutdated });
+
 export const withViews = (): AnyExtension[] => [
   ...contentExtensions.map((extension) => {
     const view = views[extension.name];
@@ -150,9 +157,7 @@ export function editorExtensions(options: IEditorOptions): AnyExtension[] {
     Collaboration.configure({
       document: provider.document,
       field: FRAGMENT,
-      // A block this build does not know (a newer release wrote it) would otherwise be deleted
-      // from the shared page; with this the sync skips it, stops writing, and the page says reload.
-      ySyncOptions: { onInvalidContent: options.onOutdated },
+      ySyncOptions: guardedSync(options.onOutdated),
     }),
     CollaborationCaret.configure({
       provider,
@@ -178,7 +183,6 @@ export function editorExtensions(options: IEditorOptions): AnyExtension[] {
 
 export const previewExtensions = (document: HocuspocusProvider['document']): AnyExtension[] => [
   ...withViews(),
-  // Read-only: an unknown block is skipped, never deleted from the shared page.
-  Collaboration.configure({ document, field: FRAGMENT, ySyncOptions: { onInvalidContent: noop } }),
+  Collaboration.configure({ document, field: FRAGMENT, ySyncOptions: guardedSync(noop) }),
   CodeHighlight,
 ];

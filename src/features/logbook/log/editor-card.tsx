@@ -243,7 +243,7 @@ export function EditorCard(props: IEditorCardProps) {
                   )}
                   aria-label="Insert"
                   title="Link entities or upload a file"
-                  disabled={isNotNil(props.readOnly) || props.deleted}
+                  disabled={isNotNil(props.readOnly) || props.outdated || props.deleted}
                 >
                   <Icon name="plus" size={15} stroke={2.4} />
                   <span className="@max-[420px]/pane:hidden!">Insert</span>
@@ -307,7 +307,9 @@ export function EditorCard(props: IEditorCardProps) {
       {writeTab && onLog ? (
         <FormatBar
           editor={editor}
-          disabled={isNotNil(props.readOnly) || isNotNil(rejoinAt) || props.deleted}
+          disabled={
+            isNotNil(props.readOnly) || props.outdated || isNotNil(rejoinAt) || props.deleted
+          }
         />
       ) : null}
       {writeTab && isNotNil(artifact) ? (
