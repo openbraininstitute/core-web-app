@@ -5,7 +5,6 @@ import { useCallback } from 'react';
 import BlockDictionaryEntries from '@/features/scan-config/components/block-dictionary-entries';
 import { Chevron, CountBadge, LeftMenuTab } from '@/features/scan-config/components/components';
 import { EModelOptimisationMechanismsTabList } from '@/features/scan-config/components/emodel-optimisation-mechanisms-tabs';
-import { useFieldErrorsForPath } from '@/features/scan-config/components/hooks/field-errors';
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
 import { DESCRIPTION_TOOLTIP_CLASS } from '@/features/scan-config/components/shared/box-class';
 import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
@@ -27,7 +26,7 @@ import {
   useConfigErrors,
   useConfigValue,
   useEntrySummaries,
-  useHasConfigErrors,
+  useHasIssues,
 } from '@/features/scan-config/use-config-store';
 import { useAIConfig } from '@/services/ai-agent';
 import { expandedRootElementsAtom } from '@/state/config-highlights';
@@ -83,7 +82,6 @@ export function RootElement({
   const { isChatReady } = useAIConfig();
   const setExpandedRootElements = useSetAtom(expandedRootElementsAtom);
   const { highlights, hasHighlights, isExpanded, diffClass } = useRootElementDiff(rootElement);
-  const hasFieldErrors = useFieldErrorsForPath(rootElement);
   const isSelected = selectedRootElement === rootElement;
   const isBlockDictionary =
     rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary;
@@ -91,7 +89,7 @@ export function RootElement({
   const hasSection = useConfigValue(
     useCallback((config: Config) => Boolean(config[rootElement]), [rootElement])
   );
-  const hasSchemaErrors = useHasConfigErrors(`/${rootElement}`);
+  const hasIssues = useHasIssues(`/${rootElement}`);
   // only a dictionary holds sub-entries; the count is what it currently holds
   const entryCount = isBlockDictionary ? entries.length : null;
   // The block picked is one of this dictionary's own.
@@ -197,9 +195,7 @@ export function RootElement({
                 {entryCount ? <CountBadge count={entryCount} selected={lit} /> : null}
 
                 {/* A warning where the block has a problem; one that is fine needs no tick. */}
-                {(hasSchemaErrors || hasFieldErrors) && (
-                  <WarningFilled className="text-yellow-400!" />
-                )}
+                {hasIssues && <WarningFilled className="text-yellow-400!" />}
 
                 <Chevron
                   // A dictionary's points down while open; the e-model's is never shut.

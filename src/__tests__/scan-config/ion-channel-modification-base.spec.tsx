@@ -1,8 +1,10 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { GlobalModificationBase } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/global-base';
 import { RangeModificationBase } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/range-base';
+
+import { renderInForm } from './form-providers';
 
 import type { MechanismVariablesRoot } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
 import type { ConfigValue } from '@/features/scan-config/types';
@@ -32,14 +34,14 @@ describe('GlobalModificationBase', () => {
   };
 
   it('shows the loading note while circuit variables are being fetched', () => {
-    render(<GlobalModificationBase {...baseProps} state={{}} loading reason={null} />);
+    renderInForm(<GlobalModificationBase {...baseProps} state={{}} loading reason={null} />);
 
     expect(screen.getByText(/Loading variables/)).toBeInTheDocument();
     expect(screen.queryByText('Select a variable…')).not.toBeInTheDocument();
   });
 
   it('shows the reason note instead of the picker when one is provided', () => {
-    render(
+    renderInForm(
       <GlobalModificationBase
         {...baseProps}
         state={{}}
@@ -55,7 +57,7 @@ describe('GlobalModificationBase', () => {
   });
 
   it('renders the empty picker (placeholder) when data is available but nothing is selected', () => {
-    render(<GlobalModificationBase {...baseProps} state={{}} />);
+    renderInForm(<GlobalModificationBase {...baseProps} state={{}} />);
 
     expect(screen.getByText('Select a variable…')).toBeInTheDocument();
   });
@@ -70,7 +72,7 @@ describe('GlobalModificationBase', () => {
         new_value: 0.05,
       },
     };
-    render(<GlobalModificationBase {...baseProps} state={state} />);
+    renderInForm(<GlobalModificationBase {...baseProps} state={state} />);
 
     expect(screen.getByText('NaTg')).toBeInTheDocument();
     expect(screen.getByText('gbar')).toBeInTheDocument();
@@ -88,7 +90,7 @@ describe('GlobalModificationBase', () => {
         new_value: [0.05, 0.1, 0.2],
       },
     };
-    render(<GlobalModificationBase {...baseProps} state={state} />);
+    renderInForm(<GlobalModificationBase {...baseProps} state={state} />);
 
     const fields = screen.getAllByTestId('scan-config-sweep-value');
     expect(fields.map((f) => (f.querySelector('input') ?? f).getAttribute('value'))).toEqual([
@@ -108,7 +110,9 @@ describe('GlobalModificationBase', () => {
       variable_type: 'RANGE',
       new_value: 0.05,
     };
-    render(<GlobalModificationBase {...baseProps} setState={setState} state={{ modification }} />);
+    renderInForm(
+      <GlobalModificationBase {...baseProps} setState={setState} state={{ modification }} />
+    );
 
     fireEvent.click(screen.getByTestId('scan-config-sweep-expand'));
 
@@ -127,7 +131,9 @@ describe('GlobalModificationBase', () => {
       variable_type: 'RANGE',
       new_value: 0.05,
     };
-    render(<GlobalModificationBase {...baseProps} setState={setState} state={{ modification }} />);
+    renderInForm(
+      <GlobalModificationBase {...baseProps} setState={setState} state={{ modification }} />
+    );
 
     const field = screen.getByTestId('scan-config-sweep-value');
     fireEvent.change(field.querySelector('input') ?? field, { target: { value: '' } });
@@ -148,7 +154,7 @@ describe('GlobalModificationBase', () => {
         new_value: [],
       },
     };
-    render(<GlobalModificationBase {...baseProps} state={state} />);
+    renderInForm(<GlobalModificationBase {...baseProps} state={state} />);
 
     expect(screen.getAllByTestId('scan-config-sweep-value')).toHaveLength(1);
     expect(screen.getByTestId('scan-config-sweep-expand')).toBeInTheDocument();
@@ -165,7 +171,7 @@ describe('RangeModificationBase', () => {
   };
 
   it('renders the empty picker when nothing is selected yet', () => {
-    render(<RangeModificationBase {...baseProps} state={{}} />);
+    renderInForm(<RangeModificationBase {...baseProps} state={{}} />);
 
     expect(screen.getByText('Select a variable…')).toBeInTheDocument();
   });
@@ -179,7 +185,7 @@ describe('RangeModificationBase', () => {
         section_list_modifications: { somatic: 0.05 },
       },
     };
-    render(<RangeModificationBase {...baseProps} state={state} />);
+    renderInForm(<RangeModificationBase {...baseProps} state={state} />);
 
     expect(screen.getByText('NaTg')).toBeInTheDocument();
     expect(screen.getByText('gbar')).toBeInTheDocument();
@@ -198,7 +204,7 @@ describe('RangeModificationBase', () => {
         section_list_modifications: { somatic: [0.1, 0.3], axonal: 0.2 },
       },
     };
-    render(<RangeModificationBase {...baseProps} state={state} />);
+    renderInForm(<RangeModificationBase {...baseProps} state={state} />);
 
     const fields = screen.getAllByTestId('scan-config-sweep-value');
     expect(fields.map((f) => (f.querySelector('input') ?? f).getAttribute('value'))).toEqual([
@@ -216,7 +222,9 @@ describe('RangeModificationBase', () => {
       variable_name: 'gbar',
       section_list_modifications: { somatic: [0.1, 0.3], axonal: 0.2 },
     };
-    render(<RangeModificationBase {...baseProps} setState={setState} state={{ modification }} />);
+    renderInForm(
+      <RangeModificationBase {...baseProps} setState={setState} state={{ modification }} />
+    );
 
     const axonal = screen.getAllByTestId('scan-config-sweep-value')[2];
     fireEvent.change(axonal.querySelector('input') ?? axonal, { target: { value: '' } });
@@ -227,7 +235,7 @@ describe('RangeModificationBase', () => {
   });
 
   it('honours the gating reason over the picker', () => {
-    render(
+    renderInForm(
       <RangeModificationBase
         {...baseProps}
         state={{}}

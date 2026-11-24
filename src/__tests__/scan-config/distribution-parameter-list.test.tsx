@@ -1,18 +1,20 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { useState } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { useFieldErrors } from '@/features/scan-config/components/hooks/field-errors';
 import {
   DistributionParameterList,
   distributionParameterRows,
   readParameterRows,
   type TDistributionParameter,
 } from '@/features/scan-config/components/ui-elements/distance-function/distribution-parameter-list';
+import { useReportedIssues } from '@/features/scan-config/use-config-store';
+
+import { renderInForm } from './form-providers';
 
 /** Renders the current field-error keys so a test can assert what was published. */
 function FieldErrorKeysProbe() {
-  const errors = useFieldErrors();
+  const errors = useReportedIssues();
   return <div data-testid="field-error-keys">{[...errors.keys()].join(',')}</div>;
 }
 
@@ -85,19 +87,19 @@ describe('readParameterRows', () => {
 
 describe('DistributionParameterList', () => {
   it('shows a hint and no rows when the function declares no parameters', () => {
-    render(<Harness functionText="math.exp(-{distance}/50.)*{value}" />);
+    renderInForm(<Harness functionText="math.exp(-{distance}/50.)*{value}" />);
     expect(screen.getByText(/No parameters/)).toBeInTheDocument();
     expect(screen.queryByTestId(/scan-config-distribution-parameter-/)).toBeNull();
   });
 
   it('renders one row per extra placeholder in the function', () => {
-    render(<Harness functionText="{value}*{a}+{b}" />);
+    renderInForm(<Harness functionText="{value}*{a}+{b}" />);
     expect(screen.getByTestId('scan-config-distribution-parameter-a')).toBeInTheDocument();
     expect(screen.getByTestId('scan-config-distribution-parameter-b')).toBeInTheDocument();
   });
 
   it('writes a fixed value for a parameter', async () => {
-    render(<Harness functionText="{value}*{a}" />);
+    renderInForm(<Harness functionText="{value}*{a}" />);
     const row = screen.getByTestId('scan-config-distribution-parameter-a');
     fireEvent.change(within(row).getByLabelText('a value'), { target: { value: '3' } });
     await waitFor(() => {
@@ -108,7 +110,7 @@ describe('DistributionParameterList', () => {
   });
 
   it('switches to bounds mode and writes the pair', async () => {
-    render(<Harness functionText="{value}*{a}" />);
+    renderInForm(<Harness functionText="{value}*{a}" />);
     const row = screen.getByTestId('scan-config-distribution-parameter-a');
     fireEvent.click(within(row).getByLabelText('Bounds'));
     fireEvent.change(within(row).getByLabelText('a min'), { target: { value: '-1' } });
@@ -121,7 +123,7 @@ describe('DistributionParameterList', () => {
   });
 
   it('flags bounds that do not increase', () => {
-    render(
+    renderInForm(
       <Harness
         functionText="{value}*{a}"
         initial={[{ name: 'a', value: { mode: 'bounds', value: null, bounds: [2, 1] } }]}
@@ -132,7 +134,7 @@ describe('DistributionParameterList', () => {
 
   it('publishes a field error at errorPath while a value is missing, and clears it once set', async () => {
     const path = 'distance_dependent_distributions/mouse/parameters';
-    render(
+    renderInForm(
       <>
         <Harness functionText="{value}*{a}" errorPath={path} />
         <FieldErrorKeysProbe />

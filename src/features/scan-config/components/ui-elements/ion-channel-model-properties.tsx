@@ -15,14 +15,15 @@ import { getStrains } from '@/api/entitycore/queries/general/strain';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { useAppNotification } from '@/components/notification';
 import { flattenTreeAsObject } from '@/components/tree/elements/helpers';
-import {
-  useFieldError,
-  useFieldErrorsSessionKey,
-} from '@/features/scan-config/components/hooks/field-errors';
+import { useFieldErrorsSessionKey } from '@/features/scan-config/components/hooks/field-errors';
 import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
-import { useConfigValue, useSetConfig } from '@/features/scan-config/use-config-store';
+import {
+  useConfigValue,
+  useReportIssue,
+  useSetConfig,
+} from '@/features/scan-config/use-config-store';
 import { makeSessionAtomWithDefault } from '@/ui/hooks/use-session-atom';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilderHierarchy } from '@/ui/use-query-keys/atlas';
@@ -301,7 +302,7 @@ function ModelPropertiesCheck({
   propertyKey: string;
   locked: boolean;
 }) {
-  const path = `${root}.${propertyKey}`;
+  const path = `/${root}/${propertyKey}`;
   const setConfig = useSetConfig();
   const rootBlock = useConfigValue((config) => config[root]);
   const { block, value } = readProperties(
@@ -373,7 +374,7 @@ function ModelPropertiesCheck({
     );
   }, [locked, rootRegion, root, propertyKey, setConfig]);
 
-  useFieldError(
+  useReportIssue(
     path,
     failed
       ? "The recordings could not be loaded, so the model's properties cannot be checked"

@@ -4,7 +4,6 @@ import { get } from 'es-toolkit/compat';
 import { ScanConfigGenerationError, ScanConfigGenerationStep } from '@/api/one/utils';
 import { useAppNotification } from '@/components/notification';
 import { useLowCredits } from '@/features/low-credits';
-import { useFieldErrors } from '@/features/scan-config/components/hooks/field-errors';
 import { useGenerateScanConfigCampaign } from '@/features/scan-config/components/hooks/use-generate-scan-config-campaign';
 import { LAUNCH_GREEN } from '@/features/scan-config/components/shared/task-launch-button';
 import { ScanConfigResultsTab } from '@/features/scan-config/helpers';
@@ -14,7 +13,7 @@ import {
   type TScanConfigTabs,
   type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
-import { useGetConfig, useHasConfigErrors } from '@/features/scan-config/use-config-store';
+import { useGetConfig, useHasIssues } from '@/features/scan-config/use-config-store';
 import { messages } from '@/i18n/en/scan-config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { assertErrorMessage, classNames } from '@/util/utils';
@@ -65,12 +64,8 @@ export default function GenerateConfigButton({
   campaignEntityType?: TExtendedEntitiesTypeDict;
 }) {
   const { projectId, virtualLabId } = useWorkspace();
-  // ajv schema errors plus field-level errors (e.g. duplicate group names) that
-  // schema validation can't catch; either kind blocks generation
-  const fieldErrors = useFieldErrors();
-  const hasSchemaErrors = useHasConfigErrors('');
+  const hasBlockingErrors = useHasIssues('');
   const getConfig = useGetConfig();
-  const hasBlockingErrors = hasSchemaErrors || fieldErrors.size > 0;
   const notification = useAppNotification();
   // Generation doesn't consume credits (issue #250): don't gate on balance.
   const { reportError: reportLowCredits, creditsModal } = useLowCredits({

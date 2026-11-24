@@ -12,14 +12,13 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Fragment, memo, useEffect, useMemo, useRef } from 'react';
 
 import { deleteEntry, renameEntry } from '@/features/scan-config/commands';
-import { useFieldErrors } from '@/features/scan-config/components/hooks/field-errors';
 import { DESCRIPTION_TOOLTIP_CLASS } from '@/features/scan-config/components/shared/box-class';
 import { useEntryDiff } from '@/features/scan-config/hooks/use-entry-diff';
 import {
   useEntryNames,
   useEntrySummaries,
   useGetConfig,
-  useHasConfigErrors,
+  useHasIssues,
   useSetConfig,
 } from '@/features/scan-config/use-config-store';
 import { MarkdownDescription } from '@/ui/molecules/markdown-description';
@@ -98,15 +97,11 @@ function EntryTab({
   );
 }
 
-/** The warning sign of one entry: a schema error or a field error under it. */
+/** The warning sign of one entry: shown while the entry has an issue. */
 function EntryWarning({ rootElement, entry }: { rootElement: string; entry: string }) {
-  const hasSchemaErrors = useHasConfigErrors(`/${rootElement}/${entry}`);
-  const fieldErrors = useFieldErrors();
-  const hasFieldErrors = Array.from(fieldErrors.keys()).some((key) =>
-    key.startsWith(`${rootElement}/${entry}`)
-  );
+  const hasIssues = useHasIssues(`/${rootElement}/${entry}`);
 
-  return hasSchemaErrors || hasFieldErrors ? <WarningFilled className="text-yellow-400!" /> : null;
+  return hasIssues ? <WarningFilled className="text-yellow-400!" /> : null;
 }
 
 export default function BlockDictionaryEntries({
