@@ -30,6 +30,8 @@ export function LeftColumn({ props, state, formShown }: ColumnProps & { formShow
       setSelectedRootElement={state.setSelectedRootElement}
       config={state.config}
       setConfig={state.setConfig}
+      scanMode={state.scanMode}
+      setScanMode={state.setScanMode}
       campaignId={state.campaignId}
       loading={state.loading}
       selectedEntry={state.selectedEntry}
