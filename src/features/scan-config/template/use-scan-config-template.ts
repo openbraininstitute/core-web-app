@@ -8,8 +8,8 @@ import { showRestoreAtom } from '@/features/ai-assistant/message-item/collapsibl
 import { useScanConfigWorkflowEditorField } from '@/features/scan-config/bridge/editor-context';
 import { useSetScanConfigEntityPreview } from '@/features/scan-config/bridge/entity-preview';
 import {
-  nextEntryName,
   useEntries,
+  useReserveEntryName,
   useValidateSchema,
 } from '@/features/scan-config/components/hooks';
 import { useConfig } from '@/features/scan-config/components/hooks/schema';
@@ -98,6 +98,7 @@ export function useScanConfigTemplate({
   });
   useDefaultValidationTargets({ schemaName, config, setConfig });
   const allEntries = useEntries({ config, schema });
+  const reserveEntryName = useReserveEntryName({ config, schema });
   const errors = useValidateSchema({ initialConfig, config, schema });
   const editingLocked = useScanConfigEditingLocked({
     campaignId,
@@ -108,7 +109,7 @@ export function useScanConfigTemplate({
 
   const createEntry = useCallback(
     (rootElement: string, block: Record<string, unknown>) => {
-      const entry = nextEntryName(schema, rootElement, allEntries);
+      const entry = reserveEntryName(rootElement);
 
       setConfig(
         (previous) =>
@@ -129,7 +130,7 @@ export function useScanConfigTemplate({
       setIsEditingKey(false);
       setNewKey('');
     },
-    [schema, allEntries, setConfig, setExpandedRootElements]
+    [reserveEntryName, setConfig, setExpandedRootElements]
   );
 
   const selectedSchema = schema.properties[selectedRootElement];
