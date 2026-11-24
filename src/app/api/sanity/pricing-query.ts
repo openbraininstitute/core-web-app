@@ -11,6 +11,7 @@ const pricingQuery = `*[_type == "planV2"][] {
   build_features,
   notebooks_features,
   simulate_features,
+  extract_features,
   support,
   monthly_subscriptions[] {
     name,
