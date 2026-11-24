@@ -1,4 +1,5 @@
 import { act, render, screen } from '@testing-library/react';
+import { Profiler } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import { createScanConfigStore } from '@/features/scan-config/store';
@@ -10,16 +11,12 @@ import {
 
 import type { Config } from '@/features/scan-config/types';
 
-const renders = { name: 0, sets: 0 };
-
 function CampaignName() {
-  renders.name += 1;
   const info = useConfigValue((config) => config.info);
   return <output data-testid="name">{JSON.stringify(info)}</output>;
 }
 
 function NeuronSets() {
-  renders.sets += 1;
   const sets = useConfigValue((config) => config.neuron_sets);
   const setConfig = useSetConfig();
   return (
@@ -42,24 +39,39 @@ describe('useConfigValue', () => {
   it('re-renders only the components whose slice changed', () => {
     const initial: Config = { info: { campaign_name: 'first' }, neuron_sets: {} };
     const store = createScanConfigStore(initial);
+    const commits = { name: 0, sets: 0 };
     render(
       <ScanConfigStoreProvider store={store}>
-        <CampaignName />
-        <NeuronSets />
+        <Profiler
+          id="name"
+          onRender={() => {
+            commits.name += 1;
+          }}
+        >
+          <CampaignName />
+        </Profiler>
+        <Profiler
+          id="sets"
+          onRender={() => {
+            commits.sets += 1;
+          }}
+        >
+          <NeuronSets />
+        </Profiler>
       </ScanConfigStoreProvider>
     );
-    renders.name = 0;
-    renders.sets = 0;
+    commits.name = 0;
+    commits.sets = 0;
 
     act(() => screen.getByTestId('add-set').click());
 
     expect(screen.getByTestId('add-set').textContent).toBe('Added');
-    expect(renders).toEqual({ name: 0, sets: 1 });
+    expect(commits).toEqual({ name: 0, sets: 1 });
 
     act(() => store.set((previous) => ({ ...previous, info: { campaign_name: 'second' } })));
 
     expect(screen.getByTestId('name').textContent).toBe('{"campaign_name":"second"}');
-    expect(renders).toEqual({ name: 1, sets: 1 });
+    expect(commits).toEqual({ name: 1, sets: 1 });
   });
 
   it('fails loudly outside a provider', () => {
