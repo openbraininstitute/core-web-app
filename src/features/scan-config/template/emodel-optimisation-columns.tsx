@@ -21,6 +21,7 @@ import {
   isType,
   ScanConfigUIElementDict,
 } from '@/features/scan-config/types';
+import { useBlockState } from '@/features/scan-config/use-config-store';
 import { cn } from '@/utils/css-class';
 
 import { LeftColumn, MIDDLE_WRAPPER_BASE, MiddleColumnContent } from './columns';
@@ -94,7 +95,6 @@ export function EModelOptimisationColumns({ props, state }: Props) {
     setSelectedRegionModel,
     selectedMechanismsTab,
     config,
-    setConfig,
     errors,
     selectedRootElement,
     editingLocked,
@@ -125,8 +125,8 @@ export function EModelOptimisationColumns({ props, state }: Props) {
     Boolean(rootSchema && preview) &&
     selectedMechanismsTab === EModelOptimisationMechanismsTabs.MechanismSelection;
 
-  const value = config[selectedRootElement];
-  const writeValue = (next: typeof value) => setConfig({ ...config, [selectedRootElement]: next });
+  const [storedValue, writeValue] = useBlockState(selectedRootElement);
+  const value = storedValue ?? null;
   // Each tab's drawers flag only the errors of the keys that tab writes: Region Assignment the region
   // entries, Parameters Selection their parameters.
   const emodelErrors = errorsUnder(errors, `/${selectedRootElement}`);

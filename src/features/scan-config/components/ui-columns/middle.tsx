@@ -145,7 +145,6 @@ export default function Middle({
           campaignId={campaignId}
           loading={loading}
           config={config}
-          setConfig={setConfig}
           entity={entity}
           entityType={entityType}
           schemaMappingConfig={schemaMappingConfig}
@@ -157,8 +156,8 @@ export default function Middle({
         <EModelOptimisationParameters
           selectedTab={selectedMechanismsTab}
           rootSchema={selectedSchema}
-          value={config[selectedRootElement]}
-          onChange={(next) => setConfig({ ...config, [selectedRootElement]: next })}
+          value={rootState ?? null}
+          onChange={setRootState}
           selectedRegionChoice={selectedRegionChoice}
           setSelectedRegionChoice={setSelectedRegionChoice}
           disabled={editingLocked}
