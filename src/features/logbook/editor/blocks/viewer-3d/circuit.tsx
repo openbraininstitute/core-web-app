@@ -23,8 +23,9 @@ export default function CircuitViewer3d({ entityId, project }: IViewer3dProps) {
     .with({ status: 'pending' }, () => <ViewerMessage text="Loading the circuit…" />)
     .with({ status: 'error' }, () => <ViewerMessage text="This circuit can't be shown." />)
     .with({ status: 'success' }, ({ data }) => (
-      // Taller than the other viewers, as the 3D pane and the table's each keep a floor.
-      <ViewerFrame className="h-[720px] bg-neutral-1 pt-3">
+      // Taller than the other viewers, as the 3D pane and the table's each keep a floor. The
+      // column pads only its left (in the scan config the page edge is its right): pr-3 evens it.
+      <ViewerFrame className="h-[720px] bg-neutral-1 pt-3 pr-3">
         <PreviewColumn boxed>
           <ModelPreview model={data} electrodeOverlaysEnabled={false} />
         </PreviewColumn>
