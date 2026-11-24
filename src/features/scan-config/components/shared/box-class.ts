@@ -26,12 +26,12 @@ export const BLOCKS_AND_FORM_COLUMNS_CLASS =
 export const LAUNCH_GREEN = 'bg-[linear-gradient(94.93deg,#389E0D_18.84%,#143805_116.7%)]';
 
 /** The text of the launch and generate buttons. */
-export const TASK_BUTTON_TEXT = 'text-sm font-semibold';
+export const TASK_BUTTON_TEXT = 'text-base font-semibold text-balance';
 
 const GENERATE_CLICKABLE =
   'shadow-[0_3px_8px_-1px_rgb(20_56_5/0.3)] transition-[scale] duration-200 ease-out motion-safe:hover:scale-[1.02]';
 
-/** The generate buttons' pill: the 3D Player button's font in the launch button's green. */
+/** The generate buttons' pill, in the launch button's text and green. */
 export function generateButtonClass(disabled: boolean): string {
   return cn(
     'flex min-h-12.5 p-2 w-full items-center justify-center rounded-full ring-1 ring-black/5',
