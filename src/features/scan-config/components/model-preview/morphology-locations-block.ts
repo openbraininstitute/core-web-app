@@ -125,7 +125,10 @@ function blocksOf(
 
 /** What the form gives the 3D viewer so a pick can write back to the config. */
 export interface IFormBindingOptions {
+  /** The sections the viewer reads (`viewerConfigOf`), not the whole form. */
   config?: Config | null;
+  /** The form has a neuron sets section, so the table's neurons can become a block of it. */
+  hasNeuronSets?: boolean;
   onConfigChange?: (updater: (previous: Config) => Config) => void;
   /** Which block dictionary the form is editing. */
   selectedRootElement?: string;

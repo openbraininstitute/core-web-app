@@ -286,6 +286,7 @@ export function CircuitScene({
 }: ICircuitSceneProps) {
   const {
     config: scanConfig,
+    hasNeuronSets,
     onConfigChange: setConfig,
     selectedRootElement,
     selectedEntry,
@@ -426,7 +427,7 @@ export function CircuitScene({
   const sceneSelection = selection ?? tableSelection;
   // The table's neurons as a block of the form's neuron sets, opened there.
   const createNeuronSet =
-    onCreateEntry && scanConfig && NEURON_SETS in scanConfig
+    onCreateEntry && hasNeuronSets
       ? (block: Record<string, unknown>) => onCreateEntry(NEURON_SETS, block)
       : undefined;
 
