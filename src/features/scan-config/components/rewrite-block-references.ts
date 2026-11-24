@@ -9,6 +9,18 @@ function isBlockReference(value: unknown): value is { block_name: string } {
   return isPlainObject(value) && typeof value.block_name === 'string';
 }
 
+export type TBlockTarget = { dictionary: string; name: string };
+
+/** True when `value` references `target`; a reference without `block_dict_name` matches on name. */
+export function referencesBlock(
+  value: unknown,
+  target: TBlockTarget
+): value is { block_name: string } {
+  if (!isBlockReference(value) || value.block_name !== target.name) return false;
+  const dictionary = (value as { block_dict_name?: unknown }).block_dict_name;
+  return typeof dictionary !== 'string' || dictionary === '' || dictionary === target.dictionary;
+}
+
 export const RewriteBlockReferencesModeDict = {
   Clear: 'clear',
   Rename: 'rename',
@@ -22,8 +34,8 @@ export type RewriteBlockReferencesMode =
   | { type: typeof RewriteBlockReferencesModeDict.Rename; to: string };
 
 /**
- * Walk a config subtree and rewrite every BlockReference whose `block_name`
- * matches `matchName`.
+ * Walk a config subtree and rewrite every BlockReference to `target`
+ * (its dictionary and its name).
  *
  * Semantics mirror the historical shallow cleanup, extended for nested arrays:
  * - object-owned ref + clear  → `delete parent[key]` (same as recordings /
@@ -37,20 +49,20 @@ export type RewriteBlockReferencesMode =
  */
 export function rewriteBlockReferences(
   node: unknown,
-  matchName: string,
+  target: TBlockTarget,
   mode: RewriteBlockReferencesMode
 ): void {
   if (Array.isArray(node)) {
     for (let i = 0; i < node.length; i += 1) {
       const item = node[i];
-      if (isBlockReference(item) && item.block_name === matchName) {
+      if (referencesBlock(item, target)) {
         if (mode.type === RewriteBlockReferencesModeDict.Clear) {
           node[i] = null;
         } else {
           item.block_name = mode.to;
         }
       } else {
-        rewriteBlockReferences(item, matchName, mode);
+        rewriteBlockReferences(item, target, mode);
       }
     }
     return;
@@ -60,14 +72,14 @@ export function rewriteBlockReferences(
 
   for (const key of Object.keys(node)) {
     const value = node[key];
-    if (isBlockReference(value) && value.block_name === matchName) {
+    if (referencesBlock(value, target)) {
       if (mode.type === RewriteBlockReferencesModeDict.Clear) {
         delete node[key];
       } else {
         value.block_name = mode.to;
       }
     } else {
-      rewriteBlockReferences(value, matchName, mode);
+      rewriteBlockReferences(value, target, mode);
     }
   }
 }
