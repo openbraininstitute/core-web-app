@@ -20,18 +20,14 @@ function target(name: string, dictionary = 'neuron_sets') {
 }
 
 /**
- * Mirrors the delete/rename walk in `block-dictionary-entries.tsx`:
- * skip `initialize`, then rewrite every dictionary entry.
+ * Mirrors the delete walk in `block-dictionary-entries.tsx`: skip `initialize` (cleared by
+ * `clearDeletedBlockReferences`), then clear the references in every dictionary entry.
  */
-function rewriteConfigEntries(
-  config: Record<string, unknown>,
-  name: string,
-  mode: Parameters<typeof rewriteBlockReferences>[2]
-) {
+function clearConfigEntries(config: Record<string, unknown>, name: string) {
   for (const [configK, configV] of Object.entries(config)) {
     if (configK === 'initialize' || !isPlainObject(configV)) continue;
     for (const entryV of Object.values(configV)) {
-      rewriteBlockReferences(entryV, target(name), mode);
+      rewriteBlockReferences(entryV, target(name), { type: RewriteBlockReferencesModeDict.Clear });
     }
   }
 }
@@ -375,7 +371,7 @@ describe('rewriteBlockReferences', () => {
         type: 'CircuitSimulationScanConfig',
         initialize: {
           type: 'CircuitSimulationScanConfig.Initialize',
-          // skipped by product walk — left intact here on purpose
+          // skipped by this walk: `clearDeletedBlockReferences` clears it in the product
           node_set: {
             block_name: 'Gone',
             block_dict_name: 'neuron_sets',
@@ -435,7 +431,7 @@ describe('rewriteBlockReferences', () => {
         },
       };
 
-      rewriteConfigEntries(config, 'Gone', { type: RewriteBlockReferencesModeDict.Clear });
+      clearConfigEntries(config, 'Gone');
 
       expect(config.neuron_sets.Combined.combined_with).toEqual([[null, 'union']]);
       expect('neuron_set' in config.recordings.Soma).toBe(false);
@@ -449,11 +445,10 @@ describe('rewriteBlockReferences', () => {
       expect(config.synaptic_manipulations.Disconnect.postsynaptic_neuron_set.block_name).toBe(
         'Keep'
       );
-      // initialize is intentionally not walked by the product delete path
       expect(config.initialize.node_set.block_name).toBe('Gone');
     });
 
-    it('renames nested combined_with refs across the config without touching initialize', () => {
+    it('renames every ref across the whole config, `initialize` included', () => {
       const config = {
         initialize: {
           node_set: {
@@ -481,7 +476,7 @@ describe('rewriteBlockReferences', () => {
         },
       };
 
-      rewriteConfigEntries(config, 'Old', {
+      rewriteBlockReferences(config, target('Old'), {
         type: RewriteBlockReferencesModeDict.Rename,
         to: 'New',
       });
@@ -489,7 +484,7 @@ describe('rewriteBlockReferences', () => {
       expect(config.neuron_sets.Combined.base_neuron_set.block_name).toBe('New');
       expect(config.neuron_sets.Combined.combined_with).toEqual([[blockRef('New'), 'diff']]);
       expect(config.recordings.R1.neuron_set.block_name).toBe('New');
-      expect(config.initialize.node_set.block_name).toBe('Old');
+      expect(config.initialize.node_set.block_name).toBe('New');
     });
 
     it('does not treat property_filter / neuron_ids payloads as block references', () => {
