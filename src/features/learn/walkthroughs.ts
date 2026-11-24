@@ -181,6 +181,7 @@ export const WALKTHROUGHS: IWalkthrough[] = [
       },
     ],
     video: {
+      src: '/videos/walkthroughs/start-a-workflow.mp4',
       intro: "Start a workflow. In this walkthrough, we'll simulate a single neuron.",
       outro: "That's it. You've started your first workflow.",
     },
@@ -303,6 +304,7 @@ export const WALKTHROUGHS: IWalkthrough[] = [
       },
     ],
     video: {
+      src: '/videos/walkthroughs/browse-data.mp4',
       intro: "Browse data. In this walkthrough, we'll find a neuron's morphology.",
       outro: "That's it. You've found your first morphology.",
     },
