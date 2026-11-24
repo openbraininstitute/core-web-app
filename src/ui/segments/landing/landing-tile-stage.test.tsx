@@ -13,7 +13,7 @@ vi.mock('./landing-tile-renderer', () => ({
     renderer.showChosen = options.onShowChosen;
     // with reduced motion the renderer shows the chosen example at once
     if (options.reduced) options.onShowChosen();
-    return { setVisible: vi.fn(), smallsNow: () => [], dispose: vi.fn() };
+    return { selectFeature: vi.fn(), setVisible: vi.fn(), smallsNow: () => [], dispose: vi.fn() };
   },
 }));
 

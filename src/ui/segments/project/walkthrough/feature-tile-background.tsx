@@ -51,9 +51,12 @@ function chapterVideoSource(tour: HTMLElement, after: boolean) {
 export function FeatureTileBackground({
   active,
   chapterId,
+  stationary = false,
 }: {
   active: boolean;
   chapterId: string;
+  /** Keep one white tile field through every middle chapter, with no media repaint or entrance replay. */
+  stationary?: boolean;
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const current = useRef({ active, chapterId });
@@ -72,7 +75,9 @@ export function FeatureTileBackground({
     let failed = false;
     const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
     const desktop = window.matchMedia('(min-width: 800px)');
-    const clear = () => tour.removeAttribute('data-feature-canvas-active');
+    const clear = () => {
+      if (!stationary) tour.removeAttribute('data-feature-canvas-active');
+    };
     const layout = () => {
       const box = tour.getBoundingClientRect();
       const scale = Math.min(box.width / 1920, box.height / 1080);
@@ -102,16 +107,29 @@ export function FeatureTileBackground({
       if (!shown) {
         clear();
         selected = '';
-      } else if (engine) tour.setAttribute('data-feature-canvas-active', '');
-      if (engine && shown && selected !== current.current.chapterId) {
+      } else if (engine && !stationary) tour.setAttribute('data-feature-canvas-active', '');
+      if (engine && shown && !stationary && selected !== current.current.chapterId) {
         const after = selected !== '';
         selected = current.current.chapterId;
         surface.dataset.featureChapter = selected;
         const source = chapterVideoSource(tour, after);
-        engine.setSource(source.read, {
-          empty: source.empty,
-          frame: CHAPTER_FRAMES[selected] ?? FRAME,
-        });
+        const closing = selected === 'join';
+        engine.setSource(
+          closing
+            ? () => {
+                const video = tour.querySelector<HTMLVideoElement>(
+                  '#walkthrough-join [data-stage-current="true"] video'
+                );
+                return video && video.readyState >= 2 && !video.seeking
+                  ? { image: video, stamp: video.currentTime }
+                  : null;
+              }
+            : source.read,
+          {
+            empty: closing ? false : source.empty,
+            frame: CHAPTER_FRAMES[selected] ?? FRAME,
+          }
+        );
       }
       frame = requestAnimationFrame(tick);
     };
@@ -129,13 +147,14 @@ export function FeatureTileBackground({
           },
           onError: () => {
             failed = true;
-            tour.removeAttribute('data-feature-canvas-active');
             clear();
             surface.style.opacity = '0';
           },
         });
         layout();
         engine.setSource(() => null, { empty: true });
+        // Raise the shared white field once; subsequent chapter changes leave its geometry untouched.
+        if (stationary) engine.setSource(() => null, { empty: true });
         tick();
       } catch {
         clear();
@@ -146,11 +165,10 @@ export function FeatureTileBackground({
       cancelAnimationFrame(frame);
       resize.disconnect();
       engine?.dispose();
-      tour.removeAttribute('data-feature-canvas-active');
       clear();
       tour.style.removeProperty('--chapter-scrollbar-width');
     };
-  }, []);
+  }, [stationary]);
   return (
     <div
       aria-hidden="true"

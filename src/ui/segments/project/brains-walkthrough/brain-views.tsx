@@ -270,7 +270,7 @@ export const VIRTUAL_LABS_VIDEO = {
 };
 
 /** A crisp platform recording with a soft shadow beneath it. */
-export function VirtualLabsPreview() {
+export function VirtualLabsPreview({ near = true }: { near?: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   useEffect(() => {
     const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -287,11 +287,11 @@ export function VirtualLabsPreview() {
     <figure data-chapter-media className={labs.preview}>
       <video
         ref={videoRef}
-        src={VIRTUAL_LABS_VIDEO.src}
+        src={near ? VIRTUAL_LABS_VIDEO.src : undefined}
         poster={VIRTUAL_LABS_VIDEO.poster}
         // Not autoPlay: the tour's playback starts it from the beginning once the intro is over, rather than it
         // playing on behind the intro and being sent back to its start as the screen comes in.
-        preload="auto"
+        preload="none"
         muted
         loop
         playsInline
@@ -496,6 +496,7 @@ export function StageVideo({
     <video
       ref={videoRef}
       src={near ? video.src : undefined}
+      preload="none"
       poster={video.poster || undefined}
       autoPlay
       muted

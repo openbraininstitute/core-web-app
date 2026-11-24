@@ -28,8 +28,6 @@ import { cn } from '@/utils/css-class';
 
 import { AccountFlow, Initials, readDummyAccount } from './account-flow';
 import { ChapterFrameBackground } from './chapter-frame-background';
-import { FeatureMediaTransition } from './feature-media-transition';
-import { FeatureTextTransition } from './feature-text-transition';
 import { FeatureTileBackground } from './feature-tile-background';
 import { CHAPTER_SWITCH, LandingCubeBackdrop } from './landing-cube-backdrop';
 import { reverseOf, stopFrom, type TReverse } from './stops';
@@ -254,7 +252,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   // The scroller's height, a chapter's: until it is measured, the screen less the top menu.
   const [height, setHeight] = useState<number | null>(null);
   const [active, setActive] = useState(0);
-  const [visualChapter, setVisualChapter] = useState(0);
+  const [, setVisualChapter] = useState(0);
   const navigationUntil = useRef(0);
   const pendingIntroChapter = useRef<string | null>(null);
   const wheelHeldUntil = useRef(0);
@@ -760,7 +758,6 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   useEffect(() => {
     if (!glide.current) setVisualChapter(on);
   }, [on]);
-  const visual = chapters[Math.min(visualChapter, chapters.length - 1)];
   const advanceChapter = useCallback(() => {
     if (Date.now() < navigationUntil.current) return;
     if (stageScrolls && root) {
@@ -775,11 +772,11 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   }, [on, chapters.length, go, stageScrolls, root]);
   const playback = useChapterPlayback({
     stage: stageRef,
-    chapterId: introContent && wideScreen ? visual.id : chapter.id,
+    chapterId: chapter.id,
     enabled: !!introContent && (introDone || introLeft),
     onComplete: advanceChapter,
     autoAdvance: on < chapters.length - 1,
-    externalProgress: (introContent && wideScreen ? visual : chapter).externalProgress,
+    externalProgress: chapter.externalProgress,
   });
   // While the intro is up, the first screen waits a page below it, and scrolls up as it leaves.
   const underIntro: CSSProperties = LANDING_PEELS
@@ -851,35 +848,25 @@ export function Walkthrough<C extends IWalkthroughChapter>({
           >
             {/* behind the chapters: the first landing's frame of tiles, or, with LANDING_CUBES_BEHIND_CHAPTERS, the
                 landing's own tiles where they stood */}
-            {introContent &&
-              (LANDING_CUBES_BEHIND_CHAPTERS ? (
-                <LandingCubeBackdrop active={introDone || introLeft} />
-              ) : !wideScreen ? (
-                <ChapterFrameBackground active={introDone || introLeft} />
-              ) : (
-                <FeatureTileBackground active={introDone || introLeft} chapterId={visual.id} />
-              ))}
-            {introContent && wideScreen && (introDone || introLeft) && (
-              <div ref={stageRef} className="pointer-events-none fixed inset-0 z-10">
-                <FeatureMediaTransition
-                  chapterId={visual.id}
-                  draw={(present) => stage(visual, colorSlot, goTo, present, true)}
-                />
-              </div>
-            )}
-            {introContent && wideScreen && (introDone || introLeft) && (
-              <FeatureTextTransition chapter={visualChapter}>
-                <ChapterText
-                  chapter={visual}
-                  on
-                  bold={bold}
-                  first={visualChapter === 0}
-                  firstClass={firstTitleClass}
-                  onColorSlot={setColorSlot}
-                  publicOpening
-                  scrollsWithStage
-                />
-              </FeatureTextTransition>
+            {introContent && (
+              <>
+                {LANDING_CUBES_BEHIND_CHAPTERS ? (
+                  <LandingCubeBackdrop active={(introDone || introLeft) && chapter.id !== 'join'} />
+                ) : !wideScreen ? (
+                  <ChapterFrameBackground
+                    active={(introDone || introLeft) && chapter.id !== 'join'}
+                  />
+                ) : (
+                  <FeatureTileBackground
+                    active={(introDone || introLeft) && chapter.id !== 'join'}
+                    chapterId="shared"
+                    stationary
+                  />
+                )}
+                {wideScreen && (introDone || introLeft) && chapter.id === 'join' && (
+                  <FeatureTileBackground active chapterId="join" />
+                )}
+              </>
             )}
             {floating?.({
               entered: introDone || introLeft,
@@ -1057,7 +1044,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
               </div>
             )}
             <div
-              ref={stageScrolls && !(introContent && wideScreen) ? stageRef : undefined}
+              ref={stageScrolls ? stageRef : undefined}
               className="pointer-events-none relative z-10"
               style={{ marginTop: 'calc(var(--chapter-h) * -1)', ...underIntro }}
             >
@@ -1078,22 +1065,24 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                         : 'items-end beside:items-center'
                   )}
                 >
-                  {stageScrolls && !(introContent && wideScreen) && (
+                  {stageScrolls && (
                     <div
                       data-chapter-stage
+                      data-feature-media={introContent && wideScreen ? true : undefined}
                       className="pointer-events-none absolute inset-0 overflow-hidden"
                     >
                       {stage(
                         chapter,
                         index === on ? colorSlot : null,
                         goTo,
-                        index === on,
-                        Math.abs(index - on) <= 1
+                        index === on && (!introContent || introDone || introLeft),
+                        introContent
+                          ? index === on && (introDone || introLeft)
+                          : Math.abs(index - on) <= 1
                       )}
                     </div>
                   )}
                   <ChapterText
-                    placeholder={!!introContent && wideScreen}
                     chapter={chapter}
                     on={index === on}
                     bold={bold}

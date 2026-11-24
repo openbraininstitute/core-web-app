@@ -1632,6 +1632,11 @@ export function createLandingTileRenderer(
     });
 
   return {
+    selectFeature(index) {
+      if (heroCell?.feature === index) return;
+      const slot = cellAt.findIndex((cell) => cell.feature === index);
+      if (slot >= 0) choose(slot);
+    },
     // (behind the chapters) the tiles move about
     stir() {
       if (!reduceMotion) stir();

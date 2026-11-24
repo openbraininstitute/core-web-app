@@ -77,18 +77,48 @@ describe('public science opening', () => {
     );
   });
 
-  it('keeps the visitor on the homepage after the previous autoplay delay', () => {
+  it('shows all eight models for three seconds each before continuing once', () => {
     const onContinue = vi.fn();
     render(<LivingHero onContinue={onContinue} onChapter={vi.fn()} />);
+    act(() => window.dispatchEvent(new Event('landing-way-in')));
+    for (let index = 0; index < LANDING_MODELS.length; index++) {
+      expect(screen.getByTestId('science-caption')).toHaveTextContent(LANDING_MODELS[index].label);
+      expect(onContinue).not.toHaveBeenCalled();
+      act(() => vi.advanceTimersByTime(3000));
+    }
+    expect(onContinue).toHaveBeenCalledTimes(1);
     act(() => vi.advanceTimersByTime(20_000));
-    expect(onContinue).not.toHaveBeenCalled();
+    expect(onContinue).toHaveBeenCalledTimes(1);
   });
 
   it('lets tile selection update the hero without advancing away during interaction', () => {
     const onContinue = vi.fn();
     render(<LivingHero onContinue={onContinue} onChapter={vi.fn()} />);
+    act(() => window.dispatchEvent(new Event('landing-way-in')));
     fireEvent.click(screen.getByRole('button', { name: 'Show Build detailed brain models' }));
     expect(screen.getByTestId('science-caption')).toHaveTextContent('Build detailed brain models');
+    act(() => vi.advanceTimersByTime(20_000));
+    expect(onContinue).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    'pointermove',
+    'keydown',
+    'pointerdown',
+  ])('cancels automatic navigation on %s anywhere on the page', (event) => {
+    const onContinue = vi.fn();
+    render(<LivingHero onContinue={onContinue} onChapter={vi.fn()} />);
+    act(() => window.dispatchEvent(new Event('landing-way-in')));
+    act(() => vi.advanceTimersByTime(1000));
+    fireEvent(window, new Event(event));
+    act(() => vi.advanceTimersByTime(20_000));
+    expect(onContinue).not.toHaveBeenCalled();
+  });
+
+  it('does not navigate automatically with reduced motion', () => {
+    reduced = true;
+    const onContinue = vi.fn();
+    render(<LivingHero onContinue={onContinue} onChapter={vi.fn()} />);
     act(() => vi.advanceTimersByTime(20_000));
     expect(onContinue).not.toHaveBeenCalled();
   });

@@ -50,6 +50,7 @@ export function LandingTileStage({
   const picks = useRef<HTMLDivElement>(null);
   const engine = useRef<{
     setVisible: (visible: boolean) => void;
+    selectFeature: (index: number) => void;
     smallsNow: () => Smalls;
     dispose: () => void;
   } | null>(null);
@@ -176,6 +177,7 @@ export function LandingTileStage({
   }, [reduced]);
 
   useEffect(() => engine.current?.setVisible(visible && onScreen.current), [visible]);
+  useEffect(() => engine.current?.selectFeature(scene), [scene]);
 
   return (
     <div ref={host} className={styles.host} data-tile-landing data-ready={ready || failed}>

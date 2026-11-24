@@ -95,15 +95,7 @@ export function BrainsWalkthroughPage({
             ))}
         </>
       )}
-      chapters={
-        enterHref
-          ? BRAIN_CHAPTERS.map((chapter, index) =>
-              index === 0
-                ? { ...chapter, kicker: 'The era of brain simulation has arrived. For everyone.' }
-                : chapter
-            )
-          : BRAIN_CHAPTERS
-      }
+      chapters={BRAIN_CHAPTERS}
       // The landing's words along the foot are its way between the screens, the way on above them.
       pager={false}
       stageScrolls
@@ -129,14 +121,14 @@ export function BrainsWalkthroughPage({
  */
 function BrainScene({ scene, near }: { scene: TBrainScene; near: boolean }) {
   if (scene === 'opening') {
-    return CNS_ON_FIRST_SCREEN ? <BrainsOpening /> : <VirtualLabsPreview />;
+    return CNS_ON_FIRST_SCREEN ? <BrainsOpening /> : <VirtualLabsPreview near={near} />;
   }
   if (scene === 'configuration') return <StageVideo video={CONFIGURATION_VIDEO} near={near} />;
   if (scene === 'agents') return near ? <AgentPromptsStage /> : null;
   if (scene === 'teaching') return <StageVideo video={TEACHING_VIDEO} near={near} />;
   if (scene === 'analysis') return <StageVideo video={ANALYSIS_VIDEO} near={near} />;
   if (scene === 'notebooks') return <StageVideo video={NOTEBOOKS_VIDEO} near={near} />;
-  if (scene === 'models') return <ModelMosaic />;
+  if (scene === 'models') return <ModelMosaic near={near} />;
   // Getting started, beside the early adopters already on the platform.
   if (scene === 'join')
     return (

@@ -6,7 +6,7 @@ import styles from './model-mosaic.module.css';
 import labs from './virtual-labs.module.css';
 
 /** The supplied mosaic film, sped up 1.744x to 10 s: one brain, then the grid of models it opens into. */
-export function ModelMosaic() {
+export function ModelMosaic({ near = true }: { near?: boolean }) {
   const host = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [visible, setVisible] = useState(false);
@@ -33,9 +33,9 @@ export function ModelMosaic() {
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-    if (visible && motionAllowed) void video.play().catch(() => {});
+    if (near && visible && motionAllowed) void video.play().catch(() => {});
     else video.pause();
-  }, [visible, motionAllowed]);
+  }, [near, visible, motionAllowed]);
 
   return (
     <div ref={host} data-chapter-media className={styles.gallery}>
@@ -43,7 +43,7 @@ export function ModelMosaic() {
         <video
           ref={videoRef}
           className={labs.blendedVideo}
-          src={visible ? '/images/start/walkthrough/models-mosaic.mp4' : undefined}
+          src={near && visible ? '/images/start/walkthrough/models-mosaic.mp4' : undefined}
           poster="/images/start/walkthrough/models-mosaic.jpg"
           muted
           loop

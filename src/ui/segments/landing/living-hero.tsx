@@ -6,13 +6,14 @@ import { BRAIN_THEME_LINKS } from '@/ui/segments/project/brains-walkthrough/chap
 import { THEME_NAV_RAIL, ThemeLine } from '@/ui/segments/project/brains-walkthrough/landing-themes';
 
 import { informationFont } from './information-font';
+import { LANDING_MODELS } from './landing-models';
 import { LANDING_WAY_IN, LandingTileStage } from './landing-tile-stage';
 
 import styles from './living-hero.module.css';
 
 /** The scene the opening shows first: the fly's brain and nerve cord turning as its model runs. */
 export const FIRST_SCENE = 0;
-/** The tour starts when the visitor chooses a chapter or continues from the landing. */
+/** Show every model for three seconds, then continue into Virtual Labs unless the visitor takes control. */
 export function LivingHero({
   onContinue,
   onChapter,
@@ -25,6 +26,10 @@ export function LivingHero({
   const [reduced, setReduced] = useState(true);
   const [visible, setVisible] = useState(true);
   const touchY = useRef<number | null>(null);
+  const interacted = useRef(false);
+  const tourStep = useRef(0);
+  const continueFromIdle = useRef(onContinue);
+  continueFromIdle.current = onContinue;
   const heroRef = useRef<HTMLElement>(null);
   // The chapters along the foot and the arrow down come in last, with the landing's way in.
   const [wayIn, setWayIn] = useState(false);
@@ -56,6 +61,41 @@ export function LivingHero({
       document.removeEventListener('visibilitychange', visibility);
     };
   }, []);
+
+  useEffect(() => {
+    if (!wayIn || reduced || !visible || interacted.current) return;
+    const timer = window.setInterval(() => {
+      if (interacted.current || document.hidden) return;
+      tourStep.current += 1;
+      if (tourStep.current < LANDING_MODELS.length) {
+        setScene((FIRST_SCENE + tourStep.current) % LANDING_MODELS.length);
+      } else {
+        interacted.current = true;
+        window.clearInterval(timer);
+        continueFromIdle.current();
+      }
+    }, 3000);
+    const cancel = () => {
+      interacted.current = true;
+      window.clearInterval(timer);
+    };
+    // Include the header and portalled chapter menu, not only the artwork.
+    const events = [
+      'pointerdown',
+      'pointermove',
+      'touchstart',
+      'wheel',
+      'keydown',
+      'click',
+      'focusin',
+    ];
+    for (const event of events)
+      window.addEventListener(event, cancel, { capture: true, passive: true });
+    return () => {
+      window.clearInterval(timer);
+      for (const event of events) window.removeEventListener(event, cancel, true);
+    };
+  }, [wayIn, reduced, visible]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {

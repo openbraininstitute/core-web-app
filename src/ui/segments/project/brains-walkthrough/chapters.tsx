@@ -1,6 +1,6 @@
 import { AgentPrompts } from './agent-prompts';
 import { AiSparkles } from './agent-ready';
-import { ConfigurationRecording, StartNow, VirtualLabsPoints } from './brain-views';
+import { ConfigurationRecording, StartNow } from './brain-views';
 import { CNS_ON_FIRST_SCREEN } from './brains';
 import { ChapterAction } from './chapter-action';
 
@@ -40,7 +40,14 @@ const UNDER_VIDEO =
 const VIDEO_CHAPTER = `${labs.chapter} ${UNDER_VIDEO}`;
 
 /** A word on the platform, on its first screen. */
-const VIRTUAL_LABS_WORDS = <VirtualLabsPoints />;
+const VIRTUAL_LABS_WORDS = (
+  <>
+    <p>
+      Bring data, models and experiments together. Collaborate with your team in one Virtual Lab.
+    </p>
+    <ChapterAction label="Get Started" destination="platform" />
+  </>
+);
 
 /** The walkthrough of the course's three brains, and of the models the platform holds inside each. */
 export const BRAIN_CHAPTERS: IBrainChapter[] = [
@@ -49,7 +56,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     theme: 'Virtual Labs',
     label: 'Start',
     scene: 'opening',
-    title: 'Virtual Labs Platform',
+    title: 'Your neuroscience workspace',
     hero: true,
     titleClass: SERIF_TITLE,
     ...(CNS_ON_FIRST_SCREEN
@@ -76,14 +83,13 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     theme: 'Explore',
     label: 'Analysis',
     scene: 'analysis',
-    title: 'Explore data, models and results',
+    title: 'Explore across species and scales',
     hero: true,
     column: VIDEO_CHAPTER,
     body: (
       <p>
-        Explore many types of experimental data, such as neuron morphologies, electrophysiology, EM
-        reconstructions and ion channel recordings, across multiple species; models at every scale,
-        from single neurons to circuits; and the outputs of your virtual experiments.
+        Discover morphologies, electrophysiological recordings, ion channels, brain models and
+        simulation results.
       </p>
     ),
     after: <ChapterAction label="Get Started" destination="data" />,
@@ -93,22 +99,15 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     theme: 'Build',
     label: 'Build',
     scene: 'models',
-    title: 'Build brain models, across scales',
+    title: 'Turn data into brain models',
     hero: true,
     titleClass: SERIF_TITLE,
     column: `${VIDEO_CHAPTER} ${mosaic.chapter}`,
     body: (
-      <>
-        <p>
-          Explore models across species: rat, mouse, human and fruit fly (FlyWire), from single
-          neurons and small circuits to brain regions and whole brains.
-        </p>
-        <p>Customize models for hypothesis testing and disease modelling.</p>
-        <p>
-          Create neuronal skeletons from H01 and MICrONS electron microscopy reconstructions as a
-          starting point for new models.
-        </p>
-      </>
+      <p>
+        Build and customize models, from neurons to circuits. Skeletonize EM meshes from MICrONS,
+        H01 or your own data.
+      </p>
     ),
     after: <ChapterAction label="Get Started" destination="workflows" />,
   },
@@ -117,20 +116,13 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     theme: 'Simulate',
     label: 'Simulate',
     scene: 'configuration',
-    title: 'Configure simulations & workflows',
+    title: 'Put your hypotheses to the test',
     hero: true,
     column: VIDEO_CHAPTER,
     body: (
-      <>
-        <p>
-          Set up a simulation campaign on any circuit in the platform: its stimuli, recordings and
-          neuron sets, chosen beside the circuit in 3D and its table of neurons.
-        </p>
-        <p>
-          Give any parameter a list of values to scan it, then generate and launch the whole
-          campaign at once.
-        </p>
-      </>
+      <p>
+        Choose stimuli, recordings and neuron sets. Scan parameters and launch simulation campaigns.
+      </p>
     ),
     after: <ChapterAction label="Get Started" destination="workflows" />,
   },
@@ -139,17 +131,14 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     theme: 'Notebooks',
     label: 'Notebooks',
     scene: 'notebooks',
-    title: 'Jupyter notebooks for interacting with data',
+    title: 'Go further with Python',
     hero: true,
     column: VIDEO_CHAPTER,
     body: (
-      <>
-        <p>
-          Open models, data and simulation results in Jupyter notebooks in the cloud: query them
-          with Python, analyse them and plot them, with nothing to install.
-        </p>
-        <p>Start from the platform&apos;s own notebooks, or write your own and share them.</p>
-      </>
+      <p>
+        Query, analyse and visualize your data in cloud Jupyter notebooks. Start with ours or share
+        your own.
+      </p>
     ),
     after: <ChapterAction label="Get Started" destination="notebooks" />,
   },
@@ -171,17 +160,10 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     column: labs.chapter,
     body: (
       <>
-        <p>AI assistant, MCP server, plugins and connectors.</p>
-        {/* Upright on a phone the prompts below say it, and there is no room for both. */}
-        <p className="stacked:hidden">
-          Work on the platform from the AI you already use: Claude through the OBI connector,
-          ChatGPT through the OBI plugin, or the OBI Assistant built into the platform.
+        <p>
+          Build models, run simulations and analyse results through Claude, ChatGPT or the OBI
+          Assistant.
         </p>
-        <p className="stacked:hidden">
-          Ask in plain words to build models, run simulation campaigns and analyse their results,
-          all in your Virtual Lab.
-        </p>
-        {/* Upright on a phone the stage has no room for the prompts: they come after the words. */}
         <AgentPrompts className="beside:hidden" />
       </>
     ),
@@ -192,21 +174,14 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     theme: 'Learn & Teach',
     label: 'Learn & Teach',
     scene: 'teaching',
-    kicker: 'For students and educators',
-    title: 'Learn & teach neuroscience by doing',
+    title: 'Learn by doing. Teach with ease.',
     hero: true,
     column: VIDEO_CHAPTER,
     body: (
-      <>
-        <p>
-          Start with the course Introduction to brain modeling: explore real brain models and run
-          your own simulations in the browser, with nothing to install.
-        </p>
-        <p>
-          Give your class a Virtual Lab, share models, data and notebooks with your students, teach
-          from the courses, and create exercises compatible with Moodle.
-        </p>
-      </>
+      <p>
+        Explore brain models through hands-on courses and OBI Summer Camps. Connect your teaching to
+        Moodle.
+      </p>
     ),
     after: <ChapterAction label="Get Started" destination="learn" />,
   },
@@ -215,20 +190,17 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     theme: 'Get Started',
     label: 'Get Started',
     scene: 'join',
-    title: 'Your next experiment starts here.',
+    title: 'Your next experiment starts here',
     hero: true,
     column: getStarted.words,
     body: (
       <>
         <p>
-          Explore brain data, build models and run simulations.
+          Start free with 100 credits included.
           <br />
-          All in your browser.
+          Explore, build and simulate—all in your browser.
         </p>
         <StartNow />
-        <p className={getStarted.freeOffer}>
-          Free to start. <strong>100 credits included.</strong>
-        </p>
       </>
     ),
   },
