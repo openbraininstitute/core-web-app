@@ -287,6 +287,33 @@ export function BlockScopeProvider({
   return <BlockScopeContext value={scope}>{children}</BlockScopeContext>;
 }
 
+const noSubscription = () => () => {};
+
+/**
+ * A block scope over a block held in props (a nested object): fields below read `state` and
+ * write the whole block back with `setState`. They re-render when the props change.
+ */
+export function PropsBlockScopeProvider({
+  state,
+  setState,
+  children,
+}: {
+  state: TBlockState;
+  setState: (next: TBlockState) => void;
+  children: ReactNode;
+}) {
+  const scope = useMemo<IBlockScope>(
+    () => ({
+      getSnapshot: () => state,
+      subscribe: noSubscription,
+      update: (updater) => setState(updater(state)),
+    }),
+    [state, setState]
+  );
+
+  return <BlockScopeContext value={scope}>{children}</BlockScopeContext>;
+}
+
 function useBlockScope(): IBlockScope {
   const scope = use(BlockScopeContext);
   if (!scope) throw new Error('A field must be rendered inside a BlockScopeProvider');
