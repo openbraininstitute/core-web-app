@@ -27,8 +27,11 @@ const MAX_CONCURRENT_PART_UPLOADS = 5;
 const PART_RETRY_ATTEMPTS = 3;
 const PART_RETRY_BASE_DELAY_MS = 500;
 
+export const UploadPhase = { Hashing: 'hashing', Uploading: 'uploading' } as const;
+export type TUploadPhase = (typeof UploadPhase)[keyof typeof UploadPhase];
+
 export interface IUploadProgress {
-  phase: 'hashing' | 'uploading';
+  phase: TUploadPhase;
   loadedBytes: number;
   totalBytes: number;
 }
@@ -148,11 +151,11 @@ export async function uploadAssetMultipart({
 }): Promise<IAsset> {
   const totalBytes = file.size;
 
-  onProgress?.({ phase: 'hashing', loadedBytes: 0, totalBytes });
+  onProgress?.({ phase: UploadPhase.Hashing, loadedBytes: 0, totalBytes });
   const sha256Digest = await sha256HexOfBlob(file, {
     signal,
     onProgress: (hashedBytes) =>
-      onProgress?.({ phase: 'hashing', loadedBytes: hashedBytes, totalBytes }),
+      onProgress?.({ phase: UploadPhase.Hashing, loadedBytes: hashedBytes, totalBytes }),
   });
 
   const asset = await initiateMultipartUpload({
@@ -203,7 +206,7 @@ async function uploadParts({
   const partAbort = new AbortController();
   const partSignal = signal ? AbortSignal.any([signal, partAbort.signal]) : partAbort.signal;
 
-  onProgress?.({ phase: 'uploading', loadedBytes: 0, totalBytes });
+  onProgress?.({ phase: UploadPhase.Uploading, loadedBytes: 0, totalBytes });
   let uploadedBytes = 0;
   const limit = pLimit(MAX_CONCURRENT_PART_UPLOADS);
 
@@ -215,7 +218,7 @@ async function uploadParts({
           const chunk = file.slice(start, start + partSize);
           await uploadPartWithRetry(part.url, chunk, partSignal);
           uploadedBytes += chunk.size;
-          onProgress?.({ phase: 'uploading', loadedBytes: uploadedBytes, totalBytes });
+          onProgress?.({ phase: UploadPhase.Uploading, loadedBytes: uploadedBytes, totalBytes });
         })
       )
     );

@@ -1,6 +1,15 @@
 import { match } from 'ts-pattern';
 
+import { UploadPhase } from '@/api/entitycore/queries/assets/multipart';
+import { DRACO_MAX_TRIANGLES } from '@/features/entities/em-cell-mesh/viewer/engine/budget';
+import {
+  GLB_HEADER_BYTES,
+  glbJsonEnd,
+  meshHeader,
+  readGlbJson,
+} from '@/features/entities/em-cell-mesh/viewer/engine/glb';
 import { messages } from '@/i18n/en/upload';
+import { formatBytes as formatUploadLimit } from '@/ui/hooks/use-file-upload';
 import {
   EMCellMeshFileType,
   getEMCellMeshFileType,
@@ -10,19 +19,15 @@ import { formatBytes, formatCompactNumber } from '@/utils/format';
 import type { IUploadProgress } from '@/api/entitycore/queries/assets/multipart';
 import type { MeshHeader } from '@/features/entities/em-cell-mesh/viewer/engine/glb';
 
-/** An OBJ is converted to a Draco GLB on the server, so it may be far larger than a GLB. */
 export const OBJ_MAX_BYTES = 6 * 1024 ** 3;
 export const GLB_MAX_BYTES = 500 * 1024 ** 2;
 
 const OBJ_SNIFF_BYTES = 64 * 1024;
-const GLB_HEADER_BYTES = 20;
-const GLB_JSON_LENGTH_OFFSET = 12;
 const HASHING_SHARE = 0.1;
+const PROGRESS_STEPS = 100;
 
 export interface IMeshFileCheck {
-  /** Why the file is refused. */
   error: string | null;
-  /** What the user should know about a file that is accepted. */
   notice: string | null;
 }
 
@@ -42,16 +47,8 @@ async function checkObjFile(file: File): Promise<IMeshFileCheck> {
 }
 
 async function readGlbMeshHeader(file: File): Promise<MeshHeader> {
-  const { meshHeader, readGlbJson } = await import(
-    '@/features/entities/em-cell-mesh/viewer/engine/glb'
-  );
-  const head = new Uint8Array(await file.slice(0, GLB_HEADER_BYTES).arrayBuffer());
-  if (head.byteLength < GLB_HEADER_BYTES) throw new Error('GLB too short');
-  readGlbJson(head);
-  const jsonLength = new DataView(head.buffer).getUint32(GLB_JSON_LENGTH_OFFSET, true);
-  const json = readGlbJson(
-    new Uint8Array(await file.slice(0, GLB_HEADER_BYTES + jsonLength).arrayBuffer())
-  );
+  const header = new Uint8Array(await file.slice(0, GLB_HEADER_BYTES).arrayBuffer());
+  const json = readGlbJson(new Uint8Array(await file.slice(0, glbJsonEnd(header)).arrayBuffer()));
   if (!json) throw new Error('GLB ends inside its JSON chunk');
   return meshHeader(json);
 }
@@ -59,14 +56,14 @@ async function readGlbMeshHeader(file: File): Promise<MeshHeader> {
 async function checkGlbFile(file: File): Promise<IMeshFileCheck> {
   if (file.size > GLB_MAX_BYTES) {
     return refused(
-      messages.FileSizeExceeded.replace('$$$', formatBytes(GLB_MAX_BYTES)).replace('$$', file.name)
+      messages.FileSizeExceeded.replace('$$$', formatUploadLimit(GLB_MAX_BYTES)).replace(
+        '$$',
+        file.name
+      )
     );
   }
   try {
     const header = await readGlbMeshHeader(file);
-    const { DRACO_MAX_TRIANGLES } = await import(
-      '@/features/entities/em-cell-mesh/viewer/engine/budget'
-    );
     if (!header.draco || header.triangles <= DRACO_MAX_TRIANGLES) return ACCEPTED;
     return {
       error: null,
@@ -88,9 +85,8 @@ export async function checkMeshFile(file: File): Promise<IMeshFileCheck> {
     .otherwise(() => Promise.resolve(refused(messages.FileNotAccepted.replace('$$', file.name))));
 }
 
-/** "Preparing" while the file is hashed, then the bytes sent out of the total. */
 export function describeUploadProgress(progress: IUploadProgress): string {
-  if (progress.phase === 'hashing') return 'Preparing';
+  if (progress.phase === UploadPhase.Hashing) return 'Preparing';
   return `Uploading ${formatBytes(progress.loadedBytes, 1)} of ${formatBytes(progress.totalBytes, 1)}`;
 }
 
@@ -98,7 +94,17 @@ export function describeUploadProgress(progress: IUploadProgress): string {
 export function uploadFraction(progress: IUploadProgress): number {
   if (progress.totalBytes === 0) return 0;
   const share = progress.loadedBytes / progress.totalBytes;
-  return progress.phase === 'hashing'
+  return progress.phase === UploadPhase.Hashing
     ? share * HASHING_SHARE
     : HASHING_SHARE + share * (1 - HASHING_SHARE);
+}
+
+/** Whether two progress reports show the same percentage, so the second needs no render. */
+export function isSameUploadStep(a: IUploadProgress | null, b: IUploadProgress): boolean {
+  return (
+    a !== null &&
+    a.phase === b.phase &&
+    Math.floor(uploadFraction(a) * PROGRESS_STEPS) ===
+      Math.floor(uploadFraction(b) * PROGRESS_STEPS)
+  );
 }

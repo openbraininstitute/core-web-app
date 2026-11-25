@@ -4,6 +4,7 @@
  */
 import type { Vec3 } from './types';
 
+export const GLB_HEADER_BYTES = 20;
 const MAGIC = 0x46546c67;
 const JSON_CHUNK = 0x4e4f534a;
 const BIN_CHUNK = 0x004e4942;
@@ -51,16 +52,22 @@ export interface MeshHeader {
   bounds: { min: Vec3; max: Vec3 } | null;
 }
 
-/** The JSON chunk, once the first `received` bytes hold it; null before, and an error if this isn't a GLB. */
-export function readGlbJson(bytes: Uint8Array, received = bytes.byteLength): GltfJson | null {
-  if (received < 20) return null;
-  const view = new DataView(bytes.buffer, bytes.byteOffset, received);
+/** Where the JSON chunk ends, from the GLB's first 20 bytes; an error if this isn't a GLB. */
+export function glbJsonEnd(header: Uint8Array): number {
+  if (header.byteLength < GLB_HEADER_BYTES) throw new Error('GLB too short');
+  const view = new DataView(header.buffer, header.byteOffset, GLB_HEADER_BYTES);
   if (view.getUint32(0, true) !== MAGIC) throw new Error('not a GLB file');
   if (view.getUint32(4, true) !== 2) throw new Error(`GLB version ${view.getUint32(4, true)}`);
-  const length = view.getUint32(12, true);
   if (view.getUint32(16, true) !== JSON_CHUNK) throw new Error('GLB without a JSON chunk first');
-  if (received < 20 + length) return null;
-  return JSON.parse(new TextDecoder().decode(bytes.subarray(20, 20 + length)));
+  return GLB_HEADER_BYTES + view.getUint32(12, true);
+}
+
+/** The JSON chunk, once the first `received` bytes hold it; null before, and an error if this isn't a GLB. */
+export function readGlbJson(bytes: Uint8Array, received = bytes.byteLength): GltfJson | null {
+  if (received < GLB_HEADER_BYTES) return null;
+  const end = glbJsonEnd(bytes);
+  if (received < end) return null;
+  return JSON.parse(new TextDecoder().decode(bytes.subarray(GLB_HEADER_BYTES, end)));
 }
 
 /** The whole GLB's JSON and binary chunk. */

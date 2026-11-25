@@ -1,13 +1,17 @@
 import { describe, expect, it } from 'vitest';
 
+import { UploadPhase } from '@/api/entitycore/queries/assets/multipart';
 import { DRACO_MAX_TRIANGLES } from '@/features/entities/em-cell-mesh/viewer/engine/budget';
 import {
   checkMeshFile,
   describeUploadProgress,
   GLB_MAX_BYTES,
   isObjMeshFile,
+  isSameUploadStep,
   uploadFraction,
 } from '@/ui/segments/contribute/em-cell-mesh/helpers';
+
+import type { TUploadPhase } from '@/api/entitycore/queries/assets/multipart';
 
 /** A GLB holding only its JSON chunk: one primitive with `triangles` triangles. */
 function glbFile(triangles: number, { draco = true, name = 'mesh.glb' } = {}): File {
@@ -86,7 +90,7 @@ describe('checkMeshFile', () => {
   it('refuses a GLB above the GLB size limit', async () => {
     const { error } = await checkMeshFile(withSize(glbFile(10), GLB_MAX_BYTES + 1));
 
-    expect(error).toContain('exceeds the maximum size of 500 MB');
+    expect(error).toContain('exceeds the maximum size of 500MB');
   });
 
   it('refuses another file type', async () => {
@@ -98,24 +102,42 @@ describe('checkMeshFile', () => {
 
 describe('upload progress', () => {
   it('counts hashing as the first tenth and then the bytes sent', () => {
-    expect(uploadFraction({ phase: 'hashing', loadedBytes: 50, totalBytes: 100 })).toBeCloseTo(
-      0.05
-    );
-    expect(uploadFraction({ phase: 'uploading', loadedBytes: 50, totalBytes: 100 })).toBeCloseTo(
-      0.55
-    );
+    expect(
+      uploadFraction({ phase: UploadPhase.Hashing, loadedBytes: 50, totalBytes: 100 })
+    ).toBeCloseTo(0.05);
+    expect(
+      uploadFraction({ phase: UploadPhase.Uploading, loadedBytes: 50, totalBytes: 100 })
+    ).toBeCloseTo(0.55);
   });
 
   it('describes each phase', () => {
-    expect(describeUploadProgress({ phase: 'hashing', loadedBytes: 0, totalBytes: 10 })).toBe(
-      'Preparing'
-    );
+    expect(
+      describeUploadProgress({ phase: UploadPhase.Hashing, loadedBytes: 0, totalBytes: 10 })
+    ).toBe('Preparing');
     expect(
       describeUploadProgress({
-        phase: 'uploading',
+        phase: UploadPhase.Uploading,
         loadedBytes: 1024 ** 3,
         totalBytes: 6 * 1024 ** 3,
       })
     ).toBe('Uploading 1 GB of 6 GB');
+  });
+
+  it('renders a report only when the shown percentage or the phase changes', () => {
+    const at = (phase: TUploadPhase, loaded: number) => ({
+      phase,
+      loadedBytes: loaded,
+      totalBytes: 1000,
+    });
+    expect(isSameUploadStep(null, at(UploadPhase.Hashing, 0))).toBe(false);
+    expect(isSameUploadStep(at(UploadPhase.Uploading, 500), at(UploadPhase.Uploading, 505))).toBe(
+      true
+    );
+    expect(isSameUploadStep(at(UploadPhase.Uploading, 500), at(UploadPhase.Uploading, 520))).toBe(
+      false
+    );
+    expect(isSameUploadStep(at(UploadPhase.Hashing, 1000), at(UploadPhase.Uploading, 0))).toBe(
+      false
+    );
   });
 });

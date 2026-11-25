@@ -17,10 +17,14 @@ import { tryCatch } from '@/api/utils';
 import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
 import { messages } from '@/i18n/en/upload';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { EM_CELL_MESH_PROGRESS_STEPS } from '@/ui/segments/contribute/em-cell-mesh/config';
+import {
+  CONVERSION_MUTATION_KEY,
+  EM_CELL_MESH_PROGRESS_STEPS,
+} from '@/ui/segments/contribute/em-cell-mesh/config';
 import {
   describeUploadProgress,
   isObjMeshFile,
+  isSameUploadStep,
   uploadFraction,
 } from '@/ui/segments/contribute/em-cell-mesh/helpers';
 import {
@@ -36,9 +40,6 @@ import type {
   IPipelineHookResult,
 } from '@/ui/segments/contribute/shared/types';
 
-const CONVERSION_MUTATION_KEY = 'convertEMCellMesh';
-
-/** Asks before the tab closes while a file is being uploaded. */
 function useWarnBeforeUnload(active: boolean) {
   useEffect(() => {
     if (!active) return undefined;
@@ -57,7 +58,6 @@ export function useEMCellMeshPipeline({
   const { projectId, virtualLabId } = useWorkspace();
   const [uploadProgress, setUploadProgress] = useState<IUploadProgress | null>(null);
   const [isObjSubmission, setIsObjSubmission] = useState(false);
-  const [completionNotice, setCompletionNotice] = useState<string | null>(null);
 
   const createEMCellMeshAsync = useMutation({
     mutationFn: ({
@@ -105,7 +105,8 @@ export function useEMCellMeshPipeline({
         mimeType: getEMCellMeshMimeType(file) ?? file.type,
         payload: file,
         label: 'cell_surface_mesh' as Parameters<typeof createAsset>[0]['label'],
-        onProgress: setUploadProgress,
+        onProgress: (progress: IUploadProgress) =>
+          setUploadProgress((shown) => (isSameUploadStep(shown, progress) ? shown : progress)),
       });
     },
   });
@@ -162,20 +163,14 @@ export function useEMCellMeshPipeline({
       const file = values.assets?.mesh;
       const isObj = file ? isObjMeshFile(file) : false;
       setIsObjSubmission(isObj);
-      setCompletionNotice(null);
       setUploadProgress(null);
 
-      // An OBJ mesh stays a draft until the conversion task has replaced the OBJ with a GLB.
       const cellMesh = await createEMCellMeshAsync.mutateAsync({
         values,
         lifecycleStatus: isObj ? EntityLifecycleStatus.Draft : EntityLifecycleStatus.Active,
       });
 
       try {
-        if (file) {
-          await createAssetsAsync.mutateAsync({ entityId: cellMesh.id, file });
-        }
-
         if (values.contribution && values.contribution.length > 0) {
           await createContributionAsync.mutateAsync({
             entityId: cellMesh.id,
@@ -190,11 +185,14 @@ export function useEMCellMeshPipeline({
           });
         }
 
+        if (file) {
+          await createAssetsAsync.mutateAsync({ entityId: cellMesh.id, file });
+        }
+
         if (isObj) {
           await convertAsync.mutateAsync(cellMesh.id);
         }
       } catch (error) {
-        // The OBJ is never kept: without a launched conversion, the draft goes with its file.
         if (isObj) {
           await tryCatch(
             deleteEMCellMesh({ id: cellMesh.id, context: { projectId, virtualLabId } })
@@ -204,7 +202,6 @@ export function useEMCellMeshPipeline({
         throw error;
       }
 
-      if (isObj) setCompletionNotice(messages.MeshConversionStarted);
       return cellMesh;
     },
     loading:
@@ -234,7 +231,8 @@ export function useEMCellMeshPipeline({
         }
       : undefined,
     skippedSteps: isObjSubmission ? [] : [CONVERSION_MUTATION_KEY],
-    completionNotice,
+    completionNotice:
+      isObjSubmission && convertAsync.isSuccess ? messages.MeshConversionStarted : null,
     mutationKeys: EM_CELL_MESH_PROGRESS_STEPS.reduce(
       (acc, step) => {
         acc[step.mutationKey] = {
