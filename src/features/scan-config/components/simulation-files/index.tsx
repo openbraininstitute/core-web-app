@@ -70,8 +70,6 @@ const SIMULATION_FILE_NAMES: Partial<Record<string, string>> = {
 // The result opens listed, as what the panel is for; the inputs stay shut until asked for.
 const openGroupsAtom = atom({ circuit: false, simulation: false, result: true });
 
-const NO_FILES: TAssetBackedFile[] = [];
-
 type SimulationFilesProps = {
   simulation: ISimulation;
   execStatus: ActivityStatus;
@@ -185,10 +183,11 @@ export function SimulationFiles({
   useAutoSelectFileOnConfigChange({
     configId: simulation.id,
     selectedFile,
-    inputFiles: awaitingResult ? NO_FILES : prioritizedInputFiles,
-    outputFiles: awaitingResult ? NO_FILES : prioritizedOutputFiles,
+    inputFiles: prioritizedInputFiles,
+    outputFiles: prioritizedOutputFiles,
     onSelect,
     resultReady: execStatus === ActivityStatus.DONE && !outputLoading,
+    awaitingResult,
   });
 
   // The circuit's files, the simulation's and its result's, each as one pill that opens to list them.

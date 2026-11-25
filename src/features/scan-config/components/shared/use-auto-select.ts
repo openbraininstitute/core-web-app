@@ -11,10 +11,13 @@ type Props = {
   inputFiles: TActivityCustomFile[];
   outputFiles: TActivityCustomFile[];
   onSelect: (file: TActivityCustomFile) => void;
-  /** Opt-in: a task log picked while `false` gives way to the first result file once `true`; needs
-   * the outputs empty while a finished run's files load. */
+  /** Opt-in: a task log picked while `false` gives way to the first result file once `true`. */
   resultReady?: boolean;
+  /** While `true`, a finished run's files are loading and nothing is picked. */
+  awaitingResult?: boolean;
 };
+
+const NO_FILES: TActivityCustomFile[] = [];
 
 /** The stable per-row key: every row sets `id`, a file row's asset id, else the entity id. */
 function fileKey(file: TActivityCustomFile): string {
@@ -37,19 +40,22 @@ export function useAutoSelectFileOnConfigChange({
   outputFiles,
   onSelect,
   resultReady,
+  awaitingResult,
 }: Props) {
   const previousConfigId = useRef<string | null>(null);
   const pendingOutputSelectionForConfigId = useRef<string | null>(null);
   const provisionalPick = useRef<TActivityCustomFile | null>(null);
 
   useEffect(() => {
-    const tracksLog = resultReady === false && outputFiles.some(isTaskLogsFile);
+    const inputs = awaitingResult ? NO_FILES : inputFiles;
+    const outputs = awaitingResult ? NO_FILES : outputFiles;
+    const tracksLog = resultReady === false && outputs.some(isTaskLogsFile);
 
     if (previousConfigId.current !== configId) {
       previousConfigId.current = configId;
       pendingOutputSelectionForConfigId.current = configId;
 
-      const preferred = outputFiles[0] ?? inputFiles[0];
+      const preferred = outputs[0] ?? inputs[0];
       provisionalPick.current = tracksLog ? logOrNull(preferred) : null;
       if (preferred && !isSameFile(selectedFile, preferred)) {
         onSelect(preferred);
@@ -63,7 +69,7 @@ export function useAutoSelectFileOnConfigChange({
       if (!isSameFile(selectedFile, provisionalPick.current)) {
         provisionalPick.current = null;
       } else {
-        const result = outputFiles.find((file) => !isTaskLogsFile(file));
+        const result = outputs.find((file) => !isTaskLogsFile(file));
         if (result) {
           provisionalPick.current = null;
           pendingOutputSelectionForConfigId.current = null;
@@ -74,12 +80,12 @@ export function useAutoSelectFileOnConfigChange({
     }
 
     if (pendingOutputSelectionForConfigId.current !== configId) return;
-    const firstOutput = outputFiles[0];
+    const firstOutput = outputs[0];
     if (!firstOutput) return;
 
     if (!isSameFile(selectedFile, firstOutput)) {
       onSelect(firstOutput);
     }
     pendingOutputSelectionForConfigId.current = null;
-  }, [configId, inputFiles, onSelect, outputFiles, selectedFile, resultReady]);
+  }, [configId, inputFiles, onSelect, outputFiles, selectedFile, resultReady, awaitingResult]);
 }

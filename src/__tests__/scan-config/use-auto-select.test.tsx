@@ -30,6 +30,7 @@ type THarnessProps = {
   inputFiles: TActivityCustomFile[];
   outputFiles: TActivityCustomFile[];
   resultReady?: boolean;
+  awaitingResult?: boolean;
   initialSelected?: TActivityCustomFile;
 };
 
@@ -56,7 +57,7 @@ describe('useAutoSelectFileOnConfigChange', () => {
 
   it('switches from the log to the result once the run is done', () => {
     const { result, rerender } = renderHook(useHarness, { initialProps: running(false) });
-    rerender({ ...running(false), outputFiles: [] });
+    rerender({ ...running(false), awaitingResult: true });
     rerender(done(true));
     expect(result.current.selectedFile).toBe(spikes);
   });
@@ -94,7 +95,7 @@ describe('useAutoSelectFileOnConfigChange', () => {
     const { result, rerender } = renderHook(useHarness, { initialProps: running(false) });
     act(() => result.current.setSelectedFile(config));
     act(() => result.current.setSelectedFile(logs));
-    rerender({ ...running(false), outputFiles: [] });
+    rerender({ ...running(false), awaitingResult: true });
     rerender(done(true));
     expect(result.current.selectedFile).toBe(spikes);
   });
@@ -105,8 +106,7 @@ describe('useAutoSelectFileOnConfigChange', () => {
       initialProps: { ...done(true), outputFiles: [spikes, logs] },
     });
     act(() => result.current.setSelectedFile(logs));
-    // a finished simulation's outputs are held back while its result's files load
-    rerender({ ...done(false), configId: 'sim-2', outputFiles: [] });
+    rerender({ ...done(false), configId: 'sim-2', outputFiles: [logs2], awaitingResult: true });
     rerender({ ...done(true), configId: 'sim-2', outputFiles: [logs2, spikes] });
     expect(result.current.selectedFile).toBe(logs2);
   });
@@ -114,7 +114,7 @@ describe('useAutoSelectFileOnConfigChange', () => {
   it('switches from a log already on show when the simulation is first seen', () => {
     const initialProps: THarnessProps = { ...running(false), initialSelected: logs };
     const { result, rerender } = renderHook(useHarness, { initialProps });
-    rerender({ ...running(false), outputFiles: [] });
+    rerender({ ...running(false), awaitingResult: true });
     rerender(done(true));
     expect(result.current.selectedFile).toBe(spikes);
   });
