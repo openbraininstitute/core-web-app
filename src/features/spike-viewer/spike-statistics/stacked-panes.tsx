@@ -5,6 +5,7 @@ import { Spin } from 'antd';
 import { atom, useAtom } from 'jotai';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { match } from 'ts-pattern';
 
 import {
   KeptTablePlaceholder,
@@ -119,11 +120,13 @@ export function StackedPanes({
         // Beside the panel a file's views take the page's left edge, as the lists did, and the
         // panel's its right. Between the two each keeps a GUTTER from the grab bar, as panes do
         // from theirs; the file's column ends a grid gap (gap-1.25) short of that bar.
-        split === 'file' && sidePanel?.open
-          ? 'pl-px pr-[calc(12px-0.3125rem)]'
-          : split === 'panel'
-            ? 'pl-[12px] pr-px'
-            : 'pl-3 pr-px',
+        match({ split, panelOpen: Boolean(sidePanel?.open) })
+          .with(
+            { split: StackedSplit.File, panelOpen: true },
+            () => 'pl-px pr-[calc(12px-0.3125rem)]'
+          )
+          .with({ split: StackedSplit.Panel }, () => 'pl-[12px] pr-px')
+          .otherwise(() => 'pl-3 pr-px'),
         'pt-px pb-3'
       )}
     >
