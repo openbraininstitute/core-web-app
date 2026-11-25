@@ -15,11 +15,14 @@ import {
   type TSupportedEntitiesForScanConfiguration,
   type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
-import { useBlockState, useConfigErrorsUnder } from '@/features/scan-config/use-config-store';
+import {
+  BlockScopeProvider,
+  useBlockState,
+  useConfigErrorsUnder,
+  useHasBlock,
+} from '@/features/scan-config/use-config-store';
 import { useAIConfig } from '@/services/ai-agent';
 import { cn } from '@/utils/css-class';
-
-import { isPlainObject } from '../utils';
 
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type { Nullish } from '@/utils/type';
@@ -65,23 +68,23 @@ function SingleBlock({
   disabled,
 }: TSingleBlockProps) {
   const preview = useDiffPreview(selectedRootElement);
-  const [rootState, setRootState] = useBlockState(selectedRootElement);
+  const hasBlock = useHasBlock(selectedRootElement);
 
-  if (!isPlainObject(rootState)) return null;
+  if (!hasBlock) return null;
 
   return (
-    <Block
-      schema={schema}
-      disabled={disabled}
-      blockSchema={blockSchema}
-      state={preview ?? rootState}
-      setState={setRootState}
-      entity={entity}
-      schemaMappingConfig={schemaMappingConfig}
-      rootElement={selectedRootElement}
-      selectedEntry={selectedEntry}
-      errorPathPrefix={selectedRootElement}
-    />
+    <BlockScopeProvider rootElement={selectedRootElement} preview={preview}>
+      <Block
+        schema={schema}
+        disabled={disabled}
+        blockSchema={blockSchema}
+        entity={entity}
+        schemaMappingConfig={schemaMappingConfig}
+        rootElement={selectedRootElement}
+        selectedEntry={selectedEntry}
+        errorPathPrefix={selectedRootElement}
+      />
+    </BlockScopeProvider>
   );
 }
 

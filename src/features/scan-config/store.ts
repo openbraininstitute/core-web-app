@@ -1,3 +1,5 @@
+import { omit } from 'es-toolkit';
+
 import { isPlainObject } from '@/features/scan-config/components/utils';
 
 import type { ErrorObject } from 'ajv';
@@ -55,6 +57,50 @@ export function writeBlock(
   const root = config[rootElement];
   if (!isPlainObject(root)) return config;
   return { ...config, [rootElement]: { ...root, [entry]: state } };
+}
+
+export type TBlockState = Record<string, ConfigValue>;
+
+/** One block of the config, as a store of its own: what the fields of that block read and write. */
+export interface IBlockScope {
+  getSnapshot: () => TBlockState;
+  subscribe: (listener: () => void) => () => void;
+  /** The updater runs on the latest block, so updates made in a row never overwrite each other. */
+  update: (updater: (previous: TBlockState) => TBlockState) => void;
+}
+
+/** The block with one field set, or without that field when the value is `undefined`. */
+export function withField(
+  block: TBlockState,
+  key: string,
+  value: ConfigValue | undefined
+): TBlockState {
+  return value === undefined ? omit(block, [key]) : { ...block, [key]: value };
+}
+
+const EMPTY_BLOCK: TBlockState = Object.freeze({});
+
+/** The scope of a root block, or of one entry of a root dictionary when `entry` is given. */
+export function createBlockScope(
+  store: IScanConfigStore,
+  rootElement: string,
+  entry?: string
+): IBlockScope {
+  const blockOf = (config: Config) => {
+    const block = readBlock(config, rootElement, entry);
+    return isPlainObject(block) ? block : EMPTY_BLOCK;
+  };
+
+  return {
+    getSnapshot: () => blockOf(store.getSnapshot()),
+    subscribe: store.subscribe,
+    update: (updater) =>
+      store.set((config) => {
+        const previous = blockOf(config);
+        const next = updater(previous);
+        return next === previous ? config : writeBlock(config, rootElement, entry, next);
+      }),
+  };
 }
 
 /**

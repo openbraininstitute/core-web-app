@@ -13,7 +13,9 @@ import {
 
 import { entryNames } from '@/features/scan-config/commands';
 import { useConfigValidator } from '@/features/scan-config/components/hooks';
+import { isPlainObject } from '@/features/scan-config/components/utils';
 import {
+  createBlockScope,
   createDerivedReader,
   createReportedIssues,
   createSliceReader,
@@ -21,14 +23,17 @@ import {
   errorsUnder,
   isAtOrBelow,
   readBlock,
+  withField,
   writeBlock,
 } from '@/features/scan-config/store';
 
 import type { ErrorObject } from 'ajv';
 import type { ReactNode } from 'react';
 import type {
+  IBlockScope,
   IReportedIssues,
   IScanConfigStore,
+  TBlockState,
   TEntrySummary,
 } from '@/features/scan-config/store';
 import type { Config, ConfigSchema, ConfigValue } from '@/features/scan-config/types';
@@ -229,6 +234,103 @@ export function useBlockState(rootElement: string, entry?: string) {
   );
 
   return [state, setState] as const;
+}
+
+/** Whether a root block, or one entry of a root dictionary, exists as an object. */
+export function useHasBlock(rootElement: string, entry?: string): boolean {
+  const select = useCallback(
+    (config: Config) => isPlainObject(readBlock(config, rootElement, entry)),
+    [rootElement, entry]
+  );
+  return useConfigValue(select);
+}
+
+/** One property of a block (its `type`, say); re-renders only when that property changes. */
+export function useBlockProperty(
+  rootElement: string,
+  entry: string | undefined,
+  key: string
+): ConfigValue | undefined {
+  const select = useCallback(
+    (config: Config) => {
+      const block = readBlock(config, rootElement, entry);
+      return isPlainObject(block) ? block[key] : undefined;
+    },
+    [rootElement, entry, key]
+  );
+  return useConfigValue(select);
+}
+
+const BlockScopeContext = createContext<IBlockScope | null>(null);
+
+/**
+ * Gives the fields below it one block to read and write. With a `preview`, fields read it instead
+ * of the stored block.
+ */
+export function BlockScopeProvider({
+  rootElement,
+  entry,
+  preview,
+  children,
+}: {
+  rootElement: string;
+  entry?: string;
+  preview?: TBlockState | null;
+  children: ReactNode;
+}) {
+  const store = useScanConfigStore();
+  const scope = useMemo(() => {
+    const stored = createBlockScope(store, rootElement, entry);
+    return preview ? { ...stored, getSnapshot: () => preview } : stored;
+  }, [store, rootElement, entry, preview]);
+
+  return <BlockScopeContext value={scope}>{children}</BlockScopeContext>;
+}
+
+function useBlockScope(): IBlockScope {
+  const scope = use(BlockScopeContext);
+  if (!scope) throw new Error('A field must be rendered inside a BlockScopeProvider');
+  return scope;
+}
+
+/**
+ * Reads one slice of the block in scope; the component re-renders only when that slice changes.
+ * Pass `isEqual` when the selector builds a new value each time.
+ */
+export function useBlockValue<TSlice>(
+  selector: (block: TBlockState) => TSlice,
+  isEqual: (previous: TSlice, next: TSlice) => boolean = Object.is
+): TSlice {
+  const scope = useBlockScope();
+  const getSlice = useMemo(
+    () => createDerivedReader(scope.getSnapshot, selector, isEqual),
+    [scope, selector, isEqual]
+  );
+
+  return useSyncExternalStore(scope.subscribe, getSlice, getSlice);
+}
+
+/** Writes the block in scope with an updater, for a field that writes more than its own key. */
+export function useUpdateBlock(): IBlockScope['update'] {
+  return useBlockScope().update;
+}
+
+export type TSetFieldValue = (next: ConfigValue | undefined) => void;
+
+/**
+ * The value of one field of the block in scope and its setter; the caller re-renders only when
+ * that value changes. Setting `undefined` removes the key.
+ */
+export function useField(key: string): readonly [ConfigValue | undefined, TSetFieldValue] {
+  const { update } = useBlockScope();
+  const selectValue = useCallback((block: TBlockState) => block[key], [key]);
+  const value = useBlockValue(selectValue);
+  const setValue = useCallback<TSetFieldValue>(
+    (next) => update((previous) => withField(previous, key, next)),
+    [update, key]
+  );
+
+  return [value, setValue] as const;
 }
 
 const sameNames = (previous: Set<string>, next: Set<string>) =>
