@@ -1,27 +1,29 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PriceActions } from '@/admin/sections/accounting/ui/price-actions';
 import { ApiError } from '@/api/error';
 
 import type { TPrice } from '@/admin/sections/accounting/types';
 
-const { assertAfterMock, expireMock, errorMock } = vi.hoisted(() => ({
-  assertAfterMock: vi.fn(),
+const { assertEndMock, expireMock, updateMock, errorMock } = vi.hoisted(() => ({
+  assertEndMock: vi.fn(),
   expireMock: vi.fn(),
+  updateMock: vi.fn(),
   errorMock: vi.fn(),
 }));
 
 vi.mock('@/admin/sections/accounting/api', () => ({
-  assertPriceAfter: assertAfterMock,
+  assertPriceAfter: vi.fn(),
   assertPriceEdit: vi.fn(),
+  assertPriceEnd: assertEndMock,
   createPrice: vi.fn(),
   expirePrice: expireMock,
   getAccount: vi.fn(),
   listPricesFor: vi.fn().mockResolvedValue({ data: [], pagination: { total: 0 } }),
   replacePrice: vi.fn(),
-  updatePrice: vi.fn(),
+  updatePrice: updateMock,
 }));
 vi.mock('@/components/notification', () => ({
   useAppNotification: () => ({ success: vi.fn(), error: errorMock }),
@@ -51,6 +53,8 @@ const renderActions = (price: TPrice) =>
 
 const buttons = () => screen.queryAllByRole('button').map((button) => button.textContent);
 
+beforeEach(() => vi.clearAllMocks());
+
 describe('PriceActions', () => {
   it.each([
     ['a scheduled price', SCHEDULED, ['Edit', 'Change end']],
@@ -63,7 +67,7 @@ describe('PriceActions', () => {
   });
 
   it('never ends a price when nothing would take over, and keeps the dialog open', async () => {
-    assertAfterMock.mockRejectedValue(new ApiError('No other price would apply', { status: 400 }));
+    assertEndMock.mockRejectedValue(new ApiError('No other price would apply', { status: 400 }));
     renderActions(SCHEDULED);
 
     fireEvent.click(screen.getByRole('button', { name: 'Change end' }));
@@ -72,8 +76,33 @@ describe('PriceActions', () => {
 
     await waitFor(() => expect(errorMock).toHaveBeenCalled());
     await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
-    expect(assertAfterMock).toHaveBeenCalledWith(SCHEDULED, SCHEDULED.valid_to, SCHEDULED.id);
+    expect(assertEndMock).toHaveBeenCalledWith(SCHEDULED, SCHEDULED.valid_to);
     expect(expireMock).not.toHaveBeenCalled();
     expect(screen.getByRole('dialog')).toBeTruthy();
+  });
+
+  it('refuses to save an edit once the price has started since the page loaded', async () => {
+    renderActions(SCHEDULED);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Review' }));
+    fireEvent.change(await within(dialog).findByRole('textbox'), {
+      target: { value: SCHEDULED.service_subtype },
+    });
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(Date.parse(SCHEDULED.valid_from) + 60_000);
+    try {
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+
+      await waitFor(() =>
+        expect(errorMock).toHaveBeenCalledWith(
+          expect.objectContaining({ description: expect.stringMatching(/has started/) })
+        )
+      );
+      expect(updateMock).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

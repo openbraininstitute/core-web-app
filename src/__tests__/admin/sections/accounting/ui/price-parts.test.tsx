@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { PriceTiersTable } from '@/admin/sections/accounting/ui/price-parts';
 
@@ -21,5 +21,23 @@ describe('PriceTiersTable', () => {
     expect(screen.getByText('0.1')).toBeTruthy();
     expect(screen.queryByText('0.05')).toBeNull();
     expect(screen.getByText(/2 tiers stored/)).toBeTruthy();
+  });
+
+  it('shows zero-width tiers without clashing rows', () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const pricing: TPricing = {
+      service_type: 'oneshot',
+      tiers: [
+        { min_quantity: 0, max_quantity: 10, fixed_cost: '0', multiplier: '0.1' },
+        { min_quantity: 10, max_quantity: 10, fixed_cost: '5', multiplier: '0' },
+        { min_quantity: 10, max_quantity: null, fixed_cost: '0', multiplier: '0.05' },
+      ],
+    };
+
+    render(<PriceTiersTable pricing={pricing} />);
+
+    expect(screen.getAllByRole('row')).toHaveLength(4);
+    expect(consoleError).not.toHaveBeenCalled();
+    consoleError.mockRestore();
   });
 });

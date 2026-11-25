@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   assertPriceAfter,
   assertPriceEdit,
+  assertPriceEnd,
   assignBudget,
   depleteProject,
   depleteVlab,
@@ -378,6 +379,24 @@ describe('replacePrice', () => {
     expect(closesDialog(error)).toBe(false);
     expect(posted('admin/price')).toEqual([]);
   });
+
+  it('refuses a new price whose end hands over to a price that lapses before the old end', async () => {
+    const lapsing: TPrice = {
+      ...OLD,
+      id: 5,
+      valid_from: '2025-01-01T00:00:00Z',
+      valid_to: new Date(Date.now() + 5 * 3_600_000).toISOString(),
+    };
+    accounting({ listed: [OLD, lapsing] });
+
+    const error = await replacePrice(OLD, {
+      ...NEXT,
+      valid_to: new Date(Date.now() + 2 * 3_600_000).toISOString(),
+    }).catch((caught) => caught);
+
+    expect(error.message).toMatch(/No other price would apply/);
+    expect(posted('admin/price')).toEqual([]);
+  });
 });
 
 describe('assertPriceAfter', () => {
@@ -388,13 +407,13 @@ describe('assertPriceAfter', () => {
       page(url.includes('only_default=true') ? [OLD] : [])
     );
 
-    await expect(assertPriceAfter({ ...OLD, vlab_id: 'lab' }, end, 4)).resolves.toBeUndefined();
+    await expect(assertPriceEnd({ ...OLD, id: 4, vlab_id: 'lab' }, end)).resolves.toBeUndefined();
   });
 
   it('refuses to end the only default price', async () => {
     fetchMock.mockResolvedValue(page([OLD]));
 
-    await expect(assertPriceAfter(OLD, end, OLD.id)).rejects.toThrow(/No other price would apply/);
+    await expect(assertPriceEnd(OLD, end)).rejects.toThrow(/No other price would apply/);
   });
 
   it('checks nothing for a price with no end', async () => {

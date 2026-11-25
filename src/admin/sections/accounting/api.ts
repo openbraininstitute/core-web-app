@@ -6,7 +6,14 @@ import { compactRecord } from '@/utils/dictionary';
 
 import { errorReason } from '../../shared/errors';
 import { formatDateTime } from '../../shared/format';
-import { checkPriceAfter, checkPriceEdit, editMoves, isOutcomeUnknown, priceKey } from './helpers';
+import {
+  checkPriceAfter,
+  checkPriceEdit,
+  checkPriceEnd,
+  editMoves,
+  isOutcomeUnknown,
+  priceKey,
+} from './helpers';
 import { AccountingErrorCode, AccountingMethod } from './types';
 
 import type {
@@ -218,8 +225,12 @@ async function pricesAround(scope: TPriceScope): Promise<TPriceLists> {
 }
 
 /** Refuses an end with no price after it, since reservations of that subtype would then fail. */
-export async function assertPriceAfter(price: TPriceScope, end: string | null, except?: number) {
-  if (end) checkPriceAfter((await pricesAround(price)).lists, end, except);
+export async function assertPriceAfter(price: TPriceScope, end: string | null) {
+  if (end) checkPriceAfter((await pricesAround(price)).lists, end);
+}
+
+export async function assertPriceEnd(price: TPrice, end: string | null) {
+  if (end) checkPriceEnd((await pricesAround(price)).lists, price, end);
 }
 
 export async function assertPriceEdit(price: TPrice, next: TPriceBody) {
@@ -244,7 +255,7 @@ export async function replacePrice(price: TPrice, next: TPriceBody) {
       { status: 400 }
     );
   }
-  await assertPriceAfter(next, next.valid_to, price.id);
+  await assertPriceEnd(price, next.valid_to);
   const created = await createPrice(next);
   if (!created) throw new ApiError(UNKNOWN_OUTCOME, { code: AccountingErrorCode.OutcomeUnknown });
   const listed = await listPricesFor(price).catch(() => null);

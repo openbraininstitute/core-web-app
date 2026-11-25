@@ -1,10 +1,12 @@
 'use client';
 
+import { ApiError } from '@/api/error';
 import { Button } from '@/ui/molecules/button';
 
 import {
   assertPriceAfter,
   assertPriceEdit,
+  assertPriceEnd,
   createPrice,
   expirePrice,
   replacePrice,
@@ -63,7 +65,7 @@ function SetEndButton({ price }: { price: TPrice }) {
         initialValues: { valid_to: price.valid_to ?? undefined },
         okText: 'Set end',
         write: async ({ valid_to: end }) => {
-          await assertPriceAfter(price, end, price.id);
+          await assertPriceEnd(price, end);
           return expirePrice(price.id, { valid_to: end });
         },
         done: 'End set',
@@ -85,6 +87,11 @@ function EditPriceButton({ price }: { price: TPrice }) {
           keyLocked
           okText="Save"
           write={async (body) => {
+            if (windowStatus(price) !== WindowStatus.Scheduled) {
+              throw new ApiError(
+                'It has started since the page loaded, so it can only be replaced or given an end.'
+              );
+            }
             await assertPriceEdit(price, body);
             return updatePrice(price.id, body);
           }}

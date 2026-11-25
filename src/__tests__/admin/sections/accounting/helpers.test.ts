@@ -7,6 +7,7 @@ import {
   amountField,
   chargedTiers,
   checkPriceEdit,
+  checkPriceEnd,
   dayBounds,
   describeStatusChange,
   discountUpdate,
@@ -362,6 +363,54 @@ describe('checkPriceEdit', () => {
         valid_from: at(2),
       })
     ).toThrow(/No other price would apply/);
+  });
+
+  it('refuses an earlier end when the price that would follow lapses before the old end', () => {
+    const fallback: TPrice = {
+      ...PRICE,
+      id: 1,
+      valid_from: '2026-01-01T00:00:00Z',
+      valid_to: at(5),
+    };
+
+    expect(() =>
+      checkPriceEdit({ lists: [[scheduled], [fallback]], truncated: false }, scheduled, {
+        ...scheduled,
+        valid_to: at(2),
+      })
+    ).toThrow(/No other price would apply/);
+  });
+});
+
+describe('checkPriceEnd', () => {
+  const at = (days: number) =>
+    new Date(Date.parse('2030-01-01T00:00:00Z') + days * 86_400_000).toISOString();
+  const lab: TPrice = { ...PRICE, id: 2, vlab_id: 'lab', valid_from: at(0), valid_to: null };
+  const fallback: TPrice = {
+    ...PRICE,
+    id: 1,
+    valid_from: '2026-01-01T00:00:00Z',
+    valid_to: at(10),
+  };
+
+  it('refuses an end that leaves no price once the one taking over lapses', () => {
+    expect(() => checkPriceEnd([[lab], [fallback]], lab, at(5))).toThrow(
+      /No other price would apply/
+    );
+  });
+
+  it('lets an end hand over to prices that follow on from each other', () => {
+    const following: TPrice = { ...fallback, id: 5, valid_from: at(10), valid_to: null };
+
+    expect(() => checkPriceEnd([[lab], [following, fallback]], lab, at(5))).not.toThrow();
+  });
+
+  it('checks only the new end when the end moves later', () => {
+    const ending: TPrice = { ...lab, valid_to: at(5) };
+    const lapsing: TPrice = { ...fallback, valid_to: at(7) };
+    const later: TPrice = { ...fallback, id: 5, valid_from: at(12), valid_to: null };
+
+    expect(() => checkPriceEnd([[ending], [later, lapsing]], ending, at(20))).not.toThrow();
   });
 });
 

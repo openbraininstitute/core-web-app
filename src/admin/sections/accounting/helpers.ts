@@ -465,14 +465,23 @@ export function checkPriceAfter(lists: TPrice[][], end: string | null, except?: 
 const sameInstant = (a: string | null, b: string | null) =>
   (a ? Date.parse(a) : null) === (b ? Date.parse(b) : null);
 
-const lapsesBetween = (lists: TPrice[][], from: string, to: string) => [
+const lapsesBetween = (lists: TPrice[][], from: string, to: string | null) => [
   from,
   ...lists
     .flat()
     .flatMap(({ valid_to: end }) =>
-      end && Date.parse(end) > Date.parse(from) && Date.parse(end) < Date.parse(to) ? [end] : []
-    ),
+      end && Date.parse(end) > Date.parse(from) && (!to || Date.parse(end) < Date.parse(to))
+        ? [end]
+        : []
+    )
+    .sort((a, b) => Date.parse(a) - Date.parse(b)),
 ];
+
+/** Ending `price` at `end`: every other price lapsing in the time it stops covering needs a successor. */
+export function checkPriceEnd(lists: TPrice[][], price: TPrice, end: string | null) {
+  if (!end) return;
+  for (const at of lapsesBetween(lists, end, price.valid_to)) checkPriceAfter(lists, at, price.id);
+}
 
 export const editMoves = (price: TPrice, next: TPriceBody) => ({
   later: Date.parse(next.valid_from) > Date.parse(price.valid_from),
@@ -494,5 +503,5 @@ export function checkPriceEdit({ lists, truncated }: TPriceLists, price: TPrice,
       checkPriceAfter(lists, at, price.id);
     }
   }
-  if (endMoved) checkPriceAfter(lists, next.valid_to, price.id);
+  if (endMoved) checkPriceEnd(lists, price, next.valid_to);
 }
