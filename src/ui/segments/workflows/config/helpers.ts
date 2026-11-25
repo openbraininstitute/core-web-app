@@ -130,7 +130,7 @@ export function getWorkflowListingLabels(opts: {
     ? getWorkflow({ activity, targetType, context: WorkflowListContextDict.Browse })
     : null;
   return {
-    category: getActivity(activity)?.label ?? '',
+    category: getActivity(activity)?.label ?? '-',
     type: workflow ? workflowLabel(workflow) : (getWorkflowEntityLabel(targetType) ?? '-'),
   };
 }

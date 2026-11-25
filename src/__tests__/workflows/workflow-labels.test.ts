@@ -223,6 +223,6 @@ describe('workflows table labels', () => {
   it('names a type with no browse workflow by its workflow catalog label', () => {
     expect(
       getWorkflowListingLabels({ activity: null, targetType: ExtendedEntitiesTypeDict.Memodel })
-    ).toEqual({ category: '', type: 'Single neuron' });
+    ).toEqual({ category: '-', type: 'Single neuron' });
   });
 });
