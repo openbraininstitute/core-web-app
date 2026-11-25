@@ -55,7 +55,6 @@ export function useEMCellMeshPipeline({
           generation_method: values.setup.generation_method,
           level_of_detail: values.setup.level_of_detail,
           mesh_type: values.setup.mesh_type,
-          generation_parameters: values.setup.generation_parameters,
         },
       });
     },

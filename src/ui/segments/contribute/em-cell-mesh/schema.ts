@@ -34,14 +34,19 @@ export const SetupSchema = z.object({
   em_dense_reconstruction_dataset_id: z.uuid({ error: 'Dataset ID is required' }),
   dense_reconstruction_cell_id: z.coerce.number().int(),
 
-  release_version: z.coerce.number().int().nullish(),
-  level_of_detail: z.coerce.number().int().nullish(),
+  release_version: z
+    .number({ error: 'Release version is required' })
+    .int({ error: 'Release version must be a whole number' }),
+  level_of_detail: z
+    .number({ error: 'Level of detail is required' })
+    .int({ error: 'Level of detail must be a whole number' }),
 
   generation_method: z
     .enum(valuesToEnumTuple(EMCellMeshGenerationMethodDictionary))
     .prefault(EMCellMeshGenerationMethodDictionary.MarchingCubes),
-  mesh_type: z.enum(valuesToEnumTuple(EMCellMeshTypeDictionary)).nullish(),
-  generation_parameters: z.string().nullish().or(z.literal('')),
+  mesh_type: z.enum(valuesToEnumTuple(EMCellMeshTypeDictionary), {
+    error: 'Mesh type is required',
+  }),
 });
 
 export const MTypeClassIdSchema = z.uuid().nonempty({

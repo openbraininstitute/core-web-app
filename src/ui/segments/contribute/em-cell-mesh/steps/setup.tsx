@@ -118,9 +118,10 @@ export function Setup() {
 
       <Form.Item
         name={['setup', 'release_version']}
-        label={renderLabel('Release version', 'main')}
+        label={renderLabel('Release version', 'main', RequiredFieldMarker)}
         rules={[
           {
+            required: true,
             validator: createZodFieldValidator(EMCellMeshSchema, 'setup.release_version', form),
           },
         ]}
@@ -145,9 +146,10 @@ export function Setup() {
 
       <Form.Item
         name={['setup', 'level_of_detail']}
-        label={renderLabel('Level of detail', 'main')}
+        label={renderLabel('Level of detail', 'main', RequiredFieldMarker)}
         rules={[
           {
+            required: true,
             validator: createZodFieldValidator(EMCellMeshSchema, 'setup.level_of_detail', form),
           },
         ]}
@@ -160,9 +162,10 @@ export function Setup() {
 
       <Form.Item
         name={['setup', 'mesh_type']}
-        label={renderLabel('Mesh type', 'main')}
+        label={renderLabel('Mesh type', 'main', RequiredFieldMarker)}
         rules={[
           {
+            required: true,
             validator: createZodFieldValidator(EMCellMeshSchema, 'setup.mesh_type', form),
           },
         ]}

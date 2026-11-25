@@ -7,6 +7,7 @@ import type {
   EntityCoreOwnership,
   EntityCoreType,
   IContributor,
+  IEntityLifecycleStatus,
   ILicense,
   IMType,
   Subject,
@@ -138,4 +139,17 @@ export interface IEMCellMesh
   brain_region: BrainRegionHierarchyBase;
   mtypes: Array<IMType> | null;
   em_dense_reconstruction_dataset: EntityCoreIdentifiable & EntityCoreType;
+}
+
+export interface IEMCellMeshCreate extends IEMCellMeshBase, Partial<IEntityLifecycleStatus> {
+  name: string;
+  description: string;
+  brain_region_id: string;
+  subject_id: string;
+  license_id: string;
+  em_dense_reconstruction_dataset_id: string;
+  experiment_date?: string | null;
+  contact_email?: string | null;
+  published_in?: string | null;
+  notice_text?: string | null;
 }

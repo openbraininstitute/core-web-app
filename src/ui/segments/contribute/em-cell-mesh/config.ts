@@ -1,3 +1,7 @@
+import {
+  EMCellMeshGenerationMethodDictionary,
+  EMCellMeshTypeDictionary,
+} from '@/api/entitycore/types/entities/em-cell-mesh';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { EMCellMeshSchema } from '@/ui/segments/contribute/em-cell-mesh/schema';
 import { DEFAULT_LICENSE_ID } from '@/ui/segments/contribute/shared/schemas';
@@ -32,8 +36,6 @@ export const EM_CELL_MESH_PROGRESS_STEPS = [
   },
 ];
 
-const ZERO_UUID = '00000000-0000-4000-8000-000000000000';
-
 export function createEMCellMeshConfig(
   steps: IContributionStep<TEMCellMeshForm>[]
 ): IContributionFormConfig<TEMCellMeshForm, typeof EMCellMeshSchema> {
@@ -46,8 +48,8 @@ export function createEMCellMeshConfig(
     getInitialValues: (brainRegionId: string) => ({
       setup: {
         brain_region_id: brainRegionId,
-        em_dense_reconstruction_dataset_id: ZERO_UUID,
-        generation_method: 'marching_cubes',
+        generation_method: EMCellMeshGenerationMethodDictionary.MarchingCubes,
+        mesh_type: EMCellMeshTypeDictionary.Static,
       } as TEMCellMeshForm['setup'],
       contribution: [{}] as unknown as TEMCellMeshForm['contribution'],
       license_id: DEFAULT_LICENSE_ID,
