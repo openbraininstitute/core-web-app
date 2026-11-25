@@ -5,9 +5,13 @@ import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
 import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import {
   FieldControl,
+  FieldIssueText,
   FieldLabel,
 } from '@/features/scan-config/components/ui-elements/field-control';
-import { useFieldLabelling } from '@/features/scan-config/components/ui-elements/field-labelling';
+import {
+  useFieldIssueMark,
+  useFieldLabelling,
+} from '@/features/scan-config/components/ui-elements/field-labelling';
 import {
   type ConfigSchema,
   type ConfigValue,
@@ -46,6 +50,8 @@ function ObjectFieldRow({
   errorPathPrefix,
 }: TObjectFieldRowProps) {
   const labelling = useFieldLabelling(fieldSchema.ui_element);
+  const fieldPath = errorPathPrefix ? `${errorPathPrefix}/${fieldKey}` : undefined;
+  const { issue, issueId, controlAria } = useFieldIssueMark(fieldPath);
 
   return (
     <div
@@ -68,6 +74,7 @@ function ObjectFieldRow({
           <span>
             <div
               {...labelling.group}
+              aria-describedby={labelling.labelId && issueId}
               className="w-full min-w-0 max-w-full rounded-lg border border-transparent"
             >
               <FieldControl
@@ -75,10 +82,11 @@ function ObjectFieldRow({
                 disabled={disabled}
                 paramSchema={fieldSchema}
                 controlId={labelling.controlId}
+                controlAria={controlAria}
                 schema={schema}
                 entity={entity}
                 schemaMappingConfig={schemaMappingConfig}
-                errorPathPrefix={errorPathPrefix}
+                errorPathPrefix={fieldPath}
               />
             </div>
           </span>
@@ -94,6 +102,7 @@ function ObjectFieldRow({
           <MarkdownDescription>{fieldSchema.description}</MarkdownDescription>
         </TooltipContent>
       </Tooltip>
+      <FieldIssueText id={issueId} issue={issue} requiredMissing={false} />
     </div>
   );
 }

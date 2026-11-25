@@ -31,7 +31,9 @@ export function renderInBlock(ui: ReactElement, rootElement: string, state: TBlo
   const store = createScanConfigStore({ [rootElement]: state });
   const view = render(
     <ScanConfigStoreProvider store={store}>
-      <BlockScopeProvider rootElement={rootElement}>{ui}</BlockScopeProvider>
+      <ScanConfigErrorsProvider schema={ANY_OBJECT}>
+        <BlockScopeProvider rootElement={rootElement}>{ui}</BlockScopeProvider>
+      </ScanConfigErrorsProvider>
     </ScanConfigStoreProvider>
   );
 

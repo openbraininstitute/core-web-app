@@ -11,6 +11,7 @@ import {
 } from '@/features/scan-config/types';
 import {
   BlockScopeProvider,
+  ScanConfigErrorsProvider,
   ScanConfigStoreProvider,
   useBlockValue,
   useField,
@@ -185,16 +186,18 @@ function renderBlock() {
   const store = createScanConfigStore(config());
   render(
     <ScanConfigStoreProvider store={store}>
-      <BlockScopeProvider rootElement="info">
-        <Block
-          schema={SCHEMA}
-          disabled={false}
-          blockSchema={BLOCK_SCHEMA}
-          entity={null}
-          schemaMappingConfig={undefined}
-          rootElement="info"
-        />
-      </BlockScopeProvider>
+      <ScanConfigErrorsProvider schema={SCHEMA}>
+        <BlockScopeProvider rootElement="info">
+          <Block
+            schema={SCHEMA}
+            disabled={false}
+            blockSchema={BLOCK_SCHEMA}
+            entity={null}
+            schemaMappingConfig={undefined}
+            rootElement="info"
+          />
+        </BlockScopeProvider>
+      </ScanConfigErrorsProvider>
     </ScanConfigStoreProvider>
   );
   const input = (field: string) =>

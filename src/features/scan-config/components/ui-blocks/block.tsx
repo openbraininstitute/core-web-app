@@ -3,8 +3,14 @@ import { isNil } from 'es-toolkit/compat';
 import { FieldDescriptionTooltip } from '@/features/scan-config/components/shared/field-description-tooltip';
 import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
 import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
-import { FieldLabel } from '@/features/scan-config/components/ui-elements/field-control';
-import { useFieldLabelling } from '@/features/scan-config/components/ui-elements/field-labelling';
+import {
+  FieldIssueText,
+  FieldLabel,
+} from '@/features/scan-config/components/ui-elements/field-control';
+import {
+  useFieldIssueMark,
+  useFieldLabelling,
+} from '@/features/scan-config/components/ui-elements/field-labelling';
 import { SweepCollapseButton } from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { isReferenceFieldVisible } from '@/features/scan-config/components/ui-elements/reference';
 import {
@@ -24,6 +30,7 @@ import { useField } from '@/features/scan-config/use-config-store';
 import { MarkdownDescription } from '@/ui/molecules/markdown-description';
 import { cn } from '@/utils/css-class';
 
+import type { ReactNode } from 'react';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type { Nullish } from '@/utils/type';
 
@@ -40,11 +47,16 @@ type TFieldRowProps = {
   errorPathPrefix?: string;
 };
 
-/** A population is chosen but has no filterable property: a data condition, not a missing input. */
+/**
+ * A population is chosen but has no filterable property: a data condition, not a missing input,
+ * so it is said instead of the field's own message.
+ */
 function NeuronFilterNotice({
   paramSchema,
   schemaMappingConfig,
+  children,
 }: Pick<TFieldRowProps, 'schemaMappingConfig'> & {
+  children: ReactNode;
   paramSchema: Extract<
     ParamSchema,
     { ui_element: typeof ScanConfigUIElementDict.NeuronPropertyFilter }
@@ -52,13 +64,19 @@ function NeuronFilterNotice({
 }) {
   const { population, properties } = useNeuronFilterProperties(paramSchema, schemaMappingConfig);
 
-  if (!population || Object.keys(properties).length > 0) return null;
+  if (!population || Object.keys(properties).length > 0) return children;
   return <span className="text-red-500">No properties available</span>;
 }
 
 function FieldRow({ required, diffClass, ...control }: TFieldRowProps) {
   const { fieldKey, paramSchema, disabled, entity, schemaMappingConfig } = control;
   const [value, setValue] = useField(fieldKey);
+  const requiredMissing = required && isNil(value);
+  const { issue, issueId, controlAria } = useFieldIssueMark(
+    control.errorPathPrefix,
+    requiredMissing ? 'Required' : undefined
+  );
+  const issueText = <FieldIssueText id={issueId} issue={issue} requiredMissing={requiredMissing} />;
   const Field = FIELD_REGISTRY[paramSchema.ui_element];
   const labelling = useFieldLabelling(paramSchema.ui_element);
   const isBooleanInput = paramSchema.ui_element === ScanConfigUIElementDict.BooleanInput;
@@ -107,6 +125,7 @@ function FieldRow({ required, diffClass, ...control }: TFieldRowProps) {
         <span className="block w-full">
           <div
             {...labelling.group}
+            aria-describedby={labelling.labelId && issueId}
             className={cn(
               'w-full min-w-0 max-w-full border',
               isPillField ? 'rounded-full' : 'rounded-lg',
@@ -118,6 +137,7 @@ function FieldRow({ required, diffClass, ...control }: TFieldRowProps) {
               <Field
                 {...control}
                 controlId={labelling.controlId}
+                controlAria={controlAria}
                 value={value}
                 setValue={setValue}
               />
@@ -126,10 +146,13 @@ function FieldRow({ required, diffClass, ...control }: TFieldRowProps) {
         </span>
       </FieldDescriptionTooltip>
 
-      {paramSchema.ui_element === ScanConfigUIElementDict.NeuronPropertyFilter && (
-        <NeuronFilterNotice paramSchema={paramSchema} schemaMappingConfig={schemaMappingConfig} />
+      {paramSchema.ui_element === ScanConfigUIElementDict.NeuronPropertyFilter ? (
+        <NeuronFilterNotice paramSchema={paramSchema} schemaMappingConfig={schemaMappingConfig}>
+          {issueText}
+        </NeuronFilterNotice>
+      ) : (
+        issueText
       )}
-      {required && isNil(value) && <span className="text-red-500">Required</span>}
     </div>
   );
 }
