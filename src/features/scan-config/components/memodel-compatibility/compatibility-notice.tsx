@@ -43,7 +43,14 @@ export function CompatibilityNotice({ state, onRetry, className }: Props) {
         message={messages.CompatibilityCheckFailed}
         detail={state.detail}
         action={
-          <Button rounded variant="outline" size="sm" onClick={onRetry} className="self-start">
+          <Button
+            type="button"
+            rounded
+            variant="outline"
+            size="sm"
+            onClick={onRetry}
+            className="self-start"
+          >
             {messages.CompatibilityRetry}
           </Button>
         }
