@@ -5,9 +5,11 @@ import {
   MEMODEL_INPUTS_BLOCK,
   MEModelCompatibilityResult,
 } from '@/features/scan-config/components/memodel-compatibility';
+import { ScanConfigForm } from '@/features/scan-config/components/scan-config-form';
 import { Left, Middle } from '@/features/scan-config/components/ui-columns';
 import { cn } from '@/utils/css-class';
 
+import type { ReactNode } from 'react';
 import type { ScanConfigTemplateProps } from './types';
 import type { ScanConfigTemplateState } from './use-scan-config-template';
 
@@ -17,6 +19,31 @@ type ColumnProps = {
   props: ScanConfigTemplateProps;
   state: ScanConfigTemplateState;
 };
+
+/** The form around the left and middle columns; its submit generates the campaign. */
+export function ConfigForm({
+  props,
+  state,
+  className,
+  children,
+}: ColumnProps & { className?: string; children: ReactNode }) {
+  return (
+    <ScanConfigForm
+      loading={state.loading}
+      campaignId={state.campaignId}
+      setCampaignId={state.setCampaignId}
+      setLoading={state.setLoading}
+      setTab={state.setTab}
+      activity={props.activity}
+      generatedApiUrl={props.generatedEndpoint}
+      entityType={props.entityType}
+      campaignEntityType={props.campaignEntityType}
+      className={className}
+    >
+      {children}
+    </ScanConfigForm>
+  );
+}
 
 /** Left tab/tree column, identical across every layout. */
 export function LeftColumn({ props, state }: ColumnProps) {
@@ -32,17 +59,11 @@ export function LeftColumn({ props, state }: ColumnProps) {
       setSelectedEntry={state.setSelectedEntry}
       setEditing={state.setEditing}
       readOnly={props.readOnly}
-      setCampaignId={state.setCampaignId}
-      setLoading={state.setLoading}
-      setTab={state.setTab}
       newKey={state.newKey}
       setNewKey={state.setNewKey}
       isEditingKey={state.isEditingKey}
       setIsEditingKey={state.setIsEditingKey}
       activity={props.activity}
-      generatedEndpoint={props.generatedEndpoint}
-      entityType={props.entityType}
-      campaignEntityType={props.campaignEntityType}
       aiEnabled={props.aiEnabled}
       selectedMechanismsTab={state.selectedMechanismsTab}
       setSelectedMechanismsTab={state.setSelectedMechanismsTab}

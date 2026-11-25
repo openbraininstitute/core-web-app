@@ -3,13 +3,7 @@ import { useEffect } from 'react';
 
 import { RootElement } from '@/features/scan-config/components/root-element';
 import { useConfigUpdateFlashes } from '@/features/scan-config/hooks/use-config-update-flashes';
-import {
-  type ConfigSchema,
-  isType,
-  type TScanConfigActivity,
-  type TScanConfigTabs,
-  type TSupportedEntityTypesForScanConfiguration,
-} from '@/features/scan-config/types';
+import { type ConfigSchema, isType, type TScanConfigActivity } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
 import { pendingRestoreConfigAtom, restorePreviewActiveAtom } from '@/state/config-highlights';
 
@@ -17,7 +11,6 @@ import { EditWithChatButton } from '../edit-with-chat-button';
 import GenerateConfigButton from '../generate-config-button';
 import GenerateNewCampaignButton from '../generate-new-campaign-button';
 
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { Config } from '@/features/scan-config/types';
 
 export default function Left({
@@ -31,17 +24,11 @@ export default function Left({
   setSelectedEntry,
   setEditing,
   readOnly,
-  setCampaignId,
-  setLoading,
-  setTab,
   newKey,
   setNewKey,
   isEditingKey,
   setIsEditingKey,
   activity,
-  generatedEndpoint,
-  entityType,
-  campaignEntityType,
   aiEnabled,
   selectedMechanismsTab,
   setSelectedMechanismsTab,
@@ -56,17 +43,11 @@ export default function Left({
   setSelectedEntry: (selectedEntry: string) => void;
   setEditing: React.Dispatch<React.SetStateAction<boolean>>;
   readOnly?: boolean;
-  setCampaignId: React.Dispatch<React.SetStateAction<string>>;
-  setLoading: React.Dispatch<React.SetStateAction<boolean>>;
-  setTab: (tab: TScanConfigTabs) => void;
   newKey: string;
   setNewKey: (k: string) => void;
   isEditingKey: boolean;
   setIsEditingKey: (k: boolean) => void;
   activity: TScanConfigActivity;
-  generatedEndpoint: string;
-  entityType: TSupportedEntityTypesForScanConfiguration;
-  campaignEntityType?: TExtendedEntitiesTypeDict;
   aiEnabled?: boolean;
   selectedMechanismsTab: string;
   setSelectedMechanismsTab: (tab: string) => void;
@@ -159,17 +140,7 @@ export default function Left({
         // Ruled off from the blocks, with room under it for its shadow, its foot level with the
         // preview's boxes.
         <div className="mt-auto w-full border-t border-gray-200 px-2 pt-3 pb-3">
-          <GenerateConfigButton
-            loading={loading}
-            campaignId={campaignId}
-            setCampaignId={setCampaignId}
-            setTab={setTab}
-            setLoading={setLoading}
-            activity={activity}
-            entityType={entityType}
-            campaignEntityType={campaignEntityType}
-            generatedApiUrl={generatedEndpoint}
-          />
+          <GenerateConfigButton loading={loading} campaignId={campaignId} activity={activity} />
         </div>
       )}
 

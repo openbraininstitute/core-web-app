@@ -2,7 +2,6 @@ import { render, screen } from '@testing-library/react';
 import { Provider } from 'jotai';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import Left from '@/features/scan-config/components/ui-columns/left';
 import { createScanConfigStore } from '@/features/scan-config/store';
 import { type ConfigSchema, ScanConfigActivity } from '@/features/scan-config/types';
@@ -41,16 +40,11 @@ function renderLeft(aiEnabled: boolean, activity = ScanConfigActivity.Optimize) 
             setSelectedEntry={vi.fn()}
             setEditing={vi.fn()}
             readOnly
-            setCampaignId={vi.fn()}
-            setLoading={vi.fn()}
-            setTab={vi.fn()}
             newKey=""
             setNewKey={vi.fn()}
             isEditingKey={false}
             setIsEditingKey={vi.fn()}
             activity={activity}
-            generatedEndpoint="/generated"
-            entityType={ExtendedEntitiesTypeDict.ElectricalCellRecording}
             aiEnabled={aiEnabled}
             selectedMechanismsTab=""
             setSelectedMechanismsTab={vi.fn()}

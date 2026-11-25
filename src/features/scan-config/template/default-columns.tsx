@@ -18,7 +18,7 @@ import { StackedPanes } from '@/features/spike-viewer/spike-statistics/stacked-p
 import { cn } from '@/utils/css-class';
 
 import { useCollapsingColumns } from './collapsing-columns';
-import { LeftColumn, MiddleColumn } from './columns';
+import { ConfigForm, LeftColumn, MiddleColumn } from './columns';
 
 import type { ReactNode, RefObject } from 'react';
 import type { ScanConfigTemplateProps } from './types';
@@ -60,7 +60,9 @@ export function DefaultConfigColumns({ props, state }: Props) {
       {/* The blocks and their form in one window, as the preview's views are: its ring a pixel
           under the page's clip, its foot level with theirs. The form keeps only the rule between
           the two, and a subgrid keeps both on the grid's tracks as they are dragged. */}
-      <div
+      <ConfigForm
+        props={props}
+        state={state}
         className={cn(
           BOX_CLASS,
           // a pixel in for its ring, which then meets the project selector's left edge
@@ -73,7 +75,7 @@ export function DefaultConfigColumns({ props, state }: Props) {
           <LeftColumn props={props} state={state} />
         </div>
         {shut === 'none' && <MiddleColumn props={props} state={state} className="border-r-0" />}
-      </div>
+      </ConfigForm>
       {shut !== 'none' && (
         // Its ring a pixel under the page's clip, and its foot level with the preview's boxes.
         <ShutPaneBar
