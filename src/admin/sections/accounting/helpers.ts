@@ -414,7 +414,7 @@ export const priceValues = (price: TPrice): TPriceValues => ({
   service_subtype: price.service_subtype,
   valid_from: price.valid_from,
   valid_to: price.valid_to ?? undefined,
-  tiers: tierValues(price.tiers, price.service_type),
+  tiers: tierValues(chargedTiers(price), price.service_type),
 });
 
 const COST_SCALE = 30;

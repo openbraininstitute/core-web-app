@@ -455,15 +455,19 @@ describe('price form values', () => {
     expect(tierCost(body.tiers, BigInt(500))).toEqual(tierCost(closed.tiers, BigInt(500)));
   });
 
-  it('leaves a storage price on its one tier', () => {
+  it('loads a storage price with the one tier accounting charges, so it saves unchanged', () => {
     const storage: TPrice = {
       ...PRICE,
       service_type: 'storage',
       service_subtype: 'storage',
-      tiers: [tier(0, 100, '1E-7')],
+      valid_from: '2030-01-01T00:00:00Z',
+      tiers: [tier(0, 100, '1E-7'), tier(100, null, '2E-7')],
     };
 
-    expect(priceValues(storage).tiers).toHaveLength(1);
+    const values = priceValues(storage);
+
+    expect(values.tiers).toEqual([{ to: null, fixed_cost: '0', multiplier: '0.0000001' }]);
+    expect(PriceBody.safeParse(priceBody(values, null)).error?.issues).toBeUndefined();
   });
 });
 
