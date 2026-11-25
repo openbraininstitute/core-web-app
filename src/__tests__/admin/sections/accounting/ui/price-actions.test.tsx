@@ -64,6 +64,22 @@ describe('PriceActions', () => {
     expect(buttons()).toEqual(expected);
   });
 
+  it.each([
+    [
+      'a storage price',
+      { ...ACTIVE, service_type: 'storage', service_subtype: 'storage' },
+      /running storage jobs move to the next price/,
+    ],
+    ['a oneshot price', ACTIVE, /Jobs reserved before the end keep this price/],
+  ])('says what happens to running jobs when ending %s', async (_, price, text) => {
+    renderActions(price as TPrice);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Set end' }));
+    const dialog = await screen.findByRole('dialog');
+
+    expect(within(dialog).getByText(text)).toBeTruthy();
+  });
+
   it('starts Change price with the old end kept', async () => {
     renderActions({ ...ACTIVE, valid_to: hours(48) });
 

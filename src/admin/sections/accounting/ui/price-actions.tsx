@@ -13,7 +13,7 @@ import {
 } from '../api';
 import { endField, isPartlyDone, priceValues, windowStatus } from '../helpers';
 import { LEGACY_SUBTYPES } from '../schemas';
-import { WindowStatus } from '../types';
+import { ChargeType, WindowStatus } from '../types';
 import { ActionButton, DialogButton } from './action-button';
 import { PriceDialog } from './price-dialog';
 import { useAccount } from './queries';
@@ -56,7 +56,9 @@ function SetEndButton({ price }: { price: TPrice }) {
         label: price.valid_to ? 'Change end' : 'Set end',
         title: `End price #${price.id}`,
         description:
-          "Jobs reserved before the end keep this price. Accounting can't remove an end once it's set.",
+          price.service_type === ChargeType.Storage
+            ? "Storage is charged by the price in use at each charge, so running storage jobs move to the next price from their first charge after the end. Once it has started, accounting can't remove an end."
+            : "Jobs reserved before the end keep this price. Once it has started, accounting can't remove an end.",
         fields: [endField(price.valid_from, true)],
         initialValues: { valid_to: price.valid_to ?? undefined },
         okText: 'Set end',
