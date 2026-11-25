@@ -1,23 +1,24 @@
-import { getAdoptersContent } from '@/services/sanity/api/get-adopters-content';
-import { getCellToBrainContent } from '@/services/sanity/api/get-cell-to-brain';
-import { getEmailContent } from '@/services/sanity/api/get-email-content';
 import {
+  getCellToBrainContent,
+  getEmailContent,
   getFoundationsLinks,
   getFoundationsText,
-} from '@/services/sanity/api/get-foundations-content';
-import { getMembers } from '@/services/sanity/api/get-members';
-import { getMilestones } from '@/services/sanity/api/get-milestones';
-import { getMissionDownload } from '@/services/sanity/api/get-mission-download';
-import { getMultipleMember } from '@/services/sanity/api/get-multiple-member';
-import { getNewsList } from '@/services/sanity/api/get-news-list';
-import { getPortalsList, getPortalsTitle } from '@/services/sanity/api/get-portals-content';
-import { getPriceListContent } from '@/services/sanity/api/get-price-list-content';
-import { getPricingFeatures } from '@/services/sanity/api/get-pricing-features';
-import { getRepositoriesContent } from '@/services/sanity/api/get-repositories-content';
-import { getSpecialContributors } from '@/services/sanity/api/get-special-contributors';
-import { getSwipeableList } from '@/services/sanity/api/get-swipeable-list';
-import { getVirtualLabsBlocks } from '@/services/sanity/api/get-virtual-labs-content';
-import { getWidgetHero } from '@/services/sanity/api/get-widget-hero';
+  getMembers,
+  getMilestones,
+  getMissionDownload,
+  getMultipleMember,
+  getNewsList,
+  getPortalsList,
+  getPortalsTitle,
+  getPriceListContent,
+  getPricingFeatures,
+  getRepositoriesContent,
+  getSpecialContributors,
+  getSwipeableList,
+  getVirtualLabsBlocks,
+  getWidgetHero,
+} from '@/content/website/content';
+import { getAdoptersContent } from '@/content/website/shared';
 import WidgetAdoptersLogo from '@/ui/segments/landing/widgets/adopters-logo/adopters-logo';
 import { WidgetCompanyMembers } from '@/ui/segments/landing/widgets/company-members/company-members';
 import { WidgetContributorsPanel } from '@/ui/segments/landing/widgets/contributors-panel/contributors-panel';

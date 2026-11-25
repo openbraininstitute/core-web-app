@@ -1,4 +1,5 @@
-import { fetchSanity } from '@/services/sanity';
+import { getLocalMetadata } from '@/content/website/content';
+import { usesSanityContent } from '@/content/website/sources';
 import { tryType, typeStringOrNull } from '@/services/sanity/type-utils';
 import { logError } from '@/utils/logger';
 
@@ -8,11 +9,13 @@ import queryTemplate from './metadata.groq';
 
 import type { Metadata } from 'next';
 
-export async function generateMetadataFromSanity(slug: string): Promise<Metadata> {
+export async function generateWebsiteMetadata(slug: string): Promise<Metadata> {
   const slugPred = getSanityPagesSlugPredicate(slug);
   const query = queryTemplate.replace('<SLUG_PRED>', slugPred);
   try {
-    const content = await fetchSanity(query, isContentForSeo);
+    const content = usesSanityContent(slug)
+      ? await (await import('@/services/sanity/hooks')).fetchSanity(query, isContentForSeo)
+      : await getLocalMetadata(slug);
     if (!content) return DEFAULT_METADATA;
 
     return {
@@ -37,7 +40,7 @@ export async function generateMetadataFromSanity(slug: string): Promise<Metadata
       },
     };
   } catch (ex) {
-    logError('Unable to retrieve SEO content from Sanity!', ex, query);
+    logError('Unable to retrieve website SEO content!', ex, query);
     return DEFAULT_METADATA;
   }
 }

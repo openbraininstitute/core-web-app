@@ -1,0 +1,4362 @@
+[
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/e968fc50cfdd455ac44d1279b3e534d3aba952bd-616x941.webp",
+    "mediaType": "image",
+    "title": "Neocortex_136.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/f952419dabd033c55dabd9ff8654745791bbf5f3-1420x2000.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_050.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/ba3a18035d1bbf6c2ea18a3c96fa68da03bbf2ed-1920x1363.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_051.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/c0ba02d4e5825e1f7b36900b93fce6b71a2bce57-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_053.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/9f73174aeb3a8694e90617f64d2d67b6cd7433a0-1920x1920.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_001.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/bbd3b0df919bfe142a6d8eff141714a426efd57e-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_004.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/2c119c657e415938b4a61dc7c0d4741209bca0d5-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_006.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/41fefe4f59ec1c418cfd8656ae22848100382295-1200x1200.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_001.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/7a25ce58842c782e105ceb606236102ffe8272eb-1920x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_003.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/11bfdbb83cd141f8a559a09fef824f1b552cfa63-1920x1991.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_004.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/e254717cac737ee4f0cf0e487e274b99bc959842-1920x1991.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_008.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/b79077468fa6c9f5880f559afed0150460b30670-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_010.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/6ff4b2524e290eab308ff2ff44fc1266c3b29a21-1920x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_012.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/dd3b3adbfd9be6307e5fb09089100fc636e932d8-1920x2000.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_016.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/a5f13eb39c9d5b4f8db45936fb39454c5adadb93-1920x1118.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_021.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/c7f2b72850a1a836ed3bfb12a4aaab4d8180d65c-1080x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_032.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/a8b6ce49c4f7781642e6be7c3f28fc3a4e19d5d6-1200x1713.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_035.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/9f1deaa602f7c32df61205c1ecdafead7081ff60-1920x1078.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_038.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/646a98724bb2f49e7d46606872102061f98ef2c8-1920x1064.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_039.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/2a0c6d107d485d277d10b42ca49b986f03583254-1080x1522.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_042.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/f489ac2781239f42225902c6acc18ad043eab505-1438x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_048.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/2642ed4f39813cd414e44afdc0d6b0e75638ed74-1920x2704.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_050.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/99fc20565292d33f48afdbf79f457d712bb86f95-1920x2705.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_051.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/4bcf0c3b7911c987e4a31246187ee95962b3dc41-1920x1440.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_057.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/13df770a9adf6e44aa9cb9faa082db06c8f01d49-1200x2133.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_063.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/f52c2c1931226081995e768493a2c35e24818b11-1200x1691.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_064.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/d9025bf94b1922a5595d9d7e7223a72a873ea272-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_066.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/1b40b53aeec91f1654ce07faf85de01cd185c76e-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_074.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/280f9fe6cb27cc199c2c3475a9557953d4bc25b0-1920x2304.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_083.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/864986443cfeda5cbee9ac46194e40c01415c60d-1080x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_092.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/0d59d25fac3950ab771187390606601e9645e8a5-1080x1563.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_095.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/d7d1793d02e78283b24132482b03e53ae77368d0-1080x1563.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_096.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/48d1f29ab722cee419676ec22b49ff05959fc59e-1920x1200.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_097.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/9e01577684ace0773b6eaa9eb54c793defee298b-1920x1358.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_099.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/7e24e145fd292c3fe994c8f12cbbea03a4dbb8e5-1920x1078.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_100.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/ea88eeaece6f2c95bba0df4a391660b0907dd0f0-1920x1358.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_101.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/e09c6148b3accf4ab2aa9cc0368f71dc15ef28af-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_109.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/aff2507d967f93ad8c11157f7d9d5eadc8323c16-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_110.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/3dfd2cd23f5d4530064900e72d3d837af99a5e7c-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_112.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/b163ca2440b66a85f0c52d5b658f1a1d1d51b685-1920x673.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_113.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/e933ffad6090530a5426524237fb8642b6b78890-1920x768.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_116.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/47780290c08509999027df2b09b7bce778113f7e-1920x768.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_119.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/499a5ba198503d39f344cd3ada7083889742c99f-1920x768.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_120.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/bc6d5b4b6b5c604a7909298187f63c0a51675893-1920x864.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_127.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/7551e236cce964e7d1aa4cb0c4d396b8b562d6bf-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_130.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": "white",
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": true,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/1bd627d6decad97944214c9a543d745a04c70e82-1920x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_135.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": "white",
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": true,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/c4898efe6d4f9399129f392702238f3b2e46647e-1920x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_137.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": "white",
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": true,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/c057826c3f6667ea9f9c9e6191d5cdaf4e67df55-1920x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_138.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": "white",
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": true,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/cacb663d02acbdc4eca01851587d0eb2b3ac8e50-1920x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_139.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": "white",
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": true,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/72271d5f1d0ae690c0f057b93359e61e56f2ed8e-1920x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_141.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": "white",
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": true,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/dbd274d866a37cbe558c98ad0ef3421fde066a35-1920x1200.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_147.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": "white",
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": true,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/3137716d8b982749c4ef1041775908c78ed8f29c-1920x1200.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_150.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": "white",
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": true,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/c491274980f1aa193d648084a4af900f6a44556e-1920x1200.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_152.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": "white",
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": true,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/42020c5fc174b9199fc53cdb9dc2227a590ac3db-1920x1200.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_159.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/67046d7cefee18029d9464b72b9301efdb0557d4-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_164.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/3ba5790ebeaf591cbf1da7810568d721e3cf0cbd-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_165.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/5dc6506602e4f9ffdfe36203c6122b8b5195ad4f-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_168.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/65dfdfe9eb19bd22c0e98d9435702222f8c5b8c0-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_170.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/3edb0637915517747442a8ca0f35b5ccc238c9e0-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_173.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/e44f29cf9d93f3fda2f55475d829c1cd2e572af6-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_174.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/fff121eedd393ea551c80331574daf45add6cc88-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_175.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/e2667aa47007dad7f58139cb9c01264100e9f729-1200x1458.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_180.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/1688e2db4dcb61c4b7daa17a862d15a4aee2a961-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_182.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/fb62ea63eff4392d42d7014b00fa6ab739df46d6-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_183.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/1e918b6013aecb520e6da34f98835184dbbb26f6-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_184.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/79a20972707cf232e14b76affcba80fd75a3faaa-1200x2133.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_186.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/1e2ad55fff547742ef74cec04505bd346e65b648-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_190.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/4a559ab9bb62eff51bf4a58a0aebf84a9bcf2e70-1200x1200.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_197.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/96a7b88579d727b8f181304f861daf7f383aa91d-1200x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_198.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/7b4ebc4db2aaa30b3fd5c36c6c88eb13ee3a383a-1200x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_203.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/49135b85a5b752ad5a1f58d5004dedf4b0af1a37-1200x750.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_204.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/80457de8de9a0a2264bf64b17333cbe3c14efe77-1200x750.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_205.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/4251794df780c88c833c38b69415d842bbf48119-1200x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_206.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/8dd8a730d789666c518ac4583945037a1008e7bd-1200x675.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_208.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/b81120959009ec06656d7912aa98580a661898d7-1200x1273.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_210.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/b286e0d3b38fc775f796999824c809b8b3a87850-1200x1273.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_215.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/7a159317239ff276514773cb92fa365579b9d8b0-1200x1273.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_216.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/c1e663c1b0f84240eaf6262ef6508dabc8060c84-1200x858.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_219.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/cb5d2be67c9e68b6c816fec153ddd9c74243d608-1200x1200.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_226.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/ddcb091d866d3440229f34e34f440c50efe63490-1200x1200.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_229.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/ebd855b3ad371566458924f6a5ebf9b197de406c-1200x956.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_231.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/72312150da3c2df5df5c07d469457e764a399966-1200x842.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_238.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/db5dca43eb418aedfb098dd34e8c33fa6b904922-1920x1595.webp",
+    "mediaType": "image",
+    "title": "Neocortex_001.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/40be08ef4b3c99ebaff03c0c03da10693305df05-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_004.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/4551dae1d322c623529395ce9f03ea361bc43477-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_007.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/0802336cac1d4aa2c52a18eb74aef56e876250f6-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_008.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/1fd1d2e54d8a1542c0e9404dc3305b1633aa2c67-1920x3413.webp",
+    "mediaType": "image",
+    "title": "Neocortex_012.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/6f99b287aee47972604c37c78572e543ca9853c5-1920x3413.webp",
+    "mediaType": "image",
+    "title": "Neocortex_014.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/1824e4b2a7777bbb3aba4d2646b93599a9c2f340-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_016.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/baff90720f7d528838b7c8f5431e5b56c1c97364-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_018.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/5bd5845b2ac25acac32ab3d66852b4808359e59e-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_022.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/2b5309cb52cf6dd794cd86990475809926e32575-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_023.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/6d288ee93b1c41809dec2c15a636d2f11c4c4aaf-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_025.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/29988e4a3d4a91b42623c2bd1b66034aae274416-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_054.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/176dd27d188f3b996b9949a1d33b076128e8591d-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_055.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/293b9cb271d99a457428c278ccd5e8bafb4d2313-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_056.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/7f475587cafed84282af09e287366da87f162bf1-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_060.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/239c09b45bc75638cd41fa14387d5cce0ae11326-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_061.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": "white",
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": true,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/51d8530cd12d85333e8d128fdbfbebdd0f458511-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_063.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/32a208b19dd5275f7c08163ae1bff936b60fe4af-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_068.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/f3d6e4ba2401407b1fc4b2497331a606a42c145e-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_075.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/3d337129db1d5e86b78c051234647a897b5453ee-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_077.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/1999cd8829ebb61da3e4bc8aa77f0450e9d00998-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_083.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/834e7192592351decd351522f455ea828d85a4a7-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_084.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/3ea9f8ac29f61432388b0dab2f1279d48e7f05df-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_086.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/3a2382cd0d2586cdf931779e1f9dbbd53652db1d-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_101.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/045b1bea501e5658551b0f6df796a74c3251e1a5-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_102.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/bed4ae19587c3e9a4a4ea17456656f79367bfd5b-1920x1385.webp",
+    "mediaType": "image",
+    "title": "Neocortex_111.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/3742d7d4b058cc5e5986fe234fc45e739aac334b-1920x1399.webp",
+    "mediaType": "image",
+    "title": "Neocortex_112.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/55c105913cfc9bfd0605ec7fa6eb574f16c3bd26-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_119.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/5957951cef98c5fa41cc645a8d29636d739e6b8d-840x779.webp",
+    "mediaType": "image",
+    "title": "Neocortex_134.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/d224f3cbb17a2d7aba572a06fe7d741e97c23d7c-1920x4455.webp",
+    "mediaType": "image",
+    "title": "Neocortex_141.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/b387c2da11efff319fe13f01f7a28690326f307a-1920x1920.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_007.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/c9629371434f5f629be5bcd0ff018c6b63965d2f-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_011.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/be7b310a4857ac228ee0c61c2889f99fca494e3c-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_013.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/ef71e11931816bc1a96b6a1364a70599d2736b1b-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_016.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/26ad11fead9cb960ac9d3a8554a1e11941d1a513-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_027.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/dc1dc7a1448550c4a2f636a6cd6477c4205adfee-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_029.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/f961c31e328c485e4776809de3573a2b5528c160-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_030.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/4600ca448677a05ea785197384dde0bec9878aa0-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_037.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/0b7ba633b267f8108b3e9384b39b7861e5b4aeaf-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_043.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/d8871b2fabdee41863d8a1a989e4d9eb4db9547a-1920x2704.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_052.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/06aa104221988bef4f21d6b5f5b33af6a3bd2c42-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_058.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/d575edaafe21ce88789beaeb791b806a3971202f-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_059.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/d51dec8c333480b0d0fb412a09a8805133dd452b-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_060.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/0ad4312d4cae4f8e5cf4c6700bb568e8203f2aa4-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_071.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/46b510207a208d1a9be803de20b606ab03cb5e6f-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_075.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/acd1baa729660a22894243e013bdbde85c09dba5-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_082.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/bca951c8bac54c01ee7290f1f226e70b23ac0727-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_026.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/b4872e5fe9433e817a2818bfe952e2972921abb9-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_030.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/2fb7a79dc93ea999f911680d07f96db997fd1ac2-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_031.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/4eb47d044f8f36dcc9099be266ead80dcdc3dbfb-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_039.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/545bf55a48bd50d665ba6342aaf4e7e2df3b78f0-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_043.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/5036b60cc2cf7d7f00429b187e822ed135279003-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_044.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/deb5fe99eabe629e278e8da26424be392bad95d4-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_028.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/5abade469885dd386262d082173d30ac663a950a-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_032.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/aaa5a7452acdde2655aa186cf6872d4ff86c257d-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_038.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/7a6ee9d5c64db833d9507f3f939a55fe14d9985e-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_042.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/a78f4b2a4887edf3f1fe330eaf93a99b492919e7-1920x942.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_046.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/65aa497ad75f29e26ff504c3d562ff7983dc95b1-1920x944.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_047.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/1b0bcce44aff7d04b656d09625a6ea5656e7c2d5-1920x946.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_048.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/5408219b70d8fe02dc811b8b0fb2184f786dc540-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_062.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/d3d41085fa0c4c93eb02b98eb8f235386e3b9bf7-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_063.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/8628362ef839cde4dec0dd25512f8ac89a3c249f-1920x1991.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_002.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/d64cf00206a2d70b2a56c6daadb1fcdfec566909-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_006.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/704e46fd3b3d20fbe5d3fe2e1e99d2cd8c8d3872-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_007.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/c8e13a71c01a02073ff14e2f21ed535a2770d161-1920x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_009.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/ce4cb2fef1377b94d577462262c30b830ffd8e73-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_011.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/a948be9b5c82ca6368de780430743eeae692a8bf-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_018.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/33c78be3e8fc08481cc878399b414674ecafa518-1920x2120.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_020.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/1fb5dc0b8f9b19629ae17f45b5f1f93f14ae51ea-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_022.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/cfc0d503f219537c90343e8ca1dcc23326886853-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_023.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/f437b0b322908e93972512e88a034daebd45faf8-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_026.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/d5e048877c19b8769ef1d4012523eb7c32c75988-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_027.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/f19db67bd8555c611ae6a42518a73bed2c9a6cfd-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_029.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/945ad6aac95b50b4b4d8ab5af5255d314ebfd966-1080x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_030.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/5d7277864d4f58de1af8e8e8654dc2d8f8c7afb4-1080x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_033.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/8326e1c5b86f53288ca863a9c98f8ce192d377e3-2700x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_036.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/fd03ae82947bb60c5215b7295f6c06922ed53d65-1363x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_046.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/4791a34216a8924f09c6ee059fbec13d1e46e7a1-1438x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_049.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/56e3307f0766cb19d3c738fa13eee16398c5a876-1920x2705.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_052.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/4340dc77fae18d38369d8ebcc69e8d93d2fb9ff1-1920x1440.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_054.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/fc09bd604e32c2b900c2ad2a64bd9ed842d191fc-1920x1440.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_055.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/15f4229a85ab159e1d7e6d86a5d18d9f463ab216-1200x1691.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_059.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/0ef6d2340acfe7d05aa79dc2ba53e0c260e49e33-1200x2133.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_060.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/106dc738e43812d818e3cdda2b390ea921111a6e-1200x2133.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_062.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/a7dd2182633cbc4ae2f3cfde0010fd48c3a96a4d-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_067.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/83e2c19d6e1814c8a6fb680b0e88d7dbad6585c2-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_068.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/5a2dfceafd4e31af29ae31875392de8ced7a0870-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_073.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/4405cc3129edc54bbf37737f9f7e688d10d0f430-1920x1078.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_077.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/510535560a9dfe633cb8a261abea56aca91835a1-1920x2304.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_084.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/aaf471052fa04bae1f01f9ee38547994123c08a8-1920x2304.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_094.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/cdf9ebed864b0f63dc72897ce254f321047f8117-1920x768.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_098.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/8b25d83810cbbf62476b7d0a1b4b260634fc4977-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_105.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/5bf161683cceefba1710e3c2866c8f56b4727de7-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_106.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/49183dab46a2cbbbe550642e013571cf46d53181-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_111.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/e359b4075fed9fc19e231b0326ce19b897fbc404-1920x768.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_114.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/fcbbc0a45cfcfee8357f6c586eeca0cdac252c89-1920x768.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_121.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/d01d511ca6ed0001f4ed228887c4b56a804373a1-1920x768.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_124.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/ce52589356281273b3c4cdf5da5f2e2c6c27a412-1920x1081.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_132.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": "white",
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": true,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/4f5ea6cd1c4484304fc47dae834a6cb753570ebf-1920x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_142.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": "white",
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": true,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/de16b00c5edc821ecbdc00f6146ce1a64af4daba-1920x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_144.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/7a363fe7f52db20bb7b7c0b690875a3186b5b213-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_145.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/033d29f0e1a5eff13307a87fd30c05f6bb58d157-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_146.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": "white",
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": true,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/446208b444d072a9e8caef55b303bf4741b04b15-1920x1200.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_153.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": "white",
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": true,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/f8040197e68380701005efbadf0591c7666fc19f-1920x1200.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_157.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/1c8beafed1554e558b5fd92b95d098a448a021b0-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_161.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/cee0c0a3b7f391db343f75cc50247765b3529570-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_166.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/ccd3a1790e1e77e6521a92c39024194ba5003ff1-1920x1013.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_167.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/9bb971ac8b782affba8b6a3283c6d22994198b25-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_171.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/fd04f82e95513564331aaf5c7d24a22fd16544a9-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_177.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/bdedbbe1d89334677753de437042da37da638e40-1080x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_181.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/9434f1b4abece2506f83303793741b17ef46016b-1200x1485.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_187.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/73172fd3f151c5d7097a5212f94340ce6dd75559-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_191.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/6f53efd5bbbc1ca9f0c4fc8be31fd41b807ae60b-1920x1200.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_193.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/3e3882b36ddf4e7729850c71a6df973eb6134634-1200x750.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_195.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/f64974d9a3e77f336340f4df0bd8c3dc02c6964c-1200x675.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_196.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/09641a1163f781d83adb8192c0d5067e23be4c28-1200x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_199.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/0ccf6ca8e9bc721e397c04d69ef7bc5a025aa2e4-1200x2133.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_201.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/03ca72aa6d66df39524088add652f21b110baf6c-1200x675.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_209.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/5ef66b15ad5f7cdf431e03932c016b4f6b2ec822-1200x1139.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_213.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/10bb73271f632532059bf2f7a459486d57521664-1200x1273.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_217.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/2f34d3dc86b47440821179bb47bc655ace22d92b-1200x1280.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_220.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/ac91b1872198277460fd97e17acc8774f44026e3-1200x548.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_221.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/101079c52390a897e0279c821fc6b433e97d416e-1200x548.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_223.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/0c905214196fe656ca7d662f17edf54b51ac16fa-1200x1230.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_224.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/251e78b9b0e085695247a51d7426e15ac63fbac7-1200x1635.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_228.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/946962f2c83cc241473268a3ae68632098f642a9-1200x842.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_236.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/180d7a7bb3d7aadaadfabfaf62d0320724ffa9a7-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_003.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/67094c4a845d7364bb299ed65c7dfde6e5bf8c46-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_006.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/63f3e572e4e846da3da262e4ed6b8c49ac326d44-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_010.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/ce74e8c0f71f3a6a6ba369093cc330f4d7240776-1920x3413.webp",
+    "mediaType": "image",
+    "title": "Neocortex_011.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/74dce26c4c0112759a647cc07319cf705bccead3-1920x3413.webp",
+    "mediaType": "image",
+    "title": "Neocortex_013.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/21cdd8a288ea217e6b3512382f570a53aa242607-1920x3413.webp",
+    "mediaType": "image",
+    "title": "Neocortex_015.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/1c033387d5f1f4f1d7b54652bfe53afa843398b7-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_020.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/60a4983d2c9a021a612c1ed0fffd987a8703efbb-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_021.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/643a2c908fb3689d2a6d61fd488e9929a1143a0e-1819x1101.webp",
+    "mediaType": "image",
+    "title": "Neocortex_024.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/bca951c8bac54c01ee7290f1f226e70b23ac0727-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_028.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/ed82b40f7dba7d47570c985f2651892227bd54a5-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_034.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/3c05bcf49a278db6e7ea618f5f4bfcdfa4896375-1920x551.webp",
+    "mediaType": "image",
+    "title": "Neocortex_035.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/b1075b206e8c30400fbc7d21b7e89695a20efb9a-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_040.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/803f003271fb817ca32140095ce1691d68075238-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_045.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/a68926d93814fe1c3bb317597b66d06c282ef658-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_051.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/814208142169a549a7ac371499fb741c24f428ef-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_053.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/c30f03154ed085401ac6067b8efcc9f2aad4b1d0-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_058.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/de1c6fcfc5117cadb1250513ad1196575364a40e-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_059.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/5160994be632e6010570da55684a146f2553d288-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_064.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/368da7fd60c13011b8b2a75007185410224ad093-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_067.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/31c55122204ece0036c576c12653f0f9325d8fbf-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_070.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/9ebf9afa33499e6383c380cc220fa1083ab596f1-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_071.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/d31066c949d32c082d7848f6afd31ae0426d271d-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_073.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/79baba4340dcb7886dcf1ea6abf6690354b95464-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_074.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/900822bf6c50d382a44a2a4d6b08713792bdb731-1920x319.webp",
+    "mediaType": "image",
+    "title": "Neocortex_078.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/5da33f9fe9ab54f3cefdf92bd13948de3ffd83de-1920x319.webp",
+    "mediaType": "image",
+    "title": "Neocortex_079.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/00a31e0fac8504472da325e68a574d36d1c01b74-1920x319.webp",
+    "mediaType": "image",
+    "title": "Neocortex_080.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/cc74c30a869e44506ecf46293b4a22ac8e40af2c-1920x319.webp",
+    "mediaType": "image",
+    "title": "Neocortex_081.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/11d186802d6bdf0244b4c55e238aaa5e21a86b54-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_082.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/a64938a76ba8809594805c4b43cc9b3da2e6b706-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_096.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/8b28b43157d0aaf88feb67efcf6fed61c2e111c3-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_097.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/3466343e487ce3e9fb2b1926d541b741efd9f5a7-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_110.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/5158ff7ede46cfceedb4507df4f96131026e3eb5-1920x1440.webp",
+    "mediaType": "image",
+    "title": "Neocortex_114.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/93fc70c3327b66b3184ceab4bb76df9cca4796a0-779x836.webp",
+    "mediaType": "image",
+    "title": "Neocortex_135.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/6996808229dcf0a1010d58b2925971969624d6be-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_139.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/15116078b8b6cf320134a4f36f0bd61fa8aea4ef-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_140.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/d22b4f67021b1f7cde9446b27a7f56db9cc917d5-1920x720.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_002.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/8711310a5e252e203020d6cc5e4fc72e35454552-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_005.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/12a6b1aca4855d430b8b9a2c29b6eb85236eb392-1920x540.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_008.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/24158054ae584db7e7269fb36eb7ebd10dd028a3-1920x540.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_009.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/43cbe6df2603f4662e2c974cd636e7202ae77e02-1920x540.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_010.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/1e2a4094b484a87af639ef71f52313889b8e27f1-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_017.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/c73e2018aed34dc317d5b4a9b7a011487cd43af7-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_020.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/4fad27c3c591b3bc36ff68171f50de28eef4768d-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_024.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/8d0b360f68c5059bac79a678816781e893429769-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_026.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/b822c1710d1e8614dbb90c638389ed9eb25c5d84-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_031.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/00180831479f4abb9eb584ba9770e1eb9ad140b3-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_036.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/86736dbf38a5839b7ca2dd4af51756e467d5658a-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_039.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/44a617eb2aaa937bad95c7468fe0a17dce591746-1920x1920.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_045.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/32e9ce0ec483d5156d0f3d0948f2c3d4136941a9-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_054.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/964713e7d3eed39f44ec1255d34dd76f6ba17c03-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_057.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/c10c4cc4555cab076d80a0d8e2d84a3e8119cd3d-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_064.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/aa281c8bb1d44b1f01292f586dc7825bf192ad5a-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_068.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/0a7c8d4bf7653bb217f98fc40fb033e45e125070-1920x1920.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_069.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/6c787ffd8e986ca89ed1e66d0d73b12c8c3b5e95-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_070.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/9810b5ae3a9d77bd01f9fec437bb6031371566a7-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_074.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/16c62871b2118e6bdc1c5a9111d9146a810d8b04-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_078.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/369a880d7dc39548b7d1243f50434c832e656e6b-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_005.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/2510f486e172e2698a10827c304e2fbd4da155b4-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_013.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/a6c4e8d0fe67bfa8d879805af0494068f93ae593-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_014.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/14fa51ca15fbbbc2a6ab8cca772c19d05aecc45e-1920x1121.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_015.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/c9daf9eaf3fee23b833568f471c1ea081e523d37-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_017.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/67a07cb75c8d06e45459fdbfe8eb3d0da0ce3bd5-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_019.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/e20af15173e03bd20941453fbca1ca189a6cc1d9-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_024.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/4497b74453bc9ffd5d3af4081c619c66b9056e2f-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_025.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/bcb8b503d0fd67b11b5afb99487ceb8cda55387c-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_028.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/39f4cbc0d4c63f0b5440410bfc1832a5d7228280-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_031.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/59224366966801d8cf4080d09cd9a2a677bccd09-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_034.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/c9844cd95bbec840dcf5f3325a62ac798a072abc-2700x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_037.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/522494c85f6ab65e01bce63c317d88f6f7f7b050-1920x1064.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_040.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/51358ae381aadd26c4fff11b42e2fbbb09f82eea-1362x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_041.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/11e6647777e7f01a52b467b6e240a2fad4a05c35-1577x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_043.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/4b98648027ec9904a54a8a3c06ea37099d86076a-1363x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_047.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/9b60b2b23d988c70ac48741dbb6a706639cc54b4-1200x900.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_053.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/63e3354a78c122e2b84708633af3706dcb3017ec-1920x1440.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_056.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/29d03f69d030b9bda54a42e82e1cf6c6dee1da63-1200x1692.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_058.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/ce4cbd6e362723c3e91d50c9d90866e0475b74c5-1200x2133.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_061.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/c977c40f5730b0edc55cc0bbe0e0473c19971275-1200x1200.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_065.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/3075fc53ccad00bbd4aa74526a3e65fc90d67468-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_069.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/8919a883af1f2ab2168ee9bdcee3f01c710ee764-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_070.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/7f61049eb4b0c9cecf9d40970b6481be89ee47a7-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_071.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/33286b98faba041de5301cd6c94ac7ed80731274-1920x1247.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_072.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/3c1610df57f6e6f117814d4ff9edc97f4bde889f-1920x1058.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_075.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/a31b65526af62a9d632126ce1baade3ba183b173-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_076.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/5ed7d866b30c537092f03d45d20cb47b80efae2c-1200x1650.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_078.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/7ffa40c91c1b088c5f87470af463431ecc98eead-1200x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_080.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/48ac626ee09e912212f266b73e308ad2f35415fa-1200x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_081.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/a38c30e2c2a25a9de3909c7c01d9a6c86f4668ca-1920x2304.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_085.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/17507da251ee2273a0a30e904072fa55e43e433b-1920x2304.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_086.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/d3ad25a0383ab774fd015f8179d5141678818c6c-1920x1200.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_087.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/835fbeece09c6a62b881efeff6f43323cc528f99-1920x1200.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_088.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/624a943914e4e5c8d1ff6f144a7cc1ca864580bd-1920x1200.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_089.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/196de5cf22d4bd922aa4024ea5fb900c0f708934-1080x1571.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_090.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/7f91ebe0d1e0e6318e443234067b8640290e7e51-1080x1571.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_091.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/ef9719d9971b978736d07e0ba5dd4b2bc82b7583-1080x1728.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_093.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/a7dda3d398e43cde950ac033953c1e644f1f2d9f-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_108.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/d7396733ff1429ccd1d669ad3e7d7dcd62f50afd-1920x768.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_115.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/19f00eea7a8e68d50e52e6774c83d3c3f08aa1c6-1920x768.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_117.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/1b2137c34cd3517bd6b95739c8b075c6023a51bd-1920x1361.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_118.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/733ca88a0ec725d461fd9a64880e14243403670a-1920x768.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_122.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/8c5a4a63fe685da211658a4b97610b02780b627c-1920x768.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_123.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/11e6deb546533e5105b53b959aec29dc1c693e42-1920x864.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_125.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/ee3582062658b9b6d9d336b8fb29f12519e07336-1920x864.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_126.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/eef0d1646381eb7ce8e7d37ea644c1a654768a31-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_128.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": "white",
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": true,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/517af1dfffb84b7f9144b9d62f771a6bdd76cc0a-1920x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_133.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": "white",
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": true,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/d12915d38e6d801e3510655e0ca8c6747f3f3ac0-1920x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_134.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": "white",
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": true,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/359e7c948a121dbf09aa0dc9bc2829ef6be45514-1920x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_143.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": "white",
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": true,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/89783b275b77bc96ba7a0ef6dada4630cb2d4505-1920x1200.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_148.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": "white",
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": true,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/f42f4072aa63120255cef18bb0ce3d7292c45681-1920x1200.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_149.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": "white",
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": true,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/948405403f4fb9108646b98493c74da22bc69c65-1920x1200.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_151.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": "white",
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": true,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/fdda3ecbb022244ef9c058de1287849855ad9a09-1920x1200.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_154.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": "white",
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": true,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/c4e12e8069905881630586281a61b8d24971780e-1920x1200.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_155.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": "white",
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": true,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/d114496bf3ff3ccd3391c9b9a629644805e5914e-1920x1200.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_156.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": "white",
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": true,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/2ff3b8709d8eb8f7ee5ff1f896bd6cd09293ca39-1920x1200.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_158.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": "white",
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": true,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/ce6402f5da79bf6613fbece3e058af8e12a59883-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_160.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": "white",
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": true,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/b33b9d7e9edffe07035249774ecb332b945cd956-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_162.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/727dcf1257bb7cd2f9a59d348ed3cdeb79b757f1-1920x1959.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_163.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/f84572cf333cd77d0c73258ed8da6e5a1d78737d-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_169.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/9cb7f57a7458d9edd7011d123b6780cd13651f7a-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_172.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/a1bc313ecc09f6693c5df5cbea2ff96a0e86adba-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_176.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/e99ff964567e79abfeb88b8b3401e93e43dcc5d5-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_178.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/c4c9e6df98b88afbc921658a128a695d00dc9e44-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_179.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/44d989234b1813971550d65e45257c9b91b1efcc-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_185.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/fdbf83dced242affb52730c6f0c70eda77824eff-1200x2133.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_188.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/8f9dccde8cb6ba67c2dd1537aea154043dcaed28-1920x3413.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_189.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/bd31848ffa8a718f66cb7c160d95d80fabf714cb-1200x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_192.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/1bae440cf528b0b88aaf31a10947c14eece70499-1200x1456.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_194.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/241a2232cb40953b8481aa60d5d89da0494ad5bf-1200x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_200.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/9713051c4d360e680d63ddc7ce16d2b45f0ee15c-1200x675.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_202.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/a92210ca740c2188bcc43955daa64b65e8b3792f-1200x2133.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_207.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/90d92a9489107f997f797067883e19487d3c4a28-1200x1139.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_211.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/52ee6bd977ab329f6c6d3e11c56e18556b7073f0-1200x1139.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_212.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/34e04d2668bb54765a3423bdfe509249bc63c396-1200x1273.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_214.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/c6a40c47867f10cb3f2caa5d0a5ecade1e64916c-1200x1273.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_218.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/b128536589ec33dfd61b23e39a7bbbfcc06519c2-1200x548.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_222.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/05740ff8d49f199ade8b4472f92e00fb5e2fef66-1200x1200.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_225.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/4ace6b3965da3de2ee6baf13c95ddc946c36159d-1200x1635.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_227.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/eea513b8afba30f1a7b2a6d5126a2b312ae97aa8-1200x1115.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_230.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/a12a8dac48b0296f90bb758b9489e47fa2ef52ac-1200x956.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_232.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/872e8f0f8c3022530d11072fbcfba06fff83c0f9-1200x491.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_235.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/10914342d1b4d1756ba39646dd810ec521bd5a8d-1200x842.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_237.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/015a70e7dd64857b5fdc55714fd3bd49f74402e6-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_002.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/737b586284b3821a0b6859fd17b0f41054c84202-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_005.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/77ff2b3bca461c30565e3fbc9c25317d4e7ebbc8-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_009.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/da30346d52f8f85e80ec0de6e3a00ceac1029ada-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_017.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/5df9f5333add4c3f82b762758cdd4c8c340055ad-1440x781.webp",
+    "mediaType": "image",
+    "title": "Neocortex_019.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/4c55cfd597a9e0d04e3e5eb51cf74136c81c021c-1920x550.webp",
+    "mediaType": "image",
+    "title": "Neocortex_027.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/ab0d3e3660f06373e5927aa2c67e1463e2f6d383-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_029.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/f2340b437c4f4c9076adc667d8bbff4ec6036691-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_033.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/55c39b0d216ef7da2d5619f4182c06666beb6554-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_036.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/fe275347d6bf71628ba3dd367ed94883472531b1-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_037.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/5f2fb1ab56c8672f59a52e07d2e2c1e71b4c4cdf-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_041.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/09e865c206c4de087402717036ac9518ef3329a4-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_047.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/3dbc21d4cf653c08e33f5f8125b73e6beea73be7-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_057.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/e3da66dd28e226b4b71df1b3ab95158c7a9142fa-960x540.webp",
+    "mediaType": "image",
+    "title": "Neocortex_065.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/cf29340f5d068a9e9b9e79ce6f3efa15628541a6-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_069.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/3f6eeb22c44027efad9f3eff15363ba3df70f166-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_072.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/97b5ae5bfcd9303b0b21e304b18582c14f3989ab-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_076.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/dbe566877f3adc5c47f69ba60e81648a75328754-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_085.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/679dbb0b77c4f97ca9959fb70b6ef229bb34b845-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_088.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/b0285c90dd61dd73e8bb277b832678d5abd96531-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_090.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/bce9f05ef243a7b2f8cfadb17750c3d7140ab39d-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_091.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/a0460636dd07f0eba2506b9df0c09971cd83f21d-1920x1649.webp",
+    "mediaType": "image",
+    "title": "Neocortex_116.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/f97295c6b6cd0096ffc4e9518cccfb2c38d61640-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_137.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/ac1bf1ccdf83333fa9ee69f3f76ecb00c8e4ddcd-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_003.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/cce88c33da48bdecb3dbc3e7b9d8d19aad29e3da-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_012.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/e5782bdf5e838a03e357517c8ca7130d8c9ffa4e-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_014.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/fceddcfdb1348749ae96a8efa3b90a2ba4c3f3cd-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_015.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/964713e7d3eed39f44ec1255d34dd76f6ba17c03-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_018.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/b532fa89be31c52127d3c65aa7f3b4ddd0d9dc62-1920x1313.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_019.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/bd11937d05843ee4116fd667857af3d499f6304c-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_021.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/d55c1c41e39f14fd484f205f0e1fd8d67ecf296c-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_022.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/b532fa89be31c52127d3c65aa7f3b4ddd0d9dc62-1920x1313.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_023.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/d5eb19e6a94c795908bcfb34386f7f697b1f5c0a-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_025.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/e50dfb3e21aa538f6f2e618aea0a271e036e2528-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_041.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/68bd9fad298d4389a7d7a0b5901e329d743a676a-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_044.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/c8d33046ffe538c4d3a5038cd139c76e24a597d6-1920x1920.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_056.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/a2a408c6526d9903ba3f65f0798816b5dcd44e70-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_067.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/07c507762ffa46848148a544f9de96c8c41e972f-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_072.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/cc9f6419a5afe23eb8c8c77a29b84516bc1988c8-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_079.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/d738c8d2cbd74fc4876134d5e54677fd476fc695-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_083.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/119ca767a0e18764a7553a04fdb9a5969e7e6213-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_084.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/02fe11f8ebaf2813eacba396363c87a3475b51e9-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_085.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/9ac15191139fc979cac93ffd2ed89bee6e9f6607-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_086.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/723b31773bffcf4fa4d15c719bfe51e242aaa864-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_033.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/3f5afcc8089af4eb6334f8bb5e8371f2caecd672-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_034.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/8556524003a756acac9e0ae7baa49c903fd68937-1024x1443.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_049.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/049d678032244e375b964c0b486547cddbbe5064-1920x1920.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_055.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/8b265011f4c6f9144e31a6579db698dc10f641fe-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_061.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/1e2a4094b484a87af639ef71f52313889b8e27f1-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_065.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/b2db8bb3d129b64f76d191e93b8f1c9019a7ce64-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_073.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/b38ee4137da6d977ce1da41cd707f2559a02238a-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_076.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/c1fc906161160570e4e7f62a799f94ad86b88ea3-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_077.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/6ad1872f41440f79a3a3dc3a13c9b9a30d601882-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_080.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "multiple",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/4f78b295e080a6ecf79fef6493cd099d6cfc99a1-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Multiple_brain_regions_081.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/1de9136e8162b81919f8ec8a8135804d97637f4c-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_032.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/b46dfdbb04c28c046f9d62d3e4fe4e5f9eb61d95-1920x1411.webp",
+    "mediaType": "image",
+    "title": "Neocortex_038.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/d288396e48310493de24cd2a153ae887d304fd18-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_042.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/d4a72944e317e2cc2e125e28426f37e3ae2d966a-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_046.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/a4afcbf525ac99c92474d3efbed3d10adb9966a0-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_048.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/e5e2da1a1c655d9e8cc567db42b17e6a46d68b1a-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_049.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/e9c866a3de1fbc0cc845d2cc630fd1c249a976df-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_050.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/153b9229d309f2e3ed84d33a6198db771f481e9b-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_052.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/2608eb58da5897bc6cf422132f2de5b787e516a2-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_087.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/d5a17f4d26d7384ea0397d31b338cc9f8ddddced-1920x1621.webp",
+    "mediaType": "image",
+    "title": "Neocortex_089.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/e7224e2aa82aad5e0a56c2c3f20d1949e884c710-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_092.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/8451eaa7eb494817fb4d85f1b565eee52f6a2666-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_094.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/7f63a379a430a8e2c04753cebab7c79c4bf0e0fc-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_095.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/21b78a6a62949ca0d26014cb4306565907e5c273-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_098.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/a71859d25d8cc3112fd75faaf6040514a52815e9-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_099.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/091c78f0a2c1bb631838cb5dda35e02a1a8eda53-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_100.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/4613acea066509a8bd3b8eff684a167002525dbb-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_103.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/99c11af213c5e84fdd19a9f3c6cf98935714b6ff-1920x1200.webp",
+    "mediaType": "image",
+    "title": "Neocortex_104.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/84263f1f4d6a1ef548a1a55b913433f781b55a9f-1920x1200.webp",
+    "mediaType": "image",
+    "title": "Neocortex_106.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/a1e00e662b2175405606510154d3ba395b621523-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_093.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/be0d70c278ec7e1808b2610b71d239bac7fe4b65-1920x1200.webp",
+    "mediaType": "image",
+    "title": "Neocortex_105.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/65145eef079276dabd77a071e72486f2142bfaab-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_107.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/ed0333dc44b0e2d25c44c5b0aab6d3170d4c1077-1920x1582.webp",
+    "mediaType": "image",
+    "title": "Neocortex_108.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/8b629aae40344edc71271ca47def4eedc3715555-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_109.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/ae13cad921e07100fb66b9820da07def6fbae698-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_113.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/3742d7d4b058cc5e5986fe234fc45e739aac334b-1920x1399.webp",
+    "mediaType": "image",
+    "title": "Neocortex_115.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/4904870463e93284ed61806f374beb033215377c-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_117.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/7b4e873513a02107b0936713d63df1d8b9c1d74c-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_138.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "neocortex",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/94e28af4c1c48a9b2f719647f8c4c6ddfe952ca7-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Neocortex_142.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/9d2bded0e7bcb521a4bcf8d8050c0140b27a9f06-1920x1078.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_129.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": null,
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": false,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/223842458bd6fd46819f331c0db90fccd9273572-1920x1080.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_131.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": "white",
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": true,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/7d7fbbb31c8c51bcfdaa5c7294156aedb27dee46-1920x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_136.webp",
+    "video": null
+  },
+  {
+    "backgroundColor": "white",
+    "brainRegion": "hippocampus",
+    "description": null,
+    "has_background": true,
+    "image": "https://cdn.sanity.io/images/fgi7eh1v/staging/8335734aa783e72108010733abec472ce86a400b-1920x1920.webp",
+    "mediaType": "image",
+    "title": "Hippocampus_140.webp",
+    "video": null
+  }
+]

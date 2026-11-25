@@ -3,9 +3,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { type RefObject, useCallback, useEffect, useRef, useState } from 'react';
 
+import { getAdoptersContent } from '@/content/website/shared';
 import { SERIF } from '@/features/learn/components/heuristics/shared';
 import { ViewOverlay } from '@/features/viewer-3d/bare';
-import { getAdoptersContent } from '@/services/sanity/api/get-adopters-content';
 import { ModelView } from '@/ui/segments/project/models/model-views';
 import { PackView } from '@/ui/segments/project/models/pack-view';
 import { FLY_PACK, L6_PACK, MICRONS_PACK } from '@/ui/segments/project/models/repo-packs';

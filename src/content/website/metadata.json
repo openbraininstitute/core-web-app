@@ -1,0 +1,163 @@
+{
+  "/": {
+    "imageHeight": 630,
+    "imageURL": "/static/website-media/images/ed2098c6832ea8faf1e4b5b8c4fff6fd86feac25-1200x630.jpg",
+    "imageWidth": 1200,
+    "seoDescription": "Neuroscience platform that offers exploration of experimental, model and simulation data in addition to brain model building and simulating..",
+    "seoKeywords": [
+      "Neuroscience",
+      "Brain",
+      "Model",
+      "Neuron",
+      "Physiology",
+      "Morphology",
+      "Connectivity",
+      "Digital Brain Models"
+    ],
+    "seoTitle": "Open Brain Platform, Launch your virtual lab and perform neuroscience at the speed of thought",
+    "title": "Create your Virtual Lab to Perform Neuroscience at the Speed of Thought"
+  },
+  "about": {
+    "imageHeight": 630,
+    "imageURL": "/static/website-media/images/ed2098c6832ea8faf1e4b5b8c4fff6fd86feac25-1200x630.jpg",
+    "imageWidth": 1200,
+    "seoDescription": null,
+    "seoKeywords": ["Brain", "Neuroscience", "Model", "Simulation", "Experimentts"],
+    "seoTitle": "Open Brain Institute - About the brain institute, its story and the foundations",
+    "title": "About"
+  },
+  "mission": {
+    "imageHeight": 630,
+    "imageURL": "/static/website-media/images/ed2098c6832ea8faf1e4b5b8c4fff6fd86feac25-1200x630.jpg",
+    "imageWidth": 1200,
+    "seoDescription": null,
+    "seoKeywords": [
+      "Neuroscience",
+      "Brain",
+      "Modeling",
+      "Digital",
+      "Model",
+      "Simulation",
+      "Experiment"
+    ],
+    "seoTitle": "Open Brain Institute \u2013 Our mission towards brain modeling and simulation experiment for all",
+    "title": "Mission"
+  },
+  "team": {
+    "imageHeight": 630,
+    "imageURL": "/static/website-media/images/ed2098c6832ea8faf1e4b5b8c4fff6fd86feac25-1200x630.jpg",
+    "imageWidth": 1200,
+    "seoDescription": null,
+    "seoKeywords": ["Neuroscience", "Brain", "Build", "Model", "Simulate", "Experiment"],
+    "seoTitle": "Open Brain Institute team members working on the Open Brain Platform",
+    "title": "Team"
+  },
+  "resources": {
+    "imageHeight": 630,
+    "imageURL": "/static/website-media/images/ed2098c6832ea8faf1e4b5b8c4fff6fd86feac25-1200x630.jpg",
+    "imageWidth": 1200,
+    "seoDescription": null,
+    "seoKeywords": [
+      "Resources",
+      "Artifacts",
+      "Notebooks",
+      "Neuroscience",
+      "Models",
+      "Simulate",
+      "Experiment"
+    ],
+    "seoTitle": "Open Brain Institute \u2013 All the resources from neuroscience artifacts to Notebooks and tools",
+    "title": "Resources"
+  },
+  "notebooks": {
+    "imageHeight": 630,
+    "imageURL": "/static/website-media/images/ed2098c6832ea8faf1e4b5b8c4fff6fd86feac25-1200x630.jpg",
+    "imageWidth": 1200,
+    "seoDescription": null,
+    "seoKeywords": [
+      "Resources",
+      "Artifacts",
+      "Notebooks",
+      "Neuroscience",
+      "Models",
+      "Simulate",
+      "Experiment"
+    ],
+    "seoTitle": "Open Brain Institute \u2013 All the resources from neuroscience artifacts to Notebooks and tools",
+    "title": "Notebooks"
+  },
+  "contact": {
+    "imageHeight": 630,
+    "imageURL": "/static/website-media/images/ed2098c6832ea8faf1e4b5b8c4fff6fd86feac25-1200x630.jpg",
+    "imageWidth": 1200,
+    "seoDescription": null,
+    "seoKeywords": [
+      "Contact",
+      "Neuroscience",
+      "Collaboration",
+      "Support",
+      "Brain",
+      "Model",
+      "Simulation",
+      "Experiment"
+    ],
+    "seoTitle": "Open Brain Institute - Contact us to get information, collaborate or get your hands on the platform",
+    "title": "Contact"
+  },
+  "features": {
+    "imageHeight": null,
+    "imageURL": null,
+    "imageWidth": null,
+    "seoDescription": null,
+    "seoKeywords": null,
+    "seoTitle": null,
+    "title": "Features"
+  },
+  "pricing": {
+    "imageHeight": 630,
+    "imageURL": "/static/website-media/images/ed2098c6832ea8faf1e4b5b8c4fff6fd86feac25-1200x630.jpg",
+    "imageWidth": 1200,
+    "seoDescription": null,
+    "seoKeywords": ["Brain", "Neuroscience", "Models", "Simulation", "Experiment"],
+    "seoTitle": "Open Brain Institute - Our pricing for the Open Brain platform for free, pro and premium users",
+    "title": "Pricing"
+  },
+  "gallery": null,
+  "showcases": {
+    "imageHeight": null,
+    "imageURL": null,
+    "imageWidth": null,
+    "seoDescription": null,
+    "seoKeywords": null,
+    "seoTitle": "OBI Showcases",
+    "title": "Showcases"
+  },
+  "sfn-2025": {
+    "imageHeight": null,
+    "imageURL": null,
+    "imageWidth": null,
+    "seoDescription": null,
+    "seoKeywords": null,
+    "seoTitle": null,
+    "title": "SFN 2025"
+  },
+  "the-real-digital-brain-story": {
+    "imageHeight": 630,
+    "imageURL": "/static/website-media/images/ed2098c6832ea8faf1e4b5b8c4fff6fd86feac25-1200x630.jpg",
+    "imageWidth": 1200,
+    "seoDescription": null,
+    "seoKeywords": [
+      "Neuroscience",
+      "Brain",
+      "Digital",
+      "Digital Brain",
+      "Story",
+      "Model",
+      "Build",
+      "Simulate",
+      "Experiment"
+    ],
+    "seoTitle": "Open Brain Institute - Discover the Real Digital Brain Story",
+    "title": "The Real Digital Brain Story"
+  }
+}

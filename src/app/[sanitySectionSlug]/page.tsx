@@ -1,5 +1,5 @@
 import LandingPage from '@/ui/segments/landing';
-import { generateMetadataFromSanity } from '@/ui/segments/landing/metadata/metadata';
+import { generateWebsiteMetadata } from '@/ui/segments/landing/metadata/metadata';
 import { getSection } from '@/ui/segments/landing/utils';
 
 import type { Metadata } from 'next';
@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(props: ParamProps): Promise<Metadata> {
   const params = await props.params;
-  const metadata = await generateMetadataFromSanity(params.sanitySectionSlug);
+  const metadata = await generateWebsiteMetadata(params.sanitySectionSlug);
   return metadata;
 }
 

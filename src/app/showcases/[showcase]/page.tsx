@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation';
 
-import singleShowcaseQuery from '@/app/api/sanity/query';
-import { fetchSanity } from '@/services/sanity';
+import { getShowcase } from '@/content/website/content';
 import ShowcaseDetailLayout from '@/ui/segments/landing/layout/showcase-detail';
 import { SanityShowcaseSchema } from '@/ui/segments/reports/obi-showcases/types';
 
@@ -18,10 +17,7 @@ export default async function ShowcaseDetailPage({
   const params = await promisedParams;
   const slug = decodeURIComponent(params.showcase);
 
-  const rawData = await fetchSanity(
-    singleShowcaseQuery(slug),
-    (data: unknown): data is NonNullable<typeof data> => data !== null
-  );
+  const rawData = await getShowcase(slug);
 
   if (!rawData) {
     notFound();

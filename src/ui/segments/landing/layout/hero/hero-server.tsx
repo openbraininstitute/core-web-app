@@ -1,5 +1,4 @@
-import { getEmailContent } from '@/services/sanity/api/get-email-content';
-import { getHeroContent } from '@/services/sanity/api/get-hero-content';
+import { getEmailContent, getHeroContent } from '@/content/website/content';
 import { EnumSection } from '@/ui/segments/landing/sections/sections';
 import { getSection } from '@/ui/segments/landing/utils';
 

@@ -1,0 +1,636 @@
+{
+  "prices": [
+    {
+      "costUnit": "creditsSimulation",
+      "customCostUnit": null,
+      "freePrice": "1",
+      "itemName": "Ion channel",
+      "proPrice": "0.5",
+      "section": "simulate"
+    },
+    {
+      "costUnit": "creditsSimulation",
+      "customCostUnit": null,
+      "freePrice": "1",
+      "itemName": "Single cell",
+      "proPrice": "0.5",
+      "section": "simulate"
+    },
+    {
+      "costUnit": "creditsSimulation",
+      "customCostUnit": null,
+      "freePrice": "1",
+      "itemName": "Synaptome",
+      "proPrice": "0.5",
+      "section": "simulate"
+    },
+    {
+      "costUnit": "custom",
+      "customCostUnit": "credits / \u00b5m\u00b3",
+      "freePrice": "0.05",
+      "itemName": "EM Skeletonization",
+      "proPrice": "0.025",
+      "section": "notebooks"
+    },
+    {
+      "costUnit": "custom",
+      "customCostUnit": "credit / query",
+      "freePrice": "30 free queries per 24h then 1",
+      "itemName": "Queries",
+      "proPrice": "30 free queries per 24h then 0.5",
+      "section": "aiAssistant"
+    },
+    {
+      "costUnit": "creditsBuild",
+      "customCostUnit": null,
+      "freePrice": "1",
+      "itemName": "Single cell",
+      "proPrice": "0.5",
+      "section": "build"
+    },
+    {
+      "costUnit": "creditsHour",
+      "customCostUnit": null,
+      "freePrice": "4",
+      "itemName": "Running notebooks",
+      "proPrice": "2",
+      "section": "notebooks"
+    },
+    {
+      "costUnit": "creditsBuild",
+      "customCostUnit": null,
+      "freePrice": "6",
+      "itemName": "Ion channel",
+      "proPrice": "3",
+      "section": "build"
+    },
+    {
+      "costUnit": "creditsSimulation",
+      "customCostUnit": null,
+      "freePrice": "10",
+      "itemName": "Small microcircuit (<= 10 neurons)",
+      "proPrice": "5",
+      "section": "simulate"
+    },
+    {
+      "costUnit": "creditsNeuronSecond",
+      "customCostUnit": null,
+      "freePrice": "0.05",
+      "itemName": "Microcircuit (>10 neurons)",
+      "proPrice": "0.025",
+      "section": "simulate"
+    },
+    {
+      "costUnit": "creditsSimulation",
+      "customCostUnit": null,
+      "freePrice": "1",
+      "itemName": "E-model",
+      "proPrice": "0.5",
+      "section": "simulate"
+    },
+    {
+      "costUnit": "creditsBuild",
+      "customCostUnit": null,
+      "freePrice": "1",
+      "itemName": "Synaptome",
+      "proPrice": "0.5",
+      "section": "build"
+    }
+  ],
+  "creditsPacks": [
+    {
+      "discount": 5,
+      "price": 48,
+      "pricePerCredit": 0.095,
+      "quantity": "500-999"
+    },
+    {
+      "discount": 25,
+      "price": 1875,
+      "pricePerCredit": 0.075,
+      "quantity": "25000-49999"
+    },
+    {
+      "discount": 15,
+      "price": 425,
+      "pricePerCredit": 0.085,
+      "quantity": "5000-9999"
+    },
+    {
+      "discount": 30,
+      "price": 3500,
+      "pricePerCredit": 0.07,
+      "quantity": "50000+"
+    },
+    {
+      "discount": 10,
+      "price": 90,
+      "pricePerCredit": 0.09,
+      "quantity": "1000-4999"
+    },
+    {
+      "discount": 20,
+      "price": 800,
+      "pricePerCredit": 0.08,
+      "quantity": "10000-24999"
+    },
+    {
+      "discount": 0,
+      "price": 10,
+      "pricePerCredit": 0.1,
+      "quantity": "1-499"
+    }
+  ],
+  "plans": [
+    {
+      "advantages": [],
+      "ai_assistant_features": [],
+      "build_features": [],
+      "custom_plan": false,
+      "general_features": [
+        {
+          "_key": "12a992a01be2",
+          "_type": "booleanOptions",
+          "label": "All Virtual Lab features",
+          "value": true
+        },
+        {
+          "_key": "54317ebcfd5d",
+          "_type": "booleanOptions",
+          "label": "Seat-based access for instructors & students",
+          "value": true
+        },
+        {
+          "_key": "ad71dd6dc11b",
+          "_type": "booleanOptions",
+          "label": "Compute credits included for teaching",
+          "value": true
+        },
+        {
+          "_key": "6daed2eed7bc",
+          "_type": "booleanOptions",
+          "label": "Free storage for course materials",
+          "value": true
+        }
+      ],
+      "has_contact_button": true,
+      "has_subscription": false,
+      "has_subtitle": true,
+      "monthly_subscriptions": [],
+      "name": "Education",
+      "notebooks_features": [],
+      "planOrder": null,
+      "simulate_features": [],
+      "subtitle": "For courses and classroom teaching",
+      "support": [
+        {
+          "_key": "521ba1cea249",
+          "_type": "booleanOptions",
+          "label": "Onboarding",
+          "value": true
+        }
+      ],
+      "yearly_subscriptions": []
+    },
+    {
+      "advantages": [],
+      "ai_assistant_features": [],
+      "build_features": [],
+      "custom_plan": false,
+      "general_features": [
+        {
+          "_key": "fb9d520b4721",
+          "_type": "booleanOptions",
+          "label": "All Virtual Lab features",
+          "value": true
+        },
+        {
+          "_key": "ec8da3b4404c",
+          "_type": "booleanOptions",
+          "label": "Seat-based access for teams",
+          "value": true
+        },
+        {
+          "_key": "3f71b386817a",
+          "_type": "booleanOptions",
+          "label": "Scalable compute & storage options",
+          "value": true
+        },
+        {
+          "_key": "3ee53253f7e8",
+          "_type": "booleanOptions",
+          "label": "Custom feature development",
+          "value": true
+        }
+      ],
+      "has_contact_button": true,
+      "has_subscription": false,
+      "has_subtitle": true,
+      "monthly_subscriptions": [],
+      "name": "Enterprise",
+      "notebooks_features": [],
+      "planOrder": null,
+      "simulate_features": [],
+      "subtitle": "For commercial and organizational use",
+      "support": [
+        {
+          "_key": "89c0772c3189",
+          "_type": "booleanOptions",
+          "label": "Priority support",
+          "value": true
+        },
+        {
+          "_key": "37ec7d82b185",
+          "_type": "booleanOptions",
+          "label": "Onboarding",
+          "value": true
+        },
+        {
+          "_key": "13a73843e6ed",
+          "_type": "booleanOptions",
+          "label": "Dedicated account manager",
+          "value": true
+        }
+      ],
+      "yearly_subscriptions": []
+    },
+    {
+      "advantages": [],
+      "ai_assistant_features": [
+        {
+          "_key": "7ac934f7b084",
+          "_type": "planFeatures",
+          "cost": "30 free queries per 24h then 0.5 credits / query",
+          "name": "Queries"
+        }
+      ],
+      "build_features": [
+        {
+          "_key": "a7f045b1fa6b",
+          "_type": "planFeatures",
+          "cost": "3 credits / build",
+          "name": "Ion channel"
+        },
+        {
+          "_key": "64095908e048",
+          "_type": "planFeatures",
+          "cost": "0.5 credits / build",
+          "name": "Single neuron"
+        },
+        {
+          "_key": "42ef073dc87f",
+          "_type": "planFeatures",
+          "cost": "0.5 credit / build",
+          "name": "Electron microscopy circuit"
+        },
+        {
+          "_key": "9df968bf7ad4",
+          "_type": "planFeatures",
+          "cost": "0.5 credits / build",
+          "name": "Synaptome"
+        },
+        {
+          "_key": "c228897217be",
+          "_type": "planFeatures",
+          "cost": "0.25 credits / build",
+          "name": "Circuit synaptic physiology (\u2264 20 neurons)"
+        },
+        {
+          "_key": "c5de6b022870",
+          "_type": "planFeatures",
+          "name": "E-Model ",
+          "subItems": [
+            {
+              "_key": "1e1362b37910",
+              "_type": "planFeatureSubItem",
+              "available": true,
+              "cost": "2.5 credits",
+              "name": "Intracellular E-feature Extraction"
+            },
+            {
+              "_key": "6ade606619cd",
+              "_type": "planFeatureSubItem",
+              "available": true,
+              "cost": "10 credits",
+              "name": "Optimize E-Model"
+            },
+            {
+              "_key": "4f7a09c355e3",
+              "_type": "planFeatureSubItem",
+              "available": false,
+              "cost": "2.5 credits",
+              "name": "Validation"
+            }
+          ]
+        }
+      ],
+      "custom_plan": true,
+      "general_features": [
+        {
+          "_key": "ff11edd2a085",
+          "_type": "booleanOptions",
+          "label": "Get a Virtual Lab",
+          "value": true
+        },
+        {
+          "_key": "a015e4eb821d",
+          "_type": "booleanOptions",
+          "label": "Join any lab",
+          "value": true
+        },
+        {
+          "_key": "d937b0909e48",
+          "_type": "booleanOptions",
+          "label": "Invite lab members",
+          "value": true
+        }
+      ],
+      "has_contact_button": false,
+      "has_subscription": true,
+      "has_subtitle": false,
+      "monthly_subscriptions": [
+        {
+          "name": "Monthly",
+          "price": 25,
+          "currency": "CHF",
+          "has_special_label": true,
+          "special_label": "Expires in 1 year, non-transferable",
+          "features": [
+            {
+              "title": "50 free credits / month",
+              "tooltip": ""
+            }
+          ]
+        }
+      ],
+      "name": "Pro",
+      "notebooks_features": [
+        {
+          "_key": "9485185ee9c3",
+          "_type": "planFeatures",
+          "cost": "2 credits / hour",
+          "name": "Running notebooks"
+        },
+        {
+          "_key": "daec147d4795",
+          "_type": "planFeatures",
+          "cost": "0.025 credits / \u00b5m3",
+          "name": "EM skeletonization"
+        }
+      ],
+      "planOrder": null,
+      "simulate_features": [
+        {
+          "_key": "375bba4a2952",
+          "_type": "planFeatures",
+          "cost": "0.5 credits / simulation",
+          "name": "Ion channel"
+        },
+        {
+          "_key": "643a1cd7c178",
+          "_type": "planFeatures",
+          "cost": "0.5 credits / simulation",
+          "name": "Single cell"
+        },
+        {
+          "_key": "26d534e4f439",
+          "_type": "planFeatures",
+          "cost": "0.5 credits / simulation",
+          "name": "Synaptome"
+        },
+        {
+          "_key": "bc99e57275f1",
+          "_type": "planFeatures",
+          "cost": "5 credits / simulation",
+          "name": "Small microcircuit (\u2264 20 neurons)"
+        },
+        {
+          "_key": "b3b7dd939191",
+          "_type": "planFeatures",
+          "cost": "0.025 credits /neuron / second of biological time",
+          "name": "Microcircuit (>20 neurons)"
+        },
+        {
+          "_key": "d8cd90964016",
+          "_type": "planFeatures",
+          "cost": "10 credits / simulation",
+          "name": "Brian2"
+        }
+      ],
+      "subtitle": "",
+      "support": [
+        {
+          "_key": "424eea83f3b5",
+          "_type": "booleanOptions",
+          "label": "Priority support",
+          "value": true
+        },
+        {
+          "_key": "646fef361749",
+          "_type": "booleanOptions",
+          "label": "Onboarding",
+          "value": false
+        },
+        {
+          "_key": "52d2e94e052d",
+          "_type": "booleanOptions",
+          "label": "Dedicated account manager",
+          "value": false
+        }
+      ],
+      "yearly_subscriptions": [
+        {
+          "name": "Yearly",
+          "price": 275,
+          "currency": "CHF",
+          "has_special_label": false,
+          "features": [
+            {
+              "title": "650 free credits / year",
+              "tooltip": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "advantages": [
+        {
+          "_key": "6d49f894959c",
+          "_type": "advantage",
+          "title": "100 free initial credits",
+          "tooltip": "Expires in 1 year, non-transferable"
+        }
+      ],
+      "ai_assistant_features": [
+        {
+          "_key": "a94e3b2a05b1",
+          "_type": "planFeatures",
+          "cost": "30 free queries per 24h then 1 credit / query",
+          "name": "Queries"
+        }
+      ],
+      "build_features": [
+        {
+          "_key": "c4de259f7e01",
+          "_type": "planFeatures",
+          "cost": "6 credits / build",
+          "name": "Ion channel"
+        },
+        {
+          "_key": "1c6784e594d6",
+          "_type": "planFeatures",
+          "cost": "1 credit / build",
+          "name": "Single neuron"
+        },
+        {
+          "_key": "3d1d5f5c50a9",
+          "_type": "planFeatures",
+          "cost": "1 credit / build",
+          "name": "Electron microscopy circuit"
+        },
+        {
+          "_key": "75fdb52d3f6f",
+          "_type": "planFeatures",
+          "cost": "1 credit / build",
+          "name": "Synaptome"
+        },
+        {
+          "_key": "c27238f7f198",
+          "_type": "planFeatures",
+          "cost": "0.5 credits / build",
+          "name": "Circuit synaptic physiology (\u2264 20 neurons)"
+        },
+        {
+          "_key": "404ffe68f1cb",
+          "_type": "planFeatures",
+          "name": "E-Model",
+          "subItems": [
+            {
+              "_key": "f6aeaf5b959e",
+              "_type": "planFeatureSubItem",
+              "available": true,
+              "cost": "5 credits",
+              "name": "Intracellular E-feature Extraction"
+            },
+            {
+              "_key": "ed4774d9ec0f",
+              "_type": "planFeatureSubItem",
+              "available": true,
+              "cost": "20 credits",
+              "name": "Optimize E-Model"
+            },
+            {
+              "_key": "39badbe4d054",
+              "_type": "planFeatureSubItem",
+              "available": false,
+              "cost": "5 credits",
+              "name": "Validation"
+            }
+          ]
+        }
+      ],
+      "custom_plan": false,
+      "general_features": [
+        {
+          "_key": "42d0fa689bc3",
+          "_type": "booleanOptions",
+          "label": "Get a Virtual Lab",
+          "value": true
+        },
+        {
+          "_key": "36180b04fc55",
+          "_type": "booleanOptions",
+          "label": "Join any lab",
+          "value": true
+        },
+        {
+          "_key": "ed197917c286",
+          "_type": "booleanOptions",
+          "label": "Invite lab members",
+          "value": true
+        }
+      ],
+      "has_contact_button": false,
+      "has_subscription": false,
+      "has_subtitle": false,
+      "monthly_subscriptions": [],
+      "name": "Free",
+      "notebooks_features": [
+        {
+          "_key": "746101858ca8",
+          "_type": "planFeatures",
+          "cost": "4 credits / hour",
+          "name": "Running notebooks"
+        },
+        {
+          "_key": "9f60f43d3e06",
+          "_type": "planFeatures",
+          "cost": "0.05 credits / \u00b5m3",
+          "name": "EM skeletonization"
+        }
+      ],
+      "planOrder": null,
+      "simulate_features": [
+        {
+          "_key": "e296dc8bf854",
+          "_type": "planFeatures",
+          "cost": "1 credit / simulation",
+          "name": "Ion channel"
+        },
+        {
+          "_key": "0e7b9de6c48d",
+          "_type": "planFeatures",
+          "cost": "1 credit / simulation",
+          "name": "Single cell"
+        },
+        {
+          "_key": "64d65fadb7c6",
+          "_type": "planFeatures",
+          "cost": "1 credit / simulation",
+          "name": "Synaptome"
+        },
+        {
+          "_key": "2a0d7d7bbf48",
+          "_type": "planFeatures",
+          "cost": "10 credits / simulation",
+          "name": "Small microcircuit (\u2264 20 neurons)"
+        },
+        {
+          "_key": "81ce3b0399ea",
+          "_type": "planFeatures",
+          "cost": "0.05 credits / neuron / second of biological time",
+          "name": "Microcircuit (>20 neurons)"
+        },
+        {
+          "_key": "e0daefb9178d",
+          "_type": "planFeatures",
+          "cost": "20 credits / simulation",
+          "name": "Brian2"
+        }
+      ],
+      "subtitle": "",
+      "support": [
+        {
+          "_key": "85dbbba7b5e0",
+          "_type": "booleanOptions",
+          "label": "Priority support",
+          "value": false
+        },
+        {
+          "_key": "183753a2c83a",
+          "_type": "booleanOptions",
+          "label": "Onboarding",
+          "value": false
+        },
+        {
+          "_key": "34eeabd51cab",
+          "_type": "booleanOptions",
+          "label": "Dedicated account manager",
+          "value": false
+        }
+      ],
+      "yearly_subscriptions": []
+    }
+  ]
+}

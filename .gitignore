@@ -230,3 +230,6 @@ AGENTS.md
 .env.test.secrets
 .cursor/
 .agent-scratch/
+
+# Local backup of original website media; large animations and model archives are not website source.
+/.website-media-originals/

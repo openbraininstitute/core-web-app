@@ -1,4 +1,4 @@
-import { getRTFContent } from '@/services/sanity/api/get-rtf-content';
+import { getRTFContent } from '@/content/website/content';
 
 import SanityContentRTF from '../components/sanity-content-rtf/sanity-content-rtf';
 import { getSection } from '../utils';

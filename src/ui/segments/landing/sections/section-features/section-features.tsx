@@ -1,4 +1,4 @@
-import { getFeaturesContent } from '@/services/sanity/api/get-features-content';
+import { getFeaturesContent } from '@/content/website/content';
 
 import FeatureBlock from './feature-block';
 

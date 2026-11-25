@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { getSocialMediaLinks } from '@/services/sanity/api/get-social-media';
+import { getSocialMediaLinks } from '@/content/website/shared';
 import FooterPanel from '@/ui/segments/landing/layout/footer/footer-panel';
 import { LivingHero } from '@/ui/segments/landing/living-hero';
 import { OriginalHomePage } from '@/ui/segments/project/original-home';

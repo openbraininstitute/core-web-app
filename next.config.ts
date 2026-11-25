@@ -125,6 +125,11 @@ const config: NextConfig = {
   async headers() {
     const cacheHeader = [{ key: 'Cache-Control', value: LANDING_CACHE_CONTROL }];
     return [
+      // Imported media filenames include a content hash: new versions get new URLs.
+      {
+        source: '/static/website-media/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
       { source: '/', headers: cacheHeader },
       // Single-segment public landing pages (excluding `/app/*` and `/api/*`).
       // `[^/]+` keeps the match to one segment so nested routes don't pick this up.

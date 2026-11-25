@@ -2,14 +2,14 @@ import { Suspense } from 'react';
 
 import { BrainsLanding } from '@/ui/segments/landing/brains-landing';
 import { LandingFirstPaint } from '@/ui/segments/landing/landing-first-paint';
-import { generateMetadataFromSanity } from '@/ui/segments/landing/metadata/metadata';
+import { generateWebsiteMetadata } from '@/ui/segments/landing/metadata/metadata';
 
 import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const metadata = await generateMetadataFromSanity('/');
+  const metadata = await generateWebsiteMetadata('/');
   return metadata;
 }
 
