@@ -7,9 +7,11 @@ import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 import { cn } from '@/utils/css-class';
 
 import type { CheckboxChangeEvent } from 'antd/es/checkbox';
+import type { TControlAria } from '@/features/scan-config/components/ui-elements/registry';
 
 export interface BooleanInputProps {
   id?: string;
+  aria?: TControlAria;
   value: boolean | null;
   onChange: (value: boolean) => void;
   disabled?: boolean;
@@ -33,6 +35,7 @@ export interface BooleanInputProps {
  */
 export default function BooleanInput({
   id,
+  aria,
   value,
   onChange,
   disabled = false,
@@ -56,6 +59,7 @@ export default function BooleanInput({
         data-testid="scan-config-control"
         key={instanceKey}
         id={id}
+        {...aria}
         checked={normalizedValue}
         onChange={handleChange}
         disabled={disabled}

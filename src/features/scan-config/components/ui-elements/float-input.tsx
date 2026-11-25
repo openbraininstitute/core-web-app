@@ -4,6 +4,8 @@ import { useState } from 'react';
 
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 
+import type { TControlAria } from '@/features/scan-config/components/ui-elements/registry';
+
 /**
  * A single required number input for the `float_input` schema element: a bare number, no sweep
  * and no null branch. Empty is valid (the schema default applies); non-numeric text is not.
@@ -17,6 +19,7 @@ export function FloatInput({
   onChange,
   disabled,
   id,
+  aria,
 }: {
   value: number | null;
   min: number | undefined;
@@ -26,6 +29,7 @@ export function FloatInput({
   onChange: (value: number | null) => void;
   disabled: boolean;
   id?: string;
+  aria?: TControlAria;
 }) {
   // antd keeps invalid text (letters) on screen but reports the parsed value as null, so track
   // the raw string to tell non-numeric input apart from an empty field.
@@ -54,6 +58,7 @@ export function FloatInput({
     <div className="relative" data-scan-config-block-element={ScanConfigUIElementDict.FloatInput}>
       <InputNumber
         id={id}
+        {...aria}
         data-testid="scan-config-control"
         controls={false}
         disabled={disabled}

@@ -1,6 +1,9 @@
 import { useId } from 'react';
 
 import { type ParamSchema, ScanConfigUIElementDict } from '@/features/scan-config/types';
+import { useFieldIssue } from '@/features/scan-config/use-config-store';
+
+import type { TControlAria } from '@/features/scan-config/components/ui-elements/registry';
 
 type TFieldKind = ParamSchema['ui_element'];
 
@@ -25,4 +28,18 @@ export function useFieldLabelling(kind: TFieldKind) {
     labelId: id,
     group: { role: 'group', 'aria-labelledby': id },
   } as const;
+}
+
+/**
+ * The issue to show at a field (`path` without its leading slash) and what links the control to
+ * that message. `fallback` is used when the schema reports nothing at the field.
+ */
+export function useFieldIssueMark(path: string | undefined, fallback?: string) {
+  const issueId = useId();
+  const issue = useFieldIssue(path && `/${path}`) ?? fallback;
+  const controlAria: TControlAria | undefined = issue
+    ? { 'aria-invalid': true, 'aria-describedby': issueId }
+    : undefined;
+
+  return { issue, issueId: issue ? issueId : undefined, controlAria };
 }

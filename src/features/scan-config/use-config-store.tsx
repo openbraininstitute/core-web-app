@@ -15,6 +15,7 @@ import { entryNames } from '@/features/scan-config/commands';
 import { useConfigValidator } from '@/features/scan-config/components/hooks';
 import { errorsUnder } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import { isPlainObject } from '@/features/scan-config/components/utils';
+import { fieldIssuesOf, issueAt, issueLineOf } from '@/features/scan-config/issues';
 import {
   createBlockScope,
   createDerivedReader,
@@ -29,6 +30,7 @@ import {
 
 import type { ErrorObject } from 'ajv';
 import type { ReactNode } from 'react';
+import type { TFieldIssue, TIssueLine } from '@/features/scan-config/issues';
 import type {
   IBlockScope,
   IReportedIssues,
@@ -84,6 +86,7 @@ type TConfigErrors = ErrorObject[] | null;
 
 interface IScanConfigIssues {
   getErrors: () => TConfigErrors;
+  getFieldIssues: () => TFieldIssue[];
   reported: IReportedIssues;
 }
 
@@ -105,10 +108,15 @@ export function ScanConfigErrorsProvider({
   const store = useScanConfigStore();
   const validate = useConfigValidator({ initialConfig, schema });
   const [reported] = useState(createReportedIssues);
-  const issues = useMemo(
-    () => ({ getErrors: createSliceReader(store, validate, isEqual), reported }),
-    [store, validate, reported]
-  );
+  const issues = useMemo(() => {
+    const getErrors = createSliceReader(store, validate, isEqual);
+    const getFieldIssues = createSliceReader(
+      store,
+      (config) => fieldIssuesOf(getErrors(), config),
+      isEqual
+    );
+    return { getErrors, getFieldIssues, reported };
+  }, [store, validate, reported]);
 
   return <ScanConfigIssuesContext value={issues}>{children}</ScanConfigIssuesContext>;
 }
@@ -132,14 +140,12 @@ export function useConfigErrors(): TConfigErrors {
 
 const toIssuePath = (path: string) => (path.startsWith('/') ? path : `/${path}`);
 
-/**
- * Whether a path (`''` for the whole form, `/section`, `/section/entry`) has an issue, from the
- * schema or reported by a field; re-renders only when that flips.
- */
-export function useHasIssues(path: string): boolean {
+/** Subscribes to both sources of issues: the config (schema errors) and the reported issues. */
+function useIssuesSubscription() {
   const { subscribe: subscribeToConfig } = useScanConfigStore();
-  const { getErrors, reported } = useScanConfigIssues();
-  const subscribe = useCallback(
+  const { reported } = useScanConfigIssues();
+
+  return useCallback(
     (listener: () => void) => {
       const stopConfig = subscribeToConfig(listener);
       const stopReported = reported.subscribe(listener);
@@ -150,6 +156,15 @@ export function useHasIssues(path: string): boolean {
     },
     [subscribeToConfig, reported]
   );
+}
+
+/**
+ * Whether a path (`''` for the whole form, `/section`, `/section/entry`) has an issue, from the
+ * schema or reported by a field; re-renders only when that flips.
+ */
+export function useHasIssues(path: string): boolean {
+  const { getErrors, reported } = useScanConfigIssues();
+  const subscribe = useIssuesSubscription();
   const hasIssues = () =>
     (getErrors()?.some((error) => isAtOrBelow(error.instancePath, path)) ?? false) ||
     [...reported.getSnapshot().keys()].some((reportedPath) => isAtOrBelow(reportedPath, path));
@@ -176,6 +191,38 @@ export function useReportIssue(path: string | undefined, message: string | undef
 export function useReportedIssues(): ReadonlyMap<string, string> {
   const { reported } = useScanConfigIssues();
   return useSyncExternalStore(reported.subscribe, reported.getSnapshot, reported.getSnapshot);
+}
+
+/**
+ * The schema issue to show at a field, or `undefined`; re-renders only when that message changes.
+ * Issues a field reports itself are not here: the field shows those.
+ */
+export function useFieldIssue(path: string | undefined): string | undefined {
+  const { getFieldIssues } = useScanConfigIssues();
+  const getMessage = () => (path === undefined ? undefined : issueAt(getFieldIssues(), path));
+
+  return useSyncExternalStore(useScanConfigStore().subscribe, getMessage, getMessage);
+}
+
+/** Every issue of the form, from the schema and reported by fields, each named for the user. */
+export function useIssueLines(schema: ConfigSchema): TIssueLine[] {
+  const store = useScanConfigStore();
+  const { getFieldIssues, reported } = useScanConfigIssues();
+  const getLines = useMemo(
+    () =>
+      createDerivedReader(
+        () => ({ config: store.getSnapshot(), reported: reported.getSnapshot() }),
+        (source) =>
+          [
+            ...getFieldIssues(),
+            ...[...source.reported].map(([path, message]) => ({ path, message })),
+          ].map((issue) => issueLineOf(schema, source.config, issue)),
+        isEqual
+      ),
+    [store, getFieldIssues, reported, schema]
+  );
+
+  return useSyncExternalStore(useIssuesSubscription(), getLines, getLines);
 }
 
 /** The errors at or below a path, with paths relative to it; re-renders only when they change. */

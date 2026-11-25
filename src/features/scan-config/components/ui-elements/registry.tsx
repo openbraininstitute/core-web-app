@@ -95,6 +95,8 @@ import type { Nullish } from '@/utils/type';
 
 type TFieldKind = ParamSchema['ui_element'];
 
+export type TControlAria = { 'aria-invalid': true; 'aria-describedby': string };
+
 /** What every field component of the form receives. Setting `undefined` removes the key. */
 export type TFieldProps<TSchema extends ParamSchema = ParamSchema> = {
   fieldKey: string;
@@ -108,6 +110,8 @@ export type TFieldProps<TSchema extends ParamSchema = ParamSchema> = {
   errorPathPrefix?: string;
   /** the id a field with one control gives it, so the field's label points at it */
   controlId?: string;
+  /** what marks that one control invalid and links it to the message shown at the field */
+  controlAria?: TControlAria;
   /** name of the dictionary entry being edited; used to exclude self-references */
   selectedEntry?: string;
 };
@@ -122,10 +126,11 @@ function toStringList(value: unknown): string[] {
   return typeof value === 'string' ? [value] : [];
 }
 
-function StringInputField({ value, setValue, disabled, controlId }: TFieldProps) {
+function StringInputField({ value, setValue, disabled, controlId, controlAria }: TFieldProps) {
   return (
     <Input
       id={controlId}
+      {...controlAria}
       data-testid="scan-config-control"
       data-scan-config-block-element={ScanConfigUIElementDict.StringInput}
       disabled={disabled}
@@ -218,11 +223,13 @@ function FloatOptionalField({
   setValue,
   disabled,
   controlId,
+  controlAria,
 }: TFieldOf<typeof ScanConfigUIElementDict.FloatOptional>) {
   const bounds = numericSchemaBounds(paramSchema);
   return (
     <FloatOptional
       id={controlId}
+      aria={controlAria}
       min={bounds.min}
       max={bounds.max}
       exclusiveMin={bounds.exclusiveMin}
@@ -240,11 +247,13 @@ function FloatInputField({
   setValue,
   disabled,
   controlId,
+  controlAria,
 }: TFieldOf<typeof ScanConfigUIElementDict.FloatInput>) {
   const bounds = numericSchemaBounds(paramSchema);
   return (
     <FloatInput
       id={controlId}
+      aria={controlAria}
       min={bounds.min}
       max={bounds.max}
       exclusiveMin={bounds.exclusiveMin}
@@ -333,10 +342,18 @@ function EntityPropertyDropdownField({
   );
 }
 
-function BooleanInputField({ paramSchema, value, setValue, disabled, controlId }: TFieldProps) {
+function BooleanInputField({
+  paramSchema,
+  value,
+  setValue,
+  disabled,
+  controlId,
+  controlAria,
+}: TFieldProps) {
   return (
     <BooleanInput
       id={controlId}
+      aria={controlAria}
       value={typeof value === 'boolean' ? value : null}
       disabled={disabled}
       onChange={setValue}
@@ -345,10 +362,18 @@ function BooleanInputField({ paramSchema, value, setValue, disabled, controlId }
   );
 }
 
-function StochasticityField({ paramSchema, value, setValue, disabled, controlId }: TFieldProps) {
+function StochasticityField({
+  paramSchema,
+  value,
+  setValue,
+  disabled,
+  controlId,
+  controlAria,
+}: TFieldProps) {
   return (
     <Stochasticity
       id={controlId}
+      aria={controlAria}
       value={typeof value === 'boolean' ? value : null}
       disabled={disabled}
       onChange={setValue}
@@ -872,7 +897,6 @@ function ManipulationBySectionListField({
 }
 
 function ObjectFieldField({
-  fieldKey,
   paramSchema,
   value,
   setValue,
@@ -890,7 +914,7 @@ function ObjectFieldField({
       schema={schema}
       entity={entity}
       schemaMappingConfig={schemaMappingConfig}
-      errorPathPrefix={errorPathPrefix ? `${errorPathPrefix}/${fieldKey}` : undefined}
+      errorPathPrefix={errorPathPrefix}
       onChange={setValue}
     />
   );
