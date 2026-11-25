@@ -57,7 +57,7 @@ describe('useAutoSelectFileOnConfigChange', () => {
 
   it('switches from the log to the result once the run is done', () => {
     const { result, rerender } = renderHook(useHarness, { initialProps: running(false) });
-    rerender({ ...running(false), awaitingResult: true });
+    rerender({ ...running(true), awaitingResult: true });
     rerender(done(true));
     expect(result.current.selectedFile).toBe(spikes);
   });
@@ -95,7 +95,7 @@ describe('useAutoSelectFileOnConfigChange', () => {
     const { result, rerender } = renderHook(useHarness, { initialProps: running(false) });
     act(() => result.current.setSelectedFile(config));
     act(() => result.current.setSelectedFile(logs));
-    rerender({ ...running(false), awaitingResult: true });
+    rerender({ ...running(true), awaitingResult: true });
     rerender(done(true));
     expect(result.current.selectedFile).toBe(spikes);
   });
@@ -106,7 +106,7 @@ describe('useAutoSelectFileOnConfigChange', () => {
       initialProps: { ...done(true), outputFiles: [spikes, logs] },
     });
     act(() => result.current.setSelectedFile(logs));
-    rerender({ ...done(false), configId: 'sim-2', outputFiles: [logs2], awaitingResult: true });
+    rerender({ ...done(true), configId: 'sim-2', outputFiles: [logs2], awaitingResult: true });
     rerender({ ...done(true), configId: 'sim-2', outputFiles: [logs2, spikes] });
     expect(result.current.selectedFile).toBe(logs2);
   });
@@ -114,9 +114,21 @@ describe('useAutoSelectFileOnConfigChange', () => {
   it('switches from a log already on show when the simulation is first seen', () => {
     const initialProps: THarnessProps = { ...running(false), initialSelected: logs };
     const { result, rerender } = renderHook(useHarness, { initialProps });
-    rerender({ ...running(false), awaitingResult: true });
+    rerender({ ...running(true), awaitingResult: true });
     rerender(done(true));
     expect(result.current.selectedFile).toBe(spikes);
+  });
+
+  it("picks nothing while another finished simulation's files load", () => {
+    const logs2 = file('job-2:task-logs', ActivityCustomFileRenderer.TaskLogsViewer);
+    const spikes2 = file('spikes-2');
+    const { result, rerender } = renderHook(useHarness, {
+      initialProps: { ...done(true), outputFiles: [spikes, logs] },
+    });
+    rerender({ ...done(true), configId: 'sim-2', outputFiles: [logs2], awaitingResult: true });
+    expect(result.current.selectedFile).toBe(spikes);
+    rerender({ ...done(true), configId: 'sim-2', outputFiles: [spikes2, logs2] });
+    expect(result.current.selectedFile).toBe(spikes2);
   });
 
   it('starts over for another simulation', () => {

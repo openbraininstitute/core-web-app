@@ -186,7 +186,7 @@ export function SimulationFiles({
     inputFiles: prioritizedInputFiles,
     outputFiles: prioritizedOutputFiles,
     onSelect,
-    resultReady: execStatus === ActivityStatus.DONE && !outputLoading,
+    resultReady: execStatus === ActivityStatus.DONE,
     awaitingResult,
   });
 
