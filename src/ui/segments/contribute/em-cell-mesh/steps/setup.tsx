@@ -98,6 +98,7 @@ export function Setup() {
         ]}
       >
         <InputNumber
+          stringMode
           className="h-12 w-full rounded-full flex items-center [&_.ant-input-number-handler-wrap]:hidden"
           placeholder="Enter cell ID (int)"
         />

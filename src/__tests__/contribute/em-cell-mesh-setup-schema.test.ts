@@ -14,7 +14,7 @@ const filledSetup = {
   description: 'A neuron',
   experiment_date: '2026-11-25',
   em_dense_reconstruction_dataset_id: DATASET_ID,
-  dense_reconstruction_cell_id: 42,
+  dense_reconstruction_cell_id: '864691135405224174',
   release_version: 1,
   level_of_detail: 0,
 };
@@ -40,14 +40,34 @@ describe('EM cell mesh setup schema', () => {
     expect(initialSetup?.mesh_type).toBe('static');
   });
 
-  it.each(['release_version', 'level_of_detail', 'mesh_type'])('requires %s', (field) => {
+  it.each([
+    'release_version',
+    'level_of_detail',
+    'mesh_type',
+    'dense_reconstruction_cell_id',
+  ])('requires %s', (field) => {
     expect(issuePaths({ ...filledSetup, [field]: null })).toEqual([field]);
   });
 
-  it('rejects a release version that is not a whole number', () => {
-    const result = SetupSchema.safeParse({ ...filledSetup, release_version: 1.5 });
+  it.each([
+    ['release_version', 1.5, 'Release version must be a whole number'],
+    ['level_of_detail', 1.5, 'Level of detail must be a whole number'],
+    ['dense_reconstruction_cell_id', '1.5', 'Dense reconstruction cell id must be a whole number'],
+    [
+      'dense_reconstruction_cell_id',
+      '9223372036854775808',
+      'Dense reconstruction cell id is too large',
+    ],
+  ])('rejects %s %s', (field, value, message) => {
+    const result = SetupSchema.safeParse({ ...filledSetup, [field]: value });
 
     expect(result.success).toBe(false);
-    expect(result.error?.issues[0].message).toBe('Release version must be a whole number');
+    expect(result.error?.issues.map((issue) => issue.message)).toEqual([message]);
+  });
+
+  it('keeps every digit of a cell id above 2^53', () => {
+    const result = SetupSchema.safeParse(filledSetup);
+
+    expect(result.data?.dense_reconstruction_cell_id).toBe('864691135405224174');
   });
 });
