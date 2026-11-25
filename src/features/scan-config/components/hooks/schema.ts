@@ -3,7 +3,7 @@
 import $RefParser from '@apidevtools/json-schema-ref-parser';
 import { type QueryClient, useQuery } from '@tanstack/react-query';
 import { isEmpty, omit, pick } from 'es-toolkit/compat';
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 import { z } from 'zod';
 
@@ -185,13 +185,6 @@ export function useDefaultConfig(schemaName: SchemaName) {
     if (!schema) return;
     return buildInitialConfigState(schema, {}, { type: 'circuit' } as ICircuit);
   }, [schema]);
-}
-
-export function isRootBlock(schema: ConfigSchema, key: string) {
-  return (
-    schema.properties?.[key] &&
-    schema.properties[key].ui_element === ScanConfigUIElementDict.BlockSingle
-  );
 }
 
 export function isRootBlockSingle(schema: ConfigSchema, key: string) {
@@ -538,14 +531,6 @@ export function useConfigStoreSetup({
   ]);
 
   return store;
-}
-
-/** The store and its current config; the caller re-renders on every edit. */
-export function useConfig(args: Parameters<typeof useConfigStoreSetup>[0]) {
-  const store = useConfigStoreSetup(args);
-  const config = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
-
-  return [config, store.set, store] as const;
 }
 
 /**

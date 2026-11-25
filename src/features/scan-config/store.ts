@@ -1,15 +1,6 @@
 import { isPlainObject } from '@/features/scan-config/components/utils';
 
-import type { Config, ConfigValue } from '@/features/scan-config/types';
-
-export type TConfigUpdate = Config | ((previous: Config) => Config);
-
-export interface IScanConfigStore {
-  getSnapshot: () => Config;
-  subscribe: (listener: () => void) => () => void;
-  /** An updater runs on the latest config, so updates made in a row never overwrite each other. */
-  set: (update: TConfigUpdate) => void;
-}
+import type { Config, ConfigValue, IScanConfigStore } from '@/features/scan-config/types';
 
 export function createScanConfigStore(initial: Config): IScanConfigStore {
   let config = initial;

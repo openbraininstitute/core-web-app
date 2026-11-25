@@ -7,10 +7,14 @@ import { entryNames } from '@/features/scan-config/commands';
 import { useValidateSchema } from '@/features/scan-config/components/hooks';
 import { createSliceReader, readBlock, writeBlock } from '@/features/scan-config/store';
 
-import type { ErrorObject } from 'ajv';
 import type { ReactNode } from 'react';
-import type { IScanConfigStore } from '@/features/scan-config/store';
-import type { Config, ConfigSchema, ConfigValue } from '@/features/scan-config/types';
+import type {
+  Config,
+  ConfigSchema,
+  ConfigValue,
+  IScanConfigStore,
+  TConfigErrors,
+} from '@/features/scan-config/types';
 
 const ScanConfigStoreContext = createContext<IScanConfigStore | null>(null);
 
@@ -53,8 +57,6 @@ const wholeConfig = (config: Config) => config;
 export function useWholeConfig(): Config {
   return useConfigValue(wholeConfig);
 }
-
-type TConfigErrors = ErrorObject[] | null;
 
 const ScanConfigErrorsContext = createContext<TConfigErrors | undefined>(undefined);
 

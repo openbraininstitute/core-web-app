@@ -7,7 +7,6 @@ import { nextEntryName } from '@/features/scan-config/components/hooks';
 import { buildBlockDefaults } from '@/features/scan-config/components/hooks/block-defaults';
 import {
   getBlockUsabilityConfig,
-  isRootBlock,
   type TSchemaMappingConfiguration,
 } from '@/features/scan-config/components/hooks/schema';
 import { circuitSceneAnchorAtom } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
@@ -23,6 +22,7 @@ import { isPlainObject } from '@/features/scan-config/components/utils';
 import { resolveScanConfigEditingLocked } from '@/features/scan-config/hooks/use-config-editing-locked';
 import { useDiffPreview } from '@/features/scan-config/hooks/use-diff-preview-atom';
 import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
+import { isRootBlock } from '@/features/scan-config/types';
 import { useBlockState } from '@/features/scan-config/use-config-store';
 import { useAIConfig } from '@/services/ai-agent';
 import { configDiffsAtom } from '@/state/config-highlights';

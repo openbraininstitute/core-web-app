@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { entryNames } from '@/features/scan-config/commands';
 import { nextEntryName } from '@/features/scan-config/components/hooks/entry-name';
-import { useConfig } from '@/features/scan-config/components/hooks/schema';
+import { useConfigStoreSetup } from '@/features/scan-config/components/hooks/schema';
 import { ScanConfigFromIdType } from '@/features/scan-config/workflow/scan-config-from-id-type';
 import { WorkflowSeed } from '@/features/scan-config/workflow/seeding/workflow-seed';
 import { WorkflowSessionSelectionMode } from '@/features/scan-config/workflow/workflow-session-selection';
@@ -371,7 +371,7 @@ describe('editor state built from a seeded session', () => {
 
   it('opens the editor with the model and its recording already configured', () => {
     const { result } = renderHook(() =>
-      useConfig({
+      useConfigStoreSetup({
         schema: ionChannelSimulationSchema,
         model: null,
         workflowSessionSelection: seededSelection,
@@ -379,7 +379,7 @@ describe('editor state built from a seeded session', () => {
       })
     );
 
-    const [config] = result.current;
+    const config = result.current.getSnapshot();
 
     expect(config.ion_channel_models).toHaveProperty('Ion channel model 0');
     expect(config.recordings).toHaveProperty(['Recording 0', 'variable'], {
@@ -391,13 +391,13 @@ describe('editor state built from a seeded session', () => {
 
   it('reserves the seeded entry names, so the next block the user adds does not overwrite one', () => {
     const { result } = renderHook(() => {
-      const [config] = useConfig({
+      const store = useConfigStoreSetup({
         schema: ionChannelSimulationSchema,
         model: null,
         workflowSessionSelection: seededSelection,
         resolveFromIdType: resolveIonChannelFromIdType,
       });
-      return entryNames(config, ionChannelSimulationSchema);
+      return entryNames(store.getSnapshot(), ionChannelSimulationSchema);
     });
 
     expect(result.current).toEqual(new Set(['Ion channel model 0', 'Recording 0']));
@@ -419,13 +419,13 @@ describe('editor state built from a seeded session', () => {
     };
 
     const { result } = renderHook(() => {
-      const [config] = useConfig({
+      const store = useConfigStoreSetup({
         schema: ionChannelSimulationSchema,
         initialConfig,
         model: null,
         origin: 'campaign-id',
       });
-      return entryNames(config, ionChannelSimulationSchema);
+      return entryNames(store.getSnapshot(), ionChannelSimulationSchema);
     });
 
     expect(result.current).toEqual(new Set(['Ion channel model 0', 'Recording 0', 'Recording 1']));
@@ -441,7 +441,7 @@ describe('editor state built from a seeded session', () => {
     };
 
     const { result } = renderHook(() =>
-      useConfig({
+      useConfigStoreSetup({
         schema: ionChannelSimulationSchema,
         initialConfig,
         model: null,
@@ -451,7 +451,7 @@ describe('editor state built from a seeded session', () => {
       })
     );
 
-    const [config] = result.current;
+    const config = result.current.getSnapshot();
 
     expect(config.ion_channel_models).toEqual({});
     expect(config.recordings).toEqual(initialConfig.recordings);

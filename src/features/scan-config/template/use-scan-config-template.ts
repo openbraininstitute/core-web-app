@@ -7,7 +7,7 @@ import { diffBarDataAtom } from '@/features/ai-assistant/chat/use-last-message-d
 import { showRestoreAtom } from '@/features/ai-assistant/message-item/collapsible-message/collapsible-message';
 import { useScanConfigWorkflowEditorField } from '@/features/scan-config/bridge/editor-context';
 import { useSetScanConfigEntityPreview } from '@/features/scan-config/bridge/entity-preview';
-import { useReserveEntryName } from '@/features/scan-config/components/hooks';
+import { createEntry as createEntryCommand } from '@/features/scan-config/commands';
 import { useConfigStoreSetup } from '@/features/scan-config/components/hooks/schema';
 import { clearScanValueSelectionAtom } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import { withoutEmptyRegions } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
@@ -18,7 +18,6 @@ import {
 import { useScanConfigEditingLocked } from '@/features/scan-config/hooks/use-config-editing-locked';
 import { useScanConfigTab } from '@/features/scan-config/hooks/use-scan-config-tab';
 import {
-  type Config,
   EModelOptimisationMechanismsTabs,
   isType,
   ScanConfigActivity,
@@ -29,6 +28,7 @@ import {
 import { usePrevious } from '@/hooks/hooks';
 import { clearDiffStateAtom, expandedRootElementsAtom } from '@/state/config-highlights';
 
+import type { ConfigValue } from '@/features/scan-config/types';
 import type { ScanConfigTemplateProps } from './types';
 
 /**
@@ -88,7 +88,6 @@ export function useScanConfigTemplate({
     seed,
   });
   const setConfig = configStore.set;
-  const reserveEntryName = useReserveEntryName({ store: configStore, schema });
   const editingLocked = useScanConfigEditingLocked({
     campaignId,
     loading,
@@ -98,18 +97,12 @@ export function useScanConfigTemplate({
 
   const createEntry = useCallback(
     (rootElement: string, block: Record<string, unknown>) => {
-      const entry = reserveEntryName(rootElement);
-
-      setConfig(
-        (previous) =>
-          ({
-            ...previous,
-            [rootElement]: {
-              ...(previous[rootElement] as object),
-              [entry]: block,
-            },
-          }) as Config
-      );
+      const created = createEntryCommand(configStore.getSnapshot(), schema, {
+        dictionary: rootElement,
+        block: block as ConfigValue,
+      });
+      const entry = created.name;
+      setConfig(created.config);
 
       // Selecting alone only highlights the tab; the form opens on `editing`.
       setExpandedRootElements((previous) => new Set(previous).add(rootElement));
@@ -119,7 +112,7 @@ export function useScanConfigTemplate({
       setIsEditingKey(false);
       setNewKey('');
     },
-    [reserveEntryName, setConfig, setExpandedRootElements]
+    [configStore, schema, setConfig, setExpandedRootElements]
   );
 
   const selectedSchema = schema.properties[selectedRootElement];

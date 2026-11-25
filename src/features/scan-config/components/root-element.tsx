@@ -5,7 +5,6 @@ import BlockDictionaryEntries from '@/features/scan-config/components/block-dict
 import { Chevron, CountBadge, LeftMenuTab } from '@/features/scan-config/components/components';
 import { EModelOptimisationMechanismsTabList } from '@/features/scan-config/components/emodel-optimisation-mechanisms-tabs';
 import { useFieldErrorsForPath } from '@/features/scan-config/components/hooks/field-errors';
-import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
 import { DESCRIPTION_TOOLTIP_CLASS } from '@/features/scan-config/components/shared/box-class';
 import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import { isPlainObject } from '@/features/scan-config/components/utils';
@@ -17,6 +16,7 @@ import {
   type IBlockSingle,
   type IEModelOptimisationParameters,
   type IRootBlockUnion,
+  isRootBlock,
   isType,
   ScanConfigUIElementDict,
   type TBlock,

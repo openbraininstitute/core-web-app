@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { deleteEntry, entryNames, renameEntry } from '@/features/scan-config/commands';
+import { createEntry, deleteEntry, entryNames, renameEntry } from '@/features/scan-config/commands';
 import {
   NeuronalManipulationTypeDict,
   ScanConfigUIElementDict,
@@ -85,13 +85,13 @@ describe('renameEntry', () => {
 });
 
 describe('deleteEntry', () => {
-  it('removes the entry and clears every reference to it', () => {
+  it('removes the entry and clears the references to it; under `initialize` only its own reference, to null', () => {
     const before = config();
 
     const next = deleteEntry(before, schema, { dictionary: 'neuron_sets', name: 'BioAll' });
 
     expect(next).toEqual({
-      initialize: { neuron_set: null, nested: {} },
+      initialize: { neuron_set: null, nested: { inner: ref('BioAll') } },
       neuron_sets: {
         First: { type: 'IDNeuronSet' },
         Combined: { combined_with: [[null, 'union']] },
@@ -176,5 +176,59 @@ describe('entryNames', () => {
     );
 
     expect(names).toEqual(new Set(['First', 'AllBio', 'Combined', 'Clamp']));
+  });
+});
+
+describe('createEntry', () => {
+  const recordingsSchema = {
+    properties: {
+      recordings: {
+        ui_element: ScanConfigUIElementDict.BlockDictionary,
+        singular_name: 'recording',
+      },
+    },
+  } as unknown as ConfigSchema;
+
+  it('adds the entry under the next free name and leaves its input as it was', () => {
+    const before: Config = { recordings: { 'Recording 0': {} } };
+
+    const created = createEntry(before, recordingsSchema, {
+      dictionary: 'recordings',
+      block: { type: 'SomaVoltageRecording' },
+    });
+
+    expect(created.name).toBe('Recording 1');
+    expect(created.config).toEqual({
+      recordings: { 'Recording 0': {}, 'Recording 1': { type: 'SomaVoltageRecording' } },
+    });
+    expect(before).toEqual({ recordings: { 'Recording 0': {} } });
+  });
+
+  it('gives two entries created in a row different names', () => {
+    const first = createEntry({ recordings: {} }, recordingsSchema, {
+      dictionary: 'recordings',
+      block: {},
+    });
+    const second = createEntry(first.config, recordingsSchema, {
+      dictionary: 'recordings',
+      block: {},
+    });
+
+    expect(Object.keys(second.config.recordings as object)).toEqual(['Recording 0', 'Recording 1']);
+  });
+
+  it('gives a name again once its entry was removed', () => {
+    const created = createEntry({ recordings: { 'Recording 1': {} } }, recordingsSchema, {
+      dictionary: 'recordings',
+      block: {},
+    });
+
+    expect(created.name).toBe('Recording 0');
+  });
+
+  it('starts the section when it does not exist yet', () => {
+    const created = createEntry({}, recordingsSchema, { dictionary: 'recordings', block: {} });
+
+    expect(created.config).toEqual({ recordings: { 'Recording 0': {} } });
   });
 });
