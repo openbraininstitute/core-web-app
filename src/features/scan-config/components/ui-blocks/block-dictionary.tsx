@@ -24,7 +24,13 @@ import { isPlainObject } from '@/features/scan-config/components/utils';
 import { resolveScanConfigEditingLocked } from '@/features/scan-config/hooks/use-config-editing-locked';
 import { useDiffPreview } from '@/features/scan-config/hooks/use-diff-preview-atom';
 import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
-import { useBlockState, useGetConfig, useSetConfig } from '@/features/scan-config/use-config-store';
+import {
+  BlockScopeProvider,
+  useBlockProperty,
+  useGetConfig,
+  useHasBlock,
+  useSetConfig,
+} from '@/features/scan-config/use-config-store';
 import { useAIConfig } from '@/services/ai-agent';
 import { configDiffsAtom } from '@/state/config-highlights';
 import { MarkdownDescription } from '@/ui/molecules/markdown-description';
@@ -73,12 +79,11 @@ export default function BlockDictionary({
   const circuitSceneAnchor = useAtomValue(circuitSceneAnchorAtom);
   const showingDiffs = useShowingDiffs();
   const previewData = useDiffPreview(selectedRootElement, selectedEntry);
-  const [liveState, setEntryState] = useBlockState(selectedRootElement, selectedEntry);
+  const hasEntry = useHasBlock(selectedRootElement, selectedEntry);
+  const selectedBlockLocal = useBlockProperty(selectedRootElement, selectedEntry, 'type');
   const electrodeOverlaysEnabled = useFlag(electrodeOverlaysFlag.key);
   const getConfig = useGetConfig();
   const setConfig = useSetConfig();
-
-  const selectedBlockLocal = isPlainObject(liveState) ? liveState.type : undefined;
 
   const selectedBlockAI =
     aiConfig &&
@@ -103,36 +108,36 @@ export default function BlockDictionary({
       d.path[1] === selectedEntry
   );
 
-  if (selectedBlockSchema && isPlainObject(liveState)) {
-    // Preview atom takes priority when showing diffs so the Block displays
-    // the new/restored values instead of the current live values.
-    const state = previewData ?? liveState;
-
+  if (selectedBlockSchema && hasEntry) {
     // Electrode sweeps drive a 3D preview that can only draw one coordinate, so
     // their values get per-value eyes; other workflows render sweeps unchanged.
     const offersScanValueSelection =
       electrodeOverlaysEnabled && selectedRootElement === ELECTRODE_LOCATIONS_CONFIG_KEY;
 
     const block = (
-      <Block
-        schema={schema}
+      <BlockScopeProvider
         key={`${selectedRootElement}_${selectedEntry}`}
-        disabled={resolveScanConfigEditingLocked({
-          campaignId,
-          loading,
-          aiConfig,
-          isChatReady,
-          showingDiffs,
-        })}
-        blockSchema={selectedBlockSchema}
-        state={state}
-        setState={setEntryState}
-        entity={entity}
-        schemaMappingConfig={schemaMappingConfig}
         rootElement={selectedRootElement}
-        selectedEntry={selectedEntry}
-        errorPathPrefix={errorPathPrefix}
-      />
+        entry={selectedEntry}
+        preview={previewData}
+      >
+        <Block
+          schema={schema}
+          disabled={resolveScanConfigEditingLocked({
+            campaignId,
+            loading,
+            aiConfig,
+            isChatReady,
+            showingDiffs,
+          })}
+          blockSchema={selectedBlockSchema}
+          entity={entity}
+          schemaMappingConfig={schemaMappingConfig}
+          rootElement={selectedRootElement}
+          selectedEntry={selectedEntry}
+          errorPathPrefix={errorPathPrefix}
+        />
+      </BlockScopeProvider>
     );
 
     return offersScanValueSelection ? (

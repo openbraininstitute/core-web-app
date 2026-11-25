@@ -6,13 +6,19 @@ import {
 } from '@/features/scan-config/components/hooks/schema';
 import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import Block from '@/features/scan-config/components/ui-blocks/block';
-import { isPlainObject } from '@/features/scan-config/components/utils';
 import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
+import { writeBlock } from '@/features/scan-config/store';
 import { isType } from '@/features/scan-config/types';
-import { useBlockState } from '@/features/scan-config/use-config-store';
+import {
+  BlockScopeProvider,
+  useBlockProperty,
+  useHasBlock,
+  useSetConfig,
+} from '@/features/scan-config/use-config-store';
 
 import type {
   ConfigSchema,
+  ConfigValue,
   IRootBlockUnion,
   TBlock,
   TSupportedEntitiesForScanConfiguration,
@@ -52,11 +58,12 @@ export default function BlockUnion({
   const showingDiffs = useShowingDiffs();
 
   // Get current selected type from config
-  const [currentConfig, setCurrentConfig] = useBlockState(selectedRootElement);
-  const selectedType =
-    isPlainObject(currentConfig) && typeof currentConfig[discriminatorProp] === 'string'
-      ? currentConfig[discriminatorProp]
-      : undefined;
+  const setConfig = useSetConfig();
+  const setCurrentConfig = (next: ConfigValue) =>
+    setConfig((config) => writeBlock(config, selectedRootElement, undefined, next));
+  const hasBlock = useHasBlock(selectedRootElement);
+  const discriminator = useBlockProperty(selectedRootElement, undefined, discriminatorProp);
+  const selectedType = typeof discriminator === 'string' ? discriminator : undefined;
 
   // Find the matching variant schema based on the current type
   const selectedBlockSchema: TBlock | undefined = blockUnionSchema.oneOf.find((o: TBlock) => {
@@ -65,7 +72,7 @@ export default function BlockUnion({
   });
 
   // If a variant is selected and we have an atom, show the form
-  if (selectedBlockSchema && isPlainObject(currentConfig)) {
+  if (selectedBlockSchema && hasBlock) {
     return (
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
@@ -81,18 +88,18 @@ export default function BlockUnion({
             </button>
           )}
         </div>
-        <Block
-          hideTitle
-          schema={schema}
-          key={`${selectedRootElement}_${selectedType}`}
-          disabled={!!campaignId || loading || showingDiffs}
-          blockSchema={selectedBlockSchema}
-          state={currentConfig}
-          setState={setCurrentConfig}
-          entity={entity}
-          schemaMappingConfig={schemaMappingConfig}
-          errorPathPrefix={errorPathPrefix}
-        />
+        <BlockScopeProvider rootElement={selectedRootElement}>
+          <Block
+            hideTitle
+            schema={schema}
+            key={`${selectedRootElement}_${selectedType}`}
+            disabled={!!campaignId || loading || showingDiffs}
+            blockSchema={selectedBlockSchema}
+            entity={entity}
+            schemaMappingConfig={schemaMappingConfig}
+            errorPathPrefix={errorPathPrefix}
+          />
+        </BlockScopeProvider>
       </div>
     );
   }
