@@ -11,6 +11,7 @@ import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 
 import type { FlatValidationResult } from '@/features/model-analysis/viewer/container/hooks';
+import type { IValidationDocumentation } from '@/features/model-analysis/viewer/container/hooks/dictionary';
 
 import styles from './documentation.module.css';
 
@@ -44,11 +45,10 @@ export default function Documentation({
   value,
   variant = ViewVariant.Light,
 }: DocumentationProps & { variant?: TViewVariant }) {
-  const { documentation } = value;
+  const { documentation, resultDescription } = value;
 
-  if (!documentation) return null;
+  if (!documentation && !resultDescription) return null;
 
-  const { protocol } = documentation;
   return (
     <div
       id={`${documentation}_${value.assetId}`}
@@ -72,6 +72,25 @@ export default function Documentation({
           <hr />
         </>
       )}
+      {resultDescription ? (
+        <div>{resultDescription}</div>
+      ) : (
+        documentation && <DictionaryDocumentation documentation={documentation} variant={variant} />
+      )}
+    </div>
+  );
+}
+
+function DictionaryDocumentation({
+  documentation,
+  variant,
+}: {
+  documentation: IValidationDocumentation;
+  variant: TViewVariant;
+}) {
+  const { protocol } = documentation;
+  return (
+    <>
       <TextPatternTransformer
         regex={markdownLinkRegex}
         component={(match) => (
@@ -120,6 +139,6 @@ export default function Documentation({
           {documentation.validation_condition}
         </div>
       )}
-    </div>
+    </>
   );
 }

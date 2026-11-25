@@ -7,6 +7,7 @@ import { getAssets } from '@/api/entitycore/queries/assets';
 import { getValidationResults } from '@/api/entitycore/queries/general/validation-result';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { DEFAULT_PAGE_XSMALL_SIZE } from '@/constants';
+import { isThumbnailResult } from '@/features/model-analysis/helpers';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { IValidationResult } from '@/api/entitycore/types/entities/validation-result';
@@ -28,7 +29,9 @@ export function useAnalysis({ workspace, id }: { id: string; workspace: Workspac
     enabled: !!id,
     select(data) {
       return {
-        data: data.pages.flatMap((page) => page.data),
+        data: data.pages
+          .flatMap((page) => page.data)
+          .filter((result) => !isThumbnailResult(result)),
         pagination: data.pages[data.pages.length - 1].pagination,
       };
     },
