@@ -33,8 +33,10 @@ Other changes:
   chapter components from the live 3D viewer module.
 - Stripe uses its pure entry point; the external billing script starts when
   getStripe is actually called, rather than when a module is imported.
-- Homepage allows hourly static revalidation; content is public and identical
-  for signed-in and signed-out visitors. Protected /app routes are unaffected.
+- Homepage retains request-time rendering: the root layout injects deployment
+  configuration at runtime. Static pre-rendering would serialize the build-time
+  empty configuration placeholder and prevent client startup. Session lookup
+  remains removed from the public homepage. Protected /app routes are unaffected.
 - Preload the public information font and logo face; other platform fonts load
   on use, instead of competing for initial bandwidth.
 - Versioned optimized media has one-year immutable cache headers.

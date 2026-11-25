@@ -6,7 +6,9 @@ import { generateWebsiteMetadata } from '@/ui/segments/landing/metadata/metadata
 
 import type { Metadata } from 'next';
 
-export const revalidate = 3600;
+// Runtime configuration is injected by the root layout. Build-time rendering
+// would serialize the config module's build placeholder instead of deployment values.
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
   const metadata = await generateWebsiteMetadata('/');
