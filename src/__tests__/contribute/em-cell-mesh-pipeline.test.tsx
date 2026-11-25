@@ -34,7 +34,7 @@ function values(fileName: string): TEMCellMeshForm {
       brain_region_id: 'region',
       experiment_date: '2026-11-25',
       em_dense_reconstruction_dataset_id: 'dataset',
-      dense_reconstruction_cell_id: 42,
+      dense_reconstruction_cell_id: '42',
       release_version: 1,
       level_of_detail: 0,
       generation_method: 'marching_cubes',
