@@ -1,9 +1,17 @@
 import { describe, expect, it } from 'vitest';
 
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { WorkspaceSection } from '@/constants';
 import { ModelDataExtendedTypes, SimulationDataExtendedTypes } from '@/ui/segments/explore/helpers';
-import { listWorkflows } from '@/ui/segments/workflows/config/helpers';
-import { WorkflowListSortDict } from '@/ui/segments/workflows/config/types';
+import {
+  getWorkflowListingLabels,
+  listActivities,
+  listWorkflows,
+} from '@/ui/segments/workflows/config/helpers';
+import {
+  WorkflowListContextDict,
+  WorkflowListSortDict,
+} from '@/ui/segments/workflows/config/types';
 
 import type { FeatureFlags } from '@/features/feature-flags/flags';
 
@@ -184,5 +192,37 @@ describe('data navigation naming', () => {
       'Single neuron (legacy)',
       'Synaptome (legacy)',
     ]);
+  });
+});
+
+describe('workflows table labels', () => {
+  const browsed = listActivities(allFlagsOn).flatMap((activity) =>
+    listWorkflows({
+      activity: activity.value,
+      flags: allFlagsOn,
+      context: WorkflowListContextDict.Browse,
+    }).map((workflow) => ({ activity, workflow }))
+  );
+
+  it('has one browse workflow per type in each category', () => {
+    const keys = browsed.map(
+      ({ activity, workflow }) => `${activity.value}:${workflow.targetType}`
+    );
+    expect(keys.length).toBeGreaterThan(0);
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+
+  it("labels every listing with its pickers' Category and Type", () => {
+    for (const { activity, workflow } of browsed) {
+      expect(
+        getWorkflowListingLabels({ activity: activity.value, targetType: workflow.targetType })
+      ).toEqual({ category: activity.label, type: workflow.label });
+    }
+  });
+
+  it('names a type with no browse workflow by its workflow catalog label', () => {
+    expect(
+      getWorkflowListingLabels({ activity: null, targetType: ExtendedEntitiesTypeDict.Memodel })
+    ).toEqual({ category: '-', type: 'Single neuron' });
   });
 });
