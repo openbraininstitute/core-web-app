@@ -122,7 +122,7 @@ function workflowLabel(
 
 /** The Category and Type a workflow listing is labelled with, as its pickers name them. */
 export function getWorkflowListingLabels(opts: {
-  activity: TActivityValue | string | null | undefined;
+  activity: TActivityValue | null | undefined;
   targetType: TExtendedEntitiesTypeDict | null | undefined;
 }): { category: string; type: string } {
   const { activity, targetType } = opts;
