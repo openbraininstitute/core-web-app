@@ -156,7 +156,14 @@ export function useEMCellMeshPipeline({
       convertEMCellMesh({ ctx: { projectId, virtualLabId }, entityId }),
   });
 
-  useWarnBeforeUnload(createAssetsAsync.isPending);
+  const loading =
+    createEMCellMeshAsync.isPending ||
+    createAssetsAsync.isPending ||
+    createContributionAsync.isPending ||
+    createMtypeClassificationAsync.isPending ||
+    convertAsync.isPending;
+
+  useWarnBeforeUnload(loading);
 
   return {
     createEntity: async ({ values }: { values: TEMCellMeshForm }) => {
@@ -193,23 +200,14 @@ export function useEMCellMeshPipeline({
           await convertAsync.mutateAsync(cellMesh.id);
         }
       } catch (error) {
-        if (isObj) {
-          await tryCatch(
-            deleteEMCellMesh({ id: cellMesh.id, context: { projectId, virtualLabId } })
-          );
-          invalidateEntityListings(queryClient, ExtendedEntitiesTypeDict.EMCellMesh);
-        }
+        await tryCatch(deleteEMCellMesh({ id: cellMesh.id, context: { projectId, virtualLabId } }));
+        invalidateEntityListings(queryClient, ExtendedEntitiesTypeDict.EMCellMesh);
         throw error;
       }
 
       return cellMesh;
     },
-    loading:
-      createEMCellMeshAsync.isPending ||
-      createAssetsAsync.isPending ||
-      createContributionAsync.isPending ||
-      createMtypeClassificationAsync.isPending ||
-      convertAsync.isPending,
+    loading,
     error: (createEMCellMeshAsync.error ||
       createAssetsAsync.error ||
       createContributionAsync.error ||

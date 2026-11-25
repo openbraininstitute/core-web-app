@@ -116,7 +116,7 @@ describe('useEMCellMeshPipeline', () => {
     expect(result.current.completionNotice).toBeNull();
   });
 
-  it('keeps a GLB mesh when its upload fails, as before', async () => {
+  it('deletes a GLB mesh when its upload fails', async () => {
     h.createAsset.mockRejectedValue(new Error('upload failed'));
     const { result } = render();
 
@@ -124,6 +124,18 @@ describe('useEMCellMeshPipeline', () => {
       await expect(result.current.createEntity({ values: values('neuron.glb') })).rejects.toThrow();
     });
 
-    expect(h.deleteEMCellMesh).not.toHaveBeenCalled();
+    expect(h.deleteEMCellMesh).toHaveBeenCalledOnce();
+  });
+
+  it('reports the launch error when the conversion already holds the mesh', async () => {
+    h.convertEMCellMesh.mockRejectedValue(new Error('launch failed'));
+    h.deleteEMCellMesh.mockRejectedValue(new Error('mesh used by an activity'));
+    const { result } = render();
+
+    await act(async () => {
+      await expect(result.current.createEntity({ values: values('neuron.obj') })).rejects.toThrow(
+        'launch failed'
+      );
+    });
   });
 });

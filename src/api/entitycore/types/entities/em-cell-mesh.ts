@@ -141,9 +141,10 @@ export interface IEMCellMesh
   em_dense_reconstruction_dataset: EntityCoreIdentifiable & EntityCoreType;
 }
 
-export interface IEMCellMeshCreate extends IEMCellMeshBase, Partial<IEntityLifecycleStatus> {
-  name: string;
-  description: string;
+export interface IEMCellMeshCreate
+  extends IEMCellMeshBase,
+    Pick<IEMCellMesh, 'name' | 'description'>,
+    Partial<IEntityLifecycleStatus> {
   brain_region_id: string;
   subject_id: string;
   license_id: string;

@@ -62,6 +62,20 @@ export function glbJsonEnd(header: Uint8Array): number {
   return GLB_HEADER_BYTES + view.getUint32(12, true);
 }
 
+/** The whole file's length, as the GLB's first 20 bytes declare it. */
+export function glbDeclaredLength(header: Uint8Array): number {
+  glbJsonEnd(header);
+  return new DataView(header.buffer, header.byteOffset, GLB_HEADER_BYTES).getUint32(8, true);
+}
+
+/** Whether an 8-byte chunk header starts the binary chunk. */
+export function isGlbBinChunkHeader(chunkHeader: Uint8Array): boolean {
+  if (chunkHeader.byteLength < 8) return false;
+  return (
+    new DataView(chunkHeader.buffer, chunkHeader.byteOffset, 8).getUint32(4, true) === BIN_CHUNK
+  );
+}
+
 /** The JSON chunk, once the first `received` bytes hold it; null before, and an error if this isn't a GLB. */
 export function readGlbJson(bytes: Uint8Array, received = bytes.byteLength): GltfJson | null {
   if (received < GLB_HEADER_BYTES) return null;

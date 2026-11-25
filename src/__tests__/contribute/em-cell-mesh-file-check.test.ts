@@ -13,8 +13,11 @@ import {
 
 import type { TUploadPhase } from '@/api/entitycore/queries/assets/multipart';
 
-/** A GLB holding only its JSON chunk: one primitive with `triangles` triangles. */
-function glbFile(triangles: number, { draco = true, name = 'mesh.glb' } = {}): File {
+/** A GLB whose JSON chunk declares one primitive with `triangles` triangles, and a 4-byte binary chunk. */
+function glbFile(
+  triangles: number,
+  { draco = true, name = 'mesh.glb', bin = true, cutBytes = 0 } = {}
+): File {
   const json = new TextEncoder().encode(
     JSON.stringify({
       asset: { version: '2.0' },
@@ -39,13 +42,19 @@ function glbFile(triangles: number, { draco = true, name = 'mesh.glb' } = {}): F
       ],
     })
   );
+  const binChunk = new DataView(new ArrayBuffer(12));
+  binChunk.setUint32(0, 4, true);
+  binChunk.setUint32(4, 0x004e4942, true);
+  const parts = bin ? [json, binChunk.buffer] : [json];
+  const length = 20 + json.byteLength + (bin ? binChunk.byteLength : 0);
   const header = new DataView(new ArrayBuffer(20));
   header.setUint32(0, 0x46546c67, true);
   header.setUint32(4, 2, true);
-  header.setUint32(8, 20 + json.byteLength, true);
+  header.setUint32(8, length, true);
   header.setUint32(12, json.byteLength, true);
   header.setUint32(16, 0x4e4f534a, true);
-  return new File([header.buffer, json], name, { type: 'model/gltf-binary' });
+  const whole = new Blob([header.buffer, ...parts]);
+  return new File([whole.slice(0, length - cutBytes)], name, { type: 'model/gltf-binary' });
 }
 
 function withSize(file: File, size: number): File {
@@ -59,6 +68,22 @@ describe('checkMeshFile', () => {
 
     expect(await checkMeshFile(file)).toEqual({ error: null, notice: null });
     expect(isObjMeshFile(file)).toBe(true);
+  });
+
+  it('accepts an OBJ whose vertices come after a long header', async () => {
+    const header = '# exported by a tool\n'.repeat(5_000);
+    const file = new File([`${header}mtllib mesh.mtl\nv 0 0 0\n`], 'neuron.obj');
+
+    expect(await checkMeshFile(file)).toEqual({ error: null, notice: null });
+  });
+
+  it('warns that a large OBJ will likely be above the viewer limit', async () => {
+    const file = withSize(new File(['v 0 0 0\n'], 'neuron.obj'), 6 * 1024 ** 3);
+
+    const { error, notice } = await checkMeshFile(file);
+
+    expect(error).toBeNull();
+    expect(notice).toContain('likely not displayed');
   });
 
   it('refuses an OBJ with no vertex line at its start', async () => {
@@ -83,6 +108,15 @@ describe('checkMeshFile', () => {
 
   it('refuses a file that is not a GLB', async () => {
     const { error } = await checkMeshFile(new File(['PK\u0003\u0004 a zip'], 'mesh.glb'));
+
+    expect(error).toContain('could not be validated');
+  });
+
+  it.each([
+    ['cut short', { cutBytes: 2 }],
+    ['without a binary chunk', { bin: false }],
+  ])('refuses a GLB %s', async (_, shape) => {
+    const { error } = await checkMeshFile(glbFile(1_000, shape));
 
     expect(error).toContain('could not be validated');
   });
