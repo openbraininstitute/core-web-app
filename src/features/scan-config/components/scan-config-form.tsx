@@ -134,7 +134,7 @@ export function ScanConfigForm({
       className={className}
       noValidate
       onSubmit={onSubmit}
-      onKeyDown={keepEnterFromSubmitting}
+      onKeyDownCapture={keepEnterFromSubmitting}
     >
       {creditsModal}
       {children}

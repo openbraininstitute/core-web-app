@@ -117,6 +117,14 @@ describe('ScanConfigForm', () => {
     expect(generateScanConfigCampaign).not.toHaveBeenCalled();
   });
 
+  it('does not generate when Enter is pressed in an input that stops the key from bubbling', () => {
+    renderForm({
+      extra: <input aria-label="Entry name" onKeyDown={(event) => event.stopPropagation()} />,
+    });
+
+    expect(fireEvent.keyDown(screen.getByLabelText('Entry name'), { key: 'Enter' })).toBe(false);
+  });
+
   it('leaves Enter alone in an input of another form drawn through a portal', () => {
     function PortaledForm() {
       return createPortal(
