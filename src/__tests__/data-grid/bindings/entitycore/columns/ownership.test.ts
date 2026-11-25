@@ -30,10 +30,18 @@ describe('ownership columns', () => {
 
   it.each(
     DATA_BROWSE_ALLOWED_ENTITIES
-  )('%s: Visibility is hidden but offered in Filters', (dataType) => {
+  )('%s: Visibility is second, hidden by default and offered in Filters', (dataType) => {
     const definition = getEntityGridDefinition(dataType);
     if (!definition) throw new Error(`no grid definition for ${dataType}`);
     const context = { dataType, ...combinedData };
+    const [, second] = resolveColumns(definition.schema, context);
+    expect(second).toMatchObject({
+      id: 'visibility',
+      header: 'Visibility',
+      filterAvailable: true,
+      hiddenByDefaultResolved: true,
+      filter: { operators: [OperatorId.In] },
+    });
     const hidden = defaultHiddenColumnIds(definition.schema, context);
     expect(hidden).toContain('visibility');
     const entry = resolveFilterPanelGroups(definition.schema, context, hidden)

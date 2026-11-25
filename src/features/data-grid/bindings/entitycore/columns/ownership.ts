@@ -73,9 +73,8 @@ export function projectOwnershipColumn<Row>(): IColumnModel<Row> {
     id: OWNERSHIP_COLUMN_ID,
     header: 'Project',
     available: availableInCombinedData,
-    width: { width: 152, minWidth: 140 },
+    width: { width: 136, minWidth: 132 },
     sortable: false,
-    ownHoverCard: true,
     cellRenderer: PROJECT_OWNERSHIP_RENDERER,
     filter: {
       operators: [OperatorId.In],
@@ -93,7 +92,7 @@ export function visibilityColumn<Row extends { authorized_public?: boolean }>():
     auxiliary: true,
     available: availableInCombinedData,
     sortable: false,
-    width: { minWidth: 120 },
+    width: { width: 128, minWidth: 116 },
     cellRenderer: VISIBILITY_RENDERER,
     getValue: ({ authorized_public }) => {
       if (typeof authorized_public !== 'boolean') return null;
@@ -107,7 +106,7 @@ export function visibilityColumn<Row extends { authorized_public?: boolean }>():
   };
 }
 
-/** Prepends the Project column and appends the hidden Visibility column. */
+/** Puts the Project column first and the hidden Visibility column right after it. */
 export function withOwnershipColumns<Row>(schema: IGridSchema<Row>): IGridSchema<Row> {
   const ids = new Set(schema.columns.map((c) => c.id));
   if (ids.has(OWNERSHIP_COLUMN_ID) || ids.has(VISIBILITY_COLUMN_ID)) return schema;
@@ -115,8 +114,8 @@ export function withOwnershipColumns<Row>(schema: IGridSchema<Row>): IGridSchema
     ...schema,
     columns: [
       projectOwnershipColumn<Row>(),
-      ...schema.columns,
       visibilityColumn<Row & { authorized_public?: boolean }>() as IColumnModel<Row>,
+      ...schema.columns,
     ],
   };
 }

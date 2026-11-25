@@ -8,9 +8,7 @@ import {
 } from '@/features/data-grid/bindings/entitycore/columns/ownership';
 import { EMPTY_PLACEHOLDER } from '@/features/data-grid/renderers/aggrid/empty-cell';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { Icon } from '@/ui/molecules/icon';
 import { IconBadge } from '@/ui/molecules/icon-badge';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
 import type { EntityAuthorization } from '@/api/entitycore/types/shared/global';
@@ -28,47 +26,22 @@ const MUTED_ON_GREYED_ROW = 'in-[.filtered-out]:opacity-50';
 
 type TOwnershipRow = ICellRendererProps<Partial<EntityAuthorization>>;
 
-/** The row's project as the badge its filter option shows; a globe when this project made it public. */
+/** This project or Other projects, as the badge its filter option shows. */
 export function ProjectOwnershipCell({ row }: TOwnershipRow) {
   const { projectId } = useWorkspace();
-  const isCurrent = Boolean(projectId) && row?.authorized_project_id === projectId;
-  const isPublic = row?.authorized_public === true;
-  if (!isCurrent && !isPublic) return EMPTY_PLACEHOLDER;
-
-  const ownership = isCurrent ? ProjectOwnership.Current : ProjectOwnership.Other;
-  const visibility = isPublic ? Visibility.Public : Visibility.Private;
-  const label = `${ProjectOwnershipLabel[ownership]} · ${VisibilityLabel[visibility]}`;
+  if (!row?.authorized_project_id || !projectId) return EMPTY_PLACEHOLDER;
+  const ownership =
+    row.authorized_project_id === projectId ? ProjectOwnership.Current : ProjectOwnership.Other;
   const { icon, tone } = ProjectOwnershipBadge[ownership];
-
   return (
-    <div className="flex h-full w-full items-center">
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span
-            role="img"
-            aria-label={label}
-            data-testid="project-ownership-mark"
-            data-ownership={ownership}
-            data-visibility={visibility}
-            className={cn('inline-flex items-center gap-1.5', MUTED_ON_GREYED_ROW)}
-          >
-            <IconBadge icon={icon} tone={tone} className={PROJECT_BADGE_WIDTH}>
-              {ProjectOwnershipLabel[ownership]}
-            </IconBadge>
-            {isCurrent && isPublic && (
-              <span
-                data-testid="project-ownership-made-public"
-                className="inline-flex [&_svg]:stroke-scope-public-fg"
-              >
-                <Icon name="globe" size={14} />
-              </span>
-            )}
-          </span>
-        </TooltipTrigger>
-        <TooltipContent showArrow side="right">
-          {label}
-        </TooltipContent>
-      </Tooltip>
+    <div
+      data-testid="project-ownership-mark"
+      data-ownership={ownership}
+      className={cn('flex h-full w-full items-center', MUTED_ON_GREYED_ROW)}
+    >
+      <IconBadge icon={icon} tone={tone} className={PROJECT_BADGE_WIDTH}>
+        {ProjectOwnershipLabel[ownership]}
+      </IconBadge>
     </div>
   );
 }

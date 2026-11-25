@@ -46,7 +46,8 @@ export function DataScopeTabs() {
 
 export function DataHeader() {
   const { type } = useParams<{ type?: string }>();
-  const showProjectOwnership = usesProjectOwnership(snakeCase(type));
+  // Every Data table lists all scopes, so the tabs stay hidden before a type is picked too.
+  const showProjectOwnership = !type || usesProjectOwnership(snakeCase(type));
   const searchParams = useSearchParams();
   const scope = (searchParams.get(SCOPE_QUERY_PARAMS) as TWorkspaceScope) ?? WorkspaceScope.Public;
   const breakpoint = useDefaultBreakpoint();
