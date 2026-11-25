@@ -15,13 +15,14 @@ import {
 import { Right } from '@/features/scan-config/components/ui-columns';
 import { ScanConfigActivity } from '@/features/scan-config/types';
 import { StackedPanes } from '@/features/spike-viewer/spike-statistics/stacked-panes';
+import { StackedSplit } from '@/features/spike-viewer/types';
 import { cn } from '@/utils/css-class';
 
 import { useCollapsingColumns } from './collapsing-columns';
 import { LeftColumn, MiddleColumn } from './columns';
 
 import type { ReactNode, RefObject } from 'react';
-import type { StackedSplit } from '@/features/spike-viewer/spike-statistics/stacked-panes';
+import type { TStackedSplit } from '@/features/spike-viewer/types';
 import type { ScanConfigTemplateProps } from './types';
 import type { ScanConfigTemplateState } from './use-scan-config-template';
 
@@ -112,13 +113,12 @@ export function DefaultConfigColumns({ props, state }: Props) {
  */
 export function PreviewColumn({
   boxed,
-  split = 'config',
+  split = StackedSplit.Config,
   edge,
   children,
 }: {
   boxed: boolean;
-  /** Where the 3D view and table keep the bar's place: the configuration's, or this column's own. */
-  split?: Extract<StackedSplit, 'config' | 'own'>;
+  split?: Extract<TStackedSplit, typeof StackedSplit.Config | typeof StackedSplit.Isolated>;
   /** The grab bar on its left edge, which the columns before it give way to. */
   edge?: {
     gridRef: RefObject<HTMLDivElement | null>;

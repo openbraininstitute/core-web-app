@@ -18,12 +18,14 @@ import {
 } from '@/features/circuit-viewer/pane-resize-handle';
 import { BOX_CLASS } from '@/features/scan-config/components/shared/box-class';
 import { useResultsSidePanel } from '@/features/scan-config/components/shared/results-layout';
+import { StackedSplit } from '@/features/spike-viewer/types';
 import { PILL_CLASS } from '@/ui/molecules/select/pill-select';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
 import type { PaneShut } from '@/features/circuit-viewer/pane-resize-handle';
+import type { TStackedPane, TStackedSplit } from '@/features/spike-viewer/types';
 
 /** Either side of the grab bar between the panes. */
 const GUTTER = 12;
@@ -32,30 +34,11 @@ const DEFAULT_FLOORS = [GUTTER + 200, GUTTER + 160] as const;
 /** The panel's: the 3D player over the statistics, whose plot needs room under its controls. */
 export const PANEL_FLOORS = [GUTTER + 200, GUTTER + 220] as const;
 
-/**
- * The bottom pane's room as last dragged, by split: kept for the next file, as
- * a pick from the bar over the panel mounts it anew.
- */
+/** The bottom pane's last dragged room, per shared split. */
 const bottomRoomAtoms = {
-  file: atom<number | null>(null),
-  panel: atom<number | null>(null),
-  config: atom<number | null>(null),
-};
-
-/** Where the panes keep their sizes: a results layout's split, or none of their own. */
-export type StackedSplit = keyof typeof bottomRoomAtoms | 'own';
-
-export type StackedPane = {
-  /** What its bar says once it is shut. */
-  title: string;
-  content: ReactNode;
-  /**
-   * For a WebGL view: shut, it keeps its size out of sight rather than leave
-   * the layout, so nothing in it is squeezed or torn down.
-   */
-  keepsSize?: boolean;
-  /** The box's own padding, and anything else it needs, such as clipping a scene to its corners. */
-  boxClassName?: string;
+  [StackedSplit.File]: atom<number | null>(null),
+  [StackedSplit.Panel]: atom<number | null>(null),
+  [StackedSplit.Config]: atom<number | null>(null),
 };
 
 /**
@@ -66,9 +49,7 @@ export type StackedPane = {
  * The configuration's right column (`config`) has no results layout, and keeps
  * which pane is shut itself. Its top box's ring, a pixel outside the box, is
  * level with the top of the rule beside the form, where the page clips; its
- * foot is level with the generate button's. `own` is laid out as `config`, but
- * keeps the bar's place to itself, so two on one page (a logbook's 3D cards)
- * are dragged apart and leave the configuration's as it was.
+ * foot is level with the generate button's.
  */
 export function StackedPanes({
   split,
@@ -77,9 +58,9 @@ export function StackedPanes({
   bottomShare = 0.5,
   floors = DEFAULT_FLOORS,
 }: {
-  split: StackedSplit;
-  top: StackedPane;
-  bottom?: StackedPane | null;
+  split: TStackedSplit;
+  top: TStackedPane;
+  bottom?: TStackedPane | null;
   /** The bottom pane's share of the room until the bar is dragged. */
   bottomShare?: number;
   /** What the top pane and the bottom one keep while open, the gutter included. */
@@ -98,11 +79,12 @@ export function StackedPanes({
     observer.observe(area);
     return () => observer.disconnect();
   }, []);
-  // An atom per mount for `own`: one hook call either way, and the shared ones stay shared.
-  const [ownRoom] = useState(() => atom<number | null>(null));
-  const [chosen, setChosen] = useAtom(split === 'own' ? ownRoom : bottomRoomAtoms[split]);
+  const [isolatedRoom] = useState(() => atom<number | null>(null));
+  const [chosen, setChosen] = useAtom(
+    split === StackedSplit.Isolated ? isolatedRoom : bottomRoomAtoms[split]
+  );
   const [ownShut, setOwnShut] = useState<PaneShut>(null);
-  const layoutSplit = split === 'config' || split === 'own' ? null : split;
+  const layoutSplit = split === StackedSplit.File || split === StackedSplit.Panel ? split : null;
   const panes = useShuttingSplit({
     chosen,
     onChosenChange: setChosen,
@@ -248,7 +230,7 @@ export function LoadingFilePanes({
   return (
     <>
       <StackedPanes
-        split="file"
+        split={StackedSplit.File}
         top={{
           title,
           boxClassName: 'p-2',
@@ -277,7 +259,7 @@ export function LoadingFilePanes({
         sidePanel.target &&
         createPortal(
           <StackedPanes
-            split="panel"
+            split={StackedSplit.Panel}
             floors={PANEL_FLOORS}
             top={{ title: panelTop, content: <PaneSpinner /> }}
             bottom={panelBottom ? { title: panelBottom, content: <PaneSpinner /> } : null}

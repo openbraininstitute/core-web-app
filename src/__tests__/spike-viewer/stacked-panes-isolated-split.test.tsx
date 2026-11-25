@@ -2,12 +2,13 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 
 import { StackedPanes } from '@/features/spike-viewer/spike-statistics/stacked-panes';
+import { StackedSplit } from '@/features/spike-viewer/types';
 
-import type { StackedSplit } from '@/features/spike-viewer/spike-statistics/stacked-panes';
+import type { TStackedSplit } from '@/features/spike-viewer/types';
 
 afterEach(() => vi.restoreAllMocks());
 
-function Panes({ name, split }: { name: string; split: StackedSplit }) {
+function Panes({ name, split }: { name: string; split: TStackedSplit }) {
   return (
     <StackedPanes
       split={split}
@@ -19,7 +20,7 @@ function Panes({ name, split }: { name: string; split: StackedSplit }) {
 
 const tableHeight = (name: string) => screen.getByText(`table ${name}`).parentElement?.style.height;
 
-test('dragging one own split leaves the other own split and the configuration where they were', () => {
+test('dragging one isolated split leaves the other isolated split and the configuration where they were', () => {
   // Every pane area 600px tall, so each split has room for its bar to move.
   vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
     top: 0,
@@ -28,9 +29,9 @@ test('dragging one own split leaves the other own split and the configuration wh
   } as DOMRect);
   const { container } = render(
     <>
-      <Panes name="a" split="own" />
-      <Panes name="b" split="own" />
-      <Panes name="config" split="config" />
+      <Panes name="a" split={StackedSplit.Isolated} />
+      <Panes name="b" split={StackedSplit.Isolated} />
+      <Panes name="config" split={StackedSplit.Config} />
     </>
   );
   // Half each until dragged: 300 for the table's room, less the 12px gutter.
