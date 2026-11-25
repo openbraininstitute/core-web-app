@@ -1,18 +1,40 @@
 import { Input } from 'antd';
+import { isEqual } from 'es-toolkit';
+import { get } from 'es-toolkit/compat';
+import { useCallback } from 'react';
 
+import { getExtendedTypeByTaskResultType } from '@/entity-configuration/domain/helpers';
 import { AxonModifier } from '@/features/scan-config/components/ui-elements/axon-modifier';
 import BooleanInput from '@/features/scan-config/components/ui-elements/boolean-input';
+import { DefaultTargetLookup } from '@/features/scan-config/components/ui-elements/default-target-lookup';
+import { DiscreteProbabilities } from '@/features/scan-config/components/ui-elements/discrete-probabilities';
 import {
   DistanceFunctionField,
   DistanceFunctionNullableField,
 } from '@/features/scan-config/components/ui-elements/distance-function/distance-function-field';
+import {
+  DistributionParameterList,
+  distributionParameterRows,
+  readParameterRows,
+  type TDistributionParameter,
+} from '@/features/scan-config/components/ui-elements/distance-function/distribution-parameter-list';
 import { EntityPropertyDropdown } from '@/features/scan-config/components/ui-elements/entity-property-dropdown';
+import { ETypeSelector } from '@/features/scan-config/components/ui-elements/etype-selector';
 import { FloatInput } from '@/features/scan-config/components/ui-elements/float-input';
 import { FloatOptional } from '@/features/scan-config/components/ui-elements/float-optional';
+import {
+  IonChannelModelProperties,
+  recordingIdsOf,
+  type TIonChannelModelPropertiesValue,
+} from '@/features/scan-config/components/ui-elements/ion-channel-model-properties';
 import { ModelIdentifier } from '@/features/scan-config/components/ui-elements/model-identifier';
+import { EntitySelectorSingle } from '@/features/scan-config/components/ui-elements/model-selector-single';
 import MorphologyLocationSelection from '@/features/scan-config/components/ui-elements/morphology-location-selection';
 import { MorphologySectionTypeSelection } from '@/features/scan-config/components/ui-elements/morphology-section-type-selection';
 import NeuronIds from '@/features/scan-config/components/ui-elements/neuron-ids';
+import NeuronPropertyFilter, {
+  type INeuronPropertyFilter,
+} from '@/features/scan-config/components/ui-elements/neuron-property-filter';
 import {
   NeuronSetCombination,
   type NeuronSetCombinationEntry,
@@ -31,15 +53,29 @@ import {
 } from '@/features/scan-config/components/ui-elements/voltage-duration';
 import { isPlainObject, numericSchemaBounds } from '@/features/scan-config/components/utils';
 import {
+  isFromIdRef,
+  resolveEntityQueryFilters,
+  resolveNeuronFilterProperties,
+  type TEntityQuery,
+} from '@/features/scan-config/helpers';
+import {
+  type Config,
   type ConfigSchema,
   type ConfigValue,
   type ParamSchema,
   ScanConfigUIElementDict,
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
+import {
+  useBlockValue,
+  useConfigValue,
+  useUpdateBlock,
+} from '@/features/scan-config/use-config-store';
 
 import type { ComponentType } from 'react';
+import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
+import type { TBlockState } from '@/features/scan-config/store';
 import type { TSetFieldValue } from '@/features/scan-config/use-config-store';
 import type { Nullish } from '@/utils/type';
 
@@ -477,6 +513,199 @@ function NeuronSetCombinationField({
   );
 }
 
+const selectFunctionText = (block: TBlockState) =>
+  typeof block.function === 'string' ? block.function : '';
+
+function DistributionParameterListField({
+  fieldKey,
+  value,
+  setValue,
+  disabled,
+  errorPathPrefix,
+  selectedEntry,
+}: TFieldProps) {
+  const functionText = useBlockValue(selectFunctionText);
+  const stored = readParameterRows(value as ConfigValue);
+
+  return (
+    <DistributionParameterList
+      key={`${selectedEntry ?? ''}/${fieldKey}`}
+      rows={distributionParameterRows(functionText, stored)}
+      stored={stored}
+      disabled={disabled}
+      errorPath={errorPathPrefix ? `${errorPathPrefix}/${fieldKey}` : undefined}
+      onChange={(rows: TDistributionParameter[]) => setValue(rows as unknown as ConfigValue)}
+    />
+  );
+}
+
+function IonChannelModelPropertiesField({ value, setValue, disabled }: TFieldProps) {
+  const recordingIds = useBlockValue(recordingIdsOf, isEqual);
+
+  return (
+    <IonChannelModelProperties
+      value={(isPlainObject(value) ? value : {}) as TIonChannelModelPropertiesValue}
+      recordingIds={recordingIds}
+      disabled={disabled}
+      onChange={(next) => setValue(next as unknown as ConfigValue)}
+    />
+  );
+}
+
+type TNeuronPropertyFilterSchema = Extract<
+  ParamSchema,
+  { ui_element: typeof ScanConfigUIElementDict.NeuronPropertyFilter }
+>;
+
+/** The population chosen in the filter's source field and its filterable properties. */
+export function useNeuronFilterProperties(
+  paramSchema: TNeuronPropertyFilterSchema,
+  schemaMappingConfig: TSchemaMappingConfiguration | undefined
+) {
+  const select = useCallback(
+    (block: TBlockState) => resolveNeuronFilterProperties(paramSchema, block, schemaMappingConfig),
+    [paramSchema, schemaMappingConfig]
+  );
+  return useBlockValue(select, isEqual);
+}
+
+function shownNeuronFilters(
+  value: ConfigValue | undefined,
+  properties: Record<string, string[]>
+): ConfigValue[] {
+  if (Object.keys(properties).length === 0) return [];
+  if (Array.isArray(value) && value.length > 0) return value;
+  return isPlainObject(value) ? [value] : [{ filter_dict: [] }];
+}
+
+function storedNeuronFilters(filters: INeuronPropertyFilter[]): ConfigValue {
+  const [first] = filters;
+  if (!first || (filters.length === 1 && Object.keys(first.filter_dict).length === 0)) return null;
+  return (filters.length === 1 ? first : filters) as unknown as ConfigValue;
+}
+
+function NeuronPropertyFilterField({
+  paramSchema,
+  value,
+  setValue,
+  schemaMappingConfig,
+}: TFieldProps<TNeuronPropertyFilterSchema>) {
+  const { population, properties } = useNeuronFilterProperties(paramSchema, schemaMappingConfig);
+
+  return (
+    <NeuronPropertyFilter
+      properties={properties}
+      population={population}
+      value={shownNeuronFilters(value, properties) as unknown as INeuronPropertyFilter[]}
+      onChange={(next: INeuronPropertyFilter[]) => setValue(storedNeuronFilters(next))}
+    />
+  );
+}
+
+const PROBABILITIES_KEY = 'probabilities';
+
+const selectProbabilities = (block: TBlockState) => block[PROBABILITIES_KEY];
+
+const numbersOf = (value: unknown): number[] =>
+  Array.isArray(value) ? value.filter((item): item is number => typeof item === 'number') : [];
+
+function DiscreteProbabilitiesField({ fieldKey, value, disabled }: TFieldProps) {
+  const probabilities = useBlockValue(selectProbabilities);
+  const update = useUpdateBlock();
+
+  return (
+    <DiscreteProbabilities
+      values={numbersOf(value)}
+      probabilities={numbersOf(probabilities)}
+      disabled={disabled}
+      onChange={(nextValues, nextProbabilities) =>
+        update((previous) => ({
+          ...previous,
+          [fieldKey]: nextValues as unknown as ConfigValue,
+          [PROBABILITIES_KEY]: nextProbabilities as unknown as ConfigValue,
+        }))
+      }
+    />
+  );
+}
+
+type TQueriedEntity = { type: TEntityTypeDict } & TEntityQuery;
+
+/** An entity picker whose query filters come from other parts of the config (`circuit_id`, say). */
+function ModelSelectorSingleField({
+  paramSchema,
+  value,
+  setValue,
+  disabled,
+}: TFieldOf<typeof ScanConfigUIElementDict.ModelSelectorSingle>) {
+  const query = get(paramSchema, 'entity_query') as TQueriedEntity | undefined;
+  const selectFilters = useCallback(
+    (config: Config) => (query ? resolveEntityQueryFilters(query, config) : undefined),
+    [query]
+  );
+  const filters = useConfigValue(selectFilters, isEqual);
+
+  if (!query) return null;
+
+  return (
+    <EntitySelectorSingle
+      filters={filters}
+      entityType={query.type}
+      disabled={disabled}
+      value={value as ConfigValue}
+      paramSchema={paramSchema as unknown as Record<string, unknown>}
+      valueType={paramSchema.properties?.type?.const}
+      onChange={setValue}
+    />
+  );
+}
+
+function TaskResultSelectorField({
+  paramSchema,
+  value,
+  setValue,
+  disabled,
+  errorPathPrefix,
+}: TFieldOf<typeof ScanConfigUIElementDict.TaskResultSelector>) {
+  // The field carries the concrete entitycore task_result_type (`efeature_extraction__result`,
+  // say). Browse and display use the frontend view that lists it; the stored ref stays the
+  // generic `TaskResultFromID` the backend expects.
+  const taskResultType = get(paramSchema, 'task_result_type') as string | undefined;
+  const resolvedType = taskResultType ? getExtendedTypeByTaskResultType(taskResultType) : undefined;
+
+  if (!resolvedType) return null;
+
+  return (
+    <DefaultTargetLookup fieldPath={errorPathPrefix} hasValue={isFromIdRef(value)}>
+      <EntitySelectorSingle
+        entityType={resolvedType as unknown as TEntityTypeDict}
+        resolveAsType={resolvedType}
+        disabled={disabled}
+        value={value as ConfigValue}
+        paramSchema={paramSchema as unknown as Record<string, unknown>}
+        valueType={paramSchema.properties?.type?.const}
+        onChange={setValue}
+      />
+    </DefaultTargetLookup>
+  );
+}
+
+function EtypeSelectorField({
+  paramSchema,
+  value,
+  setValue,
+  disabled,
+}: TFieldOf<typeof ScanConfigUIElementDict.EtypeSelector>) {
+  return (
+    <ETypeSelector
+      disabled={disabled}
+      value={value as ConfigValue}
+      valueType={paramSchema.properties?.type?.const}
+      onChange={setValue}
+    />
+  );
+}
+
 type TTypedFieldRegistry = { [TKind in TFieldKind]?: ComponentType<TFieldOf<TKind>> };
 
 const TYPED_FIELD_REGISTRY: TTypedFieldRegistry = {
@@ -505,6 +734,13 @@ const TYPED_FIELD_REGISTRY: TTypedFieldRegistry = {
   [ScanConfigUIElementDict.PerNeuronMorphologyLocationSelection]: MorphologyLocationSelectionField,
   [ScanConfigUIElementDict.VoltageDuration]: VoltageDurationField,
   [ScanConfigUIElementDict.NeuronSetCombination]: NeuronSetCombinationField,
+  [ScanConfigUIElementDict.DistributionParameterList]: DistributionParameterListField,
+  [ScanConfigUIElementDict.IonChannelModelProperties]: IonChannelModelPropertiesField,
+  [ScanConfigUIElementDict.NeuronPropertyFilter]: NeuronPropertyFilterField,
+  [ScanConfigUIElementDict.DiscreteProbabilities]: DiscreteProbabilitiesField,
+  [ScanConfigUIElementDict.ModelSelectorSingle]: ModelSelectorSingleField,
+  [ScanConfigUIElementDict.TaskResultSelector]: TaskResultSelectorField,
+  [ScanConfigUIElementDict.EtypeSelector]: EtypeSelectorField,
 };
 
 /** The component of each field kind; a kind that is not here has not moved to the registry. */

@@ -25,14 +25,12 @@ import type { IEType, IETypeFilter } from '@/api/entitycore/types/shared/global'
 interface Props {
   disabled?: boolean;
   value?: ConfigValue;
-  state: Record<string, ConfigValue>;
-  fieldKey: string;
-  onChange: (newState: Record<string, ConfigValue>) => void;
+  onChange: (next: ConfigValue) => void;
   /** the schema field's stored FromID `type` const, e.g. `ETypeClassFromID` */
   valueType?: string;
 }
 
-export function ETypeSelector({ disabled, value, state, fieldKey, onChange, valueType }: Props) {
+export function ETypeSelector({ disabled, value, onChange, valueType }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
 
   const selectedRef = isFromIdRef(value) ? value : null;
@@ -61,15 +59,12 @@ export function ETypeSelector({ disabled, value, state, fieldKey, onChange, valu
   const handleSelect = useCallback(
     (option?: { value: string }) => {
       if (!option) {
-        onChange({ ...state, [fieldKey]: null });
+        onChange(null);
         return;
       }
-      onChange({
-        ...state,
-        [fieldKey]: { id_str: option.value, type: valueType ?? 'ETypeClassFromID' },
-      });
+      onChange({ id_str: option.value, type: valueType ?? 'ETypeClassFromID' });
     },
-    [fieldKey, onChange, state, valueType]
+    [onChange, valueType]
   );
 
   const dataKey = useMemo(

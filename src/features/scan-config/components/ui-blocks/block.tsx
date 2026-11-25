@@ -6,8 +6,10 @@ import { renderMathInText } from '@/features/scan-config/components/shared/rende
 import { UIElementRender } from '@/features/scan-config/components/ui-elements';
 import { SweepCollapseButton } from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { isReferenceFieldVisible } from '@/features/scan-config/components/ui-elements/reference';
-import { FIELD_REGISTRY } from '@/features/scan-config/components/ui-elements/registry';
-import { resolveNeuronFilterProperties } from '@/features/scan-config/helpers';
+import {
+  FIELD_REGISTRY,
+  useNeuronFilterProperties,
+} from '@/features/scan-config/components/ui-elements/registry';
 import { useBlockDiff } from '@/features/scan-config/hooks/use-block-diff';
 import {
   type ConfigSchema,
@@ -67,12 +69,7 @@ function NeuronFilterNotice({
     { ui_element: typeof ScanConfigUIElementDict.NeuronPropertyFilter }
   >;
 }) {
-  const state = useBlockValue(wholeBlock);
-  const { population, properties } = resolveNeuronFilterProperties(
-    paramSchema,
-    state,
-    schemaMappingConfig
-  );
+  const { population, properties } = useNeuronFilterProperties(paramSchema, schemaMappingConfig);
 
   if (!population || Object.keys(properties).length > 0) return null;
   return <span className="text-red-500">No properties available</span>;
