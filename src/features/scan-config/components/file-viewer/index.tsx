@@ -5,7 +5,7 @@ import { match, P } from 'ts-pattern';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { Loader } from '@/components/loader';
 import { EphysViewer } from '@/features/ephys-viewer';
-import { BOX_CLASS } from '@/features/scan-config/components/shared/box-class';
+import { BOX_CLASS, PANE_INSET_CLASS } from '@/features/scan-config/components/shared/box-class';
 import { isAssetBackedFile } from '@/features/scan-config/types';
 import { SonataViewer } from '@/features/sonata-viewer';
 import { SpikeViewer } from '@/features/spike-viewer';
@@ -162,9 +162,7 @@ export function FileViewer({ file, context, loading = false, className = '' }: F
   const boxed = !isSpikeReport && !isVoltageReport;
 
   return (
-    <div
-      className={cn('text-primary-9 relative w-full', className, boxed && 'pt-px pr-px pb-3 pl-3')}
-    >
+    <div className={cn('text-primary-9 relative w-full', className, boxed && PANE_INSET_CLASS)}>
       <div
         className={cn('relative h-full overflow-auto p-6', {
           'p-0': edgeToEdge,

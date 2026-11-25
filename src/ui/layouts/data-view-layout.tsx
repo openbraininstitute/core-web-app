@@ -8,6 +8,7 @@ import { ViewVariant, WorkspaceScope } from '@/constants';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { retrieveEntity } from '@/entity-configuration/domain/requests';
+import { PAGE_INSET_CLASS } from '@/features/scan-config/components/shared/box-class';
 import { ScanConfigTopBarProvider } from '@/features/scan-config/components/top-bar/context';
 import { resolveEntityVariant } from '@/features/views/listing/variants/registry';
 import { BreadcrumbChip, BreadcrumbTrail } from '@/ui/molecules/breadcrumb';
@@ -128,7 +129,7 @@ export async function DataViewLayout({
       // campaign / simulation pages render the scan-config tabs panel, which draws its own
       // border and top bar: hand it the breadcrumb and close as that bar's start and end slots
       return (
-        <div className="ml-3 flex h-full min-h-0 flex-col">
+        <div className={cn(PAGE_INSET_CLASS, 'flex h-full min-h-0 flex-col')}>
           <ScanConfigTopBarProvider start={breadcrumbs} end={closePage}>
             <div className="relative min-h-0 flex-1">{children}</div>
           </ScanConfigTopBarProvider>

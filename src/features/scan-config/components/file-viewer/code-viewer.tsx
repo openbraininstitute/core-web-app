@@ -102,7 +102,7 @@ export function CodeFileViewer({
       className={cn(
         'secondary-scrollbar h-full overflow-auto [&_pre]:overflow-x-auto',
         '[&_pre]:whitespace-pre [&>div]:overflow-auto [&>div>div]:overflow-x-auto',
-        'border-neutral-3 bg-white! [&_.shiki]:bg-white! [&_.shiki]:shadow-xl!'
+        'rounded-[inherit] border-neutral-3 bg-white! [&_.shiki]:bg-white! [&_.shiki]:shadow-xl!'
       )}
     >
       <div className="bg-neutral-light flex items-center justify-between border-b border-gray-200 px-3 py-2">

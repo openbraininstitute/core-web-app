@@ -46,7 +46,7 @@ export function Container() {
       {...{ [DISMISSABLE_ATTRIBUTE]: '' }}
       className={cn(
         styles.aiPanel,
-        'text-white [grid-area:ai] z-[30]',
+        'text-white [grid-area:ai] z-[30] mb-2',
         isCollapsed
           ? 'bg-primary-9 border-primary-9 mr-3 shadow-md rounded-full! [transition:background-color_150ms_ease_200ms,border-color_150ms_ease_200ms]'
           : cn(
@@ -54,7 +54,7 @@ export function Container() {
               isFullscreen ? 'rounded-lg!' : 'rounded-2xl!'
             )
       )}
-      animate={{ width: targetWidth, height: 'calc(100vh - 6rem)' }}
+      animate={{ width: targetWidth }}
       initial={false}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
     >

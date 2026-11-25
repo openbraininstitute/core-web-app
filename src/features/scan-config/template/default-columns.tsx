@@ -11,6 +11,7 @@ import {
 import {
   BLOCKS_AND_FORM_COLUMNS_CLASS,
   BOX_CLASS,
+  PANE_INSET_CLASS,
 } from '@/features/scan-config/components/shared/box-class';
 import { Right } from '@/features/scan-config/components/ui-columns';
 import { ScanConfigActivity } from '@/features/scan-config/types';
@@ -118,12 +119,9 @@ export function PreviewColumn({
 }) {
   const table = useSceneTablePaneHost();
   const handle = edge && (
-    // A double click puts the columns back as they were. Boxed, the bar sits halfway between the
-    // column before and the box: past the grid's gap (0.3125rem) the box is inset 0.75rem.
-    <div
-      onDoubleClick={edge.onReset}
-      className={cn('absolute inset-y-0 left-0', boxed && 'left-[0.21875rem]')}
-    >
+    // A double click puts the columns back as they were. The bar sits halfway between the column
+    // before and the pane: past the grid's gap (0.3125rem) the pane is inset 0.75rem.
+    <div onDoubleClick={edge.onReset} className="absolute inset-y-0 left-[0.21875rem]">
       <PaneSideResizeHandle containerRef={edge.gridRef} minWidth={0} onResize={edge.onDrag} />
     </div>
   );
@@ -131,7 +129,7 @@ export function PreviewColumn({
     return (
       <div className="relative h-full min-h-0 min-w-0">
         {handle}
-        <div className="h-full min-h-0 overflow-hidden">{children}</div>
+        <div className={cn('h-full min-h-0 overflow-hidden', PANE_INSET_CLASS)}>{children}</div>
       </div>
     );
   }

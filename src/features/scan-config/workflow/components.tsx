@@ -5,6 +5,7 @@ import { useCallback, useMemo } from 'react';
 
 import { WorkspaceSection } from '@/constants';
 import { ScanConfigWorkflowEditorFieldProvider } from '@/features/scan-config/bridge/editor-context';
+import { PAGE_INSET_CLASS } from '@/features/scan-config/components/shared/box-class';
 import { ScanConfigContainer } from '@/features/scan-config/container';
 import { ScanConfigActivity, type TScanConfigActivity } from '@/features/scan-config/types';
 import { useScanConfigWorkflow } from '@/features/scan-config/workflow/context';
@@ -59,7 +60,7 @@ function ScanConfigWorkflowFrame({
   className?: string;
 }) {
   return (
-    <div className={cn('h-full min-h-0 pl-2', className)}>
+    <div className={cn('h-full min-h-0', PAGE_INSET_CLASS, className)}>
       <ScanConfigWorkflowTopBar>{children}</ScanConfigWorkflowTopBar>
     </div>
   );

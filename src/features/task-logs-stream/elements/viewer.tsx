@@ -2,9 +2,11 @@
 
 import { useCallback } from 'react';
 
+import { PANE_INSET_CLASS } from '@/features/scan-config/components/shared/box-class';
 import { Configuration } from '@/features/task-logs-stream/elements/configuration';
 import { LogsViewer as LogEntriesViewer } from '@/features/task-logs-stream/elements/logger';
 import { useTaskLogsData } from '@/features/task-logs-stream/hooks/use-task-logs';
+import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
 
 import type { ReactNode } from 'react';
@@ -29,7 +31,10 @@ function TaskViewerFrame({ children }: { children: ReactNode }) {
     <div
       id="job-viewer"
       data-testid="scan-config-logs"
-      className="flex h-full min-h-0 flex-col overflow-hidden bg-neutral-50 px-4 w-full"
+      className={cn(
+        'flex h-full min-h-0 w-full flex-col overflow-hidden bg-neutral-50',
+        PANE_INSET_CLASS
+      )}
     >
       {children}
     </div>

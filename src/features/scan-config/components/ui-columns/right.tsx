@@ -140,11 +140,7 @@ export function EntityPreviewPane({
   return (
     <div
       id="scan-config-controls-right-mini-detail"
-      className={cn(
-        'h-full min-h-0 overflow-auto rounded-lg secondary-scrollbar',
-        // Boxed, the view is the box's content: no card of its own inside it.
-        !inset && 'px-0.5 py-1'
-      )}
+      className="h-full min-h-0 overflow-auto rounded-lg secondary-scrollbar"
     >
       {record ? (
         <MiniDetailViewRenderer
@@ -192,7 +188,7 @@ function IonChannelPreviewPane({
   return (
     <div
       id="scan-config-controls-right-preview"
-      className={cn('rounded-lg h-full', inset ? 'p-3' : 'px-0.5')}
+      className={cn('rounded-lg h-full', inset && 'p-3')}
     >
       <IonChannelModelRecordingRender
         selectedRootElement={selectedRootElement}
@@ -214,7 +210,6 @@ function CircuitModelPreviewPane({
   defaultNeuronOpacity,
   viewerFeatures,
   locked,
-  inset,
 }: {
   entity: TSupportedEntitiesForScanConfiguration;
   setConfig: RightProps['setConfig'];
@@ -226,7 +221,6 @@ function CircuitModelPreviewPane({
   defaultNeuronOpacity: number | undefined;
   viewerFeatures: IEntityViewerFeatures;
   locked?: boolean;
-  inset?: boolean;
 }) {
   const config = useViewerConfig();
   const hasNeuronSets = useConfigValue(hasNeuronSetsSection);
@@ -267,7 +261,7 @@ function CircuitModelPreviewPane({
   return (
     <div
       id="scan-config-controls-right-preview"
-      className={cn('h-full min-h-0 overflow-hidden rounded-lg', !inset && 'px-0.5')}
+      className="h-full min-h-0 overflow-hidden rounded-lg"
     >
       <div
         className="h-full min-h-0 overflow-hidden rounded-lg"
@@ -285,7 +279,7 @@ function CircuitModelPreviewPane({
 }
 
 function EmptyPreviewPane() {
-  return <div id="scan-config-controls-right-preview" className="rounded-lg px-0.5 h-full" />;
+  return <div id="scan-config-controls-right-preview" className="rounded-lg h-full" />;
 }
 
 /**
@@ -414,7 +408,7 @@ export function Right({
     .with(RightPreviewModeDict.EFeatures, () => (
       <div
         id="scan-config-controls-right-efeatures"
-        className="h-full bg-white min-h-0 overflow-y-auto secondary-scrollbar rounded-xl px-0.5"
+        className="h-full bg-white min-h-0 overflow-y-auto secondary-scrollbar rounded-xl"
       >
         <EFeaturesPane schema={schema} />
       </div>
@@ -432,7 +426,6 @@ export function Right({
           defaultNeuronOpacity={defaultNeuronOpacity}
           viewerFeatures={viewerFeatures}
           locked={locked}
-          inset={inset}
         />
       ) : (
         <EmptyPreviewPane />

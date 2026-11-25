@@ -40,7 +40,11 @@ export function ProjectRootLayout({ children }: Props) {
         noRail ? 'grid-cols-[1fr_0px] gap-x-0' : 'grid-cols-[1fr_minmax(3rem,auto)]',
         "grid-rows-[5rem_1fr] gap-2 overflow-hidden [grid-template-areas:'header_header''main_ai']",
         // The workflow tabs sit closer under the toolbar than other pages' titles.
-        'has-[.scan-config-tabs]:grid-rows-[4.25rem_1fr]'
+        'has-[.scan-config-tabs]:grid-rows-[4.25rem_1fr]',
+        // On a workflow page the boxes keep their own foot inset, and the assistant spans what they
+        // span: under the tabs rail (40px), its gap (0.5rem) and the boxes' ring (1px).
+        'has-[.scan-config-tabs]:[&>#workspace-body]:pb-0',
+        'has-[.scan-config-tabs]:[&>#workspace-ai]:mt-[calc(40px+0.5rem+1px)] has-[.scan-config-tabs]:[&>#workspace-ai]:mb-3'
       )}
     >
       {children}

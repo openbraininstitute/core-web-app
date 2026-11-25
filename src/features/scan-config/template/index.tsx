@@ -72,8 +72,8 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
       // Edge to edge, so the windows' rings meet the toolbar's ends (the project selector, the
       // assistant); the e-model layout, unboxed, keeps its inset.
       className={cn(
-        'flex min-h-0 flex-1 flex-col pt-2 pb-2',
-        isEModelOptimisationParameters ? 'px-2' : 'px-0'
+        'flex min-h-0 flex-1 flex-col pt-2',
+        isEModelOptimisationParameters ? 'px-2 pb-3' : 'px-0'
       )}
     >
       <ConfigChecks props={props} locked={state.editingLocked} />
@@ -121,7 +121,7 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
         id="scan-config-results"
         data-testid="scan-config-results"
         // Edge to edge, as the configuration's, so its windows meet the toolbar's ends.
-        className="w-full grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-1.25 min-h-0 flex-1 overflow-hidden pt-2 pb-2"
+        className="w-full grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-1.25 min-h-0 flex-1 overflow-hidden pt-2"
       >
         <ScanConfigResults props={props} state={state} />
       </div>
