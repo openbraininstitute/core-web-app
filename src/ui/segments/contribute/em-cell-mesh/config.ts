@@ -34,6 +34,11 @@ export const EM_CELL_MESH_PROGRESS_STEPS = [
     label: 'Creating M-Type Classification',
     mutationKey: 'createMtypeClassification',
   },
+  {
+    key: 'conversion',
+    label: 'Starting Conversion to GLB',
+    mutationKey: 'convertEMCellMesh',
+  },
 ];
 
 export function createEMCellMeshConfig(

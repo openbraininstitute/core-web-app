@@ -1,8 +1,9 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 
-import { createEMCellMesh } from '@/api/entitycore/queries';
+import { createEMCellMesh, deleteEMCellMesh } from '@/api/entitycore/queries';
 import {
   createMtypeClassification,
   type TMtypeClassificationCreate,
@@ -10,19 +11,42 @@ import {
 import { createAsset } from '@/api/entitycore/queries/assets';
 import { createContribution } from '@/api/entitycore/queries/general/contribution';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { EntityLifecycleStatus } from '@/api/entitycore/types/shared/global';
+import { convertEMCellMesh } from '@/api/one/em-cell-mesh';
+import { tryCatch } from '@/api/utils';
 import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
+import { messages } from '@/i18n/en/upload';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { EM_CELL_MESH_PROGRESS_STEPS } from '@/ui/segments/contribute/em-cell-mesh/config';
+import {
+  describeUploadProgress,
+  isObjMeshFile,
+  uploadFraction,
+} from '@/ui/segments/contribute/em-cell-mesh/helpers';
 import {
   getEMCellMeshMimeType,
   type TEMCellMeshForm,
 } from '@/ui/segments/contribute/em-cell-mesh/schema';
 import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
 
+import type { IUploadProgress } from '@/api/entitycore/queries/assets/multipart';
+import type { TEntityLifecycleStatus } from '@/api/entitycore/types/shared/global';
 import type {
   IMutationKeyConfig,
   IPipelineHookResult,
 } from '@/ui/segments/contribute/shared/types';
+
+const CONVERSION_MUTATION_KEY = 'convertEMCellMesh';
+
+/** Asks before the tab closes while a file is being uploaded. */
+function useWarnBeforeUnload(active: boolean) {
+  useEffect(() => {
+    if (!active) return undefined;
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [active]);
+}
 
 export function useEMCellMeshPipeline({
   sessionId,
@@ -31,9 +55,18 @@ export function useEMCellMeshPipeline({
 }): IPipelineHookResult<TEMCellMeshForm> {
   const queryClient = useQueryClient();
   const { projectId, virtualLabId } = useWorkspace();
+  const [uploadProgress, setUploadProgress] = useState<IUploadProgress | null>(null);
+  const [isObjSubmission, setIsObjSubmission] = useState(false);
+  const [completionNotice, setCompletionNotice] = useState<string | null>(null);
 
   const createEMCellMeshAsync = useMutation({
-    mutationFn: (values: TEMCellMeshForm) => {
+    mutationFn: ({
+      values,
+      lifecycleStatus,
+    }: {
+      values: TEMCellMeshForm;
+      lifecycleStatus: TEntityLifecycleStatus;
+    }) => {
       return createEMCellMesh({
         context: { projectId, virtualLabId },
         payload: {
@@ -55,6 +88,7 @@ export function useEMCellMeshPipeline({
           generation_method: values.setup.generation_method,
           level_of_detail: values.setup.level_of_detail,
           mesh_type: values.setup.mesh_type,
+          lifecycle_status: lifecycleStatus,
         },
       });
     },
@@ -71,6 +105,7 @@ export function useEMCellMeshPipeline({
         mimeType: getEMCellMeshMimeType(file) ?? file.type,
         payload: file,
         label: 'cell_surface_mesh' as Parameters<typeof createAsset>[0]['label'],
+        onProgress: setUploadProgress,
       });
     },
   });
@@ -115,48 +150,91 @@ export function useEMCellMeshPipeline({
     },
   });
 
+  const convertAsync = useMutation({
+    mutationFn: (entityId: string) =>
+      convertEMCellMesh({ ctx: { projectId, virtualLabId }, entityId }),
+  });
+
+  useWarnBeforeUnload(createAssetsAsync.isPending);
+
   return {
     createEntity: async ({ values }: { values: TEMCellMeshForm }) => {
-      const cellMorphology = await createEMCellMeshAsync.mutateAsync(values);
+      const file = values.assets?.mesh;
+      const isObj = file ? isObjMeshFile(file) : false;
+      setIsObjSubmission(isObj);
+      setCompletionNotice(null);
+      setUploadProgress(null);
 
-      if (values.assets?.mesh) {
-        await createAssetsAsync.mutateAsync({
-          entityId: cellMorphology.id,
-          file: values.assets.mesh,
-        });
+      // An OBJ mesh stays a draft until the conversion task has replaced the OBJ with a GLB.
+      const cellMesh = await createEMCellMeshAsync.mutateAsync({
+        values,
+        lifecycleStatus: isObj ? EntityLifecycleStatus.Draft : EntityLifecycleStatus.Active,
+      });
+
+      try {
+        if (file) {
+          await createAssetsAsync.mutateAsync({ entityId: cellMesh.id, file });
+        }
+
+        if (values.contribution && values.contribution.length > 0) {
+          await createContributionAsync.mutateAsync({
+            entityId: cellMesh.id,
+            contribution: values.contribution,
+          });
+        }
+
+        if (values.mtype_class_id) {
+          await createMtypeClassificationAsync.mutateAsync({
+            entityId: cellMesh.id,
+            mtypeId: values.mtype_class_id,
+          });
+        }
+
+        if (isObj) {
+          await convertAsync.mutateAsync(cellMesh.id);
+        }
+      } catch (error) {
+        // The OBJ is never kept: without a launched conversion, the draft goes with its file.
+        if (isObj) {
+          await tryCatch(
+            deleteEMCellMesh({ id: cellMesh.id, context: { projectId, virtualLabId } })
+          );
+          invalidateEntityListings(queryClient, ExtendedEntitiesTypeDict.EMCellMesh);
+        }
+        throw error;
       }
 
-      if (values.contribution && values.contribution.length > 0) {
-        await createContributionAsync.mutateAsync({
-          entityId: cellMorphology.id,
-          contribution: values.contribution,
-        });
-      }
-
-      if (values.mtype_class_id) {
-        await createMtypeClassificationAsync.mutateAsync({
-          entityId: cellMorphology.id,
-          mtypeId: values.mtype_class_id,
-        });
-      }
-
-      return cellMorphology;
+      if (isObj) setCompletionNotice(messages.MeshConversionStarted);
+      return cellMesh;
     },
     loading:
       createEMCellMeshAsync.isPending ||
       createAssetsAsync.isPending ||
       createContributionAsync.isPending ||
-      createMtypeClassificationAsync.isPending,
+      createMtypeClassificationAsync.isPending ||
+      convertAsync.isPending,
     error: (createEMCellMeshAsync.error ||
       createAssetsAsync.error ||
       createContributionAsync.error ||
-      createMtypeClassificationAsync.error) as Error | null,
+      createMtypeClassificationAsync.error ||
+      convertAsync.error) as Error | null,
     status: {
       createEMCellMesh: createEMCellMeshAsync.status,
       createEMCellMeshAssets: createAssetsAsync.status,
       createContribution: createContributionAsync.status,
       createMtypeClassification: createMtypeClassificationAsync.status,
+      [CONVERSION_MUTATION_KEY]: convertAsync.status,
     },
+    stepProgress: uploadProgress
+      ? {
+          createEMCellMeshAssets: {
+            detail: describeUploadProgress(uploadProgress),
+            fraction: uploadFraction(uploadProgress),
+          },
+        }
+      : undefined,
+    skippedSteps: isObjSubmission ? [] : [CONVERSION_MUTATION_KEY],
+    completionNotice,
     mutationKeys: EM_CELL_MESH_PROGRESS_STEPS.reduce(
       (acc, step) => {
         acc[step.mutationKey] = {

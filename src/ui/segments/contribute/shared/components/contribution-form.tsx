@@ -76,15 +76,21 @@ function FormContent<
     progressSteps: steps,
   } = useContributionPipeline<TFormValues>();
 
-  const { createEntity, loading, status } = pipeline({ sessionId });
+  const { createEntity, loading, status, stepProgress, skippedSteps, completionNotice } = pipeline({
+    sessionId,
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdEntityId, setCreatedEntityId] = useState<string | undefined>(undefined);
 
-  const progressStepsWithStatus: Array<IProgressStep> = progressSteps.map((step) => ({
-    key: step.key,
-    label: step.label,
-    status: status[step.mutationKey],
-  }));
+  const skipped = new Set(skippedSteps);
+  const progressStepsWithStatus: Array<IProgressStep> = progressSteps
+    .filter((step) => !skipped.has(step.mutationKey))
+    .map((step) => ({
+      key: step.key,
+      label: step.label,
+      status: status[step.mutationKey],
+      progress: stepProgress?.[step.mutationKey],
+    }));
 
   const onSubmit = async (e?: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     e?.preventDefault();
@@ -135,7 +141,10 @@ function FormContent<
         <div className="border-neutral-2 h-full max-h-full min-h-0 flex-1 rounded-md border py-6 pr-1">
           {isSubmitting ? (
             <div className="flex h-full w-full items-center justify-center">
-              <SubmitEntityProgress steps={progressStepsWithStatus} />
+              <SubmitEntityProgress
+                steps={progressStepsWithStatus}
+                notice={createdEntityId ? completionNotice : null}
+              />
             </div>
           ) : (
             <div className="relative h-full w-full">
