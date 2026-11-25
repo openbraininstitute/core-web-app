@@ -15,7 +15,7 @@ import { getStrains } from '@/api/entitycore/queries/general/strain';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { useAppNotification } from '@/components/notification';
 import { flattenTreeAsObject } from '@/components/tree/elements/helpers';
-import { useFieldErrorsSessionKey } from '@/features/scan-config/components/hooks/field-errors';
+import { useScanConfigSessionKey } from '@/features/scan-config/components/hooks/session-key';
 import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
@@ -269,11 +269,11 @@ const PROPERTY_LABEL: Record<keyof ReturnType<typeof useModelProperties>['differ
 const preselectedTemperatureAtomFamily = makeSessionAtomWithDefault<number | null>(null);
 
 function usePreselectedTemperature() {
-  return useAtom(preselectedTemperatureAtomFamily(useFieldErrorsSessionKey()));
+  return useAtom(preselectedTemperatureAtomFamily(useScanConfigSessionKey()));
 }
 
-function readProperties(config: Config, root: string, propertyKey: string) {
-  const block = isPlainObject(config[root]) ? config[root] : {};
+function propertiesOf(rootBlock: unknown, propertyKey: string) {
+  const block = isPlainObject(rootBlock) ? rootBlock : {};
   const value = isPlainObject(block[propertyKey]) ? block[propertyKey] : {};
   return { block, value: value as TIonChannelModelPropertiesValue };
 }
@@ -284,7 +284,7 @@ function withProperties(
   propertyKey: string,
   patch: TIonChannelModelPropertiesValue
 ) {
-  const { block, value } = readProperties(config, root, propertyKey);
+  const { block, value } = propertiesOf(config[root], propertyKey);
   return { ...config, [root]: { ...block, [propertyKey]: { ...value, ...patch } } } as Config;
 }
 
@@ -305,11 +305,7 @@ function ModelPropertiesCheck({
   const path = `/${root}/${propertyKey}`;
   const setConfig = useSetConfig();
   const rootBlock = useConfigValue((config) => config[root]);
-  const { block, value } = readProperties(
-    rootBlock === undefined ? {} : { [root]: rootBlock },
-    root,
-    propertyKey
-  );
+  const { block, value } = propertiesOf(rootBlock, propertyKey);
   const {
     loaded,
     failed,

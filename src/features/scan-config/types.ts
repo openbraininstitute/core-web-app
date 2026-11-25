@@ -231,6 +231,9 @@ export const NeuronalManipulationTypeDict = {
 
 export const CIRCUIT_NEURONAL_MANIPULATION_SOURCE_FIELD = 'neuron_set';
 
+/** The root section that holds the neuron sets. */
+export const NEURON_SETS_SECTION = 'neuron_sets';
+
 const CircuitNeuronalManipulationTypes: ReadonlySet<string> = new Set([
   NeuronalManipulationTypeDict.CircuitByNeuron,
   NeuronalManipulationTypeDict.CircuitBySectionList,

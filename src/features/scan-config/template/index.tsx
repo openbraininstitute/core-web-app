@@ -22,7 +22,7 @@ import {
   EModelOptimisationColumns,
 } from '@/features/scan-config/template/emodel-optimisation-columns';
 import { useScanConfigTemplate } from '@/features/scan-config/template/use-scan-config-template';
-import { ScanConfigActivity } from '@/features/scan-config/types';
+import { NEURON_SETS_SECTION, ScanConfigActivity } from '@/features/scan-config/types';
 import { BuildTab } from '@/features/scan-config/use-cases/build/results';
 import { ExtractionTab } from '@/features/scan-config/use-cases/extraction/results';
 import {
@@ -279,7 +279,7 @@ function ScanConfigResults({
 function neuronSetNamesOf(...configs: unknown[]): string[] {
   const names = new Set<string>();
   for (const config of configs) {
-    const sets = get(config, 'neuron_sets');
+    const sets = get(config, NEURON_SETS_SECTION);
     if (sets && typeof sets === 'object') for (const name of Object.keys(sets)) names.add(name);
   }
   return [...names];

@@ -1,5 +1,6 @@
 import { isPlainObject } from '@/features/scan-config/components/utils';
 
+import type { ErrorObject } from 'ajv';
 import type { Config, ConfigValue } from '@/features/scan-config/types';
 
 export type TConfigUpdate = Config | ((previous: Config) => Config);
@@ -101,6 +102,23 @@ export function entrySummariesOf(section: ConfigValue | undefined): TEntrySummar
 /** Whether `instancePath` is `path` itself or below it, by whole path segments. */
 export function isAtOrBelow(instancePath: string, path: string): boolean {
   return instancePath === path || instancePath.startsWith(`${path}/`);
+}
+
+/** The errors at or below `path`, with their `instancePath` made relative to it. */
+export function errorsUnder(
+  errors: readonly ErrorObject[] | null | undefined,
+  path: string
+): ErrorObject[] {
+  return (errors ?? []).flatMap((error) =>
+    isAtOrBelow(error.instancePath, path)
+      ? [{ ...error, instancePath: error.instancePath.slice(path.length) }]
+      : []
+  );
+}
+
+/** True when `path` or anything below it has an error. */
+export function hasErrorAt(errors: readonly ErrorObject[], path: string): boolean {
+  return errors.some((error) => isAtOrBelow(error.instancePath, path));
 }
 
 export interface IReportedIssues {

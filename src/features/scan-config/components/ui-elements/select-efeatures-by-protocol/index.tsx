@@ -33,7 +33,7 @@ import type { TFeatureDef, TProtocolDef, TProtocolValue } from './types';
  * A component per error rather than one call for all of them, because `useReportIssue` keys on a
  * single path — and because unmounting one is what clears it once that error is resolved.
  */
-function FieldErrorRegistrar({ path, message }: { path: string; message: string }) {
+function IssueReporter({ path, message }: { path: string; message: string }) {
   useReportIssue(path, message);
   return null;
 }
@@ -217,7 +217,7 @@ export function SelectEFeaturesByProtocol({
       data-scan-config-block-element={ScanConfigUIElementDict.SelectEFeaturesByProtocol}
     >
       {selectionErrors.map(({ key, message }) => (
-        <FieldErrorRegistrar key={key} path={`${errorPrefix}/${key}`} message={message} />
+        <IssueReporter key={key} path={`${errorPrefix}/${key}`} message={message} />
       ))}
 
       <Checkbox

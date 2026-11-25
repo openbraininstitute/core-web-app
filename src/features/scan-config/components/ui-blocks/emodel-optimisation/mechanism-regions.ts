@@ -23,6 +23,7 @@
  */
 
 import { isPlainObject } from '@/features/scan-config/components/utils';
+import { hasErrorAt } from '@/features/scan-config/store';
 import {
   type Config,
   type ConfigSchema,
@@ -217,27 +218,6 @@ export function availableDistributions(config: Config): TDistributionOption[] {
 // Schema errors: ajv errors whose `instancePath` is made relative to the value being rendered
 // (the emodel config value, or one parameter's OptimizationValue)
 // ---------------------------------------------------------------------------
-
-function isAtOrBelow(instancePath: string, path: string): boolean {
-  return instancePath === path || instancePath.startsWith(`${path}/`);
-}
-
-/** The errors at or below `path`, with their `instancePath` made relative to it. */
-export function errorsUnder(
-  errors: readonly ErrorObject[] | null | undefined,
-  path: string
-): ErrorObject[] {
-  return (errors ?? []).flatMap((error) =>
-    isAtOrBelow(error.instancePath, path)
-      ? [{ ...error, instancePath: error.instancePath.slice(path.length) }]
-      : []
-  );
-}
-
-/** True when `path` or anything below it has an error. */
-export function hasErrorAt(errors: readonly ErrorObject[], path: string): boolean {
-  return errors.some((error) => isAtOrBelow(error.instancePath, path));
-}
 
 /** Path of a region choice's entry array. */
 export function regionPath(choiceName: string): string {

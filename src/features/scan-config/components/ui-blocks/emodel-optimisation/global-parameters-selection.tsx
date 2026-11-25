@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  errorsUnder,
   ParameterMode,
   type TBounds,
   type TOptimizationValue,
@@ -9,6 +8,7 @@ import {
 import { ParameterRow } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/parameter-row';
 import { SectionHeader } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/section-header';
 import { isPlainObject } from '@/features/scan-config/components/utils';
+import { errorsUnder } from '@/features/scan-config/store';
 
 import type { ErrorObject } from 'ajv';
 import type { ConfigValue, IEModelOptimisationParameters } from '@/features/scan-config/types';

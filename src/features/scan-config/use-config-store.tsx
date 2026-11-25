@@ -13,12 +13,12 @@ import {
 
 import { entryNames } from '@/features/scan-config/commands';
 import { useConfigValidator } from '@/features/scan-config/components/hooks';
-import { errorsUnder } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import {
   createDerivedReader,
   createReportedIssues,
   createSliceReader,
   entrySummariesOf,
+  errorsUnder,
   isAtOrBelow,
   readBlock,
   writeBlock,

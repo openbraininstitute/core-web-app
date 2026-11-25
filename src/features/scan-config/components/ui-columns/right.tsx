@@ -30,6 +30,7 @@ import {
 } from '@/features/scan-config/components/model-preview/helpers';
 import { MORPHOLOGY_LOCATIONS_CONFIG_KEY } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import { useViewerConfig } from '@/features/scan-config/components/model-preview/viewer-config';
+import { NEURON_SETS_SECTION } from '@/features/scan-config/types';
 import { useConfigValue, useWholeConfig } from '@/features/scan-config/use-config-store';
 import { resolveEntityIdsFromConfigForm } from '@/features/scan-config/workflow/workflow-schema-selection';
 import { Skeleton } from '@/ui/molecules/skeleton';
@@ -169,7 +170,7 @@ export function EntityPreviewPane({
 
 const NO_IDS: string[] = [];
 
-const hasNeuronSetsSection = (config: Config) => 'neuron_sets' in config;
+const hasNeuronSetsSection = (config: Config) => NEURON_SETS_SECTION in config;
 
 function EFeaturesPane({ schema }: { schema: ConfigSchema }) {
   const config = useWholeConfig();

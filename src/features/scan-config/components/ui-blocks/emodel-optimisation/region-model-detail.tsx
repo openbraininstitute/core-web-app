@@ -10,7 +10,6 @@ import {
   defaultOptimizationValue,
   entryModelId,
   entryParameters,
-  errorsUnder,
   makeParameterSelection,
   PARAMETERS_KEY,
   readDistribution,
@@ -25,6 +24,7 @@ import {
 import { extractNeuronBlockParameters } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/neuron-block-parameters';
 import { ParameterRow } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/parameter-row';
 import { isPlainObject } from '@/features/scan-config/components/utils';
+import { errorsUnder } from '@/features/scan-config/store';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { cn } from '@/utils/css-class';

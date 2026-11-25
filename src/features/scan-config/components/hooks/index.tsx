@@ -59,20 +59,6 @@ export function useConfigValidator({
   return validate;
 }
 
-export function useValidateSchema({
-  initialConfig,
-  config,
-  schema,
-}: {
-  initialConfig?: Config;
-  config?: Config;
-  schema: AnySchema | null;
-}) {
-  const validate = useConfigValidator({ initialConfig, schema });
-
-  return useMemo(() => validate(config), [validate, config]);
-}
-
 /** Picks the name of a new entry from the latest config; names picked in a row stay distinct. */
 export function useReserveEntryName({
   store,
