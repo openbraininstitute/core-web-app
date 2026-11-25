@@ -26,13 +26,14 @@ import {
 
 import type { ErrorObject } from 'ajv';
 import type { ReactNode } from 'react';
-import type { IReportedIssues, TEntrySummary } from '@/features/scan-config/store';
 import type {
   Config,
   ConfigSchema,
   ConfigValue,
+  IScanConfigIssues,
   IScanConfigStore,
   TConfigErrors,
+  TEntrySummary,
 } from '@/features/scan-config/types';
 
 const ScanConfigStoreContext = createContext<IScanConfigStore | null>(null);
@@ -75,11 +76,6 @@ const wholeConfig = (config: Config) => config;
 /** The whole config: the caller re-renders on every edit. Prefer `useConfigValue` with a slice. */
 export function useWholeConfig(): Config {
   return useConfigValue(wholeConfig);
-}
-
-interface IScanConfigIssues {
-  getErrors: () => TConfigErrors;
-  reported: IReportedIssues;
 }
 
 const ScanConfigIssuesContext = createContext<IScanConfigIssues | null>(null);

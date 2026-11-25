@@ -250,6 +250,23 @@ export interface IScanConfigStore {
 /** The schema errors of the config, or `null` when it is valid. */
 export type TConfigErrors = ErrorObject[] | null;
 
+/** The name and block type of one entry of a section. */
+export type TEntrySummary = { name: string; type: string | undefined };
+
+/** The issues that fields report themselves, by path (`/section/entry/field`). */
+export interface IReportedIssues {
+  getSnapshot: () => ReadonlyMap<string, string>;
+  subscribe: (listener: () => void) => () => void;
+  /** Sets the message of a path, or removes the path when there is no message. */
+  report: (path: string, message: string | undefined) => void;
+}
+
+/** Every issue of the form: the schema errors, and the issues that fields report. */
+export interface IScanConfigIssues {
+  getErrors: () => TConfigErrors;
+  reported: IReportedIssues;
+}
+
 const CircuitNeuronalManipulationTypes: ReadonlySet<string> = new Set([
   NeuronalManipulationTypeDict.CircuitByNeuron,
   NeuronalManipulationTypeDict.CircuitBySectionList,

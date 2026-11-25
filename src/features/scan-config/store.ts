@@ -1,7 +1,13 @@
 import { isPlainObject } from '@/features/scan-config/components/utils';
 
 import type { ErrorObject } from 'ajv';
-import type { Config, ConfigValue, IScanConfigStore } from '@/features/scan-config/types';
+import type {
+  Config,
+  ConfigValue,
+  IReportedIssues,
+  IScanConfigStore,
+  TEntrySummary,
+} from '@/features/scan-config/types';
 
 export function createScanConfigStore(initial: Config): IScanConfigStore {
   let config = initial;
@@ -78,8 +84,6 @@ export function createSliceReader<TSlice>(
   return createDerivedReader(store.getSnapshot, selector, isEqual);
 }
 
-export type TEntrySummary = { name: string; type: string | undefined };
-
 /** The name and block type of each entry of a section; empty when it holds no entries. */
 export function entrySummariesOf(section: ConfigValue | undefined): TEntrySummary[] {
   if (!isPlainObject(section)) return [];
@@ -110,13 +114,6 @@ export function errorsUnder(
 /** True when `path` or anything below it has an error. */
 export function hasErrorAt(errors: readonly ErrorObject[], path: string): boolean {
   return errors.some((error) => isAtOrBelow(error.instancePath, path));
-}
-
-export interface IReportedIssues {
-  getSnapshot: () => ReadonlyMap<string, string>;
-  subscribe: (listener: () => void) => () => void;
-  /** Sets the message of a path, or removes the path when there is no message. */
-  report: (path: string, message: string | undefined) => void;
 }
 
 /** The issues that fields report themselves, by path (`/section/entry/field`). */
