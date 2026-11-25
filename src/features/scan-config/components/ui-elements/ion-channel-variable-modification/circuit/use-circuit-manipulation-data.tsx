@@ -37,12 +37,11 @@ function WarningsNote({ warnings }: { warnings: string[] }) {
 
 /** Parameters for {@link useCircuitManipulationData}. */
 export type TUseCircuitManipulationDataParams = {
-  state: Record<string, ConfigValue>;
-  setState: (newState: Record<string, ConfigValue>) => void;
-  /** Sibling field holding the neuron-set reference (`property_source_field`). */
-  sourceField: string;
-  /** Modification field key being edited. */
-  fieldKey: string;
+  /** The neuron-set reference held by the sibling field (`property_source_field`). */
+  reference: ConfigValue | undefined;
+  /** The modification being edited. */
+  value: ConfigValue | undefined;
+  onChange: (next: ConfigValue) => void;
   /** Schema `property_endpoints.NeuronalManipulation` path. */
   endpoint: string | undefined;
   /** Target Circuit entity id. */
@@ -61,19 +60,17 @@ export type TCircuitManipulationData = {
  * Resolves the sibling neuron set, fetches Circuit mechanism variables, and clears
  * the modification when the targeted neuron set changes.
  *
- * @param params - Form state, source field, endpoint, and Circuit entity id.
+ * @param params - The neuron-set reference, the modification, endpoint, and Circuit entity id.
  * @returns Mechanism variables, loading flag, and optional status reason.
  */
 export function useCircuitManipulationData({
-  state,
-  setState,
-  sourceField,
-  fieldKey,
+  reference,
+  value,
+  onChange,
   endpoint,
   entityId,
 }: TUseCircuitManipulationDataParams): TCircuitManipulationData {
   const workspace = useWorkspace();
-  const reference = state[sourceField];
   const dictionaryName =
     isPlainObject(reference) && typeof reference.block_dict_name === 'string'
       ? reference.block_dict_name
@@ -92,16 +89,15 @@ export function useCircuitManipulationData({
     reference
   );
 
-  const latestRef = useRef({ state, setState, fieldKey });
-  latestRef.current = { state, setState, fieldKey };
+  const latestRef = useRef({ value, onChange });
+  latestRef.current = { value, onChange };
   const previousTargetRef = useRef(neuronSetSignature);
   useEffect(() => {
     if (previousTargetRef.current === neuronSetSignature) return;
     previousTargetRef.current = neuronSetSignature;
 
-    const { state: latestState, setState: applyState, fieldKey: key } = latestRef.current;
-    if (latestState[key] == null) return;
-    applyState({ ...latestState, [key]: null });
+    if (latestRef.current.value == null) return;
+    latestRef.current.onChange(null);
   }, [neuronSetSignature]);
 
   const { data, isLoading, isError, error } = useNeuronalManipulationProperties({

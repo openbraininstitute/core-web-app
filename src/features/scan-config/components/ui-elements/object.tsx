@@ -3,7 +3,7 @@
 import { DESCRIPTION_TOOLTIP_CLASS } from '@/features/scan-config/components/shared/box-class';
 import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
 import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
-import { UIElementRender } from '@/features/scan-config/components/ui-elements';
+import { FieldControl } from '@/features/scan-config/components/ui-elements/field-control';
 import {
   type ConfigSchema,
   type ConfigValue,
@@ -12,6 +12,7 @@ import {
   ScanConfigUIElementDict,
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
+import { PropsBlockScopeProvider } from '@/features/scan-config/use-config-store';
 import { MarkdownDescription } from '@/ui/molecules/markdown-description';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 
@@ -47,62 +48,62 @@ export function ObjectField({
   const objectValue = isPlainObject(value) ? value : {};
 
   return (
-    <div
-      className="border-neutral-2 flex flex-col gap-4 rounded-lg border bg-gray-50 p-4"
-      data-scan-config-block-element={ScanConfigUIElementDict.Object}
-    >
-      {Object.entries(paramSchema.properties)
-        .filter(([, fieldSchema]) => !isType(fieldSchema) && !fieldSchema.ui_hidden)
-        .map(([fieldKey, fieldSchema]) => {
-          if (isType(fieldSchema)) return null;
-          return (
-            <div
-              key={fieldKey}
-              className="flex w-full min-w-0 max-w-full flex-col"
-              data-testid={`scan-config-field-${fieldKey}`}
-            >
-              <div className="mb-1 flex w-full items-center gap-0.5">
-                <label htmlFor={fieldKey} className="text-primary-9 text-sm font-medium">
-                  {renderMathInText(fieldSchema.title)}
-                </label>
-                {fieldSchema.units && (
-                  <FieldUnit unit={fieldSchema.units} className="ml-1 text-sm" />
-                )}
-              </div>
+    <PropsBlockScopeProvider state={objectValue} setState={onChange}>
+      <div
+        className="border-neutral-2 flex flex-col gap-4 rounded-lg border bg-gray-50 p-4"
+        data-scan-config-block-element={ScanConfigUIElementDict.Object}
+      >
+        {Object.entries(paramSchema.properties)
+          .filter(([, fieldSchema]) => !isType(fieldSchema) && !fieldSchema.ui_hidden)
+          .map(([fieldKey, fieldSchema]) => {
+            if (isType(fieldSchema)) return null;
+            return (
+              <div
+                key={fieldKey}
+                className="flex w-full min-w-0 max-w-full flex-col"
+                data-testid={`scan-config-field-${fieldKey}`}
+              >
+                <div className="mb-1 flex w-full items-center gap-0.5">
+                  <label htmlFor={fieldKey} className="text-primary-9 text-sm font-medium">
+                    {renderMathInText(fieldSchema.title)}
+                  </label>
+                  {fieldSchema.units && (
+                    <FieldUnit unit={fieldSchema.units} className="ml-1 text-sm" />
+                  )}
+                </div>
 
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span>
-                    <div className="w-full min-w-0 max-w-full rounded-lg border border-transparent">
-                      <UIElementRender
-                        k={fieldKey}
-                        disabled={disabled}
-                        paramSchema={fieldSchema}
-                        state={objectValue}
-                        setState={onChange}
-                        schema={schema}
-                        entity={entity}
-                        schemaMappingConfig={schemaMappingConfig}
-                        errorPathPrefix={errorPathPrefix}
-                      />
-                    </div>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent
-                  avoidCollisions
-                  hideWhenDetached
-                  align="center"
-                  side="right"
-                  showArrow={false}
-                  className={DESCRIPTION_TOOLTIP_CLASS}
-                >
-                  <MarkdownDescription>{fieldSchema.description}</MarkdownDescription>
-                </TooltipContent>
-              </Tooltip>
-            </div>
-          );
-        })}
-    </div>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <div className="w-full min-w-0 max-w-full rounded-lg border border-transparent">
+                        <FieldControl
+                          fieldKey={fieldKey}
+                          disabled={disabled}
+                          paramSchema={fieldSchema}
+                          schema={schema}
+                          entity={entity}
+                          schemaMappingConfig={schemaMappingConfig}
+                          errorPathPrefix={errorPathPrefix}
+                        />
+                      </div>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    avoidCollisions
+                    hideWhenDetached
+                    align="center"
+                    side="right"
+                    showArrow={false}
+                    className={DESCRIPTION_TOOLTIP_CLASS}
+                  >
+                    <MarkdownDescription>{fieldSchema.description}</MarkdownDescription>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            );
+          })}
+      </div>
+    </PropsBlockScopeProvider>
   );
 }
 

@@ -28,16 +28,15 @@ import { createScanConfigStore } from '@/features/scan-config/store';
 import { ScanConfigStoreProvider } from '@/features/scan-config/use-config-store';
 
 type HarnessProps = {
-  state: Record<string, ConfigValue>;
-  setState: (next: Record<string, ConfigValue>) => void;
+  value?: ConfigValue;
+  onChange?: (next: ConfigValue) => void;
 };
 
-function Reader({ state, setState }: HarnessProps) {
+function Reader({ value, onChange = () => {} }: HarnessProps) {
   const { data, loading, reason } = useCircuitManipulationData({
-    state,
-    setState,
-    sourceField: 'neuron_set',
-    fieldKey: 'manipulation',
+    reference: REFERENCE,
+    value,
+    onChange,
     endpoint: '/circuit-neuronal-manipulation-properties-by-neuron-set',
     entityId: 'circuit-1',
   });
@@ -51,7 +50,7 @@ function Reader({ state, setState }: HarnessProps) {
   );
 }
 
-function renderHarness({ config, state, setState }: HarnessProps & { config: Config }) {
+function renderHarness({ config, value, onChange }: HarnessProps & { config: Config }) {
   const store = createScanConfigStore(config);
   const commits = { count: 0 };
   const view = render(
@@ -62,7 +61,7 @@ function renderHarness({ config, state, setState }: HarnessProps & { config: Con
           commits.count += 1;
         }}
       >
-        <Reader state={state} setState={setState} />
+        <Reader value={value} onChange={onChange} />
       </Profiler>
     </ScanConfigStoreProvider>
   );
@@ -87,7 +86,7 @@ describe('useCircuitManipulationData', () => {
 
   it('reports loading and renders no reason while variables are being fetched', () => {
     queryResult.value = { data: undefined, isLoading: true, isError: false, error: undefined };
-    renderHarness({ config: makeConfig([1]), state: { neuron_set: REFERENCE }, setState: vi.fn() });
+    renderHarness({ config: makeConfig([1]) });
 
     expect(screen.getByTestId('loading')).toHaveTextContent('true');
     expect(screen.getByTestId('reason')).toBeEmptyDOMElement();
@@ -102,7 +101,7 @@ describe('useCircuitManipulationData', () => {
         message: 'Neuron set "exc" has no biophysical neurons.',
       }),
     };
-    renderHarness({ config: makeConfig([1]), state: { neuron_set: REFERENCE }, setState: vi.fn() });
+    renderHarness({ config: makeConfig([1]) });
 
     expect(
       screen.getByText('Could not load variables for the selected neuron set.')
@@ -119,8 +118,6 @@ describe('useCircuitManipulationData', () => {
     };
     const { container } = renderHarness({
       config: makeConfig([1]),
-      state: { neuron_set: REFERENCE },
-      setState: vi.fn(),
     });
 
     expect(
@@ -138,7 +135,7 @@ describe('useCircuitManipulationData', () => {
       isError: false,
       error: undefined,
     };
-    renderHarness({ config: makeConfig([1]), state: { neuron_set: REFERENCE }, setState: vi.fn() });
+    renderHarness({ config: makeConfig([1]) });
 
     expect(
       screen.getByText('No ion-channel variables are available for the selected neuron set.')
@@ -154,7 +151,7 @@ describe('useCircuitManipulationData', () => {
       isError: false,
       error: undefined,
     };
-    renderHarness({ config: makeConfig([1]), state: { neuron_set: REFERENCE }, setState: vi.fn() });
+    renderHarness({ config: makeConfig([1]) });
 
     expect(screen.getByText('Nothing to tune here')).toBeInTheDocument();
     expect(screen.getByText(warning)).toBeInTheDocument();
@@ -173,38 +170,31 @@ describe('useCircuitManipulationData', () => {
       isError: false,
       error: undefined,
     };
-    renderHarness({ config: makeConfig([1]), state: { neuron_set: REFERENCE }, setState: vi.fn() });
+    renderHarness({ config: makeConfig([1]) });
 
     expect(screen.getByTestId('hasData')).toHaveTextContent('yes');
     expect(screen.getByTestId('reason')).toBeEmptyDOMElement();
   });
 
   it('resets the modification when the targeted neuron set changes', () => {
-    const setState = vi.fn();
-    const state: Record<string, ConfigValue> = {
-      neuron_set: REFERENCE,
-      manipulation: { type: 'RangeModification', variable_name: 'gbar' },
-    };
+    const onChange = vi.fn();
     const { store } = renderHarness({
       config: makeConfig([1, 2]),
-      state: state,
-      setState: setState,
+      value: { type: 'RangeModification', variable_name: 'gbar' },
+      onChange,
     });
 
-    expect(setState).not.toHaveBeenCalled();
+    expect(onChange).not.toHaveBeenCalled();
 
     // same selected block, different contents -> signature changes -> reset fires
     act(() => store.set(makeConfig([1, 2, 3])));
 
-    expect(setState).toHaveBeenCalledWith({ ...state, manipulation: null });
+    expect(onChange).toHaveBeenCalledWith(null);
   });
 
   it('does not re-render while another dictionary changes', () => {
-    const state: Record<string, ConfigValue> = { neuron_set: REFERENCE };
     const { store, commits } = renderHarness({
       config: { ...makeConfig([1]), stimuli: { S: { amplitude: 1 } } },
-      state,
-      setState: vi.fn(),
     });
     const before = commits.count;
 
@@ -214,12 +204,11 @@ describe('useCircuitManipulationData', () => {
   });
 
   it('does not reset when there is no modification to clear', () => {
-    const setState = vi.fn();
-    const state: Record<string, ConfigValue> = { neuron_set: REFERENCE };
-    const { store } = renderHarness({ config: makeConfig([1]), state: state, setState: setState });
+    const onChange = vi.fn();
+    const { store } = renderHarness({ config: makeConfig([1]), onChange });
 
     act(() => store.set(makeConfig([1, 2])));
 
-    expect(setState).not.toHaveBeenCalled();
+    expect(onChange).not.toHaveBeenCalled();
   });
 });

@@ -20,6 +20,7 @@ import {
 } from '@/features/scan-config/components/ui-elements/distance-function/distribution-parameter-list';
 import { EntityPropertyDropdown } from '@/features/scan-config/components/ui-elements/entity-property-dropdown';
 import { ETypeSelector } from '@/features/scan-config/components/ui-elements/etype-selector';
+import { FieldControl } from '@/features/scan-config/components/ui-elements/field-control';
 import { FloatInput } from '@/features/scan-config/components/ui-elements/float-input';
 import { FloatOptional } from '@/features/scan-config/components/ui-elements/float-optional';
 import {
@@ -27,7 +28,15 @@ import {
   recordingIdsOf,
   type TIonChannelModelPropertiesValue,
 } from '@/features/scan-config/components/ui-elements/ion-channel-model-properties';
+import { CircuitGlobal } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/global';
+import { CircuitRange } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/range';
+import { Global } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/me-model/global';
+import { Range } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/me-model/range';
 import { ModelIdentifier } from '@/features/scan-config/components/ui-elements/model-identifier';
+import {
+  ModelIdentifierGrouped,
+  ModelIdentifierMultiple,
+} from '@/features/scan-config/components/ui-elements/model-identifier-multiple';
 import { EntitySelectorSingle } from '@/features/scan-config/components/ui-elements/model-selector-single';
 import MorphologyLocationSelection from '@/features/scan-config/components/ui-elements/morphology-location-selection';
 import { MorphologySectionTypeSelection } from '@/features/scan-config/components/ui-elements/morphology-section-type-selection';
@@ -39,9 +48,11 @@ import {
   NeuronSetCombination,
   type NeuronSetCombinationEntry,
 } from '@/features/scan-config/components/ui-elements/neuron-set-combination';
+import { ObjectField } from '@/features/scan-config/components/ui-elements/object';
 import ParameterSweep from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { SelectRecordableIonChannelVariable } from '@/features/scan-config/components/ui-elements/recordable-ion-channel-variable';
 import { Reference } from '@/features/scan-config/components/ui-elements/reference';
+import { SelectEFeaturesByProtocol } from '@/features/scan-config/components/ui-elements/select-efeatures-by-protocol';
 import { Stochasticity } from '@/features/scan-config/components/ui-elements/stochasticity';
 import { StringListInput } from '@/features/scan-config/components/ui-elements/string-list-input';
 import { StringListOptional } from '@/features/scan-config/components/ui-elements/string-list-optional';
@@ -59,14 +70,17 @@ import {
   type TEntityQuery,
 } from '@/features/scan-config/helpers';
 import {
+  CIRCUIT_NEURONAL_MANIPULATION_SOURCE_FIELD,
   type Config,
   type ConfigSchema,
   type ConfigValue,
+  isCircuitNeuronalManipulationType,
   type ParamSchema,
   ScanConfigUIElementDict,
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
 import {
+  PropsBlockScopeProvider,
   useBlockValue,
   useConfigValue,
   useUpdateBlock,
@@ -706,6 +720,175 @@ function EtypeSelectorField({
   );
 }
 
+function ModelIdentifierMultipleField({
+  paramSchema,
+  value,
+  setValue,
+  disabled,
+  errorPathPrefix,
+}: TFieldOf<typeof ScanConfigUIElementDict.ModelIdentifierMultiple>) {
+  return (
+    <ModelIdentifierMultiple
+      value={value as ConfigValue}
+      onChange={setValue}
+      paramSchema={paramSchema}
+      disabled={disabled}
+      errorPathPrefix={errorPathPrefix}
+    />
+  );
+}
+
+function ModelIdentifierGroupedField({
+  paramSchema,
+  value,
+  setValue,
+  disabled,
+  errorPathPrefix,
+}: TFieldOf<typeof ScanConfigUIElementDict.ModelIdentifierGrouped>) {
+  return (
+    <ModelIdentifierGrouped
+      value={value as ConfigValue}
+      onChange={setValue}
+      paramSchema={paramSchema}
+      disabled={disabled}
+      errorPathPrefix={errorPathPrefix}
+    />
+  );
+}
+
+function SelectEFeaturesByProtocolField({
+  paramSchema,
+  value,
+  setValue,
+  disabled,
+  schema,
+  entity,
+  schemaMappingConfig,
+  errorPathPrefix,
+}: TFieldProps) {
+  return (
+    <SelectEFeaturesByProtocol
+      value={value as ConfigValue}
+      onChange={setValue}
+      paramSchema={paramSchema}
+      schema={schema}
+      disabled={disabled}
+      errorPathPrefix={errorPathPrefix}
+      // the widget gets the field renderer as a prop, so it does not import this registry
+      renderField={(field) => (
+        <PropsBlockScopeProvider state={field.state} setState={field.setState}>
+          <FieldControl
+            fieldKey={field.fieldKey}
+            paramSchema={field.paramSchema}
+            disabled={disabled}
+            schema={schema}
+            entity={entity}
+            schemaMappingConfig={schemaMappingConfig}
+          />
+        </PropsBlockScopeProvider>
+      )}
+    />
+  );
+}
+
+type TManipulationSchema = Extract<
+  ParamSchema,
+  {
+    ui_element:
+      | typeof ScanConfigUIElementDict.IonChannelVariableModificationByNeuron
+      | typeof ScanConfigUIElementDict.ionChannelVariableModificationBySectionList;
+  }
+>;
+
+const selectVariantType = (block: TBlockState) =>
+  typeof block.type === 'string' ? block.type : undefined;
+
+/** What both manipulation kinds read: the circuit or ME-model variant, and the neuron-set reference. */
+function useManipulationSource(paramSchema: TManipulationSchema, schema: ConfigSchema) {
+  const sourceField =
+    paramSchema.property_source_field ?? CIRCUIT_NEURONAL_MANIPULATION_SOURCE_FIELD;
+  const selectReference = useCallback((block: TBlockState) => block[sourceField], [sourceField]);
+
+  return {
+    isCircuit: isCircuitNeuronalManipulationType(useBlockValue(selectVariantType)),
+    reference: useBlockValue(selectReference),
+    endpoint: paramSchema.property_group
+      ? schema.property_endpoints?.[paramSchema.property_group]
+      : undefined,
+  };
+}
+
+function ManipulationByNeuronField({
+  paramSchema,
+  value,
+  setValue,
+  disabled,
+  schema,
+  entity,
+  errorPathPrefix,
+}: TFieldOf<typeof ScanConfigUIElementDict.IonChannelVariableModificationByNeuron>) {
+  const { isCircuit, reference, endpoint } = useManipulationSource(paramSchema, schema);
+  const shared = {
+    endpoint,
+    entityId: entity?.id,
+    disabled,
+    value,
+    onChange: setValue,
+    modificationType: get(paramSchema, 'properties.type.const', 'ByNeuronModification'),
+    errorPathPrefix,
+  };
+
+  return isCircuit ? <CircuitGlobal {...shared} reference={reference} /> : <Global {...shared} />;
+}
+
+function ManipulationBySectionListField({
+  paramSchema,
+  value,
+  setValue,
+  disabled,
+  schema,
+  entity,
+  errorPathPrefix,
+}: TFieldOf<typeof ScanConfigUIElementDict.ionChannelVariableModificationBySectionList>) {
+  const { isCircuit, reference, endpoint } = useManipulationSource(paramSchema, schema);
+  const shared = {
+    endpoint,
+    entityId: entity?.id,
+    disabled,
+    value,
+    onChange: setValue,
+    modificationType: get(paramSchema, 'properties.type.const', 'BySectionListModification'),
+    errorPathPrefix,
+  };
+
+  return isCircuit ? <CircuitRange {...shared} reference={reference} /> : <Range {...shared} />;
+}
+
+function ObjectFieldField({
+  fieldKey,
+  paramSchema,
+  value,
+  setValue,
+  disabled,
+  schema,
+  entity,
+  schemaMappingConfig,
+  errorPathPrefix,
+}: TFieldOf<typeof ScanConfigUIElementDict.Object>) {
+  return (
+    <ObjectField
+      value={value as ConfigValue}
+      paramSchema={paramSchema}
+      disabled={disabled}
+      schema={schema}
+      entity={entity}
+      schemaMappingConfig={schemaMappingConfig}
+      errorPathPrefix={errorPathPrefix ? `${errorPathPrefix}/${fieldKey}` : undefined}
+      onChange={setValue}
+    />
+  );
+}
+
 type TTypedFieldRegistry = { [TKind in TFieldKind]?: ComponentType<TFieldOf<TKind>> };
 
 const TYPED_FIELD_REGISTRY: TTypedFieldRegistry = {
@@ -741,9 +924,16 @@ const TYPED_FIELD_REGISTRY: TTypedFieldRegistry = {
   [ScanConfigUIElementDict.ModelSelectorSingle]: ModelSelectorSingleField,
   [ScanConfigUIElementDict.TaskResultSelector]: TaskResultSelectorField,
   [ScanConfigUIElementDict.EtypeSelector]: EtypeSelectorField,
+  [ScanConfigUIElementDict.ModelIdentifierMultiple]: ModelIdentifierMultipleField,
+  [ScanConfigUIElementDict.ModelIdentifierGrouped]: ModelIdentifierGroupedField,
+  [ScanConfigUIElementDict.SelectEFeaturesByProtocol]: SelectEFeaturesByProtocolField,
+  [ScanConfigUIElementDict.IonChannelVariableModificationByNeuron]: ManipulationByNeuronField,
+  [ScanConfigUIElementDict.ionChannelVariableModificationBySectionList]:
+    ManipulationBySectionListField,
+  [ScanConfigUIElementDict.Object]: ObjectFieldField,
 };
 
-/** The component of each field kind; a kind that is not here has not moved to the registry. */
+/** The component of each field kind (Strategy pattern): a new kind is one component and one line here. */
 export const FIELD_REGISTRY = TYPED_FIELD_REGISTRY as Partial<
   Record<TFieldKind, ComponentType<TFieldProps>>
 >;

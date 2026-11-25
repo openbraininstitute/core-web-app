@@ -75,20 +75,16 @@ function ProtocolCardSkeletons() {
  * recordings rather than from the schema alone.
  */
 export function SelectEFeaturesByProtocol({
-  fieldKey,
   value,
-  state,
-  setState,
+  onChange,
   paramSchema,
   schema,
   disabled,
   renderField,
   errorPathPrefix,
 }: {
-  fieldKey: string;
   value: ConfigValue;
-  state: Record<string, ConfigValue>;
-  setState: (next: Record<string, ConfigValue>) => void;
+  onChange: (next: ConfigValue) => void;
   paramSchema: ParamSchema;
   schema: ConfigSchema;
   disabled: boolean;
@@ -166,10 +162,7 @@ export function SelectEFeaturesByProtocol({
   // the widget holds one merged feature list per protocol; obi-one wants a protocol's own
   // features and the catalogue extras in two separate fields, so every write goes through the split
   const commit = (protocols: TProtocolValue[]) => {
-    setState({
-      ...state,
-      [fieldKey]: serializeSelectionValue(selection, protocols, defsByType) as ConfigValue,
-    });
+    onChange(serializeSelectionValue(selection, protocols, defsByType) as ConfigValue);
   };
 
   const replaceProtocol = (typeName: string, next: TProtocolValue) => {
