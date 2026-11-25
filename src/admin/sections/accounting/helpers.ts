@@ -520,7 +520,7 @@ const lapsesBetween = (lists: TPrice[][], from: string, to: string | null) => [
 
 /** Ending `price` at `end`: every other price lapsing in the time it stops covering needs a successor. */
 export function checkPriceEnd(lists: TPrice[][], price: TPrice, end: string | null) {
-  if (!end) return;
+  if (!end || (price.valid_to && Date.parse(end) >= Date.parse(price.valid_to))) return;
   for (const at of lapsesBetween(lists, end, price.valid_to)) checkPriceAfter(lists, at, price.id);
 }
 

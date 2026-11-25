@@ -108,7 +108,7 @@ function ReplacePriceButton({ price }: { price: TPrice }) {
           title={`Replace price #${price.id}`}
           vlabId={price.vlab_id}
           priceId={price.id}
-          initialValues={{ ...priceValues(price), valid_from: undefined, valid_to: undefined }}
+          initialValues={{ ...priceValues(price), valid_from: undefined }}
           keyLocked
           startAhead
           okText="Add and end the old one"

@@ -64,6 +64,15 @@ describe('PriceActions', () => {
     expect(buttons()).toEqual(expected);
   });
 
+  it('starts Change price with the old end kept', async () => {
+    renderActions({ ...ACTIVE, valid_to: hours(48) });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Change price' }));
+    const dialog = await screen.findByRole('dialog');
+
+    expect((within(dialog).getByLabelText('Ends') as HTMLInputElement).value).not.toBe('');
+  });
+
   it("offers nothing on a legacy price, and says it can't be ended", () => {
     renderActions({ ...ACTIVE, service_subtype: 'ml-rag' } as TPrice);
 

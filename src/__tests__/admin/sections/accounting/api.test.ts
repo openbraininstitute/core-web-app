@@ -379,6 +379,19 @@ describe('replacePrice', () => {
     expect(posted('admin/price')).toEqual([]);
   });
 
+  it('replaces a price that ends with nothing after it, keeping its end', async () => {
+    const end = new Date(Date.now() + 5 * 3_600_000).toISOString();
+    const ending: TPrice = { ...OLD, valid_to: end };
+    const created: TPrice = { ...CREATED, valid_to: end };
+    accounting({
+      listed: [created, ending],
+      create: () => json({ message: 'Price added', data: created }, 201),
+    });
+
+    await expect(replacePrice(ending, { ...NEXT, valid_to: end })).resolves.toEqual(created);
+    expect(posted('/expire')).toHaveLength(1);
+  });
+
   it('refuses a new price whose end hands over to a price that lapses before the old end', async () => {
     const lapsing: TPrice = {
       ...OLD,

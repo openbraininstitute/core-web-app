@@ -408,12 +408,11 @@ describe('checkPriceEnd', () => {
     expect(() => checkPriceEnd([[lab], [following, fallback]], lab, at(5))).not.toThrow();
   });
 
-  it('checks only the new end when the end moves later', () => {
+  it('lets an end move later with nothing after it, as that only adds coverage', () => {
     const ending: TPrice = { ...lab, valid_to: at(5) };
     const lapsing: TPrice = { ...fallback, valid_to: at(7) };
-    const later: TPrice = { ...fallback, id: 5, valid_from: at(12), valid_to: null };
 
-    expect(() => checkPriceEnd([[ending], [later, lapsing]], ending, at(20))).not.toThrow();
+    expect(() => checkPriceEnd([[ending], [lapsing]], ending, at(20))).not.toThrow();
   });
 });
 
