@@ -27,6 +27,7 @@ import {
   tierSummary,
   windowStatus,
 } from '@/admin/sections/accounting/helpers';
+import { PriceBody } from '@/admin/sections/accounting/schemas';
 import { AccountingPage, JobPhase, WindowStatus } from '@/admin/sections/accounting/types';
 
 import type {
@@ -437,6 +438,31 @@ describe('price form values', () => {
     );
     expect(body.tiers).toEqual([tier(0, null, '0.1')]);
     expect(body.vlab_id).toBe('lab');
+  });
+
+  it('keeps usage above a closed last tier free when saved unchanged', () => {
+    const closed: TPrice = {
+      ...PRICE,
+      valid_from: '2030-01-01T00:00:00Z',
+      tiers: [tier(0, 100, '0.1', '2')],
+    };
+
+    const body = priceBody(priceValues(closed), null);
+
+    expect(body.tiers).toEqual([tier(0, 100, '0.1', '2'), tier(100, null, '0', '0')]);
+    expect(PriceBody.safeParse(body).error?.issues).toBeUndefined();
+    expect(tierCost(body.tiers, BigInt(500))).toEqual(tierCost(closed.tiers, BigInt(500)));
+  });
+
+  it('leaves a storage price on its one tier', () => {
+    const storage: TPrice = {
+      ...PRICE,
+      service_type: 'storage',
+      service_subtype: 'storage',
+      tiers: [tier(0, 100, '1E-7')],
+    };
+
+    expect(priceValues(storage).tiers).toHaveLength(1);
   });
 });
 
