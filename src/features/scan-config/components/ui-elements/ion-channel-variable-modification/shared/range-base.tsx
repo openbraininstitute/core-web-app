@@ -29,9 +29,8 @@ import { type ConfigValue, ScanConfigUIElementDict } from '@/features/scan-confi
 export interface RangeModificationBaseProps {
   data: MechanismVariablesRoot | null;
   disabled: boolean;
-  state: Record<string, ConfigValue>;
-  setState: (newState: Record<string, ConfigValue>) => void;
-  fieldKey: string;
+  value: ConfigValue | undefined;
+  onChange: (next: ConfigValue) => void;
   modificationType: string;
   errorPathPrefix?: string;
   /** Whether mechanism variables are still loading. */
@@ -50,15 +49,13 @@ export interface RangeModificationBaseProps {
 export function RangeModificationBase({
   data,
   disabled,
-  state,
-  setState,
-  fieldKey,
+  value: currentModification,
+  onChange,
   modificationType,
   errorPathPrefix,
   loading = false,
   reason = null,
 }: RangeModificationBaseProps) {
-  const currentModification = state[fieldKey];
   const isValidModification =
     !!currentModification &&
     typeof currentModification === 'object' &&
@@ -125,14 +122,11 @@ export function RangeModificationBase({
       }
     }
 
-    setState({
-      ...state,
-      [fieldKey]: {
-        type: modificationType,
-        ion_channel_id: selection.entityId,
-        variable_name: selection.variable.neuron_variable,
-        section_list_modifications: sectionListModifications,
-      },
+    onChange({
+      type: modificationType,
+      ion_channel_id: selection.entityId,
+      variable_name: selection.variable.neuron_variable,
+      section_list_modifications: sectionListModifications,
     });
   };
 
@@ -143,15 +137,12 @@ export function RangeModificationBase({
       (currentModification.section_list_modifications as Record<string, ConfigValue>) ?? {};
 
     // obi-one takes no null here: a cleared section list keeps its default
-    setState({
-      ...state,
-      [fieldKey]: {
-        ...currentModification,
-        section_list_modifications:
-          value === null
-            ? omit(currentMods, [sectionList])
-            : { ...currentMods, [sectionList]: value },
-      },
+    onChange({
+      ...currentModification,
+      section_list_modifications:
+        value === null
+          ? omit(currentMods, [sectionList])
+          : { ...currentMods, [sectionList]: value },
     });
   };
 

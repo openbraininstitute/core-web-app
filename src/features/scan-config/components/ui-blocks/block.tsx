@@ -3,7 +3,6 @@ import { isNil } from 'es-toolkit/compat';
 import { FieldDescriptionTooltip } from '@/features/scan-config/components/shared/field-description-tooltip';
 import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
 import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
-import { UIElementRender } from '@/features/scan-config/components/ui-elements';
 import { SweepCollapseButton } from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { isReferenceFieldVisible } from '@/features/scan-config/components/ui-elements/reference';
 import {
@@ -19,12 +18,11 @@ import {
   type TBlock,
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
-import { useBlockValue, useField, useUpdateBlock } from '@/features/scan-config/use-config-store';
+import { useField } from '@/features/scan-config/use-config-store';
 import { MarkdownDescription } from '@/ui/molecules/markdown-description';
 import { cn } from '@/utils/css-class';
 
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
-import type { TBlockState } from '@/features/scan-config/store';
 import type { Nullish } from '@/utils/type';
 
 type TFieldRowProps = {
@@ -39,25 +37,6 @@ type TFieldRowProps = {
   selectedEntry?: string;
   errorPathPrefix?: string;
 };
-
-type TFieldControlProps = Omit<TFieldRowProps, 'required' | 'diffClass'>;
-
-const wholeBlock = (block: TBlockState) => block;
-
-/** Renders a field kind that still takes the whole block; it re-renders on every edit of the block. */
-function WholeBlockField({ fieldKey, ...props }: TFieldControlProps) {
-  const state = useBlockValue(wholeBlock);
-  const update = useUpdateBlock();
-
-  return (
-    <UIElementRender
-      {...props}
-      k={fieldKey}
-      state={state}
-      setState={(next) => update(() => next)}
-    />
-  );
-}
 
 /** A population is chosen but has no filterable property: a data condition, not a missing input. */
 function NeuronFilterNotice({
@@ -130,11 +109,7 @@ function FieldRow({ required, diffClass, ...control }: TFieldRowProps) {
               !diffClass && 'border-transparent'
             )}
           >
-            {Field ? (
-              <Field {...control} value={value} setValue={setValue} />
-            ) : (
-              <WholeBlockField {...control} />
-            )}
+            {Field && <Field {...control} value={value} setValue={setValue} />}
           </div>
         </span>
       </FieldDescriptionTooltip>
