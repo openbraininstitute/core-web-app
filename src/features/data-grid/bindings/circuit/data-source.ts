@@ -19,6 +19,7 @@ import {
 } from '@/ui/segments/explore/circuit/helpers';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
+import { resolveOwnershipParams } from '../entitycore/columns/ownership';
 import { createEntitycorePagedDataSource } from '../entitycore/data-source.paged';
 import { serializeQuery } from '../entitycore/query-serializer';
 
@@ -146,12 +147,11 @@ export function createCircuitDataSource(
 
     // 3. current filters across ALL pages, so the tree builder can mark filtered-in
     //    vs grayed-out nodes. order_by is dropped: tree order is fixed.
-    const serialized = serializeQuery(
-      { ...query, params: withoutViewParam(query.params) },
-      schema,
-      {
+    const serialized = resolveOwnershipParams(
+      serializeQuery({ ...query, params: withoutViewParam(query.params) }, schema, {
         searchMode: 'ilike',
-      }
+      }),
+      projectId
     );
     const { page: _page, page_size: _pageSize, order_by: _orderBy, ...filterParams } = serialized;
 

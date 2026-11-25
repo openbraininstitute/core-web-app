@@ -1,10 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import {
   CIRCUIT_VIEW_PARAM,
   createCircuitDataSource,
 } from '@/features/data-grid/bindings/circuit/data-source';
+import { getEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
 import { circuitSchema } from '@/features/data-grid/bindings/entitycore/schemas/circuit';
+import { FilterValueKind, OperatorId } from '@/features/data-grid/core';
 
 import type { QueryClient } from '@tanstack/react-query';
 import type { IGridQuery } from '@/features/data-grid/core';
@@ -166,5 +169,45 @@ describe('createCircuitDataSource — hierarchy branch (gray-out tree)', () => {
     // 2 roots on screen (A, C), but A carries B — 3 circuits in all
     expect(page.rows.map((r) => r.id)).toEqual(['A', 'C']);
     expect(page.total).toBe(3);
+  });
+
+  // regression: entitycore rejects unknown query params, and the hierarchy sent the
+  // Project filter's pseudo-param as is
+  it('sends the Project filter as entitycore params', async () => {
+    const definition = getEntityGridDefinition(ExtendedEntitiesTypeDict.Circuit);
+    if (!definition) throw new Error('no circuit grid definition');
+    const fetchQuery = vi.fn(
+      async ({ queryKey }: { queryKey: [string, Record<string, unknown>] }) => {
+        const [name, params] = queryKey;
+        if (name.includes('circuit-derivation')) return tree;
+        return 'id__id' in params ? fullList : filteredSubset;
+      }
+    );
+
+    await createCircuitDataSource({
+      schema: definition.schema as never,
+      workspace: WORKSPACE,
+      queryClient: { fetchQuery } as unknown as QueryClient,
+    }).fetch(
+      baseQuery({
+        params: { [CIRCUIT_VIEW_PARAM]: 'hierarchy' },
+        filters: {
+          projectOwnership: {
+            columnId: 'projectOwnership',
+            operator: OperatorId.In,
+            value: { kind: FilterValueKind.Set, values: ['current'] },
+          },
+        },
+      })
+    );
+
+    const filtered = fetchQuery.mock.calls
+      .map(([{ queryKey }]) => queryKey[1])
+      .filter((params) => params && 'page' in params && !('id__id' in params));
+    expect(filtered.length).toBeGreaterThan(0);
+    for (const params of filtered) {
+      expect(params).not.toHaveProperty('project_ownership__in');
+      expect(params.authorized_project_id).toBe(WORKSPACE.projectId);
+    }
   });
 });
