@@ -106,6 +106,8 @@ export type TFieldProps<TSchema extends ParamSchema = ParamSchema> = {
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
   errorPathPrefix?: string;
+  /** the id a field with one control gives it, so the field's label points at it */
+  controlId?: string;
   /** name of the dictionary entry being edited; used to exclude self-references */
   selectedEntry?: string;
 };
@@ -120,9 +122,10 @@ function toStringList(value: unknown): string[] {
   return typeof value === 'string' ? [value] : [];
 }
 
-function StringInputField({ value, setValue, disabled }: TFieldProps) {
+function StringInputField({ value, setValue, disabled, controlId }: TFieldProps) {
   return (
     <Input
+      id={controlId}
       data-testid="scan-config-control"
       data-scan-config-block-element={ScanConfigUIElementDict.StringInput}
       disabled={disabled}
@@ -214,10 +217,12 @@ function FloatOptionalField({
   value,
   setValue,
   disabled,
+  controlId,
 }: TFieldOf<typeof ScanConfigUIElementDict.FloatOptional>) {
   const bounds = numericSchemaBounds(paramSchema);
   return (
     <FloatOptional
+      id={controlId}
       min={bounds.min}
       max={bounds.max}
       exclusiveMin={bounds.exclusiveMin}
@@ -234,10 +239,12 @@ function FloatInputField({
   value,
   setValue,
   disabled,
+  controlId,
 }: TFieldOf<typeof ScanConfigUIElementDict.FloatInput>) {
   const bounds = numericSchemaBounds(paramSchema);
   return (
     <FloatInput
+      id={controlId}
       min={bounds.min}
       max={bounds.max}
       exclusiveMin={bounds.exclusiveMin}
@@ -326,10 +333,10 @@ function EntityPropertyDropdownField({
   );
 }
 
-function BooleanInputField({ fieldKey, paramSchema, value, setValue, disabled }: TFieldProps) {
+function BooleanInputField({ paramSchema, value, setValue, disabled, controlId }: TFieldProps) {
   return (
     <BooleanInput
-      fieldKey={fieldKey}
+      id={controlId}
       value={typeof value === 'boolean' ? value : null}
       disabled={disabled}
       onChange={setValue}
@@ -338,10 +345,10 @@ function BooleanInputField({ fieldKey, paramSchema, value, setValue, disabled }:
   );
 }
 
-function StochasticityField({ fieldKey, paramSchema, value, setValue, disabled }: TFieldProps) {
+function StochasticityField({ paramSchema, value, setValue, disabled, controlId }: TFieldProps) {
   return (
     <Stochasticity
-      fieldKey={fieldKey}
+      id={controlId}
       value={typeof value === 'boolean' ? value : null}
       disabled={disabled}
       onChange={setValue}

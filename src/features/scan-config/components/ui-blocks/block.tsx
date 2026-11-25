@@ -3,6 +3,8 @@ import { isNil } from 'es-toolkit/compat';
 import { FieldDescriptionTooltip } from '@/features/scan-config/components/shared/field-description-tooltip';
 import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
 import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
+import { FieldLabel } from '@/features/scan-config/components/ui-elements/field-control';
+import { useFieldLabelling } from '@/features/scan-config/components/ui-elements/field-labelling';
 import { SweepCollapseButton } from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { isReferenceFieldVisible } from '@/features/scan-config/components/ui-elements/reference';
 import {
@@ -58,6 +60,7 @@ function FieldRow({ required, diffClass, ...control }: TFieldRowProps) {
   const { fieldKey, paramSchema, disabled, entity, schemaMappingConfig } = control;
   const [value, setValue] = useField(fieldKey);
   const Field = FIELD_REGISTRY[paramSchema.ui_element];
+  const labelling = useFieldLabelling(paramSchema.ui_element);
   const isBooleanInput = paramSchema.ui_element === ScanConfigUIElementDict.BooleanInput;
   const isPillField = paramSchema.ui_element === ScanConfigUIElementDict.ModelSelectorSingle;
   const isSweepField =
@@ -73,14 +76,15 @@ function FieldRow({ required, diffClass, ...control }: TFieldRowProps) {
       data-testid={`scan-config-field-${fieldKey}`}
     >
       <div className={cn('flex gap-0.5 w-full items-center', { 'mb-2': !isBooleanInput })}>
-        <label
-          htmlFor={fieldKey}
+        <FieldLabel
+          controlId={labelling.controlId}
+          labelId={labelling.labelId}
           className={cn('text-primary-9 text-base font-semibold', {
             'cursor-pointer': isBooleanInput,
           })}
         >
           {renderMathInText(paramSchema.title)}
-        </label>
+        </FieldLabel>
         {paramSchema.units && <FieldUnit unit={paramSchema.units} className="ml-1 text-base" />}
         {isSweepField && (
           <SweepCollapseButton
@@ -102,6 +106,7 @@ function FieldRow({ required, diffClass, ...control }: TFieldRowProps) {
       >
         <span className="block w-full">
           <div
+            {...labelling.group}
             className={cn(
               'w-full min-w-0 max-w-full border',
               isPillField ? 'rounded-full' : 'rounded-lg',
@@ -109,7 +114,14 @@ function FieldRow({ required, diffClass, ...control }: TFieldRowProps) {
               !diffClass && 'border-transparent'
             )}
           >
-            {Field && <Field {...control} value={value} setValue={setValue} />}
+            {Field && (
+              <Field
+                {...control}
+                controlId={labelling.controlId}
+                value={value}
+                setValue={setValue}
+              />
+            )}
           </div>
         </span>
       </FieldDescriptionTooltip>
