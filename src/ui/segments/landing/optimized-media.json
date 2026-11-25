@@ -104,9 +104,9 @@
   },
   "/images/start/walkthrough/explore-data-models.mp4": {
     "chapter": {
-      "src": "/static/website-optimized/explore-data-models-chapter-f4d523efa9b5.mp4",
-      "bytes": 2131363,
-      "originalBytes": 12788241
+      "src": "/static/website-optimized/explore-data-models-chapter-3f33bb8c18d7.mp4",
+      "bytes": 1275598,
+      "originalBytes": 36089545
     }
   },
   "/images/start/walkthrough/models-mosaic.mp4": {
@@ -132,9 +132,9 @@
   },
   "/images/start/walkthrough/education.mp4": {
     "chapter": {
-      "src": "/static/website-optimized/education-chapter-c290e9c60cf3.mp4",
-      "bytes": 1259046,
-      "originalBytes": 10378616
+      "src": "/static/website-optimized/education-chapter-a1c0897741f5.mp4",
+      "bytes": 1187605,
+      "originalBytes": 26961598
     }
   },
   "/images/start/walkthrough/get-started-mosaic.mp4": {
@@ -209,9 +209,9 @@
   },
   "/images/start/walkthrough/explore-data-models.jpg": {
     "poster": {
-      "src": "/static/website-optimized/explore-data-models-2815d753bd22.webp",
-      "bytes": 242840,
-      "originalBytes": 396914
+      "src": "/static/website-optimized/explore-data-models-fa3a89fb3a6b.webp",
+      "bytes": 92894,
+      "originalBytes": 147735
     }
   },
   "/images/start/walkthrough/models-mosaic.jpg": {
@@ -237,9 +237,9 @@
   },
   "/images/start/walkthrough/education-poster.jpg": {
     "poster": {
-      "src": "/static/website-optimized/education-poster-f43718b286c6.webp",
-      "bytes": 70044,
-      "originalBytes": 156489
+      "src": "/static/website-optimized/education-poster-f450ba814922.webp",
+      "bytes": 105310,
+      "originalBytes": 125082
     }
   },
   "/images/start/walkthrough/get-started-mosaic.jpg": {
