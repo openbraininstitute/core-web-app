@@ -60,7 +60,8 @@ function aboveViewerLimit(message: string, triangles: number): IMeshFileCheck {
 
 async function checkObjFile(file: File): Promise<IMeshFileCheck> {
   const head = await file.slice(0, OBJ_SNIFF_BYTES).text();
-  if (!OBJ_STATEMENT.test(head)) return refused(messages.MeshFileNotObj.replace('$$', file.name));
+  if (head.includes('\0') || !OBJ_STATEMENT.test(head))
+    return refused(messages.MeshFileNotObj.replace('$$', file.name));
   const triangles = Math.round(file.size / OBJ_BYTES_PER_TRIANGLE);
   return triangles > DRACO_MAX_TRIANGLES
     ? aboveViewerLimit(messages.MeshObjAboveViewerLimit, triangles)

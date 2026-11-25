@@ -92,6 +92,14 @@ describe('checkMeshFile', () => {
     expect(error).toContain('does not look like an OBJ mesh');
   });
 
+  it('refuses a binary file whose bytes happen to hold an OBJ comment', async () => {
+    const { error } = await checkMeshFile(
+      new File([new Uint8Array([0, 10, 35, 32, 1])], 'neuron.obj')
+    );
+
+    expect(error).toContain('does not look like an OBJ mesh');
+  });
+
   it('accepts a Draco GLB the viewer can show', async () => {
     const file = glbFile(1_000);
 

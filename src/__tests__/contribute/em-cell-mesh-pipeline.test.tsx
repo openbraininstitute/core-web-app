@@ -1,8 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { UploadPhase } from '@/api/entitycore/queries/assets/multipart';
 import { useEMCellMeshPipeline } from '@/ui/segments/contribute/em-cell-mesh/pipeline';
+import { AgentType } from '@/ui/segments/contribute/shared/types';
 
 import type { TEMCellMeshForm } from '@/ui/segments/contribute/em-cell-mesh/schema';
 
@@ -11,6 +13,8 @@ const h = vi.hoisted(() => ({
   deleteEMCellMesh: vi.fn(),
   createAsset: vi.fn(),
   convertEMCellMesh: vi.fn(),
+  createContribution: vi.fn(),
+  createMtypeClassification: vi.fn(),
 }));
 
 vi.mock('@/ui/hooks/use-workspace', () => ({
@@ -23,8 +27,20 @@ vi.mock('@/api/entitycore/queries', () => ({
 }));
 vi.mock('@/api/entitycore/queries/assets', () => ({ createAsset: h.createAsset }));
 vi.mock('@/api/one/em-cell-mesh', () => ({ convertEMCellMesh: h.convertEMCellMesh }));
+vi.mock('@/api/entitycore/queries/general/contribution', () => ({
+  createContribution: h.createContribution,
+}));
+vi.mock('@/api/entitycore/queries/annotations/mtype-classification', () => ({
+  createMtypeClassification: h.createMtypeClassification,
+}));
 
 const MESH_ID = 'mesh-1';
+const MTYPE_ID = '5f1d2c3b-4a5e-4f60-8a7b-9c0d1e2f3a4b';
+const CONTRIBUTION = {
+  agent_type: AgentType.Person.key,
+  agent_id: '0b7c1d2e-3f40-4a5b-8c6d-7e8f9a0b1c2d',
+  role_id: '9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d',
+};
 
 function values(fileName: string): TEMCellMeshForm {
   return {
@@ -42,8 +58,8 @@ function values(fileName: string): TEMCellMeshForm {
     },
     subject_id: 'subject',
     license_id: 'license',
-    mtype_class_id: '',
-    contribution: [],
+    mtype_class_id: MTYPE_ID,
+    contribution: [CONTRIBUTION],
     assets: { mesh: new File(['v 0 0 0\n'], fileName) },
   } as unknown as TEMCellMeshForm;
 }
@@ -61,12 +77,24 @@ beforeEach(() => {
   vi.clearAllMocks();
   h.createEMCellMesh.mockResolvedValue({ id: MESH_ID });
   h.createAsset.mockImplementation(async ({ onProgress }) => {
-    onProgress?.({ phase: 'uploading', loadedBytes: 5, totalBytes: 10 });
+    onProgress?.({ phase: UploadPhase.Uploading, loadedBytes: 5, totalBytes: 10 });
     return { id: 'asset' };
   });
   h.convertEMCellMesh.mockResolvedValue({ job_id: 'job' });
   h.deleteEMCellMesh.mockResolvedValue(undefined);
+  h.createContribution.mockResolvedValue({ id: 'contribution' });
+  h.createMtypeClassification.mockResolvedValue({ id: 'classification' });
 });
+
+function callOrder(mock: { mock: { invocationCallOrder: number[] } }) {
+  return mock.mock.invocationCallOrder[0];
+}
+
+function leaveIsBlocked() {
+  const event = new Event('beforeunload', { cancelable: true });
+  window.dispatchEvent(event);
+  return event.defaultPrevented;
+}
 
 describe('useEMCellMeshPipeline', () => {
   it('creates an OBJ mesh as a draft, uploads it, then starts its conversion', async () => {
@@ -80,6 +108,23 @@ describe('useEMCellMeshPipeline', () => {
       ctx: { virtualLabId: 'lab', projectId: 'project' },
       entityId: MESH_ID,
     });
+    expect(h.createContribution.mock.calls[0][0].contributor).toEqual({
+      agent_id: CONTRIBUTION.agent_id,
+      role_id: CONTRIBUTION.role_id,
+      entity_id: MESH_ID,
+    });
+    expect(h.createMtypeClassification.mock.calls[0][0].payload).toMatchObject({
+      mtype_class_id: MTYPE_ID,
+      entity_id: MESH_ID,
+    });
+    const order = [
+      h.createEMCellMesh,
+      h.createContribution,
+      h.createMtypeClassification,
+      h.createAsset,
+      h.convertEMCellMesh,
+    ].map(callOrder);
+    expect(order).toEqual([...order].sort((x, y) => x - y));
     expect(result.current.skippedSteps).toEqual([]);
     expect(result.current.completionNotice).toContain('shows as Draft until it is ready');
     expect(result.current.stepProgress?.createEMCellMeshAssets.detail).toBe(
@@ -99,9 +144,9 @@ describe('useEMCellMeshPipeline', () => {
   });
 
   it.each([
-    ['the upload', () => h.createAsset.mockRejectedValue(new Error('upload failed'))],
-    ['the conversion launch', () => h.convertEMCellMesh.mockRejectedValue(new Error('409'))],
-  ])('deletes the OBJ draft when %s fails', async (_, fail) => {
+    ['the upload', () => h.createAsset.mockRejectedValue(new Error('upload failed')), 0],
+    ['the conversion launch', () => h.convertEMCellMesh.mockRejectedValue(new Error('409')), 1],
+  ])('deletes the OBJ draft when %s fails', async (_, fail, conversions) => {
     fail();
     const { result } = render();
 
@@ -113,7 +158,38 @@ describe('useEMCellMeshPipeline', () => {
       id: MESH_ID,
       context: { virtualLabId: 'lab', projectId: 'project' },
     });
+    expect(h.convertEMCellMesh).toHaveBeenCalledTimes(conversions);
     expect(result.current.completionNotice).toBeNull();
+  });
+
+  it('keeps the leave warning on until the failed mesh is deleted', async () => {
+    let finishDelete = () => {};
+    h.deleteEMCellMesh.mockReturnValue(
+      new Promise<void>((resolve) => {
+        finishDelete = resolve;
+      })
+    );
+    h.createAsset.mockRejectedValue(new Error('upload failed'));
+    const { result } = render();
+
+    let submission: Promise<unknown> = Promise.resolve();
+    act(() => {
+      submission = result.current
+        .createEntity({ values: values('neuron.obj') })
+        .catch(() => undefined);
+    });
+    await waitFor(() => expect(h.deleteEMCellMesh).toHaveBeenCalled());
+
+    expect(leaveIsBlocked()).toBe(true);
+    expect(result.current.loading).toBe(true);
+
+    await act(async () => {
+      finishDelete();
+      await submission;
+    });
+
+    expect(leaveIsBlocked()).toBe(false);
+    expect(result.current.loading).toBe(false);
   });
 
   it('deletes a GLB mesh when its upload fails', async () => {
