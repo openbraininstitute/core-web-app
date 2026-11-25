@@ -18,7 +18,7 @@ import {
   tierSummary,
   windowStatus,
 } from '../helpers';
-import { AccountingFilter, PriceScope } from '../types';
+import { AccountingFilter, PricesShown } from '../types';
 import { WindowStatusPill } from './cells';
 import { validityColumns } from './columns';
 import { useIdFilter, useOptionFilter } from './filters';
@@ -29,9 +29,9 @@ import type { TPrice, TPriceFilters } from '../types';
 
 const PRICES_SOURCE = pagedSource(listPrices);
 
-const SCOPE_OPTIONS = [
-  { value: PriceScope.All, label: 'All' },
-  { value: PriceScope.Default, label: 'Defaults only' },
+const SHOWN_OPTIONS = [
+  { value: PricesShown.All, label: 'All' },
+  { value: PricesShown.Default, label: 'Defaults only' },
 ];
 
 const COLUMNS: Array<ISimpleColumn<TPrice>> = [
@@ -109,9 +109,9 @@ export function PricesList() {
         {subtype.control}
         {!lab.id && (
           <Segmented
-            value={defaultsOnly ? PriceScope.Default : PriceScope.All}
-            options={SCOPE_OPTIONS}
-            onChange={(value) => setDefaultsOnly(value === PriceScope.Default)}
+            value={defaultsOnly ? PricesShown.Default : PricesShown.All}
+            options={SHOWN_OPTIONS}
+            onChange={(value) => setDefaultsOnly(value === PricesShown.Default)}
           />
         )}
       </div>

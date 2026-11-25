@@ -366,7 +366,7 @@ export type TPriceScope = Pick<TPrice, 'service_type' | 'service_subtype' | 'vla
 
 export type TPricing = Pick<TPrice, 'service_type' | 'tiers'>;
 
-export const PriceScope = { All: 'all', Default: 'default' } as const;
+export const PricesShown = { All: 'all', Default: 'default' } as const;
 
 export type TPriceFilters = {
   service_type?: TChargeType;
