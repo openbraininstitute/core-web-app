@@ -72,13 +72,17 @@ describe('resolveSimulationLaunchTarget', () => {
     }
   });
 
-  it('picks the simulator over the scale for Brian2 and LearningEngine, asking for consent', () => {
+  it('picks the simulator over the scale for Brian2, LearningEngine and NEST, asking for consent', () => {
     for (const scale of Object.values(CircuitScaleDictionary)) {
       expect(resolveSimulationLaunchTarget(circuit(scale, 'Brian2'))).toEqual({
         taskType: ObiOneTaskTypeDict.CircuitSimulationBrian2,
         requiresOfflineTokenConsent: true,
       });
       expect(resolveSimulationLaunchTarget(circuit(scale, 'LearningEngine'))).toEqual({
+        taskType: ObiOneTaskTypeDict.CircuitSimulation,
+        requiresOfflineTokenConsent: true,
+      });
+      expect(resolveSimulationLaunchTarget(circuit(scale, 'NEST'))).toEqual({
         taskType: ObiOneTaskTypeDict.CircuitSimulation,
         requiresOfflineTokenConsent: true,
       });

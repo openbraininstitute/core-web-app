@@ -141,6 +141,7 @@ export const SchemaNameDict = {
   CircuitSimulationScanConfig: 'CircuitSimulationScanConfig',
   Brian2CircuitSimulationScanConfig: 'Brian2CircuitSimulationScanConfig',
   LearningEngineCircuitSimulationScanConfig: 'LearningEngineCircuitSimulationScanConfig',
+  NestCircuitSimulationScanConfig: 'NestCircuitSimulationScanConfig',
   MEModelSimulationScanConfig: 'MEModelSimulationScanConfig',
   MEModelWithSynapsesCircuitSimulationScanConfig: 'MEModelWithSynapsesCircuitSimulationScanConfig',
   IonChannelModelSimulationScanConfig: 'IonChannelModelSimulationScanConfig',

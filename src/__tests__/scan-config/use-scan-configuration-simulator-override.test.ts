@@ -28,10 +28,17 @@ const brian2Circuit = {
   target_simulator: 'Brian2',
 } as unknown as TSupportedEntitiesForScanConfiguration;
 
-function render(activity: TScanConfigActivity) {
+const nestCircuit = {
+  id: 'simplified-nbs1',
+  type: 'circuit',
+  scale: 'small',
+  target_simulator: 'NEST',
+} as unknown as TSupportedEntitiesForScanConfiguration;
+
+function render(activity: TScanConfigActivity, entity = brian2Circuit) {
   return renderHook(() =>
     useScanConfiguration({
-      entity: brian2Circuit,
+      entity,
       virtualLabId: 'vl',
       projectId: 'p',
       activity,
@@ -53,5 +60,18 @@ describe('useScanConfiguration target_simulator override', () => {
   it('switches a Brian2 circuit to the Brian2 form when simulating', () => {
     const ready = render(ScanConfigActivity.Simulate);
     expect(ready?.schemaName).toBe(SchemaNameDict.Brian2CircuitSimulationScanConfig);
+  });
+
+  it('switches a NEST circuit to the NEST form and endpoint when simulating', () => {
+    const ready = render(ScanConfigActivity.Simulate, nestCircuit);
+    expect(ready?.schemaName).toBe(SchemaNameDict.NestCircuitSimulationScanConfig);
+    expect(ready?.generatedEndpoint).toMatch(
+      /\/nest-circuit-simulation-scan-config-generate-grid$/
+    );
+  });
+
+  it('keeps the extraction form for a NEST circuit', () => {
+    const ready = render(ScanConfigActivity.Extract, nestCircuit);
+    expect(ready?.schemaName).toBe(SchemaNameDict.CircuitExtractionScanConfig);
   });
 });

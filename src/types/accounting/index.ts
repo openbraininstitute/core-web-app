@@ -65,6 +65,7 @@ export enum ServiceSubtype {
   CircuitExtraction = 'circuit-extraction',
   CircuitSimplification = 'circuit-simplification',
   Brian2CircuitSimulation = 'brian2-circuit-simulation',
+  NestCircuitSimulation = 'nest-circuit-simulation',
   EModelFeaturesExtraction = 'emodel-features-extraction',
   EModelOptimisation = 'emodel-optimisation',
   EModelValidation = 'emodel-validation',

@@ -159,7 +159,7 @@ export function useScanConfiguration({
   const isEntityLoading = shouldFetchEntity && loadingEntity;
 
   // Select the circuit-simulation generation endpoint + schema from the circuit's
-  // `target_simulator` (Brian2 / LearningEngine), falling back to the descriptor default.
+  // `target_simulator` (Brian2 / LearningEngine / NEST), falling back to the descriptor default.
   const simulatorOverride = useMemo(() => {
     if (activity !== ScanConfigActivity.Simulate) {
       return null;

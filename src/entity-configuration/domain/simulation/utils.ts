@@ -4,6 +4,7 @@ import { getSimulations } from '@/api/entitycore/queries/simulation/campaign/sim
 import { getSimulationExecutions } from '@/api/entitycore/queries/simulation/campaign/simulation-execution';
 import {
   CircuitScaleDictionary,
+  CircuitTargetSimulator,
   type TCircuitScaleDictionary,
 } from '@/api/entitycore/types/entities/circuit';
 import { EntityTypeDict, type TEntityTypeDict } from '@/api/entitycore/types/entity-type';
@@ -54,6 +55,12 @@ const ENTITY_TYPE_TARGETS: Partial<Record<TEntityTypeDict, TSimulationLaunchTarg
   },
 };
 
+/** Simulators obi-one routes from `circuit_simulation` to their own task, by the simulation config. */
+const ROUTED_SIMULATORS: ReadonlySet<string> = new Set([
+  CircuitTargetSimulator.LearningEngine.key,
+  CircuitTargetSimulator.Nest.key,
+]);
+
 export function resolveSimulationLaunchTarget({
   entityType,
   scale,
@@ -71,7 +78,7 @@ export function resolveSimulationLaunchTarget({
       requiresOfflineTokenConsent: true,
     };
   }
-  if (targetSimulator === 'LearningEngine') {
+  if (targetSimulator !== null && ROUTED_SIMULATORS.has(targetSimulator)) {
     return { taskType: ObiOneTaskTypeDict.CircuitSimulation, requiresOfflineTokenConsent: true };
   }
   if (scale === null) return null;

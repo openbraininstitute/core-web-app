@@ -1,3 +1,6 @@
+import { match } from 'ts-pattern';
+
+import { CircuitTargetSimulator } from '@/api/entitycore/types/entities/circuit';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config as appConfig } from '@/config';
 import { SchemaMappingKeyDict, SchemaNameDict } from '@/features/scan-config/types';
@@ -22,6 +25,7 @@ export const ScanConfigGeneratedApiPath = {
   CircuitSimulation: 'circuit-simulation-scan-config-generate-grid',
   Brian2CircuitSimulation: 'brian-2-circuit-simulation-scan-config-generate-grid',
   LearningEngineCircuitSimulation: 'learning-engine-circuit-simulation-scan-config-generate-grid',
+  NestCircuitSimulation: 'nest-circuit-simulation-scan-config-generate-grid',
   MEModelWithSynapsesCircuitSimulation:
     'me-model-with-synapses-circuit-simulation-scan-config-generate-grid',
   MEModelSimulation: 'me-model-simulation-scan-config-generate-grid',
@@ -84,26 +88,26 @@ export function resolveScanConfigGeneratedApiUrl(binding: TScanConfigConfigureBi
 /**
  * Data-driven selection of the circuit-simulation generation endpoint + schema by the
  * circuit's `target_simulator`. Returns `null` for `NEURON`/`null` (use the descriptor default).
- * This is what lets a single scale-based simulate workflow target the Brian2 or
- * LearningEngine (INAIT) obi-one endpoint without scale-pinned descriptors.
+ * This is what lets a single scale-based simulate workflow target the Brian2, LearningEngine
+ * (INAIT) or NEST obi-one endpoint without scale-pinned descriptors.
  */
 export function resolveSimulatorScanConfigOverride(
   targetSimulator: TCircuitTargetSimulator | null | undefined
 ): { generatedApiPath: string; schemaName: SchemaName } | null {
-  switch (targetSimulator) {
-    case 'Brian2':
-      return {
-        generatedApiPath: ScanConfigGeneratedApiPath.Brian2CircuitSimulation,
-        schemaName: SchemaNameDict.Brian2CircuitSimulationScanConfig,
-      };
-    case 'LearningEngine':
-      return {
-        generatedApiPath: ScanConfigGeneratedApiPath.LearningEngineCircuitSimulation,
-        schemaName: SchemaNameDict.LearningEngineCircuitSimulationScanConfig,
-      };
-    default:
-      return null;
-  }
+  return match(targetSimulator)
+    .with(CircuitTargetSimulator.Brian2.key, () => ({
+      generatedApiPath: ScanConfigGeneratedApiPath.Brian2CircuitSimulation,
+      schemaName: SchemaNameDict.Brian2CircuitSimulationScanConfig,
+    }))
+    .with(CircuitTargetSimulator.LearningEngine.key, () => ({
+      generatedApiPath: ScanConfigGeneratedApiPath.LearningEngineCircuitSimulation,
+      schemaName: SchemaNameDict.LearningEngineCircuitSimulationScanConfig,
+    }))
+    .with(CircuitTargetSimulator.Nest.key, () => ({
+      generatedApiPath: ScanConfigGeneratedApiPath.NestCircuitSimulation,
+      schemaName: SchemaNameDict.NestCircuitSimulationScanConfig,
+    }))
+    .otherwise(() => null);
 }
 
 /** Workflow registry scan-config entry — single source for configure resolution. */

@@ -83,6 +83,7 @@ export const CircuitTargetSimulator = {
   Neuron: { key: 'NEURON', label: 'NEURON' },
   Brian2: { key: 'Brian2', label: 'Brian2' },
   LearningEngine: { key: 'LearningEngine', label: 'LearningEngine' },
+  Nest: { key: 'NEST', label: 'NEST' },
 } as const;
 
 export type TCircuitTargetSimulator =
