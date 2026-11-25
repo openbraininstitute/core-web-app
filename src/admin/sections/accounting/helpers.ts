@@ -426,7 +426,7 @@ function scaled(value: string) {
   return BigInt(whole + fraction.slice(0, COST_SCALE).padEnd(COST_SCALE, '0'));
 }
 
-/** Accounting's tier rule, exact, rounded to cents. */
+/** Accounting's tier rule, exact, rounded to cents half to even as its journal prints them. */
 export function tierCost(tiers: TPriceTier[], quantity: bigint) {
   const total = tiers.reduce((sum, { min_quantity: min, max_quantity: max, ...tier }) => {
     const start = BigInt(min);
@@ -434,7 +434,11 @@ export function tierCost(tiers: TPriceTier[], quantity: bigint) {
     const end = max === null || BigInt(max) > quantity ? quantity : BigInt(max);
     return sum + scaled(tier.fixed_cost) + scaled(tier.multiplier) * (end - start);
   }, BigInt(0));
-  const cents = (total + BigInt(5) * tenTo(COST_SCALE - 3)) / tenTo(COST_SCALE - 2);
+  const cent = tenTo(COST_SCALE - 2);
+  const [down, rest] = [total / cent, total % cent];
+  const up =
+    rest * BigInt(2) > cent || (rest * BigInt(2) === cent && down % BigInt(2) === BigInt(1));
+  const cents = up ? down + BigInt(1) : down;
   const hundred = BigInt(100);
   return `${cents / hundred}.${String(cents % hundred).padStart(2, '0')}`;
 }

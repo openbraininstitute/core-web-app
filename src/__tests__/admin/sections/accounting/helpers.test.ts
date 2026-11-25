@@ -307,8 +307,10 @@ describe('tierCost', () => {
     );
   });
 
-  it('rounds half up to cents', () => {
-    expect(tierCost([tier(0, null, '0.005')], BigInt(1))).toBe('0.01');
+  it('rounds half to even to cents, as accounting prints them', () => {
+    expect(tierCost([tier(0, null, '0.005')], BigInt(1))).toBe('0.00');
+    expect(tierCost([tier(0, null, '0.015')], BigInt(1))).toBe('0.02');
+    expect(tierCost([tier(0, null, '0.0051')], BigInt(1))).toBe('0.01');
     expect(tierCost([tier(0, null, '0.0049')], BigInt(1))).toBe('0.00');
   });
 });
