@@ -103,15 +103,43 @@ export function getWorkflowEntityLabel(
   return getEntityMeta(value)?.label ?? getEntityByExtendedType({ type: value })?.title ?? null;
 }
 
+function workflowEntity(workflow: IWorkflowDescriptor): TEntityTypeMeta {
+  return (
+    EntityTypeCatalog[workflow.sourceType] ?? {
+      value: workflow.sourceType,
+      group: EntityGroupDict.Cellular,
+      label: workflow.label ?? String(workflow.sourceType),
+    }
+  );
+}
+
+function workflowLabel(
+  workflow: IWorkflowDescriptor,
+  entity: TEntityTypeMeta = workflowEntity(workflow)
+): string {
+  return workflow.label ?? entity.label;
+}
+
+/** The Category and Type a workflow listing is labelled with, as its pickers name them. */
+export function getWorkflowListingLabels(opts: {
+  activity: TActivityValue | null | undefined;
+  targetType: TExtendedEntitiesTypeDict | null | undefined;
+}): { category: string; type: string } {
+  const { activity, targetType } = opts;
+  const workflow = targetType
+    ? getWorkflow({ activity, targetType, context: WorkflowListContextDict.Browse })
+    : null;
+  return {
+    category: getActivity(activity)?.label ?? '-',
+    type: workflow ? workflowLabel(workflow) : (getWorkflowEntityLabel(targetType) ?? '-'),
+  };
+}
+
 function resolveWorkflow(
   workflow: IWorkflowDescriptor,
   flags: FeatureFlags | undefined
 ): ResolvedWorkflow {
-  const entity = EntityTypeCatalog[workflow.sourceType] ?? {
-    value: workflow.sourceType,
-    group: EntityGroupDict.Cellular,
-    label: workflow.label ?? String(workflow.sourceType),
-  };
+  const entity = workflowEntity(workflow);
   const entityFeaturesSatisfied = featuresSatisfied(entity.requiredFeatures, flags);
   const workflowFeaturesSatisfied = featuresSatisfied(workflow.requiredFeatures, flags);
   const disabled =
@@ -120,7 +148,7 @@ function resolveWorkflow(
     ...workflow,
     entity,
     disabled,
-    label: workflow.label ?? entity.label,
+    label: workflowLabel(workflow, entity),
     legacy: workflow.legacy ?? entity.legacy ?? false,
   };
 }

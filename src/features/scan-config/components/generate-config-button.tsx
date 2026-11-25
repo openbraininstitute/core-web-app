@@ -6,7 +6,7 @@ import { useAppNotification } from '@/components/notification';
 import { useLowCredits } from '@/features/low-credits';
 import { useFieldErrors } from '@/features/scan-config/components/hooks/field-errors';
 import { useGenerateScanConfigCampaign } from '@/features/scan-config/components/hooks/use-generate-scan-config-campaign';
-import { LAUNCH_GREEN } from '@/features/scan-config/components/shared/task-launch-button';
+import { generateButtonClass } from '@/features/scan-config/components/shared/box-class';
 import { ScanConfigResultsTab } from '@/features/scan-config/helpers';
 import {
   ScanConfigActivity,
@@ -16,18 +16,11 @@ import {
 } from '@/features/scan-config/types';
 import { messages } from '@/i18n/en/scan-config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { assertErrorMessage, classNames } from '@/util/utils';
+import { assertErrorMessage } from '@/util/utils';
 
 import type { ErrorObject } from 'ajv';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { Config } from '@/features/scan-config/types';
-
-/**
- * A generate button that can be clicked: a soft shadow in the launch green's dark end, and a
- * slight grow under the pointer.
- */
-export const GENERATE_CLICKABLE =
-  'shadow-[0_3px_8px_-1px_rgb(20_56_5/0.3)] transition-[scale] duration-200 ease-out motion-safe:hover:scale-[1.02]';
 
 const LOW_CREDITS_SUBJECT: Record<TScanConfigActivity, string> = {
   [ScanConfigActivity.Simulate]: 'run the simulation',
@@ -122,13 +115,7 @@ export default function GenerateConfigButton({
       <button
         type="button"
         data-testid="scan-config-submit"
-        className={classNames(
-          // The 3D Player button's font in the launch button's green.
-          'flex min-h-12.5 p-2 w-full items-center justify-center rounded-full text-sm font-semibold ring-1 ring-black/5',
-          hasBlockingErrors || loading
-            ? 'bg-gray-300 text-gray-500'
-            : `${LAUNCH_GREEN} ${GENERATE_CLICKABLE} text-white`
-        )}
+        className={generateButtonClass(hasBlockingErrors || loading)}
         onClick={onClick}
         disabled={hasBlockingErrors || loading}
       >
