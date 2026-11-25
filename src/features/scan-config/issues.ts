@@ -2,21 +2,12 @@ import { isNil } from 'es-toolkit';
 import { get } from 'es-toolkit/compat';
 
 import { isAtOrBelow } from '@/features/scan-config/store';
-import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 
 import type { ErrorObject } from 'ajv';
-import type { Config, ConfigSchema } from '@/features/scan-config/types';
+import type { Config } from '@/features/scan-config/types';
 
 /** One issue of the form at a field (`/section/field`, `/section/entry/field`) or at an entry. */
 export type TFieldIssue = { path: string; message: string };
-
-/** Where an issue is in the form, and how to name it to the user. */
-export type TIssueLine = TFieldIssue & {
-  title: string;
-  rootElement: string;
-  entry: string | undefined;
-  field: string | undefined;
-};
 
 const REQUIRED = 'Required';
 const VARIANT_REJECTED = /^(.*\/(?:oneOf|anyOf)\/\d+)\/properties\/[^/]+\/const$/;
@@ -76,54 +67,4 @@ export function fieldIssuesOf(
 /** The first issue at or below a path. */
 export function issueAt(issues: readonly TFieldIssue[], path: string): string | undefined {
   return issues.find((issue) => isAtOrBelow(issue.path, path))?.message;
-}
-
-type TLooseSchema = object | undefined;
-
-function blockSchemaOf(rootSchema: TLooseSchema, block: unknown): TLooseSchema {
-  const declaredVariants: unknown =
-    get(rootSchema, 'additionalProperties.oneOf') ?? get(rootSchema, 'oneOf');
-  const variants: TLooseSchema[] = Array.isArray(declaredVariants) ? declaredVariants : [];
-  if (variants.length === 0) return rootSchema;
-
-  const declared: unknown = get(rootSchema, 'discriminator');
-  const discriminator: string =
-    typeof declared === 'string' ? declared : (get(declared, 'propertyName') ?? 'type');
-  return variants.find(
-    (variant) =>
-      get(variant, ['properties', discriminator, 'const']) === get(block, [discriminator])
-  );
-}
-
-/** The title of the deepest part of a path that has one, walking the schema's `properties`. */
-function deepestTitle(blockSchema: TLooseSchema, fieldPath: string[]): string | undefined {
-  let node: TLooseSchema = blockSchema;
-  let title: string | undefined;
-  for (const segment of fieldPath) {
-    node = get(node, ['properties', segment]);
-    if (!node) break;
-    title = get(node, 'title') ?? title;
-  }
-  return title;
-}
-
-/** An issue with the section, entry and field it belongs to, named by their schema titles. */
-export function issueLineOf(schema: ConfigSchema, config: Config, issue: TFieldIssue): TIssueLine {
-  const [rootElement = '', ...rest] = segmentsOf(issue.path);
-  const rootSchema: TLooseSchema = get(schema, ['properties', rootElement]);
-  const isDictionary = get(rootSchema, 'ui_element') === ScanConfigUIElementDict.BlockDictionary;
-  const entry = isDictionary ? rest[0] : undefined;
-  const fieldPath = isDictionary ? rest.slice(1) : rest;
-  const [field] = fieldPath;
-  const block = entry === undefined ? config[rootElement] : get(config, [rootElement, entry]);
-  const fieldTitle = deepestTitle(blockSchemaOf(rootSchema, block), fieldPath) ?? field;
-  const where = [get(rootSchema, 'title') ?? rootElement, entry].filter(Boolean).join(', ');
-
-  return {
-    ...issue,
-    title: fieldTitle ? `${where}: ${fieldTitle}` : where,
-    rootElement,
-    entry,
-    field,
-  };
 }

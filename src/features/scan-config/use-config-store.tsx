@@ -15,7 +15,7 @@ import { entryNames } from '@/features/scan-config/commands';
 import { useConfigValidator } from '@/features/scan-config/components/hooks';
 import { errorsUnder } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import { isPlainObject } from '@/features/scan-config/components/utils';
-import { fieldIssuesOf, issueAt, issueLineOf } from '@/features/scan-config/issues';
+import { fieldIssuesOf, issueAt } from '@/features/scan-config/issues';
 import {
   createBlockScope,
   createDerivedReader,
@@ -30,7 +30,7 @@ import {
 
 import type { ErrorObject } from 'ajv';
 import type { ReactNode } from 'react';
-import type { TFieldIssue, TIssueLine } from '@/features/scan-config/issues';
+import type { TFieldIssue } from '@/features/scan-config/issues';
 import type {
   IBlockScope,
   IReportedIssues,
@@ -202,27 +202,6 @@ export function useFieldIssue(path: string | undefined): string | undefined {
   const getMessage = () => (path === undefined ? undefined : issueAt(getFieldIssues(), path));
 
   return useSyncExternalStore(useScanConfigStore().subscribe, getMessage, getMessage);
-}
-
-/** Every issue of the form, from the schema and reported by fields, each named for the user. */
-export function useIssueLines(schema: ConfigSchema): TIssueLine[] {
-  const store = useScanConfigStore();
-  const { getFieldIssues, reported } = useScanConfigIssues();
-  const getLines = useMemo(
-    () =>
-      createDerivedReader(
-        () => ({ config: store.getSnapshot(), reported: reported.getSnapshot() }),
-        (source) =>
-          [
-            ...getFieldIssues(),
-            ...[...source.reported].map(([path, message]) => ({ path, message })),
-          ].map((issue) => issueLineOf(schema, source.config, issue)),
-        isEqual
-      ),
-    [store, getFieldIssues, reported, schema]
-  );
-
-  return useSyncExternalStore(useIssuesSubscription(), getLines, getLines);
 }
 
 /** The errors at or below a path, with paths relative to it; re-renders only when they change. */

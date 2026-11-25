@@ -10,20 +10,8 @@ import { pendingRestoreConfigAtom, restorePreviewActiveAtom } from '@/state/conf
 import { EditWithChatButton } from '../edit-with-chat-button';
 import GenerateConfigButton from '../generate-config-button';
 import GenerateNewCampaignButton from '../generate-new-campaign-button';
-import { IssueList } from '../issue-list';
 
 import type { Config } from '@/features/scan-config/types';
-
-/** Focuses the first control of a field once the section it belongs to has been drawn. */
-function focusFieldOnNextFrame(field: string) {
-  requestAnimationFrame(() => {
-    document
-      .querySelector<HTMLElement>(
-        `[data-testid="scan-config-field-${CSS.escape(field)}"] :is(input, button, [tabindex])`
-      )
-      ?.focus();
-  });
-}
 
 export default function Left({
   schema,
@@ -152,15 +140,6 @@ export default function Left({
         // Ruled off from the blocks, with room under it for its shadow, its foot level with the
         // preview's boxes.
         <div className="mt-auto w-full border-t border-gray-200 px-2 pt-3 pb-3">
-          <IssueList
-            schema={schema}
-            onOpen={({ rootElement, entry, field }) => {
-              setSelectedRootElement(rootElement);
-              setSelectedEntry(entry ?? '');
-              setEditing(true);
-              if (field) focusFieldOnNextFrame(field);
-            }}
-          />
           <GenerateConfigButton loading={loading} campaignId={campaignId} activity={activity} />
         </div>
       )}

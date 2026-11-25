@@ -5,6 +5,7 @@ import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
 import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import {
   FieldControl,
+  FieldIssueText,
   FieldLabel,
 } from '@/features/scan-config/components/ui-elements/field-control';
 import {
@@ -101,11 +102,7 @@ function ObjectFieldRow({
           <MarkdownDescription>{fieldSchema.description}</MarkdownDescription>
         </TooltipContent>
       </Tooltip>
-      {issue && (
-        <span id={issueId} className="text-red-500">
-          {issue}
-        </span>
-      )}
+      <FieldIssueText id={issueId} issue={issue} requiredMissing={false} />
     </div>
   );
 }

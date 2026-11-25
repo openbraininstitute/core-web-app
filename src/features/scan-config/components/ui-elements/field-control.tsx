@@ -12,6 +12,35 @@ export function FieldControl(props: Omit<TFieldProps, 'value' | 'setValue'>) {
   return Field ? <Field {...props} value={value} setValue={setValue} /> : null;
 }
 
+/**
+ * The message of a field with an issue. It is visible only where the form has always shown one:
+ * "Required" under an empty field the block requires. Any other issue is read by assistive
+ * technology only.
+ */
+export function FieldIssueText({
+  id,
+  issue,
+  requiredMissing,
+}: {
+  id: string | undefined;
+  issue: string | undefined;
+  requiredMissing: boolean;
+}) {
+  if (requiredMissing) {
+    return (
+      <span id={id} className="text-red-500">
+        Required
+      </span>
+    );
+  }
+  if (!issue) return null;
+  return (
+    <span id={id} className="sr-only">
+      {issue}
+    </span>
+  );
+}
+
 /** The title of a field: a label of its one control, or the name of its group of controls. */
 export function FieldLabel({
   controlId,

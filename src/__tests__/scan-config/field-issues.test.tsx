@@ -1,11 +1,10 @@
 import { act, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { Profiler, useState } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { createConfigValidator } from '@/features/scan-config/components/hooks';
-import { IssueList } from '@/features/scan-config/components/issue-list';
 import Block from '@/features/scan-config/components/ui-blocks/block';
-import { fieldIssuesOf, issueLineOf } from '@/features/scan-config/issues';
+import { fieldIssuesOf } from '@/features/scan-config/issues';
 import { createScanConfigStore } from '@/features/scan-config/store';
 import {
   type Config,
@@ -18,7 +17,6 @@ import {
   ScanConfigErrorsProvider,
   ScanConfigStoreProvider,
   useFieldIssue,
-  useReportIssue,
 } from '@/features/scan-config/use-config-store';
 
 import type { ReactNode } from 'react';
@@ -117,39 +115,6 @@ describe('fieldIssuesOf', () => {
 
     expect(issues).toHaveLength(1);
     expect(issues[0]?.path).toBe('/neuron_sets/S');
-  });
-});
-
-describe('issueLineOf', () => {
-  const nested = {
-    properties: {
-      mechanisms: {
-        title: 'Mechanisms',
-        properties: {
-          selection: {
-            title: 'Selection',
-            properties: { models: { title: 'Ion channel models' }, untitled: {} },
-          },
-        },
-      },
-    },
-  } as unknown as ConfigSchema;
-
-  it('names an issue below a field by the deepest title on its path', () => {
-    const line = issueLineOf(nested, {}, { path: '/mechanisms/selection/models', message: 'm' });
-
-    expect(line.title).toBe('Mechanisms: Ion channel models');
-    expect(line.field).toBe('selection');
-  });
-
-  it('keeps the last title it finds when a deeper part has none', () => {
-    const line = issueLineOf(
-      nested,
-      {},
-      { path: '/mechanisms/selection/untitled/0', message: 'm' }
-    );
-
-    expect(line.title).toBe('Mechanisms: Selection');
   });
 });
 
@@ -270,58 +235,76 @@ describe('Block with an issue', () => {
   });
 });
 
-describe('IssueList', () => {
-  const config = {
-    info: { campaign_name: null },
-    neuron_sets: { S: { type: 'ByPopulation', population: 'p', gain: -1 } },
-  };
+describe('what a field shows', () => {
+  const NEURON_FILTER_BLOCK = {
+    title: 'By property',
+    description: '',
+    required: ['property_filter'],
+    properties: {
+      population: { title: 'Population', ui_element: ScanConfigUIElementDict.StringInput },
+      property_filter: {
+        title: 'Neuron property filter',
+        ui_element: ScanConfigUIElementDict.NeuronPropertyFilter,
+        population_source_dropdown_key: 'population',
+      },
+    },
+  } as unknown as TBlock;
 
-  it('lists each issue with its section, entry and field title', () => {
-    render(
-      <Providers config={config}>
-        <IssueList schema={SCHEMA} onOpen={vi.fn()} />
+  function renderBlock(blockSchema: TBlock, entry: Config[string], schemaMappingConfig?: unknown) {
+    return render(
+      <Providers config={{ info: { campaign_name: 'n' }, neuron_sets: { S: entry } }}>
+        <BlockScopeProvider rootElement="neuron_sets" entry="S">
+          <Block
+            schema={SCHEMA}
+            disabled={false}
+            blockSchema={blockSchema}
+            entity={null}
+            schemaMappingConfig={schemaMappingConfig as never}
+            rootElement="neuron_sets"
+            selectedEntry="S"
+            errorPathPrefix="neuron_sets/S"
+          />
+        </BlockScopeProvider>
       </Providers>
     );
+  }
 
-    const lines = screen.getAllByRole('listitem').map((line) => line.textContent);
-    expect(lines).toEqual(['Info: Campaign name. Required', 'Neuron sets, S: Gain. must be >= 0']);
+  /** The message the row itself shows; a control's own message (a number out of range) is not it. */
+  const visibleTexts = (container: HTMLElement) =>
+    [...container.querySelectorAll('[data-testid^="scan-config-field-"] > span.text-red-500')].map(
+      (span) => span.textContent
+    );
+
+  it('shows Required only under an empty field the block requires', () => {
+    const { container } = renderBlock(BY_POPULATION as unknown as TBlock, {
+      type: 'ByPopulation',
+      gain: null,
+    });
+
+    expect(visibleTexts(container)).toEqual(['Required']);
+    expect(
+      screen.getByTestId('scan-config-field-population').querySelector(':scope > span.text-red-500')
+    ).not.toBeNull();
   });
 
-  it('opens the section and entry of the issue that is clicked', () => {
-    const onOpen = vi.fn();
-    render(
-      <Providers config={config}>
-        <IssueList schema={SCHEMA} onOpen={onOpen} />
-      </Providers>
-    );
+  it('shows no new text under a field with a wrong value', () => {
+    const { container } = renderBlock(BY_POPULATION as unknown as TBlock, {
+      type: 'ByPopulation',
+      population: 'p',
+      gain: -1,
+    });
 
-    fireEvent.click(screen.getByRole('button', { name: /Gain/ }));
-
-    expect(onOpen).toHaveBeenCalledWith({ rootElement: 'neuron_sets', entry: 'S', field: 'gain' });
+    expect(visibleTexts(container)).toEqual([]);
+    expect(screen.getByText('must be >= 0')).toHaveClass('sr-only');
   });
 
-  it('lists an issue reported by a field too', () => {
-    function Reporter() {
-      useReportIssue('/info/campaign_name', 'taken');
-      return null;
-    }
-    render(
-      <Providers config={{ info: { campaign_name: 'n' }, neuron_sets: {} }}>
-        <Reporter />
-        <IssueList schema={SCHEMA} onOpen={vi.fn()} />
-      </Providers>
+  it('shows the no-properties note instead of Required, not both', () => {
+    const { container } = renderBlock(
+      NEURON_FILTER_BLOCK,
+      { type: 'ByProperty', population: 'pop' },
+      { properties: { NodePropertyUniqueValuesByPopulation: { pop: {} } } }
     );
 
-    expect(screen.getByRole('listitem')).toHaveTextContent('Info: Campaign name. taken');
-  });
-
-  it('renders nothing without issues', () => {
-    const { container } = render(
-      <Providers config={{ info: { campaign_name: 'n' }, neuron_sets: {} }}>
-        <IssueList schema={SCHEMA} onOpen={vi.fn()} />
-      </Providers>
-    );
-
-    expect(container).toBeEmptyDOMElement();
+    expect(visibleTexts(container)).toEqual(['No properties available']);
   });
 });
