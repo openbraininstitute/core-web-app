@@ -28,7 +28,7 @@ import {
 } from '@/features/scan-config/use-config-store';
 import { cn } from '@/utils/css-class';
 
-import { LeftColumn, MIDDLE_WRAPPER_BASE, MiddleColumnContent } from './columns';
+import { ConfigForm, LeftColumn, MIDDLE_WRAPPER_BASE, MiddleColumnContent } from './columns';
 
 import type { ReactNode } from 'react';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
@@ -168,7 +168,7 @@ export function EModelOptimisationColumns({ props, state }: Props) {
   }, [selectedRegionModel, selectedModelStillAssigned, setSelectedRegionModel]);
 
   return (
-    <>
+    <ConfigForm props={props} state={state} className="contents">
       <LeftColumn props={props} state={state} />
       <div
         id="scan-config-controls-middle"
@@ -233,7 +233,7 @@ export function EModelOptimisationColumns({ props, state }: Props) {
           </DrawerColumn>
         )}
       </div>
-    </>
+    </ConfigForm>
   );
 }
 
