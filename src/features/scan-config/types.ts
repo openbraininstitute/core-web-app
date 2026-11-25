@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { SectionType } from '@/features/circuit-viewer/section-type';
 
+import type { ErrorObject } from 'ajv';
 import type {
   ICellMorphology,
   ICircuit,
@@ -233,6 +234,21 @@ export const CIRCUIT_NEURONAL_MANIPULATION_SOURCE_FIELD = 'neuron_set';
 
 /** The root section that holds the neuron sets. */
 export const NEURON_SETS_SECTION = 'neuron_sets';
+
+/** The part of the schema that the config commands read. */
+export type TConfigSchemaProperties = Pick<ConfigSchema, 'properties'>;
+
+export type TConfigUpdate = Config | ((previous: Config) => Config);
+
+export interface IScanConfigStore {
+  getSnapshot: () => Config;
+  subscribe: (listener: () => void) => () => void;
+  /** An updater runs on the latest config, so updates made in a row never overwrite each other. */
+  set: (update: TConfigUpdate) => void;
+}
+
+/** The schema errors of the config, or `null` when it is valid. */
+export type TConfigErrors = ErrorObject[] | null;
 
 const CircuitNeuronalManipulationTypes: ReadonlySet<string> = new Set([
   NeuronalManipulationTypeDict.CircuitByNeuron,
@@ -850,6 +866,11 @@ type Type = {
 
 export function isType(v: TRootElement | Type | TBlockElement): v is Type {
   return 'const' in v;
+}
+
+/** Whether a root section is one block (`block_single`), not a dictionary of entries or a union. */
+export function isRootBlock(schema: TConfigSchemaProperties, key: string): boolean {
+  return schema.properties?.[key]?.ui_element === ScanConfigUIElementDict.BlockSingle;
 }
 
 export const ActivityCustomFileRenderer = {

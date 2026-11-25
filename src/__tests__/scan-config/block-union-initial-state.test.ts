@@ -1,7 +1,7 @@
 import { renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { useConfig } from '@/features/scan-config/components/hooks/schema';
+import { useConfigStoreSetup } from '@/features/scan-config/components/hooks/schema';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 
 import type { Config, ConfigSchema } from '@/features/scan-config/types';
@@ -22,8 +22,8 @@ const schemaWith = (oneOf: ReturnType<typeof variant>[]) =>
   }) as unknown as ConfigSchema;
 
 function initialState(schema: ConfigSchema, initialConfig?: Config) {
-  const { result } = renderHook(() => useConfig({ schema, model: null, initialConfig }));
-  return result.current[0];
+  const { result } = renderHook(() => useConfigStoreSetup({ schema, model: null, initialConfig }));
+  return result.current.getSnapshot();
 }
 
 describe('root block union initial state', () => {
