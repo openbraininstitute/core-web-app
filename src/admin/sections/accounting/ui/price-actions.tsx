@@ -4,7 +4,6 @@ import { ApiError } from '@/api/error';
 import { Button } from '@/ui/molecules/button';
 
 import {
-  assertPriceAfter,
   assertPriceEdit,
   assertPriceEnd,
   createPrice,
@@ -40,10 +39,7 @@ export function NewPriceButton({ vlabId }: { vlabId?: string }) {
           title={account.data ? `New price for ${account.data.name}` : 'New default price'}
           vlabId={vlabId ?? null}
           okText="Add price"
-          write={async (body) => {
-            await assertPriceAfter(body, body.valid_to);
-            return createPrice(body);
-          }}
+          write={createPrice}
           done={(price) => (price ? `Price #${price.id} added` : 'Price added')}
           failed="Couldn't add the price"
           onClose={close}
@@ -131,16 +127,21 @@ function ReplacePriceButton({ price }: { price: TPrice }) {
 export function PriceActions({ price }: { price: TPrice }) {
   const status = windowStatus(price);
   if (status === WindowStatus.Expired) return null;
-  const legacy = LEGACY_SUBTYPES.includes(price.service_subtype);
+  if (LEGACY_SUBTYPES.includes(price.service_subtype)) {
+    return (
+      <span className="text-neutral-4 text-sm">
+        Legacy subtype: no new price can take over, so it can't be ended here
+      </span>
+    );
+  }
 
   return (
     <span className="flex items-center gap-2">
-      {!legacy &&
-        (status === WindowStatus.Scheduled ? (
-          <EditPriceButton price={price} />
-        ) : (
-          <ReplacePriceButton price={price} />
-        ))}
+      {status === WindowStatus.Scheduled ? (
+        <EditPriceButton price={price} />
+      ) : (
+        <ReplacePriceButton price={price} />
+      )}
       <SetEndButton price={price} />
     </span>
   );

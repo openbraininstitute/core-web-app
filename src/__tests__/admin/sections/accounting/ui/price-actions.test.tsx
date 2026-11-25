@@ -15,7 +15,6 @@ const { assertEndMock, expireMock, updateMock, errorMock } = vi.hoisted(() => ({
 }));
 
 vi.mock('@/admin/sections/accounting/api', () => ({
-  assertPriceAfter: vi.fn(),
   assertPriceEdit: vi.fn(),
   assertPriceEnd: assertEndMock,
   createPrice: vi.fn(),
@@ -60,10 +59,16 @@ describe('PriceActions', () => {
     ['a scheduled price', SCHEDULED, ['Edit', 'Change end']],
     ['a price in use', ACTIVE, ['Change price', 'Set end']],
     ['an expired price', { ...ACTIVE, valid_to: hours(-1) }, []],
-    ['a legacy subtype', { ...ACTIVE, service_subtype: 'ml-rag' } as TPrice, ['Set end']],
   ])('offers the right actions on %s', (_, price, expected) => {
     renderActions(price);
     expect(buttons()).toEqual(expected);
+  });
+
+  it("offers nothing on a legacy price, and says it can't be ended", () => {
+    renderActions({ ...ACTIVE, service_subtype: 'ml-rag' } as TPrice);
+
+    expect(buttons()).toEqual([]);
+    expect(screen.getByText(/no new price can take over/)).toBeTruthy();
   });
 
   it('never ends a price when nothing would take over, and keeps the dialog open', async () => {

@@ -6,14 +6,7 @@ import { compactRecord } from '@/utils/dictionary';
 
 import { errorReason } from '../../shared/errors';
 import { formatDateTime } from '../../shared/format';
-import {
-  checkPriceAfter,
-  checkPriceEdit,
-  checkPriceEnd,
-  editMoves,
-  isOutcomeUnknown,
-  priceKey,
-} from './helpers';
+import { checkPriceEdit, checkPriceEnd, editMoves, isOutcomeUnknown, priceKey } from './helpers';
 import { AccountingErrorCode, AccountingMethod } from './types';
 
 import type {
@@ -222,11 +215,6 @@ async function pricesAround(scope: TPriceScope): Promise<TPriceLists> {
     lists: pages.map(({ data }) => data),
     truncated: pages.some(({ data, pagination }) => pagination.total > data.length),
   };
-}
-
-/** Refuses an end with no price after it, since reservations of that subtype would then fail. */
-export async function assertPriceAfter(price: TPriceScope, end: string | null) {
-  if (end) checkPriceAfter((await pricesAround(price)).lists, end);
 }
 
 export async function assertPriceEnd(price: TPrice, end: string | null) {

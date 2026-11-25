@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
-  assertPriceAfter,
   assertPriceEdit,
   assertPriceEnd,
   assignBudget,
@@ -399,7 +398,7 @@ describe('replacePrice', () => {
   });
 });
 
-describe('assertPriceAfter', () => {
+describe('assertPriceEnd', () => {
   const end = new Date(Date.now() + 3_600_000).toISOString();
 
   it('lets a lab price end into the default', async () => {
@@ -417,7 +416,7 @@ describe('assertPriceAfter', () => {
   });
 
   it('checks nothing for a price with no end', async () => {
-    await expect(assertPriceAfter(OLD, null)).resolves.toBeUndefined();
+    await expect(assertPriceEnd(OLD, null)).resolves.toBeUndefined();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });
