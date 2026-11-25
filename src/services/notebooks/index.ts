@@ -256,3 +256,123 @@ export async function startEmptyNotebook(
 
   return assertApiResponse(res);
 }
+
+export interface NotebookSession {
+  /** Null for agent sandbox sessions, which cannot be opened or stopped from here. */
+  session_number: number | null;
+  kind: 'notebook' | 'sandbox';
+  state: 'running' | 'starting' | 'stopping';
+  /** Profile name, null for pods started before the notebook service labelled them. */
+  profile: string | null;
+  started_on: string | null;
+  url: string;
+}
+
+export interface NotebookSessionsResponse {
+  sessions: NotebookSession[];
+  max_sessions: number;
+}
+
+export interface NotebookSessionResponse {
+  message: string;
+  session_number: number;
+  url: string;
+}
+
+export interface NotebookTemplateRef {
+  id: string;
+  filename: string;
+}
+
+export type NotebookSessionScope = { vlabId: string; projectId: string; cloud: string };
+
+const SESSION_ERRORS: Record<number, { error_code: string; hint: string }> = {
+  460: {
+    error_code: 'ACCOUNTING_RESERVATION_ERROR',
+    hint: 'No reservation could be made in the accounting service',
+  },
+  461: {
+    error_code: 'INSUFFICIENT_FUNDS_ERROR',
+    hint: 'Not enough credits to run the notebook',
+  },
+  462: { error_code: 'JUPYTER_ERROR', hint: 'The notebook could not be launched in Jupyter' },
+  470: {
+    error_code: 'SESSION_LIMIT_REACHED',
+    hint: 'You reached the maximum number of concurrent sessions in this project. Stop one to start another.',
+  },
+};
+
+const sessionsUrl = (path = '') => `${config.NOTEBOOK_API_URL}/sessions${path}`;
+
+const scopeQuery = ({ vlabId, projectId, cloud }: NotebookSessionScope) =>
+  new URLSearchParams({ vlabId, projectId, cloud }).toString();
+
+async function sessionRequest<T>(url: string, init: RequestInit): Promise<T> {
+  const res = await authFetch(url, {
+    ...init,
+    headers: { 'Content-Type': 'application/json' },
+  });
+  const known = SESSION_ERRORS[res.status];
+  if (!res.ok && known) throw Error(known.error_code, { cause: known });
+  return assertApiResponse(res);
+}
+
+/** Running notebook sessions of the current user in a project, plus agent sandboxes. */
+export function listNotebookSessions(
+  scope: NotebookSessionScope
+): Promise<NotebookSessionsResponse> {
+  return sessionRequest(`${sessionsUrl()}?${scopeQuery(scope)}`, { method: 'GET' });
+}
+
+/** Start a new session; the service picks its number and enforces the concurrent limit. */
+export function startNotebookSession(
+  scope: NotebookSessionScope & { profile?: string; template?: NotebookTemplateRef }
+): Promise<NotebookSessionResponse> {
+  const { vlabId, projectId, cloud, profile, template } = scope;
+  return sessionRequest(sessionsUrl(), {
+    method: 'POST',
+    body: JSON.stringify({
+      vlabId,
+      projectId,
+      cloud,
+      ...(profile ? { profile } : {}),
+      ...(template
+        ? {
+            analysis_notebook_template_id: template.id,
+            analysis_notebook_template_filename: template.filename,
+          }
+        : {}),
+    }),
+  });
+}
+
+/** Attach to a running session without starting a pod or a new accounting session. */
+export function openNotebookSession(
+  sessionNumber: number,
+  scope: NotebookSessionScope & { template?: NotebookTemplateRef }
+): Promise<NotebookSessionResponse> {
+  const { vlabId, projectId, cloud, template } = scope;
+  return sessionRequest(sessionsUrl(`/${sessionNumber}/open`), {
+    method: 'POST',
+    body: JSON.stringify({
+      vlabId,
+      projectId,
+      cloud,
+      ...(template
+        ? {
+            analysis_notebook_template_id: template.id,
+            analysis_notebook_template_filename: template.filename,
+          }
+        : {}),
+    }),
+  });
+}
+
+export function stopNotebookSession(
+  sessionNumber: number,
+  scope: NotebookSessionScope
+): Promise<NotebookSessionResponse> {
+  return sessionRequest(sessionsUrl(`/${sessionNumber}?${scopeQuery(scope)}`), {
+    method: 'DELETE',
+  });
+}

@@ -1,7 +1,7 @@
 'use client';
 
 import { type RemixiconComponentType, RiPlayFill } from '@remixicon/react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
 import { getAsset } from '@/api/entitycore/selectors/assets';
@@ -12,9 +12,13 @@ import { config } from '@/config';
 import { useLowCredits } from '@/features/low-credits';
 import {
   getNotebookProfiles,
-  type NotebookStartResponse,
-  startEmptyNotebook,
-  startNotebook,
+  listNotebookSessions,
+  type NotebookSession,
+  type NotebookSessionScope,
+  type NotebookTemplateRef,
+  openNotebookSession,
+  startNotebookSession,
+  stopNotebookSession,
 } from '@/services/notebooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
@@ -68,6 +72,148 @@ export function useNotebookProfiles(enabled = true) {
   return data ?? { profiles: [], defaultProfile: null };
 }
 
+const SESSIONS_REFRESH_MS = 15_000;
+/** Faster refresh while a session is starting or stopping, so the list settles quickly. */
+const SESSIONS_TRANSITION_REFRESH_MS = 3_000;
+
+export function sessionsRefreshInterval(sessions: NotebookSession[] | undefined): number {
+  return sessions?.some((session) => session.state !== 'running')
+    ? SESSIONS_TRANSITION_REFRESH_MS
+    : SESSIONS_REFRESH_MS;
+}
+
+export type SessionPanelProps = {
+  sessions: NotebookSession[];
+  maxSessions: number | null;
+  stoppingSession: number | null;
+  onOpenSession: (sessionNumber: number) => void;
+  onStopSession: (sessionNumber: number) => void;
+};
+
+/** Number of the first notebook session that can be attached to, if any. */
+const firstOpenableSessionNumber = (sessions: NotebookSession[]): number | null =>
+  sessions.find((session) => session.kind === 'notebook')?.session_number ?? null;
+
+/** The user's running sessions in this project, refreshed while the page is open. */
+export function useNotebookSessions(cloud: string | undefined, enabled = true) {
+  const { virtualLabId, projectId } = useWorkspace();
+  const { data } = useQuery({
+    queryKey: ['notebook-sessions', virtualLabId, projectId, cloud],
+    queryFn: () => listNotebookSessions({ vlabId: virtualLabId, projectId, cloud: cloud ?? '' }),
+    enabled: enabled && Boolean(virtualLabId) && Boolean(projectId) && Boolean(cloud),
+    refetchInterval: (query) => sessionsRefreshInterval(query.state.data?.sessions),
+    staleTime: 0,
+  });
+  return { sessions: data?.sessions ?? [], maxSessions: data?.max_sessions ?? null };
+}
+
+/** Start, attach to and stop sessions, with the notifications shared by every entry point. */
+function useSessionActions(cloud: string | undefined) {
+  const { virtualLabId, projectId } = useWorkspace();
+  const notification = useAppNotification();
+  const queryClient = useQueryClient();
+  const [busy, setBusy] = useState(false);
+  const [stoppingSession, setStoppingSession] = useState<number | null>(null);
+  const { reportError: reportLowCredits, creditsModal } = useLowCredits({
+    subject: 'run the notebook',
+  });
+
+  const refreshSessions = () =>
+    queryClient.invalidateQueries({ queryKey: ['notebook-sessions', virtualLabId, projectId] });
+
+  const reportError = (error: unknown, fallback: string) => {
+    if (reportLowCredits(error)) return;
+    const cause =
+      error instanceof Error ? (error.cause as Record<string, string> | undefined) : null;
+    notification.error({
+      message: cause?.hint ?? cause?.detail ?? fallback,
+      key: 'notebook-error',
+      placement: 'topRight',
+    });
+  };
+
+  async function guarded(
+    fallback: string,
+    action: (scope: NotebookSessionScope) => Promise<{ url: string }>
+  ) {
+    if (busy || !cloud) return;
+    setBusy(true);
+    try {
+      const { url } = await action({ vlabId: virtualLabId, projectId, cloud });
+      window.open(url, '_blank');
+    } catch (error) {
+      reportError(error, fallback);
+    } finally {
+      setBusy(false);
+      refreshSessions();
+    }
+  }
+
+  return {
+    busy,
+    stoppingSession,
+    creditsModal,
+    start: (profile?: string, template?: NotebookTemplateRef) =>
+      guarded('Failed to start notebook', async (scope) => {
+        const response = await startNotebookSession({ ...scope, profile, template });
+        notification.success({
+          message: 'Notebook starting',
+          key: 'notebook-started-successfully',
+          placement: 'topRight',
+        });
+        return response;
+      }),
+    open: (sessionNumber: number, template?: NotebookTemplateRef) =>
+      guarded('Failed to attach to the session', (scope) =>
+        openNotebookSession(sessionNumber, { ...scope, template })
+      ),
+    async stop(sessionNumber: number) {
+      if (!cloud || stoppingSession !== null) return;
+      setStoppingSession(sessionNumber);
+      try {
+        await stopNotebookSession(sessionNumber, { vlabId: virtualLabId, projectId, cloud });
+      } catch (error) {
+        reportError(error, 'Failed to stop the session');
+      } finally {
+        setStoppingSession(null);
+        refreshSessions();
+      }
+    },
+  };
+}
+
+/**
+ * Sessions + actions for surfaces that only open a bare JupyterHub (no notebook template).
+ * `reuseExisting` attaches to a running session instead of starting a new one, for users
+ * who do not get to choose (course students).
+ */
+export function useJupyterHubSessions({
+  cloud,
+  enabled = true,
+}: {
+  cloud: string | undefined;
+  enabled?: boolean;
+}) {
+  const { sessions, maxSessions } = useNotebookSessions(cloud, enabled);
+  const actions = useSessionActions(cloud);
+
+  const panel: SessionPanelProps = {
+    sessions,
+    maxSessions,
+    stoppingSession: actions.stoppingSession,
+    onOpenSession: (sessionNumber) => actions.open(sessionNumber),
+    onStopSession: actions.stop,
+  };
+
+  function openJupyterHub(profile?: string, reuseExisting = false) {
+    const existing = reuseExisting ? firstOpenableSessionNumber(sessions) : null;
+    if (existing !== null) return actions.open(existing);
+    return actions.start(profile);
+  }
+
+  return { panel, openJupyterHub, opening: actions.busy, creditsModal: actions.creditsModal };
+}
+
 export function useRunNotebook({
   id,
   assets,
@@ -77,13 +223,8 @@ export function useRunNotebook({
   assets: IAsset[];
   enabled?: boolean;
 }) {
-  const { virtualLabId, projectId } = useWorkspace();
-  const notification = useAppNotification();
+  const { virtualLabId } = useWorkspace();
   const [runningTarget, setRunningTarget] = useState<string | null>(null);
-  const [opening, setOpening] = useState(false);
-  const { reportError: reportLowCredits, creditsModal } = useLowCredits({
-    subject: 'run the notebook',
-  });
 
   const { data: virtualLabData } = useQuery({
     queryKey: keyBuilder.getOneLab({ virtualLabId }),
@@ -92,78 +233,49 @@ export function useRunNotebook({
   });
 
   const { profiles, defaultProfile } = useNotebookProfiles(enabled);
+  const cloud = virtualLabData?.compute_cell;
+  const { sessions, maxSessions } = useNotebookSessions(cloud, enabled);
+  const actions = useSessionActions(cloud);
 
   const runTargets = buildRunTargets(config.DEPLOYMENT_ENV);
 
-  async function run(target: NotebookRunTarget = DEFAULT_RUN_TARGET, profile?: string) {
-    if (runningTarget) return;
-    const asset = getAsset({
-      assets,
-      label: AssetLabel.jupyter_notebook,
-    }).getOneOrNull();
+  const templateRef = (): NotebookTemplateRef | null => {
+    const asset = getAsset({ assets, label: AssetLabel.jupyter_notebook }).getOneOrNull();
+    return asset ? { id, filename: asset.path } : null;
+  };
 
-    if (!asset || !virtualLabData) return;
+  const sessionPanel = (withTemplate: boolean): SessionPanelProps => ({
+    sessions,
+    maxSessions,
+    stoppingSession: actions.stoppingSession,
+    onOpenSession: (sessionNumber) =>
+      actions.open(sessionNumber, withTemplate ? (templateRef() ?? undefined) : undefined),
+    onStopSession: actions.stop,
+  });
 
-    const cloud = target.cloud ?? virtualLabData.compute_cell;
+  async function run(
+    target: NotebookRunTarget = DEFAULT_RUN_TARGET,
+    profile?: string,
+    reuseExisting = false
+  ) {
+    if (runningTarget || actions.busy) return;
+    const template = templateRef();
+    if (!template || !virtualLabData) return;
+
     setRunningTarget(target.key);
     try {
-      const retval: NotebookStartResponse = await startNotebook(
-        id,
-        asset.path,
-        virtualLabId,
-        projectId,
-        cloud,
-        0,
-        undefined,
-        profile
-      );
-      notification.success({
-        message: 'Notebook starting',
-        key: 'notebook-started-successfully',
-        placement: 'topRight',
-      });
-      window.open(retval.url, '_blank');
-    } catch (error) {
-      if (reportLowCredits(error)) return;
-      if (error instanceof Error && 'cause' in error) {
-        notification.error({
-          message: (error.cause as { error_code: string; hint: string }).hint,
-          key: 'notebook-error',
-          placement: 'topRight',
-        });
-      } else {
-        notification.error({
-          message: `Failed to start notebook, unknown error: ${error}`,
-          key: 'notebook-unknown-error',
-          placement: 'topRight',
-        });
-      }
+      const existing = reuseExisting ? firstOpenableSessionNumber(sessions) : null;
+      if (existing !== null) await actions.open(existing, template);
+      else await actions.start(profile, template);
     } finally {
       setRunningTarget(null);
     }
   }
 
-  async function openJupyterHub(profile?: string) {
-    if (opening || !virtualLabData) return;
-    setOpening(true);
-    try {
-      const retval = await startEmptyNotebook(
-        virtualLabId,
-        projectId,
-        virtualLabData.compute_cell,
-        profile
-      );
-      window.open(retval.url, '_blank');
-    } catch (error) {
-      if (reportLowCredits(error)) return;
-      notification.error({
-        message: 'Failed to open JupyterHub',
-        key: 'notebook-open-error',
-        placement: 'topRight',
-      });
-    } finally {
-      setOpening(false);
-    }
+  function openJupyterHub(profile?: string, reuseExisting = false) {
+    const existing = reuseExisting ? firstOpenableSessionNumber(sessions) : null;
+    if (existing !== null) return actions.open(existing);
+    return actions.start(profile);
   }
 
   return {
@@ -172,10 +284,14 @@ export function useRunNotebook({
     runningTarget,
     running: runningTarget !== null,
     openJupyterHub,
-    opening,
-    creditsModal,
+    opening: actions.busy && runningTarget === null,
+    creditsModal: actions.creditsModal,
     profiles,
     defaultProfile,
     virtualLabData,
+    /** attach to a session with the notebook template loaded into it */
+    runSessionPanel: sessionPanel(true),
+    /** attach to a session without loading a template */
+    hubSessionPanel: sessionPanel(false),
   };
 }

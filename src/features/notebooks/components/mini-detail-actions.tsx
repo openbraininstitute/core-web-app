@@ -120,11 +120,19 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
     'description' in record ? (record.description as string | undefined) : undefined;
   const assets = 'assets' in record && record.assets ? (record.assets as IAsset[]) : [];
 
-  const { run, runTargets, runningTarget, running, creditsModal, profiles, defaultProfile } =
-    useRunNotebook({
-      id: record.id,
-      assets,
-    });
+  const {
+    run,
+    runTargets,
+    runningTarget,
+    running,
+    creditsModal,
+    profiles,
+    defaultProfile,
+    runSessionPanel,
+  } = useRunNotebook({
+    id: record.id,
+    assets,
+  });
 
   const [pendingDownload, setPendingDownload] = useState(false);
   const [openSizeMenu, setOpenSizeMenu] = useState<string | null>(null);
@@ -302,7 +310,7 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
             label="Run notebook"
             testId="notebook-run-default-button"
             theme={theme}
-            onClick={() => run()}
+            onClick={() => run(undefined, undefined, true)}
           >
             {running ? (
               <LoadingOutlined spin className="text-primary-3" />
@@ -321,6 +329,7 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
                 <SessionSizePanel
                   profiles={profiles}
                   defaultProfile={defaultProfile}
+                  sessionPanel={runSessionPanel}
                   onSelect={(profileName) => {
                     setOpenSizeMenu(null);
                     run(target, profileName);
