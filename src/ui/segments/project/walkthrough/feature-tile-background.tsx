@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import styles from './public-tour.module.css';
 
@@ -59,9 +59,24 @@ export function FeatureTileBackground({
   stationary?: boolean;
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
+  const sync = useRef<(() => void) | null>(null);
+  const [initialized, setInitialized] = useState(false);
   const current = useRef({ active, chapterId });
-  current.current = { active, chapterId };
   useEffect(() => {
+    const desktop = window.matchMedia('(min-width: 800px)');
+    const enter = () => {
+      if (active && desktop.matches) setInitialized(true);
+    };
+    enter();
+    desktop.addEventListener('change', enter);
+    return () => desktop.removeEventListener('change', enter);
+  }, [active]);
+  useEffect(() => {
+    current.current = { active, chapterId };
+    sync.current?.();
+  }, [active, chapterId]);
+  useEffect(() => {
+    if (!initialized) return;
     const surface = canvas.current;
     const tour = surface?.closest<HTMLElement>('[data-public-tour]');
     if (!surface || !tour) return;
@@ -69,7 +84,6 @@ export function FeatureTileBackground({
     let engine:
       | ReturnType<typeof import('./feature-tile-renderer').createFeatureTileRenderer>
       | undefined;
-    let frame = 0;
     let selected = '';
     let wasShown = false;
     let failed = false;
@@ -131,8 +145,10 @@ export function FeatureTileBackground({
           }
         );
       }
-      frame = requestAnimationFrame(tick);
     };
+    sync.current = tick;
+    document.addEventListener('visibilitychange', tick);
+    desktop.addEventListener('change', tick);
     const resize = new ResizeObserver(layout);
     resize.observe(tour);
     layout();
@@ -162,13 +178,15 @@ export function FeatureTileBackground({
     });
     return () => {
       disposed = true;
-      cancelAnimationFrame(frame);
+      sync.current = null;
+      document.removeEventListener('visibilitychange', tick);
+      desktop.removeEventListener('change', tick);
       resize.disconnect();
       engine?.dispose();
       clear();
       tour.style.removeProperty('--chapter-scrollbar-width');
     };
-  }, [stationary]);
+  }, [stationary, initialized]);
   return (
     <div
       aria-hidden="true"

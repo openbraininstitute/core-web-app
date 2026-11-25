@@ -1,0 +1,58 @@
+PUBLIC WEBSITE PERFORMANCE CHANGES
+
+Automatic home tour: 8 three-second previews, 1,057,162 bytes in total.
+Previously their full sources totaled 55,615,812 bytes. Clicking a model
+plays its complete movie. The white tiles retain movement, flips and hover;
+only the selected model plays video. Other model tiles use still frames.
+The previous decoder/download is released when selection changes.
+
+Seven chapter movies: 67,657,276 -> 10,244,562 bytes (85% smaller).
+Original duration and aspect ratio are preserved; audio is omitted because
+these muted presentation films do not use it. Posters: 2,320,364 ->
+1,429,550 bytes (38% smaller). Original source media is unchanged.
+
+Rebuild optimized variants from the source masters:
+  python3 scripts/website/optimize-media.py
+  node scripts/website/optimize-posters.mjs
+Requires ffmpeg/ffprobe and the project's sharp package. Review image quality
+before replacing deployed variants. Change the encoding recipe version if
+changing settings; variant URLs include a hash of the source and recipe.
+Generated variants in public/static/website-optimized MUST ship with the app;
+optimized-media.json records their names and sizes. They are not ignored by Git.
+
+Other changes:
+- Only start model video after browser idle, or an 800ms fallback.
+- Stop video downloads and canvas rendering offscreen or with the tab hidden.
+- Cap the landing canvas at 30fps and pixel ratio 1.5.
+- Initialize the shared chapter WebGL field only after entering chapters.
+- Replace the chapter wrapper's permanent animation-frame polling with events.
+- Calculate desktop landing geometry in CSS before the first paint.
+- Public homepage has no server session or feature-cookie lookup, and no full
+  platform provider initialization. Real sign-in happens after the platform CTA.
+- Defer original in-app home and floating 3D components; separate recorded
+  chapter components from the live 3D viewer module.
+- Stripe uses its pure entry point; the external billing script starts when
+  getStripe is actually called, rather than when a module is imported.
+- Homepage allows hourly static revalidation; content is public and identical
+  for signed-in and signed-out visitors. Protected /app routes are unaffected.
+- Preload the public information font and logo face; other platform fonts load
+  on use, instead of competing for initial bandwidth.
+- Versioned optimized media has one-year immutable cache headers.
+
+AFTER DEPLOYMENT
+Rerun WebPageTest with the same location, connection and browser as the baseline.
+Compare first/repeat views, bytes, number of active videos, TBT, LCP and CLS.
+Verify the hosting/CDN respects the optimized asset cache headers and caches
+public homepage responses without Set-Cookie. Measure cold and warm TTFB
+separately; hosting cold-start time cannot be proved or fixed by localhost tests.
+Do not treat asset-size reductions as measured improvements in Web Vitals.
+
+LOCAL VALIDATION (2026-11-25)
+45 focused tests passed, including selection/download release, idle startup,
+chapter playback/navigation and deferred WebGL initialization. All 23 movies
+were checked with ffprobe for duration; local desktop and 390px phone layouts
+were inspected. No new type errors were reported in changed implementation files.
+The complete repository production build is currently blocked by absent local
+logbook dependencies (@hocuspocus/provider, several @tiptap modules, yjs, etc.).
+These packages are already declared in package.json; dependency installation
+must be synchronized before the complete application build can be verified.

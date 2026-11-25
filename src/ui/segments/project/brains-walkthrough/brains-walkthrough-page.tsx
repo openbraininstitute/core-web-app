@@ -1,29 +1,18 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { getSocialMediaLinks } from '@/content/website/shared';
 import FooterPanel from '@/ui/segments/landing/layout/footer/footer-panel';
 import { LivingHero } from '@/ui/segments/landing/living-hero';
-import { OriginalHomePage } from '@/ui/segments/project/original-home';
 import { SlidingStage } from '@/ui/segments/project/walkthrough/sliding-stage';
 import { Walkthrough } from '@/ui/segments/project/walkthrough/walkthrough';
 
 import { AgentPromptsStage } from './agent-prompts';
 import { AgentReady } from './agent-ready';
-import {
-  ANALYSIS_VIDEO,
-  BrainsOpening,
-  CONFIGURATION_VIDEO,
-  EarlyAdopters,
-  NOTEBOOKS_VIDEO,
-  StageVideo,
-  TEACHING_VIDEO,
-  VirtualLabsPreview,
-} from './brain-views';
-import { CNS_ON_FIRST_SCREEN } from './brains';
 import {
   BRAIN_CHAPTERS,
   BRAIN_INTRO,
@@ -31,12 +20,30 @@ import {
   BRAIN_THEME_UNDERLINES,
   SERIF_TITLE,
 } from './chapters';
-import { FloatingMaleCns, FloatingMicrocircuit } from './floating-model';
 import { GetStartedBrain } from './get-started-brain';
 import { LandingThemes, ThemeNav } from './landing-themes';
 import { ModelMosaic } from './model-mosaic';
+import {
+  ANALYSIS_VIDEO,
+  CONFIGURATION_VIDEO,
+  EarlyAdopters,
+  NOTEBOOKS_VIDEO,
+  StageVideo,
+  TEACHING_VIDEO,
+  VirtualLabsPreview,
+} from './recorded-views';
+import { CNS_ON_FIRST_SCREEN } from './tour-settings';
 
 import type { TBrainScene } from './chapters';
+
+const BrainsOpening = dynamic(() => import('./brain-views').then((m) => m.BrainsOpening));
+const OriginalHomePage = dynamic(() =>
+  import('@/ui/segments/project/original-home').then((m) => m.OriginalHomePage)
+);
+const FloatingMaleCns = dynamic(() => import('./floating-model').then((m) => m.FloatingMaleCns));
+const FloatingMicrocircuit = dynamic(() =>
+  import('./floating-model').then((m) => m.FloatingMicrocircuit)
+);
 
 /** How long the landing stands once its words are out before the page scrolls on by itself, ms. */
 const LANDING_STAY_MS = 4000;

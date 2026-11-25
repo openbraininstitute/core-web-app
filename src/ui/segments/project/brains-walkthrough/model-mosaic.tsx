@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 
+import { optimizedMedia } from '@/ui/segments/landing/optimized-media';
+
 import styles from './model-mosaic.module.css';
 import labs from './virtual-labs.module.css';
 
@@ -43,8 +45,12 @@ export function ModelMosaic({ near = true }: { near?: boolean }) {
         <video
           ref={videoRef}
           className={labs.blendedVideo}
-          src={near && visible ? '/images/start/walkthrough/models-mosaic.mp4' : undefined}
-          poster="/images/start/walkthrough/models-mosaic.jpg"
+          src={
+            near && visible
+              ? optimizedMedia('/images/start/walkthrough/models-mosaic.mp4')
+              : undefined
+          }
+          poster={optimizedMedia('/images/start/walkthrough/models-mosaic.jpg', 'poster')}
           muted
           loop
           playsInline

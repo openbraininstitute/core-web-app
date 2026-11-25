@@ -1,8 +1,8 @@
 import { AgentPrompts } from './agent-prompts';
 import { AiSparkles } from './agent-ready';
-import { ConfigurationRecording, StartNow } from './brain-views';
-import { CNS_ON_FIRST_SCREEN } from './brains';
 import { ChapterAction } from './chapter-action';
+import { ConfigurationRecording, StartNow } from './recorded-views';
+import { CNS_ON_FIRST_SCREEN } from './tour-settings';
 
 import type { IWalkthroughChapter } from '@/ui/segments/project/walkthrough/walkthrough';
 

@@ -58,10 +58,22 @@ export const COURSE_FRONT: Facing = { from: [-1, 0, 0], up: [0, -1, 0] };
  * (0.602, -0.143, 0.786), about its somas' middle.
  */
 export const MOUSE_PLACE = new THREE.Matrix4().set(
-  0.630976, -0.77027, -0.092487, 1389.374662,
-  0.437477, 0.254819, 0.86237, -10625.171495,
-  -0.64069, -0.584595, 0.49776, -1325.121172,
-  0, 0, 0, 1
+  0.630976,
+  -0.77027,
+  -0.092487,
+  1389.374662,
+  0.437477,
+  0.254819,
+  0.86237,
+  -10625.171495,
+  -0.64069,
+  -0.584595,
+  0.49776,
+  -1325.121172,
+  0,
+  0,
+  0,
+  1
 );
 
 /** The mouse's brain from its right, above and a little in front, dorsal side up, in the circuit's frame. */
@@ -88,10 +100,22 @@ export const H01_MARK: [number, number, number] = [108664, -107670, -197427];
  * onto the circuit's column axis, about its somas' middle.
  */
 export const RAT_PLACE = new THREE.Matrix4().set(
-  0.601603, -0.784516, -0.15036, 7503.877501,
-  0.441042, 0.169287, 0.881376, 1200.667662,
-  -0.666, -0.596553, 0.447849, -32630.651298,
-  0, 0, 0, 1
+  0.601603,
+  -0.784516,
+  -0.15036,
+  7503.877501,
+  0.441042,
+  0.169287,
+  0.881376,
+  1200.667662,
+  -0.666,
+  -0.596553,
+  0.447849,
+  -32630.651298,
+  0,
+  0,
+  0,
+  1
 );
 
 /** The rat's brain from its right, above and a little in front, dorsal side up, in the circuit's frame. */
@@ -143,7 +167,7 @@ export const MICRONS_FRAME: FrameBox = {
  * landing, gliding over to the right of that screen with its caption, and the recording under the words. False has the
  * Male CNS on the landing alone, leaving with it, and the recording on the right.
  */
-export const CNS_ON_FIRST_SCREEN: boolean = false;
+export { CNS_ON_FIRST_SCREEN } from './tour-settings';
 
 /** The cortical microcircuit's one colour in this walkthrough, the fly's brain's, and MICrONS's. */
 export const L6_COLOR = '#e64980';

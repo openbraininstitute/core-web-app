@@ -1,4 +1,5 @@
 import { LANDING_MODELS as FEATURES } from './landing-models';
+import { createLandingPlayback } from './landing-video-playback';
 
 /**
  * Canvas artwork adapted from LandingPage_V1; application UI stays in React.
@@ -206,7 +207,7 @@ export function createLandingTileRenderer(
   // (a let: a tile fading in or out is drawn into a layer of its own, `ctx` pointed at it meanwhile)
   let ctx = cv.getContext('2d');
   if (!ctx) throw new Error('Canvas rendering is unavailable');
-  const DPR = Math.min(2, window.devicePixelRatio || 1);
+  const DPR = Math.min(1.5, window.devicePixelRatio || 1);
   cv.width = 1920 * DPR;
   cv.height = STAGE_H * DPR;
 
@@ -1063,7 +1064,7 @@ export function createLandingTileRenderer(
     if (alpha <= 0.001) return;
     const index = c.feature,
       f = FEATURES[index],
-      v = videos[index],
+      v = playback.get(index),
       src = v && v.readyState >= 2 ? v : images[index];
     if (!src) return;
     const nw = src.videoWidth || src.naturalWidth,
@@ -1116,51 +1117,28 @@ export function createLandingTileRenderer(
     busyUntil = now + FLIP_SPREAD + FLIP_DUR;
   }
 
-  // ---------- video features: played only while a tile shows them, their frames painted into the slice ----------
-  // Every copy of a video on the page keeps to one clock (the page's time, round its length), so the one in a tile
-  // and the one beside the field pick up where each other left off.
-  const videos = FEATURES.map((f) => {
-    if (!f.video || reduceMotion || backdrop) return null;
-    const v = document.createElement('video');
-    v.muted = true;
-    v.loop = true;
-    v.playsInline = true;
-    v.preload = 'none';
-    v.defaultPlaybackRate = v.playbackRate = f.rate ?? 1;
-    v.src = f.video;
-    v.addEventListener('playing', () => keepTime(v));
-    return v;
-  });
-  const keepTime = (v) => {
-    if (!v.duration) return;
-    v.playbackRate = v.defaultPlaybackRate;
-    const want = ((performance.now() / 1000) * v.playbackRate) % v.duration,
-      off = Math.abs(v.currentTime - want);
-    if (off > 0.2 && off < v.duration - 0.2) v.currentTime = want;
-  };
-  const lastSync = new Map(),
-    lastFrame = new Map();
-  function runVideos(now) {
-    let playing = false;
-    videos.forEach((v, i) => {
-      if (!v) return;
-      const shown = visible && slices[i] && featureCells.some((c) => c.pics.includes(slices[i]));
-      if (!shown) {
-        if (!v.paused) v.pause();
-        return;
-      }
-      playing = true;
-      if (v.paused) v.play().catch(() => {});
-      if ((lastSync.get(v) ?? -Infinity) + 2000 < now) {
-        keepTime(v);
-        lastSync.set(v, now);
-      }
-      if (v.readyState >= 2 && lastFrame.get(v) !== v.currentTime) {
-        paintSlice(slices[i], FEATURES[i], v);
-        lastFrame.set(v, v.currentTime);
-      }
-    });
-    return playing;
+  // One featured video; small tiles stay on their sharp still images.
+  let fullVideos = false;
+  const playback = createLandingPlayback(FEATURES, kick);
+  let paintedIndex = -1;
+  let paintedTime = -1;
+  function runVideos() {
+    const index = heroCell?.feature ?? initialIndex;
+    const video = playback.update(
+      index,
+      visible && !reduceMotion && !backdrop && started,
+      fullVideos
+    );
+    if (paintedIndex !== index && paintedIndex >= 0 && images[paintedIndex]) {
+      paintSlice(slices[paintedIndex], FEATURES[paintedIndex], images[paintedIndex]);
+      paintedTime = -1;
+    }
+    paintedIndex = index;
+    if (video && slices[index] && video.readyState >= 2 && paintedTime !== video.currentTime) {
+      paintSlice(slices[index], FEATURES[index], video);
+      paintedTime = video.currentTime;
+    }
+    return Boolean(video);
   }
 
   let lastNow = 0;
@@ -1316,6 +1294,11 @@ export function createLandingTileRenderer(
       looping = false;
       return;
     }
+    // 30 fps is enough for this slow artwork; avoid redrawing every 60/120 Hz display tick.
+    if (lastNow && now - lastNow < 1000 / 30 - 1) {
+      requestFrame(loop);
+      return;
+    }
     const active = render(now);
     if (active) requestFrame(loop);
     else {
@@ -1410,6 +1393,7 @@ export function createLandingTileRenderer(
     });
     b.addEventListener('click', () => {
       onInteraction();
+      fullVideos = true;
       choose(slot);
     });
     $('picks').appendChild(b);
@@ -1677,19 +1661,14 @@ export function createLandingTileRenderer(
         cancelAnimationFrame(frameId);
         looping = false;
         lastNow = 0;
-        videos.forEach((v) => v?.pause());
+        playback.update(-1, false);
       } else kick();
     },
     dispose() {
       disposed = true;
       cancelAnimationFrame(frameId);
       timers.forEach((timer) => clearTimeout(timer));
-      videos.forEach((v) => {
-        if (!v) return;
-        v.pause();
-        v.removeAttribute('src');
-        v.load();
-      });
+      playback.dispose();
       stage.removeEventListener('pointermove', pointerMove);
       stage.removeEventListener('pointerleave', pointerLeave);
       window.removeEventListener('pointermove', backdropMove);

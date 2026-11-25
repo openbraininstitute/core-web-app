@@ -1,7 +1,10 @@
+import { optimizedMedia } from './optimized-media';
+
 type LandingModel = {
   label: string;
   img: string;
   video?: string;
+  preview?: string;
   heroBounds?: { x: number; y: number; width: number; height: number };
   zoom: number;
   hero: number;
@@ -11,7 +14,7 @@ type LandingModel = {
   caption?: { kicker: string; text: string };
 };
 
-export const LANDING_MODELS: readonly LandingModel[] = [
+const MODELS: readonly LandingModel[] = [
   {
     label: 'Simulate whole-brain activity',
     img: '/static/landing-v1/fly-brain.jpg',
@@ -89,3 +92,11 @@ export const LANDING_MODELS: readonly LandingModel[] = [
     alt: 'A neocortex growing',
   },
 ];
+
+// Automatic three-second tour uses teasers. Picking a tile plays its complete optimized movie.
+export const LANDING_MODELS: readonly LandingModel[] = MODELS.map((model) => ({
+  ...model,
+  img: optimizedMedia(model.img, 'poster'),
+  video: model.video ? optimizedMedia(model.video, 'full') : undefined,
+  preview: model.video ? optimizedMedia(model.video, 'preview') : undefined,
+}));

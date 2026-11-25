@@ -1,0 +1,252 @@
+{
+  "/static/landing-v1/fly-brain.mp4": {
+    "preview": {
+      "src": "/static/website-optimized/fly-brain-preview-9e5ff1ff5ccf.mp4",
+      "bytes": 310199,
+      "originalBytes": 5812708
+    },
+    "full": {
+      "src": "/static/website-optimized/fly-brain-full-4dec21ad55d7.mp4",
+      "bytes": 3236956,
+      "originalBytes": 5812708
+    }
+  },
+  "/static/landing-v1/microcircuits.mp4": {
+    "preview": {
+      "src": "/static/website-optimized/microcircuits-preview-6f242986efa9.mp4",
+      "bytes": 144563,
+      "originalBytes": 14201478
+    },
+    "full": {
+      "src": "/static/website-optimized/microcircuits-full-646007e7189a.mp4",
+      "bytes": 2039205,
+      "originalBytes": 14201478
+    }
+  },
+  "/static/landing-v1/somatosensory.mp4": {
+    "preview": {
+      "src": "/static/website-optimized/somatosensory-preview-19cbd83125c4.mp4",
+      "bytes": 75104,
+      "originalBytes": 10798014
+    },
+    "full": {
+      "src": "/static/website-optimized/somatosensory-full-09c03c552db1.mp4",
+      "bytes": 811929,
+      "originalBytes": 10798014
+    }
+  },
+  "/static/landing-v1/hippocampus-growth.mp4": {
+    "preview": {
+      "src": "/static/website-optimized/hippocampus-growth-preview-902df8f42905.mp4",
+      "bytes": 66764,
+      "originalBytes": 4018765
+    },
+    "full": {
+      "src": "/static/website-optimized/hippocampus-growth-full-62f73e6ad7f6.mp4",
+      "bytes": 483712,
+      "originalBytes": 4018765
+    }
+  },
+  "/static/landing-v1/full-brain.mp4": {
+    "preview": {
+      "src": "/static/website-optimized/full-brain-preview-961f14feb0c9.mp4",
+      "bytes": 83201,
+      "originalBytes": 4988667
+    },
+    "full": {
+      "src": "/static/website-optimized/full-brain-full-7a868f3e46f5.mp4",
+      "bytes": 450836,
+      "originalBytes": 4988667
+    }
+  },
+  "/static/landing-v1/thalamus-growth.mp4": {
+    "preview": {
+      "src": "/static/website-optimized/thalamus-growth-preview-be5891174b7d.mp4",
+      "bytes": 66194,
+      "originalBytes": 3321039
+    },
+    "full": {
+      "src": "/static/website-optimized/thalamus-growth-full-fb58500956e7.mp4",
+      "bytes": 734172,
+      "originalBytes": 3321039
+    }
+  },
+  "/static/landing-v1/dendrite-ride.mp4": {
+    "preview": {
+      "src": "/static/website-optimized/dendrite-ride-preview-4f17b21f2978.mp4",
+      "bytes": 273977,
+      "originalBytes": 7919928
+    },
+    "full": {
+      "src": "/static/landing-v1/dendrite-ride.mp4",
+      "bytes": 7919928,
+      "originalBytes": 7919928
+    }
+  },
+  "/static/landing-v1/neocortex-growth.mp4": {
+    "preview": {
+      "src": "/static/website-optimized/neocortex-growth-preview-8b0f78e88a2b.mp4",
+      "bytes": 37160,
+      "originalBytes": 4555213
+    },
+    "full": {
+      "src": "/static/website-optimized/neocortex-growth-full-b6170e9104af.mp4",
+      "bytes": 471194,
+      "originalBytes": 4555213
+    }
+  },
+  "/images/start/walkthrough/virtual-labs.mp4": {
+    "chapter": {
+      "src": "/static/website-optimized/virtual-labs-chapter-9d6c3d216a8d.mp4",
+      "bytes": 2323132,
+      "originalBytes": 11303934
+    }
+  },
+  "/images/start/walkthrough/explore-data-models.mp4": {
+    "chapter": {
+      "src": "/static/website-optimized/explore-data-models-chapter-f4d523efa9b5.mp4",
+      "bytes": 2131363,
+      "originalBytes": 12788241
+    }
+  },
+  "/images/start/walkthrough/models-mosaic.mp4": {
+    "chapter": {
+      "src": "/static/website-optimized/models-mosaic-chapter-96bdbae5b067.mp4",
+      "bytes": 2348788,
+      "originalBytes": 9664413
+    }
+  },
+  "/images/start/walkthrough/simulation-configuration.mp4": {
+    "chapter": {
+      "src": "/static/website-optimized/simulation-configuration-chapter-d3b2dbf29df9.mp4",
+      "bytes": 260307,
+      "originalBytes": 4624406
+    }
+  },
+  "/images/start/walkthrough/notebooks.mp4": {
+    "chapter": {
+      "src": "/static/website-optimized/notebooks-chapter-d419e0169e4b.mp4",
+      "bytes": 607837,
+      "originalBytes": 9728191
+    }
+  },
+  "/images/start/walkthrough/education.mp4": {
+    "chapter": {
+      "src": "/static/website-optimized/education-chapter-c290e9c60cf3.mp4",
+      "bytes": 1259046,
+      "originalBytes": 10378616
+    }
+  },
+  "/images/start/walkthrough/get-started-mosaic.mp4": {
+    "chapter": {
+      "src": "/static/website-optimized/get-started-mosaic-chapter-7ffe9d06d0f8.mp4",
+      "bytes": 1314089,
+      "originalBytes": 9169475
+    }
+  },
+  "/static/landing-v1/fly-brain.jpg": {
+    "poster": {
+      "src": "/static/website-optimized/fly-brain-f85bd19282e0.webp",
+      "bytes": 81730,
+      "originalBytes": 94070
+    }
+  },
+  "/static/landing-v1/microcircuits.jpg": {
+    "poster": {
+      "src": "/static/website-optimized/microcircuits-3da30894a032.webp",
+      "bytes": 38870,
+      "originalBytes": 59139
+    }
+  },
+  "/static/landing-v1/somatosensory.jpg": {
+    "poster": {
+      "src": "/static/website-optimized/somatosensory-570628759cb6.webp",
+      "bytes": 33420,
+      "originalBytes": 54173
+    }
+  },
+  "/static/landing-v1/hippocampus-growth.jpg": {
+    "poster": {
+      "src": "/static/website-optimized/hippocampus-growth-f26902fb898b.webp",
+      "bytes": 24130,
+      "originalBytes": 41880
+    }
+  },
+  "/static/landing-v1/full-brain.jpg": {
+    "poster": {
+      "src": "/static/website-optimized/full-brain-d4d59b9099b4.webp",
+      "bytes": 21446,
+      "originalBytes": 40940
+    }
+  },
+  "/static/landing-v1/thalamus-growth.jpg": {
+    "poster": {
+      "src": "/static/website-optimized/thalamus-growth-81d75abbf8bb.webp",
+      "bytes": 24428,
+      "originalBytes": 40419
+    }
+  },
+  "/static/landing-v1/dendrite-ride.jpg": {
+    "poster": {
+      "src": "/static/website-optimized/dendrite-ride-9ee39c39073f.webp",
+      "bytes": 37552,
+      "originalBytes": 52836
+    }
+  },
+  "/static/landing-v1/neocortex-growth.jpg": {
+    "poster": {
+      "src": "/static/website-optimized/neocortex-growth-38516a5b8e6d.webp",
+      "bytes": 23190,
+      "originalBytes": 40168
+    }
+  },
+  "/images/start/walkthrough/virtual-labs.jpg": {
+    "poster": {
+      "src": "/static/website-optimized/virtual-labs-3b25908f778f.webp",
+      "bytes": 257902,
+      "originalBytes": 395548
+    }
+  },
+  "/images/start/walkthrough/explore-data-models.jpg": {
+    "poster": {
+      "src": "/static/website-optimized/explore-data-models-2815d753bd22.webp",
+      "bytes": 242840,
+      "originalBytes": 396914
+    }
+  },
+  "/images/start/walkthrough/models-mosaic.jpg": {
+    "poster": {
+      "src": "/static/website-optimized/models-mosaic-d9c85f38522e.webp",
+      "bytes": 254280,
+      "originalBytes": 355437
+    }
+  },
+  "/images/start/walkthrough/simulation-configuration.jpg": {
+    "poster": {
+      "src": "/static/website-optimized/simulation-configuration-32f6c1efd959.webp",
+      "bytes": 105290,
+      "originalBytes": 216339
+    }
+  },
+  "/images/start/walkthrough/notebooks.jpg": {
+    "poster": {
+      "src": "/static/website-optimized/notebooks-5e96a98be846.webp",
+      "bytes": 71086,
+      "originalBytes": 151635
+    }
+  },
+  "/images/start/walkthrough/education-poster.jpg": {
+    "poster": {
+      "src": "/static/website-optimized/education-poster-f43718b286c6.webp",
+      "bytes": 70044,
+      "originalBytes": 156489
+    }
+  },
+  "/images/start/walkthrough/get-started-mosaic.jpg": {
+    "poster": {
+      "src": "/static/website-optimized/get-started-mosaic-f45e737b5ee3.webp",
+      "bytes": 143342,
+      "originalBytes": 224377
+    }
+  }
+}

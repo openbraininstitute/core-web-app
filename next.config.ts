@@ -130,6 +130,10 @@ const config: NextConfig = {
         source: '/static/website-media/:path*',
         headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
+      {
+        source: '/static/website-optimized/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
       { source: '/', headers: cacheHeader },
       // Single-segment public landing pages (excluding `/app/*` and `/api/*`).
       // `[^/]+` keeps the match to one segment so nested routes don't pick this up.

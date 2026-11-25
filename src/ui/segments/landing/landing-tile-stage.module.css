@@ -2,6 +2,7 @@
   position: absolute;
   inset: 0;
   overflow: hidden;
+  container-type: size;
   /* white on white, the tiles told apart by their shadows alone */
   background: #fff;
   font-family: var(--font-info-titillium), Arial, sans-serif;
@@ -10,6 +11,10 @@
 .stage {
   /* In thirds: the words, the examples (the field is in the stage's own px), the chosen one. */
   --field-shift: 0px;
+  /* Dimensionless fit available at first paint, before React/ResizeObserver. */
+  --stage-scale: min(tan(atan2(100cqw, 1920px)), tan(atan2(100cqh, 1080px)));
+  left: calc((100cqw / var(--stage-scale) - 1920px) / 2);
+  top: calc((100cqh / var(--stage-scale) - 1080px) / 2);
   /* the logo over the words in the left third, the way in under them, all together (382 px tall) centred down the page */
   --words-left: 150px;
   --words-top: 349px;
@@ -285,6 +290,8 @@
   /* Keep the invitation above a compact model and tile field. */
   .stage {
     --canvas-top: 180px;
+    left: 0;
+    top: 0;
     --mobile-title-size: 28px;
     --words-at: 12px;
     position: relative;

@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from 'react';
 
+import { optimizedMedia } from '@/ui/segments/landing/optimized-media';
+
 import styles from './get-started.module.css';
 
 /** The latest platform overview mosaic, supplied for the closing chapter. */
@@ -34,8 +36,8 @@ export function GetStartedBrain({ near = true }: { near?: boolean }) {
     <div data-chapter-media className={styles.brainArtwork}>
       <video
         ref={videoRef}
-        src={near ? '/images/start/walkthrough/get-started-mosaic.mp4?v=8d932eff' : undefined}
-        poster="/images/start/walkthrough/get-started-mosaic.jpg?v=8d932eff"
+        src={near ? optimizedMedia('/images/start/walkthrough/get-started-mosaic.mp4') : undefined}
+        poster={optimizedMedia('/images/start/walkthrough/get-started-mosaic.jpg', 'poster')}
         muted
         loop
         playsInline

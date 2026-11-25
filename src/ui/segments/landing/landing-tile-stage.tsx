@@ -108,18 +108,10 @@ export function LandingTileStage({
     composition.style.setProperty('--phone-stage-h', String(stageH));
     const resize = new ResizeObserver(() => {
       const { width, height } = container.getBoundingClientRect();
-      // Fit the mobile artwork below the invitation.
-      const scale = phone
-        ? Math.min(width / 1000, (height - PHONE_COPY_HEIGHT) / stageH)
-        : Math.min(width / 1920, height / 1080);
-      composition.style.setProperty('--stage-scale', String(scale));
-      if (!phone) {
-        // in the stage's own px, which its zoom scales
-        composition.style.left = `${(width - 1920 * scale) / 2 / scale}px`;
-        composition.style.top = `${(height - 1080 * scale) / 2 / scale}px`;
-      } else {
-        composition.style.left = '0px';
-        composition.style.top = '0px';
+      // Desktop fitting is CSS-only so the first painted composition never jumps.
+      if (phone) {
+        const scale = Math.min(width / 1000, (height - PHONE_COPY_HEIGHT) / stageH);
+        composition.style.setProperty('--stage-scale', String(scale));
       }
       window.dispatchEvent(new Event(LANDING_LAID_OUT));
     });
