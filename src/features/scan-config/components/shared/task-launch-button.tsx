@@ -5,6 +5,13 @@ import { classNames } from '@/util/utils';
 /** The launch button's green, which the configuration's generate buttons share. */
 export const LAUNCH_GREEN = 'bg-[linear-gradient(94.93deg,#389E0D_18.84%,#143805_116.7%)]';
 
+/**
+ * A generate button that can be clicked: a soft shadow in the launch green's dark end, and a
+ * slight grow under the pointer.
+ */
+export const GENERATE_CLICKABLE =
+  'shadow-[0_3px_8px_-1px_rgb(20_56_5/0.3)] transition-[scale] duration-200 ease-out motion-safe:hover:scale-[1.02]';
+
 type Props = {
   label: string;
   countLabel?: string;

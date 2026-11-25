@@ -10,8 +10,10 @@ import { useState } from 'react';
 import { useAppNotification } from '@/components/notification';
 import { isLegacyMigratedEmodel } from '@/entity-configuration/domain/optimization/legacy-migrated-emodels';
 import { useFlags } from '@/features/feature-flags';
-import { GENERATE_CLICKABLE } from '@/features/scan-config/components/generate-config-button';
-import { LAUNCH_GREEN } from '@/features/scan-config/components/shared/task-launch-button';
+import {
+  GENERATE_CLICKABLE,
+  LAUNCH_GREEN,
+} from '@/features/scan-config/components/shared/task-launch-button';
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import { ScanConfigActivity } from '@/features/scan-config/types';
 import { messages } from '@/i18n/en/scan-config';

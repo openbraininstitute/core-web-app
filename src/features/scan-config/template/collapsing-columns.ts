@@ -10,7 +10,7 @@ export interface IColumnsLayout {
   /** Px, 0 while shut. */
   left: number;
   middle: number;
-  /** Which have shut into the one bar: the middle one alone, then both together. */
+  /** Which have shut: the middle one alone, leaving nothing, then both, into the one bar. */
   shut: 'none' | 'middle' | 'both';
 }
 
@@ -18,8 +18,8 @@ export interface IColumnsLayout {
  * Where the preview's left edge is dragged to, `x` from the columns' left, as the two columns
  * before it. The edge goes no further right than the middle of the width, where it begins, so
  * the preview never has less than half of it. Dragged left, the middle column narrows to its
- * floor and, past half of that, shuts into a bar; the left one then narrows the same way and,
- * past half of its floor, shuts into that bar too, leaving the preview the rest. `left` is the
+ * floor and, past half of that, shuts; the left one then narrows the same way and, past half of
+ * its floor, shuts too, both into one bar, leaving the preview the rest. `left` is the
  * left column's width while there is room for it, its share of the width until a drag.
  */
 export function columnsAt(x: number, width: number, left: number): IColumnsLayout {
@@ -27,18 +27,15 @@ export function columnsAt(x: number, width: number, left: number): IColumnsLayou
   if (at >= left + FLOORS.middle / 2) {
     return { left, middle: Math.max(FLOORS.middle, at - left), shut: 'none' };
   }
-  const room = at - SHUT_BAR_SIZE;
-  if (room >= FLOORS.left / 2) {
-    return { left: Math.min(left, Math.max(FLOORS.left, room)), middle: 0, shut: 'middle' };
+  if (at >= FLOORS.left / 2) {
+    return { left: Math.min(left, Math.max(FLOORS.left, at)), middle: 0, shut: 'middle' };
   }
   return { left: 0, middle: 0, shut: 'both' };
 }
 
-/** The grid's columns for a layout: the open ones, the bar for those shut, and the preview. */
+/** The grid's columns for a layout: the open ones, the bar where both are shut, and the preview. */
 export function columnsTemplate({ left, middle, shut }: IColumnsLayout): string {
-  const bar = `${SHUT_BAR_SIZE}px`;
-  if (shut === 'both') return `${bar} minmax(0,1fr)`;
-  if (shut === 'middle') return `${left}px ${bar} minmax(0,1fr)`;
+  if (shut === 'both') return `${SHUT_BAR_SIZE}px minmax(0,1fr)`;
   return `${left}px ${middle}px minmax(0,1fr)`;
 }
 

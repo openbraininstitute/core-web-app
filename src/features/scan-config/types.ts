@@ -177,6 +177,7 @@ export const ScanConfigUIElementDict = {
   // blocks
   BlockUnion: 'block_union',
   BlockSingle: 'block_single',
+  BlockInfo: 'block_info',
   BlockDictionary: 'block_dictionary',
   // components
   StringInput: 'string_input',
@@ -809,9 +810,21 @@ export type TBlock = {
 };
 
 export interface IBlockSingle extends TRootElement, TBlock {
-  ui_element: typeof ScanConfigUIElementDict.BlockSingle;
+  /**
+   * `block_info`, the campaign's name and description, is laid out and edited as a `block_single`.
+   * Its values are not needed while the config is edited: they are asked for as it is generated.
+   */
+  ui_element: typeof ScanConfigUIElementDict.BlockSingle | typeof ScanConfigUIElementDict.BlockInfo;
   additionalProperties: false;
   required?: string[];
+}
+
+/** Whether a root element holds one block with a form of its own: a `block_single` or a `block_info`. */
+export function isSingleBlockElement(element: { ui_element?: string }): element is IBlockSingle {
+  return (
+    element.ui_element === ScanConfigUIElementDict.BlockSingle ||
+    element.ui_element === ScanConfigUIElementDict.BlockInfo
+  );
 }
 
 export interface IBlockDictionary extends TRootElement {

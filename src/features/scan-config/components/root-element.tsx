@@ -1,5 +1,6 @@
 import { WarningFilled } from '@ant-design/icons';
 import { useSetAtom } from 'jotai';
+import { useEffect, useRef } from 'react';
 
 import BlockDictionaryEntries from '@/features/scan-config/components/block-dictionary-entries';
 import { Chevron, CountBadge, LeftMenuTab } from '@/features/scan-config/components/components';
@@ -17,6 +18,7 @@ import {
   type IBlockSingle,
   type IEModelOptimisationParameters,
   type IRootBlockUnion,
+  isSingleBlockElement,
   isType,
   ScanConfigUIElementDict,
   type TBlock,
@@ -31,6 +33,54 @@ import type { ErrorObject } from 'ajv';
 import type React from 'react';
 
 import styles from './root-element.module.css';
+
+/** The nearest ancestor that scrolls up and down. */
+function scrollParent(element: HTMLElement): HTMLElement | null {
+  for (let at = element.parentElement; at; at = at.parentElement) {
+    if (/auto|scroll/.test(getComputedStyle(at).overflowY)) return at;
+  }
+  return null;
+}
+
+/** Room left under a dictionary scrolled into view, px. */
+const REVEAL_GAP = 8;
+/** How long a dictionary is followed as it opens: its 0.3 s unfolding and some slack, ms. */
+const REVEAL_FOLLOW = 600;
+
+/** Scrolls the list with a dictionary the user opens, as far as keeps the dictionary's own row. */
+function useRevealOnOpen(isExpanded: boolean) {
+  const ref = useRef<HTMLDivElement>(null);
+  const asked = useRef(false);
+
+  useEffect(() => {
+    if (!isExpanded || !asked.current) return;
+    asked.current = false;
+    const element = ref.current;
+    const scroller = element && scrollParent(element);
+    if (!element || !scroller) return;
+
+    const reveal = () => {
+      const view = scroller.getBoundingClientRect();
+      const box = element.getBoundingClientRect();
+      const hidden = box.bottom + REVEAL_GAP - view.bottom;
+      if (hidden > 0) scroller.scrollTop += Math.max(0, Math.min(hidden, box.top - view.top));
+    };
+    const observer = new ResizeObserver(reveal);
+    observer.observe(element);
+    const stop = window.setTimeout(() => observer.disconnect(), REVEAL_FOLLOW);
+    return () => {
+      observer.disconnect();
+      window.clearTimeout(stop);
+    };
+  }, [isExpanded]);
+
+  return {
+    ref,
+    revealOnOpen: () => {
+      asked.current = true;
+    },
+  };
+}
 
 export function RootElement({
   schema,
@@ -54,6 +104,7 @@ export function RootElement({
   setIsEditingKey,
   selectedMechanismsTab,
   setSelectedMechanismsTab,
+  formShown = false,
 }: {
   schema: ConfigSchema | null; // The global schema
   rootElement: string;
@@ -80,11 +131,18 @@ export function RootElement({
   setIsEditingKey: (k: boolean) => void;
   selectedMechanismsTab: string;
   setSelectedMechanismsTab: (tab: string) => void;
+  /**
+   * Whether the form column is showing a form at the moment: a block picked can be picked with
+   * its form folded away, and a click on it then opens the form where it would otherwise put the
+   * block away.
+   */
+  formShown?: boolean;
 }) {
   const { isChatReady } = useAIConfig();
   const setExpandedRootElements = useSetAtom(expandedRootElementsAtom);
   const { highlights, hasHighlights, isExpanded, diffClass } = useRootElementDiff(rootElement);
   const hasFieldErrors = useFieldErrorsForPath(rootElement);
+  const { ref, revealOnOpen } = useRevealOnOpen(isExpanded);
   const isSelected = selectedRootElement === rootElement;
   const isBlockDictionary =
     rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary;
@@ -98,6 +156,13 @@ export function RootElement({
 
   if (!schema?.properties) return;
 
+  /** Folds the form away and leaves nothing picked: no block, and no dictionary lit for one. */
+  const putAway = () => {
+    setSelectedRootElement('');
+    setSelectedEntry('');
+    setEditing(false);
+  };
+
   const handleEntryClick = (subkey: string) => {
     setSelectedRootElement(rootElement); // Select the parent block
     setSelectedEntry(subkey);
@@ -107,7 +172,7 @@ export function RootElement({
   };
 
   return (
-    <div className="w-full flex flex-col gap-0.5">
+    <div ref={ref} className="w-full flex flex-col gap-0.5">
       <Tooltip>
         <TooltipTrigger asChild>
           <span>
@@ -132,29 +197,35 @@ export function RootElement({
                   !isRootBlock(schema, rootElement) &&
                   rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion;
 
-                // BlockDictionary: always toggle expand/collapse on click,
-                // regardless of whether this root element is currently selected.
+                // BlockDictionary: a click only opens or shuts it, whichever block is picked.
                 if (isDictionary) {
-                  // The block picked stays picked, its form open, as its own dictionary opens or shuts.
-                  if (!holdsSelected) {
-                    setSelectedRootElement(rootElement);
-                    setSelectedEntry('');
-                    setEditing(false);
-                  }
-
                   if (isExpanded) {
+                    // Shut, it takes the form with it where the form is one of its own: that
+                    // of a block picked in it, or its kinds of block to add. Another block's
+                    // form is left as it is, and that block picked.
+                    if (isSelected) putAway();
                     setExpandedRootElements((prev) => {
                       const newSet = new Set(prev);
                       newSet.delete(rootElement);
                       return newSet;
                     });
                   } else {
+                    // Opened, it only shows its blocks: the block picked and its form stay as
+                    // they are.
+                    revealOnOpen();
                     setExpandedRootElements((prev) => {
                       const newSet = new Set(prev);
                       newSet.add(rootElement);
                       return newSet;
                     });
                   }
+                  return;
+                }
+
+                // What is left has a form of its own. Clicked again while that form is
+                // showing, the block is put away.
+                if (isSelected && formShown) {
+                  putAway();
                   return;
                 }
 
@@ -169,7 +240,7 @@ export function RootElement({
                 setSelectedEntry('');
 
                 if (
-                  rootElementSchema.ui_element === ScanConfigUIElementDict.BlockSingle ||
+                  isSingleBlockElement(rootElementSchema) ||
                   rootElementSchema.ui_element === ScanConfigUIElementDict.BlockUnion
                 )
                   setEditing(true);
