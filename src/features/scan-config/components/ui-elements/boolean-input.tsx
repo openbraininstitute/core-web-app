@@ -9,7 +9,7 @@ import { cn } from '@/utils/css-class';
 import type { CheckboxChangeEvent } from 'antd/es/checkbox';
 
 export interface BooleanInputProps {
-  fieldKey: string;
+  id?: string;
   value: boolean | null;
   onChange: (value: boolean) => void;
   disabled?: boolean;
@@ -32,13 +32,13 @@ export interface BooleanInputProps {
  * }
  */
 export default function BooleanInput({
-  fieldKey,
+  id,
   value,
   onChange,
   disabled = false,
   ariaLabel,
 }: BooleanInputProps) {
-  const id = useId();
+  const instanceKey = useId();
 
   // Normalize null to false for the checkbox component
   const normalizedValue = value === true;
@@ -54,8 +54,8 @@ export default function BooleanInput({
     <span data-scan-config-block-element={ScanConfigUIElementDict.BooleanInput} className="ml-4">
       <Checkbox
         data-testid="scan-config-control"
-        key={id}
-        id={fieldKey}
+        key={instanceKey}
+        id={id}
         checked={normalizedValue}
         onChange={handleChange}
         disabled={disabled}

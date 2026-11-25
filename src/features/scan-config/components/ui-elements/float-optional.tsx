@@ -23,6 +23,7 @@ export function FloatOptional({
   exclusiveMax,
   onChange,
   disabled,
+  id,
 }: {
   value: number | null;
   min: number | undefined;
@@ -31,6 +32,7 @@ export function FloatOptional({
   exclusiveMax: number | undefined;
   onChange: (value: number | null) => void;
   disabled: boolean;
+  id?: string;
 }) {
   const errorMessage = (() => {
     if (isNil(value)) return undefined;
@@ -52,6 +54,7 @@ export function FloatOptional({
       data-scan-config-block-element={ScanConfigUIElementDict.FloatOptional}
     >
       <InputNumber
+        id={id}
         data-testid="scan-config-optional-value"
         controls={false}
         disabled={disabled}
