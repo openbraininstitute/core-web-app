@@ -1,12 +1,9 @@
 import Ajv, { type AnySchema, type ErrorObject } from 'ajv';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 
-import { entryNames } from '@/features/scan-config/commands';
-import { nextEntryName } from '@/features/scan-config/components/hooks/entry-name';
 import { log } from '@/utils/logger';
 
-import type { IScanConfigStore } from '@/features/scan-config/store';
-import type { Config, ConfigSchema, TBlock } from '@/features/scan-config/types';
+import type { Config } from '@/features/scan-config/types';
 
 export { nextEntryName } from '@/features/scan-config/components/hooks/entry-name';
 
@@ -57,40 +54,4 @@ export function useConfigValidator({
   }
 
   return validate;
-}
-
-/** Picks the name of a new entry from the latest config; names picked in a row stay distinct. */
-export function useReserveEntryName({
-  store,
-  schema,
-}: {
-  store: IScanConfigStore;
-  schema: ConfigSchema;
-}) {
-  const picked = useRef(new Set<string>());
-
-  useEffect(
-    () =>
-      store.subscribe(() => {
-        if (picked.current.size === 0) return;
-        const names = entryNames(store.getSnapshot(), schema);
-        for (const name of picked.current) if (names.has(name)) picked.current.delete(name);
-      }),
-    [store, schema]
-  );
-
-  return useCallback(
-    (rootElement: string, block?: TBlock) => {
-      const names = entryNames(store.getSnapshot(), schema);
-      const name = nextEntryName(
-        schema,
-        rootElement,
-        new Set([...names, ...picked.current]),
-        block
-      );
-      picked.current.add(name);
-      return name;
-    },
-    [store, schema]
-  );
 }

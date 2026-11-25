@@ -1,3 +1,4 @@
+import { nextEntryName } from '@/features/scan-config/components/hooks/entry-name';
 import {
   RewriteBlockReferencesModeDict,
   rewriteBlockReferences,
@@ -8,21 +9,24 @@ import {
 } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import { clearDeletedBlockReferences } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/state';
 import { isPlainObject } from '@/features/scan-config/components/utils';
-import { ScanConfigUIElementDict } from '@/features/scan-config/types';
+import { isRootBlock } from '@/features/scan-config/types';
 
-import type { Config, ConfigSchema } from '@/features/scan-config/types';
+import type {
+  Config,
+  ConfigSchema,
+  ConfigValue,
+  TBlock,
+  TConfigSchemaProperties,
+} from '@/features/scan-config/types';
 
-type TSchema = Pick<ConfigSchema, 'properties'>;
+/** Its references are cleared to `null` by the schema-aware pass, and never by the generic walk. */
+const INITIALIZE_SECTION = 'initialize';
 
-function isSingleBlock(schema: TSchema, section: string) {
-  return schema.properties?.[section]?.ui_element === ScanConfigUIElementDict.BlockSingle;
-}
-
-export function entryNames(config: Config, schema: TSchema): Set<string> {
+export function entryNames(config: Config, schema: TConfigSchemaProperties): Set<string> {
   const names = new Set<string>();
 
   for (const [section, entries] of Object.entries(config)) {
-    if (isSingleBlock(schema, section) || !isPlainObject(entries)) continue;
+    if (isRootBlock(schema, section) || !isPlainObject(entries)) continue;
     for (const name of Object.keys(entries)) names.add(name);
   }
 
@@ -32,7 +36,7 @@ export function entryNames(config: Config, schema: TSchema): Set<string> {
 /** Renames an entry and every reference to it; returns `config` itself when the rename is not allowed. */
 export function renameEntry(
   config: Config,
-  schema: TSchema,
+  schema: TConfigSchemaProperties,
   { dictionary, from, to }: { dictionary: string; from: string; to: string }
 ): Config {
   const section = config[dictionary];
@@ -60,7 +64,7 @@ export function renameEntry(
 /** Removes an entry and clears every reference to it; returns `config` itself when it does not exist. */
 export function deleteEntry(
   config: Config,
-  schema: TSchema,
+  schema: TConfigSchemaProperties,
   { dictionary, name }: { dictionary: string; name: string }
 ): Config {
   const section = config[dictionary];
@@ -68,14 +72,14 @@ export function deleteEntry(
 
   const { [name]: _removed, ...remaining } = section;
   const next = clearDeletedBlockReferences(
-    { ...config, [dictionary]: remaining },
+    structuredClone({ ...config, [dictionary]: remaining }),
     schema,
     dictionary,
     name
   );
 
-  for (const section of Object.values(next)) {
-    if (!isPlainObject(section)) continue;
+  for (const [key, section] of Object.entries(next)) {
+    if (key === INITIALIZE_SECTION || !isPlainObject(section)) continue;
     for (const field of Object.values(section)) {
       rewriteBlockReferences(
         field,
@@ -88,4 +92,25 @@ export function deleteEntry(
   return dictionary === DISTANCE_DISTRIBUTIONS_KEY
     ? remapParameterDistributions(next, schema, name, null)
     : next;
+}
+
+/**
+ * Adds an entry to a dictionary under the next free name. `variant` is the block type picked for
+ * it, when its schema gives the name to start from.
+ */
+export function createEntry(
+  config: Config,
+  schema: ConfigSchema,
+  { dictionary, block, variant }: { dictionary: string; block: ConfigValue; variant?: TBlock }
+): { config: Config; name: string } {
+  const name = nextEntryName(schema, dictionary, entryNames(config, schema), variant);
+  const section = config[dictionary];
+
+  return {
+    name,
+    config: {
+      ...config,
+      [dictionary]: { ...(isPlainObject(section) ? section : {}), [name]: block },
+    },
+  };
 }

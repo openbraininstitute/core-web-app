@@ -3,12 +3,10 @@ import { useAtomValue } from 'jotai';
 
 import { useFlag } from '@/features/feature-flags';
 import { electrodeOverlaysFlag } from '@/features/feature-flags/flags';
-import { entryNames } from '@/features/scan-config/commands';
-import { nextEntryName } from '@/features/scan-config/components/hooks';
+import { createEntry } from '@/features/scan-config/commands';
 import { buildBlockDefaults } from '@/features/scan-config/components/hooks/block-defaults';
 import {
   getBlockUsabilityConfig,
-  isRootBlock,
   type TSchemaMappingConfiguration,
 } from '@/features/scan-config/components/hooks/schema';
 import { circuitSceneAnchorAtom } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
@@ -24,6 +22,7 @@ import { isPlainObject } from '@/features/scan-config/components/utils';
 import { resolveScanConfigEditingLocked } from '@/features/scan-config/hooks/use-config-editing-locked';
 import { useDiffPreview } from '@/features/scan-config/hooks/use-diff-preview-atom';
 import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
+import { isRootBlock } from '@/features/scan-config/types';
 import {
   BlockScopeProvider,
   useBlockProperty,
@@ -219,23 +218,16 @@ export default function BlockDictionary({
                         >)
                       : initial;
 
-                  const newEntry = nextEntryName(
-                    schema,
-                    selectedRootElement,
-                    entryNames(getConfig(), schema),
-                    o
-                  );
+                  const latest = getConfig();
+                  if (!isPlainObject(latest[selectedRootElement])) return;
 
-                  setSelectedEntry(newEntry);
-
-                  setConfig((previous) => {
-                    const dictionary = previous[selectedRootElement];
-                    if (!isPlainObject(dictionary)) return previous;
-                    return {
-                      ...previous,
-                      [selectedRootElement]: { ...dictionary, [newEntry]: seededInitial },
-                    };
+                  const created = createEntry(latest, schema, {
+                    dictionary: selectedRootElement,
+                    block: seededInitial,
+                    variant: o,
                   });
+                  setSelectedEntry(created.name);
+                  setConfig(created.config);
                 }}
                 data-scan-config-block-element-item={`${blockDictionarySchema.ui_element}_item`}
               >

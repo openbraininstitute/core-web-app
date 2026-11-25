@@ -80,7 +80,6 @@ import type { PopulationsControls } from '@/features/scan-config/components/colo
 import type { TElectrodeArrayEntity } from '@/features/scan-config/components/model-preview/use-electrode-overlays';
 
 const NOTHING_HIDDEN: readonly string[] = [];
-/** The form's root element its neuron sets are in. */
 const MIN_TABLE_HEIGHT = 280;
 const DEFAULT_TABLE_HEIGHT_RATIO = 0.4;
 

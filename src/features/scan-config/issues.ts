@@ -4,10 +4,7 @@ import { get } from 'es-toolkit/compat';
 import { isAtOrBelow } from '@/features/scan-config/store';
 
 import type { ErrorObject } from 'ajv';
-import type { Config } from '@/features/scan-config/types';
-
-/** One issue of the form at a field (`/section/field`, `/section/entry/field`) or at an entry. */
-export type TFieldIssue = { path: string; message: string };
+import type { Config, TFieldIssue } from '@/features/scan-config/types';
 
 const REQUIRED = 'Required';
 const VARIANT_REJECTED = /^(.*\/(?:oneOf|anyOf)\/\d+)\/properties\/[^/]+\/const$/;

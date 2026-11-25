@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { SectionType } from '@/features/circuit-viewer/section-type';
 
+import type { ErrorObject } from 'ajv';
 import type {
   ICellMorphology,
   ICircuit,
@@ -233,6 +234,42 @@ export const CIRCUIT_NEURONAL_MANIPULATION_SOURCE_FIELD = 'neuron_set';
 
 /** The root section that holds the neuron sets. */
 export const NEURON_SETS_SECTION = 'neuron_sets';
+
+/** The part of the schema that the config commands read. */
+export type TConfigSchemaProperties = Pick<ConfigSchema, 'properties'>;
+
+export type TConfigUpdate = Config | ((previous: Config) => Config);
+
+export interface IScanConfigStore {
+  getSnapshot: () => Config;
+  subscribe: (listener: () => void) => () => void;
+  /** An updater runs on the latest config, so updates made in a row never overwrite each other. */
+  set: (update: TConfigUpdate) => void;
+}
+
+/** The schema errors of the config, or `null` when it is valid. */
+export type TConfigErrors = ErrorObject[] | null;
+
+/** The name and block type of one entry of a section. */
+export type TEntrySummary = { name: string; type: string | undefined };
+
+/** The issues that fields report themselves, by path (`/section/entry/field`). */
+export interface IReportedIssues {
+  getSnapshot: () => ReadonlyMap<string, string>;
+  subscribe: (listener: () => void) => () => void;
+  /** Sets the message of a path, or removes the path when there is no message. */
+  report: (path: string, message: string | undefined) => void;
+}
+
+/** One issue of the form at a field (`/section/field`, `/section/entry/field`) or at an entry. */
+export type TFieldIssue = { path: string; message: string };
+
+/** Every issue of the form: the schema errors, per field too, and the issues that fields report. */
+export interface IScanConfigIssues {
+  getErrors: () => TConfigErrors;
+  getFieldIssues: () => TFieldIssue[];
+  reported: IReportedIssues;
+}
 
 const CircuitNeuronalManipulationTypes: ReadonlySet<string> = new Set([
   NeuronalManipulationTypeDict.CircuitByNeuron,
@@ -850,6 +887,11 @@ type Type = {
 
 export function isType(v: TRootElement | Type | TBlockElement): v is Type {
   return 'const' in v;
+}
+
+/** Whether a root section is one block (`block_single`), not a dictionary of entries or a union. */
+export function isRootBlock(schema: TConfigSchemaProperties, key: string): boolean {
+  return schema.properties?.[key]?.ui_element === ScanConfigUIElementDict.BlockSingle;
 }
 
 export const ActivityCustomFileRenderer = {
