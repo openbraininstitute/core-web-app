@@ -376,7 +376,8 @@ export const SUBTYPE_OPTIONS = Object.values(AccountingSubtype).map((value) => (
 const FREE_ABOVE: TTierValues = { to: null, fixed_cost: '0', multiplier: '0' };
 
 // The form's last row is always open: a closed last tier gets a free one after it, as stored.
-function tierValues(tiers: TPriceTier[], type: TChargeType): TTierValues[] {
+function tierValues(stored: TPriceTier[], type: TChargeType): TTierValues[] {
+  const tiers = stored.filter(({ min_quantity: min, max_quantity: max }) => max !== min);
   const values = tiers.map(({ max_quantity: max, fixed_cost: fixed, multiplier }) => ({
     to: max,
     fixed_cost: plainDecimal(fixed),
@@ -430,8 +431,8 @@ function scaled(value: string) {
 export function tierCost(tiers: TPriceTier[], quantity: bigint) {
   const total = tiers.reduce((sum, { min_quantity: min, max_quantity: max, ...tier }) => {
     const start = BigInt(min);
-    if (quantity <= start) return sum;
     const end = max === null || BigInt(max) > quantity ? quantity : BigInt(max);
+    if (end <= start) return sum;
     return sum + scaled(tier.fixed_cost) + scaled(tier.multiplier) * (end - start);
   }, BigInt(0));
   const cent = tenTo(COST_SCALE - 2);
@@ -495,10 +496,15 @@ export const priceKey = ({
 export const priceAt = (prices: TPrice[], at: Date, except?: number) =>
   prices.find((price) => price.id !== except && windowStatus(price, at) === WindowStatus.Active);
 
-export function checkPriceAfter(lists: TPrice[][], end: string | null, except?: number) {
+export function checkPriceAfter(
+  lists: TPrice[][],
+  end: string | null,
+  except?: number,
+  advice = 'Add the next price first.'
+) {
   if (!end || lists.some((prices) => priceAt(prices, new Date(end), except))) return;
   throw new ApiError(
-    `No other price would apply from ${formatDateTime(end)}, so jobs of this subtype couldn't start. Add the next price first.`,
+    `No other price would apply from ${formatDateTime(end)}, so jobs of this subtype couldn't start. ${advice}`,
     { status: 400 }
   );
 }
@@ -529,6 +535,8 @@ export const editMoves = (price: TPrice, next: TPriceBody) => ({
   endMoved: !sameInstant(next.valid_to, price.valid_to),
 });
 
+const KEEP_START = 'Keep the earlier start, or add a price for that time first.';
+
 /** A scheduled price's edit: a later start mustn't open a gap, nor a new end leave none after it. */
 export function checkPriceEdit({ lists, truncated }: TPriceLists, price: TPrice, next: TPriceBody) {
   const { later, endMoved } = editMoves(price, next);
@@ -541,7 +549,7 @@ export function checkPriceEdit({ lists, truncated }: TPriceLists, price: TPrice,
   const justBefore = new Date(Date.parse(price.valid_from) - 1);
   if (later && lists.some((prices) => priceAt(prices, justBefore, price.id))) {
     for (const at of lapsesBetween(lists, price.valid_from, next.valid_from)) {
-      checkPriceAfter(lists, at, price.id);
+      checkPriceAfter(lists, at, price.id, KEEP_START);
     }
   }
   if (endMoved) checkPriceEnd(lists, price, next.valid_to);

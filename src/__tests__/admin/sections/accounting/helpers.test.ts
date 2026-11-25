@@ -307,6 +307,11 @@ describe('tierCost', () => {
     );
   });
 
+  it('charges nothing for a zero-width tier, as accounting skips it', () => {
+    const zeroWidth = [tier(0, 10, '0.1'), tier(10, 10, '0', '5'), tier(10, null, '0.05')];
+    expect(tierCost(zeroWidth, BigInt(100))).toBe('5.50');
+  });
+
   it('rounds half to even to cents, as accounting prints them', () => {
     expect(tierCost([tier(0, null, '0.005')], BigInt(1))).toBe('0.00');
     expect(tierCost([tier(0, null, '0.015')], BigInt(1))).toBe('0.02');
@@ -365,7 +370,7 @@ describe('checkPriceEdit', () => {
         ...scheduled,
         valid_from: at(2),
       })
-    ).toThrow(/No other price would apply/);
+    ).toThrow(/No other price would apply.*Keep the earlier start/);
   });
 
   it('refuses an earlier end when the price that would follow lapses before the old end', () => {
@@ -453,6 +458,24 @@ describe('price form values', () => {
     expect(body.tiers).toEqual([tier(0, 100, '0.1', '2'), tier(100, null, '0', '0')]);
     expect(PriceBody.safeParse(body).error?.issues).toBeUndefined();
     expect(tierCost(body.tiers, BigInt(500))).toEqual(tierCost(closed.tiers, BigInt(500)));
+  });
+
+  it('leaves out a zero-width tier, so it saves unchanged at the same costs', () => {
+    const zeroWidth: TPrice = {
+      ...PRICE,
+      valid_from: '2030-01-01T00:00:00Z',
+      tiers: [tier(0, 10, '0.1'), tier(10, 10, '0', '5'), tier(10, null, '0.05')],
+    };
+
+    const body = priceBody(priceValues(zeroWidth), null);
+
+    expect(body.tiers).toEqual([tier(0, 10, '0.1'), tier(10, null, '0.05')]);
+    expect(PriceBody.safeParse(body).error?.issues).toBeUndefined();
+    for (const quantity of [5, 10, 100]) {
+      expect(tierCost(body.tiers, BigInt(quantity))).toBe(
+        tierCost(zeroWidth.tiers, BigInt(quantity))
+      );
+    }
   });
 
   it('loads a storage price with the one tier accounting charges, so it saves unchanged', () => {
