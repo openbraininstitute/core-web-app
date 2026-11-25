@@ -17,8 +17,15 @@
   top: calc((100cqh / var(--stage-scale) - 1080px) / 2);
   /* the logo over the words in the left third, the way in under them, all together (382 px tall) centred down the page */
   --words-left: 150px;
-  --words-top: 349px;
+  /* the slogan, "Try it now" and "Start free" centred on one upright line, as a group level with the central tile
+     (its middle 540): its 270 px from the slogan's top to the free offer's foot centred on 540 */
+  --words-axis: 298px;
+  --words-top: 249px;
   --logo-h: 120px;
+  /* the logo over the slogan, on its line (--words-axis) but 10 px left of centre (user): 110 tall, 342 wide, 30 above the slogan's top */
+  --logo-at-h: 110px;
+  --logo-left: 117px;
+  --logo-top: 265px;
   --line-h: 50px;
   position: absolute;
   width: 1920px;
@@ -58,10 +65,10 @@
 .logoAt {
   position: absolute;
   /* (at this height the logo is 373 px wide) */
-  left: var(--words-left);
-  top: var(--words-top);
+  left: var(--logo-left);
+  top: var(--logo-top);
   width: 1px;
-  height: var(--logo-h);
+  height: var(--logo-at-h);
   pointer-events: none;
 }
 .headline {
@@ -76,17 +83,19 @@
 }
 .headline span {
   position: absolute;
+  width: 600px;
+  text-align: center;
   white-space: nowrap;
   animation: enter 800ms both;
 }
 /* in at once, as the logo is (and as the page's first HTML has them: landing-first-paint.module.css) */
 .headline span:nth-child(1) {
-  left: var(--words-left);
+  left: calc(var(--words-axis) - 300px);
   top: calc(var(--words-top) + var(--logo-h) + 36px);
   animation-delay: 0ms;
 }
 .headline span:nth-child(2) {
-  left: var(--words-left);
+  left: calc(var(--words-axis) - 300px);
   top: calc(var(--words-top) + var(--logo-h) + 36px + var(--line-h));
   animation-delay: 150ms;
 }
@@ -95,7 +104,7 @@
   animation: none;
 }
 .headline span:nth-child(3) {
-  left: var(--words-left);
+  left: calc(var(--words-axis) - 300px);
   top: calc(var(--words-top) + var(--logo-h) + 36px + 2 * var(--line-h));
   animation-delay: 400ms;
 }
@@ -103,10 +112,11 @@
 .actionRow {
   display: flex;
   position: absolute;
-  left: var(--words-left);
+  left: calc(var(--words-axis) - 300px);
+  width: 600px;
   top: calc(var(--words-top) + var(--logo-h) + 36px + 2 * var(--line-h) + 38px);
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 30px;
   z-index: 3;
 }
@@ -131,6 +141,9 @@
 .ctaGroup {
   position: relative;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 .cta {
   composes: pill from "./cta-pill.module.css";
@@ -183,11 +196,12 @@
 .actionRow .label {
   display: none;
 }
-/* Centre the caption below the selected model at HERO_TILE.x = 1590. */
+/* The caption under the film, centred under it (HERO_TILE.x = 1595), level with the chapters along the foot
+   (--label-y: their words' middle, set by landing-tile-stage.tsx; the caption 52 px tall). */
 .heroLabels {
   position: absolute;
-  left: 1330px;
-  top: 825px;
+  left: 1335px;
+  top: calc(var(--label-y, 975px) - 26px);
   width: 520px;
   height: 60px;
   pointer-events: none;
@@ -470,5 +484,33 @@
     display: inline;
     margin: 0 6px 0 0;
     font-size: 11px;
+  }
+}
+
+/* Under the field, just over the chapters along the foot (their words' middle --label-y), in the middle of the
+   page as they are. */
+.tagline {
+  position: absolute;
+  left: 0;
+  width: 1920px;
+  top: calc(var(--label-y, 975px) - 82px);
+  margin: 0;
+  text-align: center;
+  font-size: 30px;
+  line-height: 40px;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  color: #13306f;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0;
+  transition: opacity 700ms ease;
+}
+.tagline[data-shown="true"] {
+  opacity: 1;
+}
+@media (max-width: 799px) {
+  .tagline {
+    display: none;
   }
 }

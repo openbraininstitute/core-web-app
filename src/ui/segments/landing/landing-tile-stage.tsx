@@ -27,6 +27,9 @@ const wayIn = () => window.dispatchEvent(new Event(LANDING_WAY_IN));
  * page's first HTML: landing-first-paint.module.css). */
 const CTA_AFTER_WORDS = 300;
 
+/** How long each film stays beside the field before the next comes, ms. */
+const FILM_MS = 8000;
+
 /** Reserved space above the mobile artwork for the tagline, CTA and credit message. */
 const PHONE_COPY_HEIGHT = 180;
 
@@ -49,6 +52,7 @@ export function LandingTileStage({
   const canvas = useRef<HTMLCanvasElement>(null);
   const picks = useRef<HTMLDivElement>(null);
   const engine = useRef<{
+    show: (index: number) => void;
     setVisible: (visible: boolean) => void;
     selectFeature: (index: number) => void;
     smallsNow: () => Smalls;
@@ -114,7 +118,26 @@ export function LandingTileStage({
         composition.style.setProperty('--stage-scale', String(scale));
       }
       window.dispatchEvent(new Event(LANDING_LAID_OUT));
+      placeLabel();
     });
+    // the films' name level with the chapters' along the foot (fixed to the window's foot, the stage scaled):
+    // in the stage's own px
+    const placeLabel = () => {
+      const word = container
+        .closest('[data-walkthrough-intro]')
+        ?.querySelector('nav[aria-label="Platform sections"] [data-fly]');
+      if (!word || phone) return;
+      const at = word.getBoundingClientRect(),
+        stageAt = composition.getBoundingClientRect();
+      // (desktop) the stage's scale is in its CSS now, not set here: read off its drawn width, 1920 of its own px
+      const scale = stageAt.width / 1920 || 1;
+      if (!at.height) return;
+      composition.style.setProperty(
+        '--label-y',
+        `${(at.top + at.height / 2 - stageAt.top) / scale}px`
+      );
+    };
+    window.addEventListener(LANDING_WAY_IN, placeLabel);
     resize.observe(container);
     const seen = new IntersectionObserver(([entry]) => {
       onScreen.current = entry?.isIntersecting ?? true;
@@ -135,6 +158,8 @@ export function LandingTileStage({
             // beside the field; on a phone above it (user: "the selected model above the small examples")
             heroBeside: true,
             heroAbove: phone,
+            // this version: the field white, the films only beside it, one at a time
+            whiteField: true,
             phoneStageH: stageH,
             onShowChosen: () => {
               if (!disposed) setChosenShown(true);
@@ -165,11 +190,22 @@ export function LandingTileStage({
       engine.current = null;
       resize.disconnect();
       seen.disconnect();
+      window.removeEventListener(LANDING_WAY_IN, placeLabel);
     };
   }, [reduced]);
 
   useEffect(() => engine.current?.setVisible(visible && onScreen.current), [visible]);
   useEffect(() => engine.current?.selectFeature(scene), [scene]);
+
+  // The films beside the field, one after another in a loop, each FILM_MS; none with reduced motion.
+  useEffect(() => {
+    if (!chosenShown || reduced || !visible) return;
+    const timer = window.setTimeout(
+      () => engine.current?.show((scene + 1) % FEATURES.length),
+      FILM_MS
+    );
+    return () => window.clearTimeout(timer);
+  }, [chosenShown, reduced, visible, scene]);
 
   return (
     <div ref={host} className={styles.host} data-tile-landing data-ready={ready || failed}>
@@ -207,6 +243,10 @@ export function LandingTileStage({
             </p>
           </div>
         </div>
+        {/* Under the field, over the chapters along the foot. */}
+        <p className={styles.tagline} data-shown={chosenShown}>
+          Explore - Build - Simulate Brains
+        </p>
         {/* What the chosen one is, under its big cube: the one going fading as the next comes. */}
         <div
           className={styles.heroLabels}

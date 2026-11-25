@@ -1,4 +1,5 @@
 import { LANDING_MODELS as FEATURES } from './landing-models';
+import { LANDING_SUBJECTS } from './landing-tile-icons';
 import { createLandingPlayback } from './landing-video-playback';
 
 /**
@@ -7,7 +8,8 @@ import { createLandingPlayback } from './landing-video-playback';
  * @param {HTMLDivElement} picksContainer
  * @param {{ initialIndex?: number, reduced?: boolean, textInField?: boolean, heroBeside?: boolean,
  * heroAbove?: boolean, phoneStageH?: number,
- * flightMs?: number, seed?: number, backdrop?: boolean, introAt?: number, onShowChosen?: () => void, onSelect?: (index: number) => void,
+ * flightMs?: number, seed?: number, backdrop?: boolean, whiteField?: boolean, introAt?: number, onShowChosen?: () => void,
+ * onCentreIn?: () => void, onSelect?: (index: number) => void,
  * onReady?: () => void, onInteraction?: () => void, onError?: (error: Error) => void }} options
  */
 export function createLandingTileRenderer(
@@ -32,10 +34,15 @@ export function createLandingTileRenderer(
     seed,
     // the arrangement alone, every tile white, nothing to pick, nothing beside the field (behind the chapters)
     backdrop = false,
+    // every tile in the field white and none a pick; the films only beside the field, one at a time, changed with
+    // `show(i)` (with heroBeside)
+    whiteField = false,
     // when (performance.now() clock) the first white tiles are to show: as the page's logo and words start coming in
     introAt,
     // with the chosen one beside the field: told when the opening is far enough on for it to show there
     onShowChosen = () => {},
+    // (whiteField) told as the field's central tile, which the page's logo stands on, comes in
+    onCentreIn = () => {},
     onSelect = () => {},
     onReady = () => {},
     onInteraction = () => {},
@@ -84,6 +91,8 @@ export function createLandingTileRenderer(
   // the examples, and none on the big one's right, which the chosen one has. ----
   // On a phone (user: "the selected model above the small examples"): the stage's middle 1000 px across, the chosen one
   // in its top half, the field under it from `fieldTop`, and no tiles over the chosen one.
+  // how many picture tiles the field has: one per film, or (white) as many as the first landing's eight films had
+  const FIELD_TILES = whiteField ? 8 : FEATURES.length;
   const STAGE_H = heroAbove ? Math.max(1080, phoneStageH) : 1080,
     FOOT = STAGE_H - 40;
   const PHONE = { x0: 450, x1: 1410, fieldTop: FOOT - 440, big: 112, medium: 69 };
@@ -91,7 +100,7 @@ export function createLandingTileRenderer(
   const PHONE_HERO_H = PHONE.fieldTop - 120;
   const FEATURE_SLOTS = [
     heroAbove ? { x: 930, y: FOOT - 240, r: PHONE.big } : { x: 960, y: 540, r: 174 },
-    ...Array.from({ length: Math.max(1, FEATURES.length - (heroBeside ? 2 : 1)) }, () => ({
+    ...Array.from({ length: Math.max(1, FIELD_TILES - (heroBeside ? 2 : 1)) }, () => ({
       x: 0,
       y: 0,
       r: heroAbove ? PHONE.medium : 88,
@@ -100,13 +109,17 @@ export function createLandingTileRenderer(
   // where the chosen one goes, in the right third, its tile growing as if to a cube this big as the cube melts away
   // from round it; and how far a moving tile bows off its way (none: a straight path, user: the arc "makes the
   // animation look weird"; it was 90)
+  // (whiteField) the films fill the right third, from under the top bar down to their name, level with the
+  // chapters along the foot
   const HERO_TILE = heroAbove
       ? { x: 930, y: 10 + PHONE_HERO_H / 2, r: (210 * PHONE_HERO_H) / 480 }
-      : { x: 1590, y: 480, r: 330 },
+      : whiteField
+        ? { x: 1595, y: 500, r: 330 }
+        : { x: 1590, y: 480, r: 330 },
     BOW = 0;
   // the chosen one itself, out of its cube: as wide as the example says (smaller in step on a phone), within this box
-  const BIG_W = heroAbove ? 960 : 720,
-    BIG_H = heroAbove ? PHONE_HERO_H : 620,
+  const BIG_W = heroAbove ? 960 : whiteField ? 620 : 720,
+    BIG_H = heroAbove ? PHONE_HERO_H : whiteField ? 800 : 620,
     HERO_K = HERO_TILE.r / 330;
   // ---- small white tiles round them, a new set on every pick, as on the first landing: each grown until its straight
   // edge almost touches a picture tile; a fade of lower, smaller ones round them; a few tiny ones for depth ----
@@ -648,7 +661,8 @@ export function createLandingTileRenderer(
     DRIFT_MAX = 7;
   const driftAt = (c, now) => {
     // the honeycomb holds still, its cracks with it; the tiles that stand out of it wander
-    if (reduceMotion || (!c.role && !c.stray)) return [0, 0];
+    // (and the central tile holding the logo holds still: the logo stays in its middle)
+    if (reduceMotion || c.still || (!c.role && !c.stray)) return [0, 0];
     const a = Math.min(DRIFT_MAX, DRIFT_PER_R * radiusOf(c));
     return [
       a * Math.sin(now / c.driftPace[0] + c.driftPhase[0]),
@@ -842,6 +856,10 @@ export function createLandingTileRenderer(
   }
   // which picture tile is at each place now, and which is the chosen one's, beside the field
   const cellAt = featureCells.filter((c) => c.slot >= 0);
+  // (whiteField) the big tile in the middle holds the page's logo: it neither wanders nor lifts under the mouse
+  if (whiteField && cellAt[0]) cellAt[0].still = true;
+  // how long after the central tile starts rising the logo comes in on it, ms
+  const CENTRE_LOGO_AFTER = 250;
   let heroCell = featureCells.find((c) => c.slot < 0) ?? null;
 
   // small white tiles: each one is put straight beside a picture tile (mostly the medium ones) with its edge almost
@@ -987,7 +1005,7 @@ export function createLandingTileRenderer(
   const STIR = { reach: [60, 190], ms: 1400, stagger: 400 };
   const shiftAt = (c, now) => {
     const m = c.shift;
-    if (!m) return [0, 0];
+    if (!m || c.still) return [0, 0];
     const f = Math.min(1, Math.max(0, (now - m.start) / m.ms)),
       e = turnEase(f);
     return [m.from[0] + (m.to[0] - m.from[0]) * e, m.from[1] + (m.to[1] - m.from[1]) * e];
@@ -1076,15 +1094,24 @@ export function createLandingTileRenderer(
     const sourceW = nw * (1 + ((bounds?.width ?? 1) - 1) * progress);
     const sourceH = nh * (1 + ((bounds?.height ?? 1) - 1) * progress);
     const aspect = bounds ? (nw * bounds.width) / (nh * bounds.height) : nw / nh;
-    const maximumWidth = bounds && !heroAbove ? 600 : BIG_W;
-    const full = Math.min(f.hero * HERO_K, maximumWidth, BIG_H * aspect) / (bounds ? 1.8 : 1);
+    const maximumWidth = bounds && !heroAbove && !whiteField ? 600 : BIG_W;
+    // (whiteField) as big as the right third lets it be, whatever the film's own size
+    const full =
+      Math.min(whiteField ? Infinity : f.hero * HERO_K, maximumWidth, BIG_H * aspect) /
+      (bounds ? 1.8 : 1);
     const rs = c.baseR;
     const inCube = Math.sqrt(3) * rs * at.k * f.zoom,
       inBigCube = Math.sqrt(3) * HERO_TILE.r * f.zoom;
     c.zoomStarted ??= performance.now();
     const elapsed = Math.max(0, performance.now() - c.zoomStarted);
-    const zoom =
-      bounds && !reduceMotion ? 1 + 0.4 * (1 - Math.cos((elapsed / 24000) * Math.PI * 2)) : 1;
+    // (whiteField) in close from the start, held there; otherwise a slow zoom in and back out
+    const zoom = !bounds
+      ? 1
+      : whiteField
+        ? 1.8
+        : reduceMotion
+          ? 1
+          : 1 + 0.4 * (1 - Math.cos((elapsed / 24000) * Math.PI * 2));
     const w = inCube * (full / inBigCube) ** t * (1 + (zoom - 1) * progress),
       h = (w * sourceH) / sourceW;
     ctx.save();
@@ -1118,7 +1145,8 @@ export function createLandingTileRenderer(
   }
 
   // One featured video; small tiles stay on their sharp still images.
-  let fullVideos = false;
+  // (whiteField) each film stays up 8 s beside the field: its whole film, not the 3 s teaser looping
+  let fullVideos = whiteField;
   const playback = createLandingPlayback(FEATURES, kick);
   let paintedIndex = -1;
   let paintedTime = -1;
@@ -1141,6 +1169,501 @@ export function createLandingTileRenderer(
     return Boolean(video);
   }
 
+  // ---------- (whiteField) lines in the logo's blue, radiating from the central tile ----------
+  // A tree: from the central tile out to a few tiles round it, from each of those on out to one or two further from
+  // the middle, and so on; and a few lines across between tiles of it. Drawn over the tiles once they are up, one
+  // after another outwards: a dot at the middle of a tile, the line running out, a dot at the middle of the other;
+  // a word under the dot on each tile it reaches (placeholders for now). From the central tile the lines start at
+  // its rim, clear of the logo on it.
+  const LINKS = {
+    // the lines and their dots hidden for now (user): the tiles they reach still come in one after another outwards,
+    // each with its icon and word
+    lines: false,
+    colour: '#002766',
+    text: '#13306f',
+    width: 1.4,
+    alpha: 0.85,
+    dot: 3.5,
+    // (and none leaving it within `side` degrees of level, where the logo reaches out to its sides)
+    first: { count: 6, reach: [190, 430], spread: 45, side: 30 }, // tiles joined to the central one; degrees apart at least
+    out: { reach: [120, 420], cone: 70, gain: 50, depth: 3, most: 18, two: 0.6 }, // further out: within `cone` degrees of
+    // straight out, `gain` px further from the middle at least; `depth` steps out; `most` tiles in all
+    across: 3, // lines across between tiles of the tree
+    fieldX1: 1290, // none reaching into the films' third
+    fieldY: [100, 820], // nor up to the top bar or down to the chapters along the foot
+    words: { x0: 0, x1: 650, y0: 200, y1: 700 }, // nothing over the logo, the slogan and the way in
+    after: 700, // ms after the central tile comes in that the first line starts
+    draw: 420, // ms for a line to run out
+    gap: 60, // ms between one line and those going on from where it ends
+    fade: 350, // ms for a tile's icon and word to come in
+    step: 260, // (lines hidden) ms between one tile's icon and word and the next one out
+    icon: 30, // px
+    iconUp: 14, // px the icon's middle is above the tile's
+    // (lines hidden) a word only on a tile big enough for it, and well apart from the next word
+    labelTile: 60, // px, the tile's size at rest (middle to corner) at least
+    labelApart: 170, // px between the middles of two tiles with words
+    labels: 9, // (lines hidden) how many tiles get one
+  };
+  // (with the lines) the words; without them, the subjects, more than there are tiles for them: those not shown wait
+  // their turn, a few tiles at a time turning over to one of them (as the information pages' tiles turn over)
+  const SUBJECTS = {
+    swap: 3200, // ms between one lot of tiles turning over and the next
+    count: 2, // how many turn over at a time
+    stagger: 180, // ms between them
+    icon: 46, // px, the icon on a tile at rest
+    gap: 6, // px between the icon and its word
+    word: 15, // px
+    centre: 2, // times bigger on the central tile
+    // which way every turn goes (user: always the same way): true = the new subject comes in from the top, the old
+    // one rolling down and away; false = the other way
+    down: true,
+  };
+  let waiting = []; // subjects not on a tile now, in the order they come
+  let nextSwap = Infinity;
+  let subjectPool = []; // (lines hidden) the tiles a subject may turn up on: big enough, in the field, clear of the words
+  const LINK_WORDS = [
+    'Explore',
+    'Model',
+    'Brain Regions',
+    'FlyWire',
+    'EM Meshes',
+    'Single Neuron',
+    'Simulate',
+    'Circuits',
+    'Morphologies',
+    'Ion Channels',
+    'Synapses',
+    'Connectome',
+    'Notebooks',
+    'Microcircuit',
+    'Spines',
+    'Virtual Labs',
+  ];
+  let links = null; // [{ a, b, start, fromRim }]
+  let linksAt = Infinity; // when the first line starts (performance.now())
+  const linkWords = new Map(); // tile -> its word
+  const labelAt = new Map(); // (lines hidden) tile -> when its icon and word come in, ms after `linksAt`
+  let linkFont = null;
+  let subjectFont = null;
+  const linkIcons = new Map(
+    LANDING_SUBJECTS.map(({ word, icon }) => {
+      const img = new Image();
+      img.src = icon;
+      return [word, img];
+    })
+  );
+  const restR = (c) => (c.r0 || R) * (1 + SCALE_PER_H * Math.max(c.base, c.lift));
+  // how far up a tile has come, 0 .. 1
+  const risen = (c) => Math.min(1, Math.max(0, c.h / Math.max(0.05, Math.max(c.base, c.lift))));
+  const inWords = (x, y) =>
+    x > LINKS.words.x0 && x < LINKS.words.x1 && y > LINKS.words.y0 && y < LINKS.words.y1;
+  const crossesWords = (p, q) => {
+    for (let k = 0; k <= 20; k++)
+      if (inWords(p.x + ((q.x - p.x) * k) / 20, p.y + ((q.y - p.y) * k) / 20)) return true;
+    return false;
+  };
+  const angleOf = (p, q) => Math.atan2(q.y - p.y, q.x - p.x);
+  const turn = (u, v) => {
+    const d = Math.abs(u - v) % (2 * Math.PI);
+    return ((d > Math.PI ? 2 * Math.PI - d : d) * 180) / Math.PI;
+  };
+  function makeLinks() {
+    const root = cellAt[0];
+    if (!root) return [];
+    const centre = homeOf(root);
+    const pool = cells.filter((c) => {
+      if (!c.role || c === heroCell || c === root || Math.max(c.base, c.lift) <= 0.05) return false;
+      const p = homeOf(c);
+      return (
+        p.x < LINKS.fieldX1 && p.y > LINKS.fieldY[0] && p.y < LINKS.fieldY[1] && !inWords(p.x, p.y)
+      );
+    });
+    const used = new Set([root]),
+      made = [];
+    const fromRoot = (c) => Math.hypot(homeOf(c).x - centre.x, homeOf(c).y - centre.y);
+    const join = (a, b, depth, fromRim = false) => {
+      used.add(b);
+      made.push({ a, b, depth, fromRim });
+    };
+    // round the central tile, well apart from each other
+    const firsts = [];
+    for (const c of pool
+      .filter((c) => fromRoot(c) >= LINKS.first.reach[0] && fromRoot(c) <= LINKS.first.reach[1])
+      .sort(() => random() - 0.5)) {
+      if (firsts.length >= LINKS.first.count) break;
+      const a = angleOf(centre, homeOf(c));
+      if (firsts.some((f) => turn(angleOf(centre, homeOf(f)), a) < LINKS.first.spread)) continue;
+      if (crossesWords(centre, homeOf(c))) continue;
+      const level = Math.min(turn(a, 0), turn(a, Math.PI));
+      if (level < LINKS.first.side) continue;
+      firsts.push(c);
+      join(root, c, 0, true);
+    }
+    // on out from each, away from the middle
+    let ring = firsts;
+    for (let depth = 1; depth <= LINKS.out.depth && used.size <= LINKS.out.most; depth++) {
+      const next = [];
+      for (const parent of ring) {
+        const pp = homeOf(parent),
+          outward = angleOf(centre, pp);
+        const options = pool
+          .filter((c) => !used.has(c))
+          .filter((c) => {
+            const d = Math.hypot(homeOf(c).x - pp.x, homeOf(c).y - pp.y);
+            return (
+              d >= LINKS.out.reach[0] &&
+              d <= LINKS.out.reach[1] &&
+              fromRoot(c) >= fromRoot(parent) + LINKS.out.gain &&
+              turn(angleOf(pp, homeOf(c)), outward) <= LINKS.out.cone &&
+              !crossesWords(pp, homeOf(c))
+            );
+          })
+          .sort(() => random() - 0.5);
+        const want = random() < LINKS.out.two ? 2 : 1;
+        for (const c of options.slice(0, want)) {
+          if (used.size > LINKS.out.most) break;
+          join(parent, c, depth);
+          next.push(c);
+        }
+      }
+      ring = next;
+    }
+    // a few across, between tiles of the tree not yet joined, near each other
+    const tree = [...used].filter((c) => c !== root);
+    const joined = (a, b) => made.some((l) => (l.a === a && l.b === b) || (l.a === b && l.b === a));
+    const pairs = [];
+    for (let i = 0; i < tree.length; i++)
+      for (let j = i + 1; j < tree.length; j++) {
+        const a = tree[i],
+          b = tree[j],
+          d = Math.hypot(homeOf(a).x - homeOf(b).x, homeOf(a).y - homeOf(b).y);
+        if (
+          d >= LINKS.out.reach[0] &&
+          d <= 300 &&
+          !joined(a, b) &&
+          !crossesWords(homeOf(a), homeOf(b))
+        )
+          pairs.push({ a, b, d });
+      }
+    pairs.sort(() => random() - 0.5);
+    const deepest = Math.max(0, ...made.map((l) => l.depth));
+    for (const { a, b } of pairs.slice(0, LINKS.across))
+      made.push({ a, b, depth: deepest + 1, fromRim: false });
+    // a word for each tile reached (with the lines hidden, only on those big enough and apart), each its own
+    const words = (LINKS.lines ? LINK_WORDS : LANDING_SUBJECTS.map((s) => s.word))
+      .slice()
+      .sort(() => random() - 0.5);
+    const labelled = [];
+    // (lines hidden) any of the field's tiles, the nearest the middle first, and so on outwards
+    const reach = LINKS.lines
+      ? made.slice().sort((u, v) => u.depth - v.depth)
+      : pool
+          .slice()
+          .sort((u, v) => fromRoot(u) - fromRoot(v))
+          .map((b) => ({ b }));
+    for (const l of reach) {
+      const c = l.b;
+      if (!LINKS.lines && labelled.length >= LINKS.labels) break;
+      if (linkWords.has(c) || labelled.includes(c)) continue;
+      if (!LINKS.lines) {
+        const p = homeOf(c);
+        if (restR(c) < LINKS.labelTile) continue;
+        if (
+          labelled.some((o) => Math.hypot(homeOf(o).x - p.x, homeOf(o).y - p.y) < LINKS.labelApart)
+        )
+          continue;
+      }
+      labelled.push(c);
+    }
+    // the central tile too, first, the others then on outwards from it (user)
+    if (!LINKS.lines) labelled.unshift(root);
+    labelled.forEach((c, i) => {
+      linkWords.set(c, words[i % words.length]);
+      labelAt.set(c, i * LINKS.step);
+    });
+    waiting = words.slice(labelled.length);
+    subjectPool = pool.filter((c) => restR(c) >= LINKS.labelTile);
+    // one after another outwards: each line starts as the one it goes on from has run out
+    const ends = new Map([[root, 0]]);
+    for (const l of made.sort((u, v) => u.depth - v.depth)) {
+      l.start = (ends.get(l.a) ?? (LINKS.draw + LINKS.gap) * l.depth) + random() * 120;
+      const end = l.start + LINKS.draw + LINKS.gap;
+      if (!ends.has(l.b) || ends.get(l.b) > end) ends.set(l.b, end);
+    }
+    return made;
+  }
+  // a subject's picture for a tile: its icon over its word, at the tile's own size at rest (it grows with the tile)
+  const subjectSlices = new Map();
+  function subjectSlice(c, word) {
+    const key = `${cells.indexOf(c)}:${word}`;
+    let slice = subjectSlices.get(key);
+    if (slice) return slice;
+    // not before its icon is in: the tile waits for it
+    const icon = linkIcons.get(word);
+    if (!icon?.complete || !icon.naturalWidth) return null;
+    const r = restR(c),
+      k = 2,
+      z = c === cellAt[0] ? SUBJECTS.centre : 1,
+      w = Math.sqrt(3) * r,
+      h = 2 * r;
+    slice = document.createElement('canvas');
+    slice.width = Math.ceil(w * k);
+    slice.height = Math.ceil(h * k);
+    const g = slice.getContext('2d');
+    if (!g) return null;
+    g.setTransform(k, 0, 0, k, 0, 0);
+    // white under it: a see-through face let the old subject show through the new one to the end of the turn,
+    // then vanish at once (user)
+    g.fillStyle = '#fff';
+    g.fillRect(0, 0, w, h);
+    subjectFont ??= getComputedStyle(canvas).fontFamily || 'Arial, sans-serif';
+    const icon_ = SUBJECTS.icon * z,
+      gap = SUBJECTS.gap * z,
+      size = SUBJECTS.word * z;
+    const top = h / 2 - (icon_ + gap + size) / 2;
+    g.drawImage(icon, w / 2 - icon_ / 2, top, icon_, icon_);
+    g.font = `600 ${size}px ${subjectFont}`;
+    g.textAlign = 'center';
+    g.textBaseline = 'top';
+    g.fillStyle = LINKS.text;
+    g.fillText(word, w / 2, top + icon_ + gap);
+    subjectSlices.set(key, slice);
+    return slice;
+  }
+  // turn tile c over to a subject (or, without motion, show it at once)
+  // (no word: turn it over to plain white)
+  function turnTo(c, word, now, delay = 0) {
+    const slice = word ? subjectSlice(c, word) : null;
+    if (word && !slice) return;
+    c.subject = word || null;
+    c.introduced = true;
+    if (reduceMotion) {
+      c.pics[c.orient] = slice;
+      return;
+    }
+    // always the same way round: the turn runs from face `from` (what shows now) to the other (the new subject)
+    const from = SUBJECTS.down ? 0 : 1;
+    c.pics[from] = c.pics[c.orient];
+    c.pics[1 - from] = slice;
+    c.orient = from;
+    c.turnStart = now;
+    c.turnDelay = delay;
+    c.turnDur = FLIP_DUR;
+  }
+  // (lines hidden) the subjects coming in on their tiles from the middle outwards, each tile turning over to its own
+  // as it is up; then, every SUBJECTS.swap, a few tiles turning over to subjects not shown, the number shown the same
+  function runSubjects(now) {
+    links ??= makeLinks();
+    if (now < linksAt) return linksAt < Infinity;
+    const t = reduceMotion ? Infinity : now - linksAt;
+    let running = false,
+      allIn = true;
+    for (const [c, at] of labelAt) {
+      if (c.introduced) continue;
+      allIn = false;
+      if (t < at || (!reduceMotion && risen(c) < 0.9)) {
+        running = true;
+        continue;
+      }
+      turnTo(c, linkWords.get(c), now);
+    }
+    if (allIn && !reduceMotion && waiting.length) {
+      if (nextSwap === Infinity) nextSwap = now + SUBJECTS.swap;
+      else if (now >= nextSwap) {
+        nextSwap = now + SUBJECTS.swap;
+        swapSubjects(now);
+      }
+    }
+    return running;
+  }
+
+  // a few random tiles turning over at once, as many showing a subject after as before (user): a tile with one to
+  // another subject, or one going white as a white one somewhere else takes a subject up; the central tile always
+  // keeps one
+  function swapSubjects(now) {
+    const root = cellAt[0];
+    const idle = (c) => c.turnStart < 0 && risen(c) >= 0.9;
+    const shown = subjectPool.filter((c) => c.subject);
+    if (root?.subject) shown.push(root);
+    const apart = (c, others) => {
+      const p = homeOf(c);
+      return others.every(
+        (o) => o === c || Math.hypot(homeOf(o).x - p.x, homeOf(o).y - p.y) >= LINKS.labelApart
+      );
+    };
+    const pick = (list) => list[Math.floor(random() * list.length)];
+    let k = 0;
+    for (let n = 0; n < SUBJECTS.count; n++) {
+      const on = shown.filter(idle);
+      const hideable = on.filter((c) => c !== root);
+      // white tiles clear of the others showing one (the one going white aside)
+      const out = random() < 0.5 && hideable.length ? pick(hideable) : null;
+      const blanks = subjectPool.filter(
+        (c) =>
+          !c.subject &&
+          idle(c) &&
+          apart(
+            c,
+            shown.filter((o) => o !== out)
+          )
+      );
+      const into = out && blanks.length ? pick(blanks) : null;
+      if (into && waiting[0] && subjectSlice(into, waiting[0])) {
+        waiting.push(out.subject);
+        turnTo(out, null, now, k * SUBJECTS.stagger);
+        const next = waiting.shift();
+        turnTo(into, next, now, k * SUBJECTS.stagger + SUBJECTS.stagger / 2);
+        shown.splice(shown.indexOf(out), 1, into);
+      } else {
+        const c = pick(on);
+        const next = waiting[0];
+        if (!c || !next || !subjectSlice(c, next)) continue;
+        waiting.shift();
+        waiting.push(c.subject);
+        turnTo(c, next, now, k * SUBJECTS.stagger);
+      }
+      k++;
+    }
+  }
+
+  // where a tile's middle is now (as it wanders)
+  const middleOf = (c, now) => {
+    const p = c.role === 'feature' ? placeOf(c, now) : homeOf(c);
+    const [dx, dy] = driftAt(c, now);
+    const [sx, sy] = shiftAt(c, now);
+    return [p.x + dx + sx, p.y + dy + sy];
+  };
+  // draws the lines as far as they have run out by `now`; true while any is still running out
+  function drawLinks(now) {
+    links ??= makeLinks();
+    if (!links.length || now < linksAt) return now < linksAt && linksAt < Infinity;
+    linkFont ??= `600 16px ${getComputedStyle(canvas).fontFamily || 'Arial, sans-serif'}`;
+    const t = reduceMotion ? Infinity : now - linksAt;
+    let running = false;
+    const dot = (x, y) => {
+      ctx.beginPath();
+      ctx.arc(x, y, LINKS.dot, 0, 2 * Math.PI);
+      ctx.fill();
+    };
+    const reached = new Map(); // tile -> how far its dot and word have come in, 0 .. 1
+    // (lines hidden) one tile after another outwards, each once it is up
+    if (!LINKS.lines)
+      for (const [c, at] of labelAt) {
+        if (!reduceMotion && risen(c) < 0.9) {
+          for (const [o, oat] of labelAt) if (oat >= at) labelAt.set(o, oat + 16);
+          running = true;
+          break;
+        }
+        const k = reduceMotion ? 1 : Math.min(1, (t - at) / LINKS.fade);
+        if (k < 1) running = true;
+        if (k > 0) reached.set(c, k);
+      }
+    ctx.save();
+    ctx.strokeStyle = ctx.fillStyle = LINKS.colour;
+    ctx.lineWidth = LINKS.width;
+    ctx.lineCap = 'round';
+    ctx.globalAlpha = LINKS.alpha;
+    for (const l of LINKS.lines ? links : []) {
+      const f = Math.min(1, Math.max(0, (t - l.start) / LINKS.draw));
+      if (f < 1 && t >= l.start - 50) running = true;
+      if (t < l.start) {
+        if (t < Infinity) running = true;
+        continue;
+      }
+      // not before both its tiles are up: it waits for them, and those going on from it with it
+      if (!reduceMotion && (risen(l.a) < 0.9 || risen(l.b) < 0.9)) {
+        const wait = t + 16 - l.start;
+        for (const later of links) if (later.start >= l.start) later.start += wait;
+        running = true;
+        continue;
+      }
+      const e = f * f * (3 - 2 * f);
+      let [ax, ay] = middleOf(l.a, now);
+      const [bx, by] = middleOf(l.b, now);
+      if (l.fromRim) {
+        // from the central tile's rim, clear of the logo
+        const r = restR(l.a) * APO * 0.94,
+          d = Math.hypot(bx - ax, by - ay) || 1;
+        ax += ((bx - ax) / d) * r;
+        ay += ((by - ay) / d) * r;
+      }
+      if (LINKS.lines) {
+        dot(ax, ay);
+        ctx.beginPath();
+        ctx.moveTo(ax, ay);
+        ctx.lineTo(ax + (bx - ax) * e, ay + (by - ay) * e);
+        ctx.stroke();
+      }
+      if (f >= 1) {
+        const k = reduceMotion ? 1 : Math.min(1, (t - l.start - LINKS.draw) / LINKS.fade);
+        if (k < 1) running = true;
+        reached.set(l.b, Math.max(reached.get(l.b) ?? 0, k));
+      }
+    }
+    // the dots the lines end on, and the words under them, coming in as a line gets there
+    ctx.font = linkFont;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    for (const [c, k] of reached) {
+      const [x, y] = middleOf(c, now);
+      if (LINKS.lines) dot(x, y);
+      const word = linkWords.get(c);
+      if (!word || k <= 0) continue;
+      ctx.save();
+      ctx.globalAlpha = k * k * (3 - 2 * k);
+      // its icon over the tile's middle, its word under it
+      const icon = linkIcons.get(word);
+      const top = LINKS.lines ? y + LINKS.dot + 7 : y + LINKS.icon / 2 - LINKS.iconUp + 6;
+      if (icon?.complete && icon.naturalWidth)
+        ctx.drawImage(
+          icon,
+          x - LINKS.icon / 2,
+          y - LINKS.iconUp - LINKS.icon / 2,
+          LINKS.icon,
+          LINKS.icon
+        );
+      if (LINKS.lines) {
+        // a white edge round its letters: readable over a line going on from the tile
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 4;
+        ctx.lineJoin = 'round';
+        ctx.strokeText(word, x, top);
+      }
+      ctx.fillStyle = LINKS.text;
+      ctx.fillText(word, x, top);
+      ctx.restore();
+    }
+    ctx.restore();
+    return running;
+  }
+
+  // (whiteField) the film beside the field changing: the one going fades out, then the next fades in
+  const FADE_OUT = 450,
+    FADE_IN = 650;
+  let heroFade = null; // { from, start }
+  // how much of the chosen one's film shows now; a film going out drawn from `outOf` (the chosen one, as it was)
+  function heroAlpha(now) {
+    if (!heroFade) return 1;
+    const f = (now - heroFade.start - FADE_OUT) / FADE_IN;
+    if (f >= 1) {
+      heroFade = null;
+      return 1;
+    }
+    return f <= 0 ? 0 : f * f * (3 - 2 * f);
+  }
+
+  // (whiteField) the tiles lying under a picture tile, where they stand at rest: never drawn, decided once
+  let underDecided = false;
+  function decideUnder() {
+    underDecided = true;
+    const tops = featureCells.filter((f) => f !== heroCell);
+    for (const c of cells) {
+      if (c.role === 'feature') continue;
+      const p = homeOf(c);
+      c.under = tops.some((f) => Math.hypot(homeOf(f).x - p.x, homeOf(f).y - p.y) < f.baseR);
+    }
+  }
+
   let lastNow = 0;
   function render(now) {
     const dt = lastNow ? Math.min(50, now - lastNow) : 16.7;
@@ -1148,7 +1671,7 @@ export function createLandingTileRenderer(
     const k = 1 - (1 - EASE) ** (dt / 16.7); // EASE per 60 fps frame
     // drifting tiles and playing videos keep the loop going
     const playing = runVideos(now);
-    let active = playing || (started && !reduceMotion) || now < stirredUntil;
+    let active = playing || (started && !reduceMotion) || now < stirredUntil || !!heroFade;
 
     const kLift = 1 - (1 - LIFT_EASE) ** (dt / 16.7); // slower rise for the first lift from the floor
     for (const c of cells) {
@@ -1219,9 +1742,19 @@ export function createLandingTileRenderer(
     // fixed stacking order (as on index.html): by each tile's resting height, set when it is placed, so hover,
     // growing and shrinking never change which tile lies on top
     // (a tile on its way to or from the big cube, or in it, over all the rest)
+    // (whiteField) the bigger a tile is now, the higher it stands, so the more on top: a tile grown under the mouse
+    // goes over its smaller neighbours (the film beside the field over everything)
+    const sizeNow = (c) =>
+      isBig(c) ? Infinity : radiusOf(c) * (c.role === 'feature' ? placeOf(c, now).k : 1);
     const drawn = cells
       .filter((c) => c.h > 0.01 || c.turnStart >= 0)
-      .sort((a, b) => (isBig(a) ? 300 : a.order || 0) - (isBig(b) ? 300 : b.order || 0));
+      .sort((a, b) =>
+        whiteField
+          ? sizeNow(a) - sizeNow(b) || (a.order || 0) - (b.order || 0)
+          : (isBig(a) ? 300 : a.order || 0) - (isBig(b) ? 300 : b.order || 0)
+      );
+    if (whiteField && started && !underDecided) decideUnder();
+    if (whiteField && started && !LINKS.lines && runSubjects(now)) active = true;
     const geometry = drawn.map((c) => {
       const at = c.role === 'feature' ? placeOf(c, now) : homeOf(c);
       const [dx, dy] = driftAt(c, now);
@@ -1230,6 +1763,11 @@ export function createLandingTileRenderer(
     });
     for (const tile of geometry) {
       tile.c.displayRadius = tile.r;
+      // (whiteField) as laid out, not as they wander and grow: a tile does not come and go on its own
+      if (whiteField) {
+        if (tile.c.under) tile.c.displayRadius = 0;
+        continue;
+      }
       if (tile.c.role === 'feature') continue;
       for (const other of geometry) {
         if (tile === other) continue;
@@ -1283,9 +1821,15 @@ export function createLandingTileRenderer(
       else {
         const free = smooth(t, 0.15, 0.85);
         drawFaded(1 - free, at.x + ox, at.y + oy, radiusOf(c) * at.k, draw);
-        drawFree(c, at, at.x + ox, at.y + oy, t, free);
+        if (c === heroCell && heroFade) {
+          const out = 1 - Math.min(1, Math.max(0, (now - heroFade.start) / FADE_OUT));
+          if (out > 0) drawFree(heroFade.outOf, at, at.x + ox, at.y + oy, t, free * out * out);
+        }
+        drawFree(c, at, at.x + ox, at.y + oy, t, free * (c === heroCell ? heroAlpha(now) : 1));
       }
     }
+    // over the tiles, once they are up, the lines radiating from the central tile
+    if (whiteField && started && LINKS.lines && drawLinks(now)) active = true;
     return active;
   }
   let looping = false;
@@ -1341,7 +1885,15 @@ export function createLandingTileRenderer(
       y = (e.clientY - rect.top) / s;
     let hit = null;
     for (const c of cells)
-      if (c.role && c.h > 0.05 && !isBig(c) && insideHex(c, x, y) && (!hit || c.h > hit.h)) hit = c;
+      if (
+        c.role &&
+        !c.still &&
+        c.h > 0.05 &&
+        !isBig(c) &&
+        insideHex(c, x, y) &&
+        (!hit || c.h > hit.h)
+      )
+        hit = c;
     setHover(hit);
   };
   const pointerLeave = () => setHover(null);
@@ -1376,9 +1928,10 @@ export function createLandingTileRenderer(
   stage.addEventListener('pointerleave', pointerLeave);
 
   // ---------- the picture tiles are buttons: all of them with the chosen one beside, else all but the big one ----------
-  const pickSlots = backdrop
-    ? []
-    : FEATURE_SLOTS.map((_, slot) => slot).filter((slot) => heroBeside || slot > 0);
+  const pickSlots =
+    backdrop || whiteField
+      ? []
+      : FEATURE_SLOTS.map((_, slot) => slot).filter((slot) => heroBeside || slot > 0);
   const picks = pickSlots.map((slot) => {
     const c = slotPos[slot],
       d = c.r * 1.6;
@@ -1559,6 +2112,7 @@ export function createLandingTileRenderer(
       slices = FEATURES.map((f, i) => makeSlice(f, imgs[i]));
       // picture tiles start white and turn to their first picture while they rise (same turn as a click)
       featureCells.forEach((c) => {
+        if (whiteField && c !== heroCell) return; // white: no picture to turn to
         if (c === heroCell || reduceMotion) c.pics[0] = slices[c.feature];
         else {
           c.pics[0] = null;
@@ -1581,6 +2135,18 @@ export function createLandingTileRenderer(
             (PICTURES_AFTER - HERO_AFTER) +
             ((homeOf(c).x - pLeft) / pSpan) * PICTURES_SWEEP;
       if (heroCell) heroCell.start = heroAt;
+      // (whiteField) the logo comes in with the central tile, as it rises
+      if (whiteField && cellAt[0]) {
+        if (reduceMotion) {
+          onCentreIn();
+          linksAt = now;
+        } else {
+          const at = Math.max(0, cellAt[0].start - now) + CENTRE_LOGO_AFTER;
+          later(onCentreIn, at);
+          linksAt = now + at + LINKS.after;
+          later(kick, at + LINKS.after);
+        }
+      }
       if (!reduceMotion) {
         if (heroCell)
           later(() => {
@@ -1612,14 +2178,38 @@ export function createLandingTileRenderer(
       if (disposed) return;
       // the tiles waiting on their pictures rise white
       for (const c of cells) if (c.start === Infinity) c.start = performance.now();
+      if (whiteField) onCentreIn();
       onError(error);
     });
 
   return {
     selectFeature(index) {
       if (heroCell?.feature === index) return;
+      // (whiteField) no tile holds a film: the one beside the field changes over to it
+      if (whiteField) return this.show(index);
       const slot = cellAt.findIndex((cell) => cell.feature === index);
       if (slot >= 0) choose(slot);
+    },
+    /** (whiteField) show film `i` beside the field: the one there fades out and it fades in. */
+    show(i) {
+      if (!whiteField || !heroCell || !(i >= 0 && i < FEATURES.length) || i === heroCell.feature)
+        return;
+      const now = performance.now();
+      if (!reduceMotion)
+        heroFade = {
+          from: heroCell.feature,
+          start: now,
+          // the one going, as it was: its own film and zoom
+          outOf: Object.assign(Object.create(heroCell), {
+            feature: heroCell.feature,
+            zoomStarted: heroCell.zoomStarted,
+          }),
+        };
+      heroCell.feature = i;
+      heroCell.pics[0] = slices[i] ?? null;
+      heroCell.zoomStarted = now + (reduceMotion ? 0 : FADE_OUT);
+      showFeature(i);
+      kick();
     },
     // (behind the chapters) the tiles move about
     stir() {

@@ -36,14 +36,20 @@
   left: calc(var(--x0) + 150 * var(--u));
 }
 .logo {
-  top: calc(var(--y0) + 349 * var(--u));
-  height: calc(120 * var(--u));
+  /* over the slogan, as the live one (landing-tile-stage.module.css --logo-left / --logo-top) */
+  left: calc(var(--x0) + 117 * var(--u));
+  top: calc(var(--y0) + 265 * var(--u));
+  height: calc(110 * var(--u));
   width: auto;
   color: #002766;
   animation: logoIn 900ms ease both;
 }
 .words {
-  top: calc(var(--y0) + 505 * var(--u));
+  /* centred on the live words' line (--words-axis 298), 100 up, level with the central tile */
+  left: calc(var(--x0) + -2 * var(--u));
+  width: calc(600 * var(--u));
+  text-align: center;
+  top: calc(var(--y0) + 405 * var(--u));
   margin: 0;
   color: #13306f;
   font-family: var(--font-info-titillium), Arial, sans-serif;
@@ -62,7 +68,9 @@
 /* "Try it now" under the words, as the live one is (643 down, 88 tall) and coming in as it does, 300 ms after them */
 .cta {
   composes: pill from "./cta-pill.module.css";
-  top: calc(var(--y0) + 643 * var(--u));
+  top: calc(var(--y0) + 543 * var(--u));
+  left: calc(var(--x0) + 298 * var(--u));
+  translate: -50% 0;
   width: auto;
   height: calc(88 * var(--u));
   padding: 0 calc(46 * var(--u));

@@ -14,6 +14,7 @@ type LandingModel = {
   caption?: { kicker: string; text: string };
 };
 
+/** The landing's three films (this version: shown one at a time beside the white tile field). */
 const MODELS: readonly LandingModel[] = [
   {
     label: 'Simulate whole-brain activity',
@@ -35,42 +36,6 @@ const MODELS: readonly LandingModel[] = [
     alt: 'Simulated cortical microcircuit, its neurons firing',
   },
   {
-    label: 'Explore brain structure',
-    img: '/static/landing-v1/somatosensory.jpg',
-    video: '/static/landing-v1/somatosensory.mp4',
-    heroBounds: { x: 0.25391, y: 0.12917, width: 0.51562, height: 0.69583 },
-    zoom: 1.7,
-    hero: 760,
-    alt: 'A somatosensory cortex model',
-  },
-  {
-    label: 'Build detailed brain models',
-    img: '/static/landing-v1/hippocampus-growth.jpg',
-    video: '/static/landing-v1/hippocampus-growth.mp4',
-    heroBounds: { x: 0.26953, y: 0.14583, width: 0.5, height: 0.7625 },
-    zoom: 1.7,
-    hero: 780,
-    alt: 'A hippocampus model',
-  },
-  {
-    label: 'Navigate across brain regions',
-    img: '/static/landing-v1/full-brain.jpg',
-    video: '/static/landing-v1/full-brain.mp4',
-    heroBounds: { x: 0.27734, y: 0.17222, width: 0.45156, height: 0.59306 },
-    zoom: 1.7,
-    hero: 760,
-    alt: 'Brain atlas',
-  },
-  {
-    label: 'Inspect neuronal connectivity',
-    img: '/static/landing-v1/thalamus-growth.jpg',
-    video: '/static/landing-v1/thalamus-growth.mp4',
-    heroBounds: { x: 0.3, y: 0.275, width: 0.42656, height: 0.55 },
-    zoom: 1.7,
-    hero: 700,
-    alt: 'A thalamus model showing neuronal connectivity',
-  },
-  {
     label: 'Extract skeletons and spines',
     img: '/static/landing-v1/dendrite-ride.jpg?v=3',
     // the learn branch's fly-through down the cell's spiniest dendrite, its mesh opaque in the fly model's blue, its
@@ -81,15 +46,6 @@ const MODELS: readonly LandingModel[] = [
     zoom: 1.15,
     hero: 760,
     alt: 'Riding down a dendrite past its spines, coloured by their distance from the soma',
-  },
-  {
-    label: 'Visualize cortical architecture',
-    img: '/static/landing-v1/neocortex-growth.jpg',
-    video: '/static/landing-v1/neocortex-growth.mp4',
-    heroBounds: { x: 0.26641, y: 0.2125, width: 0.46641, height: 0.58333 },
-    zoom: 1.7,
-    hero: 700,
-    alt: 'A neocortex growing',
   },
 ];
 

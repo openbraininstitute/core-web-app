@@ -13,7 +13,13 @@ import styles from './living-hero.module.css';
 
 /** The scene the opening shows first: the fly's brain and nerve cord turning as its model runs. */
 export const FIRST_SCENE = 0;
-/** Show every model for three seconds, then continue into Virtual Labs unless the visitor takes control. */
+/** How long the landing stands, once all of it is in, before it glides on to the first chapter by itself, ms (the
+ * logo going up into its corner as it does); once a page load, not again on coming back to it. */
+export const LANDING_AUTO_CONTINUE_MS = 5000;
+let autoContinued = false;
+/** The three-second tour of every model, then on into Virtual Labs (off in this version: the films loop beside the
+ * field on their own, LandingTileStage's FILM_MS, and the landing goes on after LANDING_AUTO_CONTINUE_MS). */
+const MODEL_TOUR = false;
 export function LivingHero({
   onContinue,
   onChapter,
@@ -38,6 +44,16 @@ export function LivingHero({
     window.addEventListener(LANDING_WAY_IN, show);
     return () => window.removeEventListener(LANDING_WAY_IN, show);
   }, []);
+  // (as the tour before it) not with reduced motion, nor once the visitor has touched anything on the page
+  useEffect(() => {
+    if (!wayIn || autoContinued || reduced || interacted.current) return;
+    const timer = window.setTimeout(() => {
+      if (interacted.current) return;
+      autoContinued = true;
+      onContinue();
+    }, LANDING_AUTO_CONTINUE_MS);
+    return () => window.clearTimeout(timer);
+  }, [wayIn, reduced, onContinue]);
   const lastIn = {
     opacity: wayIn ? 1 : 0,
     transition: 'opacity 700ms ease',
@@ -65,7 +81,7 @@ export function LivingHero({
   useEffect(() => {
     if (!wayIn || reduced || !visible || interacted.current) return;
     const timer = window.setInterval(() => {
-      if (interacted.current || document.hidden) return;
+      if (!MODEL_TOUR || interacted.current || document.hidden) return;
       tourStep.current += 1;
       if (tourStep.current < LANDING_MODELS.length) {
         setScene((FIRST_SCENE + tourStep.current) % LANDING_MODELS.length);

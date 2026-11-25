@@ -33,17 +33,17 @@ vi.mock('./landing-tile-stage', () => ({
         onClick={() => {
           onInteraction?.();
           onSelect(
-            LANDING_MODELS.findIndex((model) => model.label === 'Build detailed brain models')
+            LANDING_MODELS.findIndex((model) => model.label === 'Extract skeletons and spines')
           );
         }}
       >
-        Show Build detailed brain models
+        Show Extract skeletons and spines
       </button>
     </div>
   ),
 }));
 
-import { FIRST_SCENE, LivingHero } from './living-hero';
+import { FIRST_SCENE, LANDING_AUTO_CONTINUE_MS, LivingHero } from './living-hero';
 
 let reduced = false;
 beforeEach(() => {
@@ -77,16 +77,24 @@ describe('public science opening', () => {
     );
   });
 
-  it('shows all eight models for three seconds each before continuing once', () => {
+  it('waits for the whole landing before counting down to the first chapter', () => {
     const onContinue = vi.fn();
     render(<LivingHero onContinue={onContinue} onChapter={vi.fn()} />);
+    act(() => vi.advanceTimersByTime(20_000));
+    expect(onContinue).not.toHaveBeenCalled();
+  });
+
+  it('goes on to the first chapter 5 s after the landing is in, once a page load', () => {
+    const onContinue = vi.fn();
+    const { unmount } = render(<LivingHero onContinue={onContinue} onChapter={vi.fn()} />);
     act(() => window.dispatchEvent(new Event('landing-way-in')));
-    for (let index = 0; index < LANDING_MODELS.length; index++) {
-      expect(screen.getByTestId('science-caption')).toHaveTextContent(LANDING_MODELS[index].label);
-      expect(onContinue).not.toHaveBeenCalled();
-      act(() => vi.advanceTimersByTime(3000));
-    }
+    act(() => vi.advanceTimersByTime(LANDING_AUTO_CONTINUE_MS - 1));
+    expect(onContinue).not.toHaveBeenCalled();
+    act(() => vi.advanceTimersByTime(1));
     expect(onContinue).toHaveBeenCalledTimes(1);
+    unmount();
+    render(<LivingHero onContinue={onContinue} onChapter={vi.fn()} />);
+    act(() => window.dispatchEvent(new Event('landing-way-in')));
     act(() => vi.advanceTimersByTime(20_000));
     expect(onContinue).toHaveBeenCalledTimes(1);
   });
@@ -95,8 +103,8 @@ describe('public science opening', () => {
     const onContinue = vi.fn();
     render(<LivingHero onContinue={onContinue} onChapter={vi.fn()} />);
     act(() => window.dispatchEvent(new Event('landing-way-in')));
-    fireEvent.click(screen.getByRole('button', { name: 'Show Build detailed brain models' }));
-    expect(screen.getByTestId('science-caption')).toHaveTextContent('Build detailed brain models');
+    fireEvent.click(screen.getByRole('button', { name: 'Show Extract skeletons and spines' }));
+    expect(screen.getByTestId('science-caption')).toHaveTextContent('Extract skeletons and spines');
     act(() => vi.advanceTimersByTime(20_000));
     expect(onContinue).not.toHaveBeenCalled();
   });
