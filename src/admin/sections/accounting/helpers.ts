@@ -9,7 +9,7 @@ import { changedFields } from '../../shared/changed-fields';
 import { parseDay } from '../../shared/day';
 import { afterDate, REQUIRED } from '../../shared/form-modal';
 import { formatDateTime } from '../../shared/format';
-import { Amount, Fraction } from './schemas';
+import { Amount, Fraction, MAX_QUANTITY } from './schemas';
 import {
   AccountingErrorCode,
   AccountingFilter,
@@ -307,6 +307,34 @@ export function endField(start?: string, required = false): FormModalField {
     ],
   };
 }
+
+const START_AHEAD_MINUTES = 5;
+
+export const startsAhead: Rule = {
+  validator: async (_, value?: string) => {
+    if (value && dayjs(value).isBefore(dayjs().add(START_AHEAD_MINUTES, 'minute'))) {
+      throw new Error(
+        `Has to start at least ${START_AHEAD_MINUTES} minutes from now, so the old price can end then`
+      );
+    }
+  },
+};
+
+export const TIER_END: Rule[] = [
+  REQUIRED,
+  { type: 'number', max: MAX_QUANTITY, message: `At most ${MAX_QUANTITY}` },
+];
+
+export const afterPrevious =
+  (index: number): Rule =>
+  ({ getFieldValue }) => ({
+    validator: async (_, value?: number | null) => {
+      const from = index === 0 ? 0 : getFieldValue(['tiers', index - 1, 'to']);
+      if (value != null && from != null && value <= from) {
+        throw new Error(`Has to be more than ${from}`);
+      }
+    },
+  });
 
 export const discountSummary = (discount: TDiscount) =>
   `${fractionToPercent(discount.discount)}% from ${formatDateTime(discount.valid_from)}${

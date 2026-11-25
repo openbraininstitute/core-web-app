@@ -1,12 +1,12 @@
 'use client';
 
 import { Button, Form, Input, InputNumber, Modal, Select } from 'antd';
-import dayjs from 'dayjs';
 import { useState } from 'react';
 
 import { FormModalItem, REQUIRED } from '../../../shared/form-modal';
 import { lockWhilePending } from '../../../shared/form-props';
 import {
+  afterPrevious,
   endField,
   isCurrent,
   priceBody,
@@ -16,47 +16,20 @@ import {
   SUBTYPE_OPTIONS,
   schemaRule,
   startField,
+  startsAhead,
+  TIER_END,
 } from '../helpers';
-import { LEGACY_SUBTYPES, MAX_QUANTITY, MAX_TIERS, PriceBody, PriceDecimal } from '../schemas';
+import { LEGACY_SUBTYPES, MAX_TIERS, PriceBody, PriceDecimal } from '../schemas';
 import { ChargeType } from '../types';
 import { useDialogWrite } from './action-button';
 import { CostExamples, PriceTiersTable } from './price-parts';
 import { usePricesFor } from './queries';
 
-import type { Rule } from 'antd/es/form';
 import type { TPriceBody, TPriceValues } from '../types';
 
 const CURRENT_SUBTYPES = SUBTYPE_OPTIONS.filter(({ value }) => !LEGACY_SUBTYPES.includes(value));
 
 const DECIMAL = schemaRule(PriceDecimal);
-
-const START_AHEAD_MINUTES = 5;
-
-const startsAhead: Rule = {
-  validator: async (_, value?: string) => {
-    if (value && dayjs(value).isBefore(dayjs().add(START_AHEAD_MINUTES, 'minute'))) {
-      throw new Error(
-        `Has to start at least ${START_AHEAD_MINUTES} minutes from now, so the old price can end then`
-      );
-    }
-  },
-};
-
-const TIER_END: Rule[] = [
-  REQUIRED,
-  { type: 'number', max: MAX_QUANTITY, message: `At most ${MAX_QUANTITY}` },
-];
-
-const afterPrevious =
-  (index: number): Rule =>
-  ({ getFieldValue }) => ({
-    validator: async (_, value?: number | null) => {
-      const from = index === 0 ? 0 : getFieldValue(['tiers', index - 1, 'to']);
-      if (value != null && from != null && value <= from) {
-        throw new Error(`Has to be more than ${from}`);
-      }
-    },
-  });
 
 function OtherPrices({ body, priceId }: { body: TPriceBody; priceId?: number }) {
   const prices = usePricesFor(body);
