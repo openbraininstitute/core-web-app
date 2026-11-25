@@ -95,16 +95,28 @@ function blockSchemaOf(rootSchema: TLooseSchema, block: unknown): TLooseSchema {
   );
 }
 
+/** The title of the deepest part of a path that has one, walking the schema's `properties`. */
+function deepestTitle(blockSchema: TLooseSchema, fieldPath: string[]): string | undefined {
+  let node: TLooseSchema = blockSchema;
+  let title: string | undefined;
+  for (const segment of fieldPath) {
+    node = get(node, ['properties', segment]);
+    if (!node) break;
+    title = get(node, 'title') ?? title;
+  }
+  return title;
+}
+
 /** An issue with the section, entry and field it belongs to, named by their schema titles. */
 export function issueLineOf(schema: ConfigSchema, config: Config, issue: TFieldIssue): TIssueLine {
   const [rootElement = '', ...rest] = segmentsOf(issue.path);
   const rootSchema: TLooseSchema = get(schema, ['properties', rootElement]);
   const isDictionary = get(rootSchema, 'ui_element') === ScanConfigUIElementDict.BlockDictionary;
   const entry = isDictionary ? rest[0] : undefined;
-  const field = isDictionary ? rest[1] : rest[0];
+  const fieldPath = isDictionary ? rest.slice(1) : rest;
+  const [field] = fieldPath;
   const block = entry === undefined ? config[rootElement] : get(config, [rootElement, entry]);
-  const fieldTitle: string | undefined =
-    field && (get(blockSchemaOf(rootSchema, block), ['properties', field, 'title']) ?? field);
+  const fieldTitle = deepestTitle(blockSchemaOf(rootSchema, block), fieldPath) ?? field;
   const where = [get(rootSchema, 'title') ?? rootElement, entry].filter(Boolean).join(', ');
 
   return {

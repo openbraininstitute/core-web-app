@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createConfigValidator } from '@/features/scan-config/components/hooks';
 import { IssueList } from '@/features/scan-config/components/issue-list';
 import Block from '@/features/scan-config/components/ui-blocks/block';
-import { fieldIssuesOf } from '@/features/scan-config/issues';
+import { fieldIssuesOf, issueLineOf } from '@/features/scan-config/issues';
 import { createScanConfigStore } from '@/features/scan-config/store';
 import {
   type Config,
@@ -117,6 +117,39 @@ describe('fieldIssuesOf', () => {
 
     expect(issues).toHaveLength(1);
     expect(issues[0]?.path).toBe('/neuron_sets/S');
+  });
+});
+
+describe('issueLineOf', () => {
+  const nested = {
+    properties: {
+      mechanisms: {
+        title: 'Mechanisms',
+        properties: {
+          selection: {
+            title: 'Selection',
+            properties: { models: { title: 'Ion channel models' }, untitled: {} },
+          },
+        },
+      },
+    },
+  } as unknown as ConfigSchema;
+
+  it('names an issue below a field by the deepest title on its path', () => {
+    const line = issueLineOf(nested, {}, { path: '/mechanisms/selection/models', message: 'm' });
+
+    expect(line.title).toBe('Mechanisms: Ion channel models');
+    expect(line.field).toBe('selection');
+  });
+
+  it('keeps the last title it finds when a deeper part has none', () => {
+    const line = issueLineOf(
+      nested,
+      {},
+      { path: '/mechanisms/selection/untitled/0', message: 'm' }
+    );
+
+    expect(line.title).toBe('Mechanisms: Selection');
   });
 });
 
