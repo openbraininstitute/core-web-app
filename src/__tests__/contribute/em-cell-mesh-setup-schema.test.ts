@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { createEMCellMeshConfig } from '@/ui/segments/contribute/em-cell-mesh/config';
-import { SetupSchema } from '@/ui/segments/contribute/em-cell-mesh/schema';
+import { EMCellMeshSchema, SetupSchema } from '@/ui/segments/contribute/em-cell-mesh/schema';
 
 const BRAIN_REGION_ID = '7b2e33b4-37a4-4c3d-9f6c-1b2d3e4f5a6b';
 const DATASET_ID = '1c8f0d6e-5a2b-4c7d-8e9f-0a1b2c3d4e5f';
@@ -69,5 +69,16 @@ describe('EM cell mesh setup schema', () => {
     const result = SetupSchema.safeParse(filledSetup);
 
     expect(result.data?.dense_reconstruction_cell_id).toBe('864691135405224174');
+  });
+
+  it('checks the cell id through the per-step schema the form validates with', () => {
+    const stepSchema = EMCellMeshSchema.pick({ setup: true });
+    const result = stepSchema.safeParse({
+      setup: { ...filledSetup, dense_reconstruction_cell_id: '9223372036854775808' },
+    });
+
+    expect(result.error?.issues.map((issue) => issue.path.join('.'))).toEqual([
+      'setup.dense_reconstruction_cell_id',
+    ]);
   });
 });
