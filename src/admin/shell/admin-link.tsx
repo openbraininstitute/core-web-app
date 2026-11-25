@@ -14,6 +14,7 @@ const ROUTES = {
   course: 'courses',
   account: 'accounting/accounts',
   accountingJob: 'accounting/jobs',
+  accountingPrice: 'accounting/prices',
 };
 
 export function adminHref(kind: keyof typeof ROUTES, id: string) {

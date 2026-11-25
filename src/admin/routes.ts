@@ -36,6 +36,7 @@ export const ADMIN_NAV: { label: string; items: AdminNavItem[] }[] = [
       { label: 'Jobs', href: `${ADMIN_ROOT}/accounting/jobs`, need: 'accounting.admin' },
       { label: 'Journal', href: `${ADMIN_ROOT}/accounting/journal`, need: 'accounting.admin' },
       { label: 'Reports', href: `${ADMIN_ROOT}/accounting/reports`, need: 'accounting.admin' },
+      { label: 'Prices', href: `${ADMIN_ROOT}/accounting/prices`, need: 'accounting.admin' },
       {
         label: 'Discounts',
         href: `${ADMIN_ROOT}/accounting/discounts`,

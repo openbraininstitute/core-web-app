@@ -10,8 +10,10 @@ import {
   DiscountBody,
   DiscountPatchBody,
   EmptyBody,
+  ExpirePriceBody,
   GrantBody,
   MoveBody,
+  PriceBody,
   RefundBody,
   ReverseBody,
   TopUpBody,
@@ -81,6 +83,14 @@ export const ACCOUNTING_ROUTES: TAccountingRoute[] = [
   ]),
   read(`admin/job/${UUID}`),
   read('admin/discount', ['vlab_id', ...PAGE_PARAMS]),
+  read('admin/price', [
+    'service_type',
+    'service_subtype',
+    'vlab_id',
+    'only_default',
+    ...PAGE_PARAMS,
+  ]),
+  read(`admin/price/${INT_ID}`),
   read('balance/system'),
   read(`report/(system|virtual-lab/${UUID}|project/${UUID})`, [
     'started_after',
@@ -92,6 +102,9 @@ export const ACCOUNTING_ROUTES: TAccountingRoute[] = [
   write(AccountingMethod.Post, 'admin/discount', DiscountBody),
   write(AccountingMethod.Patch, `admin/discount/${INT_ID}`, DiscountPatchBody),
   write(AccountingMethod.Delete, `admin/discount/${INT_ID}`, EmptyBody),
+  write(AccountingMethod.Post, 'admin/price', PriceBody),
+  write(AccountingMethod.Put, `admin/price/${INT_ID}`, PriceBody),
+  write(AccountingMethod.Post, `admin/price/${INT_ID}/expire`, ExpirePriceBody),
   write(AccountingMethod.Post, 'budget/top-up', TopUpBody),
   write(AccountingMethod.Post, 'budget/assign', AssignBody),
   write(AccountingMethod.Post, 'budget/reverse', ReverseBody),
@@ -207,7 +220,7 @@ const unanswered = (write: boolean) =>
   write
     ? accountingReply(
         502,
-        "Accounting didn't answer, so this change may or may not have gone through. Check the journal or the discounts list before trying again.",
+        "Accounting didn't answer, so this change may or may not have gone through. Check the journal, the discounts or the prices list before trying again.",
         AccountingErrorCode.OutcomeUnknown
       )
     : accountingReply(502, "Accounting didn't answer.");

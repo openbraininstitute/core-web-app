@@ -4,6 +4,9 @@ import { ApiError } from '@/api/error';
 import { parseApiError } from '@/api/utils';
 import { compactRecord } from '@/utils/dictionary';
 
+import { errorReason } from '../../shared/errors';
+import { formatDateTime } from '../../shared/format';
+import { checkPriceEdit, checkPriceEnd, editMoves, isOutcomeUnknown, priceKey } from './helpers';
 import { AccountingErrorCode, AccountingMethod } from './types';
 
 import type {
@@ -21,6 +24,7 @@ import type {
   TDiscountBody,
   TDiscountFilters,
   TDiscountPatchBody,
+  TExpirePriceBody,
   TGrantBody,
   TJobFilters,
   TJobReport,
@@ -30,6 +34,11 @@ import type {
   TPageParams,
   TPaginated,
   TParams,
+  TPrice,
+  TPriceBody,
+  TPriceFilters,
+  TPriceLists,
+  TPriceScope,
   TProjectAccount,
   TRefund,
   TRefundBody,
@@ -99,6 +108,20 @@ export const listJournal = (params: TJournalFilters & TPageParams, signal?: Abor
 export const listDiscounts = (params: TDiscountFilters & TPageParams, signal?: AbortSignal) =>
   paged<TDiscount>('admin/discount', params, signal);
 
+export const listPrices = (params: TPriceFilters & TPageParams, signal?: AbortSignal) =>
+  paged<TPrice>('admin/price', params, signal);
+
+const ONE_PAGE = { page: 1, page_size: 100 };
+
+export const listLabDiscounts = (vlabId: string, signal?: AbortSignal) =>
+  listDiscounts({ vlab_id: vlabId, ...ONE_PAGE }, signal);
+
+export const listPricesFor = (scope: TPriceScope, signal?: AbortSignal) =>
+  listPrices({ ...priceKey(scope), ...ONE_PAGE }, signal);
+
+export const getPrice = (priceId: number, signal?: AbortSignal) =>
+  accountingGet<TPrice>(`admin/price/${priceId}`, undefined, signal);
+
 export const getSystemBalance = (signal?: AbortSignal) =>
   accountingGet<{ balance: string }>('balance/system', undefined, signal);
 
@@ -117,7 +140,7 @@ export const listReport = (
 ) => paged<TJobReport>(path, params, signal);
 
 const UNKNOWN_OUTCOME =
-  "The reply didn't arrive, so this change may or may not have gone through. Check the journal or the discounts list before trying again.";
+  "The reply didn't arrive, so this change may or may not have gone through. Check the journal, the discounts or the prices list before trying again.";
 
 const isUnanswered = (error: unknown) =>
   !(error instanceof ApiError) || ((error.cause?.status ?? 0) >= 500 && !error.cause?.message);
@@ -173,3 +196,68 @@ export const updateDiscount = (discountId: number, body: TDiscountPatchBody) =>
 
 export const deleteDiscount = (discountId: number) =>
   accountingWrite(`admin/discount/${discountId}`, {}, AccountingMethod.Delete);
+
+export const createPrice = (body: TPriceBody) => accountingWrite<TPrice>('admin/price', body);
+
+export const updatePrice = (priceId: number, body: TPriceBody) =>
+  accountingWrite<TPrice>(`admin/price/${priceId}`, body, AccountingMethod.Put);
+
+export const expirePrice = (priceId: number, body: TExpirePriceBody) =>
+  accountingWrite<TPrice>(`admin/price/${priceId}/expire`, body);
+
+async function pricesAround(scope: TPriceScope): Promise<TPriceLists> {
+  const pages = await Promise.all(
+    (scope.vlab_id ? [scope, { ...scope, vlab_id: null }] : [scope]).map((each) =>
+      listPricesFor(each)
+    )
+  );
+  return {
+    lists: pages.map(({ data }) => data),
+    truncated: pages.some(({ data, pagination }) => pagination.total > data.length),
+  };
+}
+
+export async function assertPriceEnd(price: TPrice, end: string | null) {
+  if (end) checkPriceEnd((await pricesAround(price)).lists, price, end);
+}
+
+export async function assertPriceEdit(price: TPrice, next: TPriceBody) {
+  const { later, endMoved } = editMoves(price, next);
+  if (later || endMoved) checkPriceEdit(await pricesAround(price), price, next);
+}
+
+const partlyDone = (message: string) =>
+  new ApiError(message, { code: AccountingErrorCode.PartlyDone });
+
+/** Adds `next` and ends `price` when it starts, once the new one is listed. */
+export async function replacePrice(price: TPrice, next: TPriceBody) {
+  if (Date.parse(next.valid_from) < Date.now() + 60_000) {
+    throw new ApiError(
+      'The new price would start within a minute. Pick a later start, so this one can still end then.',
+      { status: 400 }
+    );
+  }
+  if (price.valid_to && Date.parse(next.valid_from) > Date.parse(price.valid_to)) {
+    throw new ApiError(
+      `This price ends ${formatDateTime(price.valid_to)}. Start the new one by then, or add it as a new price.`,
+      { status: 400 }
+    );
+  }
+  await assertPriceEnd(price, next.valid_to);
+  const created = await createPrice(next);
+  if (!created) throw new ApiError(UNKNOWN_OUTCOME, { code: AccountingErrorCode.OutcomeUnknown });
+  const listed = await listPricesFor(price).catch(() => null);
+  if (!listed?.data.some((row) => row.id === created.id)) {
+    throw partlyDone(
+      `Price #${created.id} was added but isn't listed yet, so this one wasn't ended. Reload, then end this price when the new one starts.`
+    );
+  }
+  await expirePrice(price.id, { valid_to: created.valid_from }).catch((error) => {
+    throw partlyDone(
+      isOutcomeUnknown(error)
+        ? `Price #${created.id} was added, but no reply came about ending this one. Reload and check whether it ends when the new one starts before ending it again.`
+        : `Price #${created.id} was added, but this one couldn't be ended: ${errorReason(error).replace(/\.$/, '')}. The new one applies from its start anyway, as it started last.`
+    );
+  });
+  return created;
+}
