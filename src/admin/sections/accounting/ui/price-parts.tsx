@@ -23,9 +23,8 @@ export function PriceTiersTable({ pricing }: { pricing: TPricing }) {
           </tr>
         </thead>
         <tbody className="text-primary-9">
-          {tiers.map((tier, index) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: zero-width tiers share a start, and rows keep their order
-            <tr key={index}>
+          {tiers.map((tier) => (
+            <tr key={tier.min_quantity}>
               <td className={CELL}>
                 <span className={NUMBER}>{tier.min_quantity}</span>
                 {tier.max_quantity === null ? (
@@ -43,7 +42,7 @@ export function PriceTiersTable({ pricing }: { pricing: TPricing }) {
           ))}
         </tbody>
       </table>
-      {tiers.length < pricing.tiers.length && (
+      {storage && tiers.length < pricing.tiers.length && (
         <p className="text-neutral-4 text-sm">
           It has {pricing.tiers.length} tiers stored, but accounting charges storage by the first
           one's rate only.

@@ -23,7 +23,7 @@ describe('PriceTiersTable', () => {
     expect(screen.getByText(/2 tiers stored/)).toBeTruthy();
   });
 
-  it('shows zero-width tiers without clashing rows', () => {
+  it('leaves out a zero-width tier, as accounting never charges it', () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const pricing: TPricing = {
       service_type: 'oneshot',
@@ -36,7 +36,9 @@ describe('PriceTiersTable', () => {
 
     render(<PriceTiersTable pricing={pricing} />);
 
-    expect(screen.getAllByRole('row')).toHaveLength(4);
+    expect(screen.getAllByRole('row')).toHaveLength(3);
+    expect(screen.queryByText('5')).toBeNull();
+    expect(screen.queryByText(/tiers stored/)).toBeNull();
     expect(consoleError).not.toHaveBeenCalled();
     consoleError.mockRestore();
   });

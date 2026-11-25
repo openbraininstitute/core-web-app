@@ -523,6 +523,12 @@ describe('price labels', () => {
 
   it('summarizes one tier or counts several', () => {
     expect(tierSummary(PRICE)).toBe('2 tiers');
+    expect(
+      tierSummary({
+        ...PRICE,
+        tiers: [tier(0, 10, '0.1'), tier(10, 10, '0', '5'), tier(10, null, '0.05')],
+      })
+    ).toBe('2 tiers');
     expect(tierSummary({ ...PRICE, tiers: [tier(0, null, '0.05', '1')] })).toBe(
       '1 + 0.05 per unit'
     );

@@ -376,8 +376,7 @@ export const SUBTYPE_OPTIONS = Object.values(AccountingSubtype).map((value) => (
 const FREE_ABOVE: TTierValues = { to: null, fixed_cost: '0', multiplier: '0' };
 
 // The form's last row is always open: a closed last tier gets a free one after it, as stored.
-function tierValues(stored: TPriceTier[], type: TChargeType): TTierValues[] {
-  const tiers = stored.filter(({ min_quantity: min, max_quantity: max }) => max !== min);
+function tierValues(tiers: TPriceTier[], type: TChargeType): TTierValues[] {
   const values = tiers.map(({ max_quantity: max, fixed_cost: fixed, multiplier }) => ({
     to: max,
     fixed_cost: plainDecimal(fixed),
@@ -464,11 +463,11 @@ export const COST_EXAMPLES: Record<TChargeType, Array<{ label: string; quantity:
   ],
 };
 
-/** The tiers accounting charges by: storage takes only the first tier's rate. */
+/** The tiers accounting charges by: storage takes only the first tier's rate, and a tier with no width charges nothing. */
 export const chargedTiers = ({ service_type: type, tiers }: TPricing): TPriceTier[] =>
   type === ChargeType.Storage && tiers.length
     ? [{ ...tiers[0], max_quantity: null, fixed_cost: '0' }]
-    : tiers;
+    : tiers.filter(({ min_quantity: min, max_quantity: max }) => max === null || max > min);
 
 export const rateUnit = (type?: TChargeType) =>
   type === ChargeType.Storage ? 'byte-second' : 'unit';
