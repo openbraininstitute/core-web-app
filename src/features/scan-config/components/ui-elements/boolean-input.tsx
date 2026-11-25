@@ -15,7 +15,6 @@ export interface BooleanInputProps {
   value: boolean | null;
   onChange: (value: boolean) => void;
   disabled?: boolean;
-  ariaLabel?: string;
 }
 
 /**
@@ -39,7 +38,6 @@ export default function BooleanInput({
   value,
   onChange,
   disabled = false,
-  ariaLabel,
 }: BooleanInputProps) {
   const instanceKey = useId();
 
@@ -63,7 +61,6 @@ export default function BooleanInput({
         checked={normalizedValue}
         onChange={handleChange}
         disabled={disabled}
-        aria-label={ariaLabel}
         className={cn(
           '[&_.ant-checkbox-inner]:w-6 [&_.ant-checkbox-inner]:h-6 [&_.ant-checkbox-inner]:rounded',
           '[&_.ant-checkbox-inner]:border-gray-300 [&_.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-8 ',

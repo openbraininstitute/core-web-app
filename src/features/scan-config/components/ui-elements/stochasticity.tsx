@@ -10,7 +10,6 @@ export interface IStochasticityProps {
   value: boolean | null;
   onChange: (value: boolean) => void;
   disabled?: boolean;
-  ariaLabel?: string;
 }
 
 /**
@@ -19,22 +18,6 @@ export interface IStochasticityProps {
  * The field is a boolean at heart (enable stochastic mechanisms globally), so this is a thin
  * wrapper that delegates to {@link BooleanInput}.
  */
-export function Stochasticity({
-  id,
-  aria,
-  value,
-  onChange,
-  disabled,
-  ariaLabel,
-}: IStochasticityProps) {
-  return (
-    <BooleanInput
-      id={id}
-      aria={aria}
-      value={value}
-      onChange={onChange}
-      disabled={disabled}
-      ariaLabel={ariaLabel}
-    />
-  );
+export function Stochasticity({ id, aria, value, onChange, disabled }: IStochasticityProps) {
+  return <BooleanInput id={id} aria={aria} value={value} onChange={onChange} disabled={disabled} />;
 }

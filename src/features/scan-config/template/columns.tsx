@@ -20,13 +20,15 @@ type ColumnProps = {
   state: ScanConfigTemplateState;
 };
 
-/** The form around the left and middle columns; its submit generates the campaign. */
+/** The form around the left and middle columns; its submit generates the campaign. A read-only view has nothing to submit. */
 export function ConfigForm({
   props,
   state,
   className,
   children,
 }: ColumnProps & { className?: string; children: ReactNode }) {
+  if (props.readOnly) return <div className={className}>{children}</div>;
+
   return (
     <ScanConfigForm
       loading={state.loading}
