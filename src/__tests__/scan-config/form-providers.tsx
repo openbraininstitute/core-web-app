@@ -9,8 +9,7 @@ import {
 } from '@/features/scan-config/use-config-store';
 
 import type { ReactElement, ReactNode } from 'react';
-import type { TBlockState } from '@/features/scan-config/store';
-import type { ConfigSchema } from '@/features/scan-config/types';
+import type { ConfigSchema, TBlockState } from '@/features/scan-config/types';
 
 const ANY_OBJECT = { type: 'object' } as unknown as ConfigSchema;
 

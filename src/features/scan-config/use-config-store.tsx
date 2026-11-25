@@ -18,6 +18,7 @@ import { fieldIssuesOf, issueAt } from '@/features/scan-config/issues';
 import {
   createBlockScope,
   createDerivedReader,
+  createPropsBlockScope,
   createReportedIssues,
   createSliceReader,
   entrySummariesOf,
@@ -30,15 +31,17 @@ import {
 
 import type { ErrorObject } from 'ajv';
 import type { ReactNode } from 'react';
-import type { IBlockScope, TBlockState } from '@/features/scan-config/store';
 import type {
   Config,
   ConfigSchema,
   ConfigValue,
+  IBlockScope,
   IScanConfigIssues,
   IScanConfigStore,
+  TBlockState,
   TConfigErrors,
   TEntrySummary,
+  TSetFieldValue,
 } from '@/features/scan-config/types';
 
 const ScanConfigStoreContext = createContext<IScanConfigStore | null>(null);
@@ -306,11 +309,10 @@ export function BlockScopeProvider({
   return <BlockScopeContext value={scope}>{children}</BlockScopeContext>;
 }
 
-const noSubscription = () => () => {};
-
 /**
  * A block scope over a block held in props (a nested object): fields below read `state` and
- * write the whole block back with `setState`. They re-render when the props change.
+ * write the whole block back with `setState`. They re-render when the props change. Updates made
+ * before the props change build on each other.
  */
 export function PropsBlockScopeProvider({
   state,
@@ -321,14 +323,7 @@ export function PropsBlockScopeProvider({
   setState: (next: TBlockState) => void;
   children: ReactNode;
 }) {
-  const scope = useMemo<IBlockScope>(
-    () => ({
-      getSnapshot: () => state,
-      subscribe: noSubscription,
-      update: (updater) => setState(updater(state)),
-    }),
-    [state, setState]
-  );
+  const scope = useMemo(() => createPropsBlockScope(state, setState), [state, setState]);
 
   return <BlockScopeContext value={scope}>{children}</BlockScopeContext>;
 }
@@ -360,8 +355,6 @@ export function useBlockValue<TSlice>(
 export function useUpdateBlock(): IBlockScope['update'] {
   return useBlockScope().update;
 }
-
-export type TSetFieldValue = (next: ConfigValue | undefined) => void;
 
 /**
  * The value of one field of the block in scope and its setter; the caller re-renders only when

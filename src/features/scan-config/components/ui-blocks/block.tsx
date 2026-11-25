@@ -54,8 +54,11 @@ type TFieldRowProps = {
 function NeuronFilterNotice({
   paramSchema,
   schemaMappingConfig,
+  id,
   children,
 }: Pick<TFieldRowProps, 'schemaMappingConfig'> & {
+  /** the id the field is described by, so the note is read with the field */
+  id: string | undefined;
   children: ReactNode;
   paramSchema: Extract<
     ParamSchema,
@@ -65,7 +68,11 @@ function NeuronFilterNotice({
   const { population, properties } = useNeuronFilterProperties(paramSchema, schemaMappingConfig);
 
   if (!population || Object.keys(properties).length > 0) return children;
-  return <span className="text-red-500">No properties available</span>;
+  return (
+    <span id={id} className="text-red-500">
+      No properties available
+    </span>
+  );
 }
 
 function FieldRow({ required, diffClass, ...control }: TFieldRowProps) {
@@ -147,7 +154,11 @@ function FieldRow({ required, diffClass, ...control }: TFieldRowProps) {
       </FieldDescriptionTooltip>
 
       {paramSchema.ui_element === ScanConfigUIElementDict.NeuronPropertyFilter ? (
-        <NeuronFilterNotice paramSchema={paramSchema} schemaMappingConfig={schemaMappingConfig}>
+        <NeuronFilterNotice
+          paramSchema={paramSchema}
+          schemaMappingConfig={schemaMappingConfig}
+          id={issueId}
+        >
           {issueText}
         </NeuronFilterNotice>
       ) : (

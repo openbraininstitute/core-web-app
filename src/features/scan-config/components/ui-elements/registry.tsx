@@ -77,6 +77,8 @@ import {
   isCircuitNeuronalManipulationType,
   type ParamSchema,
   ScanConfigUIElementDict,
+  type TBlockState,
+  type TSetFieldValue,
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
 import {
@@ -89,8 +91,6 @@ import {
 import type { ComponentType } from 'react';
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
-import type { TBlockState } from '@/features/scan-config/store';
-import type { TSetFieldValue } from '@/features/scan-config/use-config-store';
 import type { Nullish } from '@/utils/type';
 
 type TFieldKind = ParamSchema['ui_element'];
@@ -156,7 +156,7 @@ function DistanceFunctionInputField({
       paramSchema={paramSchema}
       value={typeof value === 'string' ? value : ''}
       disabled={disabled}
-      errorPath={errorPathPrefix ? `${errorPathPrefix}/${fieldKey}` : undefined}
+      errorPath={errorPathPrefix}
       // Non-nullable `str`: clearing omits the key so the schema default applies; `null`
       // is rejected by both Ajv ("must be string") and the backend (422).
       onChange={(next) => setValue(next || undefined)}
@@ -179,7 +179,7 @@ function DistanceFunctionInputNullableField({
       paramSchema={paramSchema}
       value={typeof value === 'string' ? value : ''}
       disabled={disabled}
-      errorPath={errorPathPrefix ? `${errorPathPrefix}/${fieldKey}` : undefined}
+      errorPath={errorPathPrefix}
       onChange={(next) => setValue(next || null)}
     />
   );
@@ -342,14 +342,7 @@ function EntityPropertyDropdownField({
   );
 }
 
-function BooleanInputField({
-  paramSchema,
-  value,
-  setValue,
-  disabled,
-  controlId,
-  controlAria,
-}: TFieldProps) {
+function BooleanInputField({ value, setValue, disabled, controlId, controlAria }: TFieldProps) {
   return (
     <BooleanInput
       id={controlId}
@@ -357,19 +350,11 @@ function BooleanInputField({
       value={typeof value === 'boolean' ? value : null}
       disabled={disabled}
       onChange={setValue}
-      ariaLabel={paramSchema.description}
     />
   );
 }
 
-function StochasticityField({
-  paramSchema,
-  value,
-  setValue,
-  disabled,
-  controlId,
-  controlAria,
-}: TFieldProps) {
+function StochasticityField({ value, setValue, disabled, controlId, controlAria }: TFieldProps) {
   return (
     <Stochasticity
       id={controlId}
@@ -377,7 +362,6 @@ function StochasticityField({
       value={typeof value === 'boolean' ? value : null}
       disabled={disabled}
       onChange={setValue}
-      ariaLabel={paramSchema.description}
     />
   );
 }
@@ -579,7 +563,7 @@ function DistributionParameterListField({
       rows={distributionParameterRows(functionText, stored)}
       stored={stored}
       disabled={disabled}
-      errorPath={errorPathPrefix ? `${errorPathPrefix}/${fieldKey}` : undefined}
+      errorPath={errorPathPrefix}
       onChange={(rows: TDistributionParameter[]) => setValue(rows as unknown as ConfigValue)}
     />
   );

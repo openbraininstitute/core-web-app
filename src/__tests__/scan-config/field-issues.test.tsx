@@ -17,6 +17,7 @@ import {
   ScanConfigErrorsProvider,
   ScanConfigStoreProvider,
   useFieldIssue,
+  useReportedIssues,
 } from '@/features/scan-config/use-config-store';
 
 import type { ReactNode } from 'react';
@@ -306,5 +307,100 @@ describe('what a field shows', () => {
     );
 
     expect(visibleTexts(container)).toEqual(['No properties available']);
+    expect(
+      screen.getByRole('group', { name: 'Neuron property filter' })
+    ).toHaveAccessibleDescription('No properties available');
+  });
+});
+
+describe('where a field puts its issue', () => {
+  function ReportedPaths() {
+    return <span data-testid="reported-paths">{[...useReportedIssues().keys()].join(' ')}</span>;
+  }
+
+  it('marks a field inside an object field at its own path', () => {
+    const objectBlock = {
+      title: 'Stimulus',
+      description: '',
+      properties: {
+        shape: {
+          title: 'Shape',
+          ui_element: ScanConfigUIElementDict.Object,
+          properties: {
+            width: { title: 'Width', ui_element: ScanConfigUIElementDict.FloatInput },
+          },
+        },
+      },
+    } as unknown as TBlock;
+    const schema = {
+      type: 'object',
+      properties: {
+        stimulus: {
+          type: 'object',
+          properties: {
+            shape: { type: 'object', properties: { width: { type: 'number', minimum: 0 } } },
+          },
+        },
+      },
+    } as unknown as ConfigSchema;
+    const store = createScanConfigStore({ stimulus: { shape: { width: -1 } } });
+    render(
+      <ScanConfigStoreProvider store={store}>
+        <ScanConfigErrorsProvider schema={schema}>
+          <BlockScopeProvider rootElement="stimulus">
+            <Block
+              schema={schema}
+              disabled={false}
+              blockSchema={objectBlock}
+              entity={null}
+              schemaMappingConfig={undefined}
+              rootElement="stimulus"
+              errorPathPrefix="stimulus"
+            />
+          </BlockScopeProvider>
+        </ScanConfigErrorsProvider>
+      </ScanConfigStoreProvider>
+    );
+
+    expect(screen.getByLabelText('Width')).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  it('reports the issue of a distribution parameter list at the field, not one level below', () => {
+    const block = {
+      title: 'Distribution',
+      description: '',
+      properties: {
+        parameters: {
+          title: 'Parameters',
+          ui_element: ScanConfigUIElementDict.DistributionParameterList,
+        },
+      },
+    } as unknown as TBlock;
+    const store = createScanConfigStore({
+      distributions: { D: { function: '{a}*{value}', parameters: [] } },
+    });
+    render(
+      <ScanConfigStoreProvider store={store}>
+        <ScanConfigErrorsProvider schema={{ type: 'object' } as unknown as ConfigSchema}>
+          <BlockScopeProvider rootElement="distributions" entry="D">
+            <Block
+              schema={SCHEMA}
+              disabled={false}
+              blockSchema={block}
+              entity={null}
+              schemaMappingConfig={undefined}
+              rootElement="distributions"
+              selectedEntry="D"
+              errorPathPrefix="distributions/D"
+            />
+          </BlockScopeProvider>
+          <ReportedPaths />
+        </ScanConfigErrorsProvider>
+      </ScanConfigStoreProvider>
+    );
+
+    expect(screen.getByTestId('reported-paths')).toHaveTextContent(
+      /^\/distributions\/D\/parameters$/
+    );
   });
 });

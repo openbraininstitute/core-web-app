@@ -6,8 +6,10 @@ import type { ErrorObject } from 'ajv';
 import type {
   Config,
   ConfigValue,
+  IBlockScope,
   IReportedIssues,
   IScanConfigStore,
+  TBlockState,
   TEntrySummary,
 } from '@/features/scan-config/types';
 
@@ -56,14 +58,26 @@ export function writeBlock(
   return { ...config, [rootElement]: { ...root, [entry]: state } };
 }
 
-export type TBlockState = Record<string, ConfigValue>;
+const noSubscription = () => () => {};
 
-/** One block of the config, as a store of its own: what the fields of that block read and write. */
-export interface IBlockScope {
-  getSnapshot: () => TBlockState;
-  subscribe: (listener: () => void) => () => void;
-  /** The updater runs on the latest block, so updates made in a row never overwrite each other. */
-  update: (updater: (previous: TBlockState) => TBlockState) => void;
+/**
+ * A scope over a block held by its owner (a nested object): `getSnapshot` gives that block, and an
+ * update is handed to `setState`. Updates made in a row build on each other.
+ */
+export function createPropsBlockScope(
+  state: TBlockState,
+  setState: (next: TBlockState) => void
+): IBlockScope {
+  let latest = state;
+
+  return {
+    getSnapshot: () => state,
+    subscribe: noSubscription,
+    update: (updater) => {
+      latest = updater(latest);
+      setState(latest);
+    },
+  };
 }
 
 /** The block with one field set, or without that field when the value is `undefined`. */

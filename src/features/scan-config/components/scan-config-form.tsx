@@ -34,9 +34,20 @@ const FAILURE_MESSAGE_KEY: Record<string, string> = {
   [ScanConfigGenerationStep.EmptyCampaignId]: 'ScanConfigGenerateGridCampaignIdFailed',
 };
 
-/** Enter in a one-line input would submit the form; only the Generate button may do that. */
+/**
+ * Enter in a one-line input would submit the form; only the Generate button may do that. React
+ * also bubbles here the keys pressed in a modal or picker drawn through a portal, so only an
+ * input that belongs to this form is stopped.
+ */
 function keepEnterFromSubmitting(event: KeyboardEvent<HTMLFormElement>) {
-  if (event.key === 'Enter' && event.target instanceof HTMLInputElement) event.preventDefault();
+  const { target, currentTarget } = event;
+  if (
+    event.key === 'Enter' &&
+    target instanceof HTMLInputElement &&
+    target.form === currentTarget
+  ) {
+    event.preventDefault();
+  }
 }
 
 /**

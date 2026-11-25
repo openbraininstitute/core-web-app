@@ -250,6 +250,19 @@ export interface IScanConfigStore {
 /** The schema errors of the config, or `null` when it is valid. */
 export type TConfigErrors = ErrorObject[] | null;
 
+export type TBlockState = Record<string, ConfigValue>;
+
+/** One block of the config, as a store of its own: what the fields of that block read and write. */
+export interface IBlockScope {
+  getSnapshot: () => TBlockState;
+  subscribe: (listener: () => void) => () => void;
+  /** The updater runs on the latest block, so updates made in a row never overwrite each other. */
+  update: (updater: (previous: TBlockState) => TBlockState) => void;
+}
+
+/** Sets the value of one field; `undefined` removes its key. */
+export type TSetFieldValue = (next: ConfigValue | undefined) => void;
+
 /** The name and block type of one entry of a section. */
 export type TEntrySummary = { name: string; type: string | undefined };
 

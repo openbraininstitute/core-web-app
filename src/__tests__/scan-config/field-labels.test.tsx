@@ -18,7 +18,11 @@ const BLOCK = {
   properties: {
     name: { title: 'Name', ui_element: ScanConfigUIElementDict.StringInput },
     gain: { title: 'Gain', ui_element: ScanConfigUIElementDict.FloatInput },
-    enabled: { title: 'Enabled', ui_element: ScanConfigUIElementDict.BooleanInput },
+    enabled: {
+      title: 'Enabled',
+      description: 'Whether the stimulus is applied during the run.',
+      ui_element: ScanConfigUIElementDict.BooleanInput,
+    },
     values: { title: 'Values', ui_element: ScanConfigUIElementDict.DiscreteProbabilities },
     shape: {
       title: 'Shape',
@@ -63,6 +67,13 @@ describe('field labels', () => {
       name: 'outer',
       shape: { name: 'changed' },
     });
+  });
+
+  it('names a boolean field by its title, not by its description', () => {
+    renderStimulus();
+
+    expect(screen.getByLabelText('Enabled')).toHaveAttribute('type', 'checkbox');
+    expect(screen.getByRole('checkbox', { name: 'Enabled' })).toBeTruthy();
   });
 
   it('toggles a boolean field from its label', () => {

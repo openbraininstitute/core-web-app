@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { createPortal } from 'react-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const generateScanConfigCampaign = vi.fn();
@@ -20,6 +21,7 @@ import {
   ScanConfigStoreProvider,
 } from '@/features/scan-config/use-config-store';
 
+import type { ReactNode } from 'react';
 import type { Config, ConfigSchema } from '@/features/scan-config/types';
 
 const SCHEMA = {
@@ -32,9 +34,11 @@ const SCHEMA = {
 function renderForm({
   config = { info: { campaign_name: 'name' } },
   campaignId = '',
+  extra,
 }: {
   config?: Config;
   campaignId?: string;
+  extra?: ReactNode;
 } = {}) {
   const store = createScanConfigStore(config);
   const setCampaignId = vi.fn();
@@ -54,6 +58,7 @@ function renderForm({
             generatedApiUrl="/generate"
             entityType="circuit"
           >
+            {extra}
             <input aria-label="Campaign name" />
             <textarea aria-label="Notes" />
             <GenerateConfigButton
@@ -110,6 +115,20 @@ describe('ScanConfigForm', () => {
 
     expect(notCancelled).toBe(false);
     expect(generateScanConfigCampaign).not.toHaveBeenCalled();
+  });
+
+  it('leaves Enter alone in an input of another form drawn through a portal', () => {
+    function PortaledForm() {
+      return createPortal(
+        <form aria-label="Promotion code">
+          <input aria-label="Code" />
+        </form>,
+        document.body
+      );
+    }
+    renderForm({ extra: <PortaledForm /> });
+
+    expect(fireEvent.keyDown(screen.getByLabelText('Code'), { key: 'Enter' })).toBe(true);
   });
 
   it('leaves Enter alone in a text area', () => {

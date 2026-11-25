@@ -19,7 +19,7 @@ import {
 } from '@/features/scan-config/use-config-store';
 
 import type { ReactNode } from 'react';
-import type { TBlockState } from '@/features/scan-config/store';
+import type { TBlockState } from '@/features/scan-config/types';
 
 const config = (): { info: TBlockState; stimuli: TBlockState } => ({
   info: { campaign_name: 'name', note: 'a' },

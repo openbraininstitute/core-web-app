@@ -11,12 +11,13 @@ import {
   PropsBlockScopeProvider,
   useBlockValue,
   useField,
+  useUpdateBlock,
 } from '@/features/scan-config/use-config-store';
 
 import { renderInBlock } from './form-providers';
 
 import type { ReactNode } from 'react';
-import type { TBlockState } from '@/features/scan-config/store';
+import type { TBlockState } from '@/features/scan-config/types';
 
 const selectNote = (block: TBlockState) => block.note;
 
@@ -50,6 +51,18 @@ describe('PropsBlockScopeProvider', () => {
     act(() => result.current[1](undefined));
 
     expect(setState).toHaveBeenCalledWith({ name: 'a' });
+  });
+
+  it('keeps both of two updates made before the props change', () => {
+    const { setState, wrapper } = setup({ name: 'a', note: 'n' });
+    const { result } = renderHook(() => useUpdateBlock(), { wrapper });
+
+    act(() => {
+      result.current((previous) => ({ ...previous, name: 'b' }));
+      result.current((previous) => ({ ...previous, note: 'm' }));
+    });
+
+    expect(setState).toHaveBeenLastCalledWith({ name: 'b', note: 'm' });
   });
 
   it('follows the block when the props change', () => {
