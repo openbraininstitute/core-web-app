@@ -1,7 +1,7 @@
 import { FACETS_ONLY_PAGE } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { resolveOwnershipParams } from '@/features/data-grid/bindings/entitycore/columns/ownership';
 import { serializeQuery } from '@/features/data-grid/bindings/entitycore/query-serializer';
-import { getProjectOwnershipFilters } from '@/utils/workspace-scope';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
@@ -45,10 +45,8 @@ export function serializeEntitycoreQuery<Row>(
   projectId?: string
 ): TEntitycoreParams {
   const ilike = getEntityByExtendedType({ type: dataType })?.api?.config?.ilikeSearchEnabled;
-  const { projectOwnership, ...params } = serializeQuery(query, schema, {
-    searchMode: ilike ? 'ilike' : 'plain',
-  });
-  return { ...params, ...getProjectOwnershipFilters(projectOwnership, projectId) };
+  const params = serializeQuery(query, schema, { searchMode: ilike ? 'ilike' : 'plain' });
+  return resolveOwnershipParams(params, projectId);
 }
 
 /**

@@ -3,7 +3,10 @@ import { notFound } from 'next/navigation';
 
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
-import { DATA_BROWSE_LISTING_PROPS } from '@/features/views/listing/data-browse-entities';
+import {
+  DATA_BROWSE_LISTING_PROPS,
+  usesProjectOwnership,
+} from '@/features/views/listing/data-browse-entities';
 import { getVariantGroup, resolveListingVariant } from '@/features/views/listing/variants/registry';
 
 import type { TWorkspaceScope } from '@/constants';
@@ -34,6 +37,7 @@ export default async function Page({
       section={WorkspaceSection.Data}
       dataType={group.dataType}
       variantSlug={variant.slug}
+      showProjectOwnership={usesProjectOwnership(group.dataType)}
       {...(group.listingProps ?? DATA_BROWSE_LISTING_PROPS)}
     />
   );

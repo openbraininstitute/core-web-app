@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useAtomValue } from 'jotai';
 import { useCallback, useMemo } from 'react';
 
-import { WorkspaceSection } from '@/constants';
+import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import {
   CIRCUIT_VIEW_PARAM,
@@ -53,14 +53,22 @@ function subCircuitsOf(row: EntityCoreIdentifiableNamed): ICircuitEnriched[] | u
  * recursive detail rendering the row's already-fetched `sub_circuits`.
  */
 export function CircuitGridBody(props: IBrowseEntityGridProps) {
-  const { definition, dataType, section = WorkspaceSection.Data, id, scope: defaultScope } = props;
+  const {
+    definition,
+    dataType,
+    section = WorkspaceSection.Data,
+    id,
+    scope: defaultScope,
+    showProjectOwnership,
+  } = props;
   const { virtualLabId, projectId } = useWorkspace();
   const queryClient = useQueryClient();
   const atomView = useAtomValue(circuitRepresentationViewAtom);
   // A variant pins a subset of the tree, and the hierarchy is built from ALL circuits
   // (`/circuit/hierarchy` + every id), so it is neither meaningful nor cheap there.
   const view = props.variant ? CircuitRepresentationView.Flat : atomView;
-  const { scope } = useScope({ defaultScope, clearOnDefault: false });
+  const { scope: selectedScope } = useScope({ defaultScope, clearOnDefault: false });
+  const scope = showProjectOwnership ? WorkspaceScope.Combined : selectedScope;
 
   const { dataKey } = makeDataKey({ virtualLabId, projectId, section, dataType, scope, id });
 

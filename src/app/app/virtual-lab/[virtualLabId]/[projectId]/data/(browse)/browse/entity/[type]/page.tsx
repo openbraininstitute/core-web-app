@@ -8,8 +8,8 @@ import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import {
   DATA_BROWSE_ALLOWED_ENTITIES as AllowedEntities,
   DATA_BROWSE_LISTING_PROPS,
+  usesProjectOwnership,
 } from '@/features/views/listing/data-browse-entities';
-import { usesProjectOwnership } from '@/utils/workspace-scope';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TWorkspaceScope } from '@/constants';

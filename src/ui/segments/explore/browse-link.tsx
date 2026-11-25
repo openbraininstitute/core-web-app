@@ -23,6 +23,7 @@ import {
   savedListingParams,
   useSavedListingFilters,
 } from '@/features/data-grid/saved-listing-filters';
+import { usesProjectOwnership } from '@/features/views/listing/data-browse-entities';
 import { listingInstanceId } from '@/features/views/listing/variants/scope-listing';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useTableQueryCount } from '@/ui/hooks/use-table-query-count';
@@ -33,7 +34,7 @@ import { makeSelectContributionEntityClickEvent } from '@/ui/segments/contribute
 import { getEntityTypeFromUrlOnEntityScope } from '@/ui/segments/explore/helpers';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { cn } from '@/utils/css-class';
-import { getWorkspaceScopeFilters, usesProjectOwnership } from '@/utils/workspace-scope';
+import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 
 import type { MouseEvent, ReactNode } from 'react';

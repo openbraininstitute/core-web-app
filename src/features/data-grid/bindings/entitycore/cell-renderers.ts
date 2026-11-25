@@ -6,6 +6,12 @@ import {
   LIFECYCLE_STATUS_RENDERER,
   LifecycleStatusCell,
 } from '@/features/data-grid/bindings/entitycore/renderers/lifecycle-status-cell';
+import {
+  PROJECT_OWNERSHIP_RENDERER,
+  ProjectOwnershipCell,
+  VISIBILITY_RENDERER,
+  VisibilityCell,
+} from '@/features/data-grid/bindings/entitycore/renderers/ownership-cells';
 import { registerSharedRenderers } from '@/features/data-grid/bindings/entitycore/renderers/register';
 import { CellRendererRegistry } from '@/features/data-grid/react';
 
@@ -22,6 +28,8 @@ export function buildCellRenderers(definition: TAnyEntityGridDefinition): CellRe
   const registry = new CellRendererRegistry();
   registry.register(LIFECYCLE_STATUS_RENDERER, LifecycleStatusCell);
   registry.register(DESCRIPTION_RENDERER, DescriptionCell);
+  registry.register(PROJECT_OWNERSHIP_RENDERER, ProjectOwnershipCell);
+  registry.register(VISIBILITY_RENDERER, VisibilityCell);
   registerSharedRenderers(registry);
   definition.registerCellRenderers?.(registry);
   return registry;

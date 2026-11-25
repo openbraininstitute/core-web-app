@@ -7,6 +7,7 @@ export default async function Page() {
     <BrowseEntityScope
       section={WorkspaceSection.Data}
       dataType={ExtendedEntitiesTypeDict.Circuit}
+      showProjectOwnership
     />
   );
 }

@@ -6,6 +6,7 @@ import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigat
 
 import { config } from '@/config';
 import { SCOPE_QUERY_PARAMS, type TWorkspaceScope, WorkspaceScope } from '@/constants';
+import { usesProjectOwnership } from '@/features/views/listing/data-browse-entities';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useScope } from '@/ui/hooks/use-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -17,7 +18,6 @@ import {
 } from '@/ui/segments/mini-detail-view/event';
 import { TabsSelector } from '@/ui/segments/shared/scope-selector';
 import { cn } from '@/utils/css-class';
-import { usesProjectOwnership } from '@/utils/workspace-scope';
 
 export function DataScopeTabs() {
   const navigate = useRouter().push;

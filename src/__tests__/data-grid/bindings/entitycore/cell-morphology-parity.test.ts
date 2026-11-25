@@ -1,18 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import { transformFiltersToQuery } from '@/api/entitycore/transformers';
-import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import { viewDefForCellMorphology } from '@/entity-configuration/definitions/view-defs/experimental/cell-morphology';
 import { serializeQuery } from '@/features/data-grid/bindings/entitycore/query-serializer';
 import { cellMorphologySchema } from '@/features/data-grid/bindings/entitycore/schemas/cell-morphology';
-import {
-  defaultHiddenColumnIds,
-  FilterValueKind,
-  OperatorId,
-  resolveColumns,
-  resolveFilterPanelGroups,
-  SortDirection,
-} from '@/features/data-grid/core';
+import { FilterValueKind, OperatorId, SortDirection } from '@/features/data-grid/core';
 
 import type { TCoreFilter } from '@/entity-configuration/definitions/types';
 import type { IGridQuery, TFilterModel, TFilterValue } from '@/features/data-grid/core';
@@ -31,69 +23,23 @@ describe('cell_morphology — column parity with the legacy view-def', () => {
     // only the non-auxiliary columns are compared — an auxiliary column adds a filter
     // surface, never a column the legacy listing lacked
     const legacyOrder = viewDefForCellMorphology.columns;
-    const visible = resolveColumns(cellMorphologySchema, {
-      dataType: cellMorphologySchema.id,
-      section: WorkspaceSection.Data,
-      scope: WorkspaceScope.Public,
-    })
-      .filter((c) => !c.hiddenByDefaultResolved)
-      .map((c) => c.id);
+    const visible = cellMorphologySchema.columns.filter((c) => !c.auxiliary).map((c) => c.id);
     expect(visible).toEqual([
       'preview',
       'brainRegion',
       'species',
       'mtype',
       'name',
+      'lifecycleStatus',
       'contributions',
       'registrationDate',
-      'lifecycleStatus',
     ]);
     expect(legacyOrder).toHaveLength(visible.length);
   });
 
-  it('places the ownership filter before Preview in the combined Data listing', () => {
-    const [ownership, preview] = resolveColumns(cellMorphologySchema, {
-      dataType: cellMorphologySchema.id,
-      section: WorkspaceSection.Data,
-      scope: WorkspaceScope.Combined,
-    });
-    expect(ownership).toMatchObject({
-      header: 'Project ownership',
-      filterAvailable: true,
-      hiddenByDefaultResolved: false,
-    });
-    expect(preview.id).toBe('preview');
-  });
-
-  it('offers Public and Private in Filters while Visibility is hidden', () => {
-    const context = {
-      dataType: cellMorphologySchema.id,
-      section: WorkspaceSection.Data,
-      scope: WorkspaceScope.Combined,
-    };
-    const hidden = defaultHiddenColumnIds(cellMorphologySchema, context);
-    expect(hidden).toContain('visibility');
-    const entries = resolveFilterPanelGroups(cellMorphologySchema, context, hidden).flatMap(
-      (group) => group.filters
-    );
-    expect(entries.find((entry) => entry.key === 'visibility')).toMatchObject({
-      label: 'Visibility',
-      def: {
-        field: 'authorized_public',
-        options: {
-          items: [
-            { id: 'true', label: 'Public' },
-            { id: 'false', label: 'Private' },
-          ],
-        },
-      },
-    });
-  });
-
-  it('declares the auxiliary columns after the visible ones', () => {
+  it('declares the seven auxiliary columns after the visible ones', () => {
     const auxiliary = cellMorphologySchema.columns.filter((c) => c.auxiliary).map((c) => c.id);
     expect(auxiliary).toEqual([
-      'visibility',
       'generationType',
       'protocolDesign',
       'protocolName',

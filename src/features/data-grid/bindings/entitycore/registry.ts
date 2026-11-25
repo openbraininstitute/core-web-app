@@ -1,3 +1,4 @@
+import { withOwnershipColumns } from '@/features/data-grid/bindings/entitycore/columns/ownership';
 import { analysisNotebookResultGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/analysis-notebook-result';
 import { analysisNotebookTemplateGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/analysis-notebook-template';
 import { cellMorphologyGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/cell-morphology';
@@ -57,7 +58,7 @@ export type TAnyEntityGridDefinition = IEntityGridDefinition<any>;
  * entry: there is no second listing implementation to fall back to, so removing one
  * breaks that listing rather than reverting it.
  */
-const definitions: Record<string, TAnyEntityGridDefinition> = {
+const baseDefinitions: Record<string, TAnyEntityGridDefinition> = {
   [cellMorphologyGridDefinition.dataType]: cellMorphologyGridDefinition,
   [electricalCellRecordingGridDefinition.dataType]: electricalCellRecordingGridDefinition,
   [ionChannelRecordingGridDefinition.dataType]: ionChannelRecordingGridDefinition,
@@ -86,6 +87,13 @@ const definitions: Record<string, TAnyEntityGridDefinition> = {
   [simulationCampaignGridDefinition.dataType]: simulationCampaignGridDefinition,
   [circuitGridDefinition.dataType]: circuitGridDefinition,
 };
+
+const definitions: Record<string, TAnyEntityGridDefinition> = Object.fromEntries(
+  Object.entries(baseDefinitions).map(([key, def]) => [
+    key,
+    { ...def, schema: withOwnershipColumns(def.schema) },
+  ])
+);
 
 export function getEntityGridDefinition(dataType: string): TAnyEntityGridDefinition | undefined {
   return definitions[dataType];

@@ -3,7 +3,6 @@ import {
   CellMorphologyProtocolDesign,
 } from '@/api/entitycore/types/entities/cell-morphology-protocol';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import {
   brainRegionColumn,
   contributionsColumn,
@@ -17,10 +16,7 @@ import {
   yesNo,
 } from '@/features/data-grid/bindings/entitycore/columns/catalog';
 import { lifecycleStatusColumn } from '@/features/data-grid/bindings/entitycore/columns/lifecycle-status';
-import {
-  CellMorphologyPreview,
-  ProjectOwnershipCell,
-} from '@/features/data-grid/bindings/entitycore/renderers/cell-morphology-cells';
+import { CellMorphologyPreview } from '@/features/data-grid/bindings/entitycore/renderers/cell-morphology-cells';
 import { registerSharedRenderers } from '@/features/data-grid/bindings/entitycore/renderers/register';
 import {
   dictLabelByKey,
@@ -33,16 +29,10 @@ import {
   OperatorId,
   SortDirection,
 } from '@/features/data-grid/core';
-import { ProjectOwnership } from '@/utils/workspace-scope';
 
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { IEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
-import type {
-  IAdvancedFilterGroup,
-  IColumnModel,
-  IGridContext,
-  IGridSchema,
-} from '@/features/data-grid/core';
+import type { IAdvancedFilterGroup, IColumnModel, IGridSchema } from '@/features/data-grid/core';
 import type { CellRendererRegistry } from '@/features/data-grid/react';
 
 /**
@@ -58,12 +48,6 @@ type Row = ICellMorphology & {
     protocol_document?: string | null;
   } | null;
 };
-
-const visibilityLabels = { true: 'Public', false: 'Private' } as const;
-
-function availableInCombinedData({ section, scope }: IGridContext) {
-  return section === WorkspaceSection.Data && scope === WorkspaceScope.Combined;
-}
 
 const GENERATION_TYPE_LABELS = dictLabelByKey(CellMorphologyGenerationType);
 const PROTOCOL_DESIGN_LABELS = dictLabelByKey(CellMorphologyProtocolDesign);
@@ -223,21 +207,6 @@ export const cellMorphologySchema: IGridSchema<Row> = {
   selection: { enabled: true },
   advancedFilters: flatAdvancedFilters(cellMorphologyAdvancedFilters),
   columns: [
-    {
-      id: 'projectOwnership',
-      header: 'Project ownership',
-      available: availableInCombinedData,
-      width: { width: 180, minWidth: 155 },
-      sortable: false,
-      cellRenderer: 'projectOwnership',
-      filter: {
-        operators: [OperatorId.Eq],
-        options: {
-          kind: FilterOptionsKind.Static,
-          items: Object.values(ProjectOwnership).map((label) => ({ id: label, label })),
-        },
-      },
-    },
     previewColumn<Row>({
       cellRenderer: 'cellMorphologyPreview',
       width: { width: 184, minWidth: 120, resizable: true },
@@ -346,26 +315,7 @@ export const cellMorphologySchema: IGridSchema<Row> = {
       },
     }),
     registrationDateColumn<Row>({ essential: true }),
-    {
-      id: 'visibility',
-      header: 'Visibility',
-      field: 'authorized_public',
-      auxiliary: true,
-      available: availableInCombinedData,
-      sortable: false,
-      width: { minWidth: 120 },
-      getValue: ({ authorized_public }) => {
-        if (typeof authorized_public !== 'boolean') return null;
-        return authorized_public ? visibilityLabels.true : visibilityLabels.false;
-      },
-      filter: {
-        operators: [OperatorId.Eq],
-        options: {
-          kind: FilterOptionsKind.Static,
-          items: Object.entries(visibilityLabels).map(([id, label]) => ({ id, label })),
-        },
-      },
-    },
+    // Auxiliary — hidden until ticked; each replaces an advanced filter.
     generationTypeColumn,
     protocolDesignColumn,
     protocolNameColumn,
@@ -383,7 +333,6 @@ export const cellMorphologyGridDefinition: IEntityGridDefinition<Row> = {
   schema: cellMorphologySchema,
   registerCellRenderers: (registry: CellRendererRegistry) => {
     registerSharedRenderers(registry);
-    registry.register('projectOwnership', ProjectOwnershipCell);
     registry.register('cellMorphologyPreview', CellMorphologyPreview);
   },
 };
