@@ -57,6 +57,7 @@ import {
 } from '@/features/spike-viewer/spike-statistics/stacked-panes';
 import { SPIKE_STATISTICS } from '@/features/spike-viewer/spike-statistics/statistics';
 import { withKeptSpikes } from '@/features/spike-viewer/spike-trace';
+import { StackedSplit } from '@/features/spike-viewer/types';
 import { PillSelect } from '@/ui/molecules/select/pill-select';
 import { spikeReplayTour, useNextStepOnboarding } from '@/ui/segments/app-setup/discover-app';
 import { classNames } from '@/util/utils';
@@ -752,7 +753,7 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
           {/* The raster over the table, its box topping the column: the panel's button ends the
               raster's controls, and the table's header names the population. */}
           <StackedPanes
-            split="file"
+            split={StackedSplit.File}
             top={{
               title: 'Raster',
               keepsSize: true,
@@ -777,7 +778,7 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
           {sidePanel.target &&
             createPortal(
               <StackedPanes
-                split="panel"
+                split={StackedSplit.Panel}
                 floors={PANEL_FLOORS}
                 top={{
                   title: '3D Player',

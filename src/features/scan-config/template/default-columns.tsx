@@ -15,12 +15,14 @@ import {
 import { Right } from '@/features/scan-config/components/ui-columns';
 import { ScanConfigActivity } from '@/features/scan-config/types';
 import { StackedPanes } from '@/features/spike-viewer/spike-statistics/stacked-panes';
+import { StackedSplit } from '@/features/spike-viewer/types';
 import { cn } from '@/utils/css-class';
 
 import { useCollapsingColumns } from './collapsing-columns';
 import { LeftColumn, MiddleColumn } from './columns';
 
 import type { ReactNode, RefObject } from 'react';
+import type { TStackedSplit } from '@/features/spike-viewer/types';
 import type { ScanConfigTemplateProps } from './types';
 import type { ScanConfigTemplateState } from './use-scan-config-template';
 
@@ -111,10 +113,12 @@ export function DefaultConfigColumns({ props, state }: Props) {
  */
 export function PreviewColumn({
   boxed,
+  split = StackedSplit.Config,
   edge,
   children,
 }: {
   boxed: boolean;
+  split?: Extract<TStackedSplit, typeof StackedSplit.Config | typeof StackedSplit.Isolated>;
   /** The grab bar on its left edge, which the columns before it give way to. */
   edge?: {
     gridRef: RefObject<HTMLDivElement | null>;
@@ -147,7 +151,7 @@ export function PreviewColumn({
       <div className="relative h-full min-h-0 min-w-0">
         {handle}
         <StackedPanes
-          split="config"
+          split={split}
           bottomShare={0.4}
           top={{
             title: '3D View',

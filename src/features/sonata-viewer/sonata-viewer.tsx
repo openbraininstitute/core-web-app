@@ -78,6 +78,7 @@ import {
 import { TABLE_BOX_CLASS } from '@/features/spike-viewer/spike-statistics/statistics-plots';
 import { meanTraceFigure } from '@/features/spike-viewer/spike-statistics/time-course-figures';
 import { WindowChip } from '@/features/spike-viewer/spike-statistics/window-chip';
+import { StackedSplit } from '@/features/spike-viewer/types';
 import { PillSelect } from '@/ui/molecules/select/pill-select';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
@@ -1027,7 +1028,7 @@ export function SonataReportView({
         {/* The traces over the table, their box topping the column: the panel's button ends the
             traces' controls, and the table's header names the population. */}
         <StackedPanes
-          split="file"
+          split={StackedSplit.File}
           top={{
             title: tracesTitle,
             boxClassName: 'p-2',
@@ -1101,7 +1102,7 @@ export function SonataReportView({
         {sidePanel.target &&
           createPortal(
             <StackedPanes
-              split="panel"
+              split={StackedSplit.Panel}
               floors={PANEL_FLOORS}
               top={
                 voltage
