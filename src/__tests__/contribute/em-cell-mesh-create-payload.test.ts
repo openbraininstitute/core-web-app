@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { EntityLifecycleStatus } from '@/api/entitycore/types/shared/global';
 import { toEMCellMeshCreatePayload } from '@/ui/segments/contribute/em-cell-mesh/helpers';
 
 import type { TEMCellMeshForm } from '@/ui/segments/contribute/em-cell-mesh/schema';
@@ -29,7 +30,8 @@ const values = {
 
 describe('toEMCellMeshCreatePayload', () => {
   it('sends every field entitycore requires', () => {
-    expect(toEMCellMeshCreatePayload(values)).toMatchObject({
+    expect(toEMCellMeshCreatePayload(values, EntityLifecycleStatus.Draft)).toMatchObject({
+      lifecycle_status: 'draft',
       release_version: 1,
       level_of_detail: 0,
       mesh_type: 'static',
@@ -43,6 +45,8 @@ describe('toEMCellMeshCreatePayload', () => {
   });
 
   it('leaves out fields the form does not show', () => {
-    expect(toEMCellMeshCreatePayload(values)).not.toHaveProperty('generation_parameters');
+    expect(toEMCellMeshCreatePayload(values, EntityLifecycleStatus.Active)).not.toHaveProperty(
+      'generation_parameters'
+    );
   });
 });

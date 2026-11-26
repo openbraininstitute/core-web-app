@@ -13,16 +13,13 @@ import type {
   IContributionStep,
 } from '@/ui/segments/contribute/shared/types';
 
+export const CONVERSION_MUTATION_KEY = 'convertEMCellMesh';
+
 export const EM_CELL_MESH_PROGRESS_STEPS = [
   {
     key: 'em-cell-mesh',
     label: 'Creating Cell Mesh',
     mutationKey: 'createEMCellMesh',
-  },
-  {
-    key: 'assets',
-    label: 'Uploading Assets',
-    mutationKey: 'createEMCellMeshAssets',
   },
   {
     key: 'contribution',
@@ -33,6 +30,16 @@ export const EM_CELL_MESH_PROGRESS_STEPS = [
     key: 'mtype-classification',
     label: 'Creating M-Type Classification',
     mutationKey: 'createMtypeClassification',
+  },
+  {
+    key: 'assets',
+    label: 'Uploading Assets',
+    mutationKey: 'createEMCellMeshAssets',
+  },
+  {
+    key: 'conversion',
+    label: 'Starting Conversion to GLB',
+    mutationKey: CONVERSION_MUTATION_KEY,
   },
 ];
 

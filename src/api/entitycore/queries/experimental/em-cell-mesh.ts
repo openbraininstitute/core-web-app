@@ -87,3 +87,20 @@ export async function createEMCellMesh({
     body: payload,
   });
 }
+
+/** Deletes the mesh and, with it, its assets and their files. */
+export async function deleteEMCellMesh({
+  id,
+  context,
+}: {
+  id: string;
+  context?: WorkspaceContext | null;
+}) {
+  const api = await entityCoreApi();
+  return await api.delete<void>(`${baseUri}/${id}`, {
+    headers: {
+      accept: 'application/json',
+      ...getEntityCoreContext(context).headers,
+    },
+  });
+}

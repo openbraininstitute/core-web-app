@@ -1,26 +1,22 @@
+import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { obioneApi } from '@/api/one/utils';
 
-export type MeshResolution = {
-  isValid: boolean;
-  buffer: ArrayBuffer;
-};
+import type { TRunTaskResponse } from '@/api/one/runner';
+import type { WorkspaceContext } from '@/types/common';
 
-export async function resolveMeshFile(file: File): Promise<MeshResolution> {
+/** Starts the free task that converts a draft mesh's OBJ to a Draco GLB, then activates the mesh. */
+export async function convertEMCellMesh({
+  ctx,
+  entityId,
+}: {
+  ctx: WorkspaceContext;
+  entityId: string;
+}): Promise<TRunTaskResponse> {
   const api = await obioneApi();
-  const formData = new FormData();
-  formData.append('file', file, file.name);
-  const response = await api.post<Response>(
-    '/declared/test-mesh-file',
-    {
-      headers: {
-        accept: 'application/json',
-      },
-      body: formData,
+  return await api.post<TRunTaskResponse>(`/declared/em-cell-mesh/${entityId}/convert`, {
+    headers: {
+      ...getEntityCoreContext(ctx).headers,
+      accept: 'application/json',
     },
-    { asRawResponse: true }
-  );
-  return {
-    isValid: response.ok,
-    buffer: await response.arrayBuffer(),
-  };
+  });
 }

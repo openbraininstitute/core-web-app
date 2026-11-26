@@ -1,10 +1,11 @@
 'use client';
 
+import { AlertOutlined } from '@ant-design/icons';
 import { Form } from 'antd';
+import { useState } from 'react';
 
-import { resolveMeshFile } from '@/api/one/em-cell-mesh';
-import { tryCatch } from '@/api/utils';
-import { messages } from '@/i18n/en/upload';
+import { Alert, AlertContent, AlertDescription, AlertIcon } from '@/ui/molecules/alert';
+import { checkMeshFile, OBJ_MAX_BYTES } from '@/ui/segments/contribute/em-cell-mesh/helpers';
 import { AssetUpload } from '@/ui/segments/contribute/shared/components/asset-upload';
 
 import type { FileWithPreview } from '@/ui/hooks/use-file-upload';
@@ -31,20 +32,19 @@ function HiddenSentinel({ value }: { value?: unknown; onChange?: (val: unknown) 
 
 export function EMAssetUpload({
   maxFiles = 1,
-  maxSize = 500 * 1024 * 1024,
+  maxSize = OBJ_MAX_BYTES,
   accept = ['application/obj', '.obj', 'model/gltf-binary', '.glb'],
   multiple = true,
   className,
   onFilesChange,
 }: IAssetUploadProps) {
   const form = Form.useFormInstance();
+  const [notice, setNotice] = useState<string | null>(null);
 
   const validateMeshFile = async (file: File): Promise<string | null> => {
-    const { data: resolution, error } = await tryCatch(resolveMeshFile(file));
-    if (error || !resolution?.isValid) {
-      return messages.ResolveMeshFileFailed.replace('$$', file.name);
-    }
-    return null;
+    const { error, notice: fileNotice } = await checkMeshFile(file);
+    setNotice(fileNotice);
+    return error;
   };
 
   return (
@@ -63,6 +63,7 @@ export function EMAssetUpload({
         onValidateFile={validateMeshFile}
         onFilesChange={(files) => {
           const file = files[0]?.file instanceof File ? (files[0].file as File) : undefined;
+          if (!file) setNotice(null);
 
           // Defer form update out of the current render/state-update cycle.
           setTimeout(() => {
@@ -72,6 +73,22 @@ export function EMAssetUpload({
           onFilesChange?.(files);
         }}
       />
+
+      {notice && (
+        <Alert
+          variant="warning"
+          appearance="light"
+          className="mt-5"
+          data-testid="em-mesh-upload-notice"
+        >
+          <AlertIcon>
+            <AlertOutlined />
+          </AlertIcon>
+          <AlertContent>
+            <AlertDescription>{notice}</AlertDescription>
+          </AlertContent>
+        </Alert>
+      )}
     </>
   );
 }

@@ -68,12 +68,15 @@ export const MTypeClassIdSchema = z.uuid().nonempty({
   error: 'M-type class is required',
 });
 
+export const EMCellMeshFileType = { Obj: 'obj', Glb: 'glb' } as const;
+export type TEMCellMeshFileType = (typeof EMCellMeshFileType)[keyof typeof EMCellMeshFileType];
+
 export const EM_CELL_MESH_FILE_TYPES = [
-  { type: 'obj', extension: 'obj', mimeType: 'application/obj' },
-  { type: 'glb', extension: 'glb', mimeType: 'model/gltf-binary' },
+  { type: EMCellMeshFileType.Obj, extension: 'obj', mimeType: 'application/obj' },
+  { type: EMCellMeshFileType.Glb, extension: 'glb', mimeType: 'model/gltf-binary' },
 ] as const;
 
-function getEMCellMeshFileType(file: File) {
+export function getEMCellMeshFileType(file: File) {
   const ext = file.name.split('.').pop()?.toLowerCase();
   return EM_CELL_MESH_FILE_TYPES.find(
     (f) => f.extension === ext || file.type.toLowerCase() === f.mimeType.toLowerCase()

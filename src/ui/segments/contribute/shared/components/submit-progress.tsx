@@ -2,6 +2,7 @@
 
 import { CheckOutlined, CloseOutlined, LoadingOutlined } from '@ant-design/icons';
 import { isNil } from 'es-toolkit/compat';
+import { match } from 'ts-pattern';
 
 import { cn } from '@/utils/css-class';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
@@ -10,6 +11,7 @@ import type { IProgressStep } from '@/ui/segments/contribute/shared/types';
 
 interface ISubmitEntityProgressProps {
   steps: Array<IProgressStep>;
+  notice?: string | null;
 }
 
 interface IProgressCircleProps {
@@ -23,7 +25,11 @@ function ProgressCircle({ progress }: IProgressCircleProps) {
 
   return (
     <div className="relative">
-      <svg className="h-64 w-64 -rotate-90 transform xl:h-72 xl:w-72" viewBox="0 0 128 128">
+      <svg
+        className="h-64 w-64 -rotate-90 transform xl:h-72 xl:w-72"
+        viewBox="0 0 128 128"
+        aria-hidden="true"
+      >
         {/* background circle */}
         <circle cx="64" cy="64" r={radius} stroke="#e5e7eb" strokeWidth="4" fill="none" />
         {/* progress circle */}
@@ -87,13 +93,25 @@ function StepItem({ step }: IStepItemProps) {
       >
         {step.label || 'Processing...'}
       </span>
+      {step.status === 'pending' && step.progress && (
+        <span className="text-neutral-4 text-sm font-normal select-none">
+          {step.progress.detail}
+        </span>
+      )}
     </div>
   );
 }
 
-export function SubmitEntityProgress({ steps }: ISubmitEntityProgressProps) {
-  const completedSteps = steps.filter((step) => step.status === 'success');
-  const progress = (completedSteps.length / steps.length) * 100;
+function stepShare(step: IProgressStep): number {
+  return match(step.status)
+    .with('success', () => 1)
+    .with('pending', () => step.progress?.fraction ?? 0)
+    .otherwise(() => 0);
+}
+
+export function SubmitEntityProgress({ steps, notice }: ISubmitEntityProgressProps) {
+  const done = steps.reduce((sum, step) => sum + stepShare(step), 0);
+  const progress = (done / steps.length) * 100;
 
   return (
     <HydrateWrapper>
@@ -105,6 +123,11 @@ export function SubmitEntityProgress({ steps }: ISubmitEntityProgressProps) {
               <StepItem key={step.key} step={step} />
             ))}
           </div>
+          {notice && (
+            <p className="text-primary-9 max-w-md text-sm" data-testid="submit-progress-notice">
+              {notice}
+            </p>
+          )}
         </div>
       </div>
     </HydrateWrapper>

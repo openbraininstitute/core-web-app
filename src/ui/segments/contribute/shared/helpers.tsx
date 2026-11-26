@@ -7,6 +7,8 @@ import type { ComponentProps, ReactNode } from 'react';
 import type { ZodSafeParseResult, ZodType } from 'zod';
 import type {
   ICustomFormErrorOptions,
+  IPipelineHookResult,
+  IProgressStep,
   TStepValidationStatus,
 } from '@/ui/segments/contribute/shared/types';
 
@@ -239,3 +241,23 @@ export function getNextStepKey(
 }
 
 export const RequiredFieldMarker = <sup className="text-destructive">*</sup>;
+
+/** The steps a submission runs, each with its status and progress. */
+export function toProgressSteps(
+  steps: ReadonlyArray<{ key: string; label: string; mutationKey: string }>,
+  {
+    status,
+    stepProgress,
+    skippedSteps,
+  }: Pick<IPipelineHookResult<unknown>, 'status' | 'stepProgress' | 'skippedSteps'>
+): Array<IProgressStep> {
+  const skipped = new Set(skippedSteps);
+  return steps
+    .filter((step) => !skipped.has(step.mutationKey))
+    .map((step) => ({
+      key: step.key,
+      label: step.label,
+      status: status[step.mutationKey],
+      progress: stepProgress?.[step.mutationKey],
+    }));
+}

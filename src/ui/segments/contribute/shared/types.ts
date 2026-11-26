@@ -44,6 +44,12 @@ export interface IPipelineHookResult<TFormValues> {
   error: Error | null;
   status: Record<string, MutationStatus>;
   mutationKeys: Record<string, IMutationKeyConfig>;
+  /** How far a running step is, by mutation key. */
+  stepProgress?: Record<string, IStepProgress>;
+  /** Mutation keys of the steps this submission does not run. */
+  skippedSteps?: ReadonlyArray<string>;
+  /** Shown under the progress once the submission is done. */
+  completionNotice?: string | null;
 }
 
 export type TPipelineHookFactory<TFormValues> = (params: {
@@ -109,10 +115,17 @@ export interface IBaseFormValues {
   assets: Record<string, File>;
 }
 
+export interface IStepProgress {
+  detail: string;
+  /** From 0 to 1. */
+  fraction: number;
+}
+
 export interface IProgressStep {
   key: string;
   label: string;
   status?: MutationStatus;
+  progress?: IStepProgress;
 }
 
 export interface ICustomFormErrorOptions {
