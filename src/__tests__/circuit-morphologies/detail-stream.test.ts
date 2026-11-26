@@ -15,50 +15,65 @@ import {
 
 import { arrivalOf } from './arrival';
 import { boxesAt } from './boxes';
+import { PACKING } from './packed';
 
 import type { DetailView } from '@/features/circuit-viewer/morphologies/engine/detail';
 import type {
   BoxRead,
+  BoxSegments,
   DetailRules,
   MorphologyChunks,
-  MorphologySegments,
 } from '@/features/circuit-viewer/morphologies/types';
 
-const h = vi.hoisted(() => ({ logError: vi.fn() }));
-vi.mock('@/utils/logger', () => ({ logError: h.logError }));
+const h = vi.hoisted(() => ({ logError: vi.fn(), logWarn: vi.fn() }));
+vi.mock('@/utils/logger', () => ({ logError: h.logError, logWarn: h.logWarn }));
 
 const RULES: DetailRules = { budget: Infinity, pixels: 2, culling: true };
 /** Each box's segments at each level, the finest first. */
 const COUNTS = [100, 50, 10];
 const DEPTHS = [20, 40, 60, 80];
 
-const segmentsOf = (count: number): MorphologySegments => ({
-  segments: new Float32Array(8 * count),
+const segmentsOf = (count: number, packed = false): BoxSegments => ({
+  segments: packed ? new Uint32Array(5 * count) : new Float32Array(8 * count),
   segmentCells: new Uint32Array(count),
   segmentTypes: new Uint8Array(count),
 });
 
-/** Four boxes 10 µm wide down -z, and every read waiting for the test to end it. */
+/** Four boxes 10 µm wide down -z, and every read waiting for the test to end it, with what it hands over. */
 function chunksOf() {
-  const reads: { wanted: BoxRead[]; resolve(): void; reject(e: unknown): void }[] = [];
+  const reads: {
+    wanted: BoxRead[];
+    handed: BoxSegments[];
+    packed: boolean;
+    resolve(): void;
+    reject(e: unknown): void;
+  }[] = [];
   const chunks: MorphologyChunks = {
     ...boxesAt(DEPTHS, COUNTS),
-    read: (wanted) =>
+    packing: PACKING,
+    read: (wanted, packed = false) =>
       new Promise((resolve, reject) => {
-        reads.push({
-          wanted,
-          resolve: () => resolve(wanted.map(({ level }) => segmentsOf(COUNTS[level]))),
-          reject,
-        });
+        const handed = wanted.map(({ level }) => segmentsOf(COUNTS[level], packed));
+        reads.push({ wanted, handed, packed, resolve: () => resolve(handed), reject });
       }),
   };
   return { chunks, reads };
 }
 
+/** Whether each of the boxes read has been let go of: every array of it detached, or none. */
+const letGo = (boxes: BoxSegments[]) =>
+  boxes.map(({ segments, segmentCells, segmentTypes }) => {
+    const gone = [segments, segmentCells, segmentTypes].map(
+      ({ buffer }) => (buffer as ArrayBuffer).detached
+    );
+    expect(new Set(gone).size).toBe(1);
+    return gone[0];
+  });
+
 /** Uploads that say when an arena's are made, of how many segments, and let go of. */
 function uploadsSaid() {
   const said: string[] = [];
-  const uploadsOf: UploadsOf = (_ends, words) => {
+  const uploadsOf: UploadsOf = ({ words }) => {
     said.push(`made ${words.length}`);
     return { upload: vi.fn(), dispose: () => said.push('disposed') };
   };
@@ -316,6 +331,44 @@ describe('DetailStream', () => {
       expect(asked(reads)).toEqual([[1, 1, 1, 1]]);
       expect(levelsDrawn(stream)).toEqual([0, 4, 0]);
     });
+  });
+
+  it('asks for the ends packed where its arena is uploaded, and places them; as floats where three draws from it', async () => {
+    const { chunks, reads } = chunksOf();
+    const { uploadsOf } = uploadsSaid();
+    const geometry = () => new THREE.InstancedBufferGeometry();
+    const uploaded = DetailStream.of(chunks, 8 * BLOCK, geometry(), vi.fn(), uploadsOf);
+    const drawn = DetailStream.of(chunks, 8 * BLOCK, geometry(), vi.fn());
+    uploaded.update(viewOf(500), RULES, true);
+    drawn.update(viewOf(500), RULES, true);
+
+    expect(reads.map(({ packed }) => packed)).toEqual([true, false]);
+    for (const [k, stream] of [uploaded, drawn].entries()) {
+      reads[k].resolve();
+      await settled();
+      stream.apply();
+      expect(levelsDrawn(stream)).toEqual([0, 0, 4]);
+    }
+    const again = uploaded.remade(16 * BLOCK, 0, geometry());
+    again.update(viewOf(500), RULES, true);
+    expect(reads[2].packed).toBe(true);
+  });
+
+  it('warns once of packed segments that did not fit', async () => {
+    const { stream, reads } = make();
+    stream.update(viewOf(500), RULES, true);
+    reads[0].handed[1].clamped = 3;
+    reads[0].handed[2].clamped = 2;
+    reads[0].resolve();
+    await settled();
+    stream.apply();
+    stream.update(viewOf(20), RULES, true);
+    reads[1].handed[0].clamped = 1;
+    reads[1].resolve();
+    await settled();
+
+    expect(h.logWarn).toHaveBeenCalledOnce();
+    expect(h.logWarn.mock.calls[0][0]).toContain('5 segments');
   });
 
   it('is made again for a larger budget, its arena let go of before the new one is made, uploaded alike', () => {
@@ -787,6 +840,65 @@ describe('DetailStream', () => {
       expect(said).toEqual([`made ${7 * BLOCK}`, 'disposed', `made ${3 * BLOCK}`]);
       expect(without.holds(2 * BLOCK, 0)).toBe(true);
       expect(without.holds(2 * BLOCK, 500)).toBe(false);
+    });
+  });
+
+  describe('lets go of the arrays of a box read', () => {
+    it('once the box is placed, and of none still to place', async () => {
+      const { stream, reads } = make();
+      stream.update(viewOf(20), RULES, true);
+      reads[0].resolve();
+      await settled();
+      const { handed } = reads[0];
+      expect(letGo(handed)).toEqual([false, false, false, false]);
+
+      // A box of the finest level takes two blocks of room, 128 segments: two are placed.
+      stream.apply(300);
+      expect(letGo(handed)).toEqual([true, true, false, false]);
+      stream.apply();
+      expect(letGo(handed)).toEqual([true, true, true, true]);
+    });
+
+    it('once its base is placed', async () => {
+      const { stream, reads } = make(1000, true);
+      stream.update(viewOf(500), RULES, true);
+      reads[0].resolve();
+      await settled();
+      expect(letGo(reads[0].handed)).toEqual([false, false, false, false]);
+
+      stream.apply();
+      expect(letGo(reads[0].handed)).toEqual([true, true, true, true]);
+    });
+
+    it('where it came in for a level no longer wanted, or again for another level', async () => {
+      const { stream, reads } = make();
+      stream.update(viewOf(500), RULES, true);
+      stream.update(viewOf(20), RULES, true);
+      reads[0].resolve();
+      await settled();
+      stream.update(viewOf(100), RULES, true);
+      reads[1].resolve();
+      await settled();
+      // The finest level came in over the coarsest, for each box.
+      expect(letGo(reads[0].handed)).toEqual([true, true, true, true]);
+      expect(letGo(reads[1].handed)).toEqual([false, false, false, false]);
+
+      stream.apply();
+      expect(letGo(reads[1].handed)).toEqual([true, true, true, true]);
+    });
+
+    it('where it waits to be placed, or comes in, once the stream is stopped', async () => {
+      const { stream, reads } = make();
+      stream.update(viewOf(500), RULES, true);
+      reads[0].resolve();
+      await settled();
+      stream.update(viewOf(20), RULES, true);
+      stream.stop();
+      expect(letGo(reads[0].handed)).toEqual([true, true, true, true]);
+
+      reads[1].resolve();
+      await settled();
+      expect(letGo(reads[1].handed)).toEqual([true, true, true, true]);
     });
   });
 

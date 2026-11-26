@@ -42,7 +42,6 @@ const workspace = { virtualLabId: 'vlab', projectId: 'proj' };
 
 const schema = buildWorkflowActivitySchema({
   activity: undefined,
-  activityName: '',
   entityType: undefined,
   workspace,
 });
@@ -239,7 +238,7 @@ describe('createAllWorkflowsDataSource', () => {
       targetType: ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
       label: `label of ${ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation}`,
     });
-    expect(category?.getValue?.(page.rows[0] as EntityCoreObjectTypes)).toBe('Simulation');
+    expect(category?.getValue?.(page.rows[0] as EntityCoreObjectTypes)).toBe('Simulate');
   });
 
   it('sums the facet counts of the sources', async () => {

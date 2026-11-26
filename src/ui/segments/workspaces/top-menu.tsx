@@ -1,7 +1,7 @@
 'use client';
 
+import ObiLogo from '@/components/logo/obi-logo';
 import { courseToolbarFlag, useFlag } from '@/features/feature-flags';
-import ObiLogo from '@/features/learn/components/ui/ObiLogo';
 import { AiButton } from '@/ui/segments/ai/button';
 import { Wallet } from '@/ui/segments/project/balance';
 import { SpaceSwitcher } from '@/ui/segments/workspaces/space-switcher';

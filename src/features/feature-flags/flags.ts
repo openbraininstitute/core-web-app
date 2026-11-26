@@ -2,7 +2,7 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { config } from '@/config';
 import { PanelState } from '@/ui/segments/ai/types';
 
-import { defineFlag } from './define-flag';
+import { defineFlag, type TDeploymentEnv } from './define-flag';
 
 export const aiPanelStateFlag = defineFlag<PanelState>({
   key: 'aiPanelState',
@@ -10,14 +10,6 @@ export const aiPanelStateFlag = defineFlag<PanelState>({
   values: Object.values(PanelState),
   description: 'State of the AI panel',
   visible: false,
-});
-
-export const extractionActivityFlag = defineFlag<boolean>({
-  key: ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
-  defaultValue: false,
-  values: [true, false],
-  description: 'Full extraction workflow',
-  visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
 });
 
 export const brainRegionSimulationFlag = defineFlag<boolean>({
@@ -33,14 +25,6 @@ export const extracellularRecordingArrayBuildFlag = defineFlag<boolean>({
   defaultValue: false,
   values: [true, false],
   description: 'Extracellular recording array build',
-  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
-});
-
-export const memodelBuildViaLaunchSystemFlag = defineFlag<boolean>({
-  key: 'memodel-build-via-launch-system',
-  defaultValue: false,
-  values: [true, false],
-  description: 'Launch single neuron (ME-model) builds via the launch system',
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
@@ -108,12 +92,21 @@ export const emodelValidationFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
+const LOGBOOK_ENVIRONMENTS: readonly TDeploymentEnv[] = ['local', 'staging'];
+
+export const logbookFlag = defineFlag<boolean>({
+  key: 'logbook',
+  defaultValue: false,
+  values: [true, false],
+  description: 'Logbook: research logs, in the top menu after Reports',
+  environments: LOGBOOK_ENVIRONMENTS,
+  visible: () => LOGBOOK_ENVIRONMENTS.includes(config.DEPLOYMENT_ENV),
+});
+
 export const flags = [
   aiPanelStateFlag,
-  extractionActivityFlag,
   brainRegionSimulationFlag,
   extracellularRecordingArrayBuildFlag,
-  memodelBuildViaLaunchSystemFlag,
   electrodeOverlaysFlag,
   debugFlag,
   projectScopeIconFlag,
@@ -121,6 +114,7 @@ export const flags = [
   greyMenuPillsFlag,
   hideHelpFlag,
   emodelValidationFlag,
+  logbookFlag,
 ] as const;
 
 export type FlagKey = (typeof flags)[number]['key'];

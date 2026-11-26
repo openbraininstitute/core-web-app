@@ -20,7 +20,7 @@ import {
 } from '@/features/data-grid/react';
 import { AgGridRenderer } from '@/features/data-grid/renderers/aggrid';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { ActivityValues, getActivity, type TActivityValue } from '@/ui/segments/workflows/config';
+import { ActivityValues, type TActivityValue } from '@/ui/segments/workflows/config';
 import { ActivityAndTypeSelectors } from '@/ui/segments/workflows/elements/browse-header';
 import {
   buildWorkflowActivityCellRenderers,
@@ -89,17 +89,14 @@ export function WorkflowActivity({ framed = false }: { framed?: boolean } = {}) 
 
   const gridKey = `${activityType}-${entityType}`;
 
-  const activityName = getActivity(activityType)?.name ?? '';
-
   const schema = useMemo(
     () =>
       buildWorkflowActivitySchema({
         activity: activityType,
-        activityName,
         entityType,
         workspace,
       }),
-    [activityType, activityName, entityType, workspace]
+    [activityType, entityType, workspace]
   );
 
   const operators = useMemo(() => createDefaultOperatorRegistry(), []);

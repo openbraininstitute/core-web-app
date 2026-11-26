@@ -39,7 +39,7 @@ Once drawing, a WebGPU view can give out:
 | The arena's buffers are out of memory | The arena is made again without its base, on the same device. Where there was no base to drop, or that fails too, the view and every one after are drawn with WebGL 2. |
 | The culling cannot run | Every box in view counts as seen, and every segment is drawn |
 | The somas' culling cannot run | The cloud is drawn by pieces, as on WebGL 2 |
-| The ambient occlusion cannot run | Frames are drawn without it; where only the glow failed, without the glow |
+| The ambient occlusion cannot run | Frames are drawn without it; where only the glow failed, without the glow; where only the occlusion's wide term failed, without that term |
 
 A WebGL 2 view whose context the browser takes back, most often the oldest where a page asks for more than it allows, tells `onLost` too, and is made again on WebGL 2, the cells it was given handed to the new one. After three lost graphics a view is not made again: `CircuitCells` says the graphics were reset and offers to reload the page.
 
@@ -64,7 +64,7 @@ On WebGPU with a base, a box in view may go finer than its base only while the c
 - **Reads.** One batch in flight, of at most 250,000 segments, from the pack's worker. The bases of the boxes in view first, then the finer levels wanted, nearest the focus first, then the other bases. A box that fails to read is left out, and not asked for again.
 - **Finer only at rest.** While the view moves, nothing finer is read, and with a base nothing at all: a turn draws what is there.
 - **Coarser at once.** A box wanted coarser goes back to its base, or out, with no read. A box wanted at the floor keeps what it has until its level is read.
-- **Placing** is paced to 4 MB of upload a turn of the loop, those that make room first, so that a frame stays short.
+- **Placing** is paced to 4 MB of upload a turn of the loop, those that make room first, so that a frame stays short. A box's arrays are detached once it is placed, or dropped unplaced, rather than left for the collector: after a whole load they were most of a gigabyte of the Male CNS's page.
 
 ### Seen boxes
 
@@ -78,14 +78,14 @@ With a base, the culling marks the blocks it found seen or just hidden, and the 
 
 ## The arena
 
-`SegmentArena` ([segment-arena.ts](segment-arena.ts)) holds the segments drawn, 36 bytes each: the two ends with their radii, and a word of cell and section type.
+`SegmentArena` ([segment-arena.ts](segment-arena.ts)) holds the segments drawn: the two ends with their radii, and a word of cell and section type. On WebGL 2 that is 36 bytes a segment, the ends as eight floats. On WebGPU it is 24, the ends packed into five words ([../load/packed-ends.ts](../load/packed-ends.ts)): the pack's worker hands them over packed, the arena holds and uploads them so, and the segments' vertex stage and the culling's segment test unpack them ([webgpu/packed-ends-wgsl.ts](webgpu/packed-ends-wgsl.ts)). The arena unpacks a block at a time only to work out the box round it.
 
 - A box's segments start a block of 64 and its last block is padded with holes. Each block keeps the box round its segments, which the culling tests.
 - A box taken out leaves a hole: its words are marked `HOLE`, which the shaders draw nothing of, and its blocks are emptied. Only those words are uploaded.
 - A box goes into the smallest hole it fits, or at the end. Where neither has room, every box is moved down to close the holes. The arena has room for the most the budget allows and a quarter more, so that this is seldom needed.
 - Only what lies before the end is drawn and uploaded.
 
-**The base.** On WebGPU, where the coarsest level of every box fits one storage binding, the arena starts with room for each box at it, in box order, never moved. A box put at a finer level has its base made holes in the same upload, and its base shown again when it is taken out. So every draw of the arena draws each box once. The culling's depth prepass, which draws last frame's kept segments, never tests against geometry the frame does not draw, with no second copy of the arena to swap between. It may test against less than the frame draws, for the one frame after a box is put or taken out (*Seen boxes*).
+**The base.** On WebGPU, where the coarsest level of every box fits one storage binding, the arena starts with room for each box at it, in box order, never moved. A box put at a finer level has its base made holes in the same upload, and its base shown again when it is taken out. So every draw of the arena draws each box once. The base's ends are written to the GPU as they are read and kept nowhere on the page: to hide a base and show it again the arena needs only its words and its blocks, which it keeps. The culling's depth prepass, which draws last frame's kept segments, never tests against geometry the frame does not draw, with no second copy of the arena to swap between. It may test against less than the frame draws, for the one frame after a box is put or taken out (*Seen boxes*).
 
 On WebGL 2 the arena is three's instanced attributes, uploaded by range. On WebGPU it is buffers the engine owns and three binds (`shareBuffer` in [webgpu/three-hooks.ts](webgpu/three-hooks.ts)), uploaded with `writeBuffer` and drawn by indirect draws from the culling's lists ([webgpu/arena-gpu.ts](webgpu/arena-gpu.ts)).
 
@@ -99,16 +99,18 @@ flowchart TD
   resolve --> pyramid["Pyramid: the farthest of each 2 × 2,<br/>level by level"]
   pyramid --> blocks["Blocks: each block's box<br/>against the frustum and the pyramid"]
   blocks --> segs["Segments of the blocks left:<br/>2 × 2 texels, then along their rows"]
-  segs --> lists["Seen list, and kept list:<br/>seen, or hidden by under 10 µm"]
+  segs --> lists["Seen list, and kept list:<br/>seen, or hidden by under 3 µm"]
   lists --> draw["The seen list drawn,<br/>flat and tubes, by indirect draws"]
   lists -. "next frame" .-> kept
   lists -. "marks, read back" .-> seen(["Seen boxes"])
 ```
 
 - One compute pass does it all ([webgpu/culling.ts](webgpu/culling.ts), [webgpu/culling-wgsl.ts](webgpu/culling-wgsl.ts)): one workgroup a block, one thread a segment.
-- The occluders are last frame's kept segments, not this frame's drawn twice. A segment hidden by up to 10 µm (`KEEP_UM`) is kept too: as the view moves, what was seen parts in thin cracks, and with nothing behind them every block would show through one.
+- The occluders are last frame's kept segments, not this frame's drawn twice. A segment hidden by up to 3 µm (`KEEP_UM`) is kept too: as the view moves, what was seen parts in thin cracks, and with nothing behind them every block would show through one. The next frame draws every kept segment to depth, so a deeper shell costs frame time: on the whole Male CNS, 10 µm kept 2.4M segments to show 0.7M, and took 5 ms a frame more.
+- **The width tested.** A segment is tested no thinner than it is drawn, 0.75 px of radius (`MIN_RADIUS`), and at twice that while a spike replay is loaded, when a glowing cell is drawn at twice. Tested at twice with nothing lit, the whole Male CNS drew 0.68M segments in place of 0.60M and took 0.8 ms a frame more.
 - **Hidden cells.** While the cell table hides cells (a table row under the pointer, a filter), their segments go on neither list and mark no block, and the kept list is left as it was, with last frame's seen segments drawn to depth beside it. Tested against only the cells on show, every hidden segment would count as seen and be kept, and the frame they came back in would draw them all to depth: on the whole Male CNS that loses the device on Apple GPUs ("Too much geometry to support memoryless render pass attachments").
-- The lists are as long as the arena, so no frame overfills them. The counts, the draws' arguments and the marks are read back from a pool of 8 buffers. Where none is free, the last test is read once one is, so that the last before the view rests always is. A read of an arena since replaced is dropped.
+- **A stale kept list.** A kept list made for another view hides little, and a frame tested behind it sees nearly the whole arena: after a jump of the view (`resetView`, a turn to an axis, a big step of a drag), or as hidden cells come back after a turn. A pass that draws that many segments into the frame's memoryless buffers loses the device on Apple GPUs. Two things stop it. Where the view is far from the kept list's ([webgpu/kept-view.ts](webgpu/kept-view.ts)) and no cell is hidden, the frame is tested twice: the first test makes the kept list again, the second is run behind it, and its lists are the ones drawn. And a last pass caps the seen draws at 6M segments (`MOST_SEEN`), whatever the tests saw: such a frame draws part of what it saw, its marks are left out, and another follows it. After 30 such frames on end (`CLAMPED_FRAMES`) no more follow, and a read after those is taken as it is, so the boxes it marked are read on. The depth before the tests is drawn into buffers that are stored, so the kept list may be of any length.
+- The kept list is as long as the arena, so no frame overfills it. The seen list has room for what its draws take, `MOST_SEEN` flat segments from its start and as many tubes back from its end, and is no longer than the arena (`seenRoom`). The test writes no more of either: what is seen past that is counted and not drawn. The counts, the draws' arguments and the marks are read back from a pool of 8 buffers. Where none is free, the last test is read once one is, so that the last before the view rests always is. A read of an arena since replaced is dropped.
 - **Somas** are culled the same way, one thread a soma tested as a sphere, where they are drawn opaque and alone ([webgpu/soma-culling.ts](webgpu/soma-culling.ts)). After a jump of the view, the first test draws the cloud's pieces to depth instead of the somas kept: those kept for another view hide little in this one, nearly every soma would be seen, and the driver would hold hundreds of MB more until the view rests.
 
 WebGL 2 has no culling of its own: three culls the cloud's pieces by their bounds, and the detail is chosen by frustum and pixels alone.
@@ -121,6 +123,9 @@ The cloud ([soma-cloud.ts](soma-cloud.ts)) draws a soma as a low hexagonal pyram
 - Translucent, it is drawn whole, in the page's order, so that blending does not follow the pieces: each soma is the cell of its instance, and the mesh, made the first time, is kept hidden while the somas are opaque.
 
 With morphologies, each soma is a quad ray-cast as a sphere ([impostors.ts](impostors.ts)).
+
+- On WebGPU, a soma under 32 device pixels across is drawn as a flat disc instead: its quad stands at the sphere's nearest point and its fragments write no depth of their own, so those hidden are not shaded (`BALL_FROM_PX` in [webgpu/gpu-uniforms.ts](webgpu/gpu-uniforms.ts)). It is lit as the sphere, so what changes is where it meets its neighbours: discs overlap where spheres would cut into each other, and a fibre touching a soma's rim may go under it. With every soma of the Male CNS ray-cast in depth, the whole circuit took 3.3 ms more a frame at 2560×1600 and 5.3 ms more at 3456×2234.
+- The picks draw the same two kinds, so that a pick finds the cell the look shows. The line through what covers a lit cell draws every soma as a sphere: it tests no depth.
 
 ## Segments and shading
 
@@ -136,6 +141,7 @@ With morphologies, each soma is a quad ray-cast as a sphere ([impostors.ts](impo
 - **Pick** (`numberAround` in [circuit-view.ts](circuit-view.ts)): the cells are drawn as ids, `cell + 1` across a pixel's bytes, into a small target round the pointer, and read back asynchronously; the id nearest the middle wins. Of morphologies read a cell at a time, the same read gives the segment, so the section and its offset.
 - **The cell table** ([cell-table.ts](cell-table.ts)): a texel a cell, in rows of 2,048, the widest texture WebGL 2 promises. Its colour, or none for hidden, or by section; a glow texture rewritten each frame of a replay for the cells lit, only the rows they are in uploaded (on WebGPU written to three's texture straight, as three would upload it whole); the crowding. A segment's word keeps the cell in 24 bits (`CELL_MASK`), so a view takes 16.7M cells at most.
 - **Spikes** ([spike-light.ts](spike-light.ts)): the time since a cell's last spike is read back from its glow, which falls by e every afterglow. From it, a band runs out from the soma along the fibres at 400 µm a second of the wall clock, the whole cell kept a quarter lit behind it. In the cloud, a soma swells and is drawn opaque. On WebGL 2 the band is always drawn on the morphologies. On WebGPU it is drawn while the scene settings' Spike glow switch is on, with a bloom and a line drawn through the cells in front of a lit one.
+- **The segments read the spikes only while a replay is loaded**, on WebGPU. Their look materials come in two kinds: one lit by the spikes, and one that reads nothing of them (no glow or soma texel, no band, no spike colour) and draws what an unlit cell is drawn as. Both kinds are on the same quads, and each frame is drawn with the kind for whether a replay is loaded (`drawBySpikes`, by the materials' `visible`), the switch the tests' width follows. The materials are made as with no replay loaded, so a frame the switch missed would draw no segment twice. With none loaded, the whole Male CNS takes 0.5 ms a frame less moving and 0.9 ms less with the occlusion, all of it in the scene's pass. With the perspective camera the scene's pass takes 0.3 ms less without the occlusion and 0.4 ms more with it; why was not found. The somas and the depth before the tests keep one kind: a second drew the somas 0.03 ms faster, and the depth's pass no faster.
 - **Electrodes, synapses and markers** ([electrodes.ts](electrodes.ts)): discs with a ring, drawn over the cells; synapses depth-tested among them. Their hits are tested on the page, not on the GPU.
 
 ## Settings
@@ -149,13 +155,17 @@ With morphologies, each soma is a quad ray-cast as a sphere ([impostors.ts](impo
 | `LINGER` | `detail-stream.ts` | 30 reads moving, 4 at rest | How long a box counts as seen |
 | `BLOCK` | `segment-arena.ts` | 64 | Segments a block, as culled and as the budget counts |
 | `LEAST_BUFFER`, `MOST_BUFFER` | `probe.ts` | 512 MiB, 2 GiB | The least binding WebGPU must give, the most asked for |
-| `KEEP_UM` | `webgpu/culling-wgsl.ts` | 10 µm | How far behind what hides it a segment is kept, to hide others |
+| `KEEP_UM` | `webgpu/culling-wgsl.ts` | 3 µm | How far behind what hides it a segment is kept, to hide others |
 | `BLOCK_TEXELS`, `ROWS` | `webgpu/culling-wgsl.ts` | 8, 4 | Where a test moves to a coarser level of the pyramid |
+| `MOST_SEEN` | `webgpu/culling-wgsl.ts` | 6M | The most segments the seen draws draw in a frame |
+| `STALE_TURN`, `STALE_ZOOM_OUT`, `STALE_PAN` | `webgpu/kept-view.ts` | 15°, 1.5×, 0.25 view heights | How far the view may be from the kept list's before a frame is tested twice |
 | `TUBE_FROM_PX` | `webgpu/gpu-uniforms.ts` | 48 | From how wide a segment is a tube |
+| `BALL_FROM_PX` | `webgpu/gpu-uniforms.ts` | 32 | From how wide a morphology's soma is ray-cast in depth |
 | `AO_SCALE`, `AO_RADIUS_CSS`, `AO_SAMPLES` | `webgpu/occlusion-gpu.ts` | 0.5, 32, 16 | The occlusion's resolution, reach and samples |
 | `QUADS_BELOW_PX`, `PYRAMIDS_ABOVE_PX` | `soma-cloud.ts` | 3, 3.6 | When a soma is a quad |
 | `PULSE_UM_PER_S` | `spike-light.ts` | 400 | How fast a spike runs out from the soma |
 | `MIN_RADIUS` | `impostors.ts` | 0.75 device px | The least radius a fibre is drawn with, so that a thin one far away is not left in dashes |
+| `GLOW_WIDTH` | `impostors.ts` | 2 | How many times that radius a cell glowing in full is drawn at the least, and tested at while a replay is loaded |
 
 ## Limitations
 

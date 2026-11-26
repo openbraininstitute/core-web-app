@@ -179,7 +179,14 @@ export class SomaCulling {
     const encoder = device.createCommandEncoder({ label: 'soma cull' });
     const pass = encoder.beginComputePass();
     this.shift.copy(offset).negate();
-    const levels = this.pyramid.build(pass, camera, this.shift, [0, 0, radius], [0, 0, this.count]);
+    const levels = this.pyramid.build(
+      pass,
+      camera,
+      this.shift,
+      [0, 0, radius],
+      [0, 0, this.count],
+      [0, 0]
+    );
     // three made it when it drew the somas.
     const table = gpuTexture(renderer, cells);
     if (!levels || !table) {

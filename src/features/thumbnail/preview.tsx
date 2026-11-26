@@ -10,7 +10,7 @@ import { match, P } from 'ts-pattern';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getAssetElement } from '@/api/entitycore/utils';
-import { getPreviewBlob } from '@/api/thumbnail-svc';
+import { getPreviewBlob, isTransientThumbnailError, ThumbnailError } from '@/api/thumbnail-svc';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { cn } from '@/utils/css-class';
@@ -47,6 +47,25 @@ type EntityAssetTargetProps = BaseProps & {
 };
 
 type PreviewThumbnailProps = ThumbnailServiceTargetProps | EntityAssetTargetProps;
+
+/** The text shown for a thumbnail the service refused, by its stable problem code. */
+function errorText(error: Error): string {
+  if (!(error instanceof ThumbnailError)) return 'No thumbnail available';
+  return match(error.problem.code)
+    .with('ASSET_NOT_READY', () => 'Thumbnail generation in progress')
+    .with('UNAUTHENTICATED', 'FORBIDDEN', () => 'Not allowed to view this thumbnail')
+    .with(
+      'ENTITYCORE_UNAVAILABLE',
+      'INTERNAL',
+      'UNKNOWN',
+      () => 'Thumbnail unavailable, try again later'
+    )
+    .otherwise(() => 'No thumbnail available');
+}
+
+/** A refused request is final, except a transient one (409, 503): three tries, backing off. */
+const retryTransient = (failures: number, error: Error) =>
+  failures < 3 && isTransientThumbnailError(error);
 
 /** Declared once: an inline `select` re-runs every render and leaks a new object URL. */
 const toObjectUrl = (data: Blob): string => URL.createObjectURL(data);
@@ -117,6 +136,7 @@ export function PreviewThumbnail({
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    retry: retryTransient,
     enabled: inView && !!entity,
   });
 
@@ -171,11 +191,11 @@ export function PreviewThumbnail({
           />
         )
     )
-    .with({ error: P.nonNullable }, () => {
+    .with({ error: P.nonNullable.select() }, (err) => {
       return (
         <Empty
           key={`thumbnail-error-${entity.id}`}
-          description="Thumbnail generation in progress"
+          description={errorText(err)}
           image={Empty.PRESENTED_IMAGE_SIMPLE}
           className={cn(
             `thumbnail-error-${entity.id}`,

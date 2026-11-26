@@ -94,6 +94,7 @@ export async function parseApiError(
       get(responseData, path)
     );
     const detail = get(responseData, 'detail');
+    const type = get(responseData, 'type');
 
     const errMessage = message || `Error while fetching ${url}`;
     return new ApiError(errMessage, {
@@ -102,6 +103,7 @@ export async function parseApiError(
       details,
       status,
       ...(typeof detail === 'string' ? { detail } : {}),
+      ...(typeof type === 'string' ? { type } : {}),
     });
   } catch {
     return new ApiError(`Error while fetching ${url}`, { status });

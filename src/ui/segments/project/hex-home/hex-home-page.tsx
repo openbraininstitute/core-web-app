@@ -6,7 +6,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
 import { config } from '@/config';
-import ObiLogo from '@/features/learn/components/ui/ObiLogo';
+import ObiLogo from '@/components/logo/obi-logo';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { getClient } from '@/services/sanity/client';
 import { useWorkspace } from '@/ui/hooks/use-workspace';

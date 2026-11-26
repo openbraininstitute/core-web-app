@@ -39,10 +39,7 @@ export function DataInnerLayout({ children }: Props) {
         'grid w-full grid-rows-[minmax(0,1fr)]',
         'gap-4 overflow-hidden px-3 pt-3 pb-2 [grid-area:main]'
       )}
-      initial={{
-        gridTemplateColumns: '27rem 1fr',
-        gridTemplateAreas: "'aside body'",
-      }}
+      initial={false}
       animate={{
         gridTemplateColumns: mdv ? '3fr 2fr' : '24rem 1fr',
         gridTemplateAreas: mdv ? "'body mini-view'" : "'aside body'",

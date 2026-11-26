@@ -8,6 +8,7 @@ import type { Metadata, Viewport } from 'next';
 
 import MatomoAnalyticsConsent from '@/components/Matomo';
 import { ConfigProvider, getClientEnvInjectionConfig } from '@/config';
+import { APP_ROOT_ATTRIBUTE } from '@/hooks/app-root-attribute';
 
 import '@/styles/globals.css';
 
@@ -63,7 +64,9 @@ export default async function RootLayout({ children }: RootLayoutProps) {
       </head>
       <body>
         <ConfigProvider config={config}>
-          <Suspense fallback={null}>{children}</Suspense>
+          <div {...{ [APP_ROOT_ATTRIBUTE]: '' }} className="contents">
+            <Suspense fallback={null}>{children}</Suspense>
+          </div>
           <MatomoAnalyticsConsent />
         </ConfigProvider>
       </body>

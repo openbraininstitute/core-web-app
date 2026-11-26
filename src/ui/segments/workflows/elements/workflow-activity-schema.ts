@@ -11,14 +11,13 @@ import {
   OperatorId,
   SortDirection,
 } from '@/features/data-grid/core';
-import { getActivity } from '@/ui/segments/workflows/config';
+import { getActivity, getWorkflowListingLabels } from '@/ui/segments/workflows/config';
 import { rowWorkflow } from '@/ui/segments/workflows/elements/workflow-activity-all';
 import {
   WORKFLOW_ACTIVITY_ACTIONS_COLUMN_WIDTH,
   WORKFLOW_ACTIVITY_ACTIONS_RENDERER,
   WORKFLOW_ACTIVITY_DATE_RENDERER,
   WORKFLOW_ACTIVITY_STATUS_RENDERER,
-  WORKFLOW_ACTIVITY_TYPE_RENDERER,
 } from '@/ui/segments/workflows/elements/workflow-activity-cells';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
@@ -57,9 +56,7 @@ export interface IWorkflowActivitySchemaArgs {
    * All, whose rows each carry their own (`rowWorkflow`)
    */
   activity: TActivityValue | undefined;
-  /** activity label shown verbatim in every Category cell (Build, Simulation, …) */
-  activityName: string;
-  /** the listing's selected entity type, used as the Type cell's fallback title */
+  /** the listing's selected entity type */
   entityType: TExtendedEntitiesTypeDict | undefined;
   /** workspace the Status cell runs its per-campaign status queries against */
   workspace: WorkspaceContext;
@@ -78,14 +75,14 @@ const joinedStatuses = (row: EntityCoreObjectTypes): string => {
 /**
  * The workflow-activity listing schema. Built per (activity, type, workspace) rather than
  * declared statically: `cellRendererParams` is the only channel into a keyed renderer,
- * and Category, Type, Status and Actions all need host-owned values.
+ * and Status and Actions need host-owned values.
  */
 export function buildWorkflowActivitySchema({
   activity,
-  activityName,
   entityType,
   workspace,
 }: IWorkflowActivitySchemaArgs): IGridSchema<EntityCoreObjectTypes> {
+  const labels = getWorkflowListingLabels({ activity, targetType: entityType });
   return {
     id: 'workflow-activity',
     getRowId: (row) => row.id,
@@ -96,9 +93,10 @@ export function buildWorkflowActivitySchema({
         // display-only: the activity is chosen in the toolbar, or comes with the row under All
         id: 'category',
         header: 'Category',
+        // under All, the row's own activity, labelled as its picker labels it
         getValue: (row) => {
           const own = rowWorkflow(row)?.activity;
-          return own ? (getActivity(own)?.name ?? '') : activityName;
+          return own ? (getActivity(own)?.label ?? '') : labels.category;
         },
         width: { fitContent: true },
       },
@@ -106,9 +104,7 @@ export function buildWorkflowActivitySchema({
         // display-only: the entity type is pinned by the toolbar's Type selector
         id: 'type',
         header: 'Type',
-        getValue: () => '',
-        cellRenderer: WORKFLOW_ACTIVITY_TYPE_RENDERER,
-        cellRendererParams: { entityType },
+        getValue: () => labels.type,
         width: { fitContent: true },
       },
       {

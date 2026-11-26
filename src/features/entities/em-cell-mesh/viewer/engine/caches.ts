@@ -1,5 +1,6 @@
-import { bucket } from '@/features/viewer-3d/load/asset-cache';
+import { bucket } from '@/utils/asset-cache';
+import { ProjectDataCache } from '@/utils/project-data-caches';
 
-export const GLB_CACHE = bucket('em-cell-mesh-glb');
-export const STAND_IN_CACHE = bucket('em-cell-mesh-stand-in');
-export const FULL_CACHE = bucket('em-cell-mesh-full');
+export const GLB_CACHE = bucket(ProjectDataCache.EmCellMeshGlb);
+export const STAND_IN_CACHE = bucket(ProjectDataCache.EmCellMeshStandIn);
+export const FULL_CACHE = bucket(ProjectDataCache.EmCellMeshFull);

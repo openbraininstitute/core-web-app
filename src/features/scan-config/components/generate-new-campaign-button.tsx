@@ -10,10 +10,7 @@ import { useState } from 'react';
 import { useAppNotification } from '@/components/notification';
 import { isLegacyMigratedEmodel } from '@/entity-configuration/domain/optimization/legacy-migrated-emodels';
 import { useFlags } from '@/features/feature-flags';
-import {
-  GENERATE_CLICKABLE,
-  LAUNCH_GREEN,
-} from '@/features/scan-config/components/shared/task-launch-button';
+import { generateButtonClass } from '@/features/scan-config/components/shared/box-class';
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import { ScanConfigActivity } from '@/features/scan-config/types';
 import { messages } from '@/i18n/en/scan-config';
@@ -22,7 +19,6 @@ import {
   resolveWorkflowConfigureHrefForEntity,
   WorkflowConfigureOutcomeDict,
 } from '@/ui/segments/workflows/config/entity-entry';
-import { classNames } from '@/util/utils';
 
 import type { TScanConfigActivity } from '@/features/scan-config/types';
 
@@ -88,11 +84,7 @@ export default function GenerateNewCampaignButton({
     <button
       type="button"
       data-testid="scan-config-generate-new-campaign"
-      className={classNames(
-        // As the generate button an editable configuration has.
-        'flex min-h-12.5 p-2 w-full items-center justify-center rounded-full text-sm font-semibold ring-1 ring-black/5',
-        loading ? 'bg-gray-300 text-gray-500' : `${LAUNCH_GREEN} ${GENERATE_CLICKABLE} text-white`
-      )}
+      className={generateButtonClass(loading)}
       onClick={onClick}
       disabled={loading}
     >

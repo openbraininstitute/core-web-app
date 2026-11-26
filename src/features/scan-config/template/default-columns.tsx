@@ -10,10 +10,14 @@ import {
   SceneTablePaneProvider,
   useSceneTablePaneHost,
 } from '@/features/circuit-viewer/scene-table-pane';
-import { BOX_CLASS } from '@/features/scan-config/components/shared/box-class';
+import {
+  BLOCKS_AND_FORM_COLUMNS_CLASS,
+  BOX_CLASS,
+} from '@/features/scan-config/components/shared/box-class';
 import { Right } from '@/features/scan-config/components/ui-columns';
 import { ScanConfigActivity } from '@/features/scan-config/types';
 import { StackedPanes } from '@/features/spike-viewer/spike-statistics/stacked-panes';
+import { StackedSplit } from '@/features/spike-viewer/types';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { cn } from '@/utils/css-class';
 
@@ -21,6 +25,7 @@ import { useCollapsingColumns } from './collapsing-columns';
 import { LeftColumn, MiddleColumn } from './columns';
 
 import type { FocusEvent as ReactFocusEvent, ReactNode, RefObject } from 'react';
+import type { TStackedSplit } from '@/features/spike-viewer/types';
 import type { ScanConfigTemplateProps } from './types';
 import type { ScanConfigTemplateState } from './use-scan-config-template';
 
@@ -90,7 +95,7 @@ export function DefaultConfigColumns({ props, state }: Props) {
           BOX_CLASS,
           // a pixel in for its ring, which then meets the project selector's left edge
           'mt-px mb-3 ml-px grid min-h-0 grid-rows-1 gap-x-0 overflow-hidden py-3',
-          shut === 'none' ? 'col-span-2 grid-cols-subgrid' : 'grid-cols-1',
+          shut === 'none' ? cn('col-span-2', BLOCKS_AND_FORM_COLUMNS_CLASS) : 'grid-cols-1',
           shut === 'both' && 'hidden'
         )}
       >
@@ -157,10 +162,12 @@ const TABLE_WAIT_MS = 8000;
  */
 export function PreviewColumn({
   boxed,
+  split = StackedSplit.Config,
   edge,
   children,
 }: {
   boxed: boolean;
+  split?: Extract<TStackedSplit, typeof StackedSplit.Config | typeof StackedSplit.Isolated>;
   /** The grab bar on its left edge, which the columns before it give way to. */
   edge?: {
     gridRef: RefObject<HTMLDivElement | null>;
@@ -200,7 +207,7 @@ export function PreviewColumn({
       <div className="relative h-full min-h-0 min-w-0">
         {handle}
         <StackedPanes
-          split="config"
+          split={split}
           bottomShare={0.4}
           top={{
             title: '3D View',

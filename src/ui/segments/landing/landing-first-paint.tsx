@@ -1,4 +1,4 @@
-import ObiLogo from '@/features/learn/components/ui/ObiLogo';
+import ObiLogo from '@/components/logo/obi-logo';
 
 import { informationFont } from './information-font';
 

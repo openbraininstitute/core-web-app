@@ -213,6 +213,10 @@ export interface IPerson extends Timestamps, EntityCoreIdentifiable {
   pref_label: string;
 }
 
+/** EntityCore's `created_by` / `updated_by`; `id` is the user's Keycloak sub. */
+export interface IPlatformUser
+  extends Pick<IPerson, 'id' | 'pref_label' | 'creation_date' | 'update_date'> {}
+
 export interface IConsortium extends Timestamps, EntityCoreIdentifiable {
   pref_label: string;
   alternative_name: string;

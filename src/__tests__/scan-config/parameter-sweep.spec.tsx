@@ -1,10 +1,12 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { getDefaultStore } from 'jotai';
+import { useState } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   clearScanValueSelectionAtom,
   scanValueSelectionAtom,
+  selectScanValueAtom,
 } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import ParameterSweep, {
   ScanValueSelectorProvider,
@@ -12,7 +14,7 @@ import ParameterSweep, {
 } from '@/features/scan-config/components/ui-elements/parameter-sweep';
 
 function renderSweep(
-  value: (number | null)[],
+  value: number | null | (number | null)[],
   { withScope = false }: { withScope?: boolean } = {},
   onChange = vi.fn()
 ) {
@@ -37,6 +39,33 @@ function renderSweep(
   );
   return { onChange };
 }
+
+type TSweepValue = number | null | (number | null)[];
+
+/** A sweep that keeps its own value, for behaviour that shows only after a re-render. */
+function StatefulSweep({ initial, withScope }: { initial: TSweepValue; withScope?: boolean }) {
+  const [value, setValue] = useState<TSweepValue>(initial);
+  const sweep = (
+    <ParameterSweep
+      k="origin_x"
+      min={undefined}
+      max={undefined}
+      exclusiveMin={undefined}
+      exclusiveMax={undefined}
+      disabled={false}
+      value={value}
+      onChange={setValue}
+    />
+  );
+  return withScope ? (
+    <ScanValueSelectorProvider blockName="probe">{sweep}</ScanValueSelectorProvider>
+  ) : (
+    sweep
+  );
+}
+
+const valueInputs = () => screen.getAllByTestId('scan-config-sweep-value');
+const flaggedFields = () => document.querySelectorAll('.ant-input-number-status-error');
 
 // The selection atom is module-level, so one test's click would otherwise
 // survive into the next.
@@ -101,6 +130,20 @@ describe('ParameterSweep value selection', () => {
     fireEvent.click(screen.getAllByRole('button', { name: 'Remove this value' })[1]);
     expect(readSelection()).toBe(0);
   });
+
+  it('keeps the preview on the existing value when a single value opens a scan', () => {
+    getDefaultStore().set(selectScanValueAtom, { block: 'probe', param: 'origin_x', index: 3 });
+    renderSweep(5, { withScope: true });
+    fireEvent.click(screen.getByRole('button', { name: 'Scan over several values' }));
+    expect(readSelection()).toBe(0);
+  });
+
+  it('writes no selection when a removal leaves a single value', () => {
+    const { onChange } = renderSweep([10, 20], { withScope: true });
+    fireEvent.click(screen.getAllByRole('button', { name: 'Remove this value' })[0]);
+    expect(onChange).toHaveBeenCalledWith(20);
+    expect(readSelection()).toBeUndefined();
+  });
 });
 
 describe('ParameterSweep layout', () => {
@@ -109,13 +152,12 @@ describe('ParameterSweep layout', () => {
     expect(screen.queryByRole('button', { name: 'Use a single value' })).toBeNull();
   });
 
-  it('gives every row the same add/remove slots so the buttons line up', () => {
+  it('puts remove in every row and add in the last row only', () => {
     renderSweep([4100.223, 1100]);
-    const rows = [...document.querySelectorAll('.flex.w-full.items-center')];
+    const rows = screen.getAllByTestId('scan-config-sweep-row');
     expect(rows).toHaveLength(2);
-    // Only the last row shows "add", but both rows reserve the slot.
     for (const row of rows) {
-      expect(row.querySelectorAll(':scope > span.size-6')).toHaveLength(2);
+      expect(within(row).getByRole('button', { name: 'Remove this value' })).toBeTruthy();
     }
     expect(
       within(rows[0] as HTMLElement).queryByRole('button', { name: 'Add a value' })
@@ -125,13 +167,93 @@ describe('ParameterSweep layout', () => {
     ).toBeTruthy();
   });
 
-  it('orders the row controls eye, delete, then add', () => {
+  it('keeps add and remove inside the field, with the eye after it', () => {
     renderSweep([4100.223, 1100], { withScope: true });
-    const lastRow = [...document.querySelectorAll('.flex.w-full.items-center')].at(
-      -1
-    ) as HTMLElement;
+    const lastRow = screen.getAllByTestId('scan-config-sweep-row').at(-1) as HTMLElement;
     const labels = [...lastRow.querySelectorAll('button')].map((b) => b.getAttribute('aria-label'));
-    expect(labels).toEqual(['Show value 2 in the preview', 'Remove this value', 'Add a value']);
+    // remove stays at the field's right edge so it lines up on every row
+    expect(labels).toEqual(['Add a value', 'Remove this value', 'Show value 2 in the preview']);
+    const field = within(lastRow).getByTestId('scan-config-sweep-field');
+    expect(within(field).getByRole('button', { name: 'Add a value' })).toBeTruthy();
+    expect(within(field).getByRole('button', { name: 'Remove this value' })).toBeTruthy();
+    expect(within(field).queryByRole('button', { name: /show value/i })).toBeNull();
+  });
+});
+
+describe('ParameterSweep single value and back', () => {
+  it('opens a scan with an empty second value', () => {
+    const { onChange } = renderSweep(5);
+    fireEvent.click(screen.getByRole('button', { name: 'Scan over several values' }));
+    expect(onChange).toHaveBeenCalledWith([5, null]);
+  });
+
+  it('returns to a single value when only one is left', () => {
+    const { onChange } = renderSweep([10, 20]);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Remove this value' })[0]);
+    expect(onChange).toHaveBeenCalledWith(20);
+  });
+
+  it('stays a scan while two or more values are left', () => {
+    const { onChange } = renderSweep([10, 20, 30]);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Remove this value' })[0]);
+    expect(onChange).toHaveBeenCalledWith([20, 30]);
+  });
+});
+
+describe('ParameterSweep cursor', () => {
+  it('puts the cursor in the second value when a single value opens a scan', () => {
+    render(<StatefulSweep initial={5} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Scan over several values' }));
+    expect(valueInputs()).toHaveLength(2);
+    expect(document.activeElement).toBe(valueInputs()[1]);
+  });
+
+  it('puts the cursor in the first value when the single value was empty', () => {
+    render(<StatefulSweep initial={null} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Scan over several values' }));
+    expect(document.activeElement).toBe(valueInputs()[0]);
+  });
+
+  it('puts the cursor in the value a + adds', () => {
+    render(<StatefulSweep initial={[1, 2]} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Add a value' }));
+    expect(valueInputs()).toHaveLength(3);
+    expect(document.activeElement).toBe(valueInputs()[2]);
+  });
+
+  it('does not move the cursor into a row that turns up later', () => {
+    const sweepOf = (value: TSweepValue) => (
+      <ParameterSweep
+        k="origin_x"
+        min={undefined}
+        max={undefined}
+        exclusiveMin={undefined}
+        exclusiveMax={undefined}
+        disabled={false}
+        value={value}
+        onChange={vi.fn()}
+      />
+    );
+    // the parent ignores the +, then the value grows some other way
+    const { rerender } = render(sweepOf([1, 2]));
+    fireEvent.click(screen.getByRole('button', { name: 'Add a value' }));
+    rerender(sweepOf([1, 2, 3]));
+    expect(document.activeElement).not.toBe(valueInputs()[2]);
+  });
+});
+
+describe('ParameterSweep empty values', () => {
+  it('does not flag a value a + adds until the user leaves it', () => {
+    render(<StatefulSweep initial={5} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Scan over several values' }));
+    expect(flaggedFields()).toHaveLength(0);
+    fireEvent.blur(valueInputs()[1] as HTMLElement);
+    expect(flaggedFields()).toHaveLength(1);
+  });
+
+  it('flags an empty value it did not add', () => {
+    renderSweep([1, null]);
+    expect(flaggedFields()).toHaveLength(1);
   });
 });
 

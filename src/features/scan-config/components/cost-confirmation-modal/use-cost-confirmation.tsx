@@ -11,7 +11,7 @@ import type { CostConfirmationItem } from './types';
 
 type UseCostConfirmationParams = {
   items: CostConfirmationItem[];
-  taskType: TObiOneTaskType;
+  taskType: TObiOneTaskType | null;
   workflowLabel: string;
   context: WorkspaceContext;
   onConfirm: (ids: string[]) => void;
@@ -43,7 +43,7 @@ export function useCostConfirmation({
     [onConfirm]
   );
 
-  const modal = (
+  const modal = taskType ? (
     <CostConfirmationModal
       open={open}
       onClose={onClose}
@@ -53,7 +53,7 @@ export function useCostConfirmation({
       workflowLabel={workflowLabel}
       context={context}
     />
-  );
+  ) : null;
 
   return { openModal, modal };
 }

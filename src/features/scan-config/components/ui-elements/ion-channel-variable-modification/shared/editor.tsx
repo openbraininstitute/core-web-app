@@ -1,10 +1,12 @@
 'use client';
 
 import { isNil } from 'es-toolkit/compat';
-import { useCallback, useEffect, useState } from 'react';
 
 import { useFieldError } from '@/features/scan-config/components/hooks/field-errors';
 import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
+import ParameterSweep, {
+  SweepCollapseButton,
+} from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { cn } from '@/utils/css-class';
 
 import 'katex/dist/katex.min.css';
@@ -12,9 +14,8 @@ import 'katex/dist/katex.min.css';
 import type { SectionListEntry } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
 import type { TScanConfigUIElementDict } from '@/features/scan-config/types';
 
-// TODO: re-enable array support when multi-value sweep when obi-one enabled it
-// export type SectionValue = number | number[];
-export type SectionValue = number;
+/** A single value, or a list that obi-one expands into a parameter scan. */
+export type SectionValue = number | null | (number | null)[];
 
 export interface SectionListEditorProps {
   uiElement: TScanConfigUIElementDict;
@@ -60,64 +61,20 @@ function SectionConfigRow({
 }: {
   uiElement: TScanConfigUIElementDict;
   entry: SectionListEntry;
-  value: SectionValue | null;
+  value: SectionValue;
   onChange: (v: SectionValue) => void;
   disabled: boolean;
   errorPathPrefix?: string;
 }) {
   const [min, max] = entry.limits ?? [undefined, undefined];
-  const [draft, setDraft] = useState(value !== null ? String(value) : '');
-
-  // sync draft when the external value changes (e.g. variable selection reset)
-  useEffect(() => {
-    setDraft(value !== null ? String(value) : '');
-  }, [value]);
-
-  const validate = useCallback(
-    (v: number): string | undefined => {
-      if (!isNil(min) && v < min) return `Min: ${min}`;
-      if (!isNil(max) && v > max) return `Max: ${max}`;
-      return undefined;
-    },
-    [min, max]
-  );
-
-  // validate against the draft so errors appear as the user types
-  const draftError = (() => {
-    if (draft.trim() === '') return undefined;
-    const num = Number(draft);
-    if (Number.isNaN(num)) return 'Invalid number';
-    return validate(num);
-  })();
-
-  // register this error in the shared field errors atom so the left menu can see it
   const fieldPath = errorPathPrefix ? `${errorPathPrefix}/${entry.section_list}` : undefined;
-  useFieldError(fieldPath, draftError);
-
-  const commitValue = () => {
-    // allow the user to clear the field without snapping back
-    if (draft.trim() === '') return;
-    const num = Number(draft);
-    if (Number.isNaN(num)) {
-      // reset only for genuinely invalid (non-empty) input
-      setDraft(value !== null ? String(value) : '');
-      return;
-    }
-    onChange(num);
-  };
-
-  // TODO: re-enable multi-value support when sweep is needed
-  // const valuesArray: number[] = Array.isArray(value) ? value : [value];
-  // const [draft, setDraft] = useState('');
-  // const inputRef = useRef<HTMLInputElement>(null);
-  // const [isAdding, setIsAdding] = useState(false);
-  // const commitDraft = () => { ... };
-  // const removeBadge = (index: number) => { ... };
-  // const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => { ... };
-  // const handlePlusClick = () => { ... };
+  useFieldError(fieldPath, limitsError(value, min, max));
 
   return (
-    <div data-scan-config-block-element-item={`${uiElement}_editor_item`}>
+    <div
+      data-scan-config-block-element-item={`${uiElement}_editor_item`}
+      data-testid={`scan-config-section-list-${entry.section_list}`}
+    >
       <div className="mb-1.5 flex items-center gap-2">
         <span className="flex items-center">
           <span
@@ -133,47 +90,37 @@ function SectionConfigRow({
         {!isNil(entry.value) && (
           <span className="text-sm text-gray-400">Default: {entry.value}</span>
         )}
-      </div>
-
-      <div
-        className={cn(
-          'flex min-h-9 w-full items-center gap-1.5 rounded-md border px-2 py-1.5',
-          'border-gray-300 bg-background transition-shadow focus-within:ring-1 focus-within:ring-primary-9',
-          disabled && 'cursor-not-allowed opacity-50',
-          draftError && 'border-red-400 focus-within:ring-red-400/30'
-        )}
-      >
-        <input
-          data-scan-config-block-element-item={`${uiElement}_editor_item_input`}
-          value={draft}
-          onChange={(e) => {
-            const newDraft = e.target.value;
-            setDraft(newDraft);
-            const num = Number(newDraft);
-            if (newDraft.trim() !== '' && !Number.isNaN(num)) {
-              onChange(num);
-            }
-          }}
-          onBlur={commitValue}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              commitValue();
-            }
-          }}
+        <SweepCollapseButton
+          value={value}
+          name={entry.section_list}
           disabled={disabled}
-          min={min}
-          max={max}
-          step="any"
-          placeholder="Enter value…"
-          className={cn(
-            'min-w-15 flex-1 border-none bg-transparent py-0.5 text-base font-bold ',
-            'text-primary-8 outline-none placeholder:text-label placeholder:font-light ',
-            '[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]'
-          )}
+          onChange={onChange}
         />
       </div>
-      {draftError && <div className="mt-1 text-base text-red-500">{draftError}</div>}
+
+      <div data-scan-config-block-element-item={`${uiElement}_editor_item_input`}>
+        <ParameterSweep
+          k={fieldPath ?? `${uiElement}/${entry.section_list}`}
+          value={value}
+          min={min}
+          max={max}
+          exclusiveMin={undefined}
+          exclusiveMax={undefined}
+          onChange={onChange}
+          disabled={disabled}
+        />
+      </div>
     </div>
   );
+}
+
+/** First value of a single value or scan that falls outside the variable's limits. */
+function limitsError(value: SectionValue, min?: number, max?: number): string | undefined {
+  const values = Array.isArray(value) ? value : [value];
+  for (const v of values) {
+    if (isNil(v)) continue;
+    if (!isNil(min) && v < min) return `Min: ${min}`;
+    if (!isNil(max) && v > max) return `Max: ${max}`;
+  }
+  return undefined;
 }

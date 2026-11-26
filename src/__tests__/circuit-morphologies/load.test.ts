@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import * as Comlink from 'comlink';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { Arriving } from '@/features/circuit-viewer/morphologies/load/arriving';
 import {
   pageCells,
   renumberSegments,
@@ -22,7 +23,8 @@ import {
   packCacheKey,
 } from '@/features/circuit-viewer/morphologies/load/worker-api';
 
-import { FakeCacheStorage, fakeServer } from '../viewer-3d/fake-caches';
+import { FakeCacheStorage, fakeServer } from '../utils/fake-caches';
+import { unpackedOf } from './packed';
 import { indexEnd, indexOf, joined, pack } from './packs';
 
 import type { OnProgress } from '@/features/circuit-viewer/morphologies/load/download';
@@ -31,8 +33,8 @@ import type {
   MorphologySegments,
   Population,
 } from '@/features/circuit-viewer/morphologies/types';
-import type { CacheBounds } from '@/features/viewer-3d/load/asset-cache';
 import type { WorkerHandle } from '@/features/viewer-3d/load/worker-handle';
+import type { CacheBounds } from '@/utils/asset-cache';
 
 const URL_A = 'https://bluenaas.test/circuit/a/morphology-pack';
 /**
@@ -111,8 +113,8 @@ function inProcess(): TestWorker {
       return opened;
     },
     whole: () => api.whole(),
-    async read(wanted) {
-      const read = await api.read(wanted);
+    async read(wanted, packed) {
+      const read = await api.read(wanted, packed);
       for (const { segments } of read) handedOver.push(segments.buffer);
       return read;
     },
@@ -156,10 +158,10 @@ async function opened(
   populations: Population[] = POPULATIONS,
   downloaded = true
 ) {
-  const { data, boxes, levels, readableAt } = await openPack(bytes);
+  const { data, boxes, levels, packing, readableAt } = await openPack(bytes);
   const page = renumberSomas(data, pageCells(data.populations, populations), populations);
   const arrival = { readableAt, received: expect.any(Function), listen: expect.any(Function) };
-  const chunks = { boxes, levels, read: expect.any(Function) };
+  const chunks = { boxes, levels, packing, read: expect.any(Function) };
   return { ...page, chunks: downloaded ? { ...chunks, arrival } : chunks };
 }
 
@@ -175,17 +177,31 @@ async function asRead(bytes: Uint8Array, level = 0, populations = POPULATIONS) {
   const own = await openPack(bytes);
   const numbers = pageCells(own.data.populations, populations);
   const boxes = Array.from(own.levels[level].segments, (_, box) =>
-    own.readBox(level, box).then((read) => mortonOrder(renumberSegments(read, numbers)))
+    own
+      .readBox(level, box)
+      .then((read) => mortonOrder(renumberSegments(read, numbers), own.packing))
   );
   return joined(await Promise.all(boxes));
 }
 
-/** Every box of a level, read through the load's data. */
-async function readLevel(data: CircuitMorphologyData, level = 0): Promise<MorphologySegments> {
+/** Every box of a level, read through the load's data; with `packed`, read with its ends packed, then unpacked. */
+async function readLevel(
+  data: CircuitMorphologyData,
+  level = 0,
+  packed = false
+): Promise<MorphologySegments> {
   const chunks = data.chunks;
   if (!chunks) throw new Error('no chunks');
   const boxes = Array.from({ length: chunks.boxes.length / 6 }, (_, box) => ({ level, box }));
-  return joined(await chunks.read(boxes));
+  const read = await chunks.read(boxes, packed);
+  return joined(
+    read.map((box) => {
+      expect(box.segments instanceof Uint32Array).toBe(packed);
+      return box.segments instanceof Uint32Array
+        ? { ...box, segments: unpackedOf(box.segments, chunks.packing) }
+        : box;
+    })
+  );
 }
 
 const serve = (bytes: Uint8Array) => {
@@ -228,6 +244,21 @@ describe('loadCircuitMorphologies', () => {
       expect(await readLevel(data, level)).toEqual(await asRead(small(), level));
     }
     expect(workers[0].handedOver.slice(1).every((buffer) => buffer.byteLength === 0)).toBe(true);
+  });
+
+  it("reads the boxes' ends packed where asked, the same segments in the same order, with the pack's packing", async () => {
+    serve(small());
+    const { data } = await load();
+
+    expect(data.chunks?.packing).toEqual((await openPack(small())).packing);
+    for (const level of [0, 1, 2]) {
+      const packed = await readLevel(data, level, true);
+      const floats = await asRead(small(), level);
+      expect(packed.segmentCells).toEqual(floats.segmentCells);
+      expect(packed.segmentTypes).toEqual(floats.segmentTypes);
+      const off = packed.segments.map((value, k) => Math.abs(value - floats.segments[k]));
+      expect(Math.max(0, ...off)).toBeLessThan(0.001);
+    }
   });
 
   it('fails a read of a box that does not read, and reads the others', async () => {
@@ -330,6 +361,146 @@ describe('loadCircuitMorphologies', () => {
     expect(second).toEqual(await outcome(small(), true));
     expect(served.requests).toBe(1);
     expect(onProgress).not.toHaveBeenCalled();
+  });
+
+  describe('reads the pack from its entry in the cache', () => {
+    /** The parts of a blob asked for, as their lengths. */
+    const partsRead = () => {
+      const slice = vi.spyOn(Blob.prototype, 'slice');
+      return () => slice.mock.calls.map(([start = 0, end = 0]) => end - start);
+    };
+
+    it('a block at a time on a later visit, never whole', async () => {
+      serve(small());
+      await kept();
+      const parts = partsRead();
+      const second = await load();
+      for (const level of [0, 1, 2]) {
+        expect(await readLevel(second.data, level)).toEqual(await asRead(small(), level));
+      }
+
+      expect(parts().length).toBeGreaterThan(3);
+      expect(Math.max(...parts())).toBeLessThan(small().byteLength / 2);
+    });
+
+    it('once a downloaded pack is kept, letting go of the download', async () => {
+      serve(small());
+      const release = vi.spyOn(Arriving.prototype, 'release');
+      const first = await load();
+      // Asked for while the pack may still be coming in, and read through whichever holds it.
+      const coarsest = readLevel(first.data, 2);
+      await first.whole;
+      expect(release).toHaveBeenCalledOnce();
+      expect(await coarsest).toEqual(await asRead(small(), 2));
+
+      const parts = partsRead();
+      for (const level of [0, 1]) {
+        expect(await readLevel(first.data, level)).toEqual(await asRead(small(), level));
+      }
+      expect(parts().length).toBeGreaterThan(0);
+    });
+
+    it('letting go of the download only once the reads begun on it are over', async () => {
+      const bytes = small();
+      // The pack's last byte comes when the test says.
+      const last = Promise.withResolvers<void>();
+      vi.stubGlobal('fetch', async () => {
+        const body = new ReadableStream<Uint8Array>({
+          async start(controller) {
+            controller.enqueue(bytes.slice(0, -1));
+            await last.promise;
+            controller.enqueue(bytes.slice(-1));
+            controller.close();
+          },
+        });
+        return new Response(body, { headers: { 'Content-Length': String(bytes.byteLength) } });
+      });
+      const release = vi.spyOn(Arriving.prototype, 'release');
+      // One read of the download is held with its bytes in hand, as a block being inflated is.
+      const read = Arriving.prototype.read;
+      let hold = false;
+      const held = Promise.withResolvers<void>();
+      const letOn = Promise.withResolvers<void>();
+      vi.spyOn(Arriving.prototype, 'read').mockImplementation(async function (
+        this: Arriving,
+        start: number,
+        end: number
+      ) {
+        const part = await read.call(this, start, end);
+        if (!hold) return part;
+        hold = false;
+        held.resolve();
+        await letOn.promise;
+        return part;
+      });
+      const api = createPackApi(BOUNDS);
+      const opened = await api.open(requestOf(bytes), POPULATIONS, () => {});
+      const boxes = Array.from(opened.levels[2].segments, (_, box) => ({ level: 2, box }));
+      hold = true;
+      const coarsest = api.read(boxes);
+      await held.promise;
+
+      last.resolve();
+      await vi.waitFor(() => expect(cached()?.body).toEqual(bytes));
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(release).not.toHaveBeenCalled();
+
+      letOn.resolve();
+      expect(joined(await coarsest)).toEqual(await asRead(bytes, 2));
+      await api.whole();
+      expect(release).toHaveBeenCalledOnce();
+      expect(joined(await api.read(boxes.map(({ box }) => ({ level: 0, box }))))).toEqual(
+        await asRead(bytes, 0)
+      );
+    });
+
+    it('not where the pack is not kept: the download stays', async () => {
+      serve(small());
+      BOUNDS.maxBytes = small().byteLength - 1;
+      const release = vi.spyOn(Arriving.prototype, 'release');
+      const parts = partsRead();
+      const first = await load();
+      await first.whole;
+
+      expect(await readLevel(first.data, 0)).toEqual(await asRead(small(), 0));
+      expect(release).not.toHaveBeenCalled();
+      expect(parts()).toEqual([]);
+    });
+
+    /** What a browser may say of a body it cannot read. */
+    const unreadable = [
+      ['a DOMException', () => new DOMException('could not be read', 'NotReadableError')],
+      ['another error', () => new TypeError('could not be read')],
+    ] as const;
+
+    it.each(
+      unreadable
+    )('not where the browser cannot read the entry the pack was kept in, saying so with %s: the download stays', async (_, error) => {
+      serve(small());
+      const release = vi.spyOn(Arriving.prototype, 'release');
+      vi.spyOn(Blob.prototype, 'arrayBuffer').mockRejectedValue(error());
+      const first = await load();
+      await first.whole;
+
+      expect(cached()?.body).toEqual(small());
+      expect(release).not.toHaveBeenCalled();
+      expect(await readLevel(first.data, 0)).toEqual(await asRead(small(), 0));
+    });
+
+    it.each(
+      unreadable
+    )('and fetches it again where the browser cannot read the entry, saying so with %s', async (_, error) => {
+      const { served } = serve(small());
+      await kept();
+      vi.spyOn(Blob.prototype, 'arrayBuffer').mockRejectedValueOnce(error());
+      const again = await load();
+
+      expect(again.fromCache).toBe(false);
+      expect(again.data).toEqual(await opened(small()));
+      await again.whole;
+      expect(served.requests).toBe(2);
+      expect(cached()?.body).toEqual(small());
+    });
   });
 
   it('keeps a pack by its digest, whatever its URL', async () => {

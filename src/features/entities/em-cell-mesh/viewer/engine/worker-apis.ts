@@ -5,12 +5,7 @@
  */
 import * as Comlink from 'comlink';
 
-import {
-  type CacheBounds,
-  hasEntry,
-  readEntry,
-  writeEntry,
-} from '@/features/viewer-3d/load/asset-cache';
+import { type CacheBounds, hasEntry, readEntry, writeEntry } from '@/utils/asset-cache';
 
 import { packedBuffers, packMesh, unpackMesh } from './chunks';
 import { type DecodeResult, type DracoModule, decodeGlb } from './decode';

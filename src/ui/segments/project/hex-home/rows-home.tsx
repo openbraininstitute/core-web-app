@@ -10,7 +10,7 @@ import { EXAMPLES, journeyHref } from '@/ui/segments/project/hex-home/content';
 import { driftOf, HEX_CLIP, SQRT3 } from '@/ui/segments/project/hex-home/hex-geometry';
 import { FreeMedia, MeltFlier, TileMedia } from '@/ui/segments/project/hex-home/landing-example';
 import { Hexagon } from '@/ui/segments/project/hex-home/hex-tile';
-import ObiLogo from '@/features/learn/components/ui/ObiLogo';
+import ObiLogo from '@/components/logo/obi-logo';
 import { AiSparkles } from '@/ui/segments/project/brains-walkthrough/agent-ready';
 import { useAssistantQuestion } from '@/ui/segments/project/get-started/sections/use-assistant-question';
 import { VideoCard } from '@/ui/segments/project/hex-home/video-card';

@@ -32,8 +32,6 @@ interface HeaderParams {
   fitted?: boolean;
   /** registry key of a header that replaces all of the above */
   headerRenderer?: string;
-  /** the column is sized to its content, so its filter follows the label rather than its edge */
-  fitted?: boolean;
 }
 
 /**

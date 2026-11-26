@@ -3,10 +3,8 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { useState } from 'react';
 
-import {
-  GENERATE_CLICKABLE,
-  LAUNCH_GREEN,
-} from '@/features/scan-config/components/shared/task-launch-button';
+import { LAUNCH_GREEN } from '@/features/scan-config/components/shared/box-class';
+import { GENERATE_CLICKABLE } from '@/features/scan-config/components/shared/task-launch-button';
 import { Modal } from '@/ui/molecules/modal';
 import { AiSparkles } from '@/ui/segments/project/brains-walkthrough/agent-ready';
 import { cn } from '@/utils/css-class';

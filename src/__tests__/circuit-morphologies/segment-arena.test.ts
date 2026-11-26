@@ -8,12 +8,15 @@ import {
   TYPE_SHIFT,
 } from '@/features/circuit-viewer/morphologies/engine/impostors';
 import {
+  type ArenaArrays,
   BLOCK,
   roomFor,
   SegmentArena,
 } from '@/features/circuit-viewer/morphologies/engine/segment-arena';
 
-import type { MorphologySegments } from '@/features/circuit-viewer/morphologies/types';
+import { PACKING, packedOf, unpackedOf } from './packed';
+
+import type { MorphologySegments, Packing } from '@/features/circuit-viewer/morphologies/types';
 
 /** `count` segments of `box`, each told apart by its cell, `1000 * box + i`, which its ends and type carry too. */
 function segmentsOf(box: number, count: number): MorphologySegments {
@@ -28,25 +31,50 @@ function segmentsOf(box: number, count: number): MorphologySegments {
   };
 }
 
-/** An arena of `capacity` segments, with room for `base`, its arrays and what it told its uploads. */
-function arenaOf(capacity: number, base?: number[]) {
+/**
+ * An arena of `capacity` segments, with room for `base`; its words and blocks; what it told its uploads (`told`: a
+ * start, a count, and whether no ends came with them); every slot's ends as they were uploaded (`ends`), eight floats
+ * each, or five words with a `packing`; and the ends uploaded last, as they were given (`given`).
+ */
+function arenaOf(capacity: number, base?: number[], packing?: Packing) {
   const told: [number, number, boolean][] = [];
   const dispose = vi.fn();
-  let arrays: { ends: Float32Array; words: Uint32Array; blocks: Float32Array } = {
-    ends: new Float32Array(),
-    words: new Uint32Array(),
-    blocks: new Float32Array(),
-  };
+  const stride = packing ? 5 : 8;
+  let arrays: ArenaArrays = { words: new Uint32Array(), blocks: new Float32Array() };
+  let ends = new Float32Array() as Float32Array | Uint32Array;
+  let last: Float32Array | Uint32Array | null = null;
   const arena = new SegmentArena(
     new THREE.InstancedBufferGeometry(),
     capacity,
-    (ends, words, blocks) => {
-      arrays = { ends, words, blocks };
-      return { upload: (...range) => told.push(range), dispose };
+    (given) => {
+      arrays = given;
+      const slots = stride * given.words.length;
+      ends = packing ? new Uint32Array(slots) : new Float32Array(slots);
+      return {
+        upload: (start, count, changed) => {
+          told.push([start, count, changed === null]);
+          if (!changed) return;
+          ends.set(changed, stride * start);
+          last = changed;
+        },
+        dispose,
+      };
     },
-    base
+    base,
+    packing
   );
-  return { arena, ...arrays, blockWords: new Uint32Array(arrays.blocks.buffer), told, dispose };
+  const { words, blocks } = arrays;
+  return {
+    arena,
+    arrays,
+    ends,
+    given: () => last,
+    words,
+    blocks,
+    blockWords: new Uint32Array(blocks.buffer),
+    told,
+    dispose,
+  };
 }
 
 type Made = ReturnType<typeof arenaOf>;
@@ -126,19 +154,23 @@ function expectBlocks({ arena, ends, words, blocks, blockWords }: Made) {
   }
 }
 
-/** The segments and blocks that differ from `before`, each within a range told, or past the end. */
+/**
+ * The words and blocks that differ from `before`, each within a range told or past the end; and every segment drawn
+ * with its own ends uploaded.
+ */
 function expectUploaded({ arena, ends, words, blocks, told }: Made, before: Made) {
   const end = arena.geometry.instanceCount;
-  const toldOf = (i: number, ofEnds: boolean) =>
-    told.some(
-      ([start, count, wordsOnly]) => start <= i && i < start + count && !(ofEnds && wordsOnly)
-    );
+  const toldOf = (i: number) => told.some(([start, count]) => start <= i && i < start + count);
   const untold: string[] = [];
   for (let i = 0; i < end; i++) {
-    if (words[i] !== before.words[i] && !toldOf(i, false)) untold.push(`word ${i}`);
+    if (words[i] !== before.words[i] && !toldOf(i)) untold.push(`word ${i}`);
     if (typeAt(words, i) === HOLE) continue;
-    const moved = ends.subarray(8 * i, 8 * i + 8).some((v, k) => v !== before.ends[8 * i + k]);
-    if (moved && !toldOf(i, true)) untold.push(`ends ${i}`);
+    const cell = cellAt(words, i);
+    for (let k = 0; k < 8; k++) {
+      if (ends[8 * i + k] === cell + k) continue;
+      untold.push(`ends ${i}`);
+      break;
+    }
   }
   for (let b = 0; b < end / BLOCK; b++) {
     const changed = blocks
@@ -348,6 +380,102 @@ describe('SegmentArena', () => {
     expect(words.array[BLOCK] & CELL_MASK).toBe(2000);
   });
 
+  it("keeps a base's ends in three's attribute, which is drawn from", () => {
+    const arena = new SegmentArena(
+      new THREE.InstancedBufferGeometry(),
+      4 * BLOCK,
+      undefined,
+      [70, 3]
+    );
+    const ends = (arena.geometry.getAttribute('aA') as THREE.InterleavedBufferAttribute).data;
+    expect(ends.array.length).toBe(8 * 4 * BLOCK);
+    arena.putBase(1, segmentsOf(1, 3));
+
+    expect(ends.updateRanges).toEqual([{ start: 8 * 2 * BLOCK, count: 8 * 3 }]);
+    expect(Array.from(ends.array.subarray(8 * 2 * BLOCK, 8 * (2 * BLOCK + 3)))).toEqual(
+      Array.from(segmentsOf(1, 3).segments)
+    );
+  });
+
+  describe('with packed ends', () => {
+    /** `segmentsOf`, its ends on the grid and its radii on a step, as floats and packed. */
+    function bothOf(box: number, count: number) {
+      const floats = segmentsOf(box, count);
+      for (let k = 3; k < floats.segments.length; k += 4) floats.segments[k] = 2 ** ((k % 7) - 3);
+      const packed = { ...floats, segments: packedOf(floats.segments) };
+      return { floats: { ...floats, segments: unpackedOf(packed.segments) }, packed };
+    }
+
+    const packedArena = (capacity: number, base?: number[]) => arenaOf(capacity, base, PACKING);
+
+    it('hands its uploads the packing and the ends as they were put, and bounds its blocks as it does the same ends as floats', () => {
+      const packed = packedArena(4 * BLOCK);
+      const floats = arenaOf(4 * BLOCK);
+      const boxes = [bothOf(0, 70), bothOf(1, 10)];
+      boxes.forEach((box, k) => {
+        packed.arena.replace(k, box.packed);
+        floats.arena.replace(k, box.floats);
+      });
+
+      expect(packed.arena.packed).toBe(true);
+      expect(floats.arena.packed).toBe(false);
+      expect(packed.arrays.packing).toBe(PACKING);
+      expect(packed.ends.subarray(0, 5 * 70)).toEqual(boxes[0].packed.segments);
+      expect(packed.ends.subarray(5 * 2 * BLOCK, 5 * (2 * BLOCK + 10))).toEqual(
+        boxes[1].packed.segments
+      );
+      expect(packed.arrays.blocks).toEqual(floats.blocks);
+      expect(packed.arrays.words).toEqual(floats.words);
+    });
+
+    it('moves the packed ends with their boxes where it closes the holes, and keeps a base as an arena of floats does', () => {
+      const packed = packedArena(6 * BLOCK, [70]);
+      const floats = arenaOf(6 * BLOCK, [70]);
+      const base = bothOf(9, 70);
+      packed.arena.putBase(0, base.packed);
+      floats.arena.putBase(0, base.floats);
+      const put = (box: number, count: number) => {
+        const both = bothOf(box, count);
+        packed.arena.replace(box, both.packed);
+        floats.arena.replace(box, both.floats);
+      };
+      put(1, 60);
+      put(2, 60);
+      put(3, 60);
+      packed.arena.remove(1);
+      floats.arena.remove(1);
+      // Neither the hole nor the room at the end holds two blocks: the boxes above the base are moved down.
+      put(4, 100);
+
+      const end = packed.arena.geometry.instanceCount;
+      expect(end).toBe(floats.arena.geometry.instanceCount);
+      const unpacked = unpackedOf(packed.ends.subarray(0, 5 * end) as Uint32Array);
+      // A slot past its box's segments holds whatever was there.
+      const drawn = Array.from({ length: end }, (_, slot) => slot).filter(
+        (slot) => floats.words[slot] >>> TYPE_SHIFT !== HOLE
+      );
+      expect(drawn).toHaveLength(70 + 60 + 60 + 100);
+      for (const slot of drawn) {
+        expect([...unpacked.subarray(8 * slot, 8 * slot + 8)]).toEqual([
+          ...floats.ends.subarray(8 * slot, 8 * slot + 8),
+        ]);
+      }
+      expect(packed.arrays.blocks).toEqual(floats.blocks);
+      expect(packed.arrays.words).toEqual(floats.words);
+    });
+
+    it('refuses ends that are not as it holds them, and packed ends where three draws from it', () => {
+      const { floats, packed } = bothOf(0, 10);
+      expect(() => packedArena(BLOCK).arena.replace(0, floats)).toThrow('not packed');
+      expect(() => arenaOf(BLOCK).arena.replace(0, packed)).toThrow('packed');
+      expect(() => packedArena(2 * BLOCK, [10]).arena.putBase(0, floats)).toThrow('not packed');
+      const geometry = new THREE.InstancedBufferGeometry();
+      expect(() => new SegmentArena(geometry, BLOCK, undefined, undefined, PACKING)).toThrow(
+        'packed'
+      );
+    });
+  });
+
   it('refuses a box that does not fit', () => {
     const { arena } = arenaOf(BLOCK);
     arena.replace(1, segmentsOf(1, 3));
@@ -410,7 +538,7 @@ describe('SegmentArena', () => {
   describe('with a base', () => {
     it('keeps room for each box at its start, in the order of the boxes, holes until its base is put', () => {
       const made = arenaOf(10 * BLOCK, [3, 70, 0, 5]);
-      const { arena, words, told } = made;
+      const { arena, words, told, given } = made;
       expect(arena.keepsBase).toBe(true);
       expect(arena.baseRoom).toBe(4 * BLOCK);
       expect(told).toEqual([[0, 4 * BLOCK, true]]);
@@ -420,11 +548,18 @@ describe('SegmentArena', () => {
       expect([0, 1, 2, 3].map((box) => arena.hasBase(box))).toEqual([false, false, true, false]);
 
       told.length = 0;
-      expect(arena.putBase(1, segmentsOf(1, 70))).toBe(70);
+      // The base's ends are uploaded as they were read, and not kept.
+      const read = segmentsOf(1, 70);
+      expect(arena.putBase(1, read)).toBe(70);
       expect(told).toEqual([[BLOCK, 70, false]]);
+      expect(given()).toBe(read.segments);
       // Box 2's base has no segments.
       arena.replace(2, segmentsOf(2, 10));
       expect(told.at(-1)).toEqual([4 * BLOCK, BLOCK, false]);
+      // The arena's own ends are those above the base.
+      const own = given() as Float32Array;
+      expect([own.byteOffset, own.length]).toEqual([0, 8 * BLOCK]);
+      expect(own.buffer.byteLength).toBe(4 * 8 * 6 * BLOCK);
       expectDrawn(
         made,
         new Map([
@@ -456,6 +591,7 @@ describe('SegmentArena', () => {
       told.length = 0;
       // The box was the last: its words are past the end once it goes.
       expect(arena.remove(1)).toBe(Math.ceil((4 * 70) / 36));
+      // Its ends were uploaded once, and its blocks are put back with none of them.
       expect(told).toEqual([[BLOCK, 70, true]]);
       expect(arena.geometry.instanceCount).toBe(3 * BLOCK);
       expectDrawn(

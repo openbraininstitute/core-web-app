@@ -5,3 +5,11 @@ pre-commit:
       glob: "*.{css,js,ts,cjs,mjs,jsx,tsx,json,jsonc}"
       run: pnpm exec biome check --formatter-enabled=true --write {staged_files}
       stage_fixed: true
+
+pre-push:
+  commands:
+    react-doctor:
+      glob: "*.{js,jsx,ts,tsx}"
+      # Pinned in package.json: runs from node_modules, so the push needs no network; --scope changed reports only issues new versus main.
+      # `< /dev/null`: no input, so its closing menu doesn't wait for a key.
+      run: pnpm exec react-doctor . --scope changed --no-supply-chain --no-score --blocking error < /dev/null

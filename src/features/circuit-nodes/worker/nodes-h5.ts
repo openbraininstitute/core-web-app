@@ -2,6 +2,7 @@ import { Dataset, File, Group } from 'h5wasm';
 import { match } from 'ts-pattern';
 
 import { csvLines } from '@/features/circuit-nodes/nodes-csv';
+import { propertyFilterOf } from '@/features/circuit-nodes/property-filter';
 import {
   type ColumnFilter,
   type ColumnKind,
@@ -19,6 +20,8 @@ import {
   POSITION_COLUMNS,
   type SortItem,
   type TextFilter,
+  type TOfferedProperties,
+  type TPropertyFilter,
 } from '@/features/circuit-nodes/types';
 
 const SYNTHETIC_NODE_ID = 'node_id';
@@ -693,6 +696,19 @@ export class NodesSession {
       }
     }
     return out;
+  }
+
+  neuronSetFilter(cells: Uint32Array, offered: TOfferedProperties): TPropertyFilter | null {
+    return propertyFilterOf({
+      cells,
+      rowCount: this.rowCount,
+      columns: this.columns,
+      offered,
+      read: (name) => ({
+        library: (this.columnIndex.get(name) as CategoricalHandle).library,
+        indices: this.loadColumn(name) as Uint32Array,
+      }),
+    });
   }
 
   /**

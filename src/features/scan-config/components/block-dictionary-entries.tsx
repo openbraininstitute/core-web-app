@@ -194,27 +194,11 @@ export default function BlockDictionaryEntries({
 
     newConfig[selectedRootElement] = targetSectionRenamed;
 
-    const initConfig = newConfig.initialize;
-    if (
-      isPlainObject(initConfig) &&
-      isPlainObject(initConfig.node_set) &&
-      typeof initConfig.node_set.block_name === 'string' &&
-      initConfig.node_set.block_name === selectedEntry
-    ) {
-      initConfig.node_set.block_name = newKey;
-    }
-
-    Object.entries(newConfig).forEach(([configK, configV]) => {
-      if (configK === 'initialize' || !isPlainObject(configV)) return;
-
-      // Rename refs in section entries (incl. nested combination tuples)
-      Object.values(configV).forEach((entryV) => {
-        rewriteBlockReferences(entryV, selectedEntry, {
-          type: RewriteBlockReferencesModeDict.Rename,
-          to: newKey,
-        });
-      });
-    });
+    rewriteBlockReferences(
+      newConfig,
+      { dictionary: selectedRootElement, name: selectedEntry },
+      { type: RewriteBlockReferencesModeDict.Rename, to: newKey }
+    );
 
     // Distributions are referenced by plain string in each parameter's `distribution`, not via
     // block references, so cascade the rename into every parameter that uses the old name.
@@ -409,9 +393,11 @@ export default function BlockDictionaryEntries({
                                           return;
 
                                         Object.values(configV).forEach((entryV) => {
-                                          rewriteBlockReferences(entryV, subkey, {
-                                            type: RewriteBlockReferencesModeDict.Clear,
-                                          });
+                                          rewriteBlockReferences(
+                                            entryV,
+                                            { dictionary: rootElement, name: subkey },
+                                            { type: RewriteBlockReferencesModeDict.Clear }
+                                          );
                                         });
                                       });
 

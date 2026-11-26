@@ -9,6 +9,7 @@ import {
   defaultFlags,
   FEATURE_FLAGS_COOKIE,
   type FeatureFlags,
+  lockedFlags,
 } from '@/features/feature-flags/config';
 
 export async function getAllFlags(): Promise<FeatureFlags> {
@@ -18,7 +19,7 @@ export async function getAllFlags(): Promise<FeatureFlags> {
   if (!cookie?.value) return { ...defaultFlags };
 
   try {
-    return { ...defaultFlags, ...JSON.parse(cookie.value) };
+    return { ...defaultFlags, ...JSON.parse(cookie.value), ...lockedFlags() };
   } catch {
     return { ...defaultFlags };
   }

@@ -210,6 +210,12 @@ export type EdgePopulation = {
   file: string;
 };
 
+/** Each property a neuron set's form offers, with its values; obi-one leaves out one with too many. */
+export type TOfferedProperties = Readonly<Record<string, readonly string[]>>;
+
+/** A property neuron set's `filter_dict`: the values kept per property. */
+export type TPropertyFilter = Record<string, string[]>;
+
 export type ParsedCircuitConfig = {
   nodes: NodePopulation[];
   edges: EdgePopulation[];
@@ -231,8 +237,6 @@ export type ViewMode = 'nodes' | 'connectivity' | 'edges';
 export function tablePaneTitle(view: ViewMode): string {
   return view === 'connectivity' ? 'Connectivity' : 'Neuron Table';
 }
-
-export const CIRCUIT_H5_CACHE = 'obi-circuit-h5-v1';
 
 export type PreferredColumn = {
   name: string;

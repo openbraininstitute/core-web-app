@@ -1,4 +1,3 @@
-export { runBatch as runCircuitSimulationBatch } from './circuit/simulation';
 export { checkCompatibility as checkSingleNeuronCompatibility } from './single-neuron/compatibility';
 export { getMorphology as getSingleNeuronMorphology } from './single-neuron/morphology';
 export { runSimulation as runSingleNeuronSimulation } from './single-neuron/simulation';

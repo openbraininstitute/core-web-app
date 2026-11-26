@@ -1,4 +1,5 @@
 import { swrCacheConfig } from '@/api/cache-storage';
+import { ProjectDataCache } from '@/utils/project-data-caches';
 
 export const CHART_LINE_COLOR = '#0050b3';
 
@@ -6,22 +7,13 @@ export const CHART_LINE_COLOR = '#0050b3';
 // evicted by the browser under storage pressure. Tune as needed.
 //
 // Used by the main-thread download path, which the ion channel recording viewer still goes
-// through. The ephys viewer streams its file inside a worker and caches under `NWB_H5_CACHE`.
+// through. The ephys viewer streams its file inside a worker and caches under `NWB_H5_CACHE`
+// (`src/utils/h5/caches.ts`).
 export const NWB_ASSET_CACHE_CONFIG = swrCacheConfig(
-  'ephys-nwb-assets',
+  ProjectDataCache.EphysNwbAssets,
   7 * 24 * 60 * 60, //  7 days fresh
   30 * 24 * 60 * 60 // 30 days stale-while-revalidate
 );
-
-/**
- * `CacheStorage` bucket for NWB files streamed by the worker.
- *
- * Deliberately not `NWB_ASSET_CACHE_CONFIG`'s bucket: that one is written by the `ApiClient`
- * cache layer, which strips headers and stamps `x-cache-timestamp` for its own expiry checks.
- * The worker writes the response as it came off the wire, so letting the two read each other's
- * entries would mean each seeing records it can not reason about.
- */
-export const NWB_H5_CACHE = 'obi-ephys-nwb-v1';
 
 /**
  * Downloads smaller than this show no progress card. They finish fast enough that it would just

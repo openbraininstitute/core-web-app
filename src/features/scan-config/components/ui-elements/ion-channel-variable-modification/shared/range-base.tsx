@@ -1,5 +1,6 @@
 'use client';
 
+import { omit } from 'es-toolkit';
 import { type ReactNode, useMemo } from 'react';
 
 import {
@@ -16,6 +17,7 @@ import {
   type MechanismVariablesRoot,
   MechanismVariableTypeDict,
   type SectionListEntry,
+  toSectionValue,
 } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
 import { ModificationShell } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/modification-shell';
 import {
@@ -104,10 +106,8 @@ export function RangeModificationBase({
     const mods = currentModification.section_list_modifications as Record<string, ConfigValue>;
     const result: Record<string, SectionValue> = {};
     for (const [key, val] of Object.entries(mods)) {
-      if (typeof val === 'number') result[key] = val;
-      // TODO: re-enable array support when multi-value sweep when enabled in obi-one
-      // else if (Array.isArray(val) && val.every((v) => typeof v === 'number'))
-      //   result[key] = val as number[];
+      const value = toSectionValue(val);
+      if (value !== null) result[key] = value;
     }
     return result;
   }, [isValidModification, currentModification]);
@@ -142,14 +142,15 @@ export function RangeModificationBase({
     const currentMods =
       (currentModification.section_list_modifications as Record<string, ConfigValue>) ?? {};
 
+    // obi-one takes no null here: a cleared section list keeps its default
     setState({
       ...state,
       [fieldKey]: {
         ...currentModification,
-        section_list_modifications: {
-          ...currentMods,
-          [sectionList]: value,
-        },
+        section_list_modifications:
+          value === null
+            ? omit(currentMods, [sectionList])
+            : { ...currentMods, [sectionList]: value },
       },
     });
   };

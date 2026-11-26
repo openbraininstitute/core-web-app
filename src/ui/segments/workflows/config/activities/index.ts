@@ -14,7 +14,6 @@ export const ActivityRegistry: Record<TActivityValue, TActivityEntry> = {
   [WorkflowActivityDictValue.build]: {
     value: WorkflowActivityDictValue.build,
     label: 'Build',
-    name: 'Build',
     order: 1,
     disabled: false,
     /** Getter: build workflows and the circuit grid schema import each other. */
@@ -28,7 +27,6 @@ export const ActivityRegistry: Record<TActivityValue, TActivityEntry> = {
   [WorkflowActivityDictValue.simulate]: {
     value: WorkflowActivityDictValue.simulate,
     label: 'Simulate',
-    name: 'Simulation',
     order: 2,
     disabled: false,
     workflows: SimulateWorkflows,
@@ -36,7 +34,6 @@ export const ActivityRegistry: Record<TActivityValue, TActivityEntry> = {
   [WorkflowActivityDictValue.extract]: {
     value: WorkflowActivityDictValue.extract,
     label: 'Extract',
-    name: 'Extraction',
     order: 3,
     disabled: false,
     workflows: ExtractionWorkflows,
@@ -44,7 +41,6 @@ export const ActivityRegistry: Record<TActivityValue, TActivityEntry> = {
   [WorkflowActivityDictValue.optimize]: {
     value: WorkflowActivityDictValue.optimize,
     label: 'Optimize',
-    name: 'Optimization',
     order: 5,
     disabled: false,
     workflows: OptimizeWorkflows,
@@ -52,7 +48,6 @@ export const ActivityRegistry: Record<TActivityValue, TActivityEntry> = {
   [WorkflowActivityDictValue.validate]: {
     value: WorkflowActivityDictValue.validate,
     label: 'Validate',
-    name: 'Validation',
     order: 6,
     disabled: false,
     requiredFeatures: [emodelValidationFlag.key],
@@ -61,7 +56,6 @@ export const ActivityRegistry: Record<TActivityValue, TActivityEntry> = {
   [WorkflowActivityDictValue.process]: {
     value: WorkflowActivityDictValue.process,
     label: 'Process data',
-    name: 'Process data',
     order: 4,
     disabled: false,
     workflows: ProcessingWorkflows,

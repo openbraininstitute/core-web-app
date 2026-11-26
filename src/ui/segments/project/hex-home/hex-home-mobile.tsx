@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 import { AiSparkles } from '@/ui/segments/project/brains-walkthrough/agent-ready';
-import ObiLogo from '@/features/learn/components/ui/ObiLogo';
+import ObiLogo from '@/components/logo/obi-logo';
 import { VideoPlayer } from '@/ui/segments/project/get-started/elements/video-player';
 import { VideoCard } from '@/ui/segments/project/hex-home/video-card';
 import { EXAMPLES, journeyHref } from '@/ui/segments/project/hex-home/content';

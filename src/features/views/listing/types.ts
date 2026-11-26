@@ -5,6 +5,7 @@ import type { EntityCoreResponse, TFacets } from '@/api/entitycore/types/shared/
 import type { TViewVariant, TWorkspaceScope, TWorkspaceSection } from '@/constants';
 import type { TAnyEntityGridDefinition } from '@/features/data-grid/bindings/entitycore';
 import type { TSelectionScope } from '@/features/data-grid/core';
+import type { IDataGridToolbarSlots } from '@/features/data-grid/react';
 import type { WorkspaceContext } from '@/types/common';
 import type { MiniDetailView } from '@/ui/segments/mini-detail-view';
 
@@ -95,6 +96,7 @@ export type BrowseEntityScopeProps = {
     onSelect: (value: TExtendedEntitiesTypeDict) => void;
   };
   extraQueryParams?: Record<string, unknown>;
+  extraToolbarSlots?: Partial<IDataGridToolbarSlots>;
   detailVariant?: TViewVariant;
   /** When true, list content sits on a white inset panel — use default pagination styling */
   contentOnInsetPanel?: boolean;

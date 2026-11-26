@@ -1,7 +1,7 @@
 import * as Comlink from 'comlink';
 
-import { CIRCUIT_H5_CACHE } from '@/features/circuit-nodes/types';
 import { NodesSession } from '@/features/circuit-nodes/worker/nodes-h5';
+import { CIRCUIT_H5_CACHE } from '@/utils/h5/caches';
 import { fetchToFS, unlinkFromFS } from '@/utils/h5/fs';
 
 import type {
@@ -18,6 +18,8 @@ import type {
   OpenRequest,
   OpenResponse,
   SortItem,
+  TOfferedProperties,
+  TPropertyFilter,
 } from '@/features/circuit-nodes/types';
 
 let session: NodesSession | null = null;
@@ -36,7 +38,7 @@ const api = {
       url: opts.url,
       headers: opts.headers,
       fileKey: opts.fileKey,
-      cacheName: CIRCUIT_H5_CACHE,
+      cache: CIRCUIT_H5_CACHE,
       onProgress,
     });
     session = new NodesSession(filename, opts.populationKey);
@@ -73,6 +75,14 @@ const api = {
       return Comlink.transfer(column, [column.values.buffer as ArrayBuffer]);
     }
     return column;
+  },
+
+  async neuronSetFilter(
+    cells: Uint32Array,
+    offered: TOfferedProperties
+  ): Promise<TPropertyFilter | null> {
+    if (!session) throw new Error('NodesSession not initialized; call open() first');
+    return session.neuronSetFilter(cells, offered);
   },
 
   async setDerivedColumns(owner: string, columns: DerivedColumn[]): Promise<void> {

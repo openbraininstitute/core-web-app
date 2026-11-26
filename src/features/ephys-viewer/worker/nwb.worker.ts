@@ -1,8 +1,8 @@
 import * as Comlink from 'comlink';
 
-import { NWB_H5_CACHE } from '@/features/ephys-viewer/constants';
 import { deltaTimeMs } from '@/features/ephys-viewer/trace-index';
 import NWBTrace from '@/features/ephys-viewer/worker/nwb-trace';
+import { NWB_H5_CACHE } from '@/utils/h5/caches';
 import { fetchToFS, unlinkFromFS } from '@/utils/h5/fs';
 import { minMaxUniform } from '@/utils/min-max';
 
@@ -52,7 +52,7 @@ const api = {
       url: opts.url,
       headers: opts.headers,
       fileKey: opts.fileKey,
-      cacheName: NWB_H5_CACHE,
+      cache: NWB_H5_CACHE,
       extension: '.nwb',
       onProgress,
     });

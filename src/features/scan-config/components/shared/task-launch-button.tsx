@@ -1,9 +1,7 @@
 import { LoadingOutlined } from '@ant-design/icons';
 
-import { classNames } from '@/util/utils';
-
-/** The launch button's green, which the configuration's generate buttons share. */
-export const LAUNCH_GREEN = 'bg-[linear-gradient(94.93deg,#389E0D_18.84%,#143805_116.7%)]';
+import { LAUNCH_GREEN, TASK_BUTTON_TEXT } from '@/features/scan-config/components/shared/box-class';
+import { cn } from '@/utils/css-class';
 
 /**
  * A generate button that can be clicked: a soft shadow in the launch green's dark end, and a
@@ -32,8 +30,9 @@ export function TaskLaunchButton({
   return (
     <button
       data-testid="scan-config-launch"
-      className={classNames(
+      className={cn(
         'min-h-12.5 w-full cursor-pointer rounded-full p-2 text-white',
+        TASK_BUTTON_TEXT,
         LAUNCH_GREEN,
         'disabled:cursor-not-allowed disabled:bg-gray-400 disabled:bg-none',
         className

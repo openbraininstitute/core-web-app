@@ -14,6 +14,7 @@ import {
   useConnectivityEntries,
 } from '@/features/circuit-nodes/connectivity/use-connectivity';
 import { useMatrixPin } from '@/features/circuit-nodes/connectivity/use-matrix-pin';
+import { NodesClosedError } from '@/features/circuit-nodes/hooks/nodes-worker-manager';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 import { useTableTicks } from '@/features/circuit-nodes/hooks/use-table-ticks';
@@ -26,8 +27,8 @@ import { logError } from '@/utils/logger';
 
 import type { ComponentProps } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { NeuronSetBlock, OfferedProperties } from '@/features/circuit-nodes/neuron-set-block';
-import type { ViewMode } from '@/features/circuit-nodes/types';
+import type { NeuronSetBlock } from '@/features/circuit-nodes/neuron-set-block';
+import type { TOfferedProperties, ViewMode } from '@/features/circuit-nodes/types';
 
 import styles from '@/features/circuit-nodes/circuit-nodes-table.module.css';
 
@@ -59,7 +60,7 @@ export type TableCells = {
    */
   onCreateNeuronSet?: (block: NeuronSetBlock) => void;
   /** What the form's property neuron sets can show, by population; only those go in a property set. */
-  neuronSetProperties?: Readonly<Record<string, OfferedProperties>>;
+  neuronSetProperties?: Readonly<Record<string, TOfferedProperties>>;
   /** Told the connectivity matrix's pathway under the pointer, and null once it leaves. */
   onPathwayChange?: (pathway: TablePathway | null) => void;
   /** Told what the table shows, its nodes or the connectivity matrix: nodes once it is gone. */
@@ -126,6 +127,7 @@ export default function CircuitNodesTable({
     exportCsv,
     status,
     getColumn,
+    neuronSetFilter,
     setDerivedColumns,
     getFilteredIndices,
     getRowIndex,
@@ -181,46 +183,52 @@ export default function CircuitNodesTable({
   // The neurons on show as a neuron set, where they are some but not all of them.
   const [makingSet, setMakingSet] = useState(false);
   const notification = useAppNotification();
+  const scopeRef = useRef(scope);
+  useEffect(() => {
+    scopeRef.current = scope;
+  }, [scope]);
   const onCreateNeuronSet = cells?.onCreateNeuronSet;
-  const setOfShown =
+  const canMakeSet = !!(
     onCreateNeuronSet &&
     population &&
     columns &&
     shown &&
     shown.length > 0 &&
     shown.length < rowCount
-      ? () => {
-          setMakingSet(true);
-          neuronSetBlock({
-            population,
-            cells: shown,
-            rowCount,
-            ticked: ticks.ticked.size > 0,
-            filterModel: ticks.filterModel,
-            columns,
-            offered: cells?.neuronSetProperties?.[population.name] ?? {},
-            getColumn,
-          })
-            .then(({ block }) => {
-              if (block) {
-                onCreateNeuronSet(block);
-                return;
-              }
-              notification.warning({
-                message: 'Too many neurons for an ID neuron set',
-                description: `Their property values don't pick out exactly these ${shown.length.toLocaleString()} neurons, and an ID neuron set holds at most ${MAX_ID_SET_CELLS.toLocaleString()}. Select fewer, or filter by property values instead.`,
-              });
-            })
-            .catch((error: unknown) => {
-              logError('The neurons on show could not be made a neuron set:', error);
-              notification.error({
-                message: 'The neuron set could not be created',
-                description: error instanceof Error ? error.message : undefined,
-              });
-            })
-            .finally(() => setMakingSet(false));
+  );
+  const setOfShown = () => {
+    if (!onCreateNeuronSet || !population || !columns || !shown) return;
+    setMakingSet(true);
+    neuronSetBlock({
+      population,
+      cells: shown,
+      ticked: ticks.ticked.size > 0,
+      filterModel: ticks.filterModel,
+      columns,
+      offered: cells?.neuronSetProperties?.[population.name] ?? {},
+      propertyFilter: neuronSetFilter,
+    })
+      .then(({ block }) => {
+        if (scopeRef.current !== scope) return;
+        if (block) {
+          onCreateNeuronSet(block);
+          return;
         }
-      : undefined;
+        notification.warning({
+          message: 'Too many neurons for an ID neuron set',
+          description: `Their property values don't pick out exactly these ${shown.length.toLocaleString()} neurons, and an ID neuron set holds at most ${MAX_ID_SET_CELLS.toLocaleString()}. Select fewer, or filter by property values instead.`,
+        });
+      })
+      .catch((error: unknown) => {
+        if (error instanceof NodesClosedError) return;
+        logError('The neurons on show could not be made a neuron set:', error);
+        notification.error({
+          message: 'The neuron set could not be created',
+          description: error instanceof Error ? error.message : undefined,
+        });
+      })
+      .finally(() => setMakingSet(false));
+  };
   const onShownCellsChange = cells?.onShownCellsChange;
   const onPathwayChange = cells?.onPathwayChange;
   const onViewChange = cells?.onViewChange;
@@ -347,7 +355,7 @@ export default function CircuitNodesTable({
           })
         )}
         {/* Over the rows' bottom right, while the neurons on show can be made a set. */}
-        {setOfShown && view === 'nodes' && (
+        {canMakeSet && view === 'nodes' && (
           <button
             type="button"
             onClick={setOfShown}

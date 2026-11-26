@@ -9,6 +9,7 @@ import type {
   TEntityTypeWithBrainRegionDict,
 } from '@/api/entitycore/types/entity-type';
 import type { BrainRegionHierarchyFilter } from '@/api/entitycore/types/shared/request';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/entity';
@@ -98,5 +99,39 @@ export async function updateEntity<
       'content-type': 'application/json',
       ...getEntityCoreContext(context).headers,
     },
+  });
+}
+
+export async function getEntityByRoute<T>({
+  route,
+  id,
+  context,
+  signal,
+}: {
+  route: string;
+  id: string;
+  context?: WorkspaceContext | null;
+  signal?: AbortSignal;
+}): Promise<T> {
+  const api = await entityCoreApi();
+  return api.get<T>(`/${route}/${id}`, { headers: getEntityCoreContext(context).headers, signal });
+}
+
+export async function getEntitiesByRoute<T>({
+  route,
+  queryParams,
+  context,
+  signal,
+}: {
+  route: string;
+  queryParams: Record<string, string>;
+  context?: WorkspaceContext | null;
+  signal?: AbortSignal;
+}) {
+  const api = await entityCoreApi();
+  return api.get<EntityCoreResponse<T>>(`/${route}`, {
+    headers: getEntityCoreContext(context).headers,
+    queryParams,
+    signal,
   });
 }

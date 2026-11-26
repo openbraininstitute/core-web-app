@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import BlockDictionaryEntries from '@/features/scan-config/components/block-dictionary-entries';
@@ -81,6 +81,71 @@ describe('BlockDictionaryEntries', () => {
 
     rerenderWith({ loading: false });
     expect(document.activeElement).toBe(outside);
+  });
+
+  it('renames every reference to the entry, in `initialize` and in every section', () => {
+    const ref = (name: string) => ({ block_dict_name: 'neuron_sets', block_name: name });
+    const config: Config = {
+      neuron_sets: { BioAll: { type: 'PredefinedNeuronSet' }, Other: { type: 'IDNeuronSet' } },
+      initialize: {
+        circuit: { id_str: 'circuit-1' },
+        node_set: ref('BioAll'),
+        neuron_set: ref('BioAll'),
+        include_virtual_populations: true,
+      },
+      stimuli: {
+        s1: {
+          neuron_set: ref('BioAll'),
+          targeted: ref('Other'),
+          timestamps: { block_dict_name: 'timestamps', block_name: 'BioAll' },
+        },
+        s2: {
+          combined_with: [
+            [ref('BioAll'), 'union'],
+            [null, 'difference'],
+          ],
+        },
+      },
+    };
+    const before = structuredClone(config);
+    const setConfig = vi.fn();
+
+    renderEntries({
+      config,
+      setConfig,
+      rootElement: 'neuron_sets',
+      selectedRootElement: 'neuron_sets',
+      selectedEntry: 'BioAll',
+      allEntries: new Set(['BioAll', 'Other', 's1', 's2']),
+      newKey: 'AllBio123',
+      isEditingKey: true,
+    });
+
+    fireEvent.keyDown(screen.getByDisplayValue('AllBio123'), { key: 'Enter' });
+
+    expect(setConfig).toHaveBeenCalledWith({
+      neuron_sets: { AllBio123: { type: 'PredefinedNeuronSet' }, Other: { type: 'IDNeuronSet' } },
+      initialize: {
+        circuit: { id_str: 'circuit-1' },
+        node_set: ref('AllBio123'),
+        neuron_set: ref('AllBio123'),
+        include_virtual_populations: true,
+      },
+      stimuli: {
+        s1: {
+          neuron_set: ref('AllBio123'),
+          targeted: ref('Other'),
+          timestamps: { block_dict_name: 'timestamps', block_name: 'BioAll' },
+        },
+        s2: {
+          combined_with: [
+            [ref('AllBio123'), 'union'],
+            [null, 'difference'],
+          ],
+        },
+      },
+    });
+    expect(config).toEqual(before);
   });
 
   it('renders the tooltip trigger as the tab itself, without nesting a button', () => {
