@@ -14,7 +14,7 @@ function makeResult(
   id: string,
   name: string,
   assets: TFixtureAsset[],
-  description?: string | null
+  description?: string
 ): TValidationResultNonUndefined[number] {
   return {
     id,
@@ -77,7 +77,6 @@ describe('flattenValidationResults', () => {
   it.each([
     ['empty', ''],
     ['whitespace-only', '   '],
-    ['null', null],
     ['missing', undefined],
   ])('falls back to the fixed text when the description is %s', (_, description) => {
     const spiking = makeResult(

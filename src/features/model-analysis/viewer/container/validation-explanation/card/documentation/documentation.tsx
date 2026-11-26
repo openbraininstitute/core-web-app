@@ -75,7 +75,7 @@ export default function Documentation({
       {resultDescription ? (
         <div>{resultDescription}</div>
       ) : (
-        documentation && <DictionaryDocumentation documentation={documentation} variant={variant} />
+        <DictionaryDocumentation documentation={documentation} variant={variant} />
       )}
     </div>
   );
@@ -85,9 +85,11 @@ function DictionaryDocumentation({
   documentation,
   variant,
 }: {
-  documentation: IValidationDocumentation;
+  documentation?: IValidationDocumentation;
   variant: TViewVariant;
 }) {
+  if (!documentation) return null;
+
   const { protocol } = documentation;
   return (
     <>
