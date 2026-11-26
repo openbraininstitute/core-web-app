@@ -326,82 +326,86 @@ export default function Walkthrough({
         </div>
       </main>
 
-      {/* On a phone a bar of its own (the dashes and their 6 px gaps outgrow its width on a long course, which widened
-          the page, shrank the slides and stopped the swipes between them) */}
-      <PhoneTimeline
-        n={n}
-        i={i}
-        sections={sections}
-        onPick={(k) => {
-          setDir(k > i ? 1 : -1);
-          setI(k);
-        }}
-      />
-      {/* The footer's padding is room for the parts' names, above the bar and below it. */}
-      <footer className="flex items-center justify-between gap-4 px-5 pt-7 pb-7 max-sm:hidden">
-        <div
-          ref={barRef}
-          className="relative flex flex-1 gap-1.5"
-          role="tablist"
-          aria-label="Slides"
-        >
-          {slides.map((_, k) => (
-            <button
-              type="button"
-              key={k}
-              onClick={() => {
-                setDir(k > i ? 1 : -1);
-                setI(k);
-              }}
-              role="tab"
-              aria-selected={k === i}
-              aria-label={`Slide ${k + 1}`}
-              className={`h-0.5 flex-1 rounded-full transition-colors ${
-                k <= i ? 'bg-sky-400/80' : 'bg-slate-800'
-              }`}
-            />
-          ))}
-          {sections.map(({ k, name }, j) => {
-            const place = places[j];
-            const below = place?.below ?? j % 2 === 1;
-            // the part the slide on show is in, picked out
-            const here = k <= i && (sections[j + 1]?.k ?? n) > i;
-            return (
-              <span key={`part-${k}`}>
-                {/* a tick from the bar, up or down to the name */}
-                <span
-                  aria-hidden="true"
-                  className={`pointer-events-none absolute h-2 w-0.5 rounded-full ${below ? 'top-1' : 'bottom-1'} ${
-                    k <= i ? 'bg-sky-400' : 'bg-slate-500'
-                  }`}
-                  style={{ left: dashLeft(k) }}
-                />
-                <button
-                  type="button"
-                  ref={(el) => {
-                    nameRefs.current[j] = el;
-                  }}
-                  onClick={() => {
-                    setDir(k > i ? 1 : -1);
-                    setI(k);
-                  }}
-                  title={name}
-                  aria-label={`${name}, from slide ${k + 1}`}
-                  className={`absolute overflow-hidden text-[11px] leading-[13px] text-ellipsis whitespace-nowrap transition-colors ${
-                    below ? 'top-3' : 'bottom-3'
-                  } ${here ? 'text-sky-300' : 'text-slate-400 hover:text-slate-200'}`}
-                  style={{
-                    left: place ? place.left : dashLeft(k),
-                    maxWidth: place?.max,
-                  }}
-                >
-                  {name}
-                </button>
-              </span>
-            );
-          })}
+      {/* One footer round both bars, straight after the slides: the figures fade out above whatever follows `main`, and a
+          bar that is not on show has no place to fade above, so they would fade out altogether */}
+      <footer>
+        {/* On a phone a bar of its own (the dashes and their 6 px gaps outgrow its width on a long course, which widened
+            the page, shrank the slides and stopped the swipes between them) */}
+        <PhoneTimeline
+          n={n}
+          i={i}
+          sections={sections}
+          onPick={(k) => {
+            setDir(k > i ? 1 : -1);
+            setI(k);
+          }}
+        />
+        {/* The footer's padding is room for the parts' names, above the bar and below it. */}
+        <div className="flex items-center justify-between gap-4 px-5 pt-7 pb-7 max-sm:hidden">
+          <div
+            ref={barRef}
+            className="relative flex flex-1 gap-1.5"
+            role="tablist"
+            aria-label="Slides"
+          >
+            {slides.map((_, k) => (
+              <button
+                type="button"
+                key={k}
+                onClick={() => {
+                  setDir(k > i ? 1 : -1);
+                  setI(k);
+                }}
+                role="tab"
+                aria-selected={k === i}
+                aria-label={`Slide ${k + 1}`}
+                className={`h-0.5 flex-1 rounded-full transition-colors ${
+                  k <= i ? 'bg-sky-400/80' : 'bg-slate-800'
+                }`}
+              />
+            ))}
+            {sections.map(({ k, name }, j) => {
+              const place = places[j];
+              const below = place?.below ?? j % 2 === 1;
+              // the part the slide on show is in, picked out
+              const here = k <= i && (sections[j + 1]?.k ?? n) > i;
+              return (
+                <span key={`part-${k}`}>
+                  {/* a tick from the bar, up or down to the name */}
+                  <span
+                    aria-hidden="true"
+                    className={`pointer-events-none absolute h-2 w-0.5 rounded-full ${below ? 'top-1' : 'bottom-1'} ${
+                      k <= i ? 'bg-sky-400' : 'bg-slate-500'
+                    }`}
+                    style={{ left: dashLeft(k) }}
+                  />
+                  <button
+                    type="button"
+                    ref={(el) => {
+                      nameRefs.current[j] = el;
+                    }}
+                    onClick={() => {
+                      setDir(k > i ? 1 : -1);
+                      setI(k);
+                    }}
+                    title={name}
+                    aria-label={`${name}, from slide ${k + 1}`}
+                    className={`absolute overflow-hidden text-[11px] leading-[13px] text-ellipsis whitespace-nowrap transition-colors ${
+                      below ? 'top-3' : 'bottom-3'
+                    } ${here ? 'text-sky-300' : 'text-slate-400 hover:text-slate-200'}`}
+                    style={{
+                      left: place ? place.left : dashLeft(k),
+                      maxWidth: place?.max,
+                    }}
+                  >
+                    {name}
+                  </button>
+                </span>
+              );
+            })}
+          </div>
+          <span className="font-mono text-[10px] text-slate-600">← →</span>
         </div>
-        <span className="font-mono text-[10px] text-slate-600">← →</span>
       </footer>
     </div>
   );
