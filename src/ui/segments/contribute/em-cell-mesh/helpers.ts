@@ -29,6 +29,7 @@ export const GLB_MAX_BYTES = 500 * 1024 ** 2;
 
 const OBJ_SNIFF_BYTES = 64 * 1024;
 const OBJ_STATEMENT = /^(?:#|(?:v|vt|vn|vp|f|l|p|o|g|s|mtllib|usemtl)[ \t])/m;
+const OBJ_POLYGON_FACE = /^f(?:[ \t]+[-\d/]+){4,}/m;
 const OBJ_BYTES_PER_TRIANGLE = 48;
 const GLB_CHUNK_HEADER_BYTES = 8;
 const HASHING_SHARE = 0.1;
@@ -62,6 +63,9 @@ async function checkObjFile(file: File): Promise<IMeshFileCheck> {
   const head = await file.slice(0, OBJ_SNIFF_BYTES).text();
   if (head.includes('\0') || !OBJ_STATEMENT.test(head))
     return refused(messages.MeshFileNotObj.replace('$$', file.name));
+  const tail = await file.slice(-OBJ_SNIFF_BYTES).text();
+  if (OBJ_POLYGON_FACE.test(head) || OBJ_POLYGON_FACE.test(tail))
+    return refused(messages.MeshObjNotTriangles.replace('$$', file.name));
   const triangles = Math.round(file.size / OBJ_BYTES_PER_TRIANGLE);
   return triangles > DRACO_MAX_TRIANGLES
     ? aboveViewerLimit(messages.MeshObjAboveViewerLimit, triangles)

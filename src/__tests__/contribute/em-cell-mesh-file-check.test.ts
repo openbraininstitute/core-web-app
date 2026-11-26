@@ -100,6 +100,24 @@ describe('checkMeshFile', () => {
     expect(error).toContain('does not look like an OBJ mesh');
   });
 
+  it.each([
+    ['at its start', `${'v 0 0 0\n'.repeat(4)}f 1 2 3 4\n`],
+    ['after its vertices', `${'v 0 0 0\n'.repeat(20_000)}f 1 2 3\nf 1/1 2/2 3/3 4/4 # quad\n`],
+  ])('refuses an OBJ with a polygon face %s', async (_, content) => {
+    const { error } = await checkMeshFile(new File([content], 'neuron.obj'));
+
+    expect(error).toContain('faces with more than three vertices');
+  });
+
+  it('accepts triangle faces with texture and normal indices and comments', async () => {
+    const file = new File(
+      ['v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1/1/1 2/2/2 3/3/3 # tri\nf -3 -2 -1\n'],
+      'neuron.obj'
+    );
+
+    expect(await checkMeshFile(file)).toEqual({ error: null, notice: null });
+  });
+
   it('accepts a Draco GLB the viewer can show', async () => {
     const file = glbFile(1_000);
 

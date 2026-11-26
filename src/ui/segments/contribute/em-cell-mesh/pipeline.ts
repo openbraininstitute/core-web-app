@@ -12,6 +12,7 @@ import { createAsset } from '@/api/entitycore/queries/assets';
 import { createContribution } from '@/api/entitycore/queries/general/contribution';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { EntityLifecycleStatus } from '@/api/entitycore/types/shared/global';
+import { ApiError } from '@/api/error';
 import { convertEMCellMesh } from '@/api/one/em-cell-mesh';
 import { tryCatch } from '@/api/utils';
 import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
@@ -42,6 +43,12 @@ import type {
   IPipelineHookResult,
 } from '@/ui/segments/contribute/shared/types';
 
+const HTTP_CONFLICT = 409;
+
+function isHeldByConversion(error: unknown): boolean {
+  return error instanceof ApiError && error.cause?.status === HTTP_CONFLICT;
+}
+
 export function useEMCellMeshPipeline({
   sessionId,
 }: {
@@ -52,6 +59,7 @@ export function useEMCellMeshPipeline({
   const [uploadProgress, setUploadProgress] = useState<IUploadProgress | null>(null);
   const [isObjSubmission, setIsObjSubmission] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [conversionHeld, setConversionHeld] = useState(false);
 
   const createEMCellMeshAsync = useMutation({
     mutationFn: ({
@@ -136,6 +144,8 @@ export function useEMCellMeshPipeline({
     const isObj = file ? isObjMeshFile(file) : false;
     setIsObjSubmission(isObj);
     setUploadProgress(null);
+    setConversionHeld(false);
+    let conversionRequested = false;
 
     const cellMesh = await createEMCellMeshAsync.mutateAsync({
       values,
@@ -162,11 +172,18 @@ export function useEMCellMeshPipeline({
       }
 
       if (isObj) {
+        conversionRequested = true;
         await convertAsync.mutateAsync(cellMesh.id);
       }
     } catch (error) {
-      await tryCatch(deleteEMCellMesh({ id: cellMesh.id, context: { projectId, virtualLabId } }));
+      const { error: deleteError } = await tryCatch(
+        deleteEMCellMesh({ id: cellMesh.id, context: { projectId, virtualLabId } })
+      );
       invalidateEntityListings(queryClient, ExtendedEntitiesTypeDict.EMCellMesh);
+      if (conversionRequested && isHeldByConversion(deleteError)) {
+        setConversionHeld(true);
+        return cellMesh;
+      }
       throw error;
     }
 
@@ -183,13 +200,13 @@ export function useEMCellMeshPipeline({
       createAssetsAsync.error ||
       createContributionAsync.error ||
       createMtypeClassificationAsync.error ||
-      convertAsync.error) as Error | null,
+      (conversionHeld ? null : convertAsync.error)) as Error | null,
     status: {
       createEMCellMesh: createEMCellMeshAsync.status,
       createEMCellMeshAssets: createAssetsAsync.status,
       createContribution: createContributionAsync.status,
       createMtypeClassification: createMtypeClassificationAsync.status,
-      [CONVERSION_MUTATION_KEY]: convertAsync.status,
+      [CONVERSION_MUTATION_KEY]: conversionHeld ? 'success' : convertAsync.status,
     },
     stepProgress: uploadProgress
       ? {
@@ -201,7 +218,9 @@ export function useEMCellMeshPipeline({
       : undefined,
     skippedSteps: isObjSubmission ? [] : [CONVERSION_MUTATION_KEY],
     completionNotice:
-      isObjSubmission && convertAsync.isSuccess ? messages.MeshConversionStarted : null,
+      isObjSubmission && (convertAsync.isSuccess || conversionHeld)
+        ? messages.MeshConversionStarted
+        : null,
     mutationKeys: EM_CELL_MESH_PROGRESS_STEPS.reduce(
       (acc, step) => {
         acc[step.mutationKey] = {

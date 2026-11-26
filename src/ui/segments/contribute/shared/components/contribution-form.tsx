@@ -9,6 +9,7 @@ import { Button } from '@/ui/molecules/button';
 import { StepNavigation } from '@/ui/segments/contribute/shared/components/step-navigation';
 import { SubmitButton } from '@/ui/segments/contribute/shared/components/submit-button';
 import { SubmitEntityProgress } from '@/ui/segments/contribute/shared/components/submit-progress';
+import { toProgressSteps } from '@/ui/segments/contribute/shared/helpers';
 import {
   ContributionPipelineProvider,
   useContributionPipeline,
@@ -20,7 +21,6 @@ import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
 import type {
   IContributionFormConfig,
-  IProgressStep,
   TPipelineHookFactory,
 } from '@/ui/segments/contribute/shared/types';
 
@@ -82,15 +82,11 @@ function FormContent<
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdEntityId, setCreatedEntityId] = useState<string | undefined>(undefined);
 
-  const skipped = new Set(skippedSteps);
-  const progressStepsWithStatus: Array<IProgressStep> = progressSteps
-    .filter((step) => !skipped.has(step.mutationKey))
-    .map((step) => ({
-      key: step.key,
-      label: step.label,
-      status: status[step.mutationKey],
-      progress: stepProgress?.[step.mutationKey],
-    }));
+  const progressStepsWithStatus = toProgressSteps(progressSteps, {
+    status,
+    stepProgress,
+    skippedSteps,
+  });
 
   const onSubmit = async (e?: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     e?.preventDefault();

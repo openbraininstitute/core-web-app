@@ -3,6 +3,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { UploadPhase } from '@/api/entitycore/queries/assets/multipart';
+import { ApiError } from '@/api/error';
 import { useEMCellMeshPipeline } from '@/ui/segments/contribute/em-cell-mesh/pipeline';
 import { AgentType } from '@/ui/segments/contribute/shared/types';
 
@@ -203,9 +204,38 @@ describe('useEMCellMeshPipeline', () => {
     expect(h.deleteEMCellMesh).toHaveBeenCalledOnce();
   });
 
-  it('reports the launch error when the conversion already holds the mesh', async () => {
+  it('counts the conversion as started when its job already holds the mesh', async () => {
+    h.convertEMCellMesh.mockRejectedValue(new Error('gateway timeout'));
+    h.deleteEMCellMesh.mockRejectedValue(new ApiError('used', { status: 409 }));
+    const { result } = render();
+
+    await act(async () => {
+      await expect(result.current.createEntity({ values: values('neuron.obj') })).resolves.toEqual({
+        id: MESH_ID,
+      });
+    });
+
+    expect(result.current.status.convertEMCellMesh).toBe('success');
+    expect(result.current.error).toBeNull();
+    expect(result.current.completionNotice).toContain('shows as Draft until it is ready');
+  });
+
+  it('reports a failed upload even when the delete is refused', async () => {
+    h.createAsset.mockRejectedValue(new Error('upload failed'));
+    h.deleteEMCellMesh.mockRejectedValue(new ApiError('used', { status: 409 }));
+    const { result } = render();
+
+    await act(async () => {
+      await expect(result.current.createEntity({ values: values('neuron.obj') })).rejects.toThrow(
+        'upload failed'
+      );
+    });
+    expect(h.convertEMCellMesh).not.toHaveBeenCalled();
+  });
+
+  it('reports the launch error when the delete fails for another reason', async () => {
     h.convertEMCellMesh.mockRejectedValue(new Error('launch failed'));
-    h.deleteEMCellMesh.mockRejectedValue(new Error('mesh used by an activity'));
+    h.deleteEMCellMesh.mockRejectedValue(new ApiError('server error', { status: 500 }));
     const { result } = render();
 
     await act(async () => {
@@ -213,5 +243,6 @@ describe('useEMCellMeshPipeline', () => {
         'launch failed'
       );
     });
+    expect(result.current.completionNotice).toBeNull();
   });
 });
