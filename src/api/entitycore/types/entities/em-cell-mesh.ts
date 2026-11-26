@@ -7,7 +7,6 @@ import type {
   EntityCoreOwnership,
   EntityCoreType,
   IContributor,
-  IEntityLifecycleStatus,
   ILicense,
   IMType,
   Subject,
@@ -141,9 +140,7 @@ export interface IEMCellMesh
   em_dense_reconstruction_dataset: EntityCoreIdentifiable & EntityCoreType;
 }
 
-export interface IEMCellMeshCreate
-  extends Omit<IEMCellMeshBase, 'dense_reconstruction_cell_id'>,
-    Partial<IEntityLifecycleStatus> {
+export interface IEMCellMeshCreate extends Omit<IEMCellMeshBase, 'dense_reconstruction_cell_id'> {
   /** Digits as a string, so ids above 2^53 keep their value. */
   dense_reconstruction_cell_id: string;
   name: string;

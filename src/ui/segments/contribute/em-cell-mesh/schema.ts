@@ -15,6 +15,7 @@ import type dayjs from 'dayjs';
 
 const CELL_ID_DIGITS = /^\d+$/;
 const BIGINT_MAX = BigInt('9223372036854775807');
+const INT32_MAX = 2_147_483_647;
 
 function fitsInBigint(id: string) {
   return !CELL_ID_DIGITS.test(id) || BigInt(id) <= BIGINT_MAX;
@@ -46,10 +47,14 @@ export const SetupSchema = z.object({
 
   release_version: z
     .number({ error: 'Release version is required' })
-    .int({ error: 'Release version must be a whole number' }),
+    .int({ error: 'Release version must be a whole number' })
+    .min(0, { error: 'Release version cannot be negative' })
+    .max(INT32_MAX, { error: 'Release version is too large' }),
   level_of_detail: z
     .number({ error: 'Level of detail is required' })
-    .int({ error: 'Level of detail must be a whole number' }),
+    .int({ error: 'Level of detail must be a whole number' })
+    .min(0, { error: 'Level of detail cannot be negative' })
+    .max(INT32_MAX, { error: 'Level of detail is too large' }),
 
   generation_method: z
     .enum(valuesToEnumTuple(EMCellMeshGenerationMethodDictionary))
