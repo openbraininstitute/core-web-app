@@ -1,9 +1,8 @@
-import z from 'zod';
-
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 
 import type {
   IEMCellMesh,
+  IEMCellMeshCreate,
   IEmCellMeshQueryFilters,
 } from '@/api/entitycore/types/entities/em-cell-mesh';
 import type { TMeasurableEntityExpandParam } from '@/api/entitycore/types/shared/expand';
@@ -71,37 +70,12 @@ export async function getEmCellMesh({
   });
 }
 
-///
-
-const EMCellMeshSchema = z.object({
-  name: z
-    .string({ error: 'Cell mesh name is required' })
-    .nonempty({ error: 'Cell mesh name is required' }),
-  description: z
-    .string({ error: 'Cell mesh description is required' })
-    .nonempty({ error: 'Cell mesh description is required' }),
-  brain_region_id: z.uuid({ error: 'Brain region is required' }),
-  subject_id: z.uuid({ error: 'Subject is required' }),
-  license_id: z.uuid({ error: 'License is required' }),
-  experiment_date: z.string({ error: 'Experiment date is required' }).nullish(),
-  contact_email: z.string({ error: 'Contact email is required' }).nullish(),
-  published_in: z.string({ error: 'Published in is required' }).nullish(),
-  location: z.object({ x: z.number(), y: z.number(), z: z.number() }).nullable(),
-});
-
-export type TEMCellMeshCreate = z.infer<typeof EMCellMeshSchema>;
-
-/**
- * Creates a new cell morphology
- * @param param0
- * @returns A promise that resolves to the created cell morphology
- */
 export async function createEMCellMesh({
   context,
   payload,
 }: {
   context?: WorkspaceContext | null;
-  payload: TEMCellMeshCreate;
+  payload: IEMCellMeshCreate;
 }) {
   const api = await entityCoreApi();
   return await api.post<IEMCellMesh>(baseUri, {

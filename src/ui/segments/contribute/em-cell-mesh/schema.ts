@@ -13,6 +13,14 @@ import { valuesToEnumTuple } from '@/utils/array';
 
 import type dayjs from 'dayjs';
 
+const CELL_ID_DIGITS = /^\d+$/;
+const BIGINT_MAX = BigInt('9223372036854775807');
+const INT32_MAX = 2_147_483_647;
+
+function fitsInBigint(id: string) {
+  return !CELL_ID_DIGITS.test(id) || BigInt(id) <= BIGINT_MAX;
+}
+
 const ExperimentDateSchema = z.custom<dayjs.Dayjs | Date | string>((val) => !!val, {
   error: 'Experiment date is required',
 });
@@ -32,16 +40,28 @@ export const SetupSchema = z.object({
   notice_text: z.string().nullish().or(z.literal('')),
 
   em_dense_reconstruction_dataset_id: z.uuid({ error: 'Dataset ID is required' }),
-  dense_reconstruction_cell_id: z.coerce.number().int(),
+  dense_reconstruction_cell_id: z
+    .string({ error: 'Dense reconstruction cell id is required' })
+    .regex(CELL_ID_DIGITS, { error: 'Dense reconstruction cell id must be a whole number' })
+    .refine(fitsInBigint, { error: 'Dense reconstruction cell id is too large' }),
 
-  release_version: z.coerce.number().int().nullish(),
-  level_of_detail: z.coerce.number().int().nullish(),
+  release_version: z
+    .number({ error: 'Release version is required' })
+    .int({ error: 'Release version must be a whole number' })
+    .min(0, { error: 'Release version cannot be negative' })
+    .max(INT32_MAX, { error: 'Release version is too large' }),
+  level_of_detail: z
+    .number({ error: 'Level of detail is required' })
+    .int({ error: 'Level of detail must be a whole number' })
+    .min(0, { error: 'Level of detail cannot be negative' })
+    .max(INT32_MAX, { error: 'Level of detail is too large' }),
 
   generation_method: z
     .enum(valuesToEnumTuple(EMCellMeshGenerationMethodDictionary))
     .prefault(EMCellMeshGenerationMethodDictionary.MarchingCubes),
-  mesh_type: z.enum(valuesToEnumTuple(EMCellMeshTypeDictionary)).nullish(),
-  generation_parameters: z.string().nullish().or(z.literal('')),
+  mesh_type: z.enum(valuesToEnumTuple(EMCellMeshTypeDictionary), {
+    error: 'Mesh type is required',
+  }),
 });
 
 export const MTypeClassIdSchema = z.uuid().nonempty({

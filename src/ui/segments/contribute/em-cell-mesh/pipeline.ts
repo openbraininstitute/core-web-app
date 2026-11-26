@@ -13,6 +13,7 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { EM_CELL_MESH_PROGRESS_STEPS } from '@/ui/segments/contribute/em-cell-mesh/config';
+import { toEMCellMeshCreatePayload } from '@/ui/segments/contribute/em-cell-mesh/helpers';
 import {
   getEMCellMeshMimeType,
   type TEMCellMeshForm,
@@ -33,32 +34,11 @@ export function useEMCellMeshPipeline({
   const { projectId, virtualLabId } = useWorkspace();
 
   const createEMCellMeshAsync = useMutation({
-    mutationFn: (values: TEMCellMeshForm) => {
-      return createEMCellMesh({
+    mutationFn: (values: TEMCellMeshForm) =>
+      createEMCellMesh({
         context: { projectId, virtualLabId },
-        payload: {
-          name: values.setup.name,
-          description: values.setup.description,
-          brain_region_id: values.setup.brain_region_id,
-          subject_id: values.subject_id,
-          license_id: values.license_id,
-          experiment_date:
-            typeof values.setup.experiment_date === 'string'
-              ? values.setup.experiment_date
-              : values.setup.experiment_date.toISOString(),
-          contact_email: values.setup.contact_email,
-          published_in: values.setup.published_in,
-          notice_text: values.setup.notice_text,
-          em_dense_reconstruction_dataset_id: values.setup.em_dense_reconstruction_dataset_id,
-          release_version: values.setup.release_version,
-          dense_reconstruction_cell_id: values.setup.dense_reconstruction_cell_id,
-          generation_method: values.setup.generation_method,
-          level_of_detail: values.setup.level_of_detail,
-          mesh_type: values.setup.mesh_type,
-          generation_parameters: values.setup.generation_parameters,
-        },
-      });
-    },
+        payload: toEMCellMeshCreatePayload(values),
+      }),
     onSettled: () => invalidateEntityListings(queryClient, ExtendedEntitiesTypeDict.EMCellMesh),
   });
 
