@@ -52,6 +52,10 @@ describe('EM cell mesh setup schema', () => {
   it.each([
     ['release_version', 1.5, 'Release version must be a whole number'],
     ['level_of_detail', 1.5, 'Level of detail must be a whole number'],
+    ['release_version', -1, 'Release version cannot be negative'],
+    ['level_of_detail', -1, 'Level of detail cannot be negative'],
+    ['release_version', 2_147_483_648, 'Release version is too large'],
+    ['level_of_detail', 2_147_483_648, 'Level of detail is too large'],
     ['dense_reconstruction_cell_id', '1.5', 'Dense reconstruction cell id must be a whole number'],
     [
       'dense_reconstruction_cell_id',
@@ -63,6 +67,12 @@ describe('EM cell mesh setup schema', () => {
 
     expect(result.success).toBe(false);
     expect(result.error?.issues.map((issue) => issue.message)).toEqual([message]);
+  });
+
+  it('accepts the largest value an entitycore integer column holds', () => {
+    expect(
+      issuePaths({ ...filledSetup, release_version: 2_147_483_647, level_of_detail: 2_147_483_647 })
+    ).toEqual([]);
   });
 
   it('keeps every digit of a cell id above 2^53', () => {
