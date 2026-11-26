@@ -7,6 +7,7 @@ import { getAssets } from '@/api/entitycore/queries/assets';
 import { getValidationResults } from '@/api/entitycore/queries/general/validation-result';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { DEFAULT_PAGE_XSMALL_SIZE } from '@/constants';
+import { isThumbnailResult } from '@/features/model-analysis/helpers';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { IValidationResult } from '@/api/entitycore/types/entities/validation-result';
@@ -56,9 +57,10 @@ function makeQueryFn(workspace: { virtualLabId: string; projectId: string }, id:
         page_size: DEFAULT_PAGE_XSMALL_SIZE,
       },
     });
+    const results = response.data.filter((entity: IValidationResult) => !isThumbnailResult(entity));
     const data = (
       await Promise.allSettled(
-        response.data.map((entity: IValidationResult) => {
+        results.map((entity) => {
           return getAssets({
             ctx: workspace,
             entityType: EntityTypeDict.ValidationResult,
@@ -68,7 +70,7 @@ function makeQueryFn(workspace: { virtualLabId: string; projectId: string }, id:
       )
     ).map((result, i) => {
       return {
-        ...response.data[i],
+        ...results[i],
         assets: result.status === 'fulfilled' ? result.value.data : null,
         error: result.status === 'rejected' ? result.reason : null,
       };

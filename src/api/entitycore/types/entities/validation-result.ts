@@ -19,6 +19,7 @@ export interface IValidationResult
     Timestamps {
   passed: boolean;
   name: string;
+  description?: string;
   validated_entity_id: string;
   validated_entity: any;
   type: 'validation_result';
