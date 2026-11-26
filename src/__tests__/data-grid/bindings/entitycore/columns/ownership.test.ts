@@ -53,7 +53,7 @@ describe('ownership columns', () => {
       exhaustive: true,
       items: [
         { id: 'public', label: 'Public', badge: { icon: 'globe', tone: 'public' } },
-        { id: 'private', label: 'Private', badge: { icon: 'lock', tone: 'project' } },
+        { id: 'private', label: 'Private', badge: { icon: 'lock', tone: 'neutral' } },
       ],
     });
   });

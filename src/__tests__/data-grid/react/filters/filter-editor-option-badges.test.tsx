@@ -83,13 +83,13 @@ afterEach(() => {
 
 describe('Project and Visibility filters', () => {
   it.each([
-    ['projectOwnership', ['This project', 'Other projects']],
-    ['visibility', ['Public', 'Private']],
-  ])('%s: shows each option as its badge, all ticked, with no search box', (columnId, labels) => {
+    ['projectOwnership', ['This project', 'Other project'], [true, false]],
+    ['visibility', ['Public', 'Private'], [true, true]],
+  ])('%s: shows the options as their cells do, all ticked, with no search box', (columnId, labels, badged) => {
     const { options } = openFilter(columnId);
     expect(options.map((o) => o.textContent)).toEqual(labels);
+    expect(options.map((o) => Boolean(o.querySelector('[data-slot="badge"] svg')))).toEqual(badged);
     for (const option of options) {
-      expect(option.querySelector('[data-slot="badge"] svg')).toBeTruthy();
       expect(
         within(option).getByTestId('column-filter-option-checkbox').getAttribute('data-state')
       ).toBe('checked');
@@ -100,7 +100,7 @@ describe('Project and Visibility filters', () => {
 
   it('keeps a change as a draft until Apply', () => {
     const { box } = openFilter('projectOwnership');
-    fireEvent.click(box('Other projects'));
+    fireEvent.click(box('Other project'));
     expect(appliedProjectFilter()).toBeUndefined();
     fireEvent.click(screen.getByTestId('column-filter-apply'));
     expect(appliedProjectFilter()?.value).toEqual({ kind: 'set', values: ['current'] });
@@ -108,10 +108,10 @@ describe('Project and Visibility filters', () => {
 
   it('switches from one option to the other in one visit', () => {
     const { box } = openFilter('projectOwnership');
-    fireEvent.click(box('Other projects'));
+    fireEvent.click(box('Other project'));
     fireEvent.click(screen.getByTestId('column-filter-apply'));
     fireEvent.click(box('This project'));
-    fireEvent.click(box('Other projects'));
+    fireEvent.click(box('Other project'));
     fireEvent.click(screen.getByTestId('column-filter-apply'));
     expect(appliedProjectFilter()?.value).toEqual({ kind: 'set', values: ['other'] });
   });
@@ -119,37 +119,37 @@ describe('Project and Visibility filters', () => {
   it('turns Apply off while nothing is ticked', () => {
     const { box } = openFilter('projectOwnership');
     fireEvent.click(box('This project'));
-    fireEvent.click(box('Other projects'));
+    fireEvent.click(box('Other project'));
     expect(screen.getByTestId('column-filter-apply').hasAttribute('disabled')).toBe(true);
   });
 
   it('clears the filter when every option is applied', () => {
     const { box } = openFilter('projectOwnership');
-    fireEvent.click(box('Other projects'));
+    fireEvent.click(box('Other project'));
     fireEvent.click(screen.getByTestId('column-filter-apply'));
-    fireEvent.click(box('Other projects'));
+    fireEvent.click(box('Other project'));
     fireEvent.click(screen.getByTestId('column-filter-apply'));
     expect(appliedProjectFilter()).toBeUndefined();
   });
 
   it('shows the applied selection when the filter is opened again', () => {
     const first = openFilter('projectOwnership');
-    fireEvent.click(first.box('Other projects'));
+    fireEvent.click(first.box('Other project'));
     fireEvent.click(screen.getByTestId('column-filter-apply'));
     first.view.unmount();
 
     const { box } = openFilter('projectOwnership');
     expect(box('This project').getAttribute('data-state')).toBe('checked');
-    expect(box('Other projects').getAttribute('data-state')).toBe('unchecked');
+    expect(box('Other project').getAttribute('data-state')).toBe('unchecked');
   });
 
   it('ticks every option again on Reset', () => {
     const { box } = openFilter('projectOwnership');
-    fireEvent.click(box('Other projects'));
+    fireEvent.click(box('Other project'));
     fireEvent.click(screen.getByTestId('column-filter-apply'));
     fireEvent.click(screen.getByTestId('column-filter-reset'));
     expect(appliedProjectFilter()).toBeUndefined();
-    expect(box('Other projects').getAttribute('data-state')).toBe('checked');
+    expect(box('Other project').getAttribute('data-state')).toBe('checked');
   });
 });
 

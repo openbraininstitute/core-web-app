@@ -25,15 +25,23 @@ function renderCell(row: TRow | undefined, Cell = ProjectOwnershipCell) {
 
 describe('ProjectOwnershipCell', () => {
   it.each([
-    ['current', false, 'current', 'This project'],
-    ['current', true, 'current', 'This project'],
-    ['elsewhere', true, 'other', 'Other projects'],
-  ])('row of %s (public %s) shows the %s badge, whatever its visibility', (owner, isPublic, ownership, label) => {
-    renderCell({ authorized_project_id: owner, authorized_public: isPublic });
+    false,
+    true,
+  ])('tags a row of the current project (public %s) with the This project badge', (isPublic) => {
+    renderCell({ authorized_project_id: 'current', authorized_public: isPublic });
     const mark = screen.getByTestId('project-ownership-mark');
-    expect(mark.dataset.ownership).toBe(ownership);
     expect(mark.querySelector('[data-slot="badge"] svg')).toBeTruthy();
-    expect(mark.textContent).toBe(label);
+    expect(mark.textContent).toBe('This project');
+  });
+
+  it('labels a row of another project as quiet text, aligned with the badge text', () => {
+    renderCell({ authorized_project_id: 'elsewhere', authorized_public: true });
+    const mark = screen.getByTestId('project-ownership-mark');
+    expect(mark.dataset.ownership).toBe('other');
+    expect(mark.querySelector('svg')).toBeNull();
+    // the same badge geometry, with an empty slot where the icon would be
+    expect(mark.querySelector('[data-slot="badge"] > [aria-hidden="true"]')).toBeTruthy();
+    expect(mark.textContent).toBe('Other project');
   });
 
   it('shows the empty placeholder without an owning project', () => {

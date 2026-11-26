@@ -12,16 +12,18 @@ const TONE_CLASS: Record<TIconBadgeTone, string> = {
   // stroke, not color: circuit rows force every svg colour to primary-8
   [IconBadgeTone.Public]:
     'border-secondary-1 bg-secondary-0 text-scope-public-fg [&_svg]:stroke-scope-public-fg',
+  [IconBadgeTone.Neutral]: 'border-neutral-2 bg-neutral-1 text-neutral-4 [&_svg]:stroke-neutral-4',
+  [IconBadgeTone.Quiet]: 'border-transparent bg-transparent font-normal text-neutral-4',
 };
 
-/** A small rounded tag: an icon and a label in one tone. */
+/** A small rounded tag: an icon and a label in one tone; without an icon, its slot stays so labels line up. */
 export function IconBadge({
   icon,
   tone,
   children,
   className,
 }: {
-  icon: TIconName;
+  icon: TIconName | null;
   tone: TIconBadgeTone;
   children: ReactNode;
   className?: string;
@@ -38,7 +40,11 @@ export function IconBadge({
       )}
     >
       <span>
-        <Icon name={icon} size={12} />
+        {icon ? (
+          <Icon name={icon} size={12} />
+        ) : (
+          <span aria-hidden="true" className="size-[12px]" />
+        )}
         {children}
       </span>
     </Badge>

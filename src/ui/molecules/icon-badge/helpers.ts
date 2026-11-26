@@ -1,4 +1,9 @@
-export const IconBadgeTone = { Project: 'project', Public: 'public' } as const;
+export const IconBadgeTone = {
+  Project: 'project',
+  Public: 'public',
+  Neutral: 'neutral',
+  Quiet: 'quiet',
+} as const;
 export type TIconBadgeTone = (typeof IconBadgeTone)[keyof typeof IconBadgeTone];
 
 const TONES: ReadonlySet<string> = new Set(Object.values(IconBadgeTone));

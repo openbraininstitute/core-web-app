@@ -22,12 +22,13 @@ export const ProjectOwnership = { Current: 'current', Other: 'other' } as const;
 export type TProjectOwnership = (typeof ProjectOwnership)[keyof typeof ProjectOwnership];
 export const ProjectOwnershipLabel = {
   [ProjectOwnership.Current]: 'This project',
-  [ProjectOwnership.Other]: 'Other projects',
+  [ProjectOwnership.Other]: 'Other project',
 } as const;
-/** Shared by the cells and the filter options, so both show the same icon and label. */
-export const ProjectOwnershipBadge: Record<TProjectOwnership, TBadgeSpec> = {
+/** Shown over an Other project cell: other projects are listed for their public data only. */
+export const OTHER_PROJECT_HINT = 'Public data from another project';
+/** Only the current project's rows carry a badge; the cells and the filter options share it. */
+export const ProjectOwnershipBadge: Partial<Record<TProjectOwnership, TBadgeSpec>> = {
   [ProjectOwnership.Current]: { icon: 'people', tone: IconBadgeTone.Project },
-  [ProjectOwnership.Other]: { icon: 'globe', tone: IconBadgeTone.Public },
 };
 
 export const Visibility = { Public: 'public', Private: 'private' } as const;
@@ -38,7 +39,7 @@ export const VisibilityLabel = {
 } as const;
 export const VisibilityBadge: Record<TVisibility, TBadgeSpec> = {
   [Visibility.Public]: { icon: 'globe', tone: IconBadgeTone.Public },
-  [Visibility.Private]: { icon: 'lock', tone: IconBadgeTone.Project },
+  [Visibility.Private]: { icon: 'lock', tone: IconBadgeTone.Neutral },
 };
 
 /** Pseudo-fields rewritten by {@link resolveOwnershipParams} into entitycore's scalar params. */
@@ -51,18 +52,17 @@ function availableInCombinedData({ section, scope }: IGridContext) {
   return section === WorkspaceSection.Data && scope === WorkspaceScope.Combined;
 }
 
-/** Options that cover every row, each shown as its badge. */
+/** Options that cover every row, each shown as its badge when it has one. */
 function exhaustiveOptions<Id extends string>(
   labels: Record<Id, string>,
-  badges: Record<Id, TBadgeSpec>
+  badges: Partial<Record<Id, TBadgeSpec>>
 ): TFilterOptionsSource {
   return {
     kind: FilterOptionsKind.Static,
-    items: (Object.keys(labels) as Id[]).map((id) => ({
-      id,
-      label: labels[id],
-      badge: badges[id],
-    })),
+    items: (Object.keys(labels) as Id[]).map((id) => {
+      const badge = badges[id];
+      return badge ? { id, label: labels[id], badge } : { id, label: labels[id] };
+    }),
     searchable: false,
     exhaustive: true,
   };
@@ -73,13 +73,15 @@ export function projectOwnershipColumn<Row>(): IColumnModel<Row> {
     id: OWNERSHIP_COLUMN_ID,
     header: 'Project',
     available: availableInCombinedData,
-    width: { width: 136, minWidth: 132 },
+    width: { width: 124, minWidth: 120 },
     sortable: false,
+    ownHoverCard: true,
     cellRenderer: PROJECT_OWNERSHIP_RENDERER,
     filter: {
       operators: [OperatorId.In],
       field: OWNERSHIP_FIELD,
-      description: 'This project: its data, private or public. Other projects: their public data.',
+      description:
+        'This project: its data, private or public. Other project: only the public data of other projects.',
       options: exhaustiveOptions(ProjectOwnershipLabel, ProjectOwnershipBadge),
     },
   };
