@@ -7,15 +7,16 @@ import {
   getDocumentationForInputResistance,
 } from '@/features/model-analysis/viewer/container/hooks/dictionary';
 import { isNumber } from '@/util/type-guards';
+import { normalizeString } from '@/util/utils';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { TValidationResultNonUndefined } from '@/features/model-analysis/explorer/use-analysis';
 import type { FlatValidationResult } from '@/features/model-analysis/viewer/container/hooks';
 
-export const ValidationResultName = { Thumbnail: 'thumbnail' } as const;
+const ValidationResultName = { Thumbnail: 'thumbnail' } as const;
 
 export function isThumbnailResult({ name }: { name: string }) {
-  return name.trim().toLowerCase() === ValidationResultName.Thumbnail;
+  return normalizeString(name) === ValidationResultName.Thumbnail;
 }
 
 export function flattenValidationResults(

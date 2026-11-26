@@ -19,10 +19,10 @@ function makeResult(
   return {
     id,
     name,
+    description,
     passed: true,
     assets,
     error: null,
-    ...(description === undefined ? {} : { description }),
   } as unknown as TValidationResultNonUndefined[number];
 }
 

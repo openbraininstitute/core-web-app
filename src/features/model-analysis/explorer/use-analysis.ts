@@ -29,9 +29,7 @@ export function useAnalysis({ workspace, id }: { id: string; workspace: Workspac
     enabled: !!id,
     select(data) {
       return {
-        data: data.pages
-          .flatMap((page) => page.data)
-          .filter((result) => !isThumbnailResult(result)),
+        data: data.pages.flatMap((page) => page.data),
         pagination: data.pages[data.pages.length - 1].pagination,
       };
     },
@@ -59,9 +57,10 @@ function makeQueryFn(workspace: { virtualLabId: string; projectId: string }, id:
         page_size: DEFAULT_PAGE_XSMALL_SIZE,
       },
     });
+    const results = response.data.filter((entity: IValidationResult) => !isThumbnailResult(entity));
     const data = (
       await Promise.allSettled(
-        response.data.map((entity: IValidationResult) => {
+        results.map((entity) => {
           return getAssets({
             ctx: workspace,
             entityType: EntityTypeDict.ValidationResult,
@@ -71,7 +70,7 @@ function makeQueryFn(workspace: { virtualLabId: string; projectId: string }, id:
       )
     ).map((result, i) => {
       return {
-        ...response.data[i],
+        ...results[i],
         assets: result.status === 'fulfilled' ? result.value.data : null,
         error: result.status === 'rejected' ? result.reason : null,
       };
