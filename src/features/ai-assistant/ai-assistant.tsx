@@ -34,6 +34,8 @@ interface AiAssistantProps {
   onFullscreenToggle?: () => void;
   onClose?: () => void;
   disabled?: boolean;
+  /** Fill the box it is in (a phone's floating window), which grows itself rather than going fullscreen. */
+  fill?: boolean;
 }
 
 type AssistantTab = 'chat' | 'history' | 'settings';
@@ -46,6 +48,7 @@ export default function AiAssistant({
   onFullscreenToggle,
   onClose,
   disabled,
+  fill = false,
 }: AiAssistantProps) {
   const { panelWidth } = usePanelWidth();
   const isDragging = useIsDragging();
@@ -85,6 +88,7 @@ export default function AiAssistant({
     setTab((current) => (current === next ? 'chat' : next));
   };
 
+  const asFullscreen = fullscreen && !fill;
   // Esc only steps back (inner view, then fullscreen); collapsing is left to the collapse button
   const panelRef = useDismissOnOutsideInteraction<HTMLDivElement>({
     enabled: tab !== 'chat' || (fullscreen && Boolean(onFullscreenToggle)),
@@ -95,10 +99,10 @@ export default function AiAssistant({
   });
 
   const animationProps = {
-    position: fullscreen ? 'fixed' : 'absolute',
-    height: fullscreen ? 'calc(100vh - 1rem)' : '100%',
-    top: fullscreen ? '0.5rem' : 0,
-    right: fullscreen ? '10px' : 0,
+    position: asFullscreen ? 'fixed' : 'absolute',
+    height: asFullscreen ? 'calc(100vh - 1rem)' : '100%',
+    top: asFullscreen ? '0.5rem' : 0,
+    right: asFullscreen ? '10px' : 0,
   } as const;
 
   return (
@@ -113,7 +117,7 @@ export default function AiAssistant({
           initial={{ opacity: 0, width: 0, ...animationProps }}
           animate={{
             opacity: 1,
-            width: fullscreen ? 'calc(100vw - 20px)' : `${panelWidth}px`,
+            width: fill ? '100%' : fullscreen ? 'calc(100vw - 20px)' : `${panelWidth}px`,
             ...animationProps,
           }}
           exit={{ opacity: 0, width: 0 }}
@@ -183,7 +187,9 @@ export default function AiAssistant({
               {onClose && (
                 <button
                   type="button"
-                  onClick={() => setConfirmCloseOpen(true)}
+                  // a phone's floating window just folds away (the user asked): asked only while a reply is still
+                  // being written, which closing would cut off
+                  onClick={() => (fill && status === 'ready' ? onClose?.() : setConfirmCloseOpen(true))}
                   className={classNames(styles.headerBtn, styles.collapseBtn)}
                   aria-label="Close"
                   title="Close"

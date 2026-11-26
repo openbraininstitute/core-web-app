@@ -76,6 +76,7 @@ const h = vi.hoisted(() => {
     clear = vi.fn();
     dispose = vi.fn();
     setDark = vi.fn();
+    setLightCanvas = vi.fn();
     setLook = vi.fn();
     setAO = vi.fn();
     setAODepth = vi.fn();

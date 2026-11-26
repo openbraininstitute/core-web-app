@@ -34,6 +34,10 @@ export const EXPANDING_PILL_SURFACE_CLASS = cn(
   'focus-visible:ring-2 focus-visible:ring-primary-8/30'
 );
 
+/** A pill with nothing to act on yet: flat grey, kept in place rather than hidden. */
+export const EXPANDING_PILL_IDLE_CLASS =
+  'cursor-not-allowed border border-gray-200 bg-none bg-gray-100 text-gray-400 shadow-none hover:bg-gray-100 hover:shadow-none disabled:text-gray-400! disabled:opacity-100';
+
 /**
  * The pill's insides, split out so a caller that must own its own `<button>` gets the
  * same reveal. The consumer's element MUST carry {@link EXPANDING_PILL_BASE_CLASS}: the

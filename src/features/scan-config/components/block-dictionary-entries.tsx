@@ -3,7 +3,6 @@ import {
   CloseOutlined,
   DeleteOutlined,
   EditOutlined,
-  PlusOutlined,
   WarningFilled,
 } from '@ant-design/icons';
 import { Input } from 'antd';
@@ -113,7 +112,6 @@ export default function BlockDictionaryEntries({
   setEditing,
   setSelectedEntry,
   setSelectedRootElement,
-  singularName,
   allEntries,
   newKey,
   setNewKey,
@@ -140,7 +138,6 @@ export default function BlockDictionaryEntries({
   setEditing: (editing: boolean) => void;
   setSelectedEntry: (entry: string) => void;
   setSelectedRootElement: (rootElement: string) => void;
-  singularName: string;
   allEntries: Set<string>;
   newKey: string;
   setNewKey: (k: string) => void;
@@ -457,31 +454,6 @@ export default function BlockDictionaryEntries({
                   );
                 })}
             </div>
-
-            {!campaignId && !loading && !readOnly && isChatReady && highlights.length === 0 && (
-              <button
-                data-testid={`scan-config-add-entry-${rootElement}`}
-                // Set apart from the entries over it: outlined in navy round a navy plus.
-                className={cn(
-                  'group/add text-primary-9 flex h-12.5 min-h-12.5 w-full min-w-37.5 items-center ',
-                  'justify-between rounded-full border-2 border-primary-9/35 bg-white px-5 py-2 text-sm font-semibold',
-                  'hover:border-primary-9 hover:bg-primary-9/5 transition-colors ease-in-out'
-                )}
-                type="button"
-                onClick={() => {
-                  setSelectedRootElement(rootElement);
-                  setEditing(true);
-                  setSelectedEntry('');
-                }}
-              >
-                <span>
-                  Add <span className="lowercase">{singularName}</span>
-                </span>
-                <span className="bg-primary-9 flex size-6 shrink-0 items-center justify-center rounded-full text-white transition-transform group-hover/add:scale-110">
-                  <PlusOutlined className="text-xs" />
-                </span>
-              </button>
-            )}
           </div>
         </motion.div>
       )}

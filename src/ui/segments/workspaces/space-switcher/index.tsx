@@ -1,9 +1,15 @@
 'use client';
 
-import { RiArrowDownSLine, RiArrowRightSLine, RiCheckFill, RiFileCopyLine } from '@remixicon/react';
+import {
+  RiArrowDownSLine,
+  RiArrowRightSLine,
+  RiCheckFill,
+  RiRefreshLine,
+  RiFileCopyLine,
+} from '@remixicon/react';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { type ComponentProps, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -12,6 +18,7 @@ import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
 import { getSelfVirtualLab, listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { UserFilled } from '@/components/icons/buttons';
 import { SignOutFill } from '@/components/icons/EditorIcons';
+import { config } from '@/config';
 import {
   DISMISSABLE_ATTRIBUTE,
   useDismissOnOutsideInteraction,
@@ -29,6 +36,7 @@ import {
   type WorkspaceActionType,
 } from '@/ui/segments/workspaces/space-manager/event';
 import { GhostRoundedIconButton } from '@/ui/segments/workspaces/space-manager/sections/elements';
+import { useOpenSpaceSwitcherEvent } from '@/ui/segments/workspaces/space-switcher/event';
 import { Item } from '@/ui/segments/workspaces/space-switcher/item';
 import { isInsideContentModal } from '@/ui/segments/workspaces/space-switcher/outside-click';
 import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
@@ -37,6 +45,8 @@ import { cn } from '@/utils/css-class';
 
 type Props = {
   className: ComponentProps<'div'>['className'];
+  /** Closed, as words in a toolbar rather than a pill: no border or fill until hovered. */
+  plain?: boolean;
 };
 
 type ResolveCurrentProjectNameParams = {
@@ -56,7 +66,8 @@ export function resolveCurrentProjectName({
   return activeProjectName || listedProjectName || null;
 }
 
-export function SpaceSwitcher({ className }: Props) {
+export function SpaceSwitcher({ className, plain = false }: Props) {
+  const router = useRouter();
   const breakpoint = useDefaultBreakpoint();
   const { virtualLabId, projectId } = useWorkspace();
   const workspaceProjectList = { virtualLabId: virtualLabId ?? '' };
@@ -134,6 +145,12 @@ export function SpaceSwitcher({ className }: Props) {
   });
 
   const onUserClick = () => {
+    // in the toolbar the icon opens the user's own page, which holds what the panel's profile did
+    if (plain && virtualLabId && projectId) {
+      setIsExpanded(false);
+      router.push(`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/profile`);
+      return;
+    }
     setIsExpanded(true);
     makeTriggerWorkspaceConfigurationClickEvent({
       on: true,
@@ -156,6 +173,12 @@ export function SpaceSwitcher({ className }: Props) {
   const onProjectBannerClick = (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation();
     if (!virtualLabId || !projectId) return;
+    // in the toolbar the project's name opens the project's own page; the arrows beside it still open the panel
+    if (plain) {
+      setIsExpanded(false);
+      router.push(`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/project`);
+      return;
+    }
     setIsExpanded(true);
     makeTriggerWorkspaceConfigurationClickEvent({
       on: true,
@@ -292,6 +315,8 @@ export function SpaceSwitcher({ className }: Props) {
     setIsExpanded(false);
   }, []);
 
+  useOpenSpaceSwitcherEvent(() => setIsExpanded(true));
+
   const onTogglePanel = (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation();
     if (isExpanded) {
@@ -342,6 +367,37 @@ export function SpaceSwitcher({ className }: Props) {
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [boardModalOpen, collapsePanel]);
 
+  // opens and closes the panel; in the plain bar curved arrows just after the project's name
+  const toggle = (
+    <motion.button
+      type="button"
+      aria-label="toggle-workspace-panel"
+      data-testid="toggle-workspace-panel"
+      animate={{ rotate: isExpanded && !plain ? 180 : 0 }}
+      transition={{ duration: 0.15, ease: 'easeOut' }}
+      className={cn(
+        'bg-transparent group flex shrink-0 items-center justify-center disabled:cursor-not-allowed disabled:opacity-40',
+        plain ? 'size-6' : 'size-8',
+        !plain && 'rounded-full'
+      )}
+      onClick={onTogglePanel}
+      disabled={boardModalOpen}
+      title={plain ? 'Change lab or project' : undefined}
+    >
+      {plain ? (
+        // as the toolbar's other icons: grey, navy on hover and while open
+        <RiRefreshLine
+          className={cn(
+            'group-hover:text-primary-9 size-[20px] transition-colors',
+            isExpanded ? 'text-primary-9' : 'text-neutral-600'
+          )}
+        />
+      ) : (
+        <RiArrowDownSLine className="text-primary-9 size-5" />
+      )}
+    </motion.button>
+  );
+
   return (
     <div
       className={cn('relative flex items-start justify-center gap-1.5', {
@@ -365,7 +421,8 @@ export function SpaceSwitcher({ className }: Props) {
             },
             {
               'bg-background hover:shadow-sm border-neutral-2 rounded-full border text-gray-700':
-                !isExpanded,
+                !isExpanded && !plain,
+              'rounded-xl border border-transparent text-gray-700 hover:bg-neutral-50': !isExpanded && plain,
             },
             { 'h-12': breakpoint === 'xl' }
           )}
@@ -376,11 +433,16 @@ export function SpaceSwitcher({ className }: Props) {
             onClick={onUserClick}
             active={profileActive}
             hidden={userStatus !== 'authenticated' || userLoading}
+            plain={plain}
           />
           {!virtualLabId ? (
             <span className="text-gray-500">Select virtual lab</span>
           ) : (
             <>
+              {/* plain: the lab over the project, each as long as there is room for */}
+              <div
+                className={plain ? 'flex min-w-0 flex-col items-start justify-center' : 'contents'}
+              >
               {labsLoading || myLabLoading ? (
                 <Skeleton className="h-4 w-16 rounded-full" />
               ) : (
@@ -391,21 +453,30 @@ export function SpaceSwitcher({ className }: Props) {
                   onClick={onVlabBannerClick}
                   title={currentVirtualLabName}
                   className={cn(
-                    'group flex h-7 max-w-28 shrink-0 items-center overflow-hidden rounded-full px-2 transition-colors select-none',
+                    // on a phone the project's name alone: its bar has no room for the lab's over it
+                    plain
+                      ? 'group flex h-[18px] max-w-full shrink-0 items-center overflow-hidden rounded-md px-1.5 transition-colors select-none max-md:hidden'
+                      : 'group flex h-7 max-w-28 shrink-0 items-center overflow-hidden rounded-full px-2 transition-colors select-none',
                     { 'bg-primary-9! text-white': vlabSegmentActive }
                   )}
                 >
                   <h3
-                    className={cn('min-w-0 truncate font-medium group-hover:font-bold', {
-                      'text-white!': vlabSegmentActive,
-                      'text-primary-9': !vlabSegmentActive,
-                    })}
+                    className={cn(
+                      'min-w-0 truncate font-medium',
+                      plain ? 'text-[12px] leading-[16px] group-hover:underline' : 'group-hover:font-bold',
+                      {
+                        'text-white!': vlabSegmentActive,
+                        'text-primary-9': !vlabSegmentActive && !plain,
+                        'text-neutral-500': !vlabSegmentActive && plain,
+                      }
+                    )}
                   >
                     {currentVirtualLabName}
                   </h3>
                 </button>
               )}
-              <RiArrowRightSLine className="text-primary-8 size-5 shrink-0" />
+              {!plain && <RiArrowRightSLine className="text-primary-8 size-5 shrink-0" />}
+              <div className={plain ? 'flex max-w-full min-w-0 items-center gap-0.5' : 'contents'}>
               {isCurrentProjectLoading ? (
                 <Skeleton className="h-5 w-24 flex-1 rounded-full" />
               ) : (
@@ -416,7 +487,9 @@ export function SpaceSwitcher({ className }: Props) {
                   onClick={onProjectBannerClick}
                   title={currentProjectLabel}
                   className={cn(
-                    'min-w-0 flex-1 truncate rounded-full px-3 py-1 text-left font-bold transition-colors',
+                    plain
+                      ? 'max-w-full min-w-0 truncate rounded-md px-1.5 text-left text-[14px] leading-[19px] font-bold transition-colors'
+                      : 'min-w-0 flex-1 truncate rounded-full px-3 py-1 text-left font-bold transition-colors',
                     projectSegmentActive
                       ? 'bg-primary-9! text-white'
                       : 'text-primary-9 hover:underline'
@@ -425,18 +498,10 @@ export function SpaceSwitcher({ className }: Props) {
                   {currentProjectLabel}
                 </button>
               )}
-              <motion.button
-                type="button"
-                aria-label="toggle-workspace-panel"
-                data-testid="toggle-workspace-panel"
-                animate={{ rotate: isExpanded ? 180 : 0 }}
-                transition={{ duration: 0.15, ease: 'easeOut' }}
-                className="bg-transparent group flex size-8 shrink-0 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-40"
-                onClick={onTogglePanel}
-                disabled={boardModalOpen}
-              >
-                <RiArrowDownSLine className="text-primary-9 size-5" />
-              </motion.button>
+              {plain && toggle}
+              </div>
+              </div>
+              {!plain && toggle}
             </>
           )}
         </div>
@@ -451,8 +516,12 @@ export function SpaceSwitcher({ className }: Props) {
               transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
               className={cn(
                 'border-neutral-2 absolute top-full left-0 z-50 w-full overflow-hidden rounded-tr-lg rounded-b-2xl border border-t-0 bg-white',
-                'relative flex flex-col pt-1 pb-2 shadow-2xl',
+                // plain, in the toolbar: out of the flow, so the bar stays put as the panel drops under it (`relative`
+                // after `absolute` wins, which the pill bar relies on)
+                plain ? 'flex flex-col pt-1 pb-2 shadow-2xl' : 'relative flex flex-col pt-1 pb-2 shadow-2xl',
                 'h-full max-h-[calc(100vh-5.5rem)] min-h-[calc(100vh-5.5rem)]',
+                // on a phone, across the screen under the bar, the switcher being too narrow to hold it
+                'max-md:fixed max-md:inset-x-2 max-md:top-14 max-md:h-[70vh] max-md:min-h-0 max-md:w-auto',
                 { 'rounded-t-none': isExpanded }
               )}
             >
@@ -537,11 +606,14 @@ function UserIconButton({
   onClick,
   active,
   hidden,
+  plain,
 }: {
   username?: string;
   onClick: () => void;
   active?: boolean;
   hidden?: boolean;
+  /** The icon alone, not in a circle. */
+  plain?: boolean;
 }) {
   if (hidden) return null;
 
@@ -555,12 +627,18 @@ function UserIconButton({
       data-label={username}
       aria-label={username}
       className={cn(
-        'border-neutral-2 bg-white relative flex size-7 shrink-0 items-center justify-center rounded-full border transition-colors hover:shadow-sm xl:size-8',
-        { 'bg-primary-9! hover:bg-primary-8!': active }
+        plain
+          ? 'relative flex size-8 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-neutral-100'
+          : 'border-neutral-2 bg-white relative flex size-7 shrink-0 items-center justify-center rounded-full border transition-colors hover:shadow-sm xl:size-8',
+        { 'bg-primary-9! hover:bg-primary-8!': active && !plain, 'bg-primary-0': active && plain }
       )}
     >
       <UserFilled
-        className={cn('text-primary-9 text-base xl:text-lg', { 'text-white!': active })}
+        className={cn(
+          'text-primary-9',
+          plain ? 'text-[19px]' : 'text-base xl:text-lg',
+          { 'text-white!': active && !plain }
+        )}
       />
     </button>
   );

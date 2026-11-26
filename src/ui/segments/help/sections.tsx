@@ -1,6 +1,5 @@
 import { match } from 'ts-pattern';
 
-import { getAllFlags, learnFlag } from '@/features/feature-flags';
 import { getLearnSettings } from '@/features/learn/learn-settings-server';
 import AboutSection from '@/ui/segments/help/about';
 import AiChatToolsSection from '@/ui/segments/help/ai-chat-tools';
@@ -21,9 +20,7 @@ export default async function HelpSectionContent({
 
   const sectionParams = getSearchParam(params ?? {}, 'section');
   // with Learn's "remove unneeded features" on, only the lean sections; any other lands on Guides.
-  // Only while Learn is on, as only its page can switch the setting back
-  const [{ leanHelp }, flags] = await Promise.all([getLearnSettings(), getAllFlags()]);
-  const lean = leanHelp && flags[learnFlag.key] === true;
+  const { leanHelp: lean } = await getLearnSettings();
 
   return match(helpSectionShown(sectionParams, lean))
     .with('overview', () => <OverviewSection />)

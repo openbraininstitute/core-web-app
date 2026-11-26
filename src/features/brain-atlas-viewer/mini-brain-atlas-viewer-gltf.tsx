@@ -1,18 +1,9 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
-
-import {
-  makeColor,
-  usePainter,
-  usePainterLoadingListener,
-} from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/hooks';
-import { useAccessToken } from '@/hooks/useAccessToken';
-import { classNames } from '@/util/utils';
-
-import type { VisibleRegion } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/types';
-
-import styles from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/brain-atlas-viewer-gltf.module.css';
+import { ExplorerAtlas } from '@/features/brain-atlas-viewer/explorer/explorer-atlas';
+import { useBrainRegionRootHierarchyQuery } from '@/features/brain-region-hierarchy/context';
+import { useHierarchyRuntimeMetadataQuery } from '@/features/brain-region-hierarchy/hooks/use-brain-region-species';
+import { cn } from '@/utils/css-class';
 
 export type MiniBrainAtlasViewerGltfProps = {
   atlasId: string;
@@ -20,56 +11,37 @@ export type MiniBrainAtlasViewerGltfProps = {
   regionName?: string;
   className?: string;
   onLoading?: (loading: boolean) => void;
+  /** how large the brain is drawn: 1.6 by default, nearly the canvas's height */
+  cameraZoom?: number;
+  /** the colour the canvas clears to; navy by default */
+  backgroundColor?: string;
 };
 
+/** One species' whole brain, small, as the explorer draws it (a species card, the mini atlas's row of them). */
 export function MiniBrainAtlasViewerGltf({
   atlasId,
-  regionId,
-  regionName = 'Brain',
   className,
   onLoading,
+  cameraZoom,
+  backgroundColor = '#002766',
 }: MiniBrainAtlasViewerGltfProps) {
-  const accessToken = useAccessToken();
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const painter = usePainter({ loading: false, atlasId });
-
-  const regions = useMemo<VisibleRegion[]>(
-    () => [
-      {
-        id: regionId,
-        name: regionName,
-        color: makeColor('#FFFFFF'),
-      },
-    ],
-    [regionId, regionName]
-  );
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!painter || !canvas) return;
-
-    painter.start(canvas);
-
-    return () => {
-      painter.start(null);
-    };
-  }, [painter]);
-
-  usePainterLoadingListener(painter, onLoading);
-
-  useEffect(() => {
-    if (!painter || !accessToken) return;
-
-    void painter.setRegions(regions, accessToken);
-  }, [accessToken, painter, regions]);
+  const { runtimeHierarchies } = useHierarchyRuntimeMetadataQuery();
+  const hierarchy = runtimeHierarchies.find((h) => h.atlasId === atlasId);
+  const {
+    result: { root },
+  } = useBrainRegionRootHierarchyQuery({ hId: hierarchy?.id });
 
   return (
-    <div
-      ref={containerRef}
-      className={classNames(className, styles.brainAtlasViewerGltf, 'h-full w-full')}
-    >
-      <canvas ref={canvasRef} />
-    </div>
+    <ExplorerAtlas
+      compact
+      taxonomyId={hierarchy?.species.taxonomyId}
+      atlasId={atlasId}
+      // the workspace's root stands in until the species' own hierarchy is known
+      root={hierarchy ? root : null}
+      onLoading={onLoading}
+      zoom={cameraZoom}
+      clear={backgroundColor}
+      className={cn(className, 'h-full w-full')}
+    />
   );
 }

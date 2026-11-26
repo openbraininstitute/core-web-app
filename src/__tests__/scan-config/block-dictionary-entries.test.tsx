@@ -31,7 +31,6 @@ function renderEntries(overrides: Record<string, unknown> = {}) {
     setEditing: vi.fn(),
     setSelectedEntry: vi.fn(),
     setSelectedRootElement: vi.fn(),
-    singularName: 'stimulus',
     allEntries: new Set([ENTRY]),
     newKey: ENTRY,
     setNewKey: vi.fn(),
@@ -150,8 +149,7 @@ describe('BlockDictionaryEntries', () => {
   });
 
   it('renders the tooltip trigger as the tab itself, without nesting a button', () => {
-    // `campaignId` hides the "Add stimulus" button, so any <button> left is the trigger
-    const { container } = renderEntries({ campaignId: 'campaign-1' });
+    const { container } = renderEntries();
 
     const tab = container.querySelector(
       `#${ENTRY.replace(/_/g, '-')}-menu-block-dictionary-sub-entry__item`

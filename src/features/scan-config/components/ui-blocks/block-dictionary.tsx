@@ -16,6 +16,7 @@ import {
   seedElectrodeInitialOrigin,
 } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import { DESCRIPTION_TOOLTIP_CLASS } from '@/features/scan-config/components/shared/box-class';
+import { CloseFormButton } from '@/features/scan-config/components/shared/form-header-buttons';
 import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import Block from '@/features/scan-config/components/ui-blocks/block';
 import { ScanValueSelectorProvider } from '@/features/scan-config/components/ui-elements/parameter-sweep';
@@ -55,6 +56,8 @@ type Props = {
   onNewBlockClick?: () => void;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
   errorPathPrefix?: string;
+  /** Folds the form column away. */
+  onClose?: () => void;
 };
 
 export default function BlockDictionary({
@@ -72,6 +75,7 @@ export default function BlockDictionary({
   onNewBlockClick,
   schemaMappingConfig,
   errorPathPrefix,
+  onClose,
 }: Props) {
   const { aiConfig, isChatReady } = useAIConfig();
   const diffs = useAtomValue(configDiffsAtom);
@@ -154,6 +158,7 @@ export default function BlockDictionary({
         rootElement={selectedRootElement}
         selectedEntry={selectedEntry}
         errorPathPrefix={errorPathPrefix}
+        onClose={onClose}
       />
     );
 
@@ -187,6 +192,12 @@ export default function BlockDictionary({
       className="flex flex-col items-center gap-2"
       data-scan-config-block={blockDictionarySchema.ui_element}
     >
+      <div className="sticky -top-3 z-10 -mx-3 -mt-3 self-stretch bg-white px-3 pt-3 pb-2">
+        <div className="flex h-5 items-center justify-between gap-2">
+          <h3 className="text-primary-9 text-lg leading-5 font-bold">Add new...</h3>
+          {onClose && <CloseFormButton onClose={onClose} />}
+        </div>
+      </div>
       {blockDictionarySchema.additionalProperties.oneOf.map((o) => {
         const usability = getBlockUsabilityConfig({ block: o });
         let disable = false,
@@ -210,7 +221,7 @@ export default function BlockDictionary({
                 type="button"
                 disabled={disable}
                 className={cn(
-                  'min-h-25 w-full cursor-pointer rounded-xl border border-gray-200 p-5 text-left hover:bg-white hover:shadow-xs',
+                  'min-h-25 w-full cursor-pointer rounded-2xl bg-white p-5 text-left drop-shadow transition-[filter] hover:drop-shadow-md',
                   { 'cursor-not-allowed opacity-50': disable }
                 )}
                 onClick={() => {
@@ -274,6 +285,11 @@ export default function BlockDictionary({
           </Tooltip>
         );
       })}
+      {/* Fades the cards out at the column's foot; at the list's end it lies under the last one. */}
+      <div
+        aria-hidden
+        className="pointer-events-none sticky -bottom-3 z-10 -mx-3 -mt-2 -mb-3 h-10 shrink-0 self-stretch bg-linear-to-t from-white to-transparent"
+      />
     </div>
   );
 }

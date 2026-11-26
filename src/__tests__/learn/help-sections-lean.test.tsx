@@ -34,9 +34,4 @@ describe('Help sections with Help made lean', () => {
     expect(await shown(true, 'ai-tools')).toBe('Guides');
     expect(await shown(true, 'about')).toBe('About');
   });
-
-  it('ignore the setting while Learn is off, as only its page can switch it back', async () => {
-    expect(await shown(false, 'ai-tools')).toBe('AiChatTools');
-    expect(await shown(false, 'tutorials')).toBe('Tutorials');
-  });
 });

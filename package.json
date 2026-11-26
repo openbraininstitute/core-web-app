@@ -34,6 +34,7 @@
     "@apidevtools/json-schema-ref-parser": "^13.0.5",
     "@bprogress/next": "^3.2.12",
     "@codemirror/commands": "6.11.1",
+    "@codemirror/lang-markdown": "6.5.2",
     "@codemirror/language": "^6.12.3",
     "@codemirror/legacy-modes": "^6.5.3",
     "@codemirror/lint": "6.9.7",
@@ -159,6 +160,7 @@
     "three": "0.186.0",
     "ts-pattern": "^5.9.0",
     "use-breakpoint": "^4.0.10",
+    "y-codemirror.next": "0.3.6",
     "y-indexeddb": "^9.0.12",
     "yjs": "^13.6.33",
     "zod": "^4.4.3"

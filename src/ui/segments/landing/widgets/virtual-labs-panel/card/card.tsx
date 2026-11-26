@@ -5,14 +5,28 @@ import styles from './card.module.css';
 
 type SingleSectionCardProps = {
   index: number;
+  compact?: boolean;
   title: string;
   description: string;
   video: string;
 };
 
-export function SingleSectionCard({ index, title, description, video }: SingleSectionCardProps) {
+export function SingleSectionCard({
+  index,
+  title,
+  description,
+  video,
+  compact = false,
+}: SingleSectionCardProps) {
   return (
-    <button className={classNames(styles.card, index > 999 && styles.comingSoon)} type="button">
+    <button
+      className={classNames(
+        styles.card,
+        compact && styles.compact,
+        index > 999 && styles.comingSoon
+      )}
+      type="button"
+    >
       <Video className={styles.background} src={video} />
       <div className={styles.content}>
         <div>

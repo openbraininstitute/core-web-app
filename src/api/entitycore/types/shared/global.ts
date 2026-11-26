@@ -265,6 +265,8 @@ export enum AssetLabel {
   neuron_mechanisms = 'neuron_mechanisms',
   notebook_required_files = 'notebook_required_files',
   nwb = 'nwb',
+  research_log_document = 'research_log_document',
+  research_log_files = 'research_log_files',
   replay_spikes = 'replay_spikes',
   requirements = 'requirements',
   simulation_designer_image = 'simulation_designer_image',
@@ -296,8 +298,6 @@ export enum AssetLabel {
   electrode_array_weight_matrix = 'electrode_array_weight_matrix',
   electrode_array_image = 'electrode_array_image',
   electrode_locations = 'electrode_locations',
-  research_log_document = 'research_log_document',
-  research_log_files = 'research_log_files',
 }
 
 export enum AssetContentType {
@@ -311,6 +311,7 @@ export enum AssetContentType {
   ipynb = 'application/x-ipynb+json',
   jpeg = 'image/jpeg',
   json = 'application/json',
+  markdown = 'text/markdown',
   mod = 'application/mod',
   nrrd = 'application/nrrd',
   nwb = 'application/nwb',

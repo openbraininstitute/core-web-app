@@ -40,20 +40,4 @@ describe('HelpHeader with Help made lean', () => {
     await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled());
     expect(onUrlUpdate.mock.calls.at(-1)?.[0].searchParams.get('section')).toBe('guides');
   });
-
-  it('is ignored while Learn is off, which leaves Help as on main', () => {
-    expect(renderTabs(false, 'ai-tools')).toEqual([
-      'Overview',
-      'Tutorials',
-      'Glossary',
-      'Guides',
-      'Features',
-      'AI Chat Tools',
-      'About',
-    ]);
-    expect(screen.getByRole('tab', { name: 'AI Chat Tools' })).toHaveAttribute(
-      'data-state',
-      'active'
-    );
-  });
 });

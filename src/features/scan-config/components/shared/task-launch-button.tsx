@@ -3,6 +3,13 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { LAUNCH_GREEN, TASK_BUTTON_TEXT } from '@/features/scan-config/components/shared/box-class';
 import { cn } from '@/utils/css-class';
 
+/**
+ * A generate button that can be clicked: a soft shadow in the launch green's dark end, and a
+ * slight grow under the pointer.
+ */
+export const GENERATE_CLICKABLE =
+  'shadow-[0_3px_8px_-1px_rgb(20_56_5/0.3)] transition-[scale] duration-200 ease-out motion-safe:hover:scale-[1.02]';
+
 type Props = {
   label: string;
   countLabel?: string;

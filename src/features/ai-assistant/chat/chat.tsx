@@ -21,7 +21,7 @@ import FreeCreditsNotification from '../free-credits-notification';
 import { MessageItem } from '../message-item';
 import { PendingUserMessage } from '../message-item/pending-user-message';
 import { ThinkingIndicator } from '../message-item/thinking-indicator';
-import { atomRateLimit } from '../state';
+import { atomRateLimit, pendingAssistantQuestionAtom } from '../state';
 import DiffBar from './diff-bar';
 import Footer from './footer';
 import { OverlayScrollbar } from './overlay-scrollbar';
@@ -199,6 +199,32 @@ export default function Chat({
     scrollToBottom();
     requestAnimationFrame(scrollToBottom);
   };
+
+  const [pendingQuestion, setPendingQuestion] = useAtom(pendingAssistantQuestionAtom);
+  const pendingConsumedRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (pendingQuestion && threadId && status === 'ready' && !pendingConsumedRef.current) {
+      pendingConsumedRef.current = true;
+      const question = pendingQuestion;
+      setPendingQuestion(null);
+      setAutoScroll(true);
+      sendMessage(question);
+      scrollToBottom();
+      requestAnimationFrame(scrollToBottom);
+    }
+    if (!pendingQuestion) {
+      pendingConsumedRef.current = false;
+    }
+  }, [
+    pendingQuestion,
+    threadId,
+    status,
+    setPendingQuestion,
+    sendMessage,
+    setAutoScroll,
+    scrollToBottom,
+  ]);
 
   const lastMessage = messages[messages.length - 1];
   const hasVisibleContent = lastMessage?.parts.some(

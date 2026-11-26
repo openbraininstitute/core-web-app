@@ -1,10 +1,11 @@
 import { includes } from 'es-toolkit/compat';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { tryCatch } from '@/api/utils';
 import { config } from '@/config';
-import { ViewVariant, WorkspaceScope } from '@/constants';
+import { ViewVariant } from '@/constants';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { retrieveEntity } from '@/entity-configuration/domain/requests';
@@ -16,6 +17,7 @@ import ActionMenu from '@/ui/segments/action-menu';
 import { DownloadPanel as CircuitDownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { ClosePage, DataBreadcrumb } from '@/ui/segments/explore/data-nav-btns';
 import DetailMenu from '@/ui/segments/explore/detail-menu';
+import { PHONE_DETAIL_SIDEBAR } from '@/ui/segments/explore/detail-phone';
 import { DetailViewBody } from '@/ui/segments/explore/detail-view-body';
 import {
   EntityNameDisplay,
@@ -86,11 +88,10 @@ export async function DataViewLayout({
   }
 
   const isPublicEntity = entity.authorized_public;
-  const scope = isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project;
   // a split type (circuit scales) closes back to the sub-item the entity belongs to
   // resolved on the base type: a whole-brain opened as `whole_brain` is still a circuit
   const variant = resolveEntityVariant(resolveBaseEntityType(type), entity);
-  const parentLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${resolveConcreteEntityPathParam(type)}${variant ? `/${variant.slug}` : ''}?group=${entityType.group}&scope=${scope}`;
+  const parentLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${resolveConcreteEntityPathParam(type)}${variant ? `/${variant.slug}` : ''}?group=${entityType.group}`;
 
   const rendersFullPageWorkflowUi =
     Boolean(findScanConfigRegistryByTargetType(type)) ||
@@ -112,7 +113,6 @@ export async function DataViewLayout({
         title={entityType.title}
         type={type}
         group={entityType.group}
-        scope={scope}
         name={entity.name}
         variant={variant}
       />
@@ -120,8 +120,30 @@ export async function DataViewLayout({
   // the close lives at the far end of the details page's top bar, never inside the breadcrumb
   const closePage =
     origin === 'data' ? <ClosePage url={parentLink} variant={chromeVariant} /> : undefined;
+  // On a phone the breadcrumb and close give way to one link back to the list (the user asked for a details page
+  // made for a phone), as the Data page's own "← Data types".
+  const phoneBack =
+    origin === 'data' ? (
+      <Link
+        href={parentLink}
+        className="text-primary-9 border-neutral-2 flex h-9 shrink-0 items-center gap-1.5 rounded-full border bg-white px-3 text-[13px] font-semibold md:hidden"
+      >
+        <span aria-hidden>←</span>
+        {entityType.title}
+      </Link>
+    ) : null;
   // the same top bar row the workflows pages use, above the container: breadcrumb start, close end
-  const topBar = <TopBar start={breadcrumbs} end={closePage} />;
+  const topBar = (
+    <TopBar
+      start={
+        <>
+          {phoneBack}
+          <div className={cn('flex min-w-0', phoneBack && 'max-md:hidden')}>{breadcrumbs}</div>
+        </>
+      }
+      end={closePage && <div className="max-md:hidden">{closePage}</div>}
+    />
+  );
 
   if (includes(LeftMenuUnsupportedEntityTypes, type)) {
     if (useClassicLayout) {
@@ -138,8 +160,8 @@ export async function DataViewLayout({
 
     return (
       <DataViewFrame topBar={topBar} className="overflow-hidden rounded-2xl bg-white pt-5">
-        <div className="primary-scrollbar relative mx-5 mb-5 min-h-0 flex-1 overflow-y-auto">
-          <div className="rounded-3xl border border-neutral-2 bg-primary-9 px-5 py-5 text-white">
+        <div className="primary-scrollbar relative mx-5 mb-5 min-h-0 flex-1 overflow-y-auto max-md:mx-2 max-md:mb-2">
+          <div className="rounded-3xl border border-neutral-2 bg-primary-9 px-5 py-5 text-white max-md:px-4">
             {children}
           </div>
         </div>
@@ -157,8 +179,8 @@ export async function DataViewLayout({
   if (useClassicLayout) {
     return (
       <DataViewFrame topBar={topBar} className="rounded-md">
-        <div className="flex min-h-0 flex-1 overflow-hidden pt-3">
-          <div className="w-1/5 pl-5">
+        <div className="flex min-h-0 flex-1 overflow-hidden pt-3 max-md:flex-col max-md:gap-2 max-md:pt-0">
+          <div className={cn('flex w-1/5 flex-col pl-5', PHONE_DETAIL_SIDEBAR)}>
             <div className="flex flex-col gap-3">
               <DetailMenu sections={entityType.detailViewSections} variant={chromeVariant} />
             </div>
@@ -171,8 +193,8 @@ export async function DataViewLayout({
               variant={chromeVariant}
             />
           </div>
-          <div className="w-4/5 pr-1">
-            <div className="secondary-scrollbar flex h-full w-full flex-col overflow-x-auto overflow-y-auto p-10 pt-0">
+          <div className="w-4/5 pr-1 max-md:min-h-0 max-md:w-full max-md:flex-1 max-md:pr-0">
+            <div className="secondary-scrollbar flex h-full w-full flex-col overflow-x-auto overflow-y-auto p-10 pt-0 max-md:p-1 max-md:pt-2">
               <EntityNameDisplay name={entity.name} variant={contentVariant} />
               <EntityNameDisplayWrapper variant={contentVariant}>
                 {children}
@@ -272,10 +294,13 @@ function DataViewFrame({
   children,
 }: PropsWithChildren<{ topBar: ReactNode; className?: string }>) {
   return (
-    <div className="ml-5 flex h-full min-h-0 flex-col">
+    <div className="ml-5 flex h-full min-h-0 flex-col max-md:mx-3">
       {topBar}
       <div
-        className={cn('relative flex min-h-0 flex-1 flex-col border border-[#D9D9D9]', className)}
+        className={cn(
+          'relative flex min-h-0 flex-1 flex-col border border-[#D9D9D9] max-md:border-0',
+          className
+        )}
       >
         {children}
       </div>

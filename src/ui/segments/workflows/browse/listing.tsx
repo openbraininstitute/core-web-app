@@ -26,6 +26,7 @@ import { Button } from '@/ui/molecules/button';
 import { WorkflowBrowsePrerequisite } from '@/ui/segments/workflows/browse/prerequisite';
 import { useWorkflowSelectionConfig } from '@/ui/segments/workflows/browse/use-workflow-selection-config';
 import { useWorkflowBreadcrumbState } from '@/ui/segments/workflows/browse/workflow-breadcrumb-context';
+import { WorkflowBreadcrumb } from '@/ui/segments/workflows/elements/workflow-breadcrumb';
 import {
   buildScanConfigConfigureHref,
   buildWorkflowHomeHref,
@@ -582,6 +583,14 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
         requireSpeciesSelector={workflow.requireSpecies}
         requireScopeSelector
         allowFilter={workflow.requireFilters}
+        framed
+        // the breadcrumb on the search bar's row; the layout hides its own row above while this one shows
+        toolbarStart={
+          // none on a phone (the user asked)
+          <div data-toolbar-breadcrumb className="mr-2 flex min-w-0 items-center max-md:hidden">
+            <WorkflowBreadcrumb />
+          </div>
+        }
         section={section}
         classNames={{
           container: browseLayoutClassNames.container,

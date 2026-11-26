@@ -12,6 +12,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { createPortal } from 'react-dom';
 
 import {
   PaneSideResizeHandle,
@@ -20,9 +21,10 @@ import {
 } from '@/features/circuit-viewer/pane-resize-handle';
 import { ChromeButton } from '@/features/scan-config/components/color-by/chrome-button';
 import { BOX_CLASS } from '@/features/scan-config/components/shared/box-class';
+import { useMediaQuery } from '@/hooks/use-media-query';
 import { cn } from '@/utils/css-class';
 
-import type { ReactNode } from 'react';
+import type { MouseEvent, ReactNode } from 'react';
 import type { PaneShut } from '@/features/circuit-viewer/pane-resize-handle';
 
 type Props = {
@@ -261,6 +263,21 @@ export function ResultsLayout({
   // The two left columns go out of view altogether.
   const away = open && 'opacity-0 pointer-events-none';
 
+  const phone = useMediaQuery('(max-width: 767px)', false);
+  if (phone)
+    return (
+      <PhoneResultsLayout
+        left={left}
+        middle={middle}
+        right={right}
+        sidePanel={sidePanel}
+        setTarget={setTarget}
+        sidePanelBar={sidePanelBar}
+        sidePanelReport={sidePanelReport}
+        ids={{ leftId, middleId, rightId }}
+      />
+    );
+
   // Every column is placed explicitly: the panel shares their grid cells, and
   // auto-placement would push them past it.
   return (
@@ -413,6 +430,112 @@ export function ResultsLayout({
         aria-hidden
         className="pointer-events-none invisible col-start-1 col-end-4 row-start-1"
       />
+    </ResultsSidePanelContext.Provider>
+  );
+}
+
+const PHONE_STEPS = ['Simulations', 'Files', 'View'] as const;
+
+/**
+ * The results on a phone (the user asked): one column at a time, the results, the files of the one tapped, then
+ * the file tapped, with a switcher over them to go back and forth; each stays mounted, so a 3D view or a plot is
+ * not drawn anew. A side panel (a spike report's statistics) opens over the whole screen, under a back arrow.
+ */
+function PhoneResultsLayout({
+  left,
+  middle,
+  right,
+  sidePanel,
+  setTarget,
+  sidePanelBar,
+  sidePanelReport,
+  ids,
+}: {
+  left: ReactNode;
+  middle: ReactNode;
+  right: ReactNode;
+  sidePanel: ResultsSidePanel;
+  setTarget: (element: HTMLDivElement | null) => void;
+  sidePanelBar?: ReactNode;
+  sidePanelReport?: ReactNode;
+  ids: { leftId: string; middleId: string; rightId: string };
+}) {
+  const [step, setStep] = useState(0);
+  // A tap on a result's card, or on a file, goes on to the next column (not its checkbox, which picks it to launch)
+  const onTap = (pick: string, next: number) => (event: MouseEvent) => {
+    const at = event.target as Element;
+    if (at.closest('input, .ant-checkbox-wrapper, .ant-checkbox')) return;
+    if (!at.closest(pick)) return;
+    setTimeout(() => setStep(next), 0);
+  };
+  const pane = 'absolute inset-0 flex min-h-0 flex-col overflow-x-hidden overflow-y-auto';
+  return (
+    <ResultsSidePanelContext.Provider value={sidePanel}>
+      <div className="col-span-full row-start-1 flex min-h-0 flex-col gap-2 px-1">
+        <div className="border-neutral-2 flex shrink-0 gap-1 self-center rounded-full border bg-white p-1">
+          {PHONE_STEPS.map((label, i) => (
+            <button
+              key={label}
+              type="button"
+              aria-pressed={i === step}
+              onClick={() => setStep(i)}
+              className={cn(
+                'h-8 rounded-full px-4 text-[13px] font-semibold transition-colors',
+                i === step ? 'bg-primary-9 text-white' : 'text-primary-9'
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="relative min-h-0 flex-1">
+          <div
+            id={ids.leftId}
+            onClickCapture={onTap('[data-testid^="scan-config-coordinate-"]', 1)}
+            className={cn(BOX_CLASS, pane, 'items-center px-3 py-3', step !== 0 && 'hidden')}
+          >
+            {left}
+          </div>
+          <div
+            id={ids.middleId}
+            data-testid="scan-config-results-files"
+            onClickCapture={onTap('[data-testid^="task-io-file-item-"]', 2)}
+            className={cn(BOX_CLASS, pane, 'items-center px-2 py-3', step !== 1 && 'hidden')}
+          >
+            {middle}
+          </div>
+          {/* the file: out of sight rather than out of the layout while another column shows, keeping its size */}
+          <div
+            id={ids.rightId}
+            data-testid="scan-config-file-view"
+            className={cn(pane, 'items-center', step !== 2 && 'pointer-events-none invisible')}
+          >
+            {right}
+          </div>
+        </div>
+      </div>
+      {typeof document !== 'undefined' &&
+        createPortal(
+          <div className={cn('fixed inset-0 z-[65] flex flex-col bg-[#f5f7fa]', !sidePanel.open && 'hidden')}>
+            <div className="flex h-12 shrink-0 items-center gap-2 px-3">
+              <ChromeButton label="Back to the results" onClick={() => sidePanel.setOpen(false)}>
+                <RiArrowLeftLine className="size-4" />
+              </ChromeButton>
+              {/* which result and report, scrolling sideways rather than squeezed on a phone's width */}
+              <div className="no-scrollbar flex min-w-0 flex-1 items-center gap-2 overflow-x-auto [&>*]:shrink-0">
+                {sidePanelBar}
+                {sidePanelReport}
+              </div>
+            </div>
+            <div className="relative min-h-0 flex-1 px-2 pb-2">
+              <div ref={setTarget} data-results-side-panel className="peer h-full min-h-0 min-w-0" />
+              <div className="absolute inset-0 hidden items-center justify-center peer-empty:flex">
+                <Spin />
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
     </ResultsSidePanelContext.Provider>
   );
 }

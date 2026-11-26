@@ -77,7 +77,8 @@ export function useSavedListingFilters(dataKey: string): TSavedListingFilters | 
 export async function savedListingParams(
   dataType: TExtendedEntitiesTypeDict,
   saved: TSavedListingFilters | null | undefined,
-  variant?: IListingVariant
+  variant?: IListingVariant,
+  projectId?: string
 ): Promise<TEntitycoreParams> {
   if (!saved) return {};
   // Lazy: the registry pulls in every grid schema and AG Grid, which the sidebar on the
@@ -92,12 +93,18 @@ export async function savedListingParams(
     page: _page,
     page_size: _pageSize,
     ...params
-  } = serializeEntitycoreQuery(dataType, schema, {
-    page: 1,
-    pageSize: 0,
-    sort: [],
-    filters: repairPersistedFilters(saved.filters, schema),
-    freeTextSearch: saved.freeTextSearch,
-  });
+  } = serializeEntitycoreQuery(
+    dataType,
+    schema,
+    {
+      page: 1,
+      pageSize: 0,
+      sort: [],
+      filters: repairPersistedFilters(saved.filters, schema),
+      freeTextSearch: saved.freeTextSearch,
+    },
+    // the scope filter names the project in its params
+    { projectId }
+  );
   return params;
 }

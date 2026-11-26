@@ -70,3 +70,38 @@ button.card .background {
   height: 100%;
   object-fit: cover;
 }
+
+button.card.compact {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+  height: clamp(170px, 24svh, 220px);
+  aspect-ratio: auto;
+}
+
+button.card.compact .content {
+  padding: 16px;
+}
+
+.compact .content > div {
+  top: 0;
+}
+
+.compact .content > div > h2 {
+  font-size: 26px;
+  line-height: 1.2;
+  top: 0;
+}
+
+.compact .content > p {
+  font-size: 14px;
+  line-height: 1.4;
+  margin: 8px 0 0;
+}
+
+@media (max-width: 640px) {
+  button.card.compact {
+    flex: auto;
+    height: 180px;
+  }
+}

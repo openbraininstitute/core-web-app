@@ -53,7 +53,8 @@ const renderHoverCard = (row: EntityCoreObjectTypes) => <WorkflowHoverCard row={
 /** One registry for every workflow-activity grid, so remounts resolve the same objects. */
 const CELL_RENDERERS = buildWorkflowActivityCellRenderers();
 
-export function WorkflowActivity() {
+/** `framed`: the grid and its pager in one white card, as the Data table draws them. */
+export function WorkflowActivity({ framed = false }: { framed?: boolean } = {}) {
   const { virtualLabId, projectId } = useWorkspace();
 
   const [asked, updateActivityState] = useQueryStates(
@@ -169,7 +170,9 @@ export function WorkflowActivity() {
             loadingLabel="activities"
             rowHoverCard={renderHoverCard}
             className="min-h-0 flex-1"
-            gridClassName="[&_.ag-header]:bg-background [&_.ag-header-cell]:text-neutral-4"
+            framed={framed}
+            // on its white card the header is white, as the Data table's is
+            gridClassName={framed ? undefined : '[&_.ag-header]:bg-background [&_.ag-header-cell]:text-neutral-4'}
             toolbarSlots={{
               entityType: (
                 <ActivityAndTypeSelectors

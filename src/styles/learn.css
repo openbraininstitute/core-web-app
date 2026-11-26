@@ -234,11 +234,24 @@ html:has(.learn-root) {
   }
 }
 
-/* TEMPORARY, the "Outer box" setting off: the page's grey box loses its fill and border in every
-   look, its spacing kept so nothing moves */
-.learn-no-box.learn-no-box {
-  background: transparent;
-  border-color: transparent;
+/* A course picked from the Learn page's overview: the list's width (a length, so that it can be
+   eased) sliding from the page's to two columns, and the course's card sliding in from the right
+   at the width it will have, so that its words and figure do not reflow on the way */
+@property --learn-list-w {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+[data-slide] .learn-card {
+  min-width: var(--learn-card-w);
+}
+[data-slide="go"] {
+  transition: --learn-list-w 420ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-slide="go"] {
+    transition: none;
+  }
 }
 
 /* TEMPORARY, the "List box" setting off: the courses', terms' or tutorials' cards sit straight on

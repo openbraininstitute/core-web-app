@@ -1,3 +1,4 @@
+import { withScopeColumn } from '@/features/data-grid/bindings/entitycore/columns/scope';
 import { analysisNotebookResultGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/analysis-notebook-result';
 import { analysisNotebookTemplateGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/analysis-notebook-template';
 import { cellMorphologyGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/cell-morphology';
@@ -87,6 +88,12 @@ const definitions: Record<string, TAnyEntityGridDefinition> = {
   [circuitGridDefinition.dataType]: circuitGridDefinition,
 };
 
+/**
+ * A listing's definition, the scope column included: every consumer (the grid, the sidebar
+ * counts) reads saved filters against the same schema, so a saved scope filter never goes
+ * out as an unknown param. A listing without the scope selector drops it.
+ */
 export function getEntityGridDefinition(dataType: string): TAnyEntityGridDefinition | undefined {
-  return definitions[dataType];
+  const definition = definitions[dataType];
+  return definition && withScopeColumn(definition);
 }

@@ -1,9 +1,16 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { get } from 'es-toolkit/compat';
+import { useRef, useState } from 'react';
 
 import { ScanConfigGenerationError, ScanConfigGenerationStep } from '@/api/one/utils';
 import { useAppNotification } from '@/components/notification';
 import { useLowCredits } from '@/features/low-credits';
+import { CampaignInfoDialog } from '@/features/scan-config/components/campaign-info/dialog';
+import {
+  campaignInfoOf,
+  infoBlockKey,
+  withCampaignInfo,
+} from '@/features/scan-config/components/campaign-info/info-block';
 import { useFieldErrors } from '@/features/scan-config/components/hooks/field-errors';
 import { useGenerateScanConfigCampaign } from '@/features/scan-config/components/hooks/use-generate-scan-config-campaign';
 import { generateButtonClass } from '@/features/scan-config/components/shared/box-class';
@@ -20,7 +27,7 @@ import { assertErrorMessage } from '@/util/utils';
 
 import type { ErrorObject } from 'ajv';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { Config } from '@/features/scan-config/types';
+import type { Config, ConfigSchema } from '@/features/scan-config/types';
 
 const LOW_CREDITS_SUBJECT: Record<TScanConfigActivity, string> = {
   [ScanConfigActivity.Simulate]: 'run the simulation',
@@ -44,6 +51,8 @@ export default function GenerateConfigButton({
   setCampaignId,
   setLoading,
   config,
+  setConfig,
+  schema,
   setTab,
   activity,
   generatedApiUrl,
@@ -56,6 +65,8 @@ export default function GenerateConfigButton({
   setCampaignId: (campaignId: string) => void;
   setLoading: (loading: boolean) => void;
   config: Config;
+  setConfig: (config: Config) => void;
+  schema: ConfigSchema;
   setTab: (tab: TScanConfigTabs) => void;
   activity: TScanConfigActivity;
   generatedApiUrl: string;
@@ -67,6 +78,11 @@ export default function GenerateConfigButton({
   // schema validation can't catch; either kind blocks generation
   const fieldErrors = useFieldErrors();
   const hasBlockingErrors = (!!errors && errors.length > 0) || fieldErrors.size > 0;
+  // The campaign's name and description hold nothing up while the config is edited (their errors
+  // are not among `errors`): pressing Generate shows both first, to fill in or to change.
+  const infoKey = infoBlockKey(schema);
+  const [asking, setAsking] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const notification = useAppNotification();
   // Generation doesn't consume credits (issue #250): don't gate on balance.
   const { reportError: reportLowCredits, creditsModal } = useLowCredits({
@@ -98,21 +114,35 @@ export default function GenerateConfigButton({
     },
   });
 
+  const generate = (withConfig: Config) => {
+    setLoading(true);
+    generateCampaign.mutate(
+      { config: withConfig, generatedApiUrl },
+      { onSettled: () => setLoading(false) }
+    );
+  };
+
   const onClick = () => {
     if (loading || generateCampaign.isPending) return;
     if (campaignId) {
       setCampaignId('');
       return;
     }
-
-    setLoading(true);
-    generateCampaign.mutate({ config, generatedApiUrl }, { onSettled: () => setLoading(false) });
+    // every time, filled in or not: the last chance to change them
+    if (infoKey) {
+      setAsking(true);
+      return;
+    }
+    generate(config);
   };
+
+  const generateLabel = get(messages, `${activity}.Generate`, 'Generate campaign');
 
   return (
     <>
       {creditsModal}
       <button
+        ref={buttonRef}
         type="button"
         data-testid="scan-config-submit"
         className={generateButtonClass(hasBlockingErrors || loading)}
@@ -120,12 +150,72 @@ export default function GenerateConfigButton({
         disabled={hasBlockingErrors || loading}
       >
         <div className="flex justify-between gap-5">
-          {!campaignId
-            ? get(messages, `${activity}.Generate`, 'Generate campaign')
-            : get(messages, `${activity}.New`, 'New campaign')}
+          {!campaignId ? generateLabel : get(messages, `${activity}.New`, 'New campaign')}
           {loading && <LoadingOutlined />}
         </div>
       </button>
+      {asking && infoKey && (
+        <CampaignInfoDialog
+          initial={campaignInfoOf(config, infoKey)}
+          submitLabel={generateLabel}
+          suggest={() => suggestInfo(config, activity)}
+          onCancel={(typed) => {
+            // kept in the Info block, to go on with there or the next time
+            setConfig(withCampaignInfo(config, infoKey, typed));
+            setAsking(false);
+            buttonRef.current?.focus();
+          }}
+          onDone={(info) => {
+            const named = withCampaignInfo(config, infoKey, info);
+            setConfig(named);
+            setAsking(false);
+            generate(named);
+          }}
+        />
+      )}
     </>
   );
+}
+
+const ACTIVITY_NOUN: Record<TScanConfigActivity, string> = {
+  [ScanConfigActivity.Simulate]: 'simulation',
+  [ScanConfigActivity.Extract]: 'extraction',
+  [ScanConfigActivity.Process]: 'processing',
+  [ScanConfigActivity.Build]: 'build',
+  [ScanConfigActivity.Optimize]: 'optimization',
+  [ScanConfigActivity.Validate]: 'validation',
+};
+
+/**
+ * A stand-in for the assistant (neuroagent cannot be asked from here yet): a name and a description made from the
+ * config itself, what it simulates, for how long and with what, and today's date.
+ */
+function suggestInfo(config: Config, activity: TScanConfigActivity) {
+  const count = (key: string) => {
+    const v = (config as Record<string, unknown>)[key];
+    return v && typeof v === 'object' ? Object.keys(v).length : 0;
+  };
+  const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+  const parts = [
+    count('neuron_sets') && plural(count('neuron_sets'), 'neuron set', 'neuron sets'),
+    count('stimuli') && plural(count('stimuli'), 'stimulus', 'stimuli'),
+    count('recordings') && plural(count('recordings'), 'recording', 'recordings'),
+    count('synaptic_manipulations') &&
+      plural(count('synaptic_manipulations'), 'synaptic manipulation', 'synaptic manipulations'),
+  ].filter(Boolean) as string[];
+  const length = Number(get(config, 'initialize.simulation_length'));
+  const noun = ACTIVITY_NOUN[activity];
+  const date = new Date().toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+  const first = parts[0] ? ` with ${parts.slice(0, 2).join(' and ')}` : '';
+  return {
+    campaign_name: `${noun[0].toUpperCase()}${noun.slice(1)}${first} (${date})`,
+    campaign_description:
+      `A ${noun} campaign${Number.isFinite(length) && length > 0 ? ` of ${length} ms` : ''}` +
+      `${parts.length ? `, with ${parts.join(', ')}` : ''}. ` +
+      'Each combination of the values swept is run as a simulation of its own.',
+  };
 }

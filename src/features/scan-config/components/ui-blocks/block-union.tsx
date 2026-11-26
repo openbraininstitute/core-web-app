@@ -1,9 +1,11 @@
-import { CloseOutlined } from '@ant-design/icons';
-
 import {
   type TSchemaMappingConfiguration,
   unionVariantDefaults,
 } from '@/features/scan-config/components/hooks/schema';
+import {
+  CloseFormButton,
+  ResetBlockSelectionButton,
+} from '@/features/scan-config/components/shared/form-header-buttons';
 import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import Block from '@/features/scan-config/components/ui-blocks/block';
 import { isPlainObject } from '@/features/scan-config/components/utils';
@@ -32,6 +34,8 @@ type Props = {
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
   entityType: TSupportedEntityTypesForScanConfiguration;
   errorPathPrefix?: string;
+  /** Folds the form column away. */
+  onClose?: () => void;
 };
 
 function getDiscriminatorProperty(schema: IRootBlockUnion): string {
@@ -51,6 +55,7 @@ export default function BlockUnion({
   entity,
   schemaMappingConfig,
   errorPathPrefix,
+  onClose,
 }: Props) {
   const discriminatorProp = getDiscriminatorProperty(blockUnionSchema);
   const showingDiffs = useShowingDiffs();
@@ -74,21 +79,20 @@ export default function BlockUnion({
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <div className="text-lg text-gray-500">{renderMathInText(selectedBlockSchema.title)}</div>
-          {!campaignId && !loading && (
-            <button
-              type="button"
-              aria-label="Reset block selection"
-              className="cursor-pointer text-neutral-3 transition-colors hover:text-primary-8 px-2 py-1 hover:bg-neutral-3/20 rounded-full"
-              onClick={() => {
-                setConfig({
-                  ...config,
-                  [selectedRootElement]: {},
-                });
-              }}
-            >
-              <CloseOutlined />
-            </button>
-          )}
+          <div className="flex shrink-0 items-center">
+            {/* a dustbin, not an ×: it throws the pick away, where the × only folds the form */}
+            {!campaignId && !loading && (
+              <ResetBlockSelectionButton
+                onReset={() => {
+                  setConfig({
+                    ...config,
+                    [selectedRootElement]: {},
+                  });
+                }}
+              />
+            )}
+            {onClose && <CloseFormButton onClose={onClose} />}
+          </div>
         </div>
         <Block
           hideTitle
@@ -119,6 +123,11 @@ export default function BlockUnion({
       className="flex flex-col items-center gap-5"
       data-scan-config-block={blockUnionSchema.ui_element}
     >
+      {onClose && (
+        <div className="-mb-3 flex w-full justify-end">
+          <CloseFormButton onClose={onClose} />
+        </div>
+      )}
       {blockUnionSchema.oneOf.map((o) => {
         const typeProp = o.properties?.[discriminatorProp];
         const variantId = typeProp && isType(typeProp) ? typeProp.const : undefined;

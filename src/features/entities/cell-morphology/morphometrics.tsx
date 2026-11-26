@@ -87,7 +87,7 @@ export function Morphometrics({
       id={`morphometrics-${kebabCase(morphology.type)}-${morphology.id}`}
       data-testid="morphometrics"
       className={cn(
-        'flex max-w-(--breakpoint-2xl) flex-col gap-5 pl-2 rounded-lg border p-5 border-white/20 mb-2',
+        'flex max-w-(--breakpoint-2xl) flex-col gap-5 pl-2 rounded-lg border p-5 border-white/20 mb-2 max-md:p-4',
         className
       )}
     >
@@ -102,12 +102,13 @@ export function Morphometrics({
       {isLoading ? (
         <MorphometricsSkeleton />
       ) : (
-        <div className="grid grid-cols-5 gap-4 wrap-break-word">
+        // two across on a phone, five would leave a letter a line
+        <div className="grid grid-cols-5 gap-4 wrap-break-word max-md:grid-cols-2 max-md:gap-y-2 max-md:[&>div>div]:mr-0">
           {Object.entries(filteredGroupedCardFields).map(([group, fields]) => (
             <div key={group}>
               <h2
                 className={cn(
-                  'mb-8 text-lg font-semibold',
+                  'mb-8 text-lg font-semibold max-md:mb-3',
                   variant === ViewVariant.Default ? 'text-white' : 'text-primary-8'
                 )}
               >

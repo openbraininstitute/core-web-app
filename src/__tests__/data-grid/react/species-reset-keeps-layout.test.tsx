@@ -18,14 +18,13 @@ import {
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import { getEntityGridDefinition } from '@/features/data-grid/bindings/entitycore';
 import { EntityDataGrid } from '@/features/data-grid/host/browse-entity-grid';
+import { defaultFlags } from '@/features/feature-flags/config';
+import { FlagsProvider } from '@/features/feature-flags/provider';
 
 import type { ReactNode } from 'react';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { IGridDataSource, IGridPage, IGridState } from '@/features/data-grid/core';
 
-vi.mock('@/ui/hooks/use-scope', () => ({
-  useScope: () => ({ scope: WorkspaceScope.Public, isPending: false, changeScope: () => {} }),
-}));
 vi.mock('@/ui/hooks/use-workspace', () => ({
   useWorkspace: () => ({ virtualLabId: 'vl', projectId: 'pr' }),
 }));
@@ -44,7 +43,8 @@ vi.mock('@/features/brain-region-hierarchy/components/region-banner', () => ({
 const DATA_TYPE = ExtendedEntitiesTypeDict.IonChannelRecording;
 // the layout slice is scoped to section + entity type only (no lab/project/scope)
 const LAYOUT_KEY = `data-grid:v1:l:${WorkspaceSection.Data}/${DATA_TYPE}`;
-const SESSION_KEY = `data-grid:v2:s:vl/pr/data/${DATA_TYPE}/${WorkspaceScope.Public}`;
+// Data listings save their browse state without the workspace
+const SESSION_KEY = `data-grid:202611091:state:data/${DATA_TYPE}/${WorkspaceScope.Public}`;
 /** the third checkbox in the chooser (after "Select all" and "Preview") */
 const HIDDEN_COLUMN_ID = 'brainRegion';
 
@@ -81,7 +81,9 @@ function wrap(ui: ReactNode, store: ReturnType<typeof createStore>) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={qc}>
-      <Provider store={store}>{ui}</Provider>
+      <Provider store={store}>
+        <FlagsProvider flags={defaultFlags}>{ui}</FlagsProvider>
+      </Provider>
     </QueryClientProvider>
   );
 }
@@ -125,8 +127,7 @@ describe('species switch vs the saved column layout', () => {
 
     // the user unticks a column in the chooser
     fireEvent.click(await screen.findByRole('button', { name: 'Columns' }));
-    const checkboxes = await screen.findAllByRole('checkbox');
-    fireEvent.click(checkboxes[2]);
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Brain region' }));
     expect(readSlice(local, LAYOUT_KEY).hiddenColumns).toContain(HIDDEN_COLUMN_ID);
 
     // …then switches species, which resets the browse state
@@ -149,9 +150,8 @@ describe('species switch vs the saved column layout', () => {
 
     const { unmount } = mountListing(store);
     fireEvent.click(await screen.findByRole('button', { name: 'Columns' }));
-    const checkboxes = await screen.findAllByRole('checkbox');
-    const label = checkboxes[2].closest('label')?.textContent ?? '';
-    fireEvent.click(checkboxes[2]);
+    const label = 'Brain region';
+    fireEvent.click(await screen.findByRole('checkbox', { name: label }));
     await act(async () => {
       store.set(speciesSelectionModeAtom, SpeciesSelectionMode.All);
     });

@@ -11,7 +11,8 @@ import {
   OperatorId,
   SortDirection,
 } from '@/features/data-grid/core';
-import { getWorkflowListingLabels } from '@/ui/segments/workflows/config';
+import { getActivity, getWorkflowListingLabels } from '@/ui/segments/workflows/config';
+import { rowWorkflow } from '@/ui/segments/workflows/elements/workflow-activity-all';
 import {
   WORKFLOW_ACTIVITY_ACTIONS_COLUMN_WIDTH,
   WORKFLOW_ACTIVITY_ACTIONS_RENDERER,
@@ -50,8 +51,11 @@ const workflowActivityAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
 ];
 
 export interface IWorkflowActivitySchemaArgs {
-  /** the selected activity, forwarded to the actions cell to build its hrefs */
-  activity: TActivityValue;
+  /**
+   * the selected activity, forwarded to the actions cell to build its hrefs; `undefined` under
+   * All, whose rows each carry their own (`rowWorkflow`)
+   */
+  activity: TActivityValue | undefined;
   /** the listing's selected entity type */
   entityType: TExtendedEntitiesTypeDict | undefined;
   /** workspace the Status cell runs its per-campaign status queries against */
@@ -86,10 +90,14 @@ export function buildWorkflowActivitySchema({
     advancedFilters: workflowActivityAdvancedFilters,
     columns: [
       {
-        // display-only: the activity is chosen in the toolbar
+        // display-only: the activity is chosen in the toolbar, or comes with the row under All
         id: 'category',
         header: 'Category',
-        getValue: () => labels.category,
+        // under All, the row's own activity, labelled as its picker labels it
+        getValue: (row) => {
+          const own = rowWorkflow(row)?.activity;
+          return own ? (getActivity(own)?.label ?? '') : labels.category;
+        },
         width: { fitContent: true },
       },
       {

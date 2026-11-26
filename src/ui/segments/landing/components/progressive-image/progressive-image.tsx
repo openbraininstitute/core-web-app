@@ -25,7 +25,7 @@ export default function ProgressiveImage({
   width,
   height,
   alt = 'Vignette',
-  background = 'var(--color-primary)',
+  background = 'var(--color-neutral-light)',
   forceAspectRatio = false,
 }: ProgressiveImageProps) {
   const [loaded, setLoaded] = useState(false);

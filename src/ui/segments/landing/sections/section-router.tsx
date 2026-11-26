@@ -3,8 +3,8 @@ import { getCreditsPacks } from '@/services/sanity/api/get-credits-packs';
 import { getNewsCount, getNewsList } from '@/services/sanity/api/get-news-list';
 import { getPricingContent } from '@/services/sanity/api/get-pricing-content';
 import { getSinglePrices } from '@/services/sanity/api/get-single-prices';
-import queryForOBIShowcases from '@/ui/segments/reports/obi-showcases/query';
-import { isOBIShowcaseProjectProps } from '@/ui/segments/reports/obi-showcases/types';
+import queryForOBIShowcases from '@/ui/segments/showcases/query';
+import { isOBIShowcaseProjectProps } from '@/ui/segments/showcases/types';
 import { logError } from '@/utils/logger';
 
 import { getSection } from '../utils';
@@ -36,8 +36,10 @@ export default async function SectionRouter({
     case EnumSection.PrivacyPolicy:
     case EnumSection.ComingSoon:
     case EnumSection.Story:
-    case EnumSection.Contact:
       return <SectionGeneric section={section} />;
+    case EnumSection.Contact:
+      // Contact email actions are shown directly in the hero.
+      return null;
     case EnumSection.Pricing: {
       const [prices, creditsPacks, plans] = await Promise.all([
         getSinglePrices(),

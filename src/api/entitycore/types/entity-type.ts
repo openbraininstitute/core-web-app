@@ -11,6 +11,7 @@ export const EntityTypeDict = {
   IonChannelRecording: 'ion_channel_recording',
   SingleNeuronSimulation: 'single_neuron_simulation',
   SingleNeuronSynaptome: 'single_neuron_synaptome',
+  ResearchLog: 'research_log',
   Subject: 'subject',
   SynapticPathway: 'synaptic_pathway',
   SingleNeuronSynaptomeSimulation: 'single_neuron_synaptome_simulation',
@@ -43,7 +44,6 @@ export const EntityTypeDict = {
   EmSynapseMappingConfig: 'em_synapse_mapping_config',
   SimulatableExtracellularRecordingArray: 'simulatable_extracellular_recording_array',
   TaskConfig: 'task_config',
-  ResearchLog: 'research_log',
 } as const;
 
 export const EntityTypeWithBrainRegionDict = {

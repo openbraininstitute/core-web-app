@@ -46,22 +46,13 @@ export const debugFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
-/** Learn: its tab in the project's top menu, its page of courses and the courses themselves. Off
- * unless switched on. */
-export const learnFlag = defineFlag<boolean>({
-  key: 'learn',
-  defaultValue: false,
-  values: [true, false],
-  description: 'Learn: free courses, each a deck of slides',
-  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
-});
-
-/** The AI assistant opened from a round "AI" button in the top menu, rather than its side rail. */
-export const aiButtonFlag = defineFlag<boolean>({
-  key: 'ai-button',
-  defaultValue: false,
-  values: [true, false],
-  description: 'AI assistant: a round "AI" button in the top menu instead of the side rail',
+/** The Data table's mark for a project's own records: two people, or one. */
+export const projectScopeIconFlag = defineFlag<'two' | 'one'>({
+  key: 'project-scope-icon',
+  defaultValue: 'two',
+  values: ['two', 'one'],
+  labels: ['Two people', 'One person'],
+  description: 'Project icon in the Data table',
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
@@ -118,8 +109,7 @@ export const flags = [
   extracellularRecordingArrayBuildFlag,
   electrodeOverlaysFlag,
   debugFlag,
-  learnFlag,
-  aiButtonFlag,
+  projectScopeIconFlag,
   courseToolbarFlag,
   greyMenuPillsFlag,
   hideHelpFlag,

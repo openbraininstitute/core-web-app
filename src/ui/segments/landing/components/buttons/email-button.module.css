@@ -3,11 +3,12 @@ a.emailButton {
   flex-direction: column;
   justify-content: center;
   align-items: stretch;
-  border: 1px solid var(--color-neutral);
+  border: 1px solid #e5e5e5;
+  border-radius: 14px;
   padding: 48px;
   cursor: pointer;
-  width: min(500px, calc(100vw - 8px));
-  max-width: calc(100vw - 8px);
+  width: min(500px, calc(100vw - 40px));
+  max-width: calc(100vw - 40px);
 }
 
 .emailButton > big {
@@ -19,6 +20,12 @@ a.emailButton {
 
 @media (max-width: 640px) {
   a.emailButton {
-    padding: 16px 8px;
+    padding: 16px;
+  }
+
+  .emailButton > big {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-size: 20px;
   }
 }

@@ -51,6 +51,7 @@ import {
   useElectrodeOverlays,
 } from '@/features/scan-config/components/model-preview/use-electrode-overlays';
 import { useViewerZoom } from '@/features/scan-config/components/zoom-slider/use-viewer-zoom';
+import { useViewOverlay } from '@/features/viewer-3d/bare';
 import { useLatest } from '@/ui/hooks/use-latest';
 import { classNames } from '@/util/utils';
 
@@ -58,6 +59,7 @@ import { PaneResizeHandle } from './pane-resize-handle';
 import { useSceneTablePane } from './scene-table-pane';
 import { useCellFocus } from './use-cell-focus';
 
+import type { PackFile } from '@/features/circuit-viewer/morphologies/use-circuit-morphologies';
 import type { ReactNode } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
@@ -73,6 +75,7 @@ import type { ElectrodeTransform } from '@/features/circuit-viewer/morphologies/
 import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
 import type { SceneLocationMarker } from '@/features/scan-config/components/circuit-viz/circuit-viz';
 import type { ICircuitViewerChromeProps } from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
+import type { ViewerConfig } from '@/features/scan-config/components/color-by/types';
 import type { IViewerModeOption } from '@/features/scan-config/components/color-by/mode-toggle';
 import type { NodeColors } from '@/features/scan-config/components/color-by/types';
 import type { PopulationsControls } from '@/features/scan-config/components/color-by/use-circuit-color-by';
@@ -129,6 +132,14 @@ interface ICircuitSceneOptions {
    * {@link ELECTRODE_FOCUSED_NEURON_OPACITY} when electrodes should dominate.
    */
   defaultNeuronOpacity?: number;
+  /**
+   * Settings to begin with, and to go back to on reset, over the scene's own:
+   * such as morphologies with no axons on a white canvas. The same object from
+   * one render to the next, or the settings start over.
+   */
+  viewerDefaults?: Partial<ViewerConfig>;
+  /** The zoom the cells are framed at, on load and on re-centre: below 1 leaves room round them. */
+  frameZoom?: number;
   /** The live form this viewer edits; omit for a read-only preview. */
   form?: IFormBindingOptions;
   /**
@@ -166,7 +177,7 @@ interface ICircuitSceneOptions {
    * and where it draws morphologies, highlighted with the rest hidden.
    */
   highlightedCell?: number;
-  /** Told the node index of a clicked cell of the population on show. */
+  /** Told the node index of a clicked cell of the population on show; an MEModel's one cell is 0. */
   onCellClick?: (index: number) => void;
   /** Told of a click on the scene's empty space. */
   onEmptyClick?: () => void;
@@ -259,6 +270,8 @@ export function CircuitScene({
   active = true,
   features,
   defaultNeuronOpacity,
+  viewerDefaults,
+  frameZoom,
   form,
   electrodes,
   modeToggle,
@@ -303,11 +316,17 @@ export function CircuitScene({
 
   const smallForThePack =
     drawnLarge && circuit !== undefined && circuitSmallForThePack(circuit.scale);
+  // A pack its host serves for this view, or the circuit's own as Bluenaas has it.
+  const ownPack = useViewOverlay()?.pack;
   // Asked again while it builds where the cells are drawn as somas until it is ready.
-  const packStatus = useMorphologyPackStatus(drawnLarge ? circuit : undefined, {
+  const packStatus = useMorphologyPackStatus(drawnLarge && !ownPack ? circuit : undefined, {
     poll: !smallForThePack,
   });
-  const pack = packStatus?.state === MorphologyPackState.Ready ? packStatus : null;
+  const pack: PackFile | null = ownPack
+    ? { size: ownPack.size, sha256: ownPack.sha256, url: ownPack.url }
+    : packStatus?.state === MorphologyPackState.Ready
+      ? packStatus
+      : null;
   const [fellBackFor, setFellBackFor] = useState<string | null>(null);
   const largeCircuit = drawnLarge && fellBackFor !== circuit?.id;
 
@@ -516,6 +535,7 @@ export function CircuitScene({
     morphologiesNote,
     defaultRepresentation: smallForThePack ? 'morphologies' : undefined,
     defaultNeuronOpacity,
+    viewerDefaults,
     population,
     subject: memodel,
   });
@@ -703,6 +723,8 @@ export function CircuitScene({
       backgroundColor: config.backgroundColor,
       showScalebar: config.showScalebar,
       spin: config.spin,
+      aoMoving: config.aoMoving,
+      frameZoom,
       signals,
       overlays: styledOverlays,
       overlaysInteractive,
@@ -724,6 +746,8 @@ export function CircuitScene({
       config.backgroundColor,
       config.showScalebar,
       config.spin,
+      config.aoMoving,
+      frameZoom,
       config.neuronOpacity,
       config.electrodeRadius,
       config.showZoomSlider,
@@ -850,6 +874,7 @@ export function CircuitScene({
             dendrogram={dendrogram}
             {...viewerProps}
             {...perCellProps}
+            onCellClick={onCellClick}
           />
         ) : (
           cellsProps && (
