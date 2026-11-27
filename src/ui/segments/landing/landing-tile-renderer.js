@@ -300,26 +300,19 @@ export function createLandingTileRenderer(
   // blurred hexagon shadows, made once at a few blur levels (sprite hexagon radius 100)
   const SH_R = 100,
     SH_LEVELS = [2, 4, 7, 11, 16, 23, 32, 44];
+  // One pre-blurred atlas gives every browser the same pixels, without canvas filter support.
+  const shadowAtlas = new Image();
+  shadowAtlas.onload = kick;
+  shadowAtlas.src = '/static/landing-v1/shadows/tile-shadows-v1.webp';
+  let shadowX = 0;
   const shadowSprites = SH_LEVELS.map((b) => {
-    const pad = Math.ceil(b * 3),
-      size = 2 * (SH_R + pad);
-    const c = document.createElement('canvas');
-    c.width = c.height = size;
-    const g = c.getContext('2d');
-    g.filter = `blur(${b}px)`;
-    g.beginPath();
-    for (let k = 0; k < 6; k++) {
-      const a = -Math.PI / 2 + (k * Math.PI) / 3;
-      k
-        ? g.lineTo(size / 2 + SH_R * Math.cos(a), size / 2 + SH_R * Math.sin(a))
-        : g.moveTo(size / 2 + SH_R * Math.cos(a), size / 2 + SH_R * Math.sin(a));
-    }
-    g.closePath();
-    g.fillStyle = 'rgb(70, 80, 100)';
-    g.fill();
-    return { c, size, b };
+    const size = 2 * (SH_R + Math.ceil(b * 3));
+    const x = shadowX;
+    shadowX += size;
+    return { x, size, b };
   });
   function drawShadow(x, y, r, sigma, alpha) {
+    if (!shadowAtlas.complete || !shadowAtlas.naturalWidth) return;
     const scale = r / SH_R,
       want = sigma / scale; // blur needed at sprite scale
     // cross-fade the two blur levels around the wanted blur, so the shadow softens smoothly instead of
@@ -333,7 +326,7 @@ export function createLandingTileRenderer(
       if (w <= 0.001) return;
       const d = s.size * scale;
       ctx.globalAlpha = alpha * w;
-      ctx.drawImage(s.c, x - d / 2, y - d / 2, d, d);
+      ctx.drawImage(shadowAtlas, s.x, 0, s.size, s.size, x - d / 2, y - d / 2, d, d);
     };
     one(a, 1 - f);
     one(b, f);
