@@ -1,3 +1,5 @@
+import { normalizePricingPlan } from '@/services/pricing/normalize-plan';
+
 import { usesSanityContent, websiteSlug } from './sources';
 
 import type { ContentForEmail, EmailType } from '@/services/sanity/api/get-email-content';
@@ -184,7 +186,7 @@ export async function getCreditsPacks(): Promise<
 export async function getPricingContent(): Promise<
   Awaited<ReturnType<typeof import('@/services/sanity/api/get-pricing-content').getPricingContent>>
 > {
-  return (await import('./pricing.json')).default.plans;
+  return (await import('./pricing.json')).default.plans.map(normalizePricingPlan);
 }
 export async function getShowcaseProjects() {
   return (await import('./showcases.json')).default.projects;

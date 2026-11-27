@@ -1,4 +1,8 @@
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import PlanBody from '@/ui/segments/plans/body';
 
 const cms = vi.hoisted(() => ({ hero: vi.fn(), body: vi.fn() }));
 vi.mock('@/services/sanity/api/get-hero-content', () => ({ getHeroContent: cms.hero }));
@@ -59,4 +63,13 @@ describe('public website content ownership', () => {
     );
     expect(await getShowcase('does-not-exist')).toBeNull();
   });
+});
+
+it('renders every saved pricing plan even when a newer feature list is absent', async () => {
+  const plans = await getPricingContent();
+  expect(plans).toHaveLength(4);
+  for (const plan of plans) {
+    expect(plan.extract_features).toEqual([]);
+    expect(() => renderToStaticMarkup(createElement(PlanBody, { plan }))).not.toThrow();
+  }
 });
