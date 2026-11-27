@@ -1,5 +1,5 @@
-import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
+import { getAuthSession } from '@/features/auth/session';
 
 import type {
   VlmProjectStatsResponse,
@@ -14,7 +14,7 @@ import type {
  * @throws {Error} - Throws an error if the request fails
  */
 export async function getUserStats(): Promise<VlmUserStatsResponse> {
-  const session = await getSession();
+  const session = await getAuthSession();
   const response = await fetch(`${config.VIRTUAL_LAB_API_URL}/users/stats`, {
     headers: {
       'Content-Type': 'application/json',
@@ -47,7 +47,7 @@ export async function getProjectStats(
   virtualLabId: string,
   projectId: string
 ): Promise<VlmProjectStatsResponse> {
-  const session = await getSession();
+  const session = await getAuthSession();
   const response = await fetch(
     `${config.VIRTUAL_LAB_API_URL}/virtual-labs/${virtualLabId}/projects/${projectId}/stats`,
     {
@@ -78,7 +78,7 @@ export async function getProjectStats(
 export async function getVirtualLabStats(
   virtualLabId: string
 ): Promise<VlmVirtualLabStatsResponse> {
-  const session = await getSession();
+  const session = await getAuthSession();
   const response = await fetch(`${config.VIRTUAL_LAB_API_URL}/virtual-labs/${virtualLabId}/stats`, {
     headers: {
       'Content-Type': 'application/json',

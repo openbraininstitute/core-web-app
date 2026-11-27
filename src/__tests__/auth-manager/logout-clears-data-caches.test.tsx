@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import Logout from '@/app/app/log-out/Logout';
 
 const signOut = vi.hoisted(() => vi.fn());
-vi.mock('next-auth/react', () => ({ signOut }));
+vi.mock('@/features/auth/client', () => ({ signOut }));
 const dropCleanCopies = vi.hoisted(() => vi.fn(async () => {}));
 vi.mock('@/features/logbook/collaboration/local-sync', () => ({ dropCleanCopies }));
 
@@ -37,7 +37,7 @@ describe('logging out', () => {
 
     render(<Logout />);
 
-    await waitFor(() => expect(signOut).toHaveBeenCalledWith({ callbackUrl: '/' }));
+    await waitFor(() => expect(signOut).toHaveBeenCalled());
     expect(dropped.sort()).toEqual([
       'analysis-pdf-cache-v1',
       'circuit-morphology-mpack',
@@ -72,6 +72,23 @@ describe('logging out', () => {
     await waitFor(() => expect(signOut).toHaveBeenCalled());
   });
 
+  it('goes to the home page once signed out, and stays when signing out fails', async () => {
+    const assign = vi.fn();
+    vi.stubGlobal('caches', { delete: async () => true, keys: async () => [] });
+    vi.stubGlobal('location', { ...window.location, assign });
+
+    const { unmount } = render(<Logout />);
+    await waitFor(() => expect(assign).toHaveBeenCalledWith('/'));
+    unmount();
+
+    assign.mockClear();
+    signOut.mockRejectedValueOnce(new Error('offline'));
+    render(<Logout />);
+    await waitFor(() => expect(signOut).toHaveBeenCalledTimes(2));
+    await Promise.resolve();
+    expect(assign).not.toHaveBeenCalled();
+  });
+
   it('does not wait more than two seconds for the caches to go', async () => {
     vi.useFakeTimers();
     try {
@@ -82,7 +99,7 @@ describe('logging out', () => {
       await vi.advanceTimersByTimeAsync(1999);
       expect(signOut).not.toHaveBeenCalled();
       await vi.advanceTimersByTimeAsync(1);
-      expect(signOut).toHaveBeenCalledWith({ callbackUrl: '/' });
+      expect(signOut).toHaveBeenCalled();
     } finally {
       vi.useRealTimers();
     }

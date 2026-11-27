@@ -4,7 +4,7 @@ import { CloseOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { Switch } from '@/components/common/Switch/Switch';
-import { useAccessToken } from '@/hooks/useAccessToken';
+import { useAuthSession } from '@/features/auth/client';
 import {
   serviceAiAgentGetSettings,
   serviceAiAgentPatchSettings,
@@ -20,7 +20,7 @@ export interface SettingsProps {
 }
 
 export default function Settings({ className, onBack }: SettingsProps) {
-  const accessToken = useAccessToken() ?? '';
+  const accessToken = useAuthSession().data?.accessToken ?? '';
   const queryClient = useQueryClient();
   const queryKey = keyBuilderAI.settings();
 

@@ -17,7 +17,12 @@ const configFields = {
   KEYCLOAK_CLIENT_SECRET: { schema: z.string().nonempty(), public: false },
   KEYCLOAK_ISSUER: { schema: z.url(), public: false },
 
-  NEXTAUTH_SECRET: { schema: z.string().nonempty(), public: false },
+  BETTER_AUTH_SECRET: { schema: z.string().nonempty().optional(), public: false },
+  BETTER_AUTH_URL: { schema: z.url().optional(), public: false },
+  /** @deprecated Read only until every deployment sets `BETTER_AUTH_SECRET`. */
+  NEXTAUTH_SECRET: { schema: z.string().nonempty().optional(), public: false },
+  /** @deprecated Read only until every deployment sets `BETTER_AUTH_URL`. */
+  NEXTAUTH_URL: { schema: z.url().optional(), public: false },
   AUTH_PROXY_URL: { schema: z.url().optional(), public: true },
 
   GRADING_WEB_LAUNCH_HMAC_SECRET: { schema: z.string().optional(), public: false },
@@ -153,6 +158,20 @@ const baseServerSchema = z
         code: 'custom',
         message: 'AUTH_PROXY_URL can only be set when DEPLOYMENT_ENV is "preview"',
         path: ['AUTH_PROXY_URL'],
+      });
+    }
+    if (!data.BETTER_AUTH_SECRET && !data.NEXTAUTH_SECRET) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'BETTER_AUTH_SECRET must be provided',
+        path: ['BETTER_AUTH_SECRET'],
+      });
+    }
+    if (!data.BETTER_AUTH_URL && !data.NEXTAUTH_URL) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'BETTER_AUTH_URL must be provided',
+        path: ['BETTER_AUTH_URL'],
       });
     }
   }) as any as z.ZodObject<{

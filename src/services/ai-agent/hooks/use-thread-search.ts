@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import React from 'react';
 
-import { useAccessToken } from '@/hooks/useAccessToken';
+import { useAuthSession } from '@/features/auth/client';
 import { serviceAiAgentThreadSearch } from '@/services/ai-agent/api';
 import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
@@ -10,7 +10,7 @@ import type { ThreadSearchResponse } from '@/services/ai-agent/api/thread';
 
 export function useThreadSearch(query: string) {
   const [debouncedQuery, setDebouncedQuery] = React.useState('');
-  const accessToken = useAccessToken();
+  const accessToken = useAuthSession().data?.accessToken;
   const virtualLabId = useParamVirtualLabId();
   const projectId = useParamProjectId();
 

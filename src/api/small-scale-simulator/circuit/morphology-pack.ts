@@ -1,7 +1,7 @@
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { smallScaleSimulatorApi } from '@/api/small-scale-simulator/utils';
-import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
+import { getAuthSession } from '@/features/auth/session';
 
 import type { WorkspaceContext } from '@/types/common';
 
@@ -59,7 +59,7 @@ export async function buildMorphologyPackDownloadRequest({
   ctx: WorkspaceContext | null;
   circuitId: string;
 }): Promise<{ url: string; headers: Record<string, string> }> {
-  const session = await getSession();
+  const session = await getAuthSession();
   const headers: Record<string, string> = { ...getEntityCoreContext(ctx).headers };
   if (session?.accessToken) headers.Authorization = `Bearer ${session.accessToken}`;
   return { url: `${config.SMALL_SCALE_SIMULATOR_URL}${packPath(circuitId)}`, headers };

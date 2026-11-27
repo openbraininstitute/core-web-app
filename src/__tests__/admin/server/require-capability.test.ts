@@ -14,7 +14,7 @@ const { authMock, getKeycloakGroupsMock, redirectMock } = vi.hoisted(() => ({
   }),
 }));
 
-vi.mock('@/auth', () => ({ auth: authMock }));
+vi.mock('@/features/auth/session', () => ({ getAuthSession: authMock }));
 vi.mock('@/admin/server/keycloak-groups', () => ({
   getKeycloakGroups: getKeycloakGroupsMock,
 }));

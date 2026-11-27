@@ -3,8 +3,8 @@ import { ErrorBoundary } from 'react-error-boundary';
 
 import { tryCatch } from '@/api/utils';
 import { getInviteContent } from '@/api/virtual-lab-svc/queries/invite';
-import { getSession } from '@/auth-fetch';
 import { ErrorComponent as SimpleErrorComponent } from '@/components/GenericErrorFallback';
+import { getAuthSession } from '@/features/auth/session';
 import { InvitationProcessing } from '@/ui/segments/invites';
 import { getErrorUrl } from '@/ui/segments/invites/helpers';
 
@@ -14,7 +14,7 @@ import type { ServerSideComponentProp } from '@/types/common';
 export default async function InvitePage({
   searchParams,
 }: ServerSideComponentProp<null, { token: string | null }>) {
-  const session = await getSession();
+  const session = await getAuthSession();
   const params = await searchParams;
   const { token } = params;
   if (!session?.accessToken || !token) {

@@ -22,7 +22,7 @@ const { downloadAssetMock, listDirectoryOfAssetsMock, getSessionMock } = vi.hois
   return { downloadAssetMock, listDirectoryOfAssetsMock, getSessionMock };
 });
 
-vi.mock('@/auth-fetch', () => ({ getSession: getSessionMock }));
+vi.mock('@/features/auth/session', () => ({ getAuthSession: getSessionMock }));
 
 vi.mock('@/api/entitycore/queries/task', () => ({ getTaskResult: vi.fn() }));
 

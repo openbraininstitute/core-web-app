@@ -1,5 +1,5 @@
-import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
+import { getAuthSession } from '@/features/auth/session';
 
 import type {
   MemberResponse,
@@ -22,7 +22,7 @@ export async function listVirtualLabMembers({
 }: {
   virtualLabId: string;
 }): Promise<MembersResponse> {
-  const session = await getSession();
+  const session = await getAuthSession();
   const response = await fetch(`${baseUri}/${virtualLabId}/users`, {
     method: 'get',
     headers: {
@@ -52,7 +52,7 @@ export async function listProjectMembers({
   virtualLabId: string;
   projectId: string;
 }): Promise<MembersResponse> {
-  const session = await getSession();
+  const session = await getAuthSession();
   const response = await fetch(`${baseUri}/${virtualLabId}/projects/${projectId}/users`, {
     method: 'get',
     headers: {
@@ -88,7 +88,7 @@ export async function updateVirtualLabUserRole({
   userId: string;
   newRole: TRole;
 }): Promise<MemberResponse> {
-  const session = await getSession();
+  const session = await getAuthSession();
   const response = await fetch(`${baseUri}/${virtualLabId}/users/role`, {
     method: 'PATCH',
     headers: {
@@ -132,7 +132,7 @@ export async function cancelVirtualLabInvite({
   email: string;
   role?: TRole;
 }): Promise<VlmResponse<null>> {
-  const session = await getSession();
+  const session = await getAuthSession();
   const response = await fetch(`${baseUri}/${virtualLabId}/invites/cancel`, {
     method: 'post',
     headers: {
@@ -170,7 +170,7 @@ export async function removeUserFromVirtualLab({
   virtualLabId: string;
   userId: string;
 }): Promise<VlmResponse<null>> {
-  const session = await getSession();
+  const session = await getAuthSession();
   const response = await fetch(`${baseUri}/${virtualLabId}/users/detach`, {
     method: 'post',
     headers: {
@@ -212,7 +212,7 @@ export async function updateProjectUserRole({
   userId: string;
   newRole: TRole;
 }): Promise<MemberResponse> {
-  const session = await getSession();
+  const session = await getAuthSession();
   const response = await fetch(`${baseUri}/${virtualLabId}/projects/${projectId}/users/role`, {
     method: 'PATCH',
     headers: {
@@ -258,7 +258,7 @@ export async function cancelProjectInvite({
   email: string;
   role?: TRole;
 }): Promise<VlmResponse<null>> {
-  const session = await getSession();
+  const session = await getAuthSession();
   const response = await fetch(`${baseUri}/${virtualLabId}/projects/${projectId}/invites/cancel`, {
     method: 'post',
     headers: {
@@ -299,7 +299,7 @@ export async function removeUserFromProject({
   projectId: string;
   userId: string;
 }): Promise<VlmDeleteProjectMemberResponse> {
-  const session = await getSession();
+  const session = await getAuthSession();
   const response = await fetch(`${baseUri}/${virtualLabId}/projects/${projectId}/users/detach`, {
     method: 'post',
     headers: {

@@ -1,8 +1,9 @@
 'use client';
 
-import { signOut } from 'next-auth/react';
 import { useEffect } from 'react';
 
+import { signOut } from '@/features/auth/client';
+import { log } from '@/utils/logger';
 import { clearProjectDataCaches } from '@/utils/project-data-caches';
 
 async function clearLogbookCopies() {
@@ -20,7 +21,10 @@ export default function Logout() {
   useEffect(() => {
     const timeout = new Promise<void>((resolve) => setTimeout(resolve, CLEAR_TIMEOUT_MS));
     const cleared = Promise.allSettled([clearProjectDataCaches(), clearLogbookCopies()]);
-    Promise.race([cleared, timeout]).finally(() => signOut({ callbackUrl: '/' }));
+    Promise.race([cleared, timeout])
+      .then(() => signOut())
+      .then(() => window.location.assign('/'))
+      .catch((error) => log('error', 'sign-out failed', error));
   }, []);
 
   return (

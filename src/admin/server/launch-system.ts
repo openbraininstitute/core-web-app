@@ -1,6 +1,6 @@
+import { getAuthSession } from '@/features/auth/session';
 import 'server-only';
 
-import { auth } from '@/auth';
 import { serverConfig } from '@/config/server';
 import { isUuid } from '@/features/data-grid/react/filters/id-tokens';
 
@@ -42,7 +42,7 @@ export async function fetchAdminJob(
 
 export async function lookupJob(jobId: string): Promise<TJobLookup> {
   if (!isUuid(jobId)) return { outcome: JobOutcome.InvalidId };
-  const session = await auth();
+  const session = await getAuthSession();
   if (!session?.accessToken) return { outcome: JobOutcome.Denied };
   return fetchAdminJob(serverConfig.LAUNCH_SYSTEM_URL, jobId, session.accessToken);
 }

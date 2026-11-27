@@ -1,9 +1,9 @@
+import { getAuthSession } from '@/features/auth/session';
+import { AuthSessionError } from '@/features/auth/types';
 import 'server-only';
 
 import { redirect } from 'next/navigation';
 import { cache } from 'react';
-
-import { auth } from '@/auth';
 
 import { deriveCapabilities } from '../capabilities/derive';
 import { hasCapability } from '../capabilities/has-capability';
@@ -19,8 +19,8 @@ import type { CapabilityPath, OperatorCapabilities, TOperator } from '../capabil
 class TokenRejectedError extends Error {}
 
 async function resolveAccess(fresh: boolean) {
-  const session = await auth();
-  if (!session || session.error === 'RefreshAccessTokenError') return null;
+  const session = await getAuthSession();
+  if (!session || session.error === AuthSessionError.RefreshAccessToken) return null;
   const groups = await getKeycloakGroups(session, { fresh });
   if (!groups) throw new TokenRejectedError('keycloak rejected the access token');
   return { session, capabilities: deriveCapabilities(groups) };

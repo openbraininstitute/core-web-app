@@ -2,8 +2,8 @@ import { RedirectType, redirect } from 'next/navigation';
 import { match, P } from 'ts-pattern';
 
 import { tryCatch } from '@/api/utils';
-import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
+import { getAuthSession } from '@/features/auth/session';
 import { WorkspaceWizard } from '@/ui/segments/app-setup/bootsync-wizard';
 import { resolveWorkspace, WizardSteps } from '@/ui/segments/app-setup/helpers';
 
@@ -16,7 +16,7 @@ export default async function Page({
   { redirectUrl?: string; showcaseSlug?: string; showcaseSection?: string }
 >) {
   const queryParams = await searchParams;
-  const session = await getSession();
+  const session = await getAuthSession();
   const { data: workspace, error } = await tryCatch(resolveWorkspace());
 
   if (!session || !workspace?.profile) {

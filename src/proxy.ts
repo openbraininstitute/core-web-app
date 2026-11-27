@@ -1,5 +1,12 @@
+import { getCookieCache } from 'better-auth/cookies';
 import { type NextRequest, NextResponse } from 'next/server';
-import nextAuthMiddleware, { type NextRequestWithAuth } from 'next-auth/middleware';
+
+import {
+  AUTH_COOKIE_PREFIX,
+  LOG_IN_PATH,
+  SESSION_COOKIE_STRATEGY,
+} from '@/features/auth/constants';
+import { getSharedCookieDomain, resolveAuthEnv } from '@/features/auth/helpers';
 
 const { PRIMARY_HOSTNAME } = process.env;
 
@@ -106,9 +113,14 @@ function stripFirstPathSegment(pathname: string): string {
  * - bypasses redirects for static assets (supports version-prefixed paths).
  * - enforces `PRIMARY_HOSTNAME` on non-asset routes by redirecting to the canonical host.
  * - allows free-access application and API routes as configured.
- * - delegates remaining routes to next-auth middleware for authentication.
+ * - sends a request without a valid session cookie to the log-in page, which returns to the requested page.
+ * - expires the cookies next-auth left in the browser.
  */
 export async function proxy(request: NextRequest) {
+  return expireLegacyCookies(request, await route(request));
+}
+
+async function route(request: NextRequest) {
   const requestPathname = request.nextUrl.pathname;
   const pathnameWithoutLeadingSegment = stripFirstPathSegment(requestPathname);
 
@@ -148,7 +160,49 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // If not authenticated redirect to Keycloak's login and if successful back to the originally requested page
-  // Otherwise let them through
-  return nextAuthMiddleware(request as NextRequestWithAuth);
+  if (await hasSession(request)) return NextResponse.next();
+
+  const logInUrl = new URL(LOG_IN_PATH, request.nextUrl);
+  logInUrl.searchParams.set('callbackUrl', `${requestUrl}${request.nextUrl.search}`);
+  return NextResponse.redirect(logInUrl);
+}
+
+const LEGACY_COOKIE = /^(__Secure-|__Host-)?next-auth\.[\w.-]+$/;
+
+/**
+ * A browser that was signed in with next-auth still sends its cookies for up to ten hours. With
+ * the new ones they overflow the 16 KB of request headers Node accepts, and sign-in fails with a 431.
+ */
+function expireLegacyCookies(request: NextRequest, response: NextResponse): NextResponse {
+  if (!request.headers.get('cookie')?.includes('next-auth.')) return response;
+
+  const { AUTH_PROXY_URL } = process.env;
+  const sharedDomain = AUTH_PROXY_URL ? `; Domain=${getSharedCookieDomain(AUTH_PROXY_URL)}` : null;
+  for (const { name } of request.cookies.getAll()) {
+    if (!LEGACY_COOKIE.test(name)) continue;
+    const expired = `${name}=; Max-Age=0; Path=/${name.startsWith('__') ? '; Secure' : ''}`;
+    response.headers.append('set-cookie', expired);
+    if (sharedDomain && !name.startsWith('__Host-')) {
+      response.headers.append('set-cookie', `${expired}${sharedDomain}`);
+    }
+  }
+  return response;
+}
+
+/** Decrypts the session cookie: no network call, so every request can afford it. */
+async function hasSession(request: NextRequest): Promise<boolean> {
+  const { BETTER_AUTH_SECRET, BETTER_AUTH_URL, NEXTAUTH_SECRET, NEXTAUTH_URL } = process.env;
+  const { secret, baseURL } = resolveAuthEnv({
+    BETTER_AUTH_SECRET,
+    BETTER_AUTH_URL,
+    NEXTAUTH_SECRET,
+    NEXTAUTH_URL,
+  });
+  const session = await getCookieCache(request, {
+    secret,
+    strategy: SESSION_COOKIE_STRATEGY,
+    cookiePrefix: AUTH_COOKIE_PREFIX,
+    isSecure: baseURL?.startsWith('https://') ?? false,
+  }).catch(() => null);
+  return session !== null;
 }

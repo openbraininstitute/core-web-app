@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { PageKind } from '@/api/logbook/types';
 import { collaborationUrl } from '@/api/logbook/utils';
+import { getAuthSession } from '@/features/auth/session';
 import { usePages } from '@/features/logbook/api/pages';
 import { ChangeFeed } from '@/features/logbook/collaboration/changes';
 import { acquireCopy, releaseCopy } from '@/features/logbook/collaboration/local-copy';
@@ -23,13 +24,12 @@ import {
 } from '@/features/logbook/log/open-tabs';
 import { navigate, pathOf } from '@/features/logbook/router';
 import { TabKind } from '@/features/logbook/types';
-import { getClientSession } from '@/hooks/session';
 
 import type { IPage } from '@/api/logbook/types';
 import type { LocalCopy } from '@/features/logbook/collaboration/local-copy';
 import type { ILogViewProps, IOpenTabs, IPageViewProps, ITabRef } from '@/features/logbook/types';
 
-const sessionToken = async (): Promise<string> => (await getClientSession())?.accessToken ?? '';
+const sessionToken = async (): Promise<string> => (await getAuthSession())?.accessToken ?? '';
 
 function useLocalCopy(pageId: string | undefined, userId: string): LocalCopy | null {
   const [copy, setCopy] = useState<LocalCopy | null>(null);

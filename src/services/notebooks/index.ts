@@ -1,5 +1,6 @@
-import authFetch, { getSession } from '@/auth-fetch';
+import authFetch from '@/auth-fetch';
 import { config } from '@/config';
+import { getAuthSession } from '@/features/auth/session';
 import { assertApiResponse } from '@/util/utils';
 
 export type NotebookStartResponse = {
@@ -94,7 +95,7 @@ export async function startNotebook(
   grading?: NotebookGradingLaunch,
   profile?: string
 ): Promise<NotebookStartResponse> {
-  const session = await getSession();
+  const session = await getAuthSession();
 
   if (!session) {
     throw Error('no session found', {
@@ -194,7 +195,7 @@ export async function startEmptyNotebook(
   computeCell: string, // accepted: aws, azure, cell_a, cell_b as notebook service does conversion
   profile?: string
 ): Promise<NotebookStartResponse> {
-  const session = await getSession();
+  const session = await getAuthSession();
 
   if (!session) {
     throw Error('no session found', {

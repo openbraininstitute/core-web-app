@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { CheckIcon } from '@/components/icons';
 import Chevron from '@/components/icons/Chevron';
 import HelpIconI from '@/components/icons/HelpIcon';
-import { useAccessToken } from '@/hooks/useAccessToken';
+import { useAuthSession } from '@/features/auth/client';
 import { serviceAiAgentPatchSettings } from '@/services/ai-agent/api/settings';
 import { useAITools } from '@/services/ai-agent/tools/tools';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -45,7 +45,7 @@ export default function ToolsProgress({
 }: ToolsProgressProps) {
   const tools = useAITools();
   const { virtualLabId, projectId } = useWorkspace();
-  const accessToken = useAccessToken() ?? '';
+  const accessToken = useAuthSession().data?.accessToken ?? '';
   const queryClient = useQueryClient();
   const [expandedToolKeys, setExpandedToolKeys] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<'arguments' | 'result'>('arguments');

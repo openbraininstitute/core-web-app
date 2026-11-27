@@ -1,9 +1,9 @@
 import find from 'es-toolkit/compat/find';
 import kebabCase from 'es-toolkit/compat/kebabCase';
 
-import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
 import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
+import { getAuthSession } from '@/features/auth/session';
 import buildQueryString from '@/util/query-params-builder';
 
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
@@ -84,7 +84,7 @@ export async function getPreviewBlob(
   dpi: number = GRID_PREVIEW_DPI
 ) {
   const url = buildAssetUrl(resource, { dpi, target, format: 'webp' });
-  const session = await getSession();
+  const session = await getAuthSession();
 
   const headers: Record<string, string> = {
     Authorization: `Bearer ${session?.accessToken}`,

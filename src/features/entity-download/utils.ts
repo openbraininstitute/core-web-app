@@ -10,7 +10,7 @@ import template from 'es-toolkit/compat/template';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import ApiError from '@/api/error';
-import { getSession } from '@/auth-fetch';
+import { getAuthSession } from '@/features/auth/session';
 import { logError } from '@/utils/logger';
 
 import type { ReadableStream as NodeReadableStream } from 'node:stream/web';
@@ -297,7 +297,7 @@ type TemplateRenderParams = {
  * - Returns structured parameters for template rendering
  */
 export async function getReadmeTemplateRenderParams(): Promise<TemplateRenderParams> {
-  const session = await getSession();
+  const session = await getAuthSession();
 
   const username = session?.user.username!;
 

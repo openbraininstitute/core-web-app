@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import React from 'react';
 
-import { useAccessToken } from '@/hooks/useAccessToken';
+import { useAuthSession } from '@/features/auth/client';
 import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
 
 import { serviceAiAgentGetTool, serviceAiAgentListTools } from '../api/tools';
@@ -16,7 +16,7 @@ import { AIAssistantTool } from './ai-assistant-tool/ai-assistant-tool';
  * Or `null` if an error occured.
  */
 export function useAITools(): AIAssistantTool[] | undefined | null {
-  const accessToken = useAccessToken();
+  const accessToken = useAuthSession().data?.accessToken;
   const toolsLoader = React.useCallback(() => loadTools(accessToken), [accessToken]);
   const { data, isError, isLoading } = useQuery({
     queryKey: keyBuilderAI.tools(),
@@ -29,7 +29,7 @@ export function useAITools(): AIAssistantTool[] | undefined | null {
 }
 
 export function useAITool(toolId: string) {
-  const accessToken = useAccessToken();
+  const accessToken = useAuthSession().data?.accessToken;
   const toolLoader = React.useCallback(() => loadTool(accessToken, toolId), [accessToken, toolId]);
   const { data, isError, isLoading } = useQuery({
     queryKey: keyBuilderAI.tool(toolId),

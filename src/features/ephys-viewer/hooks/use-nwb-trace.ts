@@ -28,7 +28,7 @@ export type UseTraceResult = TraceSessionState & {
  *
  * The worker downloads the file itself, streaming it into its own Emscripten FS, so the only
  * thing the main thread ever holds is the trace index and whatever decimated series it asks
- * for. Building the download request stays here because it needs the NextAuth session.
+ * for. Building the download request stays here because it needs the auth session.
  */
 export default function useTrace({ entity, assetId, ctx }: UseTraceArgs): UseTraceResult {
   const [state, setState] = useState<TraceSessionState>(IDLE_TRACE_SESSION_STATE);

@@ -2,12 +2,12 @@
 
 import { useEffect, useMemo, useRef } from 'react';
 
+import { useAuthSession } from '@/features/auth/client';
 import {
   makeColor,
   usePainter,
   usePainterLoadingListener,
 } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/hooks';
-import { useAccessToken } from '@/hooks/useAccessToken';
 import { classNames } from '@/util/utils';
 
 import type { VisibleRegion } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/types';
@@ -29,7 +29,7 @@ export function MiniBrainAtlasViewerGltf({
   className,
   onLoading,
 }: MiniBrainAtlasViewerGltfProps) {
-  const accessToken = useAccessToken();
+  const accessToken = useAuthSession().data?.accessToken;
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const painter = usePainter({ loading: false, atlasId });

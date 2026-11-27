@@ -1,6 +1,8 @@
 import { afterEach, expect, test, vi } from 'vitest';
 
-vi.mock('@/auth-fetch', () => ({ getSession: () => Promise.resolve({ accessToken: 'token' }) }));
+vi.mock('@/features/auth/session', () => ({
+  getAuthSession: () => Promise.resolve({ accessToken: 'token' }),
+}));
 
 import { config } from '@/config';
 import { planFile, uploadLogFile } from '@/features/logbook/api/log-files';

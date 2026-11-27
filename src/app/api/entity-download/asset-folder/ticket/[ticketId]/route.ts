@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
-import { auth } from '@/auth';
+import { getAuthSession } from '@/features/auth/session';
 import { createDownloadStream } from '@/features/entity-download/download-stream';
 import { ticketStore } from '@/features/entity-download/ticket-store';
 import { getDownloadStreamHeaders } from '@/features/entity-download/utils';
@@ -11,7 +11,7 @@ import { getDownloadStreamHeaders } from '@/features/entity-download/utils';
 export async function GET(request: NextRequest, { params }: { params: { ticketId: string } }) {
   const { ticketId } = await params;
 
-  const session = await auth();
+  const session = await getAuthSession();
   if (!session) {
     return new Response('Unauthorized', {
       status: 401,
