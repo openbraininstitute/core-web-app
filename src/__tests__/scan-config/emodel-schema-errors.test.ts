@@ -1,13 +1,11 @@
-import { renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { useValidateSchema } from '@/features/scan-config/components/hooks';
+import { createConfigValidator } from '@/features/scan-config/components/hooks';
 import {
-  errorsUnder,
   failingModelIds,
-  hasErrorAt,
   makeRegionEntry,
 } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
+import { errorsUnder, hasErrorAt } from '@/features/scan-config/store';
 
 import type { ErrorObject } from 'ajv';
 import type { Config } from '@/features/scan-config/types';
@@ -47,16 +45,15 @@ const optimizationValueSchema = {
 
 const schema = { type: 'object', properties: { v: optimizationValueSchema } };
 
-function validate(v: unknown) {
-  const { result } = renderHook(() => useValidateSchema({ config: { v } as Config, schema }));
-  return result.current;
-}
+const validateSchema = createConfigValidator(schema);
+
+const validate = (v: unknown) => validateSchema({ v } as Config);
 
 const isValid = (v: unknown) => validate(v) === null;
 
 const keywords = (v: unknown) => (validate(v) ?? []).map((error) => error.keyword);
 
-describe('useValidateSchema on an OptimizationValue', () => {
+describe('the schema validator on an OptimizationValue', () => {
   it.each([
     [{ mode: 'fixed', value: 1, bounds: null }],
     [{ value: 1 }],

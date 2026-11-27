@@ -91,13 +91,16 @@ describe('resolveSimulationLaunchTarget', () => {
     }
   });
 
-  it('returns null for ion-channel campaigns', () => {
+  it('routes ion channel campaigns to the ion channel task type, without consent', () => {
     expect(
       resolveSimulationLaunchTarget({
         entityType: EntityTypeDict.IonChannelModel,
         scale: null,
         targetSimulator: null,
       })
-    ).toBeNull();
+    ).toEqual({
+      taskType: ObiOneTaskTypeDict.IonChannelModelSimulationExecution,
+      requiresOfflineTokenConsent: false,
+    });
   });
 });

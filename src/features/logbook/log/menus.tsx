@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useRef } from 'react';
 
 import { UPLOAD_ACCEPT } from '@/features/logbook/api/log-files';
+import { startPageLink } from '@/features/logbook/editor/page-link';
 import { useLogContext } from '@/features/logbook/log/context';
 import { uploadFiles } from '@/features/logbook/log/uploads';
 import { ToastSource } from '@/features/logbook/types';
@@ -38,6 +39,24 @@ export function InsertMenu({ editor, onClose, onPicker, onNotice }: IInsertMenuP
         <span className={TEXT}>
           <span className={TITLE}>Link entities</span>
           <span className={SUB}>Circuit, morphology, model, result and more</span>
+        </span>
+      </button>
+      <div className={cn(LABEL, 'pt-2.5')}>This log</div>
+      <button
+        type="button"
+        className={MENU_ITEM}
+        onClick={() => {
+          onClose();
+          // After the popover hands focus back: `[[` at the caret opens the page list there.
+          requestAnimationFrame(() => startPageLink(editor));
+        }}
+      >
+        <span className={cn(TILE, 'bg-fill-2 text-primary-9')}>
+          <Icon name="page" size={16} />
+        </span>
+        <span className={TEXT}>
+          <span className={TITLE}>Link a page</span>
+          <span className={SUB}>Or type [[ in the text</span>
         </span>
       </button>
       <div className={cn(LABEL, 'pt-2.5')}>From your computer</div>

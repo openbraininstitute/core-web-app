@@ -12,6 +12,7 @@ export {
   getWorkflow,
   getWorkflowEntityLabel,
   getWorkflowInitialStage,
+  getWorkflowListingLabels,
   getWorkflowSegment,
   groupWorkflowsByEntityGroup,
   inferWorkflowStartingPageRemoteSchemaBased,

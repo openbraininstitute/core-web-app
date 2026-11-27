@@ -41,12 +41,12 @@ function TitleField({
     setSeen(title);
     setValue(title);
   }
-  // biome-ignore lint/correctness/useExhaustiveDependencies: only when the field opens
+  // `focus` is fixed for the field's life, so this runs once, when the field opens.
   useEffect(() => {
     if (!focus) return;
     field.current?.focus();
     field.current?.select();
-  }, []);
+  }, [focus]);
   const save = (): void => {
     onDone();
     const name = value.trim();

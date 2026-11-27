@@ -26,7 +26,7 @@ import { cn } from '@/utils/css-class';
  * Marks the form subtree whose parameter sweeps may pick one active value.
  *
  * Why a context and not a prop: sweeps are rendered generically by
- * `UIElementRender` for every workflow, several levels below the only component
+ * the field registry for every workflow, several levels below the only component
  * that knows they feed a 3D preview (the electrode block dictionary). Without a
  * provider there is no eye, so every other workflow is untouched.
  */

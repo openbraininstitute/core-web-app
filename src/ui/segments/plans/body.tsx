@@ -156,6 +156,28 @@ export default function PlanBody({
             </div>
           </>
         )}
+        {plan.extract_features.length > 0 && (
+          <>
+            <div className={cn('my-3 h-px w-full', dividerColor)} />
+            <div className="flex w-full flex-col">
+              <div className={cn('mb-1 text-lg font-semibold tracking-wide uppercase', mutedColor)}>
+                Extract
+              </div>
+              <div className="flex flex-col gap-2">
+                {plan.extract_features.map((feature) => (
+                  <CostFeatureRow
+                    key={feature._key}
+                    feature={feature}
+                    textColor={textColor}
+                    mutedColor={mutedColor}
+                    nameWidth="w-2/5"
+                    costWidth="w-3/5"
+                  />
+                ))}
+              </div>
+            </div>
+          </>
+        )}
         {plan.notebooks_features.length > 0 && (
           <>
             <div className={cn('my-3 h-px w-full', dividerColor)} />

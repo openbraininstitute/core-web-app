@@ -39,8 +39,7 @@ import type {
   SortItem,
 } from '@/features/circuit-nodes/types';
 import type { CompartmentNote, NestedLayout } from '@/features/sonata-viewer/compartment-rows';
-import type { CompartmentPlaces } from '@/features/sonata-viewer/hooks/use-compartment-places';
-import type { PopulationMetadata } from '@/features/sonata-viewer/types';
+import type { PopulationMetadata, TCompartmentPlaces } from '@/features/sonata-viewer/types';
 
 /** This table's owner name in the shared nodes session, beside any spike statistics. */
 const OWNER = 'voltage-report';
@@ -104,7 +103,7 @@ type Props = {
   /** What the compartment set a report records says of its compartments, for their rows. */
   compartmentNote?: CompartmentNote | null;
   /** Where the compartments are on their cells' morphologies, for their rows; null until measured. */
-  compartmentPlaces?: CompartmentPlaces | null;
+  compartmentPlaces?: TCompartmentPlaces | null;
   /** Statistics the host registered in the session, pinned against the table's right edge. */
   pinnedColumns?: readonly PinnedColumn[];
   /** Changes whenever the pinned columns' values do, so their cells are drawn again. */

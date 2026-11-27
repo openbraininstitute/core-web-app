@@ -14,6 +14,8 @@ import EntityPropertyDropdown from '@/features/scan-config/components/ui-element
 import Reference from '@/features/scan-config/components/ui-elements/reference';
 import { StringSelectionEnhanced } from '@/features/scan-config/components/ui-elements/string-selection-enhanced';
 import { scanConfigHeldTestId } from '@/features/scan-config/components/utils';
+import { createScanConfigStore } from '@/features/scan-config/store';
+import { ScanConfigStoreProvider } from '@/features/scan-config/use-config-store';
 
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type {
@@ -81,14 +83,15 @@ describe('the reference dropdown', () => {
 
   function renderReference(value: string | null) {
     render(
-      <Reference
-        schema={schema}
-        referenceSchema={referenceSchema}
-        config={config}
-        value={value}
-        onChange={() => {}}
-        disabled={false}
-      />
+      <ScanConfigStoreProvider store={createScanConfigStore(config)}>
+        <Reference
+          schema={schema}
+          referenceSchema={referenceSchema}
+          value={value}
+          onChange={() => {}}
+          disabled={false}
+        />
+      </ScanConfigStoreProvider>
     );
   }
 

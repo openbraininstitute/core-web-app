@@ -418,7 +418,7 @@ function boundsError(paramSchema: ParamSchema, value: ConfigValue | undefined): 
  *
  * The JSON schema alone cannot express these: `protocols` has no `minItems`, and neither does a
  * protocol's `features`, so an empty extraction validates perfectly well while producing nothing.
- * These are reported through the shared field-errors atom so the left menu reflects them.
+ * These are reported as issues of the form so the left menu reflects them.
  */
 export function collectSelectionErrors(
   selection: TSelectEFeaturesValue,

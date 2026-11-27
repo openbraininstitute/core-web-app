@@ -15,13 +15,15 @@ import { getStrains } from '@/api/entitycore/queries/general/strain';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { useAppNotification } from '@/components/notification';
 import { flattenTreeAsObject } from '@/components/tree/elements/helpers';
-import {
-  useFieldError,
-  useFieldErrorsSessionKey,
-} from '@/features/scan-config/components/hooks/field-errors';
+import { useScanConfigSessionKey } from '@/features/scan-config/components/hooks/session-key';
 import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
+import {
+  useConfigValue,
+  useReportIssue,
+  useSetConfig,
+} from '@/features/scan-config/use-config-store';
 import { makeSessionAtomWithDefault } from '@/ui/hooks/use-session-atom';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilderHierarchy } from '@/ui/use-query-keys/atlas';
@@ -267,11 +269,11 @@ const PROPERTY_LABEL: Record<keyof ReturnType<typeof useModelProperties>['differ
 const preselectedTemperatureAtomFamily = makeSessionAtomWithDefault<number | null>(null);
 
 function usePreselectedTemperature() {
-  return useAtom(preselectedTemperatureAtomFamily(useFieldErrorsSessionKey()));
+  return useAtom(preselectedTemperatureAtomFamily(useScanConfigSessionKey()));
 }
 
-function readProperties(config: Config, root: string, propertyKey: string) {
-  const block = isPlainObject(config[root]) ? config[root] : {};
+function propertiesOf(rootBlock: unknown, propertyKey: string) {
+  const block = isPlainObject(rootBlock) ? rootBlock : {};
   const value = isPlainObject(block[propertyKey]) ? block[propertyKey] : {};
   return { block, value: value as TIonChannelModelPropertiesValue };
 }
@@ -282,7 +284,7 @@ function withProperties(
   propertyKey: string,
   patch: TIonChannelModelPropertiesValue
 ) {
-  const { block, value } = readProperties(config, root, propertyKey);
+  const { block, value } = propertiesOf(config[root], propertyKey);
   return { ...config, [root]: { ...block, [propertyKey]: { ...value, ...patch } } } as Config;
 }
 
@@ -294,18 +296,16 @@ function withProperties(
 function ModelPropertiesCheck({
   root,
   propertyKey,
-  config,
-  setConfig,
   locked,
 }: {
   root: string;
   propertyKey: string;
-  config: Config;
-  setConfig: (update: (previous: Config) => Config) => void;
   locked: boolean;
 }) {
-  const path = `${root}.${propertyKey}`;
-  const { block, value } = readProperties(config, root, propertyKey);
+  const path = `/${root}/${propertyKey}`;
+  const setConfig = useSetConfig();
+  const rootBlock = useConfigValue((config) => config[root]);
+  const { block, value } = propertiesOf(rootBlock, propertyKey);
   const {
     loaded,
     failed,
@@ -370,7 +370,7 @@ function ModelPropertiesCheck({
     );
   }, [locked, rootRegion, root, propertyKey, setConfig]);
 
-  useFieldError(
+  useReportIssue(
     path,
     failed
       ? "The recordings could not be loaded, so the model's properties cannot be checked"
@@ -383,13 +383,9 @@ function ModelPropertiesCheck({
 
 export function IonChannelModelPropertiesChecks({
   schema,
-  config,
-  setConfig,
   locked,
 }: {
   schema: ConfigSchema;
-  config: Config;
-  setConfig: (update: (previous: Config) => Config) => void;
   locked: boolean;
 }) {
   return Object.entries(schema.properties).flatMap(([root, rootSchema]) =>
@@ -400,8 +396,6 @@ export function IonChannelModelPropertiesChecks({
           key={`${root}.${key}`}
           root={root}
           propertyKey={key}
-          config={config}
-          setConfig={setConfig}
           locked={locked}
         />
       ))

@@ -1,9 +1,10 @@
 'use client';
 
 import { CloseOutlined } from '@ant-design/icons';
+import { isEqual } from 'es-toolkit';
 import dynamic from 'next/dynamic';
 import { useParams, useSearchParams } from 'next/navigation';
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { match } from 'ts-pattern';
 
 import { ViewVariant, WorkspaceSection } from '@/constants';
@@ -28,6 +29,9 @@ import {
   resolveRightPreviewMode,
 } from '@/features/scan-config/components/model-preview/helpers';
 import { MORPHOLOGY_LOCATIONS_CONFIG_KEY } from '@/features/scan-config/components/model-preview/morphology-locations-block';
+import { useViewerConfig } from '@/features/scan-config/components/model-preview/viewer-config';
+import { NEURON_SETS_SECTION } from '@/features/scan-config/types';
+import { useConfigValue, useWholeConfig } from '@/features/scan-config/use-config-store';
 import { resolveEntityIdsFromConfigForm } from '@/features/scan-config/workflow/workflow-schema-selection';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
@@ -76,7 +80,6 @@ type RightProps = {
   selectedRootElement: string;
   /** Add a block to a root element and open it, for a 3D action that creates one. */
   onCreateEntry: (rootElement: string, block: Record<string, unknown>) => void;
-  config: Config;
   setConfig: (newConfig: Config | ((prev: Config) => Config)) => void;
   /** Root scan-config schema; previews that describe the whole configuration read it. */
   schema: ConfigSchema;
@@ -137,11 +140,7 @@ export function EntityPreviewPane({
   return (
     <div
       id="scan-config-controls-right-mini-detail"
-      className={cn(
-        'h-full min-h-0 overflow-auto rounded-lg secondary-scrollbar',
-        // Boxed, the view is the box's content: no card of its own inside it.
-        !inset && 'px-0.5 py-1'
-      )}
+      className="h-full min-h-0 overflow-auto rounded-lg secondary-scrollbar"
     >
       {record ? (
         <MiniDetailViewRenderer
@@ -165,21 +164,31 @@ export function EntityPreviewPane({
   );
 }
 
+const NO_IDS: string[] = [];
+
+const hasNeuronSetsSection = (config: Config) => NEURON_SETS_SECTION in config;
+
+function EFeaturesPane({ schema }: { schema: ConfigSchema }) {
+  const config = useWholeConfig();
+
+  return <EFeaturesPreviewPanel config={config} schema={schema} />;
+}
+
 function IonChannelPreviewPane({
   selectedRootElement,
   selectedEntry,
-  config,
   inset,
 }: {
   selectedRootElement: string;
   selectedEntry: string;
-  config: Config;
   inset?: boolean;
 }) {
+  const config = useWholeConfig();
+
   return (
     <div
       id="scan-config-controls-right-preview"
-      className={cn('rounded-lg h-full', inset ? 'p-3' : 'px-0.5')}
+      className={cn('rounded-lg h-full', inset && 'p-3')}
     >
       <IonChannelModelRecordingRender
         selectedRootElement={selectedRootElement}
@@ -192,7 +201,6 @@ function IonChannelPreviewPane({
 
 function CircuitModelPreviewPane({
   entity,
-  config,
   setConfig,
   selectedRootElement,
   selectedEntry,
@@ -202,10 +210,8 @@ function CircuitModelPreviewPane({
   defaultNeuronOpacity,
   viewerFeatures,
   locked,
-  inset,
 }: {
   entity: TSupportedEntitiesForScanConfiguration;
-  config: Config;
   setConfig: RightProps['setConfig'];
   schema: ConfigSchema;
   selectedRootElement: string;
@@ -215,11 +221,9 @@ function CircuitModelPreviewPane({
   defaultNeuronOpacity: number | undefined;
   viewerFeatures: IEntityViewerFeatures;
   locked?: boolean;
-  inset?: boolean;
 }) {
-  // Memoised so the grouped prop does not hand ModelPreview a fresh object every
-  // render; `config` already changes on each form edit, the rest rarely.
-  //
+  const config = useViewerConfig();
+  const hasNeuronSets = useConfigValue(hasNeuronSetsSection);
   // Omitting `onConfigChange` while locked is what makes 3D editing read-only.
   const blockTypeToConfigKey = useBlockTypeToConfigKey(schema);
   const locationBlockTypes = useMemo(
@@ -233,6 +237,7 @@ function CircuitModelPreviewPane({
   const form = useMemo(
     () => ({
       config,
+      hasNeuronSets,
       onConfigChange: locked ? undefined : setConfig,
       selectedRootElement,
       selectedEntry,
@@ -242,6 +247,7 @@ function CircuitModelPreviewPane({
     }),
     [
       config,
+      hasNeuronSets,
       setConfig,
       selectedRootElement,
       selectedEntry,
@@ -255,7 +261,7 @@ function CircuitModelPreviewPane({
   return (
     <div
       id="scan-config-controls-right-preview"
-      className={cn('h-full min-h-0 overflow-hidden rounded-lg', !inset && 'px-0.5')}
+      className="h-full min-h-0 overflow-hidden rounded-lg"
     >
       <div
         className="h-full min-h-0 overflow-hidden rounded-lg"
@@ -273,7 +279,7 @@ function CircuitModelPreviewPane({
 }
 
 function EmptyPreviewPane() {
-  return <div id="scan-config-controls-right-preview" className="rounded-lg px-0.5 h-full" />;
+  return <div id="scan-config-controls-right-preview" className="rounded-lg h-full" />;
 }
 
 /**
@@ -329,7 +335,6 @@ export function Right({
   selectedEntry,
   selectedRootElement,
   onCreateEntry,
-  config,
   setConfig,
   schema,
   schemaMappingConfig,
@@ -341,9 +346,13 @@ export function Right({
   const workflowField = useScanConfigWorkflowEditorField();
   const configureBinding = workflowField?.configureBinding;
   const pinned = !!configureBinding?.pinEntityPreview;
+  const selectPinnedIds = useCallback(
+    (config: Config) => (pinned ? resolveEntityIdsFromConfigForm(schema, config) : NO_IDS),
+    [pinned, schema]
+  );
   usePinnedEntityPreview({
     dataType: pinned ? configureBinding?.scanConfigEntityType : undefined,
-    ids: pinned ? resolveEntityIdsFromConfigForm(schema, config) : [],
+    ids: useConfigValue(selectPinnedIds, isEqual),
   });
 
   // Source entity owns the viewer; targetType is workflow intent only.
@@ -393,23 +402,21 @@ export function Right({
       <IonChannelPreviewPane
         selectedRootElement={selectedRootElement}
         selectedEntry={selectedEntry}
-        config={config}
         inset={inset}
       />
     ))
     .with(RightPreviewModeDict.EFeatures, () => (
       <div
         id="scan-config-controls-right-efeatures"
-        className="h-full bg-white min-h-0 overflow-y-auto secondary-scrollbar rounded-xl px-0.5"
+        className="h-full bg-white min-h-0 overflow-y-auto secondary-scrollbar rounded-xl"
       >
-        <EFeaturesPreviewPanel config={config} schema={schema} />
+        <EFeaturesPane schema={schema} />
       </div>
     ))
     .with(RightPreviewModeDict.CircuitModel, () =>
       entity ? (
         <CircuitModelPreviewPane
           entity={entity}
-          config={config}
           setConfig={setConfig}
           selectedRootElement={selectedRootElement}
           selectedEntry={selectedEntry}
@@ -419,7 +426,6 @@ export function Right({
           defaultNeuronOpacity={defaultNeuronOpacity}
           viewerFeatures={viewerFeatures}
           locked={locked}
-          inset={inset}
         />
       ) : (
         <EmptyPreviewPane />

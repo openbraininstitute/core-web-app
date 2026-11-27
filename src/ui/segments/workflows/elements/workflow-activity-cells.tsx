@@ -13,10 +13,6 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useCallback, useMemo } from 'react';
 
-import { EntityTypeDict } from '@/api/entitycore/types';
-import { type ITaskConfig, TaskConfigType } from '@/api/entitycore/types/entities/task-config';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import {
   LIFECYCLE_STATUS_RENDERER,
   LifecycleStatusCell,
@@ -51,7 +47,6 @@ import type { WorkspaceContext } from '@/types/common';
 import type { TActivityValue } from '@/ui/segments/workflows/config';
 
 /** Cell-renderer registry keys owned by the workflow-activity grid. */
-export const WORKFLOW_ACTIVITY_TYPE_RENDERER = 'workflowActivityType';
 export const WORKFLOW_ACTIVITY_DATE_RENDERER = 'workflowActivityDate';
 export const WORKFLOW_ACTIVITY_ACTIONS_RENDERER = 'workflowActivityActions';
 export const WORKFLOW_ACTIVITY_STATUS_RENDERER = 'workflowActivityStatus';
@@ -125,48 +120,12 @@ function ActionButton({
   );
 }
 
-/** `cellRendererParams` the Type cell reads; supplied by the schema factory. */
-interface ITypeCellParams {
-  /** the listing's selected entity type, used when the row carries none of its own */
-  entityType?: TExtendedEntitiesTypeDict;
-}
-
 /** `cellRendererParams` the Status cell reads; supplied by the schema factory. */
 interface IStatusCellParams {
   workspace?: WorkspaceContext;
   /** the listing's workflow, for the runs' links */
   activity?: TActivityValue;
   entityType?: TExtendedEntitiesTypeDict;
-}
-
-/**
- * The row's entity title. A circuit-extraction campaign is a `TaskConfig` row whose
- * own `type` says nothing about which campaign it is, so its `task_config_type`
- * resolves the title instead; everything else falls back to the listed entity type.
- */
-export function WorkflowActivityTypeCell({
-  row,
-  params,
-}: ICellRendererProps<EntityCoreObjectTypes>): ReactNode {
-  const { entityType } = (params ?? {}) as ITypeCellParams;
-  const extractionTitle =
-    row.type === EntityTypeDict.TaskConfig &&
-    (row as unknown as ITaskConfig<Record<string, unknown>>).task_config_type ===
-      TaskConfigType.CircuitExtractionCampaign
-      ? getEntityByExtendedType({
-          type: ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
-        })?.title
-      : undefined;
-
-  const title =
-    extractionTitle ??
-    getEntityByExtendedType({
-      type: row.type as unknown as TExtendedEntitiesTypeDict,
-    })?.title ??
-    getEntityByExtendedType({ type: entityType })?.title ??
-    '-';
-
-  return <span className={cn('text-primary-9 flex items-center capitalize')}>{title}</span>;
 }
 
 /** Creation date as `dd.MM.yyyy | HHhMM`. */
@@ -326,7 +285,6 @@ export function WorkflowActivityActionsCell({
 /** Renderer registry for the workflow-activity grid. */
 export function buildWorkflowActivityCellRenderers(): CellRendererRegistry {
   return new CellRendererRegistry()
-    .register(WORKFLOW_ACTIVITY_TYPE_RENDERER, WorkflowActivityTypeCell)
     .register(WORKFLOW_ACTIVITY_DATE_RENDERER, WorkflowActivityDateCell)
     .register(WORKFLOW_ACTIVITY_STATUS_RENDERER, WorkflowActivityStatusCell)
     .register(WORKFLOW_ACTIVITY_ACTIONS_RENDERER, WorkflowActivityActionsCell)

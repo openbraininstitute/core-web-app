@@ -1,6 +1,5 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -14,12 +13,13 @@ import { Loaded } from '../../../shared/load-state';
 import { PageHeader } from '../../../shared/page-header';
 import { AdminLink, adminHref } from '../../../shell/admin-link';
 import { CapabilityGate } from '../../../shell/capability-gate';
-import { getAccount, listProjectAccounts } from '../api';
+import { listProjectAccounts } from '../api';
 import { ACCOUNT_TYPE_LABELS, accountingHref, accountLinks } from '../helpers';
 import { AccountingPage, AccountType } from '../types';
 import { AccountActions } from './account-actions';
 import { Credits, EnabledPill } from './cells';
 import { accountNameColumn, createdColumn, creditsColumn } from './columns';
+import { useAccount } from './queries';
 
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { TAccount, TProjectAccount } from '../types';
@@ -97,10 +97,7 @@ function AccountView({ account }: { account: TAccount }) {
 }
 
 export function AccountDetail({ accountId }: { accountId: string }) {
-  const query = useQuery({
-    queryKey: adminQueryKeys.accountingAccount(accountId),
-    queryFn: ({ signal }) => getAccount(accountId, signal),
-  });
+  const query = useAccount(accountId);
 
   return (
     <div className="flex flex-col gap-4">

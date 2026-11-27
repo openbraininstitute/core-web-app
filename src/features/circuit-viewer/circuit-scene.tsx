@@ -51,6 +51,7 @@ import {
   useElectrodeOverlays,
 } from '@/features/scan-config/components/model-preview/use-electrode-overlays';
 import { useViewerZoom } from '@/features/scan-config/components/zoom-slider/use-viewer-zoom';
+import { NEURON_SETS_SECTION } from '@/features/scan-config/types';
 import { useViewOverlay } from '@/features/viewer-3d/bare';
 import { useLatest } from '@/ui/hooks/use-latest';
 import { classNames } from '@/util/utils';
@@ -81,8 +82,6 @@ import type { PopulationsControls } from '@/features/scan-config/components/colo
 import type { TElectrodeArrayEntity } from '@/features/scan-config/components/model-preview/use-electrode-overlays';
 
 const NOTHING_HIDDEN: readonly string[] = [];
-/** The form's root element its neuron sets are in. */
-const NEURON_SETS = 'neuron_sets';
 const MIN_TABLE_HEIGHT = 280;
 const DEFAULT_TABLE_HEIGHT_RATIO = 0.4;
 
@@ -298,6 +297,7 @@ export function CircuitScene({
 }: ICircuitSceneProps) {
   const {
     config: scanConfig,
+    hasNeuronSets,
     onConfigChange: setConfig,
     selectedRootElement,
     selectedEntry,
@@ -444,8 +444,8 @@ export function CircuitScene({
   const sceneSelection = selection ?? tableSelection;
   // The table's neurons as a block of the form's neuron sets, opened there.
   const createNeuronSet =
-    onCreateEntry && scanConfig && NEURON_SETS in scanConfig
-      ? (block: Record<string, unknown>) => onCreateEntry(NEURON_SETS, block)
+    onCreateEntry && hasNeuronSets
+      ? (block: Record<string, unknown>) => onCreateEntry(NEURON_SETS_SECTION, block)
       : undefined;
 
   // What the viewers draw, in declared order: every population, or only the

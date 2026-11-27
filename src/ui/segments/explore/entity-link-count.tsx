@@ -21,6 +21,7 @@ import {
   BrowseExperimentalDataExtendedTypes,
   DataSectionDataTypeTabsConfig,
   ExploreDataTypeTabs,
+  isShownInData,
   ModelDataExtendedTypes,
   SimulationDataExtendedTypes,
   type TExploreDataTypeTabs,
@@ -99,18 +100,11 @@ export function EntityLinkCount() {
     shallow: true,
   });
 
-  const experimental = Object.values(BrowseExperimentalDataExtendedTypes).filter(
-    (config) =>
-      !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag])
-  );
-  const models = Object.values(ModelDataExtendedTypes).filter(
-    (config) =>
-      !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag])
-  );
-  const simulations = Object.values(SimulationDataExtendedTypes).filter(
-    (config) =>
-      !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag])
-  );
+  const shown = (config: Parameters<typeof isShownInData>[0]) =>
+    isShownInData(config, featureFlags);
+  const experimental = Object.values(BrowseExperimentalDataExtendedTypes).filter(shown);
+  const models = Object.values(ModelDataExtendedTypes).filter(shown);
+  const simulations = Object.values(SimulationDataExtendedTypes).filter(shown);
 
   const listProps = {
     scope,

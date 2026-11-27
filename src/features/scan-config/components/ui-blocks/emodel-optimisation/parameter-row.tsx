@@ -7,13 +7,13 @@ import { Fragment, useState } from 'react';
 import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
 import {
   DEFAULT_PARAMETER_MODE,
-  hasErrorAt,
   ParameterMode,
   type TBounds,
   type TDistributionOption,
   type TOptimizationValue,
   type TParameterMode,
 } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
+import { hasErrorAt } from '@/features/scan-config/store';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
 

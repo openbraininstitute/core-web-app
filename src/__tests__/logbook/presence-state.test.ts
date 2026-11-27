@@ -14,6 +14,7 @@ const live = (peers: ICollaborationSnapshot['peers']): ICollaborationSnapshot =>
   agents: [],
   readOnly: null,
   rejoinAt: null,
+  outdated: false,
 });
 
 test('my own agent on a socket is listed next to me, and my other tab is not', () => {

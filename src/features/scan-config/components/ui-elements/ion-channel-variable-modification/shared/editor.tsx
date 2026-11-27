@@ -2,11 +2,11 @@
 
 import { isNil } from 'es-toolkit/compat';
 
-import { useFieldError } from '@/features/scan-config/components/hooks/field-errors';
 import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
 import ParameterSweep, {
   SweepCollapseButton,
 } from '@/features/scan-config/components/ui-elements/parameter-sweep';
+import { useReportIssue } from '@/features/scan-config/use-config-store';
 import { cn } from '@/utils/css-class';
 
 import 'katex/dist/katex.min.css';
@@ -68,7 +68,7 @@ function SectionConfigRow({
 }) {
   const [min, max] = entry.limits ?? [undefined, undefined];
   const fieldPath = errorPathPrefix ? `${errorPathPrefix}/${entry.section_list}` : undefined;
-  useFieldError(fieldPath, limitsError(value, min, max));
+  useReportIssue(fieldPath, limitsError(value, min, max));
 
   return (
     <div

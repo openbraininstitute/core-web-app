@@ -4,6 +4,7 @@ import { atom, useAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ErrorBoundary } from 'react-error-boundary';
+import { match } from 'ts-pattern';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import { useReportTableView } from '@/features/circuit-nodes/connectivity/report-table-view';
@@ -55,6 +56,7 @@ import {
   traceGroupsOf,
   useTracePicks,
 } from '@/features/sonata-viewer/trace-picks';
+import { UnmeasuredBy } from '@/features/sonata-viewer/types';
 import { CollapsingControls } from '@/features/spike-viewer/components/collapsing-controls';
 import { PlotHelp } from '@/features/spike-viewer/components/raster-plot-controls';
 import { useNeuronSetColumns } from '@/features/spike-viewer/neuron-set-columns';
@@ -76,7 +78,9 @@ import {
 import { TABLE_BOX_CLASS } from '@/features/spike-viewer/spike-statistics/statistics-plots';
 import { meanTraceFigure } from '@/features/spike-viewer/spike-statistics/time-course-figures';
 import { WindowChip } from '@/features/spike-viewer/spike-statistics/window-chip';
+import { StackedSplit } from '@/features/spike-viewer/types';
 import { PillSelect } from '@/ui/molecules/select/pill-select';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
 import type { Remote } from 'comlink';
@@ -463,7 +467,7 @@ export function SonataReportView({
     () => (population ? compartmentsOf(population) : NO_COMPARTMENTS),
     [population]
   );
-  const compartmentPlaces = useCompartmentPlaces({
+  const { places: compartmentPlaces, unmeasured: unmeasuredPlaces } = useCompartmentPlaces({
     enabled: compartmental && status === 'ready',
     circuitId: circuit?.id,
     circuitConfig,
@@ -953,14 +957,49 @@ export function SonataReportView({
       },
     },
     resetRequest,
-    headerExtra: docked && timeWindow && (
-      <WindowChip
-        name="Trace window"
-        title="The traces' zoom, which the table's statistics and the plots follow: click to see the whole run again"
-        time={timeWindow}
-        cells={null}
-        onClear={() => handleTimeWindowChange(null)}
-      />
+    headerExtra: (
+      <>
+        {docked && timeWindow && (
+          <WindowChip
+            name="Trace window"
+            title="The traces' zoom, which the table's statistics and the plots follow: click to see the whole run again"
+            time={timeWindow}
+            cells={null}
+            onClear={() => handleTimeWindowChange(null)}
+          />
+        )}
+        {unmeasuredPlaces && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                className="text-neutral-4 shrink-0 cursor-default text-xs whitespace-nowrap"
+              >
+                No path distances or section types
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {match(unmeasuredPlaces.by)
+                .with(
+                  UnmeasuredBy.Report,
+                  () =>
+                    `Path distance and section type are measured on reports of up to ${unmeasuredPlaces.limit.toLocaleString()} morphologies; this one records ${unmeasuredPlaces.morphologies.toLocaleString()}.`
+                )
+                .with(
+                  UnmeasuredBy.ReportInContainer,
+                  () =>
+                    `Where a circuit keeps its morphologies in one file, path distance and section type are measured on reports of up to ${unmeasuredPlaces.limit.toLocaleString()} morphologies; this one records ${unmeasuredPlaces.morphologies.toLocaleString()}.`
+                )
+                .with(
+                  UnmeasuredBy.Container,
+                  () =>
+                    `Path distance and section type are measured where a circuit keeps up to ${unmeasuredPlaces.limit.toLocaleString()} morphologies in one file; this one keeps ${unmeasuredPlaces.morphologies.toLocaleString()}.`
+                )
+                .exhaustive()}
+            </TooltipContent>
+          </Tooltip>
+        )}
+      </>
     ),
   };
 
@@ -989,7 +1028,7 @@ export function SonataReportView({
         {/* The traces over the table, their box topping the column: the panel's button ends the
             traces' controls, and the table's header names the population. */}
         <StackedPanes
-          split="file"
+          split={StackedSplit.File}
           top={{
             title: tracesTitle,
             boxClassName: 'p-2',
@@ -1063,7 +1102,7 @@ export function SonataReportView({
         {sidePanel.target &&
           createPortal(
             <StackedPanes
-              split="panel"
+              split={StackedSplit.Panel}
               floors={PANEL_FLOORS}
               top={
                 voltage

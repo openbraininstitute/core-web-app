@@ -9,7 +9,7 @@ import {
   isToolUIPart,
   lastAssistantMessageIsCompleteWithApprovalResponses,
 } from 'ai';
-import { atom, useAtom, useSetAtom, useStore } from 'jotai';
+import { atom, useAtom, useAtomValue, useSetAtom, useStore } from 'jotai';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { showRestoreAtom } from '@/features/ai-assistant/message-item/collapsible-message/collapsible-message';
@@ -394,7 +394,7 @@ export const configStateAtom = atom<Config>({});
 export const isChatReadyAtom = atom(true);
 
 export function useAgentState(key: string | null, config?: Config) {
-  const [, setAIAgentState] = useAtom(agentStateAtom);
+  const setAIAgentState = useSetAtom(agentStateAtom);
   const setLastConfigUpdate = useSetAtom(lastConfigUpdateAtom);
 
   useEffect(() => {
@@ -421,9 +421,29 @@ export function useAgentState(key: string | null, config?: Config) {
   }, [setLastConfigUpdate]);
 }
 
+const NO_CIRCUIT = 'no-circuit';
+
+const circuitIdOf = (initialize: unknown) =>
+  isPlainObject(initialize) && isPlainObject(initialize.circuit)
+    ? (JSON.stringify(initialize.circuit.id_str) ?? 'undefined')
+    : NO_CIRCUIT;
+
+/**
+ * The circuit of the live config published to the agent, or `null` when none is published.
+ * A string, so readers re-render only when the circuit changes, not on every config edit.
+ */
+const agentCircuitAtom = atom((get) => {
+  const state = get(agentStateAtom) as Record<string, unknown>;
+  const activeKey = findConfigKeyInState(state);
+  const active = activeKey ? state[activeKey] : undefined;
+  const initialize = isPlainObject(active) ? active.initialize : undefined;
+
+  return isPlainObject(initialize) ? circuitIdOf(initialize) : null;
+});
+
 export function useAIConfig() {
   const [aiConfig, setAiConfig] = useAtom(configStateAtom);
-  const [aiAgentState] = useAtom(agentStateAtom);
+  const agentCircuit = useAtomValue(agentCircuitAtom);
   const [isChatReady] = useAtom(isChatReadyAtom);
 
   const defaultConfig = {
@@ -432,22 +452,13 @@ export function useAIConfig() {
     isChatReady,
   };
 
-  const activeKey = findConfigKeyInState(aiAgentState as Record<string, unknown>);
-
-  if (
-    !isPlainObject(aiConfig?.initialize) ||
-    !activeKey ||
-    !isPlainObject((aiAgentState as any)?.[activeKey]?.initialize)
-  )
-    return defaultConfig;
+  if (!isPlainObject(aiConfig?.initialize) || agentCircuit === null) return defaultConfig;
 
   // Circuit identity guard: only apply when both configs have a circuit object.
   // Non-circuit workflows (ion channel, skeletonization, etc.) skip this check.
-  const aiCircuit = aiConfig.initialize?.circuit;
-  const agentCircuit = (aiAgentState as any)?.[activeKey]?.initialize?.circuit;
-
-  if (isPlainObject(aiCircuit) && isPlainObject(agentCircuit)) {
-    if (aiCircuit.id_str !== agentCircuit.id_str) return defaultConfig;
+  const aiCircuit = circuitIdOf(aiConfig.initialize);
+  if (aiCircuit !== NO_CIRCUIT && agentCircuit !== NO_CIRCUIT && aiCircuit !== agentCircuit) {
+    return defaultConfig;
   }
 
   return {

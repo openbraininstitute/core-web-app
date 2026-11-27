@@ -6,13 +6,19 @@ import {
 } from '@/features/scan-config/components/hooks/schema';
 import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import Block from '@/features/scan-config/components/ui-blocks/block';
-import { isPlainObject } from '@/features/scan-config/components/utils';
 import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
+import { writeBlock } from '@/features/scan-config/store';
 import { isType } from '@/features/scan-config/types';
+import {
+  BlockScopeProvider,
+  useBlockProperty,
+  useHasBlock,
+  useSetConfig,
+} from '@/features/scan-config/use-config-store';
 
 import type {
-  Config,
   ConfigSchema,
+  ConfigValue,
   IRootBlockUnion,
   TBlock,
   TSupportedEntitiesForScanConfiguration,
@@ -26,8 +32,6 @@ type Props = {
   selectedRootElement: string;
   campaignId: string;
   loading: boolean;
-  config: Config;
-  setConfig: (newConfig: Config) => void;
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
   entityType: TSupportedEntityTypesForScanConfiguration;
@@ -46,8 +50,6 @@ export default function BlockUnion({
   selectedRootElement,
   campaignId,
   loading,
-  config,
-  setConfig,
   entity,
   schemaMappingConfig,
   errorPathPrefix,
@@ -56,11 +58,12 @@ export default function BlockUnion({
   const showingDiffs = useShowingDiffs();
 
   // Get current selected type from config
-  const currentConfig = config[selectedRootElement];
-  const selectedType =
-    isPlainObject(currentConfig) && typeof currentConfig[discriminatorProp] === 'string'
-      ? currentConfig[discriminatorProp]
-      : undefined;
+  const setConfig = useSetConfig();
+  const setCurrentConfig = (next: ConfigValue) =>
+    setConfig((config) => writeBlock(config, selectedRootElement, undefined, next));
+  const hasBlock = useHasBlock(selectedRootElement);
+  const discriminator = useBlockProperty(selectedRootElement, undefined, discriminatorProp);
+  const selectedType = typeof discriminator === 'string' ? discriminator : undefined;
 
   // Find the matching variant schema based on the current type
   const selectedBlockSchema: TBlock | undefined = blockUnionSchema.oneOf.find((o: TBlock) => {
@@ -69,7 +72,7 @@ export default function BlockUnion({
   });
 
   // If a variant is selected and we have an atom, show the form
-  if (selectedBlockSchema && isPlainObject(config[selectedRootElement])) {
+  if (selectedBlockSchema && hasBlock) {
     return (
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
@@ -79,32 +82,24 @@ export default function BlockUnion({
               type="button"
               aria-label="Reset block selection"
               className="cursor-pointer text-neutral-3 transition-colors hover:text-primary-8 px-2 py-1 hover:bg-neutral-3/20 rounded-full"
-              onClick={() => {
-                setConfig({
-                  ...config,
-                  [selectedRootElement]: {},
-                });
-              }}
+              onClick={() => setCurrentConfig({})}
             >
               <CloseOutlined />
             </button>
           )}
         </div>
-        <Block
-          hideTitle
-          schema={schema}
-          key={`${selectedRootElement}_${selectedType}`}
-          disabled={!!campaignId || loading || showingDiffs}
-          config={config}
-          blockSchema={selectedBlockSchema}
-          state={config[selectedRootElement]}
-          setState={(newConfig) => {
-            setConfig({ ...config, [selectedRootElement]: newConfig });
-          }}
-          entity={entity}
-          schemaMappingConfig={schemaMappingConfig}
-          errorPathPrefix={errorPathPrefix}
-        />
+        <BlockScopeProvider rootElement={selectedRootElement}>
+          <Block
+            hideTitle
+            schema={schema}
+            key={`${selectedRootElement}_${selectedType}`}
+            disabled={!!campaignId || loading || showingDiffs}
+            blockSchema={selectedBlockSchema}
+            entity={entity}
+            schemaMappingConfig={schemaMappingConfig}
+            errorPathPrefix={errorPathPrefix}
+          />
+        </BlockScopeProvider>
       </div>
     );
   }
@@ -129,12 +124,7 @@ export default function BlockUnion({
             key={o.title}
             type="button"
             className="min-h-25 w-full cursor-pointer rounded-xl border border-gray-200 p-5 text-left hover:bg-white"
-            onClick={() => {
-              setConfig({
-                ...config,
-                [selectedRootElement]: unionVariantDefaults(o),
-              });
-            }}
+            onClick={() => setCurrentConfig(unionVariantDefaults(o))}
           >
             <span className="text-primary-9 block text-lg font-bold">
               {renderMathInText(o.title)}

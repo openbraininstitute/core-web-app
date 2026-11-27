@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -6,6 +6,8 @@ import {
   type SectionValue,
 } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/editor';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
+
+import { renderInForm } from './form-providers';
 
 import type { SectionListEntry } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
 
@@ -16,7 +18,7 @@ const SECTION_LISTS: SectionListEntry[] = [
 
 function renderEditor(values: Record<string, SectionValue>, disabled = false) {
   const onChange = vi.fn();
-  render(
+  renderInForm(
     <SectionListConfigEditor
       uiElement={ScanConfigUIElementDict.ionChannelVariableModificationBySectionList}
       sectionLists={SECTION_LISTS}

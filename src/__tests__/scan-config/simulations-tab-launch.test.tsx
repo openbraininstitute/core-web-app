@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
+import { ApiError } from '@/api/error';
 import { ObiOneTaskTypeDict } from '@/api/one/types/task';
 import { SimulationsTab } from '@/features/scan-config/use-cases/simulations/results';
 import { messages } from '@/i18n/en/simulation';
@@ -15,7 +16,6 @@ const mocks = vi.hoisted(() => ({
   notificationError: vi.fn(),
   openModal: vi.fn(),
   costConfirmation: {} as { taskType?: string; onConfirm?: (ids: string[]) => unknown },
-  runSimulationBatch: vi.fn(),
   runTask: vi.fn(),
 }));
 
@@ -44,9 +44,6 @@ vi.mock('@/features/scan-config/use-cases/simulations/ui-adapter', () => ({
 }));
 vi.mock('@/components/notification', () => ({
   useAppNotification: () => ({ error: mocks.notificationError, success: vi.fn() }),
-}));
-vi.mock('@/services/small-scale-simulator/circuit', () => ({
-  runSimulationBatch: mocks.runSimulationBatch,
 }));
 vi.mock('@/api/one/runner', () => ({ runTask: mocks.runTask }));
 vi.mock('@/entity-configuration/domain/simulation/simulation-campaign', async (importOriginal) => ({
@@ -120,33 +117,38 @@ describe('SimulationsTab launch routing', () => {
     vi.clearAllMocks();
   });
 
-  it('launches a me-model through obi-one', async () => {
-    mocks.model = { entityType: EntityTypeDict.Memodel };
+  it.each([
+    [EntityTypeDict.Memodel, ObiOneTaskTypeDict.SingleNeuronSimulationExecution],
+    [EntityTypeDict.IonChannelModel, ObiOneTaskTypeDict.IonChannelModelSimulationExecution],
+  ])('launches a %s through obi-one as %s', async (entityType, taskType) => {
+    mocks.model = { entityType };
     mocks.runTask.mockResolvedValue({ job_id: 'job' });
 
     await clickLaunch();
 
     expect(mocks.openModal).toHaveBeenCalled();
-    expect(mocks.costConfirmation.taskType).toBe(
-      ObiOneTaskTypeDict.SingleNeuronSimulationExecution
-    );
+    expect(mocks.costConfirmation.taskType).toBe(taskType);
     await mocks.costConfirmation.onConfirm?.(['s1']);
-    expect(mocks.runTask).toHaveBeenCalled();
-    expect(mocks.runSimulationBatch).not.toHaveBeenCalled();
+    expect(mocks.runTask).toHaveBeenCalledWith(
+      expect.objectContaining({ task_type: taskType, config_id: 's1' })
+    );
   });
 
-  it('runs an ion channel model on Bluenaas', async () => {
+  it.each([
+    [
+      "the API's message for an API error",
+      new ApiError('Bad request', { message: 'No seats' }),
+      'No seats',
+    ],
+    ['the generic message for any other error', new Error('boom'), messages.SimulationLaunchError],
+  ])('shows %s when a launch fails', async (_, error, message) => {
     mocks.model = { entityType: EntityTypeDict.IonChannelModel };
+    mocks.runTask.mockRejectedValue(error);
 
     await clickLaunch();
-
-    expect(mocks.openModal).toHaveBeenCalled();
-    expect(mocks.costConfirmation.taskType).toBe(
-      ObiOneTaskTypeDict.IonChannelModelSimulationExecution
-    );
     await mocks.costConfirmation.onConfirm?.(['s1']);
-    expect(mocks.runSimulationBatch).toHaveBeenCalled();
-    expect(mocks.runTask).not.toHaveBeenCalled();
+
+    expect(mocks.notificationError).toHaveBeenCalledWith(expect.objectContaining({ message }));
   });
 
   it.each([
@@ -165,7 +167,6 @@ describe('SimulationsTab launch routing', () => {
       expect.objectContaining({ message: messages.SimulationLaunchTargetError })
     );
     expect(mocks.openModal).not.toHaveBeenCalled();
-    expect(mocks.runSimulationBatch).not.toHaveBeenCalled();
     expect(mocks.runTask).not.toHaveBeenCalled();
   });
 });

@@ -5,6 +5,7 @@ import {
   type Reference as ReferenceSchema,
   ScanConfigUIElementDict,
 } from '@/features/scan-config/types';
+import { useDictionaryEntries } from '@/features/scan-config/use-config-store';
 
 import {
   useAllowedBlockTypesByReferenceType,
@@ -13,7 +14,7 @@ import {
 } from '../hooks/schema';
 import { scanConfigHeldTestId } from '../utils';
 
-import type { Config, ConfigSchema } from '@/features/scan-config/types';
+import type { ConfigSchema } from '@/features/scan-config/types';
 
 const DEFAULT_SENTINEL = '__default_as_null__';
 
@@ -34,7 +35,6 @@ const DEFAULT_SENTINEL = '__default_as_null__';
  *
  * @param schema           the full scan-config schema (source of the reference/variant lookups)
  * @param referenceSchema  the field's own schema; only `reference_types` is read
- * @param config           the current config; dictionary entries become the dropdown options
  * @param value            the currently selected block name, or `null` for the default option
  * @param onChange         called with `(block_name, block_dict_name)` — both `null` for default
  * @param disabled         disables the select
@@ -103,12 +103,10 @@ export function Reference({
   disabled,
   schema,
   referenceSchema,
-  config,
   omit = [],
 }: {
   schema: ConfigSchema;
   referenceSchema: ReferenceSchema;
-  config: Config;
   value: string | null;
   onChange: (block_name: string | null, block_dict_name: string | null) => void;
   disabled: boolean;
@@ -151,6 +149,8 @@ export function Reference({
     if (configKey) matchingConfigKeys.add(configKey);
   }
 
+  const entriesByDictionary = useDictionaryEntries([...matchingConfigKeys]);
+
   if (!schema || !isReferenceFieldVisible(referenceSchema, schema)) return null;
 
   // build dropdown options from all matching dictionaries
@@ -159,18 +159,17 @@ export function Reference({
   const primaryConfigKey = matchingConfigKeys.values().next().value ?? '';
 
   for (const configKey of matchingConfigKeys) {
-    const entries = config[configKey] ?? {};
-    for (const [k, v] of Object.entries(entries)) {
-      if (options.some((o) => o.value === k)) continue;
-      if (omit.includes(k)) continue;
+    for (const entry of entriesByDictionary[configKey] ?? []) {
+      if (options.some((o) => o.value === entry.name)) continue;
+      if (omit.includes(entry.name)) continue;
 
       // narrow to the variants this field's `reference_types` accept (e.g. virtual-only). only
       // applies when those reference types declare accepted variants; otherwise show all entries.
-      if (allowedBlockTypes.size > 0 && typeof v === 'object' && v !== null && 'type' in v) {
-        if (!allowedBlockTypes.has(v.type as string)) continue;
+      if (allowedBlockTypes.size > 0 && entry.type !== undefined) {
+        if (!allowedBlockTypes.has(entry.type)) continue;
       }
 
-      options.push({ label: k, value: k });
+      options.push({ label: entry.name, value: entry.name });
     }
   }
 
@@ -192,8 +191,7 @@ export function Reference({
   // when user selects a value, find which dictionary it belongs to
   const findConfigKeyForValue = (selectedValue: string): string => {
     for (const configKey of matchingConfigKeys) {
-      const entries = config[configKey];
-      if (entries && typeof entries === 'object' && selectedValue in entries) {
+      if (entriesByDictionary[configKey]?.some((entry) => entry.name === selectedValue)) {
         return configKey;
       }
     }

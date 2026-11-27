@@ -42,6 +42,18 @@ const SCALE_TARGETS: Record<TCircuitScaleDictionary, TSimulationLaunchTarget> = 
   [CircuitScaleDictionary.WholeBrain]: LARGE_CIRCUIT_TARGET,
 };
 
+// Not `circuit_simulation`: it loads `simulation.entity_id` as a Circuit.
+const ENTITY_TYPE_TARGETS: Partial<Record<TEntityTypeDict, TSimulationLaunchTarget>> = {
+  [EntityTypeDict.Memodel]: {
+    taskType: ObiOneTaskTypeDict.SingleNeuronSimulationExecution,
+    requiresOfflineTokenConsent: false,
+  },
+  [EntityTypeDict.IonChannelModel]: {
+    taskType: ObiOneTaskTypeDict.IonChannelModelSimulationExecution,
+    requiresOfflineTokenConsent: false,
+  },
+};
+
 export function resolveSimulationLaunchTarget({
   entityType,
   scale,
@@ -51,13 +63,8 @@ export function resolveSimulationLaunchTarget({
   scale: TCircuitScaleDictionary | null;
   targetSimulator: string | null;
 }): TSimulationLaunchTarget | null {
-  // `circuit_simulation` loads `simulation.entity_id` as a Circuit, which a me-model isn't.
-  if (entityType === EntityTypeDict.Memodel) {
-    return {
-      taskType: ObiOneTaskTypeDict.SingleNeuronSimulationExecution,
-      requiresOfflineTokenConsent: false,
-    };
-  }
+  const entityTarget = entityType ? ENTITY_TYPE_TARGETS[entityType] : undefined;
+  if (entityTarget) return entityTarget;
   if (targetSimulator === 'Brian2') {
     return {
       taskType: ObiOneTaskTypeDict.CircuitSimulationBrian2,

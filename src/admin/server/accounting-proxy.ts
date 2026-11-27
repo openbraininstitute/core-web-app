@@ -7,8 +7,13 @@ import {
   AssignBody,
   DepleteProjectBody,
   DepleteVlabBody,
+  DiscountBody,
+  DiscountPatchBody,
+  EmptyBody,
+  ExpirePriceBody,
   GrantBody,
   MoveBody,
+  PriceBody,
   RefundBody,
   ReverseBody,
   TopUpBody,
@@ -32,6 +37,7 @@ import type {
 } from '../sections/accounting/types';
 
 const UUID = '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}';
+const INT_ID = '[1-9][0-9]{0,17}';
 const SAFE_SEGMENT = /^[A-Za-z0-9-]+$/;
 const PAGE_PARAMS = ['page', 'page_size'];
 const MAX_PAGE_SIZE = 100;
@@ -76,6 +82,15 @@ export const ACCOUNTING_ROUTES: TAccountingRoute[] = [
     ...PAGE_PARAMS,
   ]),
   read(`admin/job/${UUID}`),
+  read('admin/discount', ['vlab_id', ...PAGE_PARAMS]),
+  read('admin/price', [
+    'service_type',
+    'service_subtype',
+    'vlab_id',
+    'only_default',
+    ...PAGE_PARAMS,
+  ]),
+  read(`admin/price/${INT_ID}`),
   read('balance/system'),
   read(`report/(system|virtual-lab/${UUID}|project/${UUID})`, [
     'started_after',
@@ -84,6 +99,12 @@ export const ACCOUNTING_ROUTES: TAccountingRoute[] = [
   ]),
   write(AccountingMethod.Patch, `admin/account/${UUID}`, AccountStatusBody),
   write(AccountingMethod.Post, 'admin/refund', RefundBody),
+  write(AccountingMethod.Post, 'admin/discount', DiscountBody),
+  write(AccountingMethod.Patch, `admin/discount/${INT_ID}`, DiscountPatchBody),
+  write(AccountingMethod.Delete, `admin/discount/${INT_ID}`, EmptyBody),
+  write(AccountingMethod.Post, 'admin/price', PriceBody),
+  write(AccountingMethod.Put, `admin/price/${INT_ID}`, PriceBody),
+  write(AccountingMethod.Post, `admin/price/${INT_ID}/expire`, ExpirePriceBody),
   write(AccountingMethod.Post, 'budget/top-up', TopUpBody),
   write(AccountingMethod.Post, 'budget/assign', AssignBody),
   write(AccountingMethod.Post, 'budget/reverse', ReverseBody),
@@ -199,7 +220,7 @@ const unanswered = (write: boolean) =>
   write
     ? accountingReply(
         502,
-        "Accounting didn't answer, so this change may or may not have gone through. Check the journal before trying again.",
+        "Accounting didn't answer, so this change may or may not have gone through. Check the journal, the discounts or the prices list before trying again.",
         AccountingErrorCode.OutcomeUnknown
       )
     : accountingReply(502, "Accounting didn't answer.");
@@ -255,7 +276,7 @@ async function callAccounting(
       method: write?.method ?? AccountingMethod.Get,
       headers: {
         accept: 'application/json',
-        ...(write && { 'content-type': 'application/json' }),
+        ...(write?.body && { 'content-type': 'application/json' }),
       },
       body: write?.body,
       redirect: 'manual',
@@ -319,7 +340,7 @@ export async function forwardAccountingWrite({
   const entry = { operator: operator.id, username: operator.username, method, path, body };
   auditAccountingWrite({ ...entry, phase: AuditPhase.Sent });
   const { reply, upstream } = await callAccounting(path, new URLSearchParams(), {
-    write: { method, body: JSON.stringify(body) },
+    write: { method, body: method === AccountingMethod.Delete ? undefined : JSON.stringify(body) },
   });
   auditAccountingWrite({
     ...entry,

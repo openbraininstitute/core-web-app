@@ -58,6 +58,7 @@ function normalizePlan(plan: PlanV2): PlanV2 {
     build_features: Array.isArray(plan.build_features) ? plan.build_features : [],
     notebooks_features: Array.isArray(plan.notebooks_features) ? plan.notebooks_features : [],
     simulate_features: Array.isArray(plan.simulate_features) ? plan.simulate_features : [],
+    extract_features: Array.isArray(plan.extract_features) ? plan.extract_features : [],
     monthly_subscriptions: Array.isArray(plan.monthly_subscriptions)
       ? plan.monthly_subscriptions.map(normalizeSubscription)
       : [],

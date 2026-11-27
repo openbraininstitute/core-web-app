@@ -1,144 +1,37 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { get } from 'es-toolkit/compat';
 
-import { ScanConfigGenerationError, ScanConfigGenerationStep } from '@/api/one/utils';
-import { useAppNotification } from '@/components/notification';
-import { useLowCredits } from '@/features/low-credits';
-import { useFieldErrors } from '@/features/scan-config/components/hooks/field-errors';
-import { useGenerateScanConfigCampaign } from '@/features/scan-config/components/hooks/use-generate-scan-config-campaign';
-import { LAUNCH_GREEN } from '@/features/scan-config/components/shared/task-launch-button';
-import { ScanConfigResultsTab } from '@/features/scan-config/helpers';
-import {
-  ScanConfigActivity,
-  type TScanConfigActivity,
-  type TScanConfigTabs,
-  type TSupportedEntityTypesForScanConfiguration,
-} from '@/features/scan-config/types';
+import { generateButtonClass } from '@/features/scan-config/components/shared/box-class';
+import { useHasIssues } from '@/features/scan-config/use-config-store';
 import { messages } from '@/i18n/en/scan-config';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { assertErrorMessage, classNames } from '@/util/utils';
 
-import type { ErrorObject } from 'ajv';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { Config } from '@/features/scan-config/types';
+import type { TScanConfigActivity } from '@/features/scan-config/types';
 
-/**
- * A generate button that can be clicked: a soft shadow in the launch green's dark end, and a
- * slight grow under the pointer.
- */
-export const GENERATE_CLICKABLE =
-  'shadow-[0_3px_8px_-1px_rgb(20_56_5/0.3)] transition-[scale] duration-200 ease-out motion-safe:hover:scale-[1.02]';
-
-const LOW_CREDITS_SUBJECT: Record<TScanConfigActivity, string> = {
-  [ScanConfigActivity.Simulate]: 'run the simulation',
-  [ScanConfigActivity.Extract]: 'run the extraction',
-  [ScanConfigActivity.Process]: 'run the skeletonization',
-  [ScanConfigActivity.Build]: 'build the model',
-  [ScanConfigActivity.Optimize]: 'run the optimization',
-  [ScanConfigActivity.Validate]: 'run the validation',
-};
-
-const FAILURE_MESSAGE_KEY: Record<string, string> = {
-  [ScanConfigGenerationStep.CoordinateCount]: 'CoordinateCountFailed',
-  [ScanConfigGenerationStep.Generation]: 'ScanConfigGenerateGridFailed',
-  [ScanConfigGenerationStep.EmptyCampaignId]: 'ScanConfigGenerateGridCampaignIdFailed',
-};
-
+/** The submit button of `ScanConfigForm`: "Generate", or "New" once a campaign exists. */
 export default function GenerateConfigButton({
   loading,
-  errors,
   campaignId,
-  setCampaignId,
-  setLoading,
-  config,
-  setTab,
   activity,
-  generatedApiUrl,
-  entityType,
-  campaignEntityType,
 }: {
   loading: boolean;
-  errors: ErrorObject<string, Record<string, any>, unknown>[] | null | undefined;
   campaignId: string;
-  setCampaignId: (campaignId: string) => void;
-  setLoading: (loading: boolean) => void;
-  config: Config;
-  setTab: (tab: TScanConfigTabs) => void;
   activity: TScanConfigActivity;
-  generatedApiUrl: string;
-  entityType: TSupportedEntityTypesForScanConfiguration;
-  campaignEntityType?: TExtendedEntitiesTypeDict;
 }) {
-  const { projectId, virtualLabId } = useWorkspace();
-  // ajv schema errors plus field-level errors (e.g. duplicate group names) that
-  // schema validation can't catch; either kind blocks generation
-  const fieldErrors = useFieldErrors();
-  const hasBlockingErrors = (!!errors && errors.length > 0) || fieldErrors.size > 0;
-  const notification = useAppNotification();
-  // Generation doesn't consume credits (issue #250): don't gate on balance.
-  const { reportError: reportLowCredits, creditsModal } = useLowCredits({
-    context: { virtualLabId, projectId },
-    subject: LOW_CREDITS_SUBJECT[activity],
-  });
-
-  const generateCampaign = useGenerateScanConfigCampaign({
-    ctx: { virtualLabId, projectId },
-    activity,
-    entityType,
-    campaignEntityType,
-    onSuccess: (newCampaignId) => {
-      setCampaignId(newCampaignId);
-      setTab(ScanConfigResultsTab[activity]);
-    },
-    onError: (error) => {
-      if (!(error instanceof ScanConfigGenerationError)) {
-        notification.error({ message: assertErrorMessage(error) });
-        return;
-      }
-      if (reportLowCredits(error.body)) return;
-
-      notification.error({
-        message: get(messages, `${activity}.${FAILURE_MESSAGE_KEY[error.step]}`),
-        description:
-          error.step === ScanConfigGenerationStep.EmptyCampaignId ? undefined : error.message,
-      });
-    },
-  });
-
-  const onClick = () => {
-    if (loading || generateCampaign.isPending) return;
-    if (campaignId) {
-      setCampaignId('');
-      return;
-    }
-
-    setLoading(true);
-    generateCampaign.mutate({ config, generatedApiUrl }, { onSettled: () => setLoading(false) });
-  };
+  const hasBlockingErrors = useHasIssues('');
 
   return (
-    <>
-      {creditsModal}
-      <button
-        type="button"
-        data-testid="scan-config-submit"
-        className={classNames(
-          // The 3D Player button's font in the launch button's green.
-          'flex min-h-12.5 p-2 w-full items-center justify-center rounded-full text-sm font-semibold ring-1 ring-black/5',
-          hasBlockingErrors || loading
-            ? 'bg-gray-300 text-gray-500'
-            : `${LAUNCH_GREEN} ${GENERATE_CLICKABLE} text-white`
-        )}
-        onClick={onClick}
-        disabled={hasBlockingErrors || loading}
-      >
-        <div className="flex justify-between gap-5">
-          {!campaignId
-            ? get(messages, `${activity}.Generate`, 'Generate campaign')
-            : get(messages, `${activity}.New`, 'New campaign')}
-          {loading && <LoadingOutlined />}
-        </div>
-      </button>
-    </>
+    <button
+      type="submit"
+      data-testid="scan-config-submit"
+      className={generateButtonClass(hasBlockingErrors || loading)}
+      disabled={hasBlockingErrors || loading}
+    >
+      <div className="flex justify-between gap-5">
+        {!campaignId
+          ? get(messages, `${activity}.Generate`, 'Generate campaign')
+          : get(messages, `${activity}.New`, 'New campaign')}
+        {loading && <LoadingOutlined />}
+      </div>
+    </button>
   );
 }

@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
+import {
+  ExtendedEntitiesTypeDict,
+  type TExtendedEntitiesTypeDict,
+} from '@/api/entitycore/types/extended-entity-type';
 import { serializeQuery } from '@/features/data-grid/bindings/entitycore/query-serializer';
 import {
   ColumnPin,
@@ -14,7 +18,6 @@ import { ActivityValues } from '@/ui/segments/workflows/config';
 import { buildWorkflowActivityCellRenderers } from '@/ui/segments/workflows/elements/workflow-activity-cells';
 import { buildWorkflowActivitySchema } from '@/ui/segments/workflows/elements/workflow-activity-schema';
 
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { IGridQuery, TFilterValue } from '@/features/data-grid/core';
 
 /**
@@ -27,7 +30,6 @@ const TASK_CONFIG_ORDERING_FIELDS = ['creation_date', 'update_date', 'name'];
 
 const schema = buildWorkflowActivitySchema({
   activity: ActivityValues.Build,
-  activityName: 'Build',
   entityType: 'memodel' as TExtendedEntitiesTypeDict,
   workspace: { virtualLabId: 'vlab', projectId: 'proj' },
 });
@@ -215,5 +217,35 @@ describe('workflow-activity schema — renderer coverage', () => {
     for (const key of named) {
       expect(registry.has(key), `no renderer registered for "${key}"`).toBe(true);
     }
+  });
+});
+
+describe('workflow-activity schema — the Category and Type cells', () => {
+  function labels(
+    activity: (typeof ActivityValues)[keyof typeof ActivityValues],
+    entityType: TExtendedEntitiesTypeDict
+  ) {
+    const { columns } = buildWorkflowActivitySchema({
+      activity,
+      entityType,
+      workspace: { virtualLabId: 'vlab', projectId: 'proj' },
+    });
+    const value = (id: string) => columns.find((c) => c.id === id)?.getValue?.({} as never);
+    return { category: value('category'), type: value('type') };
+  }
+
+  it("reads as the pickers do, not as the rows' entity type", () => {
+    expect(
+      labels(ActivityValues.Simulate, ExtendedEntitiesTypeDict.IonChannelModelSimulation)
+    ).toEqual({
+      category: 'Simulate',
+      type: 'Ion channel',
+    });
+  });
+
+  it("keeps the picker's casing", () => {
+    expect(
+      labels(ActivityValues.Simulate, ExtendedEntitiesTypeDict.SingleNeuronSimulation).type
+    ).toBe('Single neuron (legacy)');
   });
 });

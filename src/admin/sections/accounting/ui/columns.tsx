@@ -4,7 +4,7 @@ import { splitLedgers, TRANSACTION_LABELS } from '../helpers';
 import { Credits, EnabledPill } from './cells';
 
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
-import type { TJournalEntry, TLedgerEntry, TVlabAccount } from '../types';
+import type { TJournalEntry, TLedgerEntry, TValidity, TVlabAccount } from '../types';
 
 export function creditsColumn<Row>(
   id: string,
@@ -17,6 +17,23 @@ export function creditsColumn<Row>(
     width: { width: 140 },
     renderCell: (row) => <Credits amount={amount(row)} />,
   };
+}
+
+export function validityColumns<Row extends TValidity>(): Array<ISimpleColumn<Row>> {
+  return [
+    {
+      id: 'valid_from',
+      header: 'Starts',
+      width: { width: 170 },
+      getValue: (row) => formatDateTime(row.valid_from),
+    },
+    {
+      id: 'valid_to',
+      header: 'Ends',
+      width: { width: 170 },
+      getValue: (row) => (row.valid_to ? formatDateTime(row.valid_to) : 'No end'),
+    },
+  ];
 }
 
 export function accountNameColumn<Row extends TVlabAccount>(header: string): ISimpleColumn<Row> {

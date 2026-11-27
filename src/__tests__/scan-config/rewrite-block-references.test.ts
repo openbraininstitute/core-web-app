@@ -15,19 +15,19 @@ function blockRef(block_name: string, block_dict_name = 'neuron_sets') {
   };
 }
 
+function target(name: string, dictionary = 'neuron_sets') {
+  return { dictionary, name };
+}
+
 /**
- * Mirrors the delete/rename walk in `block-dictionary-entries.tsx`:
- * skip `initialize`, then rewrite every dictionary entry.
+ * Mirrors the delete walk in `block-dictionary-entries.tsx`: skip `initialize` (cleared by
+ * `clearDeletedBlockReferences`), then clear the references in every dictionary entry.
  */
-function rewriteConfigEntries(
-  config: Record<string, unknown>,
-  matchName: string,
-  mode: Parameters<typeof rewriteBlockReferences>[2]
-) {
+function clearConfigEntries(config: Record<string, unknown>, name: string) {
   for (const [configK, configV] of Object.entries(config)) {
     if (configK === 'initialize' || !isPlainObject(configV)) continue;
     for (const entryV of Object.values(configV)) {
-      rewriteBlockReferences(entryV, matchName, mode);
+      rewriteBlockReferences(entryV, target(name), { type: RewriteBlockReferencesModeDict.Clear });
     }
   }
 }
@@ -41,7 +41,9 @@ describe('rewriteBlockReferences', () => {
         other: 'keep',
       };
 
-      rewriteBlockReferences(entry, 'Set A', { type: RewriteBlockReferencesModeDict.Clear });
+      rewriteBlockReferences(entry, target('Set A'), {
+        type: RewriteBlockReferencesModeDict.Clear,
+      });
 
       expect(entry).toEqual({
         type: 'VirtualCombinedNeuronSet',
@@ -60,7 +62,9 @@ describe('rewriteBlockReferences', () => {
         ],
       };
 
-      rewriteBlockReferences(entry, 'Set A', { type: RewriteBlockReferencesModeDict.Clear });
+      rewriteBlockReferences(entry, target('Set A'), {
+        type: RewriteBlockReferencesModeDict.Clear,
+      });
 
       expect(entry.combined_with).toEqual([
         [null, 'union'],
@@ -80,7 +84,9 @@ describe('rewriteBlockReferences', () => {
         ],
       };
 
-      rewriteBlockReferences(entry, 'Set A', { type: RewriteBlockReferencesModeDict.Clear });
+      rewriteBlockReferences(entry, target('Set A'), {
+        type: RewriteBlockReferencesModeDict.Clear,
+      });
 
       expect(entry.combined_with).toEqual([
         [null, 'union'],
@@ -99,7 +105,9 @@ describe('rewriteBlockReferences', () => {
         label: 'Set A',
       };
 
-      rewriteBlockReferences(entry, 'Set A', { type: RewriteBlockReferencesModeDict.Clear });
+      rewriteBlockReferences(entry, target('Set A'), {
+        type: RewriteBlockReferencesModeDict.Clear,
+      });
 
       expect(entry).toEqual({
         type: 'Recording',
@@ -117,7 +125,7 @@ describe('rewriteBlockReferences', () => {
         [{ block_name: 'Set A', block_dict_name: 'neuron_sets' }, 'union'],
       ];
 
-      rewriteBlockReferences({ combined_with }, 'Set A', {
+      rewriteBlockReferences({ combined_with }, target('Set A'), {
         type: RewriteBlockReferencesModeDict.Clear,
       });
 
@@ -133,7 +141,7 @@ describe('rewriteBlockReferences', () => {
         neuron_set: { block_name: 'Old', block_dict_name: 'neuron_sets' },
       };
 
-      rewriteBlockReferences(entry, 'Old', {
+      rewriteBlockReferences(entry, target('Old'), {
         type: RewriteBlockReferencesModeDict.Rename,
         to: 'New',
       });
@@ -151,7 +159,7 @@ describe('rewriteBlockReferences', () => {
         ],
       };
 
-      rewriteBlockReferences(entry, 'Old', {
+      rewriteBlockReferences(entry, target('Old'), {
         type: RewriteBlockReferencesModeDict.Rename,
         to: 'New',
       });
@@ -161,6 +169,35 @@ describe('rewriteBlockReferences', () => {
         [{ block_name: 'New', block_dict_name: 'neuron_sets' }, 'union'],
         [{ block_name: 'Other', block_dict_name: 'neuron_sets' }, 'diff'],
       ]);
+    });
+  });
+
+  describe('dictionary scope', () => {
+    it('leaves a same-named entry of another dictionary untouched', () => {
+      const renamed = {
+        neuron_set: blockRef('Same'),
+        timestamps: blockRef('Same', 'timestamps'),
+        combined_with: [[blockRef('Same', 'timestamps'), 'union']],
+      };
+      const cleared = structuredClone(renamed);
+
+      rewriteBlockReferences(renamed, target('Same'), {
+        type: RewriteBlockReferencesModeDict.Rename,
+        to: 'New',
+      });
+      rewriteBlockReferences(cleared, target('Same'), {
+        type: RewriteBlockReferencesModeDict.Clear,
+      });
+
+      expect(renamed).toEqual({
+        neuron_set: blockRef('New'),
+        timestamps: blockRef('Same', 'timestamps'),
+        combined_with: [[blockRef('Same', 'timestamps'), 'union']],
+      });
+      expect(cleared).toEqual({
+        timestamps: blockRef('Same', 'timestamps'),
+        combined_with: [[blockRef('Same', 'timestamps'), 'union']],
+      });
     });
   });
 
@@ -181,7 +218,9 @@ describe('rewriteBlockReferences', () => {
 
       for (const section of Object.values(config)) {
         for (const entry of Object.values(section)) {
-          rewriteBlockReferences(entry, 'Gone', { type: RewriteBlockReferencesModeDict.Clear });
+          rewriteBlockReferences(entry, target('Gone'), {
+            type: RewriteBlockReferencesModeDict.Clear,
+          });
         }
       }
 
@@ -191,19 +230,21 @@ describe('rewriteBlockReferences', () => {
 
     it('is a no-op for null, primitives, and empty structures', () => {
       expect(() =>
-        rewriteBlockReferences(null, 'X', { type: RewriteBlockReferencesModeDict.Clear })
+        rewriteBlockReferences(null, target('X'), { type: RewriteBlockReferencesModeDict.Clear })
       ).not.toThrow();
       expect(() =>
-        rewriteBlockReferences('Set A', 'Set A', { type: RewriteBlockReferencesModeDict.Clear })
+        rewriteBlockReferences('Set A', target('Set A'), {
+          type: RewriteBlockReferencesModeDict.Clear,
+        })
       ).not.toThrow();
       expect(() =>
-        rewriteBlockReferences(42, 'Set A', { type: RewriteBlockReferencesModeDict.Clear })
+        rewriteBlockReferences(42, target('Set A'), { type: RewriteBlockReferencesModeDict.Clear })
       ).not.toThrow();
       expect(() =>
-        rewriteBlockReferences({}, 'Set A', { type: RewriteBlockReferencesModeDict.Clear })
+        rewriteBlockReferences({}, target('Set A'), { type: RewriteBlockReferencesModeDict.Clear })
       ).not.toThrow();
       expect(() =>
-        rewriteBlockReferences([], 'Set A', { type: RewriteBlockReferencesModeDict.Clear })
+        rewriteBlockReferences([], target('Set A'), { type: RewriteBlockReferencesModeDict.Clear })
       ).not.toThrow();
     });
   });
@@ -220,7 +261,9 @@ describe('rewriteBlockReferences', () => {
         ],
       };
 
-      rewriteBlockReferences(entry, 'Deleted Set', { type: RewriteBlockReferencesModeDict.Clear });
+      rewriteBlockReferences(entry, target('Deleted Set'), {
+        type: RewriteBlockReferencesModeDict.Clear,
+      });
 
       expect(entry.base_neuron_set).toEqual(blockRef('Layer 5'));
       expect(entry.combined_with).toEqual([
@@ -238,7 +281,9 @@ describe('rewriteBlockReferences', () => {
           combined_with: [[blockRef('Gone'), 'union']],
         };
 
-        rewriteBlockReferences(entry, 'Gone', { type: RewriteBlockReferencesModeDict.Clear });
+        rewriteBlockReferences(entry, target('Gone'), {
+          type: RewriteBlockReferencesModeDict.Clear,
+        });
 
         expect(entry.combined_with).toEqual([[null, 'union']]);
         expect(entry.base_neuron_set).toEqual(blockRef('Keep'));
@@ -269,7 +314,9 @@ describe('rewriteBlockReferences', () => {
         ],
       };
 
-      rewriteBlockReferences(entry, 'Gone Virtual', { type: RewriteBlockReferencesModeDict.Clear });
+      rewriteBlockReferences(entry, target('Gone Virtual'), {
+        type: RewriteBlockReferencesModeDict.Clear,
+      });
 
       expect(entry.combined_with[0]).toEqual([null, 'union']);
       expect(entry.combined_with[1]).toEqual([
@@ -289,7 +336,9 @@ describe('rewriteBlockReferences', () => {
         combined_with: [[blockRef('Keep'), 'union']],
       };
 
-      rewriteBlockReferences(entry, 'Gone Base', { type: RewriteBlockReferencesModeDict.Clear });
+      rewriteBlockReferences(entry, target('Gone Base'), {
+        type: RewriteBlockReferencesModeDict.Clear,
+      });
 
       expect('base_neuron_set' in entry).toBe(false);
       expect(entry.combined_with).toEqual([[blockRef('Keep'), 'union']]);
@@ -305,7 +354,7 @@ describe('rewriteBlockReferences', () => {
         ],
       };
 
-      rewriteBlockReferences(entry, 'Old Name', {
+      rewriteBlockReferences(entry, target('Old Name'), {
         type: RewriteBlockReferencesModeDict.Rename,
         to: 'New Name',
       });
@@ -322,7 +371,7 @@ describe('rewriteBlockReferences', () => {
         type: 'CircuitSimulationScanConfig',
         initialize: {
           type: 'CircuitSimulationScanConfig.Initialize',
-          // skipped by product walk — left intact here on purpose
+          // skipped by this walk: `clearDeletedBlockReferences` clears it in the product
           node_set: {
             block_name: 'Gone',
             block_dict_name: 'neuron_sets',
@@ -382,7 +431,7 @@ describe('rewriteBlockReferences', () => {
         },
       };
 
-      rewriteConfigEntries(config, 'Gone', { type: RewriteBlockReferencesModeDict.Clear });
+      clearConfigEntries(config, 'Gone');
 
       expect(config.neuron_sets.Combined.combined_with).toEqual([[null, 'union']]);
       expect('neuron_set' in config.recordings.Soma).toBe(false);
@@ -396,11 +445,10 @@ describe('rewriteBlockReferences', () => {
       expect(config.synaptic_manipulations.Disconnect.postsynaptic_neuron_set.block_name).toBe(
         'Keep'
       );
-      // initialize is intentionally not walked by the product delete path
       expect(config.initialize.node_set.block_name).toBe('Gone');
     });
 
-    it('renames nested combined_with refs across the config without touching initialize', () => {
+    it('renames every ref across the whole config, `initialize` included', () => {
       const config = {
         initialize: {
           node_set: {
@@ -428,7 +476,7 @@ describe('rewriteBlockReferences', () => {
         },
       };
 
-      rewriteConfigEntries(config, 'Old', {
+      rewriteBlockReferences(config, target('Old'), {
         type: RewriteBlockReferencesModeDict.Rename,
         to: 'New',
       });
@@ -436,7 +484,7 @@ describe('rewriteBlockReferences', () => {
       expect(config.neuron_sets.Combined.base_neuron_set.block_name).toBe('New');
       expect(config.neuron_sets.Combined.combined_with).toEqual([[blockRef('New'), 'diff']]);
       expect(config.recordings.R1.neuron_set.block_name).toBe('New');
-      expect(config.initialize.node_set.block_name).toBe('Old');
+      expect(config.initialize.node_set.block_name).toBe('New');
     });
 
     it('does not treat property_filter / neuron_ids payloads as block references', () => {
@@ -458,8 +506,12 @@ describe('rewriteBlockReferences', () => {
         },
       };
 
-      rewriteBlockReferences(entry, 'L5_PC', { type: RewriteBlockReferencesModeDict.Clear });
-      rewriteBlockReferences(idEntry, 'ids', { type: RewriteBlockReferencesModeDict.Clear });
+      rewriteBlockReferences(entry, target('L5_PC'), {
+        type: RewriteBlockReferencesModeDict.Clear,
+      });
+      rewriteBlockReferences(idEntry, target('ids'), {
+        type: RewriteBlockReferencesModeDict.Clear,
+      });
 
       expect(entry.property_filter.filter_dict.mtype).toEqual(['L5_PC']);
       expect(idEntry.neuron_ids).toEqual({
@@ -476,7 +528,7 @@ describe('rewriteBlockReferences', () => {
         combined_with: [[{ block_name: 'Gone' }, 'union']],
       };
 
-      rewriteBlockReferences(entry, 'Gone', { type: RewriteBlockReferencesModeDict.Clear });
+      rewriteBlockReferences(entry, target('Gone'), { type: RewriteBlockReferencesModeDict.Clear });
 
       expect('base_neuron_set' in entry).toBe(false);
       expect(entry.combined_with).toEqual([[null, 'union']]);

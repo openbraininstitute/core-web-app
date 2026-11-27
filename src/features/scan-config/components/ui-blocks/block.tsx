@@ -3,33 +3,176 @@ import { isNil } from 'es-toolkit/compat';
 import { FieldDescriptionTooltip } from '@/features/scan-config/components/shared/field-description-tooltip';
 import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
 import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
-import { UIElementRender } from '@/features/scan-config/components/ui-elements';
+import {
+  FieldIssueText,
+  FieldLabel,
+} from '@/features/scan-config/components/ui-elements/field-control';
+import {
+  useFieldIssueMark,
+  useFieldLabelling,
+} from '@/features/scan-config/components/ui-elements/field-labelling';
 import { SweepCollapseButton } from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { isReferenceFieldVisible } from '@/features/scan-config/components/ui-elements/reference';
-import { resolveNeuronFilterProperties } from '@/features/scan-config/helpers';
+import {
+  FIELD_REGISTRY,
+  useNeuronFilterProperties,
+} from '@/features/scan-config/components/ui-elements/registry';
 import { useBlockDiff } from '@/features/scan-config/hooks/use-block-diff';
 import {
-  type Config,
   type ConfigSchema,
-  type ConfigValue,
   isType,
+  type ParamSchema,
   ScanConfigUIElementDict,
   type TBlock,
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
+import { useField } from '@/features/scan-config/use-config-store';
 import { MarkdownDescription } from '@/ui/molecules/markdown-description';
 import { cn } from '@/utils/css-class';
 
+import type { ReactNode } from 'react';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type { Nullish } from '@/utils/type';
 
+type TFieldRowProps = {
+  fieldKey: string;
+  paramSchema: ParamSchema;
+  required: boolean;
+  diffClass: string | undefined;
+  schema: ConfigSchema;
+  disabled: boolean;
+  entity: TSupportedEntitiesForScanConfiguration | Nullish;
+  schemaMappingConfig: TSchemaMappingConfiguration | undefined;
+  selectedEntry?: string;
+  errorPathPrefix?: string;
+};
+
+/**
+ * A population is chosen but has no filterable property: a data condition, not a missing input,
+ * so it is said instead of the field's own message.
+ */
+function NeuronFilterNotice({
+  paramSchema,
+  schemaMappingConfig,
+  id,
+  children,
+}: Pick<TFieldRowProps, 'schemaMappingConfig'> & {
+  /** the id the field is described by, so the note is read with the field */
+  id: string | undefined;
+  children: ReactNode;
+  paramSchema: Extract<
+    ParamSchema,
+    { ui_element: typeof ScanConfigUIElementDict.NeuronPropertyFilter }
+  >;
+}) {
+  const { population, properties } = useNeuronFilterProperties(paramSchema, schemaMappingConfig);
+
+  if (!population || Object.keys(properties).length > 0) return children;
+  return (
+    <span id={id} className="text-red-500">
+      No properties available
+    </span>
+  );
+}
+
+function FieldRow({ required, diffClass, ...control }: TFieldRowProps) {
+  const { fieldKey, paramSchema, disabled, entity, schemaMappingConfig } = control;
+  const [value, setValue] = useField(fieldKey);
+  const requiredMissing = required && isNil(value);
+  const { issue, issueId, controlAria } = useFieldIssueMark(
+    control.errorPathPrefix,
+    requiredMissing ? 'Required' : undefined
+  );
+  const issueText = <FieldIssueText id={issueId} issue={issue} requiredMissing={requiredMissing} />;
+  const Field = FIELD_REGISTRY[paramSchema.ui_element];
+  const labelling = useFieldLabelling(paramSchema.ui_element);
+  const isBooleanInput = paramSchema.ui_element === ScanConfigUIElementDict.BooleanInput;
+  const isPillField = paramSchema.ui_element === ScanConfigUIElementDict.ModelSelectorSingle;
+  const isSweepField =
+    paramSchema.ui_element === ScanConfigUIElementDict.FloatParameterSweep ||
+    paramSchema.ui_element === ScanConfigUIElementDict.IntParameterSweep;
+
+  return (
+    <div
+      className={cn('flex w-full min-w-0 max-w-full flex-col', {
+        'flex-row items-center justify-between hover:bg-gray-100 p-2 rounded-lg': isBooleanInput,
+      })}
+      data-scan-config-block-element-container-of={paramSchema.ui_element}
+      data-testid={`scan-config-field-${fieldKey}`}
+    >
+      <div className={cn('flex gap-0.5 w-full items-center', { 'mb-2': !isBooleanInput })}>
+        <FieldLabel
+          controlId={labelling.controlId}
+          labelId={labelling.labelId}
+          className={cn('text-primary-9 text-base font-semibold', {
+            'cursor-pointer': isBooleanInput,
+          })}
+        >
+          {renderMathInText(paramSchema.title)}
+        </FieldLabel>
+        {paramSchema.units && <FieldUnit unit={paramSchema.units} className="ml-1 text-base" />}
+        {isSweepField && (
+          <SweepCollapseButton
+            value={value as null | number | (number | null)[]}
+            disabled={disabled}
+            onChange={setValue}
+          />
+        )}
+      </div>
+
+      <FieldDescriptionTooltip
+        content={
+          fieldKey === 'circuit' && entity ? (
+            entity.description
+          ) : (
+            <MarkdownDescription>{paramSchema.description}</MarkdownDescription>
+          )
+        }
+      >
+        <span className="block w-full">
+          <div
+            {...labelling.group}
+            aria-describedby={labelling.labelId && issueId}
+            className={cn(
+              'w-full min-w-0 max-w-full border',
+              isPillField ? 'rounded-full' : 'rounded-lg',
+              diffClass,
+              !diffClass && 'border-transparent'
+            )}
+          >
+            {Field && (
+              <Field
+                {...control}
+                controlId={labelling.controlId}
+                controlAria={controlAria}
+                value={value}
+                setValue={setValue}
+              />
+            )}
+          </div>
+        </span>
+      </FieldDescriptionTooltip>
+
+      {paramSchema.ui_element === ScanConfigUIElementDict.NeuronPropertyFilter ? (
+        <NeuronFilterNotice
+          paramSchema={paramSchema}
+          schemaMappingConfig={schemaMappingConfig}
+          id={issueId}
+        >
+          {issueText}
+        </NeuronFilterNotice>
+      ) : (
+        issueText
+      )}
+    </div>
+  );
+}
+
+/** The fields of one block. It reads and writes the block of the `BlockScopeProvider` above it. */
 export default function Block({
   schema,
   disabled,
   blockSchema,
-  state,
-  setState,
-  config,
   entity,
   hideTitle,
   schemaMappingConfig,
@@ -39,11 +182,8 @@ export default function Block({
 }: {
   schema: ConfigSchema;
   disabled: boolean;
-  config: Config;
   blockSchema?: TBlock;
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
-  state: Record<string, ConfigValue>;
-  setState: (newState: Record<string, ConfigValue>) => void;
   hideTitle?: boolean;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
   rootElement?: string;
@@ -82,119 +222,31 @@ export default function Block({
 
       <div className="flex flex-col gap-5">
         {blockSchema.properties &&
-          Object.entries(blockSchema.properties)
-            .filter(
-              ([_, paramSchema]) =>
-                !isType(paramSchema) &&
-                !paramSchema.ui_hidden &&
-                (paramSchema.ui_element !== ScanConfigUIElementDict.Reference ||
-                  isReferenceFieldVisible(paramSchema, schema))
-            )
-            .map(([k, blockElementSchema]) => {
-              if (isType(blockElementSchema)) return null;
-              const isBooleanInput =
-                blockElementSchema.ui_element === ScanConfigUIElementDict.BooleanInput;
-              const isPillField =
-                blockElementSchema.ui_element === ScanConfigUIElementDict.ModelSelectorSingle;
+          Object.entries(blockSchema.properties).map(([fieldKey, paramSchema]) => {
+            if (isType(paramSchema) || paramSchema.ui_hidden) return null;
+            if (
+              paramSchema.ui_element === ScanConfigUIElementDict.Reference &&
+              !isReferenceFieldVisible(paramSchema, schema)
+            ) {
+              return null;
+            }
 
-              const value = state[k];
-              const fieldBorderClass = getFieldDiffClass(k);
-              const isSweepField =
-                blockElementSchema.ui_element === ScanConfigUIElementDict.FloatParameterSweep ||
-                blockElementSchema.ui_element === ScanConfigUIElementDict.IntParameterSweep;
-
-              return (
-                <div
-                  key={k}
-                  className={cn('flex w-full min-w-0 max-w-full flex-col', {
-                    'flex-row items-center justify-between hover:bg-gray-100 p-2 rounded-lg':
-                      isBooleanInput,
-                  })}
-                  data-scan-config-block-element-container-of={blockElementSchema.ui_element}
-                  data-testid={`scan-config-field-${k}`}
-                >
-                  <div
-                    className={cn('flex gap-0.5 w-full items-center', { 'mb-2': !isBooleanInput })}
-                  >
-                    <label
-                      htmlFor={k}
-                      className={cn('text-primary-9 text-base font-semibold', {
-                        'cursor-pointer': isBooleanInput,
-                      })}
-                    >
-                      {renderMathInText(blockElementSchema.title)}
-                    </label>
-                    {blockElementSchema.units && (
-                      <FieldUnit unit={blockElementSchema.units} className="ml-1 text-base" />
-                    )}
-                    {isSweepField && (
-                      <SweepCollapseButton
-                        value={value as null | number | (number | null)[]}
-                        disabled={disabled}
-                        onChange={(single) => setState({ ...state, [k]: single })}
-                      />
-                    )}
-                  </div>
-
-                  <FieldDescriptionTooltip
-                    content={
-                      k === 'circuit' && entity ? (
-                        entity.description
-                      ) : (
-                        <MarkdownDescription>{blockElementSchema.description}</MarkdownDescription>
-                      )
-                    }
-                  >
-                    <span className="block w-full">
-                      <div
-                        className={cn(
-                          'w-full min-w-0 max-w-full border',
-                          isPillField ? 'rounded-full' : 'rounded-lg',
-                          fieldBorderClass,
-                          !fieldBorderClass && 'border-transparent'
-                        )}
-                      >
-                        <UIElementRender
-                          k={k}
-                          disabled={disabled}
-                          paramSchema={blockElementSchema}
-                          config={config}
-                          schema={schema}
-                          entity={entity}
-                          schemaMappingConfig={schemaMappingConfig}
-                          state={state}
-                          setState={setState}
-                          selectedEntry={selectedEntry}
-                          errorPathPrefix={errorPathPrefix ? `${errorPathPrefix}/${k}` : undefined}
-                        />
-                      </div>
-                    </span>
-                  </FieldDescriptionTooltip>
-
-                  {(() => {
-                    if (
-                      blockElementSchema.ui_element === ScanConfigUIElementDict.NeuronPropertyFilter
-                    ) {
-                      const { population, properties } = resolveNeuronFilterProperties(
-                        blockElementSchema,
-                        state,
-                        schemaMappingConfig
-                      );
-                      // A population is chosen but exposes no filterable properties:
-                      // a data condition, not a missing input, so say so instead of "Required".
-                      if (population && Object.keys(properties).length === 0) {
-                        return <span className="text-red-500">No properties available</span>;
-                      }
-                    }
-
-                    return (
-                      blockSchema.required?.includes(k) &&
-                      isNil(value) && <span className="text-red-500">Required</span>
-                    );
-                  })()}
-                </div>
-              );
-            })}
+            return (
+              <FieldRow
+                key={fieldKey}
+                fieldKey={fieldKey}
+                paramSchema={paramSchema}
+                required={blockSchema.required?.includes(fieldKey) ?? false}
+                diffClass={getFieldDiffClass(fieldKey)}
+                schema={schema}
+                disabled={disabled}
+                entity={entity}
+                schemaMappingConfig={schemaMappingConfig}
+                selectedEntry={selectedEntry}
+                errorPathPrefix={errorPathPrefix ? `${errorPathPrefix}/${fieldKey}` : undefined}
+              />
+            );
+          })}
       </div>
     </div>
   );

@@ -4,8 +4,9 @@ import { DatePicker, Form, Input, InputNumber, Modal, Select, Switch } from 'ant
 import dayjs from 'dayjs';
 import { match } from 'ts-pattern';
 
+import { dateTimeItemProps, lockWhilePending } from './form-props';
+
 import type { Rule, RuleObject } from 'antd/es/form';
-import type { Dayjs } from 'dayjs';
 import type { ReactNode } from 'react';
 
 export type FormModalField = {
@@ -37,6 +38,26 @@ const fieldControl = ({ kind, min, max, options, placeholder }: FormModalField) 
     .otherwise(() => <Input placeholder={placeholder} />);
 
 export const REQUIRED = { required: true, message: 'Required' };
+
+/** One field, its note below it: Form.Item's own `extra` shifts the form when an error shows. */
+export function FormModalItem({ field }: { field: FormModalField }) {
+  return (
+    <div className="mb-6">
+      <Form.Item
+        name={field.name}
+        label={field.label}
+        rules={field.rules}
+        dependencies={field.dependencies}
+        valuePropName={field.kind === 'switch' ? 'checked' : 'value'}
+        {...(field.kind === 'datetime' && dateTimeItemProps)}
+        style={{ marginBottom: 0 }}
+      >
+        {fieldControl(field)}
+      </Form.Item>
+      {field.extra && <div className="text-neutral-4 mt-1 text-sm">{field.extra}</div>}
+    </div>
+  );
+}
 
 export const NAME_FIELD: FormModalField = {
   name: 'name',
@@ -104,13 +125,7 @@ export function FormModal<Values extends Record<string, unknown>>({
       okButtonProps={{ danger }}
       confirmLoading={pending}
       onOk={() => form.submit()}
-      // A save in flight finishes in this dialog, so nothing closes it until then.
-      onCancel={() => {
-        if (!pending) onClose();
-      }}
-      closable={!pending}
-      maskClosable={!pending}
-      keyboard={!pending}
+      {...lockWhilePending(pending, onClose)}
       cancelButtonProps={{ disabled: pending }}
     >
       {description && <div className="text-neutral-4 mb-4">{description}</div>}
@@ -125,25 +140,7 @@ export function FormModal<Values extends Record<string, unknown>>({
         }}
       >
         {fields.map((field) => (
-          // Form.Item's own `extra` shifts the form when a field first shows an error.
-          <div key={field.name} className="mb-6">
-            <Form.Item
-              name={field.name}
-              label={field.label}
-              rules={field.rules}
-              dependencies={field.dependencies}
-              valuePropName={field.kind === 'switch' ? 'checked' : 'value'}
-              // A date is held as the API's ISO string, so an untouched one compares equal.
-              {...(field.kind === 'datetime' && {
-                getValueProps: (value?: string) => ({ value: value ? dayjs(value) : undefined }),
-                normalize: (date?: Dayjs | null) => date?.toISOString(),
-              })}
-              style={{ marginBottom: 0 }}
-            >
-              {fieldControl(field)}
-            </Form.Item>
-            {field.extra && <div className="text-neutral-4 mt-1 text-sm">{field.extra}</div>}
-          </div>
+          <FormModalItem key={field.name} field={field} />
         ))}
       </Form>
     </Modal>

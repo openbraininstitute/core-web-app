@@ -1,5 +1,6 @@
 'use client';
 
+import { isEqual } from 'es-toolkit';
 import { useEffect } from 'react';
 
 import { usePreviewRecord } from '@/features/scan-config/bridge/entity-preview';
@@ -7,7 +8,6 @@ import { IonChannelModelsPanel } from '@/features/scan-config/components/ui-bloc
 import {
   assignedModelIds,
   availableDistributions,
-  errorsUnder,
   nonParameterErrors,
   parameterErrors,
   readMechanisms,
@@ -21,9 +21,14 @@ import {
   isType,
   ScanConfigUIElementDict,
 } from '@/features/scan-config/types';
+import {
+  useBlockState,
+  useConfigErrorsUnder,
+  useConfigValue,
+} from '@/features/scan-config/use-config-store';
 import { cn } from '@/utils/css-class';
 
-import { LeftColumn, MIDDLE_WRAPPER_BASE, MiddleColumnContent } from './columns';
+import { ConfigForm, LeftColumn, MIDDLE_WRAPPER_BASE, MiddleColumnContent } from './columns';
 
 import type { ReactNode } from 'react';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
@@ -93,9 +98,6 @@ export function EModelOptimisationColumns({ props, state }: Props) {
     selectedRegionModel,
     setSelectedRegionModel,
     selectedMechanismsTab,
-    config,
-    setConfig,
-    errors,
     selectedRootElement,
     editingLocked,
   } = state;
@@ -125,11 +127,12 @@ export function EModelOptimisationColumns({ props, state }: Props) {
     Boolean(rootSchema && preview) &&
     selectedMechanismsTab === EModelOptimisationMechanismsTabs.MechanismSelection;
 
-  const value = config[selectedRootElement];
-  const writeValue = (next: typeof value) => setConfig({ ...config, [selectedRootElement]: next });
+  const distributions = useConfigValue(availableDistributions, isEqual);
+  const emodelErrors = useConfigErrorsUnder(`/${selectedRootElement}`);
+  const [storedValue, writeValue] = useBlockState(selectedRootElement);
+  const value = storedValue ?? null;
   // Each tab's drawers flag only the errors of the keys that tab writes: Region Assignment the region
   // entries, Parameters Selection their parameters.
-  const emodelErrors = errorsUnder(errors, `/${selectedRootElement}`);
   const assignmentErrors = nonParameterErrors(emodelErrors);
   const parametersErrors = parameterErrors(emodelErrors);
 
@@ -165,7 +168,7 @@ export function EModelOptimisationColumns({ props, state }: Props) {
   }, [selectedRegionModel, selectedModelStillAssigned, setSelectedRegionModel]);
 
   return (
-    <>
+    <ConfigForm props={props} state={state} className="contents">
       <LeftColumn props={props} state={state} />
       <div
         id="scan-config-controls-middle"
@@ -225,12 +228,12 @@ export function EModelOptimisationColumns({ props, state }: Props) {
               onChange={writeValue}
               disabled={editingLocked}
               errors={parametersErrors}
-              availableDistributions={availableDistributions(config)}
+              availableDistributions={distributions}
             />
           </DrawerColumn>
         )}
       </div>
-    </>
+    </ConfigForm>
   );
 }
 

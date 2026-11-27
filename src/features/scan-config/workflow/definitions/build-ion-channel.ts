@@ -28,7 +28,6 @@ export const buildIonChannelWorkflow = defineScanConfigWorkflow({
     config: TaskConfigType.IonChannelModelingConfig,
   },
   editor: {
-    className: 'px-4',
     campaignOriginAction: ScanConfigCampaignOriginActionDict.Task,
     defaultTab: {
       __activity: ScanConfigActivity.Build,

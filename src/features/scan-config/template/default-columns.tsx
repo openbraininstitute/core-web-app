@@ -11,16 +11,19 @@ import {
 import {
   BLOCKS_AND_FORM_COLUMNS_CLASS,
   BOX_CLASS,
+  PANE_INSET_CLASS,
 } from '@/features/scan-config/components/shared/box-class';
 import { Right } from '@/features/scan-config/components/ui-columns';
 import { ScanConfigActivity } from '@/features/scan-config/types';
 import { StackedPanes } from '@/features/spike-viewer/spike-statistics/stacked-panes';
+import { StackedSplit } from '@/features/spike-viewer/types';
 import { cn } from '@/utils/css-class';
 
 import { useCollapsingColumns } from './collapsing-columns';
-import { LeftColumn, MiddleColumn } from './columns';
+import { ConfigForm, LeftColumn, MiddleColumn } from './columns';
 
 import type { ReactNode, RefObject } from 'react';
+import type { TStackedSplit } from '@/features/spike-viewer/types';
 import type { ScanConfigTemplateProps } from './types';
 import type { ScanConfigTemplateState } from './use-scan-config-template';
 
@@ -60,7 +63,9 @@ export function DefaultConfigColumns({ props, state }: Props) {
       {/* The blocks and their form in one window, as the preview's views are: its ring a pixel
           under the page's clip, its foot level with theirs. The form keeps only the rule between
           the two, and a subgrid keeps both on the grid's tracks as they are dragged. */}
-      <div
+      <ConfigForm
+        props={props}
+        state={state}
         className={cn(
           BOX_CLASS,
           // a pixel in for its ring, which then meets the project selector's left edge
@@ -73,7 +78,7 @@ export function DefaultConfigColumns({ props, state }: Props) {
           <LeftColumn props={props} state={state} />
         </div>
         {shut === 'none' && <MiddleColumn props={props} state={state} className="border-r-0" />}
-      </div>
+      </ConfigForm>
       {shut !== 'none' && (
         // Its ring a pixel under the page's clip, and its foot level with the preview's boxes.
         <ShutPaneBar
@@ -84,20 +89,7 @@ export function DefaultConfigColumns({ props, state }: Props) {
         />
       )}
       <PreviewColumn boxed={boxed} edge={{ gridRef, onDrag: onEdgeDrag, onReset: reset }}>
-        <Right
-          activity={props.activity}
-          entityType={props.entityType}
-          entity={props.entity}
-          selectedEntry={state.selectedEntry}
-          selectedRootElement={state.selectedRootElement}
-          onCreateEntry={state.createEntry}
-          config={state.config}
-          setConfig={state.setConfig}
-          schema={props.schema}
-          schemaMappingConfig={props.schemaMappingConfig}
-          locked={state.editingLocked}
-          inset={boxed}
-        />
+        <RightColumn props={props} state={state} inset={boxed} />
       </PreviewColumn>
     </div>
   );
@@ -111,10 +103,12 @@ export function DefaultConfigColumns({ props, state }: Props) {
  */
 export function PreviewColumn({
   boxed,
+  split = StackedSplit.Config,
   edge,
   children,
 }: {
   boxed: boolean;
+  split?: Extract<TStackedSplit, typeof StackedSplit.Config | typeof StackedSplit.Isolated>;
   /** The grab bar on its left edge, which the columns before it give way to. */
   edge?: {
     gridRef: RefObject<HTMLDivElement | null>;
@@ -125,12 +119,9 @@ export function PreviewColumn({
 }) {
   const table = useSceneTablePaneHost();
   const handle = edge && (
-    // A double click puts the columns back as they were. Boxed, the bar sits halfway between the
-    // column before and the box: past the grid's gap (0.3125rem) the box is inset 0.75rem.
-    <div
-      onDoubleClick={edge.onReset}
-      className={cn('absolute inset-y-0 left-0', boxed && 'left-[0.21875rem]')}
-    >
+    // A double click puts the columns back as they were. The bar sits halfway between the column
+    // before and the pane: past the grid's gap (0.3125rem) the pane is inset 0.75rem.
+    <div onDoubleClick={edge.onReset} className="absolute inset-y-0 left-[0.21875rem]">
       <PaneSideResizeHandle containerRef={edge.gridRef} minWidth={0} onResize={edge.onDrag} />
     </div>
   );
@@ -138,7 +129,7 @@ export function PreviewColumn({
     return (
       <div className="relative h-full min-h-0 min-w-0">
         {handle}
-        <div className="h-full min-h-0 overflow-hidden">{children}</div>
+        <div className={cn('h-full min-h-0 overflow-hidden', PANE_INSET_CLASS)}>{children}</div>
       </div>
     );
   }
@@ -147,7 +138,7 @@ export function PreviewColumn({
       <div className="relative h-full min-h-0 min-w-0">
         {handle}
         <StackedPanes
-          split="config"
+          split={split}
           bottomShare={0.4}
           top={{
             title: '3D View',
@@ -171,3 +162,21 @@ export function PreviewColumn({
 }
 
 export const DEFAULT_COLUMNS_GRID = 'grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)]';
+
+function RightColumn({ props, state, inset }: Props & { inset: boolean }) {
+  return (
+    <Right
+      activity={props.activity}
+      entityType={props.entityType}
+      entity={props.entity}
+      selectedEntry={state.selectedEntry}
+      selectedRootElement={state.selectedRootElement}
+      onCreateEntry={state.createEntry}
+      setConfig={state.setConfig}
+      schema={props.schema}
+      schemaMappingConfig={props.schemaMappingConfig}
+      locked={state.editingLocked}
+      inset={inset}
+    />
+  );
+}

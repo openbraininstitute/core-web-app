@@ -7,24 +7,17 @@ import { diffBarDataAtom } from '@/features/ai-assistant/chat/use-last-message-d
 import { showRestoreAtom } from '@/features/ai-assistant/message-item/collapsible-message/collapsible-message';
 import { useScanConfigWorkflowEditorField } from '@/features/scan-config/bridge/editor-context';
 import { useSetScanConfigEntityPreview } from '@/features/scan-config/bridge/entity-preview';
-import {
-  nextEntryName,
-  useEntries,
-  useValidateSchema,
-} from '@/features/scan-config/components/hooks';
-import { useConfig } from '@/features/scan-config/components/hooks/schema';
+import { createEntry as createEntryCommand } from '@/features/scan-config/commands';
+import { useConfigStoreSetup } from '@/features/scan-config/components/hooks/schema';
 import { clearScanValueSelectionAtom } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import { withoutEmptyRegions } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import {
-  getConfigKeyForEntity,
   resolveScanConfigTab,
   ScanConfigCampaignOriginActionDict,
 } from '@/features/scan-config/helpers';
 import { useScanConfigEditingLocked } from '@/features/scan-config/hooks/use-config-editing-locked';
-import { useDefaultValidationTargets } from '@/features/scan-config/hooks/use-default-validation-targets';
 import { useScanConfigTab } from '@/features/scan-config/hooks/use-scan-config-tab';
 import {
-  type Config,
   EModelOptimisationMechanismsTabs,
   isType,
   ScanConfigActivity,
@@ -33,9 +26,9 @@ import {
   ScanConfigUIElementDict,
 } from '@/features/scan-config/types';
 import { usePrevious } from '@/hooks/hooks';
-import { useAgentState, useAIConfig } from '@/services/ai-agent';
 import { clearDiffStateAtom, expandedRootElementsAtom } from '@/state/config-highlights';
 
+import type { ConfigValue } from '@/features/scan-config/types';
 import type { ScanConfigTemplateProps } from './types';
 
 /**
@@ -53,8 +46,6 @@ export function useScanConfigTemplate({
   activity = ScanConfigActivity.Simulate,
   schema,
   schemaName,
-  aiEnabled,
-  entityType,
   campaignOriginAction,
   workflowSessionSelection,
   resolveSessionFromIdType,
@@ -87,7 +78,7 @@ export function useScanConfigTemplate({
     () => loadedConfig && withoutEmptyRegions(loadedConfig, schema),
     [loadedConfig, schema]
   );
-  const [config, setConfig] = useConfig({
+  const configStore = useConfigStoreSetup({
     schema,
     initialConfig,
     model: entity,
@@ -96,9 +87,7 @@ export function useScanConfigTemplate({
     resolveFromIdType: resolveSessionFromIdType,
     seed,
   });
-  useDefaultValidationTargets({ schemaName, config, setConfig });
-  const allEntries = useEntries({ config, schema });
-  const errors = useValidateSchema({ initialConfig, config, schema });
+  const setConfig = configStore.set;
   const editingLocked = useScanConfigEditingLocked({
     campaignId,
     loading,
@@ -108,19 +97,12 @@ export function useScanConfigTemplate({
 
   const createEntry = useCallback(
     (rootElement: string, block: Record<string, unknown>) => {
-      const entry = nextEntryName(schema, rootElement, allEntries);
-      allEntries.add(entry);
-
-      setConfig(
-        (previous) =>
-          ({
-            ...previous,
-            [rootElement]: {
-              ...(previous[rootElement] as object),
-              [entry]: block,
-            },
-          }) as Config
-      );
+      const created = createEntryCommand(configStore.getSnapshot(), schema, {
+        dictionary: rootElement,
+        block: block as ConfigValue,
+      });
+      const entry = created.name;
+      setConfig(created.config);
 
       // Selecting alone only highlights the tab; the form opens on `editing`.
       setExpandedRootElements((previous) => new Set(previous).add(rootElement));
@@ -130,7 +112,7 @@ export function useScanConfigTemplate({
       setIsEditingKey(false);
       setNewKey('');
     },
-    [schema, allEntries, setConfig, setExpandedRootElements]
+    [configStore, schema, setConfig, setExpandedRootElements]
   );
 
   const selectedSchema = schema.properties[selectedRootElement];
@@ -176,19 +158,6 @@ export function useScanConfigTemplate({
     },
     [setDiffBarData, setShowRestore]
   );
-
-  useAgentState(
-    aiEnabled
-      ? getConfigKeyForEntity(
-          entityType,
-          activity,
-          entity as { scale?: string } | undefined,
-          schemaName
-        )
-      : null,
-    config
-  );
-  useAIConfig();
 
   // Changing the region choice must drop any model selected under the previous region, so the
   // third (detail) drawer doesn't linger with a stale model when a new region opens.
@@ -242,10 +211,9 @@ export function useScanConfigTemplate({
     setIsEditingKey,
     newKey,
     setNewKey,
-    allEntries,
-    config,
+    initialConfig,
     setConfig,
-    errors,
+    configStore,
     editingLocked,
     createEntry,
     selectedSchema,

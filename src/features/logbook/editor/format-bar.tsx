@@ -1,4 +1,6 @@
 import { useEditorState } from '@tiptap/react';
+import { useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import {
   ALIGNMENTS,
@@ -10,6 +12,8 @@ import {
   TEXT_STYLES,
   titleOf,
 } from '@/features/logbook/editor/formats';
+import { LinkDialog } from '@/features/logbook/editor/link-dialog';
+import { Format } from '@/features/logbook/types';
 import { Icon } from '@/ui/molecules/icon';
 import { cn } from '@/utils/css-class';
 
@@ -102,6 +106,33 @@ export function TextStyleSelect({
   );
 }
 
+/** The link button; the dialog is portalled out of the selection bubble, which hides on blur. */
+export function LinkTool({
+  editor,
+  pressed,
+  disabled,
+}: {
+  readonly editor: Editor;
+  readonly pressed: boolean;
+  readonly disabled: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Tool
+        label="Link"
+        icon="link"
+        pressed={pressed}
+        disabled={disabled}
+        onRun={() => setOpen(true)}
+      />
+      {open
+        ? createPortal(<LinkDialog editor={editor} onClose={() => setOpen(false)} />, document.body)
+        : null}
+    </>
+  );
+}
+
 export function FormatBar({
   editor,
   disabled,
@@ -139,6 +170,7 @@ export function FormatBar({
         active={state.active}
         disabled={disabled}
       />
+      <LinkTool editor={editor} pressed={state.active[Format.Link]} disabled={disabled} />
       <span className={TOOL_RULE} />
       <FormatTools
         editor={editor}

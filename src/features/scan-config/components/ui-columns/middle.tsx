@@ -1,13 +1,11 @@
 import Block from '@/features/scan-config/components/ui-blocks/block';
 import BlockDictionary from '@/features/scan-config/components/ui-blocks/block-dictionary';
 import BlockUnion from '@/features/scan-config/components/ui-blocks/block-union';
-import { errorsUnder } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import { EModelOptimisationParameters } from '@/features/scan-config/components/ui-blocks/emodel-optimisation-parameters';
 import { resolveScanConfigEditingLocked } from '@/features/scan-config/hooks/use-config-editing-locked';
 import { useDiffPreview } from '@/features/scan-config/hooks/use-diff-preview-atom';
 import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
 import {
-  type Config,
   type ConfigSchema,
   type IBlockDictionary,
   type IBlockSingle,
@@ -17,12 +15,15 @@ import {
   type TSupportedEntitiesForScanConfiguration,
   type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
+import {
+  BlockScopeProvider,
+  useBlockState,
+  useConfigErrorsUnder,
+  useHasBlock,
+} from '@/features/scan-config/use-config-store';
 import { useAIConfig } from '@/services/ai-agent';
 import { cn } from '@/utils/css-class';
 
-import { isPlainObject } from '../utils';
-
-import type { ErrorObject } from 'ajv';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type { Nullish } from '@/utils/type';
 
@@ -36,11 +37,8 @@ type MiddleProps = {
   setSelectedEntry: (entry: string) => void;
   campaignId: string;
   loading: boolean;
-  config: Config;
-  setConfig: (newConfig: Config) => void;
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
   entityType: TSupportedEntityTypesForScanConfiguration;
-  allEntries: Set<string>;
   onNewBlockClick?: () => void;
   selectedSchema: IBlockSingle | IBlockDictionary | IRootBlockUnion | IEModelOptimisationParameters;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
@@ -50,9 +48,81 @@ type MiddleProps = {
   selectedRegionChoice: string;
   /** sets the selected Region Assignment section-list choice */
   setSelectedRegionChoice: (choice: string) => void;
-  /** ajv schema errors of the whole config */
-  errors: ErrorObject[] | null;
 };
+
+type TSingleBlockProps = Pick<
+  MiddleProps,
+  'schema' | 'selectedRootElement' | 'selectedEntry' | 'entity' | 'schemaMappingConfig'
+> & {
+  blockSchema: IBlockSingle;
+  disabled: boolean;
+};
+
+function SingleBlock({
+  schema,
+  selectedRootElement,
+  selectedEntry,
+  entity,
+  schemaMappingConfig,
+  blockSchema,
+  disabled,
+}: TSingleBlockProps) {
+  const preview = useDiffPreview(selectedRootElement);
+  const hasBlock = useHasBlock(selectedRootElement);
+
+  if (!hasBlock) return null;
+
+  return (
+    <BlockScopeProvider rootElement={selectedRootElement} preview={preview}>
+      <Block
+        schema={schema}
+        disabled={disabled}
+        blockSchema={blockSchema}
+        entity={entity}
+        schemaMappingConfig={schemaMappingConfig}
+        rootElement={selectedRootElement}
+        selectedEntry={selectedEntry}
+        errorPathPrefix={selectedRootElement}
+      />
+    </BlockScopeProvider>
+  );
+}
+
+type TEModelBlockProps = Pick<
+  MiddleProps,
+  | 'selectedRootElement'
+  | 'selectedMechanismsTab'
+  | 'selectedRegionChoice'
+  | 'setSelectedRegionChoice'
+> & {
+  rootSchema: IEModelOptimisationParameters;
+  disabled: boolean;
+};
+
+function EModelBlock({
+  selectedRootElement,
+  selectedMechanismsTab,
+  selectedRegionChoice,
+  setSelectedRegionChoice,
+  rootSchema,
+  disabled,
+}: TEModelBlockProps) {
+  const [rootState, setRootState] = useBlockState(selectedRootElement);
+  const errors = useConfigErrorsUnder(`/${selectedRootElement}`);
+
+  return (
+    <EModelOptimisationParameters
+      selectedTab={selectedMechanismsTab}
+      rootSchema={rootSchema}
+      value={rootState ?? null}
+      onChange={setRootState}
+      selectedRegionChoice={selectedRegionChoice}
+      setSelectedRegionChoice={setSelectedRegionChoice}
+      disabled={disabled}
+      errors={errors}
+    />
+  );
+}
 
 export default function Middle({
   schema,
@@ -61,10 +131,7 @@ export default function Middle({
   setSelectedEntry,
   campaignId,
   loading,
-  config,
-  setConfig,
   entity,
-  allEntries,
   onNewBlockClick,
   selectedSchema,
   schemaMappingConfig,
@@ -72,11 +139,9 @@ export default function Middle({
   selectedMechanismsTab,
   selectedRegionChoice,
   setSelectedRegionChoice,
-  errors,
 }: MiddleProps) {
   const { aiConfig, isChatReady } = useAIConfig();
   const showingDiffs = useShowingDiffs();
-  const preview = useDiffPreview(selectedRootElement);
 
   // Same read-only/locked signal the generic Block uses, so the bespoke emodel widgets disable
   // their editable controls (pickers, checkboxes, inputs) once the campaign is generated / locked.
@@ -88,12 +153,6 @@ export default function Middle({
     showingDiffs,
   });
 
-  // for BlockDictionary the path includes the entry; for others just the root element
-  const errorPathPrefix =
-    selectedSchema.ui_element === ScanConfigUIElementDict.BlockDictionary
-      ? `${selectedRootElement}/${selectedEntry}`
-      : selectedRootElement;
-
   return (
     <div
       className={cn(styles.animateFadeUp, 'w-full min-w-0 max-w-full')}
@@ -103,10 +162,7 @@ export default function Middle({
         <BlockDictionary
           campaignId={campaignId}
           loading={loading}
-          config={config}
-          setConfig={setConfig}
           entity={entity}
-          allEntries={allEntries}
           schema={schema}
           selectedEntry={selectedEntry}
           setSelectedEntry={setSelectedEntry}
@@ -114,28 +170,21 @@ export default function Middle({
           selectedRootElement={selectedRootElement}
           onNewBlockClick={onNewBlockClick}
           schemaMappingConfig={schemaMappingConfig}
-          errorPathPrefix={errorPathPrefix}
+          errorPathPrefix={`${selectedRootElement}/${selectedEntry}`}
         />
       )}
 
-      {selectedSchema.ui_element === ScanConfigUIElementDict.BlockSingle &&
-        isPlainObject(config[selectedRootElement]) && (
-          <Block
-            schema={schema}
-            disabled={editingLocked}
-            config={config}
-            blockSchema={selectedSchema}
-            state={preview ?? config[selectedRootElement] ?? {}}
-            setState={(newState) => {
-              setConfig({ ...config, [selectedRootElement]: newState });
-            }}
-            entity={entity}
-            schemaMappingConfig={schemaMappingConfig}
-            rootElement={selectedRootElement}
-            selectedEntry={selectedEntry}
-            errorPathPrefix={errorPathPrefix}
-          />
-        )}
+      {selectedSchema.ui_element === ScanConfigUIElementDict.BlockSingle && (
+        <SingleBlock
+          schema={schema}
+          selectedRootElement={selectedRootElement}
+          selectedEntry={selectedEntry}
+          entity={entity}
+          schemaMappingConfig={schemaMappingConfig}
+          blockSchema={selectedSchema}
+          disabled={editingLocked}
+        />
+      )}
 
       {selectedSchema.ui_element === ScanConfigUIElementDict.BlockUnion && (
         <BlockUnion
@@ -144,25 +193,21 @@ export default function Middle({
           selectedRootElement={selectedRootElement}
           campaignId={campaignId}
           loading={loading}
-          config={config}
-          setConfig={setConfig}
           entity={entity}
           entityType={entityType}
           schemaMappingConfig={schemaMappingConfig}
-          errorPathPrefix={errorPathPrefix}
+          errorPathPrefix={selectedRootElement}
         />
       )}
 
       {selectedSchema.ui_element === ScanConfigUIElementDict.EModelOptimisationParameters && (
-        <EModelOptimisationParameters
-          selectedTab={selectedMechanismsTab}
-          rootSchema={selectedSchema}
-          value={config[selectedRootElement]}
-          onChange={(next) => setConfig({ ...config, [selectedRootElement]: next })}
+        <EModelBlock
+          selectedRootElement={selectedRootElement}
+          selectedMechanismsTab={selectedMechanismsTab}
           selectedRegionChoice={selectedRegionChoice}
           setSelectedRegionChoice={setSelectedRegionChoice}
+          rootSchema={selectedSchema}
           disabled={editingLocked}
-          errors={errorsUnder(errors, `/${selectedRootElement}`)}
         />
       )}
     </div>

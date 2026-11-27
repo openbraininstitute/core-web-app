@@ -7,8 +7,12 @@ import type {
   AssignBody,
   DepleteProjectBody,
   DepleteVlabBody,
+  DiscountBody,
+  DiscountPatchBody,
+  ExpirePriceBody,
   GrantBody,
   MoveBody,
+  PriceBody,
   RefundBody,
   ReverseBody,
   TopUpBody,
@@ -217,6 +221,8 @@ export const AccountingPage = {
   Jobs: 'jobs',
   Journal: 'journal',
   Reports: 'reports',
+  Discounts: 'discounts',
+  Prices: 'prices',
 } as const;
 export type TAccountingPage = (typeof AccountingPage)[keyof typeof AccountingPage];
 
@@ -241,7 +247,13 @@ export type TAccountingFilter = (typeof AccountingFilter)[keyof typeof Accountin
 export const EnabledFilter = { Any: 'any', Enabled: 'enabled', Disabled: 'disabled' } as const;
 export type TEnabledFilter = (typeof EnabledFilter)[keyof typeof EnabledFilter];
 
-export const AccountingMethod = { Get: 'GET', Post: 'POST', Patch: 'PATCH' } as const;
+export const AccountingMethod = {
+  Get: 'GET',
+  Post: 'POST',
+  Patch: 'PATCH',
+  Put: 'PUT',
+  Delete: 'DELETE',
+} as const;
 export type TAccountingMethod = (typeof AccountingMethod)[keyof typeof AccountingMethod];
 
 export type TAccountingRoute = {
@@ -253,7 +265,10 @@ export type TAccountingRoute = {
 
 export const AuditPhase = { Sent: 'sent', Answered: 'answered', Refused: 'refused' } as const;
 
-export const AccountingErrorCode = { OutcomeUnknown: 'OUTCOME_UNKNOWN' } as const;
+export const AccountingErrorCode = {
+  OutcomeUnknown: 'OUTCOME_UNKNOWN',
+  PartlyDone: 'PARTLY_DONE',
+} as const;
 
 /** What came back from accounting when there's no status to log. */
 export const UpstreamOutcome = {
@@ -263,7 +278,7 @@ export const UpstreamOutcome = {
 } as const;
 export type TUpstreamOutcome = (typeof UpstreamOutcome)[keyof typeof UpstreamOutcome];
 
-export type TAccountingWrite = { method: TAccountingMethod; body: string };
+export type TAccountingWrite = { method: TAccountingMethod; body?: string };
 
 export type TAccountingTarget =
   | { path: string; search: URLSearchParams; body?: ZodType }
@@ -278,6 +293,23 @@ export type TDepleteProjectBody = z.infer<typeof DepleteProjectBody>;
 export type TDepleteVlabBody = z.infer<typeof DepleteVlabBody>;
 export type TAccountStatusBody = z.infer<typeof AccountStatusBody>;
 export type TRefundBody = z.infer<typeof RefundBody>;
+export type TDiscountBody = z.infer<typeof DiscountBody>;
+export type TDiscountPatchBody = z.infer<typeof DiscountPatchBody>;
+
+export type TValidity = { valid_from: string; valid_to: string | null };
+
+export type TDiscount = TValidity & { id: number; vlab_id: string; discount: string };
+
+export type TDiscountFilters = { vlab_id?: string };
+
+export const WindowStatus = {
+  Scheduled: 'scheduled',
+  Active: 'active',
+  Expired: 'expired',
+} as const;
+export type TWindowStatus = (typeof WindowStatus)[keyof typeof WindowStatus];
+
+export type TDiscountValues = { percent: string; valid_from?: string; valid_to?: string };
 
 export type TAccountStatus = { accounts: TAccount[]; open_job_ids: string[] };
 export type TDepleted = { total_amount: string };
@@ -298,10 +330,58 @@ export type TAction<Values, Result = null> = {
   title: string;
   description: ReactNode;
   fields?: FormModalField[];
+  initialValues?: Partial<Values>;
   okText: string;
   danger?: boolean;
   buttonVariant?: 'outline' | 'destructive';
   write: (values: Values) => Promise<Result>;
   done: string | ((result: Result) => string);
   failed: string;
+};
+
+export type TPriceBody = z.infer<typeof PriceBody>;
+
+/** Price lists that bear on one scope; `truncated` when a list has more rows than it holds. */
+export type TPriceLists = { lists: TPrice[][]; truncated: boolean };
+export type TExpirePriceBody = z.infer<typeof ExpirePriceBody>;
+
+export type TPriceTier = {
+  min_quantity: number;
+  max_quantity: number | null;
+  fixed_cost: string;
+  multiplier: string;
+};
+
+export type TPrice = TValidity & {
+  id: number;
+  service_type: TChargeType;
+  service_subtype: TAccountingSubtype;
+  vlab_id: string | null;
+  tiers: TPriceTier[];
+  created_at: string;
+  updated_at: string;
+};
+
+export type TPriceScope = Pick<TPrice, 'service_type' | 'service_subtype' | 'vlab_id'>;
+
+export type TPricing = Pick<TPrice, 'service_type' | 'tiers'>;
+
+export const PricesShown = { All: 'all', Default: 'default' } as const;
+
+export type TPriceFilters = {
+  service_type?: TChargeType;
+  service_subtype?: TAccountingSubtype;
+  vlab_id?: string;
+  only_default?: boolean;
+};
+
+/** One tier as the form holds it; `to` is empty on the last, open tier. */
+export type TTierValues = { to?: number | null; fixed_cost?: string; multiplier?: string };
+
+export type TPriceValues = {
+  service_type: TChargeType;
+  service_subtype: TAccountingSubtype;
+  valid_from?: string;
+  valid_to?: string;
+  tiers: TTierValues[];
 };

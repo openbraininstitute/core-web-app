@@ -26,9 +26,8 @@ import { type ConfigValue, ScanConfigUIElementDict } from '@/features/scan-confi
 export interface GlobalModificationBaseProps {
   data: MechanismVariablesRoot | null;
   disabled: boolean;
-  state: Record<string, ConfigValue>;
-  setState: (newState: Record<string, ConfigValue>) => void;
-  fieldKey: string;
+  value: ConfigValue | undefined;
+  onChange: (next: ConfigValue) => void;
   modificationType: string;
   errorPathPrefix?: string;
   /** Whether mechanism variables are still loading. */
@@ -47,15 +46,13 @@ export interface GlobalModificationBaseProps {
 export function GlobalModificationBase({
   data,
   disabled,
-  state,
-  setState,
-  fieldKey,
+  value: currentModification,
+  onChange,
   modificationType,
   errorPathPrefix,
   loading = false,
   reason = null,
 }: GlobalModificationBaseProps) {
-  const currentModification = state[fieldKey];
   const isValidModification =
     !!currentModification &&
     typeof currentModification === 'object' &&
@@ -122,24 +119,18 @@ export function GlobalModificationBase({
   }, [isValidModification, newValue, sectionLabel]);
 
   const handleVariableChange = (selection: IonChannelSelection) => {
-    setState({
-      ...state,
-      [fieldKey]: {
-        type: modificationType,
-        ion_channel_id: selection.entityId,
-        channel_name: selection.channelName,
-        variable_name: selection.variable.neuron_variable,
-        variable_type: selection.variable.variable_type,
-      },
+    onChange({
+      type: modificationType,
+      ion_channel_id: selection.entityId,
+      channel_name: selection.channelName,
+      variable_name: selection.variable.neuron_variable,
+      variable_type: selection.variable.variable_type,
     });
   };
 
   const handleSectionChange = (_sectionList: string, value: SectionValue) => {
     if (!isValidModification) return;
-    setState({
-      ...state,
-      [fieldKey]: { ...currentModification, new_value: value },
-    });
+    onChange({ ...currentModification, new_value: value });
   };
 
   return (

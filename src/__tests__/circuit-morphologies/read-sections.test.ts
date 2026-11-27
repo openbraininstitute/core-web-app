@@ -94,4 +94,26 @@ describe("a morphology's sections", () => {
     await loadSections(client, request('kept'));
     expect(h.fetchCircuitViz).toHaveBeenCalledTimes(2);
   });
+
+  it('are kept for less where the caller reading them first asks for it, whoever asks next', async () => {
+    h.fetchCircuitViz.mockResolvedValue([SOMA]);
+
+    await loadSections(client, request('short'), { gcTime: MINUTE });
+    await loadSections(client, request('short'));
+    vi.advanceTimersByTime(2 * MINUTE);
+    await loadSections(client, request('short'));
+
+    expect(h.fetchCircuitViz).toHaveBeenCalledTimes(2);
+  });
+
+  it('stay an hour where they were read first for an hour', async () => {
+    h.fetchCircuitViz.mockResolvedValue([SOMA]);
+
+    await loadSections(client, request('long first'));
+    await loadSections(client, request('long first'), { gcTime: MINUTE });
+    vi.advanceTimersByTime(50 * MINUTE);
+    await loadSections(client, request('long first'), { gcTime: MINUTE });
+
+    expect(h.fetchCircuitViz).toHaveBeenCalledTimes(1);
+  });
 });

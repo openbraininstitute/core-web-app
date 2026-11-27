@@ -9,6 +9,7 @@ import { useUpdateLog } from '@/features/logbook/api/research-logs';
 import { useCollaboration } from '@/features/logbook/collaboration/notices';
 import { CONTROL, POPOVER_PANEL } from '@/features/logbook/constants';
 import { FormatBar } from '@/features/logbook/editor/format-bar';
+import { PageLinkMenu } from '@/features/logbook/editor/page-link-menu';
 import { SelectionMenu } from '@/features/logbook/editor/selection-menu';
 import { ArtifactIcon } from '@/features/logbook/log/artifact-icon';
 import { ArtifactBar, ArtifactView } from '@/features/logbook/log/artifact-view';
@@ -242,7 +243,7 @@ export function EditorCard(props: IEditorCardProps) {
                   )}
                   aria-label="Insert"
                   title="Link entities or upload a file"
-                  disabled={isNotNil(props.readOnly) || props.deleted}
+                  disabled={isNotNil(props.readOnly) || props.outdated || props.deleted}
                 >
                   <Icon name="plus" size={15} stroke={2.4} />
                   <span className="@max-[420px]/pane:hidden!">Insert</span>
@@ -306,7 +307,9 @@ export function EditorCard(props: IEditorCardProps) {
       {writeTab && onLog ? (
         <FormatBar
           editor={editor}
-          disabled={isNotNil(props.readOnly) || isNotNil(rejoinAt) || props.deleted}
+          disabled={
+            isNotNil(props.readOnly) || props.outdated || isNotNil(rejoinAt) || props.deleted
+          }
         />
       ) : null}
       {writeTab && isNotNil(artifact) ? (
@@ -316,6 +319,24 @@ export function EditorCard(props: IEditorCardProps) {
         <p className="m-0 bg-warning-tint px-6 py-2 text-[13px] text-warning-ink" role="status">
           This section was deleted. What it held stays shown here until you leave it; changes are no
           longer saved.
+        </p>
+      ) : null}
+      {props.outdated && onLog ? (
+        <p
+          className="m-0 flex items-center gap-3 bg-warning-tint px-6 py-2 text-[13px] text-warning-ink"
+          role="status"
+        >
+          <span className="min-w-0 flex-1">
+            A newer version of the logbook wrote something on this page. Reload to see all of it and
+            keep writing.
+          </span>
+          <button
+            type="button"
+            className="flex-none rounded-full border-0 bg-white px-3 py-1 text-[12.5px] font-bold text-primary-9"
+            onClick={() => window.location.reload()}
+          >
+            Reload
+          </button>
         </p>
       ) : null}
       {isNotNil(props.readOnly) && onLog && !props.deleted ? (
@@ -339,6 +360,7 @@ export function EditorCard(props: IEditorCardProps) {
       >
         <EditorContent editor={editor} className="rl-editor" data-flags={props.settings.flags} />
         <SelectionMenu editor={editor} />
+        <PageLinkMenu editor={editor} pageId={props.page.id} />
         {isNotNil(clock) ? (
           <button
             type="button"

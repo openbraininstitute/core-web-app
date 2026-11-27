@@ -47,5 +47,6 @@ export type PlanV2 = {
   build_features: CostNameProps[];
   notebooks_features: CostNameProps[];
   simulate_features: CostNameProps[];
+  extract_features: CostNameProps[];
   planOrder?: number | null;
 };

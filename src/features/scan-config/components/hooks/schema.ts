@@ -14,6 +14,7 @@ import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { obioneApi } from '@/api/one/utils';
 import { config } from '@/config';
 import { isPlainObject } from '@/features/scan-config/components/utils';
+import { createScanConfigStore } from '@/features/scan-config/store';
 import {
   type Config,
   type ConfigSchema,
@@ -184,13 +185,6 @@ export function useDefaultConfig(schemaName: SchemaName) {
     if (!schema) return;
     return buildInitialConfigState(schema, {}, { type: 'circuit' } as ICircuit);
   }, [schema]);
-}
-
-export function isRootBlock(schema: ConfigSchema, key: string) {
-  return (
-    schema.properties?.[key] &&
-    schema.properties[key].ui_element === ScanConfigUIElementDict.BlockSingle
-  );
 }
 
 export function isRootBlockSingle(schema: ConfigSchema, key: string) {
@@ -473,9 +467,9 @@ function buildConfigState({
  * @param model: entity model
  * @param workflowSessionSelection: optional workflow browse session selection
  * @param resolveFromIdType: optional function to resolve the from_id type from the browse type
- * @returns the scan-config form blob (`config` + `setConfig`)
+ * @returns the store that holds the scan-config form blob
  */
-export function useConfig({
+export function useConfigStoreSetup({
   schema,
   initialConfig,
   model,
@@ -493,16 +487,18 @@ export function useConfig({
   /** the workflow's seeding policy; the generic one is used when omitted */
   seed?: TAnyWorkflowSeed;
 }) {
-  const [configState, setConfigState] = useState<Config>(() =>
-    buildConfigState({
-      schema,
-      initialConfig,
-      model,
-      workflowSessionSelection,
-      resolveFromIdType,
-      origin,
-      seed,
-    })
+  const [store] = useState(() =>
+    createScanConfigStore(
+      buildConfigState({
+        schema,
+        initialConfig,
+        model,
+        workflowSessionSelection,
+        resolveFromIdType,
+        origin,
+        seed,
+      })
+    )
   );
   const appliedInitialConfigRef = useRef<Config | undefined>(initialConfig);
 
@@ -512,7 +508,7 @@ export function useConfig({
     }
 
     appliedInitialConfigRef.current = initialConfig;
-    setConfigState(
+    store.set(
       buildConfigState({
         schema,
         initialConfig,
@@ -523,9 +519,18 @@ export function useConfig({
         seed,
       })
     );
-  }, [initialConfig, model, origin, resolveFromIdType, schema, seed, workflowSessionSelection]);
+  }, [
+    initialConfig,
+    model,
+    origin,
+    resolveFromIdType,
+    schema,
+    seed,
+    store,
+    workflowSessionSelection,
+  ]);
 
-  return [configState, setConfigState] as const;
+  return store;
 }
 
 /**

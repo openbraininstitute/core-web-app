@@ -10,6 +10,8 @@ import {
   type TBlock,
 } from '@/features/scan-config/types';
 
+import { renderInBlock } from './form-providers';
+
 // E2E tests address a field by its property key, scoped to its block, because a
 // key such as `dt` repeats across block dictionary entries. Removing either test
 // id breaks that lookup, so this test guards the contract.
@@ -32,19 +34,18 @@ const BLOCK_SCHEMA = {
 const SCHEMA = { properties: {}, default_block_reference_labels: {} } as unknown as ConfigSchema;
 
 function renderBlock(overrides: Record<string, unknown> = {}) {
-  return render(
+  return renderInBlock(
     <Block
       schema={SCHEMA}
       disabled={false}
-      config={{}}
       blockSchema={BLOCK_SCHEMA}
       entity={null}
-      state={{ simulation_length: '1000', v_init: '-80' }}
-      setState={vi.fn()}
       schemaMappingConfig={undefined}
       rootElement="initialize"
       {...overrides}
-    />
+    />,
+    'initialize',
+    { simulation_length: '1000', v_init: '-80' }
   );
 }
 
