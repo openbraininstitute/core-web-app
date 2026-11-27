@@ -18,11 +18,14 @@ const state = vi.hoisted(() => ({
   pages: [] as unknown[],
   sockets: new Set<string>(),
   views: new Map<string, unknown>(),
+  stateless: new Map<string, (data: { payload: string }) => void>(),
   navigate: vi.fn(),
+  refreshPages: vi.fn(),
 }));
 
 vi.mock('@/features/logbook/api/pages', () => ({
   usePages: () => ({ data: state.pages, isPending: false, isError: false, error: null }),
+  useRefreshPages: () => state.refreshPages,
 }));
 vi.mock('@/hooks/session', () => ({ getClientSession: async () => ({ accessToken: 'token' }) }));
 vi.mock('@/api/logbook/utils', () => ({ collaborationUrl: (pageId: string) => pageId }));
@@ -44,7 +47,14 @@ vi.mock('@hocuspocus/provider-react', async () => {
       }, [props.url]);
       return props.children;
     },
-    HocuspocusRoom: (props: { children: unknown }) => props.children,
+    HocuspocusRoom: (props: {
+      name: string;
+      onStateless: (data: { payload: string }) => void;
+      children: unknown;
+    }) => {
+      state.stateless.set(props.name, props.onStateless);
+      return props.children;
+    },
   };
 });
 vi.mock('@/features/logbook/log/log-page', () => ({
@@ -100,7 +110,23 @@ beforeEach(() => {
   state.pages = [main, a, b, c];
   state.sockets.clear();
   state.views.clear();
+  state.stateless.clear();
   state.navigate.mockClear();
+  state.refreshPages.mockClear();
+});
+
+test('a pages notice on any open page socket reads the page list again; other notices do not', async () => {
+  const shown = render(<LogView {...props('a')} />);
+  await screen.findByTestId('view-a');
+  shown.rerender(<LogView {...props('b')} />);
+  await screen.findByTestId('view-b');
+
+  const notify = (pageId: string, notice: object) =>
+    act(() => state.stateless.get(pageId)?.({ payload: JSON.stringify(notice) }));
+  notify('a', { type: 'pages' }); // a warm page
+  notify('b', { type: 'pages' }); // the page on screen
+  notify('b', { type: 'saved', own: false });
+  expect(state.refreshPages).toHaveBeenCalledTimes(2);
 });
 
 test('the page left stays mounted with its socket, hidden; the one shown is on screen', async () => {

@@ -83,6 +83,7 @@ function toNotice(value: unknown): TNotice | null {
       own: value['own'] !== false,
     }))
     .with(CollaborationNotice.Closing, () => ({ type: CollaborationNotice.Closing }))
+    .with(CollaborationNotice.Pages, () => ({ type: CollaborationNotice.Pages }))
     .exhaustive();
 }
 
@@ -175,6 +176,7 @@ export class CollaborationNotices {
         this.#set({ readOnly: reason });
       })
       .with({ type: CollaborationNotice.Closing }, () => {})
+      .with({ type: CollaborationNotice.Pages }, () => {})
       .exhaustive();
     return notice;
   }

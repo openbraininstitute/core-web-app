@@ -395,7 +395,8 @@ export type TNotice =
       readonly actor: IWriterActor;
     }
   | { readonly type: typeof CollaborationNotice.ReadOnly; readonly reason: TReadOnlyReason }
-  | { readonly type: typeof CollaborationNotice.Closing };
+  | { readonly type: typeof CollaborationNotice.Closing }
+  | { readonly type: typeof CollaborationNotice.Pages };
 
 export interface IWriterActor {
   readonly userId: string;

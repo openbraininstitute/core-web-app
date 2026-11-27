@@ -22,6 +22,16 @@ test('a writer notice names its clients, and renders nothing', () => {
   expect(renders).toBe(0);
 });
 
+test('a pages notice is read and renders nothing', () => {
+  const Notices = new CollaborationNotices();
+  let renders = 0;
+  Notices.subscribe(() => {
+    renders += 1;
+  });
+  expect(Notices.receive(JSON.stringify({ type: 'pages' }))).toEqual({ type: 'pages' });
+  expect(renders).toBe(0);
+});
+
 test('a malformed writer notice is dropped', () => {
   const Notices = new CollaborationNotices();
   expect(Notices.receive(writer(['41']))).toBeNull();

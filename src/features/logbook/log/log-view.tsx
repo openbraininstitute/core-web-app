@@ -2,9 +2,9 @@ import { HocuspocusProviderWebsocketComponent, HocuspocusRoom } from '@hocuspocu
 import { isNil, isNotNil } from 'es-toolkit';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { PageKind } from '@/api/logbook/types';
+import { CollaborationNotice, PageKind } from '@/api/logbook/types';
 import { collaborationUrl } from '@/api/logbook/utils';
-import { usePages } from '@/features/logbook/api/pages';
+import { usePages, useRefreshPages } from '@/features/logbook/api/pages';
 import { ChangeFeed } from '@/features/logbook/collaboration/changes';
 import { acquireCopy, releaseCopy } from '@/features/logbook/collaboration/local-copy';
 import { CollaborationNotices } from '@/features/logbook/collaboration/notices';
@@ -137,6 +137,7 @@ export function LogView(props: ILogViewProps) {
 function PageView(props: IPageViewProps) {
   const { project, logId, page, shown, onCool } = props;
   const copy = useLocalCopy(page.id, props.me.userId);
+  const refreshPages = useRefreshPages(logId);
   const [notices] = useState(() => new CollaborationNotices());
   const [feed] = useState(() => new ChangeFeed());
   const [openedAt] = useState(() => new Date().toISOString());
@@ -166,7 +167,9 @@ function PageView(props: IPageViewProps) {
           name={page.id}
           document={copy.document}
           token={sessionToken}
-          onStateless={({ payload }) => notices.receive(payload)}
+          onStateless={({ payload }) => {
+            if (notices.receive(payload)?.type === CollaborationNotice.Pages) refreshPages();
+          }}
           onConnect={() => notices.connected()}
           onAuthenticationFailed={({ reason }) => {
             if (!RetryableRefusal.has(reason) && !props.deleted)

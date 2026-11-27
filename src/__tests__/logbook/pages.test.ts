@@ -1,9 +1,13 @@
+import { QueryClient, QueryClientProvider, QueryObserver } from '@tanstack/react-query';
+import { renderHook, waitFor } from '@testing-library/react';
+import { createElement } from 'react';
 import { expect, test } from 'vitest';
 
 import { PageKind } from '@/api/logbook/types';
-import { pageToShow } from '@/features/logbook/api/pages';
+import { pageToShow, useRefreshPages } from '@/features/logbook/api/pages';
 import { neighboursOf } from '@/features/logbook/log/page-nav';
 import { pathOf, routeOf } from '@/features/logbook/router';
+import { keyBuilderLogbook } from '@/ui/use-query-keys/logbook';
 
 import type { IPage } from '@/api/logbook/types';
 
@@ -55,4 +59,33 @@ test('the pages before and after a page; none for a page no longer in the log', 
   expect(neighboursOf(pages, 'a')).toEqual({ index: 1, previous: main, next: b });
   expect(neighboursOf(pages, 'b')).toEqual({ index: 2, previous: a, next: null });
   expect(neighboursOf(pages, 'deleted')).toEqual({ index: -1, previous: null, next: null });
+});
+
+test('the pages notice of every open socket at once makes one read of the list, not one each', async () => {
+  const client = new QueryClient();
+  let reads = 0;
+  let release = () => {};
+  const observer = new QueryObserver(client, {
+    queryKey: keyBuilderLogbook.pages(LOG),
+    queryFn: () => {
+      reads += 1;
+      return new Promise<IPage[]>((resolve) => {
+        release = () => resolve([]);
+      });
+    },
+  });
+  const stop = observer.subscribe(() => {});
+  expect(reads).toBe(1);
+  release();
+  await waitFor(() => expect(observer.getCurrentResult().isFetching).toBe(false));
+
+  const { result } = renderHook(() => useRefreshPages(LOG), {
+    wrapper: ({ children }) => createElement(QueryClientProvider, { client }, children),
+  });
+  result.current();
+  result.current();
+  result.current();
+  expect(reads).toBe(2);
+  release();
+  stop();
 });
