@@ -1,10 +1,12 @@
 'use client';
 
 import { PlusOutlined } from '@ant-design/icons';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { snakeCase } from 'es-toolkit/compat';
+import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import { config } from '@/config';
 import { SCOPE_QUERY_PARAMS, type TWorkspaceScope, WorkspaceScope } from '@/constants';
+import { usesProjectOwnership } from '@/features/views/listing/data-browse-entities';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useScope } from '@/ui/hooks/use-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -43,6 +45,9 @@ export function DataScopeTabs() {
 }
 
 export function DataHeader() {
+  const { type } = useParams<{ type?: string }>();
+  // Every Data table lists all scopes, so the tabs stay hidden before a type is picked too.
+  const showProjectOwnership = !type || usesProjectOwnership(snakeCase(type));
   const searchParams = useSearchParams();
   const scope = (searchParams.get(SCOPE_QUERY_PARAMS) as TWorkspaceScope) ?? WorkspaceScope.Public;
   const breakpoint = useDefaultBreakpoint();
@@ -58,9 +63,9 @@ export function DataHeader() {
   return (
     <div className="flex w-full items-center justify-between gap-4 pl-3 [grid-area:header]">
       <div className="flex max-w-1/2 items-center justify-center gap-2">
-        <DataScopeTabs />
+        {!showProjectOwnership && <DataScopeTabs />}
       </div>
-      {scope === WorkspaceScope.Project && (
+      {(showProjectOwnership || scope === WorkspaceScope.Project) && (
         <div className="max-w-1/2" id="upload-data-selector" data-testid="upload-data-selector">
           <Button
             rounded

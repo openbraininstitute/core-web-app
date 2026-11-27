@@ -1,5 +1,6 @@
 import { FACETS_ONLY_PAGE } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { resolveOwnershipParams } from '@/features/data-grid/bindings/entitycore/columns/ownership';
 import { serializeQuery } from '@/features/data-grid/bindings/entitycore/query-serializer';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -40,10 +41,12 @@ export interface IEntitycorePagedDataSourceOptions<Row> {
 export function serializeEntitycoreQuery<Row>(
   dataType: TExtendedEntitiesTypeDict,
   schema: IGridSchema<Row>,
-  query: IGridQuery
+  query: IGridQuery,
+  projectId?: string
 ): TEntitycoreParams {
   const ilike = getEntityByExtendedType({ type: dataType })?.api?.config?.ilikeSearchEnabled;
-  return serializeQuery(query, schema, { searchMode: ilike ? 'ilike' : 'plain' });
+  const params = serializeQuery(query, schema, { searchMode: ilike ? 'ilike' : 'plain' });
+  return resolveOwnershipParams(params, projectId);
 }
 
 /**
@@ -58,7 +61,7 @@ export function createEntitycorePagedDataSource<Row>(
   const entity = getEntityByExtendedType({ type: dataType });
 
   const paramsFor = (query: IGridQuery): TEntitycoreParams => {
-    const serialized = serializeEntitycoreQuery(dataType, schema, query);
+    const serialized = serializeEntitycoreQuery(dataType, schema, query, context.projectId);
     return transformParams ? transformParams(serialized) : serialized;
   };
   const run = (args: Parameters<TListQueryFn<Row>>[0]) =>

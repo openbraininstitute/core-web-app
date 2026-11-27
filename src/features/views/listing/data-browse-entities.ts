@@ -49,3 +49,8 @@ export const DATA_BROWSE_ALLOWED_ENTITIES = [
   ExtendedEntitiesTypeDict.WholeBrainCircuitSimulation,
   ExtendedEntitiesTypeDict.EModelValidationResult,
 ] as const;
+
+/** Data listings show every accessible record and filter by the Project column instead of scope tabs. */
+export function usesProjectOwnership(dataType?: string): boolean {
+  return (DATA_BROWSE_ALLOWED_ENTITIES as ReadonlyArray<string>).includes(dataType ?? '');
+}

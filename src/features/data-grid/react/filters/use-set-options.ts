@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { FilterOptionsKind } from '@/features/data-grid/core';
 import { stripHtmlTags } from '@/utils/safe-html-markup';
 
-import type { TFilterOptionsSource } from '@/features/data-grid/core';
+import type { IFilterOptionBadge, TFilterOptionsSource } from '@/features/data-grid/core';
 import type { IFilterEditorContext } from '@/features/data-grid/react/filters/context';
 
 export interface ISetOption {
@@ -15,6 +15,7 @@ export interface ISetOption {
   count?: number;
   /** facet type hint ('mtype'/'etype'/…) used to fetch a per-option definition */
   type?: string | null;
+  badge?: IFilterOptionBadge;
 }
 
 export interface ISetOptionsResult {
@@ -63,7 +64,12 @@ export function useSetOptions(
     }
     if (source.kind === FilterOptionsKind.Static) {
       return {
-        options: source.items.map((i) => ({ id: i.id, label: i.label, value: i.id })),
+        options: source.items.map((i) => ({
+          id: i.id,
+          label: i.label,
+          value: i.id,
+          badge: i.badge,
+        })),
         loading: false,
       };
     }

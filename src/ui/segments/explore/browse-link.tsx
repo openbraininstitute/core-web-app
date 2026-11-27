@@ -23,6 +23,7 @@ import {
   savedListingParams,
   useSavedListingFilters,
 } from '@/features/data-grid/saved-listing-filters';
+import { usesProjectOwnership } from '@/features/views/listing/data-browse-entities';
 import { listingInstanceId } from '@/features/views/listing/variants/scope-listing';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useTableQueryCount } from '@/ui/hooks/use-table-query-count';
@@ -265,7 +266,12 @@ async function resolveEntityCount({
   variant?: IListingVariant;
 }) {
   if (!entity) return undefined;
-  const saved = await savedListingParams(extendedType, savedFilters, variant);
+  const saved = await savedListingParams(
+    extendedType,
+    savedFilters,
+    variant,
+    baseQuery.context.projectId
+  );
   // the pinned params win over the user's, as in the grid's request
   const query = { ...baseQuery, filters: { ...saved, ...baseQuery.filters } };
   if (entity.api.query.count) return entity.api.query.count(query);
@@ -274,7 +280,7 @@ async function resolveEntityCount({
 }
 
 export function BrowseLink({
-  scope,
+  scope: selectedScope,
   enabled,
   extendedType,
   hierarchyId,
@@ -283,6 +289,7 @@ export function BrowseLink({
   variant,
   onClick,
 }: Props) {
+  const scope = usesProjectOwnership(extendedType) ? WorkspaceScope.Combined : selectedScope;
   const { virtualLabId, projectId } = useWorkspace();
   const pathname = usePathname();
   const { type, variant: variantSlug } = useParams<{ type?: string; variant?: string }>();

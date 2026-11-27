@@ -94,7 +94,9 @@ export type {
 export type {
   IColumnFilter,
   IColumnModel,
+  IFilterOptionBadge,
   IFilterTarget,
+  IStaticFilterOption,
   IWidthSpec,
   TAlign,
   TCellValue,

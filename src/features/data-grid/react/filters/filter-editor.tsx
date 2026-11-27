@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { match, P } from 'ts-pattern';
 
 import { getEtypes } from '@/api/entitycore/queries/annotations/etype';
 import { getMtypes } from '@/api/entitycore/queries/annotations/mtype';
@@ -34,6 +35,9 @@ import { useDebouncedCallback } from '@/hooks/hooks';
 import { SafeSubSupHtml } from '@/ui/atoms/safe-sub-sup-html';
 import { Checkbox } from '@/ui/molecules/checkbox';
 import { DateRangePicker } from '@/ui/molecules/date-picker';
+import { isIconName } from '@/ui/molecules/icon';
+import { IconBadge } from '@/ui/molecules/icon-badge';
+import { isIconBadgeTone } from '@/ui/molecules/icon-badge/helpers';
 import { Input } from '@/ui/molecules/input';
 import {
   Select,
@@ -51,11 +55,17 @@ import type { ReactNode } from 'react';
 import type { DateRange } from 'react-day-picker';
 import type { IFilterEditorContext } from '@/features/data-grid/react/filters/context';
 import type { IIdTokenSplit } from '@/features/data-grid/react/filters/id-tokens';
+import type { ISetOption } from '@/features/data-grid/react/filters/use-set-options';
 import type { IFilterTarget, TFilterOptionsSource, TFilterValue } from '../../core';
 
 const COMMIT_DEBOUNCE_MS = 250;
 
 const INPUT_CLASS = GRID_INPUT_CLASS;
+
+type TStaticOptions = Extract<TFilterOptionsSource, { kind: typeof FilterOptionsKind.Static }>;
+
+const isExhaustive = (source?: TFilterOptionsSource): source is TStaticOptions =>
+  source?.kind === FilterOptionsKind.Static && source.exhaustive === true;
 
 export interface IFilterEditorProps {
   ctx: IFilterEditorContext;
@@ -136,10 +146,14 @@ export function FilterEditor({
   const operatorDef = ctx.operators.get(operator);
   const uiKind = operatorDef.uiKind;
   const commitMode = operatorDef.commitMode ?? DEFAULT_FILTER_COMMIT_MODE;
+  // An exhaustive list has every option ticked when no filter is set.
+  const allValues = isExhaustive(optionsSource) ? optionsSource.items.map((i) => i.id) : null;
+  const emptyDraft = (): TFilterValue =>
+    allValues ? { kind: FilterValueKind.Set, values: allValues } : emptyForUiKind(uiKind);
 
   // Working value. In `apply` mode nothing reaches the grid until Apply.
   const [pending, setPending] = useState<TFilterValue>(() =>
-    current && current.operator === operator ? current.value : emptyForUiKind(uiKind)
+    current && current.operator === operator ? current.value : emptyDraft()
   );
 
   // Chips and committed value are derived from this raw draft, so a malformed token
@@ -216,19 +230,23 @@ export function FilterEditor({
     });
   };
 
-  // A malformed id must never reach the API.
-  const applyBlocked = freeEntry && idTokens.invalid.length > 0;
+  const ticked = pending.kind === FilterValueKind.Set ? pending.values : [];
+  // A malformed id must never reach the API; an exhaustive list with nothing ticked matches no row.
+  const applyBlocked =
+    (freeEntry && idTokens.invalid.length > 0) || (allValues !== null && ticked.length === 0);
+  const tickedSet = new Set(ticked);
+  const ticksEveryOption = allValues?.every((v) => tickedSet.has(v)) ?? false;
 
   const onApply = () => {
     if (applyBlocked) return;
     debouncedCommit.cancel();
-    commit(isEmptyFilterValue(pending) ? null : pending);
+    commit(isEmptyFilterValue(pending) || ticksEveryOption ? null : pending);
     onClose();
   };
 
   const onReset = () => {
     debouncedCommit.cancel();
-    setPending(emptyForUiKind(uiKind));
+    setPending(emptyDraft());
     setIdDraft('');
     commit(null);
   };
@@ -584,6 +602,9 @@ function SetEditor({
 }) {
   const { options, loading } = useSetOptions(optionsSource, facetKey, ctx);
   const [query, setQuery] = useState('');
+  const exhaustive = isExhaustive(optionsSource);
+  const searchable =
+    optionsSource?.kind !== FilterOptionsKind.Static || optionsSource.searchable !== false;
   const selectedSet = useMemo(() => new Set(selected), [selected]);
 
   const visible = useMemo(() => {
@@ -600,13 +621,15 @@ function SetEditor({
 
   return (
     <div className="flex max-h-72 w-full flex-col gap-2">
-      <Input
-        data-testid="column-filter-search"
-        className={INPUT_CLASS}
-        placeholder="Search…"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-      />
+      {searchable && (
+        <Input
+          data-testid="column-filter-search"
+          className={INPUT_CLASS}
+          placeholder="Search…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      )}
       <div className="flex justify-between text-xs font-medium">
         <button
           type="button"
@@ -617,14 +640,16 @@ function SetEditor({
         >
           Select all
         </button>
-        <button
-          type="button"
-          className="text-gray-400 hover:text-gray-600"
-          data-testid="column-filter-clear"
-          onClick={() => onChange([])}
-        >
-          Clear
-        </button>
+        {!exhaustive && (
+          <button
+            type="button"
+            className="text-gray-400 hover:text-gray-600"
+            data-testid="column-filter-clear"
+            onClick={() => onChange([])}
+          >
+            Clear
+          </button>
+        )}
       </div>
       <div className="-mx-1.5 flex flex-col overflow-auto">
         {loading ? (
@@ -654,11 +679,7 @@ function SetEditor({
                   onCheckedChange={(checked) => toggle(o.value, checked === true)}
                   className="shrink-0 **:data-[slot=checkbox-indicator]:text-white!"
                 />
-                {hasSubSupMarkup(o.label) ? (
-                  <SafeSubSupHtml html={o.label} className="flex-1 truncate text-primary-8" />
-                ) : (
-                  <span className="flex-1 truncate text-primary-8">{o.label}</span>
-                )}
+                <OptionLabel option={o} />
                 {o.count != null && (
                   <span
                     data-testid="column-filter-option-count"
@@ -679,6 +700,27 @@ function SetEditor({
       </div>
     </div>
   );
+}
+
+/** The option's badge when it names a known icon and tone, otherwise its label. */
+function OptionLabel({ option }: { option: ISetOption }) {
+  const { badge, label } = option;
+  const shownBadge =
+    badge && isIconName(badge.icon) && isIconBadgeTone(badge.tone)
+      ? { icon: badge.icon, tone: badge.tone }
+      : null;
+  return match({ shownBadge, markup: hasSubSupMarkup(label) })
+    .with({ shownBadge: P.nonNullable }, ({ shownBadge: { icon, tone } }) => (
+      <span className="flex min-w-0 flex-1">
+        <IconBadge icon={icon} tone={tone}>
+          {label}
+        </IconBadge>
+      </span>
+    ))
+    .with({ markup: true }, () => (
+      <SafeSubSupHtml html={label} className="flex-1 truncate text-primary-8" />
+    ))
+    .otherwise(() => <span className="flex-1 truncate text-primary-8">{label}</span>);
 }
 
 /** All definitions of one type, read once. Fetching per option was one request per option. */

@@ -34,12 +34,31 @@ export const FilterOptionsKind = {
 
 export type TFilterOptionsKind = (typeof FilterOptionsKind)[keyof typeof FilterOptionsKind];
 
+/** An option shown as an icon and its label in a tone; the rendering adapter resolves both names. */
+export interface IFilterOptionBadge {
+  icon: string;
+  tone: string;
+}
+
+export interface IStaticFilterOption {
+  id: string;
+  label: string;
+  badge?: IFilterOptionBadge;
+}
+
 /** Where a set/facet filter sources its selectable options. */
 export type TFilterOptionsSource =
   | { kind: typeof FilterOptionsKind.Facets }
   | {
       kind: typeof FilterOptionsKind.Static;
-      items: ReadonlyArray<{ id: string; label: string }>;
+      items: ReadonlyArray<IStaticFilterOption>;
+      /** false drops the search box, for a list too short to need one (default: true) */
+      searchable?: boolean;
+      /**
+       * Every row matches one option: all show ticked while no filter is set, applying them
+       * all clears the filter, and Apply is off while none is ticked.
+       */
+      exhaustive?: boolean;
     }
   | {
       kind: typeof FilterOptionsKind.Async;

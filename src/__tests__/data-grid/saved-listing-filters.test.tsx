@@ -112,6 +112,53 @@ describe('saved listing filters', () => {
 });
 
 describe('the sidebar count and the grid send the same filters', () => {
+  it.each([
+    [['current'], [], { authorized_project_id: 'current' }],
+    [['other'], [], { authorized_project_id__neq: 'current' }],
+    [['current', 'other'], ['public', 'private'], {}],
+    [[], [], {}],
+    [[], ['public'], { authorized_public: true }],
+    [['current'], ['public'], { authorized_project_id: 'current', authorized_public: true }],
+    [['current'], ['private'], { authorized_project_id: 'current', authorized_public: false }],
+    [['other'], ['private'], { authorized_project_id__neq: 'current', authorized_public: false }],
+  ] as const)('applies ownership %j and visibility %j to rows, facets and the sidebar count', async (ownership, visibility, expected) => {
+    const dataType = ExtendedEntitiesTypeDict.CellMorphology;
+    const definition = getEntityGridDefinition(dataType);
+    if (!definition) throw new Error('morphology grid definition missing');
+    const filters = {
+      visibility: {
+        columnId: 'visibility',
+        operator: OperatorId.In,
+        value: { kind: FilterValueKind.Set, values: [...visibility] },
+      },
+      projectOwnership: {
+        columnId: 'projectOwnership',
+        operator: OperatorId.In,
+        value: { kind: FilterValueKind.Set, values: [...ownership] },
+      },
+    };
+    const requests: Array<Record<string, unknown>> = [];
+    const source = createEntitycorePagedDataSource({
+      dataType,
+      schema: definition.schema,
+      context: { virtualLabId: 'lab', projectId: 'current' },
+      listQueryFn: async ({ filters: params }) => {
+        requests.push(params);
+        return undefined;
+      },
+    });
+    const query = { page: 1, pageSize: 20, sort: [], filters };
+    await source.fetch(query);
+    await source.fetchFacets?.(query);
+    expect(requests).toEqual([
+      { page: 1, page_size: 20, ...expected },
+      { page: 1, page_size: 0, ...expected },
+    ]);
+    await expect(
+      savedListingParams(dataType, { filters, freeTextSearch: '' }, undefined, 'current')
+    ).resolves.toEqual(expected);
+  });
+
   it('for a variant listing, after the load-time filter repair', async () => {
     const definition = getEntityGridDefinition(CIRCUIT);
     const variant = resolveListingVariant(CIRCUIT, 'small');
