@@ -13,6 +13,7 @@ export const CollaborationNotice = {
   Writer: 'writer',
   ReadOnly: 'read-only',
   Closing: 'closing',
+  Pages: 'pages',
 } as const;
 export type TCollaborationNotice = TValueOf<typeof CollaborationNotice>;
 

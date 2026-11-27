@@ -37,6 +37,16 @@ export const pagesQuery = (researchId: string, project: WorkspaceContext) =>
 export const usePages = (researchId: string, project: WorkspaceContext, enabled = true) =>
   useQuery({ ...pagesQuery(researchId, project), enabled });
 
+// Every open page socket (shown + warm) gets the notice: keep a running read, one request per change.
+export function useRefreshPages(researchId: string) {
+  const queries = useQueryClient();
+  return () =>
+    void queries.invalidateQueries(
+      { queryKey: keyBuilderLogbook.pages(researchId) },
+      { cancelRefetch: false }
+    );
+}
+
 export function useCreateSection(researchId: string, project: WorkspaceContext) {
   const queries = useQueryClient();
   return useMutation({

@@ -18,8 +18,8 @@ export const CLOCK_MS = 400;
 /** Research logs per list page. */
 export const LOGS_PAGE_SIZE = 10;
 
-/** How often the page list is read again, so pages others add show up. */
-export const PAGES_REFRESH_MS = 30_000;
+/** Backstop read of the page list: the server's `pages` notice refreshes it at once (useRefreshPages). */
+export const PAGES_REFRESH_MS = 120_000;
 
 /** Most Yjs client ids asked in one writers request. */
 export const WRITERS_MAX_CLIENTS = 100;
