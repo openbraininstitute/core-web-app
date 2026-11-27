@@ -10,11 +10,17 @@ import { useSetScanConfigEntityPreview } from '@/features/scan-config/bridge/ent
 import {
   nextEntryName,
   useEntries,
+  useInitialConfigErrors,
   useValidateSchema,
 } from '@/features/scan-config/components/hooks';
 import { useConfig } from '@/features/scan-config/components/hooks/schema';
 import { clearScanValueSelectionAtom } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import { withoutEmptyRegions } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
+import {
+  INVALID_CONFIGURATION_ERROR_CODE,
+  LEGACY_SIMULATION_ERROR_CODE,
+  type TScanConfigErrorCode,
+} from '@/features/scan-config/components/utils';
 import {
   getConfigKeyForEntity,
   resolveScanConfigTab,
@@ -37,6 +43,13 @@ import { useAgentState, useAIConfig } from '@/services/ai-agent';
 import { clearDiffStateAtom, expandedRootElementsAtom } from '@/state/config-highlights';
 
 import type { ScanConfigTemplateProps } from './types';
+
+/** Why a campaign's configuration can't be shown, or null when it can. */
+function configurationUnavailable(invalid: boolean, missing: boolean): TScanConfigErrorCode | null {
+  if (invalid) return INVALID_CONFIGURATION_ERROR_CODE;
+  if (missing) return LEGACY_SIMULATION_ERROR_CODE;
+  return null;
+}
 
 /**
  * All the state, derived values and handlers the scan-config template needs,
@@ -98,7 +111,13 @@ export function useScanConfigTemplate({
   });
   useDefaultValidationTargets({ schemaName, config, setConfig });
   const allEntries = useEntries({ config, schema });
-  const errors = useValidateSchema({ initialConfig, config, schema });
+  const errors = useValidateSchema({ config, schema });
+  const initialConfigErrors = useInitialConfigErrors({ initialConfig, schema });
+  // A saved config the schema no longer accepts (a block ObiOne has since removed) can't be shown,
+  // but its campaign's results can; without results to fall back to, it stays an error.
+  if (initialConfigErrors && (!campaignId || hideTabs)) {
+    throw new Error('Invalid campaign configuration', { cause: initialConfigErrors });
+  }
   const editingLocked = useScanConfigEditingLocked({
     campaignId,
     loading,
@@ -198,7 +217,16 @@ export function useScanConfigTemplate({
   }, []);
 
   // without the tab strip only the configuration can be shown, whatever `?tab=` says
-  const tab = resolveScanConfigTab(urlTab, activity, Boolean(campaignId) && !hideTabs);
+  const configurationUnavailableReason = configurationUnavailable(
+    Boolean(initialConfigErrors),
+    !loadedConfig && Boolean(readOnly)
+  );
+  const tab = resolveScanConfigTab(
+    urlTab,
+    activity,
+    Boolean(campaignId) && !hideTabs,
+    configurationUnavailableReason !== null
+  );
   const isConfigurationTab = tab.id === ScanConfigTabs[activity].configuration;
 
   // a mini detail view belongs to the tab it was opened from; switching any tab closes it, except
@@ -252,6 +280,7 @@ export function useScanConfigTemplate({
     isCampaignIdChanged,
     isConfigurationTab,
     isEModelOptimisationParameters,
+    configurationUnavailableReason,
   };
 }
 

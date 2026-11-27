@@ -34,4 +34,15 @@ describe('resolveScanConfigTab', () => {
 
     expect(resolveScanConfigTab(tab, ScanConfigActivity.Simulate, false)).toEqual(tab);
   });
+
+  it('opens a campaign whose configuration cannot be shown on its results', () => {
+    const configuration = {
+      id: SimulateScanConfigTabs.configuration,
+      __activity: ScanConfigActivity.Simulate,
+    } as const;
+
+    expect(resolveScanConfigTab(configuration, ScanConfigActivity.Simulate, true, true)).toEqual(
+      ScanConfigResultsTab[ScanConfigActivity.Simulate]
+    );
+  });
 });
