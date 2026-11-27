@@ -814,6 +814,56 @@ export function Walkthrough<C extends IWalkthroughChapter>({
           transition: `opacity ${INTRO.scroll}ms ease ${INTRO.scroll / 4}ms`,
         };
 
+  // Center the real title/media/copy group on phones, accounting for wrapping and AI prompts.
+  useLayoutEffect(() => {
+    if (!ownLanding || !root) return;
+    const phone = window.matchMedia('(max-width: 799px) and (orientation: portrait)');
+    const place = () => {
+      for (const section of sections.current) {
+        if (!section) continue;
+        if (!phone.matches) {
+          for (const key of ['--mobile-title-top', '--mobile-media-top', '--mobile-copy-top'])
+            section.style.removeProperty(key);
+          continue;
+        }
+        const text = section.querySelector<HTMLElement>('[data-chapter-text]');
+        const title = text?.querySelector<HTMLElement>(':scope > h1, :scope > h2');
+        if (!text || !title) continue;
+        const parts = Array.from(text.children).filter(
+          (part) => part !== title && part.getBoundingClientRect().height > 0
+        );
+        if (!parts.length) continue;
+        const first = Math.min(...parts.map((part) => part.getBoundingClientRect().top));
+        const last = Math.max(...parts.map((part) => part.getBoundingClientRect().bottom));
+        const tailHeight = last - first;
+        const titleHeight = title.getBoundingClientRect().height;
+        const ai = text.dataset.chapterText === 'agents';
+        const mediaHeight = ai
+          ? 0
+          : Math.min((root.clientWidth - 32) * 0.5625, root.clientHeight * 0.25);
+        const groupHeight = titleHeight + 20 + (ai ? 0 : mediaHeight + 24) + tailHeight;
+        const titleTop = Math.max(104, (root.clientHeight - groupHeight) / 2);
+        const mediaTop = titleTop + titleHeight + 20;
+        const copyTop = mediaTop + (ai ? 0 : mediaHeight + 24);
+        section.style.setProperty('--mobile-title-top', `${titleTop}px`);
+        section.style.setProperty('--mobile-media-top', `${mediaTop}px`);
+        section.style.setProperty('--mobile-copy-top', `${copyTop}px`);
+      }
+    };
+    const observer = new ResizeObserver(place);
+    observer.observe(root);
+    for (const section of sections.current) {
+      const text = section?.querySelector('[data-chapter-text]');
+      if (text) for (const child of text.children) observer.observe(child);
+    }
+    phone.addEventListener('change', place);
+    place();
+    return () => {
+      observer.disconnect();
+      phone.removeEventListener('change', place);
+    };
+  }, [ownLanding, root]);
+
   const page = (
     <EnteredContext.Provider value={introDone || introLeft}>
       <ActionsContext.Provider value={actions}>

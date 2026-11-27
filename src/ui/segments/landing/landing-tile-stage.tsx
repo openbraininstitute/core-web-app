@@ -180,6 +180,10 @@ export function LandingTileStage({
             // this version: the field white, the films only beside it, one at a time
             whiteField: true,
             phoneStageH: stageH,
+            phoneFieldWidth: phone
+              ? container.clientWidth /
+                (Number(composition.style.getPropertyValue('--stage-scale')) || 1)
+              : undefined,
             onShowChosen: () => {
               if (!disposed) setChosenShown(true);
             },

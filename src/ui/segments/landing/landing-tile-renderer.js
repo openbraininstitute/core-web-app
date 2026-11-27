@@ -8,7 +8,7 @@ import { limitTileOverlap, TILE_AXES } from './tile-overlap';
  * @param {HTMLCanvasElement} canvas
  * @param {HTMLDivElement} picksContainer
  * @param {{ initialIndex?: number, reduced?: boolean, textInField?: boolean, heroBeside?: boolean,
- * heroAbove?: boolean, phoneStageH?: number,
+ * heroAbove?: boolean, phoneStageH?: number, phoneFieldWidth?: number,
  * flightMs?: number, seed?: number, backdrop?: boolean, whiteField?: boolean, introAt?: number, onShowChosen?: () => void,
  * onCentreIn?: () => void, onSelect?: (index: number) => void,
  * onReady?: () => void, onInteraction?: () => void, onError?: (error: Error) => void }} options
@@ -30,6 +30,7 @@ export function createLandingTileRenderer(
     // how tall the stage is on a phone, px (1080 or more): the field and the words at its foot, and the chosen one
     // taking whatever height is left above them (user: "Move everything down, so the main example is bigger")
     phoneStageH = 1080,
+    phoneFieldWidth = 1000,
     flightMs = 1100,
     // the same seed lays the same tiles out: the chapters' backdrop draws the landing's own arrangement
     seed,
@@ -114,7 +115,7 @@ export function createLandingTileRenderer(
   // (whiteField) the films fill the right third, from under the top bar down to their name, level with the
   // chapters along the foot
   const HERO_TILE = heroAbove
-      ? { x: 930, y: 10 + PHONE_HERO_H / 2, r: (210 * PHONE_HERO_H) / 480 }
+      ? { x: 930, y: FOOT / 2, r: (210 * PHONE_HERO_H) / 480 }
       : whiteField
         ? { x: 1550, y: 530, r: 330 }
         : { x: 1590, y: 480, r: 330 },
@@ -1535,21 +1536,97 @@ export function createLandingTileRenderer(
       }
     }
     if (heroAbove && !LINKS.lines) {
-      // Frame the phone model on both sides, rather than putting its icons in a row below.
-      root.home = { x: 600, y: 335, k: 1, big: 0 };
+      // A loose rectangular frame around the phone model: icons stay legible inside,
+      // while smaller, softer hexagons dissolve toward the phone edges.
+      const phoneSpan = Math.max(1000, phoneFieldWidth);
+      const modelY = HERO_TILE.y;
+      const iconRadius = Math.max(106, Math.min(165, phoneSpan * 0.103));
+      const iconOffset = Math.max(230, iconRadius * 2 + 6);
+      root.home = { x: 930 - phoneSpan * 0.35, y: modelY, k: 1, big: 0 };
+      root.r0 = R;
+      root.baseR = iconRadius;
+      root.base = 0;
+      root.lift = hForRadius(iconRadius);
       const positions = [
-        { x: 650, y: 110 },
-        { x: 1240, y: 110 },
-        { x: 650, y: 580 },
-        { x: 1240, y: 580 },
+        { x: 930 - phoneSpan * 0.28, y: modelY - iconOffset },
+        { x: 930 + phoneSpan * 0.28, y: modelY - iconOffset },
+        { x: 930 - phoneSpan * 0.28, y: modelY + iconOffset },
+        { x: 930 + phoneSpan * 0.28, y: modelY + iconOffset },
       ];
       labelled.forEach((c, i) => {
         c.home = { ...positions[i], k: 1, big: 0 };
+        c.r0 = R;
+        c.baseR = iconRadius;
+        c.base = 0;
+        c.lift = hForRadius(iconRadius);
         c.still = true;
         c.iconSlot = true;
       });
       root.iconSlot = true;
+      const icons = new Set([root, ...labelled]);
+      for (const c of cells) c.mobileHidden = c !== heroCell && !icons.has(c);
+      const taken = new Set(cells.filter((c) => c.role));
+      const occupied = [...icons].map((c) => ({ ...homeOf(c), r: restR(c) }));
+      const topPhase = random() * Math.PI * 2;
+      const bottomPhase = random() * Math.PI * 2;
+      // Use the desktop composition's edge-to-edge clusters and varied scales, rather than
+      // a honeycomb grid. Fill remaining pockets with smaller tiles, fading at the edges.
+      for (const layer of [
+        { min: 76, max: 100, count: 14 },
+        { min: 49, max: 72, count: 28 },
+        { min: 27, max: 44, count: 40 },
+      ]) {
+        let added = 0;
+        for (let attempt = 0; attempt < 1000 && added < layer.count; attempt++) {
+          const radius = rand(layer.min, layer.max);
+          const neighbor = occupied[Math.floor(random() * occupied.length)];
+          const p =
+            random() < 0.7
+              ? beside(
+                  neighbor,
+                  radius,
+                  Math.floor(random() * 6),
+                  rand(-1, 1) * maxLat(radius, neighbor),
+                  rand(6, 12)
+                )
+              : { x: rand(930 - phoneSpan / 2, 930 + phoneSpan / 2), y: rand(16, FOOT), r: radius };
+          const across = (p.x - 930) / phoneSpan;
+          const topEdge = 34 + 26 * Math.sin(across * 12 + topPhase);
+          const bottomEdge = FOOT - 34 - 26 * Math.sin(across * 12 + bottomPhase);
+          if (
+            Math.abs(p.x - 930) + p.r > phoneSpan / 2 - rand(8, 28) ||
+            p.y - p.r < topEdge ||
+            p.y + p.r > bottomEdge
+          )
+            continue;
+          const behindModel =
+            p.x + p.r > 720 &&
+            p.x - p.r < 1140 &&
+            p.y + p.r > modelY - PHONE_HERO_H / 2 - 12 &&
+            p.y - p.r < modelY + PHONE_HERO_H / 2 + 12;
+          if (behindModel || !fits(p, occupied, 6)) continue;
+          const c = claimCell(p, taken);
+          c.home = { x: p.x, y: p.y, k: 1, big: 0 };
+          c.role = 'small';
+          c.base = 0;
+          c.r0 = p.r / 1.28;
+          c.lift = 0.4;
+          c.order = c.lift;
+          c.start = 0;
+          c.still = true;
+          c.under = false;
+          c.mobileHidden = false;
+          const edge = Math.max(
+            Math.abs(p.x - 930) / (phoneSpan / 2),
+            Math.abs(p.y - modelY) / (FOOT / 2)
+          );
+          c.mobileOpacity = (0.32 + 0.58 * Math.max(0, 1 - edge ** 3)) * rand(0.8, 1);
+          occupied.push(p);
+          added++;
+        }
+      }
     }
+
     // the central tile too, first, the others then on outwards from it (user)
     if (!LINKS.lines) labelled.unshift(root);
     labelled.forEach((c, i) => {
@@ -1590,7 +1667,7 @@ export function createLandingTileRenderer(
     if (!icon?.complete || !icon.naturalWidth) return null;
     const r = restR(c),
       k = 2,
-      z = c === cellAt[0] ? SUBJECTS.centre : 1,
+      z = heroAbove ? (1.65 * r) / 106 : c === cellAt[0] ? SUBJECTS.centre : 1,
       w = Math.sqrt(3) * r,
       h = 2 * r;
     slice = document.createElement('canvas');
@@ -1985,6 +2062,10 @@ export function createLandingTileRenderer(
     const phoneIcons = heroAbove ? geometry.filter((tile) => tile.c.iconSlot) : [];
     for (const tile of geometry) {
       tile.c.displayRadius = tile.r;
+      if (heroAbove && whiteField && tile.c.mobileHidden) {
+        tile.c.displayRadius = 0;
+        continue;
+      }
       if (
         heroAbove &&
         whiteField &&
@@ -2075,7 +2156,9 @@ export function createLandingTileRenderer(
       const [sx, sy] = shiftAt(c, now);
       const ox = dx + sx,
         oy = dy + sy;
-      const draw = () =>
+      const draw = () => {
+        ctx.save();
+        ctx.globalAlpha *= c.mobileOpacity ?? 1;
         drawTile(
           at.x + ox,
           at.y + oy,
@@ -2092,6 +2175,8 @@ export function createLandingTileRenderer(
           1 - 0.45 * (c.fade || 0),
           whiteField && !(at.big > 0) ? tileShadowAlpha(c.displayRadius) : 0
         );
+        ctx.restore();
+      };
       // on its way to the ring's middle its cube melts away from round the example, which is left there on its own
       const t = c.role === 'feature' && heroBeside ? at.big : 0;
       if (t <= 0.001) draw();

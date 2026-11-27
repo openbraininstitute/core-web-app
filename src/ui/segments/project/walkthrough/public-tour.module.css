@@ -429,8 +429,22 @@
 @media (max-width: 63.999rem) and (orientation: portrait) {
   .publicTour .publicText {
     gap: 16px;
+    align-items: center;
+    text-align: center;
   }
-  .publicText [data-chapter-action] {
+  .publicTour .publicText h1,
+  .publicTour .publicText h2,
+  .publicTour .publicText [data-chapter-body],
+  .publicTour .publicText [data-chapter-introduction],
+  .publicTour .publicText [data-agent-prompts] {
+    text-align: center;
+  }
+  .publicTour .publicText > div,
+  .publicTour .publicText [data-chapter-body] > div {
+    align-items: center;
+  }
+  .publicTour .publicText [data-chapter-action] {
+    justify-content: center;
     margin-top: 8px;
   }
 }
@@ -599,4 +613,104 @@
 }
 .publicTour [data-slide-arrows] {
   bottom: max(0px, env(safe-area-inset-bottom));
+}
+
+/* Keep every chapter's actual copy centered on phones, including nested prompt and action wrappers. */
+@media (max-width: 799px) {
+  .publicTour .publicText {
+    width: 100%;
+    align-items: center;
+    text-align: center;
+    padding-inline: 20px;
+  }
+  .publicTour .publicText h1,
+  .publicTour .publicText h2,
+  .publicTour .publicText p,
+  .publicTour .publicText li,
+  .publicTour .publicText [data-chapter-kicker],
+  .publicTour .publicText [data-chapter-body],
+  .publicTour .publicText [data-chapter-introduction],
+  .publicTour .publicText [data-agent-prompts] {
+    text-align: center;
+    margin-inline: auto;
+  }
+  .publicTour .publicText [data-chapter-action] {
+    justify-content: center;
+    align-items: center;
+  }
+}
+
+/* Phone reading order: title, demonstration, description, then the primary action. */
+@media (max-width: 799px) and (orientation: portrait) {
+  .publicTour :global(section[data-index]) {
+    --stage-video-top: var(--mobile-media-top, 196px);
+    --stage-video-h: min(calc((100vw - 32px) * 0.5625), calc(var(--chapter-h) * 0.25));
+  }
+  .publicTour .publicText,
+  .publicTour .publicText[data-chapter-text="join"] {
+    padding-top: var(--mobile-copy-top, calc(var(--stage-video-top) + var(--stage-video-h) + 24px));
+  }
+  .publicTour .publicText > h1,
+  .publicTour .publicText > h2 {
+    position: absolute;
+    top: var(--mobile-title-top, 112px);
+    left: 20px;
+    width: calc(100% - 40px);
+    margin: 0;
+    text-align: center;
+  }
+  .publicTour .publicText[data-chapter-text="agents"] {
+    padding-top: var(--mobile-copy-top, var(--stage-video-top));
+    gap: 12px;
+  }
+  .publicTour .publicText[data-chapter-text="agents"] [data-chapter-body] {
+    gap: 12px;
+  }
+  .publicTour .publicText[data-chapter-text="agents"] [data-agent-prompts] {
+    order: -1;
+    gap: 6px;
+    padding: 0;
+    width: 100%;
+  }
+  .publicTour .publicText[data-chapter-text="agents"] [data-agent-prompt] {
+    height: 74px;
+    min-height: 74px;
+    gap: 3px;
+    padding: 6px 10px;
+  }
+  .publicTour .publicText[data-chapter-text="agents"] [data-agent-prompt] > div:first-child {
+    font-size: 10px;
+    line-height: 12px;
+  }
+  .publicTour .publicText[data-chapter-text="agents"] [data-agent-prompt] > p {
+    font-size: 10px;
+    line-height: 12px;
+    height: 24px;
+    min-height: 24px;
+    overflow: hidden;
+    margin: 0;
+    width: 100%;
+  }
+  .publicTour .publicText[data-chapter-text="agents"] [data-agent-prompt] > div:last-child {
+    height: 18px;
+    min-height: 18px;
+  }
+  .publicTour .publicText[data-chapter-text="agents"] [data-agent-prompt] > div:last-child > span {
+    font-size: 9px;
+    line-height: 12px;
+    padding: 1px 4px;
+    min-height: 18px;
+  }
+  .publicTour
+    .publicText[data-chapter-text="agents"]
+    [data-agent-prompt]
+    > div:last-child
+    > span:last-child {
+    width: 18px;
+    height: 18px;
+  }
+  .publicTour .publicText[data-chapter-text="agents"] [data-agent-prompt] svg {
+    width: 12px;
+    height: 12px;
+  }
 }
