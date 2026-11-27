@@ -1278,7 +1278,7 @@ export function createLandingTileRenderer(
     // one rolling down and away; false = the other way
     down: true,
   };
-  const centralSubjects = ['Build', 'Simulate', 'Notebooks'];
+  const centralSubjects = ['Explore', 'Build', 'Simulate', 'Notebooks'];
   let centralWaiting = [];
   let nextCentralSwap = Infinity;
   const nextCentralSubject = (current) => {
