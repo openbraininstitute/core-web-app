@@ -88,15 +88,15 @@ a.newsCard > div.picture > * {
 
   a.newsCard > div.content {
     padding: 1em;
-    background-color: color-mix(in srgb, var(--color-primary) 66%, transparent);
-    color: #fffe;
+    background-color: color-mix(in srgb, #fff 86%, transparent);
+    color: var(--color-primary);
   }
 
   a.newsCard > div.content > small {
-    color: #fffc;
+    color: var(--color-body);
   }
 
   a.newsCard:hover > div.content > small {
-    color: #fffc;
+    color: #fff8;
   }
 }

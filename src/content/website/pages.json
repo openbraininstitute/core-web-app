@@ -1,0 +1,3474 @@
+{
+  "/": {
+    "hero": {
+      "backgroundType": "video",
+      "content": null,
+      "imageURL": null,
+      "next": "Discover our story",
+      "posterHeight": 1080,
+      "posterURL": "/static/website-media/images/3ffc6b1279a9d85c332f65e0fe487ad8463ed017-1920x1080.jpg",
+      "posterWidth": 1920,
+      "title": "Create your Virtual Lab to Perform Neuroscience at the Speed of Thought",
+      "videoURL": "https://player.vimeo.com/progressive_redirect/playback/1053292734/rendition/1440p/file.mp4?loc=external&log_user=0&signature=c928f0a25198726b715c100d5e1497cac299c945666635bec25d6854c37323a4"
+    },
+    "content": [
+      {
+        "_key": "8959c198b424",
+        "_type": "previewBlock",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": "Discover our mission",
+          "link": "mission"
+        },
+        "buttonLabel": "Discover our mission",
+        "buttonsList": null,
+        "content": null,
+        "hasButton": true,
+        "hasImage": true,
+        "image": {
+          "height": 580,
+          "url": "/static/website-media/images/7b6dfe8d251e645b2247cd54bc3e64e0d63d91df-726x580.jpg",
+          "width": 726
+        },
+        "internalLink": {
+          "_ref": "ae5ab11d-3cdf-4705-aa9b-b90978d733e8",
+          "_type": "reference"
+        },
+        "linkType": "internal",
+        "text": [
+          {
+            "_key": "3e29877986ca",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "6f296ebba8c7",
+                "_type": "span",
+                "marks": [],
+                "text": "The Open Brain Institute (OBI) is a non-profit organization whose mission is to empower researchers and organizations with advanced tools to explore and build digital brain models. By hosting Virtual Labs, equipped with computational modeling services and a comprehensive repository of digital brain models, the OBI enables users to conduct realistic brain simulations, test hypotheses, and explore the complexities of neural circuits."
+              }
+            ],
+            "markDefs": [],
+            "style": "normal"
+          }
+        ],
+        "theme": "dark",
+        "timestamps": null,
+        "title": "Accelerating neuroscience research"
+      },
+      {
+        "_key": "0b377082161a",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "What are digital brains?"
+      },
+      {
+        "_key": "3299399f32fb",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "97cc6e5b9059",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "6739db52f3ee",
+                "_type": "span",
+                "text": "Digital brains are advanced computer models that replicate the structure and function of the brain. These models include key components such as neurons, synapses, circuits, brain regions, and the complex connectivity between neurons, known as the connectome. Powered by Artificial Intelligence (AI), vast amounts of research data and brain scan information are processed, structured into knowledge graphs and atlases, and applied in algorithms to recreate the behavior of various neuron types with remarkable precision. It took over two decades of research and development, involving 18 million lines of code, to create the sophisticated software ecosystem that allows the simulation and creation of these digital brains. But to unpack this, it all collapses down into five key steps to build the brain."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "9b61ed17ce34",
+        "_type": "video",
+        "alt": "What are digital brains?",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "caption": "What are digital brains?",
+        "content": null,
+        "hasCaption": true,
+        "image": null,
+        "theme": null,
+        "timestamps": [
+          {
+            "description": "\nDigital brains are advanced computer models that replicate the structure and function of the brain. These models include key components such as neurons, synapses, circuits, brain regions, and the complex connectivity between neurons, known as the connectome. Powered by Artificial Intelligence (AI), vast amounts of research data and brain scan information are processed, structured into knowledge graphs and atlases, and applied in algorithms to recreate the behavior of various neuron types with remarkable precision.\n\nIt took over two decades of research and development, involving 18 million lines of code, to create the sophisticated software ecosystem that allows the simulation and creation of these digital brains. But to unpack this, it all collapses down into five key steps to build the brain.",
+            "label": "Intro",
+            "timestamp": 0
+          },
+          {
+            "description": "The process begins by populating the brain model with neurons. Each neuron is represented as a distinct entity, with its own unique identity based on its type, behavior, and function. These neurons are organized to reflect the diversity found in the biological brain.",
+            "label": "Fill with Neuron",
+            "timestamp": 90
+          },
+          {
+            "description": "Neurons grow dendrites\u2014antenna-like structures that receive information from other neurons. It is now mathematically possible to recreate these dendritic branches for any neuron type, mimicking the brain\u2019s capacity to form connections with other neurons.",
+            "label": "Grow the dendrites",
+            "timestamp": 124
+          },
+          {
+            "description": "Neurons also extend axons\u2014long nerve fibers that transmit signals across vast distances within the brain. For example, in a mouse digital brain model, around 70,000 kilometers of axons must be generated, highlighting the extraordinary complexity and scale of brain connectivity.",
+            "label": "Grow the Axons",
+            "timestamp": 161
+          },
+          {
+            "description": "The next step involves connecting the axons and dendrites. Using advanced algorithms, intersection points are identified, and synapses are formed according to specific connection rules. This creates a massive graph that mirrors the connectivity of a biological brain.",
+            "label": "Connect Axons & Dendrites",
+            "timestamp": 191
+          },
+          {
+            "description": "The final step involves activating the digital brain. Using mathematical models, the electrical behavior of each neuron is simulated, capturing their unique properties both at the individual neuron level and the whole-brain level. This simulates not just the brain's structure, but its dynamic electrical activity.",
+            "label": "Switch it on",
+            "timestamp": 223
+          }
+        ],
+        "url": "https://youtu.be/F7sETjhWyjs",
+        "useTimestamps": true
+      },
+      {
+        "_key": "d80a22aa7a15",
+        "_type": "bulletList",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "86fceef78437",
+            "_type": "bulletPoint",
+            "content": "The process begins by populating the brain model with neurons. Each neuron is represented as a distinct entity, with its own unique identity based on its type, behavior, and function. These neurons are organized to reflect the diversity found in the biological brain.",
+            "hasAnImage": false,
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "title": "01. Fill with Neurons"
+          },
+          {
+            "_key": "22016ad965e5",
+            "_type": "bulletPoint",
+            "content": "Neurons grow dendrites\u2014antenna-like structures that receive information from other neurons. It is now mathematically possible to recreate these dendritic branches for any neuron type, mimicking the brain\u2019s capacity to form connections with other neurons.",
+            "hasAnImage": false,
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "title": "02. Grow the dendrites"
+          },
+          {
+            "_key": "b5bd90430cc8",
+            "_type": "bulletPoint",
+            "content": "Neurons also extend axons\u2014long nerve fibers that transmit signals across vast distances within the brain. For example, in a mouse digital brain model, around 70,000 kilometers of axons must be generated, highlighting the extraordinary complexity and scale of brain connectivity.",
+            "hasAnImage": false,
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "title": "03. Grow the Axons"
+          },
+          {
+            "_key": "c9af05a2e89f",
+            "_type": "bulletPoint",
+            "content": "The next step involves connecting the axons and dendrites. Using advanced algorithms, intersection points are identified, and synapses are formed according to specific connection rules. This creates a massive graph that mirrors the connectivity of a biological brain.",
+            "hasAnImage": false,
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "title": "04. Connect axons and dendrites"
+          },
+          {
+            "_key": "eec7c98d6e99",
+            "_type": "bulletPoint",
+            "content": "The final step involves activating the digital brain. Using mathematical models, the electrical behavior of each neuron is simulated, capturing their unique properties both at the individual neuron level and the whole-brain level. This simulates not just the brain's structure, but its dynamic electrical activity.",
+            "hasAnImage": false,
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "title": "05. Switch it on"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "f515e4e6bab4",
+        "_type": "section",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "name": "adopters",
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "34a8ca7ba415",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "Digital brain models at different scales"
+      },
+      {
+        "_key": "5eae0ec5e607",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "06628f891f42",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "7bbb24a2a4ac",
+                "_type": "span",
+                "marks": [],
+                "text": "The Open Brain Institute offers Virtual Labs\u2014dynamic, cloud-based platforms where you can explore, build, and experiment with digital brain models across multiple scales. From individual neurons and microcircuits to entire brain regions and full-brain networks, access cutting-edge tools for simulation, visualization, and analysis. Unlock deeper insights into brain structure and function with scalable, high-resolution models designed to accelerate discovery and innovation."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "markDefs": [],
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "eed96f321f4c",
+        "_type": "section",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "name": "smallCard",
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "7fc82553bb1d",
+        "_type": "previewBlock",
+        "background": {
+          "height": 1494,
+          "url": "/static/website-media/images/d584c61eef6128f8b9f9eba172530751e90c8fda-3024x1494.jpg",
+          "width": 3024
+        },
+        "backgroundColor": null,
+        "backgroundImage": "/static/website-media/images/d584c61eef6128f8b9f9eba172530751e90c8fda-3024x1494.jpg",
+        "button": {
+          "label": "More about us",
+          "link": "about"
+        },
+        "buttonLabel": "More about us",
+        "buttonsList": null,
+        "content": null,
+        "hasButton": true,
+        "hasImage": true,
+        "image": {
+          "height": 1707,
+          "url": "/static/website-media/images/c1536121cc449c19424716f1f882f142780f9a0f-2560x1707.jpg",
+          "width": 2560
+        },
+        "internalLink": {
+          "_ref": "92bf49ad-4284-42c8-babd-90e8e19f4cdf",
+          "_type": "reference"
+        },
+        "linkType": "internal",
+        "text": [
+          {
+            "_key": "e9ae4c0b2de3",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "d8dfc2f9dd23",
+                "_type": "span",
+                "marks": [],
+                "text": "The Open Brain Institute (OBI) was founded in 2025 by Henry Markram with a vision to accelerate and democratize neuroscience research by empowering users with advanced digital brain modeling tools and data while fostering open collaboration."
+              }
+            ],
+            "markDefs": [],
+            "style": "normal"
+          }
+        ],
+        "theme": "dark",
+        "timestamps": null,
+        "title": "Who is behind the Open Brain Institute"
+      },
+      {
+        "_key": "3c575c126bc7",
+        "_type": "section",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "name": "newsList",
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "356ec1c8f5cc",
+        "_type": "previewBlock",
+        "background": {
+          "height": 1412,
+          "url": "/static/website-media/images/f2be72c4e139aecf349dcee740da30ae85d8b7c0-3024x1412.jpg",
+          "width": 3024
+        },
+        "backgroundColor": null,
+        "backgroundImage": "/static/website-media/images/f2be72c4e139aecf349dcee740da30ae85d8b7c0-3024x1412.jpg",
+        "button": {
+          "label": "Discover our team",
+          "link": "team"
+        },
+        "buttonLabel": "Discover our team",
+        "buttonsList": null,
+        "content": null,
+        "hasButton": true,
+        "hasImage": false,
+        "image": null,
+        "internalLink": {
+          "_ref": "71b2b586-d45f-4165-9117-8ae65e08ad20",
+          "_type": "reference"
+        },
+        "linkType": "internal",
+        "text": [
+          {
+            "_key": "8f7ce9ce6500",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "6498f4aa0f8f",
+                "_type": "span",
+                "marks": [],
+                "text": "The Open Brain Institute is guided by visionary founder Henry and backed by a distinguished board of pioneering neuroscientists and open science advocates Kamila Markram, Idan Segev, Javier de Felipe Oroquieta, and Sean Hill. Our dynamic team includes world-class scientists, engineers, and innovators dedicated to advancing the Open Brain Platform and accelerating neuroscience research."
+              }
+            ],
+            "markDefs": [],
+            "style": "normal"
+          }
+        ],
+        "theme": "dark",
+        "timestamps": null,
+        "title": "A world-class team of scientists, engineers, and innovators"
+      },
+      {
+        "_key": "fe280eb84c15",
+        "_type": "section",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "name": "swipeableList",
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "70bae525704e",
+        "_type": "previewBlock",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": "Contact us",
+          "link": "contact"
+        },
+        "buttonLabel": "Contact us",
+        "buttonsList": null,
+        "content": null,
+        "hasButton": true,
+        "hasImage": true,
+        "image": {
+          "height": 632,
+          "url": "/static/website-media/images/ecb8c7757874db93c7e3663b416b661a08bcd566-726x632.jpg",
+          "width": 726
+        },
+        "internalLink": {
+          "_ref": "8def50b3-5a70-43a3-bf14-093b16ebf0a5",
+          "_type": "reference"
+        },
+        "linkType": "internal",
+        "text": [
+          {
+            "_key": "7a8a9b4e877c",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "3faf6bddcd04",
+                "_type": "span",
+                "marks": [],
+                "text": "We welcome researchers, developers, and institutions to collaborate with us on cutting-edge neuroscience projects. Whether you\u2019re exploring brain simulations, AI-driven analysis, or innovative neurotechnology, the Open Brain Institute is eager to discuss and support your work. Let\u2019s advance neuroscience together! Contact us today to explore partnership opportunities and bring your ideas to life."
+              }
+            ],
+            "markDefs": [],
+            "style": "normal"
+          }
+        ],
+        "theme": "light",
+        "timestamps": null,
+        "title": "How can we collaborate and help you achieve greatness?"
+      },
+      {
+        "_key": "9bc14d450b45",
+        "_type": "previewBlock",
+        "background": {
+          "height": 1412,
+          "url": "/static/website-media/images/f2be72c4e139aecf349dcee740da30ae85d8b7c0-3024x1412.jpg",
+          "width": 3024
+        },
+        "backgroundColor": null,
+        "backgroundImage": "/static/website-media/images/f2be72c4e139aecf349dcee740da30ae85d8b7c0-3024x1412.jpg",
+        "button": {
+          "label": "Discover the story in detail",
+          "link": "the-real-digital-brain-story"
+        },
+        "buttonLabel": "Discover the story in detail",
+        "buttonsList": null,
+        "content": null,
+        "hasButton": true,
+        "image": null,
+        "internalLink": {
+          "_ref": "e8805af5-54de-41c8-8d98-973d9c13c6c4",
+          "_type": "reference"
+        },
+        "linkType": "internal",
+        "text": [
+          {
+            "_key": "1faf3b7a43f9",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "70fd7eaedac9",
+                "_type": "span",
+                "marks": [],
+                "text": "It took over two decades of research and development, involving 18 million lines of code, to create the sophisticated software ecosystem that allows the simulation and creation of digital brains."
+              }
+            ],
+            "markDefs": [],
+            "style": "normal"
+          }
+        ],
+        "theme": "dark",
+        "timestamps": null,
+        "title": "The Real Digital Brain Story"
+      }
+    ]
+  },
+  "about": {
+    "hero": {
+      "backgroundType": "video",
+      "content": "The Open Brain Institute is a non-profit organization whose mission is to empower researchers and organizations with advanced digital brain building technology to perform neuroscience at the speed of thought. \u00a0",
+      "imageURL": "/static/website-media/images/764e9b9dc0cf60d9f4b67007c1a2cd2be474dac6-3024x1964.jpg",
+      "next": "Discover our origin",
+      "posterHeight": 1964,
+      "posterURL": "/static/website-media/images/764e9b9dc0cf60d9f4b67007c1a2cd2be474dac6-3024x1964.jpg",
+      "posterWidth": 3024,
+      "title": "About",
+      "videoURL": "https://player.vimeo.com/progressive_redirect/playback/1058209556/rendition/1080p/file.mp4?loc=external&log_user=0&signature=a0be9f7351965b1ed8d2793a38cfae12e0160b61f524c346fc722c93e6770584&user_id=43466136"
+    },
+    "content": [
+      {
+        "_key": "0dabaec706f1",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "2025: The Open Brain Institute"
+      },
+      {
+        "_key": "50539a6d43ac",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "7dbcad594c90",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "f5b9d3be5c7e",
+                "_type": "span",
+                "marks": [],
+                "text": "Founded in 2025 by Henry Markram, the Open Brain Institute (OBI) is committed to accelerating and democratizing neuroscience research by embracing open science and fostering global collaboration."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "markDefs": [],
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "08b2a44b12cd",
+        "_type": "section",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "name": "multipleMember",
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "ed5f2f3d6858",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "29fab413dfed",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "15b9e00d2321",
+                "_type": "span",
+                "marks": [],
+                "text": "Built on two decades of pioneering work from the Blue Brain Project, the OBI operates the Open Brain Platform, a cloud-based infrastructure that integrates cutting-edge modeling, simulation, and data analysis tools originally developed by Blue Brain. The Open Brain Platform also serves as a comprehensive repository of high-fidelity digital brain models, capturing the intricate complexity of brain tissue across multiple scales."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "markDefs": [],
+            "style": "normal"
+          },
+          {
+            "_key": "c459c5231c70",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "6562bcf24333",
+                "_type": "span",
+                "marks": [],
+                "text": ""
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "markDefs": [],
+            "style": "normal"
+          },
+          {
+            "_key": "639f34d101bd",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "cb93308d1c13",
+                "_type": "span",
+                "marks": [],
+                "text": "Through its commitment to transparency and global knowledge-sharing, the OBI aims to promote and advance open science by empowering researchers with powerful tools and data, enabling them to conduct realistic simulations, test hypotheses, and gain deeper insights into neural circuits and brain function."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "markDefs": [],
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "5b1d5912e39a",
+        "_type": "previewBlock",
+        "background": {
+          "height": 1412,
+          "url": "/static/website-media/images/f2be72c4e139aecf349dcee740da30ae85d8b7c0-3024x1412.jpg",
+          "width": 3024
+        },
+        "backgroundColor": null,
+        "backgroundImage": "/static/website-media/images/f2be72c4e139aecf349dcee740da30ae85d8b7c0-3024x1412.jpg",
+        "button": {
+          "label": "Discover the story in detail",
+          "link": "the-real-digital-brain-story"
+        },
+        "buttonLabel": "Discover the story in detail",
+        "buttonsList": null,
+        "content": null,
+        "hasButton": true,
+        "image": null,
+        "internalLink": {
+          "_ref": "e8805af5-54de-41c8-8d98-973d9c13c6c4",
+          "_type": "reference"
+        },
+        "linkType": "internal",
+        "text": [
+          {
+            "_key": "e198f3d437e4",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "48fd2f36aad8",
+                "_type": "span",
+                "marks": [],
+                "text": "It took over two decades of research and development, involving 18 million lines of code, to create the sophisticated software ecosystem that allows the simulation and creation of digital brains."
+              }
+            ],
+            "markDefs": [],
+            "style": "normal"
+          }
+        ],
+        "theme": "dark",
+        "timestamps": null,
+        "title": "The Real Digital Brain Story"
+      },
+      {
+        "_key": "11e7ed99e1e24a8c9d2d6288f001880d",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "Our Foundations: Blue Brain"
+      },
+      {
+        "_key": "0d23c7f1558f",
+        "_type": "section",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "name": "highlight",
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "a2b035805ba5bc89e9efd8fec5479c2e",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "Browse our portals"
+      },
+      {
+        "_key": "8a97bd23f91b",
+        "_type": "section",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "name": "portalGrid",
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "0bd06d9c9a48",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "We thank all Blue Brain collaborators and contributors"
+      },
+      {
+        "_key": "8dfbc01b0be5",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "8efe492dfdbd",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "26461ade2f53",
+                "_type": "span",
+                "marks": [],
+                "text": "We thank our "
+              },
+              {
+                "_key": "33a0d8db67c2",
+                "_type": "span",
+                "marks": ["strong"],
+                "text": "1,100+ collaborators and contributors"
+              },
+              {
+                "_key": "dca14ff77adc",
+                "_type": "span",
+                "marks": [],
+                "text": " whose dedication, innovation, and expertise made the Blue Brain Project possible. Over two decades, this pioneering initiative has revolutionized neuroscience, laying the foundation for biologically accurate digital brain modeling and the field of simulation neuroscience."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "markDefs": [],
+            "style": "normal"
+          },
+          {
+            "_key": "13133598bb8f",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "87616efeb94f",
+                "_type": "span",
+                "marks": [],
+                "text": "With approximately "
+              },
+              {
+                "_key": "af2689b61de1",
+                "_type": "span",
+                "marks": ["strong"],
+                "text": "300 peer-reviewed publications"
+              },
+              {
+                "_key": "f6040f1ae7e6",
+                "_type": "span",
+                "marks": [],
+                "text": ", more than a "
+              },
+              {
+                "_key": "0b8a54a5adc8",
+                "_type": "span",
+                "marks": ["strong"],
+                "text": "petabyte of neuroscience data"
+              },
+              {
+                "_key": "73d9285bbe45",
+                "_type": "span",
+                "marks": [],
+                "text": ", and "
+              },
+              {
+                "_key": "d51101d16e9e",
+                "_type": "span",
+                "marks": ["strong"],
+                "text": "18 million lines of open-source code"
+              },
+              {
+                "_key": "939cbcd37f5b",
+                "_type": "span",
+                "marks": [],
+                "text": " across nearly "
+              },
+              {
+                "_key": "db2fe62a0b37",
+                "_type": "span",
+                "marks": ["strong"],
+                "text": "290 GitHub repositories"
+              },
+              {
+                "_key": "114317e2e5c7",
+                "_type": "span",
+                "marks": [],
+                "text": ", this collective effort has created a lasting legacy, providing tools to build, simulate, analyze, and visualize digital brain models, empowering researchers worldwide to push the boundaries of discovery."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "markDefs": [],
+            "style": "normal"
+          },
+          {
+            "_key": "8bee34e10fe2",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "d4b06b13ad59",
+                "_type": "span",
+                "marks": [],
+                "text": "To all who contributed, we express our deepest gratitude for shaping the future of neuroscience and pioneering a new era of brain research."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "markDefs": [],
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "bb8d9d4770ce",
+        "_type": "section",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "name": "contributors",
+        "theme": null,
+        "timestamps": null
+      }
+    ]
+  },
+  "mission": {
+    "hero": {
+      "backgroundType": "video",
+      "content": "The Open Brain Institute (OBI) is a non-profit organization whose mission is to empower researchers and organizations with advanced tools to explore and build digital brain models. By hosting Virtual Labs, equipped with computational modeling services and a comprehensive repository of digital brain models, the OBI enables users to conduct realistic brain simulations, test hypotheses, and explore the complexities of neural circuits. ",
+      "imageURL": "/static/website-media/images/411680bc0340653e0dc98dcf7e0ecdc64d859cc1-2414x1060.jpg",
+      "next": "discover our mission ",
+      "posterHeight": 1080,
+      "posterURL": "/static/website-media/images/3b47ee5867bd53d77f795b56aca959e9142edddb-1920x1080.jpg",
+      "posterWidth": 1920,
+      "title": "Mission",
+      "videoURL": "https://player.vimeo.com/progressive_redirect/playback/1054051972/rendition/1080p/file.mp4?loc=external&log_user=0&signature=689a6231768b0dc32c457e14eb3a2b637f8c0a84acace0ced1d913478fba1e62"
+    },
+    "content": [
+      {
+        "_key": "25a453bcf230",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "Our mission is to empower researchers and organizations with advanced digital brain building technology to perform neuroscience at the speed of thought."
+      },
+      {
+        "_key": "18e7a43b4ff5",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "0d15fee270cb",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "86b225e2a362",
+                "_type": "span",
+                "marks": [],
+                "text": "Central to OBI's mission is the establishment of a collaborative virtual laboratory infrastructure, known as \u201cVirtual Labs\u201d. This dynamic environment provides seamless access to advanced brain building tools and computational resources, including cloud compute clusters, specialized brain modeling and simulation software, and robust data analysis and visualization capabilities. These resources enable researchers to use, improve, refine and build advanced digital brain models and ultimately accelerate neuroscience research."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "markDefs": [],
+            "style": "normal"
+          },
+          {
+            "_key": "2b16b92990b5",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "d0393f0babea",
+                "_type": "span",
+                "marks": [],
+                "text": "The Open Brain Institute\u2019s core objective is to build a comprehensive repository of high-fidelity digital brain models, encompassing the complexity and diversity of brain tissue across species and at different scales. This repository serves as an invaluable resource for researchers globally, facilitating unprecedented exploration of brain structure and function. More than just a data archive, it is a dynamic and evolving resource and simulation environment, continuously updated with new data, software and model improvements."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "markDefs": [],
+            "style": "normal"
+          },
+          {
+            "_key": "0dfc90a8dc2e",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "a418d8f02a67",
+                "_type": "span",
+                "marks": [],
+                "text": "\u00a0"
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "markDefs": [],
+            "style": "normal"
+          },
+          {
+            "_key": "7e83efd7a54c",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "3be84874f92a",
+                "_type": "span",
+                "marks": [],
+                "text": "The Virtual Labs are hosted on the Open Brain Platform and provide the following key functionalities:"
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "markDefs": [],
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "cff6c3642ade",
+        "_type": "bulletList",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "97a15588f605",
+            "_type": "bulletPoint",
+            "content": "Researchers conduct atlas-driven exploration of existing experimental data, model data, digital brain models, and simulations. This structured and systematic exploration is further enhanced by powerful literature mining tools ensuring that their investigations are grounded in the most current and relevant scientific information.",
+            "hasAnImage": true,
+            "image": {
+              "_type": "image",
+              "asset": {
+                "_ref": "image-abf9360cee9b9e39dc0613ea9d260d59e8aaad30-1050x1050-jpg",
+                "_type": "reference"
+              }
+            },
+            "imageHeight": 1050,
+            "imageURL": "/static/website-media/images/abf9360cee9b9e39dc0613ea9d260d59e8aaad30-1050x1050.jpg",
+            "imageWidth": 1050,
+            "title": "Explore"
+          },
+          {
+            "_key": "7521d1c4888f",
+            "_type": "bulletPoint",
+            "content": "Researchers can use our tools to create custom brain models at multiple scales, either from scratch or by modifying existing models, empowering hypothesis testing and innovative approaches to understanding the brain.\u00a0",
+            "hasAnImage": true,
+            "image": {
+              "_type": "image",
+              "asset": {
+                "_ref": "image-0877a5cde476ff7ef9fa6596e0d17b0d3534106b-1050x1050-jpg",
+                "_type": "reference"
+              }
+            },
+            "imageHeight": 1050,
+            "imageURL": "/static/website-media/images/0877a5cde476ff7ef9fa6596e0d17b0d3534106b-1050x1050.jpg",
+            "imageWidth": 1050,
+            "title": "Build"
+          },
+          {
+            "_key": "5e0e07354d7d",
+            "_type": "bulletPoint",
+            "content": "Researchers can run experiments and model complex brain processes in a controlled, reproducible setting,\u2014 extending possibilities beyond traditional biological labs.\u00a0",
+            "hasAnImage": true,
+            "image": {
+              "_type": "image",
+              "asset": {
+                "_ref": "image-3a089a729f811a7f84ec378b4ab42d897db6aad2-1050x1050-jpg",
+                "_type": "reference"
+              }
+            },
+            "imageHeight": 1050,
+            "imageURL": "/static/website-media/images/3a089a729f811a7f84ec378b4ab42d897db6aad2-1050x1050.jpg",
+            "imageWidth": 1050,
+            "title": "Experiment"
+          },
+          {
+            "_key": "a5c465abe6da",
+            "_type": "bulletPoint",
+            "content": "We cultivate a spirit of global collaboration, offering integrated communication tools, shared data analysis, and joint model development capabilities, ensuring data integrity and attribution, while safeguarding research confidentiality.",
+            "hasAnImage": true,
+            "image": {
+              "_type": "image",
+              "asset": {
+                "_ref": "image-20e49c35259f3ae97edc265c2c83a8e839337c66-1050x1050-jpg",
+                "_type": "reference"
+              }
+            },
+            "imageHeight": 1050,
+            "imageURL": "/static/website-media/images/20e49c35259f3ae97edc265c2c83a8e839337c66-1050x1050.jpg",
+            "imageWidth": 1050,
+            "title": "Collaborate"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "06266876719f",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "Virtual labs to explore, build, and experiment digital brain models"
+      },
+      {
+        "_key": "340eac63fcc0",
+        "_type": "section",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "name": "tripleBloc",
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "44e555182f32",
+        "_type": "verticalDivider",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "spacing": "small",
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "6ac82a21ebbd",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "0d9fbfbbd9ba",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "f62be8dd2738",
+                "_type": "span",
+                "marks": [],
+                "text": "Our integrated approach to digital brain modeling and collaborative virtual labs, aims to accelerate scientific discovery, democratize access to advanced research tools, and drive transformative breakthroughs in the treatment of neurological disorders, advancing cognitive science, and pushing the boundaries of artificial intelligence."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "markDefs": [],
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "69844f6cfa13",
+        "_type": "section",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "name": "downloadButton",
+        "theme": null,
+        "timestamps": null
+      }
+    ]
+  },
+  "team": {
+    "hero": {
+      "backgroundType": "video",
+      "content": "Discover our world-class scientists, engineers, and innovators driving the Open Brain Institute.",
+      "imageURL": "/static/website-media/images/3399f38be1a7b9e7db7a2b47cbe9a6ef1213d6b8-2414x1060.jpg",
+      "next": "Discover our team",
+      "posterHeight": 1080,
+      "posterURL": "/static/website-media/images/9beb7430bfe38a8cc97e117a40b978ec623b4ce6-1920x1080.jpg",
+      "posterWidth": 1920,
+      "title": "Team",
+      "videoURL": "https://player.vimeo.com/progressive_redirect/playback/1054052007/rendition/1080p/file.mp4?loc=external&log_user=0&signature=bea87e6399da76a5a8ae0210df8aa963a5c01d1eca74722e3c454d11758909f9"
+    },
+    "content": [
+      {
+        "_key": "a83d5e017a88",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "Board"
+      },
+      {
+        "_key": "56289e6be701",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "ce4cb64ffcdb",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "d74c3c7e9806",
+                "_type": "span",
+                "marks": [],
+                "text": "The Open Brain Institute (OBI) was founded by Prof Henry Markram and Dr Kamila Markram in January 2025."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "markDefs": [],
+            "style": "normal"
+          },
+          {
+            "_key": "785e3b53b8a0",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "6fef1f457a32",
+                "_type": "span",
+                "marks": [],
+                "text": ""
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "markDefs": [],
+            "style": "normal"
+          },
+          {
+            "_key": "700fb2021300",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "38debb6bec32",
+                "_type": "span",
+                "marks": ["strong"],
+                "text": "Henry Markram"
+              },
+              {
+                "_key": "4191ffbd89e5",
+                "_type": "span",
+                "marks": [],
+                "text": " is professor of neuroscience at the Swiss Federal Institute of Technology (EPFL) and has pioneered groundbreaking initiatives that have redefined brain research and computational neuroscience, including founding the Brain Mind Institute, the Blue Brain Project, and the Human Brain Project, and serving as co-founder and chairman of Frontiers, the Frontiers Research Foundation, the Frontiers Planet Prize, and Inait. A visionary leader and pioneer in simulation neuroscience, Henry has led revolutionary efforts to model the brain and decode its complexities through cutting-edge technology. He is the president of the Board of the Open Brain Institute."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "markDefs": [],
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "e18d88845f79",
+        "_type": "section",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "name": "memberBoard",
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "1d9fb5b865fe",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "ad5b4b13850b",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "c09211009b3a",
+                "_type": "span",
+                "marks": [],
+                "text": "Committed to revolutionizing brain research, the Board unites\u00a0"
+              },
+              {
+                "_key": "02f47f2527e8",
+                "_type": "span",
+                "marks": ["strong"],
+                "text": "world-renowned experts"
+              },
+              {
+                "_key": "bcbcfbc5a311",
+                "_type": "span",
+                "marks": [],
+                "text": "\u00a0pushing the boundaries of neuroscience through collaboration, innovation, and open science."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "markDefs": [],
+            "style": "normal"
+          },
+          {
+            "_key": "aae5c67ab2af",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "82d33e9329a0",
+                "_type": "span",
+                "marks": [],
+                "text": ""
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "markDefs": [],
+            "style": "normal"
+          },
+          {
+            "_key": "d061dff1b142",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "63cbeb9d3ff8",
+                "_type": "span",
+                "marks": ["strong"],
+                "text": "Kamila Markram"
+              },
+              {
+                "_key": "6e35fa085dce",
+                "_type": "span",
+                "marks": [],
+                "text": " is a neuroscientist and the co-founder and CEO of Frontiers, one of the world\u2019s largest and most cited research publishers on a mission to make science openly accessible and thereby accelerate innovation and collaboration to enable healthy lives on a healthy planet."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "markDefs": [],
+            "style": "normal"
+          },
+          {
+            "_key": "8e8d0458f2fb",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "ada16f6824c5",
+                "_type": "span",
+                "marks": [],
+                "text": ""
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "markDefs": [],
+            "style": "normal"
+          },
+          {
+            "_key": "4cd9eee943d7",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "c3d548d3d272",
+                "_type": "span",
+                "marks": ["strong"],
+                "text": "Idan Segev"
+              },
+              {
+                "_key": "bb9feb171efd",
+                "_type": "span",
+                "marks": [],
+                "text": ", a distinguished pioneer in computational neuroscience, dedicated his life to study the neural circuits that drive brain function. His groundbreaking work uncovers how neurons process information and how brain structure directly influences behavior."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "markDefs": [],
+            "style": "normal"
+          },
+          {
+            "_key": "2bc2182bb426",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "ceaaba38ceed",
+                "_type": "span",
+                "marks": [],
+                "text": ""
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "markDefs": [],
+            "style": "normal"
+          },
+          {
+            "_key": "5c1b809a5f15",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "e85f2ff4a2ea",
+                "_type": "span",
+                "marks": ["strong"],
+                "text": "Javier de Felipe Oroquieta"
+              },
+              {
+                "_key": "b9873ac100ee",
+                "_type": "span",
+                "marks": [],
+                "text": ", a world-renowned expert in cortical microanatomy, investigates the brain's intricate structure to further our understanding of cognition and disease. His research on the neuroanatomy of the cortex sheds light on its role in perception and neural disorders."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "markDefs": [],
+            "style": "normal"
+          },
+          {
+            "_key": "d4062f197c40",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "fd72fb6ba2a3",
+                "_type": "span",
+                "marks": [],
+                "text": ""
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "markDefs": [],
+            "style": "normal"
+          },
+          {
+            "_key": "106459b5abc0",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "5d7db05b39e2",
+                "_type": "span",
+                "marks": ["strong"],
+                "text": "Sean Hill"
+              },
+              {
+                "_key": "c7a2f1a77062",
+                "_type": "span",
+                "marks": [],
+                "text": ", at the forefront of neuroinformatics and large-scale brain modeling, is committed to databasing neural data to advance our understanding of brain function and disorders, paving the way for a comprehensive, data-driven approach to neuroscience."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "markDefs": [],
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "5244d19367f8",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "Executive board"
+      },
+      {
+        "_key": "b72b7082babb",
+        "_type": "section",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "name": "memberExecutiveBoard",
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "70dc2adc735f",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "The team"
+      },
+      {
+        "_key": "9c54c033b936",
+        "_type": "imageBlock",
+        "alt": "The whole team of OBI including members of the board, the CEO, the CSO and CTO",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "caption": "The OBI team at its beginning ready to tackle the digital brain challenge",
+        "content": null,
+        "hasCaption": true,
+        "image": {
+          "height": 1568,
+          "url": "/static/website-media/images/ad58374ad6131e73c1800eced413771687f60f6b-2414x1568.jpg",
+          "width": 2414
+        },
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "0f2e3659d680",
+        "_type": "verticalDivider",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "spacing": "medium",
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "283b1d770fd1",
+        "_type": "section",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "name": "memberTeam",
+        "theme": null,
+        "timestamps": null
+      }
+    ]
+  },
+  "resources": {
+    "hero": {
+      "backgroundType": "video",
+      "content": "Explore our featured scientific models and Jupyter notebooks, showcasing innovation, insights, and cutting-edge research.",
+      "imageURL": "/static/website-media/images/04686f8f07d815ccb3b9fa1de53cc5be49337e27-3024x1964.jpg",
+      "next": "Browse our assets",
+      "posterHeight": 1964,
+      "posterURL": "/static/website-media/images/04686f8f07d815ccb3b9fa1de53cc5be49337e27-3024x1964.jpg",
+      "posterWidth": 3024,
+      "title": "Resources",
+      "videoURL": "https://player.vimeo.com/progressive_redirect/playback/1058206796/rendition/1080p/file.mp4?loc=external&log_user=0&signature=c2d08f7b7d430c9c1ba799877c780206ed6626c27c05f0c37713098d68e7daef&user_id=43466136"
+    },
+    "content": [
+      {
+        "_key": "2049cd8f2122",
+        "_type": "section",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "name": "resourcesList",
+        "theme": null,
+        "timestamps": null
+      }
+    ]
+  },
+  "notebooks": {
+    "hero": {
+      "backgroundType": "video",
+      "content": "Explore our featured scientific models and Jupyter notebooks, showcasing innovation, insights, and cutting-edge research.",
+      "imageURL": "/static/website-media/images/04686f8f07d815ccb3b9fa1de53cc5be49337e27-3024x1964.jpg",
+      "next": "Browse our assets",
+      "posterHeight": 1964,
+      "posterURL": "/static/website-media/images/04686f8f07d815ccb3b9fa1de53cc5be49337e27-3024x1964.jpg",
+      "posterWidth": 3024,
+      "title": "Notebooks",
+      "videoURL": "https://player.vimeo.com/progressive_redirect/playback/1058206796/rendition/1080p/file.mp4?loc=external&log_user=0&signature=c2d08f7b7d430c9c1ba799877c780206ed6626c27c05f0c37713098d68e7daef&user_id=43466136"
+    },
+    "content": [
+      {
+        "_key": "2049cd8f2122",
+        "_type": "section",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "name": "resourcesList",
+        "theme": null,
+        "timestamps": null
+      }
+    ]
+  },
+  "contact": {
+    "hero": {
+      "backgroundType": "video",
+      "content": "We're here to support your journey in neuroscience. Reach out for assistance, inquiries, or collaboration opportunities.",
+      "imageURL": "/static/website-media/images/04db78f572036247b4e9e3306a1d695834eac7e1-2414x1060.jpg",
+      "next": "Need Help? Get in Touch!",
+      "posterHeight": 1080,
+      "posterURL": "/static/website-media/images/95d4a2d4e9400e54da912635e27706b841135931-1920x1080.jpg",
+      "posterWidth": 1920,
+      "title": "Contact",
+      "videoURL": "https://player.vimeo.com/progressive_redirect/playback/1054051910/rendition/1080p/file.mp4?loc=external&log_user=0&signature=070bd29998265382ef18c98a492f96e62301edb61ff90d04acbdfcccf450b997"
+    },
+    "content": [
+      {
+        "_key": "2e65f2354b45",
+        "_type": "verticalDivider",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "spacing": "large",
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "947af447957a",
+        "_type": "section",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "name": "supportEmailButton",
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "25318d5a1367",
+        "_type": "verticalDivider",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "spacing": "small",
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "de25f688aa2e",
+        "_type": "section",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "name": "infoEmailButton",
+        "theme": null,
+        "timestamps": null
+      }
+    ]
+  },
+  "features": {
+    "hero": {
+      "backgroundType": "image",
+      "content": "Instant AI-powered Virtual Labs, unprecedented simulation scale, fully open data & tools, and everything you need to accelerate neuroscience breakthroughs",
+      "imageURL": "/static/website-media/images/c7e583ee0efad566584c42f2be46faf32ed22298-3024x1692.jpg",
+      "next": "Discover all features",
+      "posterHeight": null,
+      "posterURL": null,
+      "posterWidth": null,
+      "title": "Features",
+      "videoURL": null
+    },
+    "content": []
+  },
+  "pricing": {
+    "hero": {
+      "backgroundType": "video",
+      "content": "The Open Brain Platform offers flexible subscription plans and different pricing tailored to your needs.",
+      "imageURL": "/static/website-media/images/e040d8be23343156b6639be8baf5d8c99e6bc3d5-2414x1060.jpg",
+      "next": "Discover our plans",
+      "posterHeight": 1080,
+      "posterURL": "/static/website-media/images/14280c1d94ef56ac0740914e24f05c493b144aba-1920x1080.jpg",
+      "posterWidth": 1920,
+      "title": "Pricing",
+      "videoURL": "https://player.vimeo.com/progressive_redirect/playback/1054052028/rendition/1080p/file.mp4?loc=external&log_user=0&signature=3b232e4973e9865c741bf2e1fda79318c607ebf2de4b121269609b0cbfb1eb07"
+    },
+    "content": [
+      {
+        "_key": "24ea4c49115a",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "Discover our plans"
+      },
+      {
+        "_key": "8ff47aedfd49",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h3",
+        "theme": null,
+        "timestamps": null,
+        "title": "{{button}{/app/virtual-lab}{Create your Virtual Lab}{Dive into a fully digital research environment where you can Explore, Build, and Experiment.}}"
+      },
+      {
+        "_key": "2e6a0c9b1829",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "3a803d0b6a07",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "a4a82cdec61f",
+                "_type": "span",
+                "marks": [],
+                "text": "Choose the ideal plan for your research needs. Whether you're working on an individual project or a large-scale initiative, we provide flexible options to support your brain modeling and simulation goals."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "markDefs": [],
+            "style": "normal"
+          },
+          {
+            "_key": "7650697421f3",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "9c2bb1e65722",
+                "_type": "span",
+                "marks": [],
+                "text": "All our subscription plans include limited free credits and storage, with the option to top up your Virtual Lab anytime for additional credits."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "markDefs": [],
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "685d9c1eebfe",
+        "_type": "verticalDivider",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "spacing": "large",
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "501e0844497d",
+        "_type": "section",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "name": "itemPriceList",
+        "theme": null,
+        "timestamps": null
+      }
+    ]
+  },
+  "gallery": {
+    "hero": {
+      "title": "",
+      "content": "",
+      "backgroundType": "image",
+      "imageURL": "",
+      "videoURL": "",
+      "next": "",
+      "posterURL": "",
+      "posterWidth": 0,
+      "posterHeight": 0
+    },
+    "content": []
+  },
+  "showcases": {
+    "hero": {
+      "backgroundType": "image",
+      "content": "Discover the activities generated by our app. Browse scientific report and analysis.",
+      "imageURL": "/static/website-media/images/c7e583ee0efad566584c42f2be46faf32ed22298-3024x1692.jpg",
+      "next": "Read the showcase",
+      "posterHeight": null,
+      "posterURL": null,
+      "posterWidth": null,
+      "title": "Showcases",
+      "videoURL": null
+    },
+    "content": []
+  },
+  "sfn-2025": {
+    "hero": {
+      "backgroundType": "image",
+      "content": null,
+      "imageURL": null,
+      "next": "coming soon...",
+      "posterHeight": null,
+      "posterURL": null,
+      "posterWidth": null,
+      "title": "SFN 2025",
+      "videoURL": null
+    },
+    "content": [
+      {
+        "_key": "fdd2d7f34cf0",
+        "_type": "imageBlock",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": {
+          "height": 1080,
+          "url": "/static/website-media/images/3b47ee5867bd53d77f795b56aca959e9142edddb-1920x1080.jpg",
+          "width": 1920
+        },
+        "theme": null,
+        "timestamps": null
+      }
+    ]
+  },
+  "the-real-digital-brain-story": {
+    "hero": {
+      "backgroundType": "video",
+      "content": "It took over two decades of research and development, involving 18 million lines of code, to create the sophisticated software ecosystem that allows the simulation and creation of digital brains.",
+      "imageURL": null,
+      "next": "Discover the Real Digital Brain Story",
+      "posterHeight": 1080,
+      "posterURL": "/static/website-media/images/e04c2969d4f2e0c8c3a0ca3efc0b5c0d960e8c38-1920x1080.jpg",
+      "posterWidth": 1920,
+      "title": "The Real Digital Brain Story",
+      "videoURL": "https://player.vimeo.com/progressive_redirect/playback/1066095337/rendition/1080p/file.mp4?loc=external&log_user=0&signature=2c7e101cbe879a767d76cf33cace4c164e194760cb67b97fa6c1695788c01ada&user_id=43466136"
+    },
+    "content": [
+      {
+        "_key": "e7570879ede2",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "01. A Two-Decade Odyssey to Recreate the Brain"
+      },
+      {
+        "_key": "8656c1064280",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "c521085249b5",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "f1968b6706d1",
+                "_type": "span",
+                "text": "The EPFL\u2019s Blue Brain Project has been on a 20-year mission to find the recipe to recreate the mammalian brain within a computer. If the real brain could be digitally replicated, then we can perform limitless neuroscience experiments that are not technically and ethically possible on living brains. The project faced seemingly impossible neuroscience challenges because so little was known about the brain when it started in 2005, and even supercomputers were not yet fully ready to perform the trillions of calculations per second that would be needed to solve the equations to emulate brain function. The project would need to push the frontiers of computer science to enable supercomputers to build and simulate the most complex organ of the body. The project completed its mission in December 2024, based on the mouse brain and pilot builds of parts of the rat and human brain, and has now open sourced the recipe to enable the global neuroscience community to start building and simulating the brain\u2014potentially of any species, at any age and with any disorder\u2014to accelerate our understanding of the brain and its diseases."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "43ba56bc8a6a",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "02. Building a Brain from Scraps of Knowledge"
+      },
+      {
+        "_key": "7faa431d4002",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "f54ce3377bcd",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "06cf0ad6471f",
+                "_type": "span",
+                "text": "To be able to create a digital copy of the brain meant using a vast number of experimentally derived brain maps to recreate the morphological shape of every type of neuron, find the right mix of different neuron types in each brain region, work out how they are all synaptically connected, and mathematically recreate the electrochemical behavior of each type of neuron and synapse. The biggest obstacle was how to start without any blueprints and with huge gaps in our knowledge. Even the number of neurons and the parts list of neuron and synapse types were missing\u2014let alone all their morphological shapes and electrochemical behaviors, the right mix of neurons in each brain region, and the connectome that architects how neurons are connected. Not surprisingly, the project\u2019s launch was met with echoes of \u201cthis is impossible\u201d throughout the neuroscience community."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "5a5dfaa4188c",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "03. A Radical Hypothesis"
+      },
+      {
+        "_key": "379bb251df49",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "b614ad49c932",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "bf4cbc8a9b90",
+                "_type": "span",
+                "text": "Professor Henry Markram, the founder of the project, had spent the previous decade trying to experimentally reverse engineer the brain and realized that no amount of mapping would ever be enough. A radically different approach would be needed to stand a chance of mapping the brain in all its detail. He hypothesized that since every parameter in any complex system depends on every other parameter\u2014in other words, any one piece is shaped by the others\u2014then laying down one piece of the puzzle might start revealing the missing parts, and only a few landmark pieces might be needed to infer the entire map. He had effectively turned the intractable problem of experimentally mapping every facet of the brain into a tractable problem of identifying the smallest set of pieces needed to infer all the rest. But to test this hypothesis he had to begin building with the scraps of available information."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "85d69bd9860c",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "04. A Faster Path to Reverse Engineering"
+      },
+      {
+        "_key": "3478e7f082f0",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "ca5b888dd240",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "f62d5cbe8315",
+                "_type": "span",
+                "text": "The conclusion reached was that one can reverse engineer the brain much faster and easier than by exhaustively measuring every facet of its structure and function, if one simultaneously builds and simulates it because the dependencies can only be leveraged and tested during the forward engineering process \u2013 reverse and forward engineering will have to go iteratively hand in hand. But it would take a team of over 1,100 scientists and engineers to develop the recipe to build digital brain tissue in this way."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          },
+          {
+            "_key": "aa6a5cf4f7b3",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "4e4cff785e3d",
+                "_type": "span",
+                "text": ""
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          },
+          {
+            "_key": "34928794519f",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "c573b93463c1",
+                "_type": "span",
+                "text": "It is now possible to build a digital replica of brain tissue at multiple levels of detail ranging from molecular networks, single neurons and synapses, small to large brain circuits, brain regions, systems, to the whole brain\u2014 with only a fraction of the data that would be needed to prescribe every detail. \u201cIn fact, the vast majority of the brain\u2019s architecture can be inferred,\u201d Markram claims. The recipe today comprises 18 million lines of code and has been detailed in around 300 peer-reviewed scientific papers."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "236edbe2967e",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "05. Securing Unprecedented Funding"
+      },
+      {
+        "_key": "1b679e7650c4",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "87d438910d82",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "f42da4865702",
+                "_type": "span",
+                "text": "The Swiss Federal Government funded the project with around 300 MCHF over 20 years and secured the project across funding cycles by classifying it as a Swiss National Infrastructure project\u2014on par with the construction of bridges, tunnels, and highways. The late Charles Klieber, Secretary of State at the time, said, \u201cSwitzerland can fund finding the recipe based on the mouse brain, but Europe will need to fund testing and applying the recipe to the human brain.\u201d"
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          },
+          {
+            "_key": "52275cd54568",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "32a4d834937c",
+                "_type": "span",
+                "text": ""
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          },
+          {
+            "_key": "7de2ed98aa7e",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "3364371c7424",
+                "_type": "span",
+                "text": "Markram united 112 laboratories in Europe and around the world, more than 500 scientists and around 100 company engagements and put together a proposal to build and simulate the human brain. The Human Brain Project entered the largest competition the European Commission had ever launched, with around 200 other large-scale, long-term competing visionary projects. The Human Brain Project proposal, judged by a large jury, including several Nobel laureates, won funding of $1 billion over 10 years. Despite intense controversy after the award was made \u2013 and a field day for the media claiming it failed before it had started - the Human Brain project researchers collectively achieved the monumental step of establishing the IT infrastructures needed to gather, organize and database the experimental data on the structure and function of the human brain from around the world \u2013 an invaluable resource today."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "f327501052b2",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "06. Simulation Neuroscience: A New Domain for Brain Research"
+      },
+      {
+        "_key": "ce0f4360338b",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "dc394d557fc8",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "bb8743669ca1",
+                "_type": "span",
+                "text": "\u201cThe vision of the Swiss Blue Brain Project was to be able to use virtual brain tissue to overcome the limitations faced in biological experiments,\u201d says Markram. Since more biological resolution can be added as computers become more powerful, Markram also saw the opportunity to put the progress of neuroscience on the computing roadmap by leveraging the exponential growth in computing power to allow neuroscientists to delve deeper into the brain\u2019s secrets\u2014much like more powerful telescopes allow astronomers to peer further into the mysteries of the universe."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          },
+          {
+            "_key": "0dec3d903359",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "ba16cd18e940",
+                "_type": "span",
+                "text": ""
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          },
+          {
+            "_key": "bc717d265d7b",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "64f5e5d774a2",
+                "_type": "span",
+                "text": "The EPFL kick started the project in 2005 with the 8th largest supercomputer in the world from IBM\u2014the very first in the Blue Gene series of supercomputers. \u2018\u2018The project was named inline with IBM branding at the time as previously seen with \u2018Deep Blue\u2019, the supercomputer that IBM built to beat Kasparov, the world champion in chess,\u00bb says James Gonzalo King, the lead computer engineer and the oldest member of the project. \u00abThe most exciting part of the project for me has been seeing the changing shape of supercomputing and adapting alongside to build and simulate such a complex biological system as the brain.\u00bb The project pushed the boundaries of the latest computer engineering and scientific computing to extremes, using all the subsequent generations in IBM\u2019s Blue Gene series of supercomputers and in the last phase switched to a Hewlett Package Enterprise (HPE) supercomputing solution that could scale while using commodity hardware. In the closing phase of the Blue Brain Markram worked with Amazon to migrate our HPC processes into the cloud. Today all the software can run on the cloud, with the goal of scaling in size beyond the limits of a single cluster in a data center, ready to serve all researchers that want to accelerate their research with simulation neuroscience. \u00abWith providers now offering supercomputing in the cloud and neuroscience software leveraging the exponential growing computational power available, we are eager to jump on board with the scalability and elasticity of the cloud,\u2019\u2019 King added."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "d31ac84b207e",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "07. Defining Simulation Neuroscience"
+      },
+      {
+        "_key": "d1fd4b72da6a",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "99c25ce7435e",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "81ae1bface3f",
+                "_type": "span",
+                "text": "\u201cWe call this specialization of neuroscience, simulation neuroscience,\u201d says Dr. Michael Reimann, the lead neuroscientist on the project. \u201cSimulation neuroscience differs from traditional theoretical neuroscience that takes a top-down approach by searching for the simplest possible explanation (the essence) of how the brain works. In contrast, simulation neuroscience takes a bottom-up, highly data-driven approach, trying to understand the role of every component of the brain\u2014even down to a specific molecule\u2014 in generating its remarkable cognitive superpowers.\u201d"
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          },
+          {
+            "_key": "9243253f029c",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "d158f08a5e14",
+                "_type": "span",
+                "text": ""
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          },
+          {
+            "_key": "ba575ee1b834",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "4af685f26810",
+                "_type": "span",
+                "text": "Markram\u2019s experimental lab at EPFL was on standby to help the Blue Brain rush in and map parts of the brain in case the project hit a wall where the missing pieces could not be inferred - which would of course risk blocking progress. But until the recipe was fully deciphered, he would need many more experimental labs to help map the brain, so he developed a network of over 50 collaborators from around the world. Yet even that was not enough."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "e42785aeb3a0",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "08. Triggering a Global Brain-Mapping Race"
+      },
+      {
+        "_key": "a73caced0818",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "9ae245a3aad2",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "0eb3c2ffa91d",
+                "_type": "span",
+                "text": "Markram triggered a global race to experimentally map the brain of various species when he founded and won the $1 billion grant for the EU\u2019s Human Brain Project. And even though controversy raged more intensely around the feasibility of simulating the human brain, the race was on. National initiatives sprung up everywhere\u2014in China, Japan, Australia, Canada, and the US. The US launched the biggest initiative, the Brain Initiative, with around a $6 billion commitment to map all the types of neurons\u2014the parts list\u2014in the brain. Canada recruited Sean Hill, Blue Brain\u2019s architect for databasing the brain with next-generation knowledge engineering to help map the diseases of the brain for clinicians. The Allen Institute, funded by the late Paul Allen and co-founder of Microsoft ramped up their industrial approach to reverse engineering the brain, mapping one aspect of the brain after another down to which genes are switched on in different neurons across the entire brain. Janelia Research Campus, funded by the Howard Hughes Medical Institute, began mapping the complete morphological shapes of neurons, while China started mapping how the axons of neurons extended across the whole brain, connecting brain regions."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          },
+          {
+            "_key": "a5d2c7082c98",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "a2e90fa2d175",
+                "_type": "span",
+                "text": ""
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          },
+          {
+            "_key": "e3600fb88f44",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "73810cd83dfd",
+                "_type": "span",
+                "text": "In the meantime, the Blue Brain was building the tools to absorb this deluge of data to build digital brain models according to these biological specifications and leverage the interdependencies in the data."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "b32506bd22f2",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "09. Pioneering AI for Brain Knowledge"
+      },
+      {
+        "_key": "5610ae5f32d8",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "89b30422aab4",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "ee7261b47b3f",
+                "_type": "span",
+                "text": "The Blue Brain Project built artificial intelligence search tools to automatically read the neuroscience literature and push the boundaries of knowledge engineering to register data in knowledge graphs and anchor it spatially in brain atlases\u2014creating a unified and semi\u2013self-updating library of the latest brain mappings. AI tools were also developed to extract parameters needed from the literature and in brain databases to feed algorithms developed to build digital brain models, creating a living, continuously updating library of the latest neuroscience discoveries around the world."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "501f76aa2e11",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "10. Overcoming the Accessibility Challenge"
+      },
+      {
+        "_key": "8636e809bae2",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "043330fd3eda",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "24f2bd5b7205",
+                "_type": "span",
+                "text": "The next seemingly insurmountable challenge that the project faced as it began finalizing the recipe was how to make the data and all the digital brain-building technologies accessible to any neuroscientist in the world. Amazon\u2019s AWS came to the rescue, generously providing a freely available academic platform for anyone to access all of Blue Brain\u2019s data as part of their Academic Sponsorship Program. The data is now publicly available in the AWS Open Data Registry, including millions of neuronal morphologies and electrical recordings of neurons, synapses, ion channels, brain models as well as simulation experiments and around 290 repositories were created on GitHub featuring the various software packages. The brain atlas environment also serves as a single point of entry to brain databases around the world."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          },
+          {
+            "_key": "7fc446e194e9",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "2e4facdf67ba",
+                "_type": "span",
+                "text": ""
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          },
+          {
+            "_key": "5826eb028647",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "c2bd303a56f0",
+                "_type": "span",
+                "text": "Early on Markram started preparing the next generation neuroscientist for simulation neuroscience by developing a series of Massive On-line Courses (MOOCs) that have been taken by over 22\u2019000 students to date."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "006276cd3305",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "11. An Online Platform to Demonstrate the Possible"
+      },
+      {
+        "_key": "81750fe09e7c",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "139b57db6dae",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "bc919bec0a23",
+                "_type": "span",
+                "text": "Markram also saw, despite publishing nearly 300 papers on building digital brain tissue, that it was hard for neuroscientists to switch to the new paradigm of simulation neuroscience and believe that it is possible to build biologically accurate digital replicas of the brain. So, the Blue Brain team started developing a unifying platform that would bring together all the steps, making it possible for others to test and try by themselves. The initial version of the platform was pre-demoed at the 2024 annual Society for Neuroscience conference in Chicago, attended by tens of thousands of neuroscientists. There, the Blue Brain team demonstrated how to launch a virtual neuroscience laboratory and build digital brain models in a series of workshops."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          },
+          {
+            "_key": "f7bfadd1fc8d",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "f7c170fed372",
+                "_type": "span",
+                "text": ""
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          },
+          {
+            "_key": "348195e5f451",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "e3c9e486029c",
+                "_type": "span",
+                "text": "The Blue Brain team worked with AWS to solve HPC-in the cloud and all supercomputing can now run on AWS. The platform is also being ported to Microsoft Azure cloud infrastructure to provide large scale compute resources to researchers."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "ef55e03d481f",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "12. Approaching the Finish Line"
+      },
+      {
+        "_key": "3d60047d3f0f",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "23a6457754cb",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "49a4b515b0c2",
+                "_type": "span",
+                "text": "As the project approached completion\u2014after a decade of preparation starting in the Max Planck Institute in Heidelberg and continuing at the Weizmann Institute with funding from the US Office of Naval Research, and two decades of racing to find the recipe to build the brain within a computer at the EPFL with unprecedented funding from the Swiss Federal Government\u2014Markram faced another challenge. Most of the academic research phase would soon be over, and an operational, service phase would need to begin."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "e81c991502f6",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "13. Founding the Open Brain Institute"
+      },
+      {
+        "_key": "fb30ed0fe16c",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "80bac63067ed",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "60985e2bfb7e",
+                "_type": "span",
+                "text": "Markram formed a not-for-profit foundation\u2014the Open Brain Institute\u2014 that launched in January 2025, with the mission to freely share the recipe to explore, build, and simulate the brain, empowering researchers and organizations to accelerate their research. The OBI has entered into an agreement with the EPFL to ensure that digital brain-building technologies remain open for academic research for decades to come. \u00abEPFL is delighted to see that the extensive work accomplished within the EPFL Blue Brain Project (BBP) will impact and continue under Open Brain Institute, providing researchers worldwide with access to cutting-edge virtual laboratories,\u201d said Anna Fontcuberta i Morral, EPFL\u2019s current President."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "90927682b71c",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "14. Hosting Virtual Labs for All"
+      },
+      {
+        "_key": "d94b66a4c93b",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "8e949e93b199",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "8bba5382ac49",
+                "_type": "span",
+                "text": "The OBI will host virtual labs running on the open brain platform where researchers can freely use the models built by the Blue Brain, modify them, or even build their own; then plan experiments and test ideas\u2014much more quickly and cheaply than with trial biological experiments\u2014and start exploring aspects of brain structure and function that are impossible to probe on actual brain tissue. Models built by the community will also be freely accessible to members of other virtual labs, fueling an acceleration in digital brain building. \u201cWe hope it triggers an age of digital brains where tens of thousands of neuroscientists around the world build digital brain tissue models for different animal species, across the stages of brain development and aging, and for various brain diseases,\u201d says Henry Markram."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "a5bcb8dffa52",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "15. Large Language Models Simplify Access to the Recipe"
+      },
+      {
+        "_key": "be6ede8acfb4",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "7557d77208ff",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "64784ce23d2a",
+                "_type": "span",
+                "text": "Yet accessibility would still be a major challenge for even the most expert neuroscientist, because the recipe is made up of a huge number of values, equations, algorithms, processes, and workflows\u2014all organized into a suite of software applications amounting to millions of lines of code\u2014that would limit its dissemination. \u201cA solution emerged. We are in the midst of an AI revolution where Large Language Models (LLMs) can capture all the world\u2019s knowledge and serve it in any language, including the language of computers. So, we wrapped the applications in LLMs, giving them access to the recipe, simplifying interactions with the digital brain-building technologies,\u201d says Jean-Denis Courcol, the Director of Engineering during the Blue Brain Project and now CTO of the OBI. \u201cWe are on a path that will make it possible for researchers to perform neuroscience at the speed of thought,\u201d says Georges Khazen, one of the first of 45 PhD students of the Blue Brain Project, and now the CEO of OBI."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "0acb09451eed",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "16. A New Challenge for the Blue Brain Team"
+      },
+      {
+        "_key": "622a7a6ecd0b",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "e2c5c6fc1e21",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "b18dfdb2e7a2",
+                "_type": "span",
+                "text": "The OBI, currently funded by the Markram family, hired 37 of the key members of the Blue Brain Project to help the research community set up their own virtual neuroscience laboratories where they can build digital brain models to complement their research with the new third pillar of neuroscience alongside the experimental and theoretical pillars\u2014simulation neuroscience. \u201cOur mission is to make science accessible so that we can all live healthy and prosperous lives on a healthy planet,\u201d says Kamila Markram, Vice President of the OBI, CEO and co-founder of Frontiers, a pioneer of open access science publishing for papers and, most recently, also for scientific data. \u201cI feel like I can be a student all over again,\u201d says Professor Idan Segev, a founding father of computational neuroscience and a board member of the OBI. \u201cTurning electron-microscopic images of the brain into functional computational models is something even Ramo\u0301n y Cajal, the founding father of neuroanatomy, could not have dreamed about,\u201d says Professor Javier de Felipe, Founder of the Cajal Blue Brain initiative and board member of the OBI."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "6d836153f529",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "17. Sub-Cellular Labs: Simulation Neuroscience for Molecular Processes"
+      },
+      {
+        "_key": "e3ae39962bc6",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "553228208d1c",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "7a2a7a7ff626",
+                "_type": "span",
+                "text": "The OBI will host and support labs across the levels of brain organization. Sub-cellular labs will allow modeling of the brain at the molecular level with detailed models for the brain\u2019s metabolic system and for ion channel models prescribed by genes, paving the way to replicate neurons at the genetic level. \u201cFor the first time, we can build circuit models that incorporate blood flow and metabolic energy constraints. We also show how ion channels encoded by the genes expressed in each neuron come together to form the electrical behavior of the neuron.\u201d says Dan Keller, in charge of supporting the Sub-Cellular Labs."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "e7677c5460cc",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "18. Cellular Labs: Simulation Neuroscience for Single Neurons"
+      },
+      {
+        "_key": "8b3e4534ac2e",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "44247914c4c6",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "e3a17c454651",
+                "_type": "span",
+                "text": "Cellular labs will allow simulation neuroscience on single neurons with all their incoming synapses\u2014from any region of the mouse brain, selected regions of the rat brain, and all types of neurons in the human neocortex. \u201cWe have turned the Harvard-Google electron-microscopic images of the human neocortex into functional neuron models,\u201d says Marwan Abdellah, a legend in the Blue Brain team for capturing the exquisite morphological detail of neurons and their supporting cells, the glia."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "1aecd156ea56",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "19. Circuit Labs: Simulation Neuroscience for Brain CircuitsNeurons"
+      },
+      {
+        "_key": "e7d580b56981",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "4155066b0b9a",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "6033fd959145",
+                "_type": "span",
+                "text": "The Circuit Lab allows users to call up and run any one of the many microcircuit models from various brain regions that were built by the Blue Brain, by the community, or from scratch. \u201cResearchers can run an algorithm that computationally synthesizes, from a point in space, the full morphologies for any type of neuron and generate as many morphological variants as required to fill up a circuit with neurons,\u201d explains Lida Kanari, who developed the breakthrough mathematical method and will continue supporting the Cellular Labs after joining Oxford University as a faculty member."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "7c2d173cee06",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "20. Systems Lab: Brain Regions with Brain Wide Connections"
+      },
+      {
+        "_key": "d4fb5b2cbafe",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "2f8ab123a8ee",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "c73cf61f976c",
+                "_type": "span",
+                "text": "The Systems Lab allows users to select from a brain atlas as many brain regions as desired to form what we call a Brain System that can extend all the way to a whole brain. \u201cWe can now also synthesize not only the local axonal arborizations of neurons, but also the inter-regional axons connecting microcircuits to form a brain region\u2014and even grow any neuron\u2019s axons to span across the whole brain following major tracts connecting brain regions,\u201d Kanari adds."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "3940368d4ced",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "21. Addressing Critiques on Free Parameters"
+      },
+      {
+        "_key": "ac44adf45bff",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "d41d9d64f6e0",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "04753f8a9588",
+                "_type": "span",
+                "text": "\u201cSome physicists criticized that such models would never work like the real brain because of a potential explosion in the number of free parameters. But when the proper techniques are used, they are not free parameters, but biologically prescribed and with strong inter-dependencies. So, free parameters, so free parameters decrease exponentially the closer one follows biology. The Blue Brain has published many papers that show that model neurons and brain tissue constructed in this way closely mirror the behavior of real neurons and brain tissue, replicating what biologists observe in their experiments. And when it does not, it is not a failure\u2014it is an exciting moment, a potential breakthrough because it means we are at the very frontier of our knowledge. It can point to what is missing or what is not understood properly, guiding the next breakthrough,\u201d says Michael Reimann, Director of the Blue Brain Project\u2019s Simulation Neuroscience division and Chief Science Officer of the OBI."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          },
+          {
+            "_key": "6ecb5faed2fa",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "a5d14e25cc6e",
+                "_type": "span",
+                "text": ""
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          },
+          {
+            "_key": "fc84662f74a1",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "e402f2fc1fe5",
+                "_type": "span",
+                "text": "\u201cWe made a huge number of breakthroughs, published in several hundred papers, in this way. For example, this is how we found a key factor that switches the behavior of brain circuits from an awake-like state, into a sleep-like state with implications for our understanding of learning, we discovered how neuron connectivity shapes their collective behavior, how diversity of morphological and electrical properties makes the brain more resilient, and gained a deep insight into how a group of neurons processes information and more. When we recreated synaptic plasticity mechanisms in this way, we also found that it unified many theories and resolved many discrepancies in how synapses learn,\u201d he added."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "26386151f651",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "22. An Invitation to Explore, Build and Simulate the Brain"
+      },
+      {
+        "_key": "63235d0b8964",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "c0f9a5f492d5",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "c5dcc98633f2",
+                "_type": "span",
+                "text": "\u201cIt\u2019s a very exciting time for neuroscience. I hope researchers leverage this opportunity and push the boundaries, both of the virtual lab capabilities and the OBI team, and challenge the community to deliver even more tissue-accurate digital brain models and more powerful software tools to accelerate everyone\u2019s research\u2014no matter which area of the brain or which species they are working on.\u201d says Markram."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      },
+      {
+        "_key": "cc54a81aea8c",
+        "_type": "titleHeadline",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": null,
+        "image": null,
+        "levelType": "h2",
+        "theme": null,
+        "timestamps": null,
+        "title": "23. Commercial Labs and Freelance Collaboration"
+      },
+      {
+        "_key": "2ab7275573e6",
+        "_type": "richContent",
+        "background": null,
+        "backgroundColor": null,
+        "backgroundImage": null,
+        "button": {
+          "label": null,
+          "link": null
+        },
+        "buttonsList": null,
+        "content": [
+          {
+            "_key": "7935f28a46c4",
+            "_type": "block",
+            "children": [
+              {
+                "_key": "a08866ced5da",
+                "_type": "span",
+                "text": "\u201cThe OBI is launching a freelance paid program, inviting computer scientists, physicists, and computational neuroscientists from around the world to join virtual labs and help unlock the full potential of simulation neuroscience. Additionally, OBI will offer commercial virtual labs for industries to prototype neuro-prosthetic devices, explore brain diseases, test treatments, and design targeted drugs. The possibilities are endless, and we encourage everyone to create a virtual lab and embark on this exciting journey with us.\u201d concluded Georges Khazen, OBI\u2019s CEO."
+              }
+            ],
+            "imageHeight": null,
+            "imageURL": null,
+            "imageWidth": null,
+            "style": "normal"
+          }
+        ],
+        "image": null,
+        "theme": null,
+        "timestamps": null
+      }
+    ]
+  }
+}

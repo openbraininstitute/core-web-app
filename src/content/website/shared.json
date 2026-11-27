@@ -1,0 +1,83 @@
+{
+  "socialMedia": [
+    {
+      "imageHeight": 16,
+      "imageURL": "/static/website-media/images/1ec64c4a806385e3be14c742b3c73e08426c6ea6-16x16.svg",
+      "imageWidth": 16,
+      "title": "Linkedin",
+      "url": "https://www.linkedin.com/company/openbraininstitute/"
+    },
+    {
+      "imageHeight": 16,
+      "imageURL": "/static/website-media/images/ee3994d29dcb841ff647dfd146cf8ffd9b50b5a5-16x16.svg",
+      "imageWidth": 16,
+      "title": "X",
+      "url": "https://x.com/OpenBrainInst"
+    },
+    {
+      "imageHeight": 16,
+      "imageURL": "/static/website-media/images/b1a5b4ad84aaeab034d4269086f46eea8f80b233-22x16.svg",
+      "imageWidth": 22,
+      "title": "Youtube",
+      "url": "https://www.youtube.com/@openbraininstitute"
+    },
+    {
+      "imageHeight": 16,
+      "imageURL": "/static/website-media/images/8e0c767ab5aeb780b10e4bff7c06e83264bc65ec-19x16.svg",
+      "imageWidth": 19,
+      "title": "BlueSky",
+      "url": "https://bsky.app/profile/openbraininst.bsky.social"
+    }
+  ],
+  "adopters": [
+    {
+      "name": "IT IS Foundation",
+      "url": "https://itis.swiss/",
+      "imageURL": "/static/website-media/images/5f9fc7f7055fcabcc912add95527faea82e2f112-600x400.png",
+      "imageWidth": 600,
+      "imageHeight": 400
+    },
+    {
+      "name": "Inait",
+      "url": "https://www.inait.ai/",
+      "imageURL": "/static/website-media/images/94ce87b149da18997182212726ced1dd3c64f5fd-600x400.png",
+      "imageWidth": 600,
+      "imageHeight": 400
+    },
+    {
+      "name": "Mila",
+      "url": "https://mila.quebec/en",
+      "imageURL": "/static/website-media/images/4e388e5b5e37d273ffee03306c254e3622b2f944-600x400.png",
+      "imageWidth": 600,
+      "imageHeight": 400
+    },
+    {
+      "name": "The Edmond & Lily Safra Center for Brain Sciences",
+      "url": "https://elsc.huji.ac.il/",
+      "imageURL": "/static/website-media/images/bab6750c38d7ac0ccaf04b37def201150cb68dc2-600x400.png",
+      "imageWidth": 600,
+      "imageHeight": 400
+    },
+    {
+      "name": "The Hebrew University of Jerusalem",
+      "url": "https://en.huji.ac.il/",
+      "imageURL": "/static/website-media/images/e0098e1f273b841ad8a5e10c927e54401ad80965-600x400.png",
+      "imageWidth": 600,
+      "imageHeight": 400
+    },
+    {
+      "name": "UC3M - Universidad Carlos 3 de Madrid",
+      "url": "https://www.uc3m.es/Home",
+      "imageURL": "/static/website-media/images/9ccb46e5f3229b3376c87855a350ca89f37d0463-600x400.png",
+      "imageWidth": 600,
+      "imageHeight": 400
+    },
+    {
+      "name": "Universit\u00e9 de Montr\u00e9al",
+      "url": "https://www.umontreal.ca/",
+      "imageURL": "/static/website-media/images/f23889a5215db3a762b2ece61087b88799ef83cd-600x400.png",
+      "imageWidth": 600,
+      "imageHeight": 400
+    }
+  ]
+}

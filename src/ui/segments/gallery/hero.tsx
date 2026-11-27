@@ -4,6 +4,8 @@ import React from 'react';
 import ProgressiveImage from '@/ui/segments/landing/components/progressive-image/progressive-image';
 import { cn } from '@/utils/css-class';
 
+import styles from '@/ui/segments/landing/layout/hero/hero.module.css';
+
 type HeroProps = {
   videoURL: string;
   posterURL: string;
@@ -35,8 +37,8 @@ export default function HeroGallery({
   }, [videoURL]);
 
   return (
-    <div className="relative flex h-screen w-screen items-center justify-center px-10 md:px-[14vw]">
-      <div className="absolute top-0 left-0 z-0 h-screen w-screen">
+    <div className={cn(styles.hero, styles.withMedia)}>
+      <div className={styles.media}>
         {posterURL && posterWidth && posterHeight && (
           <ProgressiveImage
             src={posterURL}
@@ -47,7 +49,7 @@ export default function HeroGallery({
         )}
         <video
           ref={videoRef}
-          className={cn('h-screen w-screen object-cover', videoReady ? 'block' : 'hidden')}
+          className={videoReady ? styles.show : styles.hide}
           loop
           muted
           autoPlay
@@ -65,11 +67,13 @@ export default function HeroGallery({
           <track kind="captions" />
         </video>
       </div>
-      <div className="relative top-0 left-0 z-10 flex flex-col items-center text-center">
-        <h1 className="my-0! text-[16vmin]! text-white md:text-[10vmin]!">{title}</h1>
-        <h2 className="font-gabarito text-2xl! leading-normal! font-bold hyphens-auto text-white md:text-4xl!">
-          Discover image and video assets created by our team. Made with our tools and technologies.
-        </h2>
+      <div className={styles.text}>
+        <div className="flex flex-col items-center">
+          <h1>{title}</h1>
+          <div className={styles.content}>
+            Discover image and video assets created by our team. Made with our tools and technologies.
+          </div>
+        </div>
       </div>
     </div>
   );

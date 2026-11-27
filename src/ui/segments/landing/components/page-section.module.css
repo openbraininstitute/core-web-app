@@ -1,0 +1,8 @@
+@media (min-width: 768px) {
+  :global(.landing-page-snap) .pageSection {
+    min-height: 100dvh;
+    padding: 64px 0 48px;
+    align-content: center;
+    scroll-snap-align: start;
+  }
+}

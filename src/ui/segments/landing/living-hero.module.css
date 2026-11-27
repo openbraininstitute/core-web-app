@@ -1,0 +1,106 @@
+.hero {
+  --ink: #082d63;
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  overflow-x: hidden;
+  background: white;
+  color: var(--ink);
+  padding: 0;
+}
+@media (max-width: 799px) {
+  .hero {
+    padding: 72px 0 100px;
+  }
+}
+
+/* The landing's words in the top bar's row, beside its logo and level with its buttons: the logo is as tall as
+   clamp(44px, 5vh, 56px) and 3.11 times as wide, after the bar's own padding. */
+.topPhrase {
+  position: absolute;
+  z-index: 71;
+  top: 22px;
+  left: calc(clamp(20px, 3vw, 40px) + clamp(44px, 5vh, 56px) * 3.11 + 36px);
+  height: clamp(44px, 5vh, 56px);
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  font-family: var(--font-info-titillium), Arial, sans-serif;
+  /* two lines as tall as the logo's two */
+  font-size: calc(clamp(44px, 5vh, 56px) * 0.47);
+  line-height: 1.06;
+  font-weight: 300;
+  white-space: nowrap;
+  color: #002766;
+  pointer-events: none;
+  animation: top-phrase-in 900ms 150ms both;
+}
+@keyframes top-phrase-in {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .topPhrase {
+    animation: none;
+  }
+}
+
+/* The homepage has a tour link under the rail, so anchor the whole group lower. */
+.hero .homeChapterRail {
+  bottom: max(10px, env(safe-area-inset-bottom));
+}
+@media (max-width: 1023px) {
+  .hero .homeChapterRail {
+    bottom: 0;
+    padding-bottom: max(4px, env(safe-area-inset-bottom));
+  }
+}
+
+.chapterNavigation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.tourLink {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 44px;
+  padding-inline: 8px;
+  pointer-events: auto;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+}
+.tourLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.tourLink:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
+
+/* The phone's chapter selector is the single invitation to browse the tour. */
+@media (max-width: 1023px) {
+  .tourLink {
+    display: none;
+  }
+  .hero .homeChapterRail {
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+}

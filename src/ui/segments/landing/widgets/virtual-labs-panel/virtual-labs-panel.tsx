@@ -11,16 +11,18 @@ import styles from './virtual-labs-panel.module.css';
 
 interface WidgetVirtualLabsPanelProps {
   data: ContentForVirtualLabsBlock[];
+  compact?: boolean;
 }
 
-export function WidgetVirtualLabsPanel({ data }: WidgetVirtualLabsPanelProps) {
+export function WidgetVirtualLabsPanel({ data, compact = false }: WidgetVirtualLabsPanelProps) {
   return (
     <>
-      <div className={classNames(styles.triBlocks, styleBlockLarge)}>
+      <div className={classNames(styles.triBlocks, compact && styles.compact, styleBlockLarge)}>
         {data.map(({ title, description, videoURL }, index) => (
           <SingleSectionCard
             key={`card_${title}_${index + 1}}`}
             index={index}
+            compact={compact}
             title={title}
             description={description}
             video={videoURL}

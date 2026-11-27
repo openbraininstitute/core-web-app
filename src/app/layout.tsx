@@ -11,12 +11,14 @@ import { APP_ROOT_ATTRIBUTE } from '@/hooks/app-root-attribute';
 import '@/styles/globals.css';
 
 const titilliumWeb = Titillium_Web({
+  preload: false,
   weight: ['300', '400', '600', '700'],
   subsets: ['latin'],
   variable: '--font-titillium-web',
 });
 
 const gabarito = Gabarito({
+  preload: false,
   weight: ['400', '600', '800'],
   subsets: ['latin'],
   variable: '--font-gabarito',

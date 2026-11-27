@@ -1,0 +1,45 @@
+Website asset shipping handoff
+Prepared 25 November 2026
+
+The complete shipping inventory is assets-to-ship.json in this directory.
+It lists every asset excluded from Git, with its local backup path, original
+URL, destination storage key, exact byte size, SHA-256 checksum, content type,
+public pages or widgets using it, and content-file fields to update.
+
+Assets requiring separate media hosting: 741 files, 1,020,476,318 bytes
+  Gallery collection: 431 files, 742,480,354 bytes
+  Model ZIP archives: 309 files, 247,474,329 bytes
+  Large milestones image: 1 file, 30,521,635 bytes
+
+Assets included in this PR: 364 files, 36,180,750 bytes.
+These live under public/static/website-media and ship with the website.
+They do not require a separate upload.
+
+Original backup: .website-media-originals/ relative to the project root.
+It contains all 1,105 downloaded originals, 1,056,657,068 bytes, including
+copies of the 364 assets already included in Git. This backup is deliberately
+ignored by Git and is not available in a fresh checkout. A fresh checkout can
+recover missing originals using currentUrl from the shipping inventory.
+
+Shipping procedure
+1. Upload the 741 listed assets to dedicated public media hosting.
+2. Use the suggested storage keys and the listed content types. Some files
+   named .webp actually contain PNG images, so extension detection alone is
+   insufficient. Do not alter the original bytes during transfer.
+3. Verify each deployed file against its size and SHA-256 checksum.
+4. Replace currentUrl in every listed content-file reference with its new URL.
+5. Test gallery display, showcase previews, model downloads and caption/data
+   links. Keep current CDN URLs available until the replacements work.
+
+Current status
+The 741 assets still use their existing Sanity CDN URLs. Downloading the
+backup does not publish them to a new host. A media-storage destination must
+be selected and the links updated before Sanity CDN can be retired.
+
+News, Privacy, Terms, Financing and Releasing Soon still read their content
+from Sanity by design. Their future live additions are not captured by this
+local website snapshot. Some platform documentation/tutorial content also
+uses Sanity and is outside this public-website migration.
+
+Other untracked landing-video experiments are not used by the current
+website and are not required for shipping this PR.

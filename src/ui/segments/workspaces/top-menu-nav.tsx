@@ -41,6 +41,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/ui/molecules/dropdown-menu';
+import { HomeMenu } from '@/ui/segments/project/home-menu';
 import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
@@ -256,6 +257,9 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
     baseUrl: link.url,
     url: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/${link.url}`,
   }));
+  // Home opens a menu of the home's designs; where it is a plain link, it leads to the home as on main.
+  const homePath = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/`;
+  const homeHref = { pathname: homePath };
 
   // (after tests:) breakpoint for 950px threshold
   const useCustomBreakpoint = createBreakpoint({ mobile: 0, desktop: 950 });
@@ -324,12 +328,7 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
                   className="text-primary-9 hover:text-primary-7! flex cursor-pointer items-center gap-2 px-3 py-2"
                   asChild
                 >
-                  <Link
-                    prefetch
-                    href={{
-                      pathname: link.url,
-                    }}
-                  >
+                  <Link prefetch href={link.key === 'home' ? homeHref : { pathname: link.url }}>
                     {link.icon}
                     <span className="text-lg">{link.title}</span>
                   </Link>
@@ -453,47 +452,62 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
           }
 
           const isActiveLink = activeSection === baseUrl || isActive?.(pathname);
+          const badge = (inner: ReactNode) => (
+            <Badge
+              asChild
+              rounded
+              id={id}
+              data-testid={id}
+              variant="outline"
+              size={breakpoint === 'xl' ? 'lg' : 'md'}
+              className={cn(
+                {
+                  'w-12 !justify-center !px-0': !allowText && breakpoint === 'xl',
+                },
+                {
+                  '!w-10 !justify-center !px-0': breakpoint === 'l' && !allowText,
+                },
+                'group relative flex items-center justify-center',
+                `!overflow-visible !py-0 ${fill} select-none hover:shadow-sm hover:bg-background`,
+                plain && PLAIN,
+                {
+                  'bg-primary-9 text-white': isActiveLink && !plain,
+                  [PLAIN_ACTIVE]: isActiveLink && plain,
+                },
+                {
+                  'group-hover:rounded-r-none': hasAction,
+                },
+                'transition-all duration-400 ease-out',
+                clx
+              )}
+            >
+              {inner}
+            </Badge>
+          );
+          const content = (
+            <>
+              {allowText && <span className="group-hover:text-primary-3">{title}</span>}
+              {icon}
+            </>
+          );
           return (
             <div key={key} className="group flex w-max items-center justify-center gap-0">
               <div className="relative flex items-center">
-                <Badge
-                  asChild
-                  rounded
-                  id={id}
-                  data-testid={id}
-                  variant="outline"
-                  size={breakpoint === 'xl' ? 'lg' : 'md'}
-                  className={cn(
-                    {
-                      'w-12 !justify-center !px-0': !allowText && breakpoint === 'xl',
-                    },
-                    {
-                      '!w-10 !justify-center !px-0': breakpoint === 'l' && !allowText,
-                    },
-                    'group relative flex items-center justify-center',
-                    `!overflow-visible !py-0 ${fill} select-none hover:shadow-sm hover:bg-background`,
-                    plain && PLAIN,
-                    {
-                      'bg-primary-9 text-white': isActiveLink && !plain,
-                      [PLAIN_ACTIVE]: isActiveLink && plain,
-                    },
-                    {
-                      'group-hover:rounded-r-none': hasAction,
-                    },
-                    'transition-all duration-400 ease-out',
-                    clx
-                  )}
-                >
-                  <Link
-                    prefetch
-                    href={{
-                      pathname: url,
-                    }}
-                  >
-                    {allowText && <span className="group-hover:text-primary-3">{title}</span>}
-                    {icon}
-                  </Link>
-                </Badge>
+                {key === 'home' ? (
+                  <HomeMenu homePath={homePath}>
+                    {badge(
+                      <button type="button" aria-label="Home: choose a design">
+                        {content}
+                      </button>
+                    )}
+                  </HomeMenu>
+                ) : (
+                  badge(
+                    <Link prefetch href={{ pathname: url }}>
+                      {content}
+                    </Link>
+                  )
+                )}
               </div>
             </div>
           );

@@ -1,0 +1,215 @@
+[
+  {
+    "titleH1": "AI-Assisted Data Explorer",
+    "titleH2": "Interactive",
+    "headline": "Explore Smarter. Compute Faster. Discover Deeper.",
+    "description": "The Interactive Data Explorer unifies experimental, computational, and literature-based brain data in one AI-assisted, atlas-driven platform for neuroscience discovery.\nAt its core is OBI-ONE, our AI Assistant \u2014 a powerful agent connected to the platform\u2019s APIs, knowledge base, and literature engines.\nUsing natural language, you can instantly search, retrieve, and analyze brain data, models, and publications \u2014 all within a single environment.",
+    "useCases": [
+      "Morphology & Electrophysiology: Instantly explore brain regions, morphologies, hierarchical cell types (M-types), and electrophysiological recordings in an interactive 3D atlas.",
+      "Models & Simulations: Access validated multiscale computational models \u2014 from ion channels to neurons and circuits \u2014 plus whole-cell patch clamp recordings across species, including human cortical tissue. Run Python analyses to generate real-time metrics and visualizations.",
+      "AI Literature Mining: Search neuroscience papers, extract simulation protocols, and summarize findings using natural-language queries powered by OBI-ONE.",
+      "Smart Data Analysis: Compute morphometric, electrophysiological, and circuit-level metrics, estimate connection probabilities, and visualize results interactively."
+    ],
+    "data": [
+      {
+        "label": "Neuron morphologies",
+        "value": "6237"
+      },
+      {
+        "label": "Single neuron electrophysiology recordings",
+        "value": "2247"
+      },
+      {
+        "label": "Bouton densities",
+        "value": "6"
+      },
+      {
+        "label": "Neuron densities",
+        "value": "62"
+      },
+      {
+        "label": "Circuits",
+        "value": "155"
+      },
+      {
+        "label": "Single neurons models",
+        "value": "157"
+      }
+    ],
+    "backgroundColor": "ffffff",
+    "backgroundImage": "/static/website-media/images/f8da4c22bcc76c6f812b3293337af5e47ba09427-1512x982.jpg",
+    "theme": "light"
+  },
+  {
+    "titleH1": "Ion channel",
+    "titleH2": "Workflow",
+    "headline": "Build Hodgkin-Huxley Ion Channel Models Using Real Experimental Patch-Clamp Data.",
+    "description": "Explore experimental ion channel electrophysiology and ion channel models for steady-state, time constant parameters and response for activation, inactivation and deactivation protcols.\nBuild Hodgkin-Huxley ion channel models using a wide range of real voltage-gated potassium ion channel experimental patch-clamp data at different temperatures.\nSimulate one or multiple ion channel models together to study their dynamics and interactions.",
+    "useCases": [
+      "Create data-based genetic ion channels to use in single cell models.",
+      "Study genetic ion channel dynamics.",
+      "Study the effect of channel parameters on the model currents."
+    ],
+    "data": [
+      {
+        "label": "Voltage-gated potassium (Kv) channels ephys files",
+        "value": "33,198"
+      },
+      {
+        "label": "Kv channel data types",
+        "value": "40"
+      },
+      {
+        "label": "Channel models for different ions",
+        "value": "176"
+      }
+    ],
+    "backgroundColor": "002766",
+    "backgroundImage": "/static/website-media/images/87607e113684260549979c5c1f076ccc6b773ad2-1512x982.jpg",
+    "theme": "dark"
+  },
+  {
+    "titleH1": "Single neuron",
+    "titleH2": "Workflow",
+    "headline": "Build and Simulate Single Neuron Models.",
+    "description": "Construct detailed single-neuron models by integrating reconstructed morphologies and electrical models (E-models).\nAccess a library of validated morpho-electric models (ME-models) from key mouse and rat brain regions, including Somatosensory Cortex, Hippocampus, and more.\nRun in-silico experiments: record ionic currents, modify stimulus protocols, and perform parameter scans to comprehensively analyze model behavior.",
+    "useCases": [
+      "Compare firing properties across diverse cell types and brain regions.",
+      "Study the role of specific ionic currents in shaping action potentials.",
+      "Investigate dendritic computation and action potential backpropagation."
+    ],
+    "data": [
+      {
+        "label": "Morphological types (M-types)",
+        "value": "115"
+      },
+      {
+        "label": "Electrical types (E-Types)",
+        "value": "25"
+      },
+      {
+        "label": "Validated morpho-electric models (ME-models)",
+        "value": "157"
+      }
+    ],
+    "backgroundColor": "003A8C",
+    "backgroundImage": "/static/website-media/images/759de1479fbff78d715db6e3ab13ac5010eb7ee6-1512x982.jpg",
+    "theme": "dark"
+  },
+  {
+    "titleH1": "Synaptomes",
+    "titleH2": "Workflow",
+    "headline": "Model Single Neuron Synaptic Interactions.",
+    "description": "Interactively build and simulate your single neuron models with synapses\n(synaptomes). Design custom excitatory and inhibitory synapse sets, or use synapses from circuit, and scan over model and stimulus parameters.\nSimulate extracted circuit synaptomes with intrinsic and extrinsic synapses\nfrom published Somatosensory cortex, and Hippocampus circuits.",
+    "useCases": [
+      "Analyze the effects of synapse activation patterns on single-neuron responses.",
+      "Investigate how proximal and distal inhibition modulates somatic action potentials.",
+      "Systematically vary synaptic parameters to characterize integration properties and plasticity rules."
+    ],
+    "data": [
+      {
+        "label": "Circuit synaptomes",
+        "value": "31"
+      },
+      {
+        "label": "Custom synaptomes",
+        "value": "18"
+      },
+      {
+        "label": "Brain regions",
+        "value": "6"
+      }
+    ],
+    "backgroundColor": "002766",
+    "backgroundImage": "/static/website-media/images/edd4cde0062cafbd93deb1af59d4b1983b51b85f-1512x982.jpg",
+    "theme": "dark"
+  },
+  {
+    "titleH1": "Small microcircuits",
+    "titleH2": "Workflow",
+    "headline": "A Unified Platform for Simulation Neuroscience.",
+    "description": "Test your theories and make predictions with advanced, state-of-the-art brain models of small microcircuits built and validated by domain experts. Eliminate the complexity of managing software, hardware, and data \u2014 focus entirely on the science.\nInject currents and spikes, whilst recording neural activity. Scan across parameters seamlessly to accelerate your discoveries.\nAll data is securely stored in our cloud database and easily accessible to your team. Pre-made Jupyter notebooks show you how to analyze results instantly.\nDownload fully reproducible simulation files for publication and collaboration.",
+    "useCases": [
+      "Build your knowledge - recreate classic neuroscience results.",
+      "Test your understanding \u2013 can you predict a network\u2019s activity from the input you provide.",
+      "Test the effect of different inhibitory populations on spiking activity."
+    ],
+    "data": [
+      {
+        "label": "Small microcircuits extracted brain models",
+        "value": "77+"
+      },
+      {
+        "label": "Coordinate parameter scans for any variable",
+        "value": "100"
+      },
+      {
+        "label": "Stimulus types",
+        "value": "12+"
+      }
+    ],
+    "backgroundColor": "0050B3",
+    "backgroundImage": "/static/website-media/images/7485356a4c628ffee092cc8c0cc04082bc05a2b2-1512x982.jpg",
+    "theme": "dark"
+  },
+  {
+    "titleH1": "Notebooks",
+    "titleH2": "Jupyter",
+    "headline": "Develop and Run Jupyter Notebooks in our Virtual Labs.",
+    "description": "Write and run analyses of experimental or simulation data directly in our Virtual Labs and share the results with the world. With many valuable scientific computing packages pre-installed and fully integrated with the data on our platform, you can develop powerful analyses in python code and share them as templates with your team. You can also get a glimpse at the latest platform developments as new features are first deployed in the form of notebooks for you to explore and test.",
+    "useCases": [
+      "Use the pre-installed packages to write your own analyses and share them with your team.",
+      "Share the results of your research with the world.",
+      "Learn about platform features and how to work with the data, models and simulations on the platform through OBI-curated instructional notebooks.",
+      "Develop your own instructional notebooks and share them with your students for classes and teaching.",
+      "Use notebook templates to evaluate your students\u2019 progress."
+    ],
+    "data": [
+      {
+        "label": "OBI-curated notebooks",
+        "value": "32"
+      },
+      {
+        "label": "Scientific packages pre-installed",
+        "value": "27"
+      },
+      {
+        "label": "Space for your own analyses",
+        "value": "6"
+      }
+    ],
+    "backgroundColor": "ffffff",
+    "backgroundImage": "/static/website-media/images/d0d1791983fb1a73b174a6b0856f941808be3135-1512x982.jpg",
+    "theme": "light"
+  },
+  {
+    "titleH1": "Skeletonization",
+    "titleH2": "Neuronal",
+    "headline": "Creating Accurate 3D Digital Models of Neurons, Somata, and Spines.",
+    "description": "Reconstruct detailed and biologically accurate neuronal morphologies, somata profiles, and spine structures from dense EM datasets.\nOur advanced methodology refines massive, over-tessellated, and low quality mesh models into smooth, high-fidelity representations optimized for analysis and simulation.\nEven EM reconstructions affected by severe slicing artifacts are seamlessly restored, producing continuous and realistic neuronal geometries from highly fragmented meshes.",
+    "useCases": [
+      "Reconstruct high-quality, smooth neuronal morphologies from dense EM data, including highly tessellated, fragmented mesh, or volumetric models, using efficient skeletonization algorithms.",
+      "Segment somata to generate accurate mesh and volumetric models ready for quantitative analysis.",
+      "Segment dendritic spines and build high-resolution spine meshes with clean, biologically consistent geometric topology.",
+      "Skeletonize dendritic spines to produce detailed morphological skeletons for advanced structural studies.",
+      "Generate high-quality, watertight neuronal mesh models from fragmented inputs, fully compatible with reaction\u2013diffusion simulations."
+    ],
+    "data": [
+      {
+        "label": "Neurons skeletonized",
+        "value": "10,000+"
+      },
+      {
+        "label": "Spines reconstructed",
+        "value": "100,000+"
+      },
+      {
+        "label": "Dedicated notebooks",
+        "value": "3"
+      }
+    ],
+    "backgroundColor": "F0F0F0",
+    "backgroundImage": "/static/website-media/images/e82dac64cf73302453c985801955a3ae92332ce7-1512x929.jpg",
+    "theme": "light"
+  }
+]

@@ -1,0 +1,2184 @@
+{
+  "getMissionDownload": {
+    "description": "Through this integrated approach to digital brain modeling and collaborative virtual laboratories, the Open Brain Institute aims to accelerate scientific discovery, democratize access to advanced research tools",
+    "documentURL": "/static/website-media/downloads/6c892e090449e62ffaa03aaabb47e582fb8dacee.pdf",
+    "imageHeight": 1408,
+    "imageURL": "/static/website-media/images/62199b794ba82c66ecb2fca01c09229d41040fb4-1408x1408.jpg",
+    "imageWidth": 1408,
+    "title": "Download our mission statement"
+  },
+  "getVirtualLabsBlocks": [
+    {
+      "description": "Browse, search, and explore neuroscience data",
+      "title": "Explore",
+      "videoURL": "https://player.vimeo.com/progressive_redirect/playback/1066685284/rendition/1080p/file.mp4?loc=external&log_user=0&signature=690e209823a3fa4408da7348ca899d73192896161dd51478a755e55d7852823d&user_id=43466136"
+    },
+    {
+      "description": "Use, configure, and build digital brain models",
+      "title": "Build",
+      "videoURL": "https://player.vimeo.com/progressive_redirect/playback/1066685265/rendition/1080p/file.mp4?loc=external&log_user=0&signature=df8503b3df7f25c227bbfd5a1ef3981700b55b687b7095314cb47724453837c1&user_id=43466136"
+    },
+    {
+      "description": "Design, run, and analyze virtual simulation experiments",
+      "title": "Experiment",
+      "videoURL": "https://player.vimeo.com/progressive_redirect/playback/1066687908/rendition/1080p/file.mp4?loc=external&log_user=0&signature=a413b42d60a559be5b4d10d3c63669d94fa226682b94e4216b3634ec82decb0b&user_id=43466136"
+    }
+  ],
+  "getNewsList": [
+    {
+      "cardSize": "medium",
+      "category": "Webinar",
+      "content": "In this webinar, we introduce the morphology-related functionalities of the Open Brain Institute Virtual Labs and show how they bring these workflows together in one integrated environment. \n\nThrough hands-on use cases, we will demonstrate how the platform supports efficient dataset exploration, interactive visualization and inspection of reconstructions, collaborative data sharing, automated detection and correction of reconstruction artifacts, and morphometric and topological analyses \u2014 including how topological approaches can reveal meaningful morphological differences across species.",
+      "date": "2026-06-24T08:27:00.000Z",
+      "id": "1654bec1-2ed7-407b-a477-723dfbd7645a",
+      "imageHeight": 1080,
+      "imageURL": "/static/website-media/images/ec2b225550243e2639a35d479668865a776022f5-1920x1080.jpg",
+      "imageWidth": 1920,
+      "isEPFL": false,
+      "isExternalLink": true,
+      "link": "https://youtu.be/_8qAKzQd9Ws",
+      "slug": null,
+      "title": "Replay | From Neuronal Morphologies to Insights using the OBI Virtual Labs"
+    },
+    {
+      "cardSize": "medium",
+      "category": "Paper release",
+      "content": "Why are biological neuronal circuits so complex and highly structured?\nIs it complex mechanisms and plasticity? Or is there a simpler explanation for at least some of the observations?\n\nOur latest work offers a controversial, but intuitive answer: while a class of neurons collectively covers its entire surroundings, each individual neuron only reaches a small, spatially constrained portion of that space. This simple geometric reality, shaped by axonal continuity, gives rise to the structured connectivity motifs we observe in cortical circuits.",
+      "date": "2026-06-24T08:22:00.000Z",
+      "id": "e5755ff8-1f93-467c-9ea1-4288ec138dc0",
+      "imageHeight": 720,
+      "imageURL": "/static/website-media/images/cf96db097698f54c7896eea1678fde49ddbf0cf5-1080x720.png",
+      "imageWidth": 1080,
+      "isEPFL": false,
+      "isExternalLink": true,
+      "link": "https://www.cell.com/iscience/fulltext/S2589-0042(26)01519-1",
+      "slug": null,
+      "title": "Our first fully OBI-authored paper is out in iScience"
+    },
+    {
+      "cardSize": "medium",
+      "category": "Webinar",
+      "content": "Neuronal morphology sits at the heart of understanding how neurons connect, communicate, and compute \u2014 yet working with reconstructed morphology data remains surprisingly cumbersome. From exploration and visualization to quality control, standardization, and advanced analysis, researchers routinely face fragmented workflows and scattered tooling.\n\nWhether you are reconstructing neurons, building biologically accurate cell models, or simply trying to make sense of a large morphology dataset, this webinar will show you a more accessible and scalable way to do it. Open to researchers across all areas of neuroscience.",
+      "date": "2026-06-03T07:27:00.000Z",
+      "id": "439fa939-8e52-4e69-bc91-553914bf09b2",
+      "imageHeight": 2161,
+      "imageURL": "/static/website-media/images/f423267502bcdd1838ac9af35edb2daeb97e98f7-3841x2161.png",
+      "imageWidth": 3841,
+      "isEPFL": false,
+      "isExternalLink": true,
+      "link": "https://events.teams.microsoft.com/event/e504b3ac-c43c-4796-a0d1-6b78779d74d9@c355c1d8-2b0b-4398-a8ea-b2134d2db027",
+      "slug": null,
+      "title": "Webinar | From Neuronal Morphologies to Insights using the OBI Virtual Labs"
+    },
+    {
+      "cardSize": "medium",
+      "category": "Paper release",
+      "content": "Excited to share our new paper in PLOS Computational Biology.\n\n\"A multimodal spatial atlas of transcriptomic, morphological, and electrophysiological cell type densities in the mouse brain\u201d\n\nFor the first time, we've built a unified, high-resolution 3D atlas of the mouse brain that speaks all three languages of neuroscience \u2014 gene expression, cell shape, and electrical activity \u2014 at once.\n\nUsing MERFISH spatial transcriptomics data, the Allen Brain Cell Atlas, and patch-sequencing datasets, we mapped 5,274 transcriptomic cell types across the entire mouse brain at 25 \u00b5m\u00b3 voxel resolution. We then developed a probabilistic framework to translate these into 458 functional morpho-electrophysiological types \u2014 bridging the gap between modern transcriptomics and decades of classical cell-counting literature.\n\nUnderstanding the brain isn't just about knowing which genes cells express \u2014 it's about knowing where they are, what shape they take, and how they fire. This atlas brings all three together in one place, opening new doors for large-scale brain simulation, disease modeling, and circuit-level neuroscience.The atlas and all tools are fully open-access. Whether you're building computational models, analyzing spatial transcriptomics, or exploring inhibitory neuron gradients, this resource is built for you.",
+      "date": "2026-06-02T13:46:00.000Z",
+      "id": "0c2e93c0-c15c-41d4-9386-851e7c8bf406",
+      "imageHeight": 1501,
+      "imageURL": "/static/website-media/images/d8984b995046bd1a3296eefdc8824efcd7108efd-2251x1501.png",
+      "imageWidth": 2251,
+      "isEPFL": false,
+      "isExternalLink": true,
+      "link": "https://doi.org/10.1371/journal.pcbi.1014106",
+      "slug": "our-new-paper-in-plos-computational-biology",
+      "title": "Our new paper in PLOS Computational Biology"
+    }
+  ],
+  "getPortalsList": [
+    {
+      "description": "An online public resource of the Blue Brain Project's first release of a digital reconstruction of the microcircuitry of juvenile rat somatosensory cortex.",
+      "imageHeight": 600,
+      "imageURL": "/static/website-media/images/9f8a08aff5583224b23ca17391ae9873745aa9e8-498x600.jpg",
+      "imageWidth": 498,
+      "link": "https://bbp.epfl.ch/nmc-portal/microcircuit.html",
+      "title": "The Neocortical Microcircuit Collaboration Portal"
+    },
+    {
+      "description": "Come and explore the various datasets and visuals made available to understand how we reconstruct in silico the Neuro-Glia-Vasculature ensemble architecture of the rat brain.",
+      "imageHeight": 600,
+      "imageURL": "/static/website-media/images/002b67980c09808fb47af96697d8c7bc5985b431-498x600.jpg",
+      "imageWidth": 498,
+      "link": "https://bbp.epfl.ch/ngv-portal/",
+      "title": "The Neuro-Glia-Vasculature Portal"
+    },
+    {
+      "description": "Explore the existing Hippocampus model and all its parts!",
+      "imageHeight": 600,
+      "imageURL": "/static/website-media/images/88aebd9f04056e53b3e6d1a0b388d7c34fbc3aa4-498x600.jpg",
+      "imageWidth": 498,
+      "link": "https://www.hippocampushub.eu/model/",
+      "title": "The Hippocampus Hub"
+    },
+    {
+      "description": "The Blue Brain Cell Atlas is a comprehensive online resource that describes the number, types, and positions of cells in all areas of the mouse brain.",
+      "imageHeight": 600,
+      "imageURL": "/static/website-media/images/333015300751d39cde0a135c50981b66944b87cf-498x600.jpg",
+      "imageWidth": 498,
+      "link": "https://bbp.epfl.ch/nexus/cell-atlas/",
+      "title": "The Blue Brain Cell Atlas"
+    },
+    {
+      "description": "Web-based freely-accessible information management network and electrophysiology data repository for comprehensive ion channel research.",
+      "imageHeight": 600,
+      "imageURL": "/static/website-media/images/3441ed84056a920985c743c13d126391feb2d5ac-498x600.jpg",
+      "imageWidth": 498,
+      "link": "https://channelpedia.epfl.ch/",
+      "title": "Channelpedia"
+    },
+    {
+      "description": "Discover a tissue-level model of the rodent somatosensory cortex 'in silico'.",
+      "imageHeight": 600,
+      "imageURL": "/static/website-media/images/e65fa4327532790c8bb292a33bfe9e3428682add-498x600.jpg",
+      "imageWidth": 498,
+      "link": "https://bbp.epfl.ch/sscx-portal/",
+      "title": "The SSCx Portal"
+    },
+    {
+      "description": "Thalamic control of sensory processing and spindles in a biophysical somatosensory thalamoreticular circuit model of wakefulness and sleep.",
+      "imageHeight": 600,
+      "imageURL": "/static/website-media/images/1c32cea90988da740737f710c1b609c627fcdd0c-498x600.jpg",
+      "imageWidth": 498,
+      "link": "https://bbp.epfl.ch/thalamus-studio/",
+      "title": "The Thalamus Studio"
+    },
+    {
+      "description": "Input data and analysis results of our manuscript 'Topology of synaptic connectivity constrains neuronal stimulus representation, predicting two complementary coding strategies'.",
+      "imageHeight": 600,
+      "imageURL": "/static/website-media/images/83ec28f7055f42d3565f7a13f21d43e014009810-498x600.jpg",
+      "imageWidth": 498,
+      "link": "https://bbp.epfl.ch/topological-sampling-portal/",
+      "title": "The Topological Sampling Data Studio"
+    }
+  ],
+  "getPortalsTitle": "",
+  "getMembers": [
+    {
+      "firstName": "Darshan",
+      "group": "team",
+      "imageHeight": 262,
+      "imageURL": "/static/website-media/images/1fe29e4eef911ed5c16718f72fcf00b97b3e8643-560x262.jpg",
+      "imageWidth": 560,
+      "lastName": "Mandge",
+      "order": null,
+      "role": "R&D Scientist"
+    },
+    {
+      "firstName": "Elvis",
+      "group": "team",
+      "imageHeight": 262,
+      "imageURL": "/static/website-media/images/1fe29e4eef911ed5c16718f72fcf00b97b3e8643-560x262.jpg",
+      "imageWidth": 560,
+      "lastName": "Bocci",
+      "order": null,
+      "role": "Visualization Engineer"
+    },
+    {
+      "firstName": "Pavlo",
+      "group": "team",
+      "imageHeight": 262,
+      "imageURL": "/static/website-media/images/4ab025b8e08376c6d72f4abe6a78782e8d513665-560x262.jpg",
+      "imageWidth": 560,
+      "lastName": "Getta",
+      "order": null,
+      "role": "Software Engineer"
+    },
+    {
+      "firstName": "Sean",
+      "group": "board",
+      "imageHeight": 608,
+      "imageURL": "/static/website-media/images/e6cfeb18b58ec88c3ceab5f4e7ea3c323c5106c4-754x608.jpg",
+      "imageWidth": 754,
+      "lastName": "Hill",
+      "order": 5,
+      "role": "Member"
+    },
+    {
+      "firstName": "Natali",
+      "group": "team",
+      "imageHeight": 262,
+      "imageURL": "/static/website-media/images/fbf2bc07473590855e8272784a602571078c4699-560x262.jpg",
+      "imageWidth": 560,
+      "lastName": "Barros",
+      "order": null,
+      "role": "R&D Scientist"
+    },
+    {
+      "firstName": "Judit",
+      "group": "team",
+      "imageHeight": 262,
+      "imageURL": "/static/website-media/images/4ab025b8e08376c6d72f4abe6a78782e8d513665-560x262.jpg",
+      "imageWidth": 560,
+      "lastName": "Planas",
+      "order": null,
+      "role": "Software Engineer"
+    },
+    {
+      "firstName": "Michael",
+      "group": "executiveBoard",
+      "imageHeight": 608,
+      "imageURL": "/static/website-media/images/634e3b971220fc4390ae4eb229d53cae6f427553-754x608.jpg",
+      "imageWidth": 754,
+      "lastName": "Reimann",
+      "order": 3,
+      "role": "Chief Scientific Officer"
+    },
+    {
+      "firstName": "Idan",
+      "group": "board",
+      "imageHeight": 608,
+      "imageURL": "/static/website-media/images/37be42afb53df8955c8d392c21d8479a57d49eea-752x608.jpg",
+      "imageWidth": 752,
+      "lastName": "Segev",
+      "order": 4,
+      "role": "Member"
+    },
+    {
+      "firstName": "Mathieu",
+      "group": "team",
+      "imageHeight": 262,
+      "imageURL": "/static/website-media/images/fbf2bc07473590855e8272784a602571078c4699-560x262.jpg",
+      "imageWidth": 560,
+      "lastName": "Chambon",
+      "order": null,
+      "role": "Visualization Engineer"
+    },
+    {
+      "firstName": "Armando",
+      "group": "team",
+      "imageHeight": 262,
+      "imageURL": "/static/website-media/images/1fe29e4eef911ed5c16718f72fcf00b97b3e8643-560x262.jpg",
+      "imageWidth": 560,
+      "lastName": "Romani",
+      "order": null,
+      "role": "R&D Scientist"
+    },
+    {
+      "firstName": "Henry",
+      "group": "board",
+      "imageHeight": 1707,
+      "imageURL": "/static/website-media/images/c1536121cc449c19424716f1f882f142780f9a0f-2560x1707.jpg",
+      "imageWidth": 2560,
+      "lastName": "Markram",
+      "order": 1,
+      "role": "President"
+    },
+    {
+      "firstName": "Gil Arturo",
+      "group": "team",
+      "imageHeight": 262,
+      "imageURL": "/static/website-media/images/fb381c6426290fb752975c5223d2f4d04dc26d5d-560x262.jpg",
+      "imageWidth": 560,
+      "lastName": "Barrios Del Villar",
+      "order": null,
+      "role": "Software Engineer"
+    },
+    {
+      "firstName": "Fabien",
+      "group": "team",
+      "imageHeight": 262,
+      "imageURL": "/static/website-media/images/1fe29e4eef911ed5c16718f72fcf00b97b3e8643-560x262.jpg",
+      "imageWidth": 560,
+      "lastName": "Petitjean",
+      "order": null,
+      "role": "Software Engineer"
+    },
+    {
+      "firstName": "Daniel",
+      "group": "team",
+      "imageHeight": 262,
+      "imageURL": "/static/website-media/images/4ab025b8e08376c6d72f4abe6a78782e8d513665-560x262.jpg",
+      "imageWidth": 560,
+      "lastName": "Fernandez",
+      "order": null,
+      "role": "Software Engineer"
+    },
+    {
+      "firstName": "Juan Jos\u00e9",
+      "group": "team",
+      "imageHeight": 262,
+      "imageURL": "/static/website-media/images/fbf2bc07473590855e8272784a602571078c4699-560x262.jpg",
+      "imageWidth": 560,
+      "lastName": "Garc\u00eda Cantero",
+      "order": null,
+      "role": "Software Engineer"
+    },
+    {
+      "firstName": "Boris",
+      "group": "team",
+      "imageHeight": 262,
+      "imageURL": "/static/website-media/images/4ab025b8e08376c6d72f4abe6a78782e8d513665-560x262.jpg",
+      "imageWidth": 560,
+      "lastName": "Bergsma",
+      "order": null,
+      "role": "Machine Learning Engineer"
+    },
+    {
+      "firstName": "Ilkan",
+      "group": "team",
+      "imageHeight": 262,
+      "imageURL": "/static/website-media/images/fb381c6426290fb752975c5223d2f4d04dc26d5d-560x262.jpg",
+      "imageWidth": 560,
+      "lastName": "Kili\u00e7",
+      "order": null,
+      "role": "Software Engineer"
+    },
+    {
+      "firstName": "Gianluca",
+      "group": "team",
+      "imageHeight": 262,
+      "imageURL": "/static/website-media/images/fb381c6426290fb752975c5223d2f4d04dc26d5d-560x262.jpg",
+      "imageWidth": 560,
+      "lastName": "Ficarelli",
+      "order": null,
+      "role": "Software Engineer"
+    },
+    {
+      "firstName": "Javier",
+      "group": "board",
+      "imageHeight": 608,
+      "imageURL": "/static/website-media/images/88b15b87a47cc534c1e204c7485317a77ae27c9a-754x608.jpg",
+      "imageWidth": 754,
+      "lastName": "de Felipe Oroquieta",
+      "order": 3,
+      "role": "Member"
+    },
+    {
+      "firstName": "Aurelien",
+      "group": "team",
+      "imageHeight": 262,
+      "imageURL": "/static/website-media/images/4ab025b8e08376c6d72f4abe6a78782e8d513665-560x262.jpg",
+      "imageWidth": 560,
+      "lastName": "Jaquier",
+      "order": null,
+      "role": "R&D Scientist"
+    },
+    {
+      "firstName": "Nicolas",
+      "group": "team",
+      "imageHeight": 262,
+      "imageURL": "/static/website-media/images/1fe29e4eef911ed5c16718f72fcf00b97b3e8643-560x262.jpg",
+      "imageWidth": 560,
+      "lastName": "Frank",
+      "order": null,
+      "role": "Machine Learning Engineer"
+    },
+    {
+      "firstName": "Bilal",
+      "group": "team",
+      "imageHeight": 262,
+      "imageURL": "/static/website-media/images/fbf2bc07473590855e8272784a602571078c4699-560x262.jpg",
+      "imageWidth": 560,
+      "lastName": "Meddah",
+      "order": null,
+      "role": "Software Engineer"
+    },
+    {
+      "firstName": "Erik",
+      "group": "team",
+      "imageHeight": 262,
+      "imageURL": "/static/website-media/images/1fe29e4eef911ed5c16718f72fcf00b97b3e8643-560x262.jpg",
+      "imageWidth": 560,
+      "lastName": "Heeren",
+      "order": null,
+      "role": "Software Engineer"
+    },
+    {
+      "firstName": "Ayima",
+      "group": "team",
+      "imageHeight": 262,
+      "imageURL": "/static/website-media/images/4ab025b8e08376c6d72f4abe6a78782e8d513665-560x262.jpg",
+      "imageWidth": 560,
+      "lastName": "Okeeva",
+      "order": null,
+      "role": "Quality Engineer"
+    },
+    {
+      "firstName": "James",
+      "group": "team",
+      "imageHeight": 262,
+      "imageURL": "/static/website-media/images/fbf2bc07473590855e8272784a602571078c4699-560x262.jpg",
+      "imageWidth": 560,
+      "lastName": "Isbister",
+      "order": null,
+      "role": "R&D Scientist"
+    },
+    {
+      "firstName": "Jean-Denis",
+      "group": "executiveBoard",
+      "imageHeight": 608,
+      "imageURL": "/static/website-media/images/03183705cada85dd81d8f2af24741a89e89734fe-752x608.jpg",
+      "imageWidth": 752,
+      "lastName": "Courcol",
+      "order": 2,
+      "role": "Chief Technical Officer"
+    },
+    {
+      "firstName": "Loris",
+      "group": "team",
+      "imageHeight": 262,
+      "imageURL": "/static/website-media/images/fb381c6426290fb752975c5223d2f4d04dc26d5d-560x262.jpg",
+      "imageWidth": 560,
+      "lastName": "Olivier",
+      "order": null,
+      "role": "UX & UI engineer"
+    },
+    {
+      "firstName": "Mike",
+      "group": "team",
+      "imageHeight": 262,
+      "imageURL": "/static/website-media/images/fb381c6426290fb752975c5223d2f4d04dc26d5d-560x262.jpg",
+      "imageWidth": 560,
+      "lastName": "Gevaert",
+      "order": null,
+      "role": "Software Engineer"
+    },
+    {
+      "firstName": "Georges",
+      "group": "executiveBoard",
+      "imageHeight": 605,
+      "imageURL": "/static/website-media/images/9a80f257080f5ffdb527c55d1071ffb34d20d169-800x605.jpg",
+      "imageWidth": 800,
+      "lastName": "Khazen",
+      "order": 1,
+      "role": "Chief Executive Officer"
+    },
+    {
+      "firstName": "James",
+      "group": "team",
+      "imageHeight": 262,
+      "imageURL": "/static/website-media/images/fbf2bc07473590855e8272784a602571078c4699-560x262.jpg",
+      "imageWidth": 560,
+      "lastName": "Gonzalo King",
+      "order": null,
+      "role": "Software Engineer"
+    },
+    {
+      "firstName": "Alessandro",
+      "group": "team",
+      "imageHeight": 262,
+      "imageURL": "/static/website-media/images/1fe29e4eef911ed5c16718f72fcf00b97b3e8643-560x262.jpg",
+      "imageWidth": 560,
+      "lastName": "Cattabiani",
+      "order": null,
+      "role": "Software Engineer"
+    },
+    {
+      "firstName": "Daniel",
+      "group": "team",
+      "imageHeight": 262,
+      "imageURL": "/static/website-media/images/1fe29e4eef911ed5c16718f72fcf00b97b3e8643-560x262.jpg",
+      "imageWidth": 560,
+      "lastName": "Keller",
+      "order": null,
+      "role": "R&D Scientist"
+    },
+    {
+      "firstName": "Dries",
+      "group": "team",
+      "imageHeight": 262,
+      "imageURL": "/static/website-media/images/fbf2bc07473590855e8272784a602571078c4699-560x262.jpg",
+      "imageWidth": 560,
+      "lastName": "Verachtert",
+      "order": null,
+      "role": "Software Engineer"
+    },
+    {
+      "firstName": "Eva",
+      "group": "team",
+      "imageHeight": 262,
+      "imageURL": "/static/website-media/images/fbf2bc07473590855e8272784a602571078c4699-560x262.jpg",
+      "imageWidth": 560,
+      "lastName": "Kenny",
+      "order": null,
+      "role": "Project Manager"
+    },
+    {
+      "firstName": "Kamila",
+      "group": "board",
+      "imageHeight": 608,
+      "imageURL": "/static/website-media/images/9731d27ff575ba9e7c6b0816afc91455d19b92ec-752x608.jpg",
+      "imageWidth": 752,
+      "lastName": "Markram",
+      "order": 2,
+      "role": "Vice-President"
+    },
+    {
+      "firstName": "Jan",
+      "group": "team",
+      "imageHeight": 262,
+      "imageURL": "/static/website-media/images/4ab025b8e08376c6d72f4abe6a78782e8d513665-560x262.jpg",
+      "imageWidth": 560,
+      "lastName": "Krepl",
+      "order": null,
+      "role": "Machine Learning Engineer"
+    },
+    {
+      "firstName": "Christoph",
+      "group": "team",
+      "imageHeight": 262,
+      "imageURL": "/static/website-media/images/1fe29e4eef911ed5c16718f72fcf00b97b3e8643-560x262.jpg",
+      "imageWidth": 560,
+      "lastName": "Pokorny",
+      "order": null,
+      "role": "R&D Scientist"
+    },
+    {
+      "firstName": "Marwan",
+      "group": "team",
+      "imageHeight": 262,
+      "imageURL": "/static/website-media/images/f1c4708256d8533989b20acbfc5d0db3f51a89c3-560x262.jpg",
+      "imageWidth": 560,
+      "lastName": "Abdellah",
+      "order": null,
+      "role": "Software Engineer"
+    },
+    {
+      "firstName": "Weina",
+      "group": "team",
+      "imageHeight": 262,
+      "imageURL": "/static/website-media/images/fb381c6426290fb752975c5223d2f4d04dc26d5d-560x262.jpg",
+      "imageWidth": 560,
+      "lastName": "Ji",
+      "order": null,
+      "role": "Software Engineer"
+    }
+  ],
+  "getCellToBrainContent": [
+    {
+      "title": "Subcellular",
+      "cards": [
+        {
+          "title": "Ion channel",
+          "description": "Users can build Hodgkin-Huxley-type models of ion channels from whole-cell patch-clamp electrophysiological characterization of cells overexpressing the channel of interest.",
+          "imageURL": "/static/website-media/images/0c7ec1ccbfd26a7fa6c8b38e484212ea77590f7f-332x250.jpg",
+          "imageWidth": 332,
+          "imageHeight": 250
+        },
+        {
+          "title": "Metabolism",
+          "description": "A notebook allows users to model the metabolic behavior of tissue for both young and old states.",
+          "imageURL": "/static/website-media/images/9e6f5cc21a4b3d7bfe473498f5a9f7d467eeb50c-145x144.jpg",
+          "imageWidth": 145,
+          "imageHeight": 144
+        },
+        {
+          "title": "NGV unit",
+          "description": "Simulate blood flow, metabolism, and neuronal activity to understand effects arising from particular cell types and layers.",
+          "imageURL": "/static/website-media/images/512d3bf324fb7e26bf3c6bc71c34d78a932d295f-145x144.jpg",
+          "imageWidth": 145,
+          "imageHeight": 144
+        }
+      ]
+    },
+    {
+      "title": "Cellular",
+      "cards": [
+        {
+          "title": "Single Neuron",
+          "description": "Load single cell models, perform various intracellular stimulation experiments with different levels of input, and observe the changes in membrane potential.",
+          "imageURL": "/static/website-media/images/c86ba1a50c2fb2aaa19a8e9bfb404de1aa4cc62a-145x144.jpg",
+          "imageWidth": 145,
+          "imageHeight": 144
+        },
+        {
+          "title": "Synaptome",
+          "description": "Add synapses and groups of synapses to single cell models and perform virtual experiments by setting up stimulation and recordings locations.",
+          "imageURL": "/static/website-media/images/7c4a818fc1d528d79a8b262b9287a203b889fc9d-332x250.jpg",
+          "imageWidth": 332,
+          "imageHeight": 250
+        },
+        {
+          "title": "Paired neurons",
+          "description": "Retrieve interconnected Hodgkin-Huxley cell models from a circuit and conduct a simulated experiment by establishing a stimulation and reporting protocol.",
+          "imageURL": "/static/website-media/images/0f93855497b7d1a552299b62dda90c01b9344a24-332x250.jpg",
+          "imageWidth": 332,
+          "imageHeight": 250
+        }
+      ]
+    },
+    {
+      "title": "Circuit",
+      "cards": [
+        {
+          "title": "Small microcircuit",
+          "description": "Circuit with 3-20 neurons together with synapses coming from inside and outside its volume (usually called intrinsic and extrinsic synapses respectively).",
+          "imageURL": "/static/website-media/images/56cedea396b764125d8933c6c239b772c61d2e25-332x250.jpg",
+          "imageWidth": 332,
+          "imageHeight": 250
+        },
+        {
+          "title": "Microcircuit",
+          "description": "Any circuit larger than 20 neurons but not being a region, system, or whole-brain circuit.",
+          "imageURL": "/static/website-media/images/039a89a7c9b04c12732bc5898a7b70b5199914f0-332x250.jpg",
+          "imageWidth": 332,
+          "imageHeight": 250
+        },
+        {
+          "title": "NGV circuit",
+          "description": "Explore the structural geometry of circuits built with neurons, glia, and vasculature.",
+          "imageURL": "/static/website-media/images/0b1d27c7debb6f76e3c842a574dcefac0074b159-510x408.jpg",
+          "imageWidth": 510,
+          "imageHeight": 408
+        }
+      ]
+    },
+    {
+      "title": "System",
+      "cards": [
+        {
+          "title": "Brain region",
+          "description": "Build, explore, and simulate detailed or simplified brain region models. Browse anatomical and electrophysiological data to construct, refine, validate, and simulate models in silico.",
+          "imageURL": "/static/website-media/images/63db8e0e56ea2437d70c53a73a54d4da8468c410-332x250.jpg",
+          "imageWidth": 332,
+          "imageHeight": 250
+        },
+        {
+          "title": "Brain system",
+          "description": "Build, explore, and simulate brain system models. Study computational interactions by refining and validating regional models, then simulate and analyze their activity.",
+          "imageURL": "/static/website-media/images/ab01a14f567eb05d4fa3735188068f3597705602-332x250.jpg",
+          "imageWidth": 332,
+          "imageHeight": 250
+        },
+        {
+          "title": "Whole brain",
+          "description": "Build, explore, and simulate whole-brain models. Combine curated models or construct from scratch, then simulate, validate activity, and run in silico experiments.",
+          "imageURL": "/static/website-media/images/02ed3825a15b785cfc53895196dcf24a5bd2db92-332x250.jpg",
+          "imageWidth": 332,
+          "imageHeight": 250
+        }
+      ]
+    }
+  ],
+  "getFoundationsLinks": [
+    {
+      "label": "Blue Brain GitHub",
+      "sublabel": "View on",
+      "url": "https://github.com/BlueBrain"
+    },
+    {
+      "label": "Blue Brain Data",
+      "sublabel": "Discover the",
+      "url": "https://registry.opendata.aws/bluebrain_opendata/"
+    },
+    {
+      "label": "Blue Brain Publications",
+      "sublabel": "Discover the",
+      "url": "https://portal.bluebrain.epfl.ch/resources/publications/"
+    },
+    {
+      "label": "Blue Brain Gallery",
+      "sublabel": "Discover the",
+      "url": "https://portal.bluebrain.epfl.ch/gallery/"
+    },
+    {
+      "label": "Blue Brain News",
+      "sublabel": "Discover the",
+      "url": "https://bbp.epfl.ch/bbp/research/domains/bluebrain/index.html%3Fp=517.html"
+    },
+    {
+      "label": "Blue Brain YouTube",
+      "sublabel": "Discover the",
+      "url": "https://www.youtube.com/@Bluebrainpjt"
+    },
+    {
+      "label": "Blue Brain Milestones",
+      "sublabel": "Discover the",
+      "url": "https://bbp.epfl.ch/bbp/research/domains/bluebrain/index.html%3Fp=7688.html"
+    },
+    {
+      "label": "Blue Brain MOOCs",
+      "sublabel": "Discover the",
+      "url": "https://bbp.epfl.ch/bbp/research/domains/bluebrain/index.html%3Fp=2330.html"
+    }
+  ],
+  "getFoundationsText": {
+    "description": [
+      {
+        "_key": "c918654d0a4f",
+        "_type": "block",
+        "children": [
+          {
+            "_key": "e34116544fcf",
+            "_type": "span",
+            "marks": [],
+            "text": "The Blue Brain Project was a pioneering scientific initiative hosted at the \u00c9cole Polytechnique F\u00e9d\u00e9rale de Lausanne (EPFL). Supported by nearly 300 million CHF investment from the Swiss Federal Government, the project successfully completed its mission in December 2024, spanning two decades of research to work out how to build biologically accurate digital replica of the brain and begin simulation neuroscience. \u2028The project's legacy includes around 300 peer-reviewed publications, featuring more than 1'100 co-authors, and more than a petabyte of data, comprising millions of neuronal morphologies, electrophysiological recordings, and meticulously detailed digital brain models across multiple scales. With more than 18 million lines of code made available in around 290 open GitHub repositories, the project has delivered the tools to build, simulate, analyze, and visualize biologically accurate digital brain models, paving the way for a new era of simulation neuroscience."
+          }
+        ],
+        "markDefs": [],
+        "style": "normal"
+      }
+    ],
+    "subtitle": null,
+    "title": null,
+    "videoURL": "https://player.vimeo.com/progressive_redirect/playback/1054410171/rendition/1080p/file.mp4?loc=external&log_user=0&signature=f36c9f19fd2f4855ba3c2836a24c21b90d46eea144e476e51dbfc4f590aea572"
+  },
+  "getPriceListContent": {
+    "generalList": [
+      {
+        "name": "OBI Membership",
+        "prices": [
+          {
+            "currency": "CHF",
+            "plans": [
+              {
+                "cost": 20,
+                "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+              },
+              {
+                "cost": 20,
+                "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+              },
+              {
+                "cost": null,
+                "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+              }
+            ]
+          },
+          {
+            "currency": "EUR",
+            "plans": [
+              {
+                "cost": 18,
+                "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+              },
+              {
+                "cost": 18,
+                "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+              },
+              {
+                "cost": null,
+                "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+              }
+            ]
+          },
+          {
+            "currency": "USD",
+            "plans": [
+              {
+                "cost": 21,
+                "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+              },
+              {
+                "cost": 21,
+                "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+              },
+              {
+                "cost": null,
+                "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+              }
+            ]
+          }
+        ],
+        "type": "Month / Member"
+      },
+      {
+        "name": "500 Credits",
+        "prices": [
+          {
+            "currency": "USD",
+            "plans": [
+              {
+                "cost": 5,
+                "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+              },
+              {
+                "cost": 5,
+                "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+              },
+              {
+                "cost": null,
+                "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+              }
+            ]
+          },
+          {
+            "currency": "EUR",
+            "plans": [
+              {
+                "cost": 4.5,
+                "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+              },
+              {
+                "cost": 4.5,
+                "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+              },
+              {
+                "cost": null,
+                "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+              }
+            ]
+          },
+          {
+            "currency": "CHF",
+            "plans": [
+              {
+                "cost": 4.8,
+                "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+              },
+              {
+                "cost": 4.8,
+                "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+              },
+              {
+                "cost": null,
+                "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+              }
+            ]
+          }
+        ],
+        "type": "as"
+      }
+    ],
+    "labList": [
+      {
+        "list": [
+          {
+            "items": [
+              {
+                "name": "Build AI",
+                "plans": [
+                  {
+                    "cost": 0.5,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 0.5,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              },
+              {
+                "name": "Experiment AI",
+                "plans": [
+                  {
+                    "cost": 1,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 1,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              }
+            ],
+            "title": "General",
+            "type": "creaditQuery"
+          },
+          {
+            "items": [
+              {
+                "name": "Ion Channel",
+                "plans": [
+                  {
+                    "cost": 1,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 1,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              },
+              {
+                "name": "Metabolism",
+                "plans": [
+                  {
+                    "cost": 1,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 1,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              },
+              {
+                "name": "NGV unit",
+                "plans": [
+                  {
+                    "cost": 1,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 1,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              }
+            ],
+            "title": "Build",
+            "type": "creditBuild"
+          },
+          {
+            "items": [
+              {
+                "name": "Ion channel",
+                "plans": [
+                  {
+                    "cost": 1,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 1,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              },
+              {
+                "name": "Metabolism",
+                "plans": [
+                  {
+                    "cost": 1,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 1,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              },
+              {
+                "name": "NGV Unit",
+                "plans": [
+                  {
+                    "cost": 1,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 1,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              }
+            ],
+            "title": "Experiment",
+            "type": "creditSimulation"
+          }
+        ],
+        "name": "Subcellular Scale"
+      },
+      {
+        "list": [
+          {
+            "items": [
+              {
+                "name": "Build AI",
+                "plans": [
+                  {
+                    "cost": 0.5,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 0.5,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              },
+              {
+                "name": "Experiment AI",
+                "plans": [
+                  {
+                    "cost": 1,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 1,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              }
+            ],
+            "title": "General",
+            "type": "creaditQuery"
+          },
+          {
+            "items": [
+              {
+                "name": "Ion Channel",
+                "plans": [
+                  {
+                    "cost": 1,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 1,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              },
+              {
+                "name": "Metabolism",
+                "plans": [
+                  {
+                    "cost": 1,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 1,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              },
+              {
+                "name": "NGV unit",
+                "plans": [
+                  {
+                    "cost": 1,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 1,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              }
+            ],
+            "title": "Build",
+            "type": "creditBuild"
+          },
+          {
+            "items": [
+              {
+                "name": "Ion channel",
+                "plans": [
+                  {
+                    "cost": 1,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 1,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              },
+              {
+                "name": "Metabolism",
+                "plans": [
+                  {
+                    "cost": 1,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 1,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              },
+              {
+                "name": "NGV Unit",
+                "plans": [
+                  {
+                    "cost": 1,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 1,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              }
+            ],
+            "title": "Experiment",
+            "type": "creditSimulation"
+          }
+        ],
+        "name": "Cellular Scale"
+      },
+      {
+        "list": [
+          {
+            "items": [
+              {
+                "name": "Build AI",
+                "plans": [
+                  {
+                    "cost": 0.5,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 0.5,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              },
+              {
+                "name": "Experiment AI",
+                "plans": [
+                  {
+                    "cost": 1,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 1,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              }
+            ],
+            "title": "General",
+            "type": "creaditQuery"
+          },
+          {
+            "items": [
+              {
+                "name": "Ion Channel",
+                "plans": [
+                  {
+                    "cost": 1,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 1,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              },
+              {
+                "name": "Metabolism",
+                "plans": [
+                  {
+                    "cost": 1,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 1,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              },
+              {
+                "name": "NGV unit",
+                "plans": [
+                  {
+                    "cost": 1,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 1,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              }
+            ],
+            "title": "Build",
+            "type": "creditBuild"
+          },
+          {
+            "items": [
+              {
+                "name": "Ion channel",
+                "plans": [
+                  {
+                    "cost": 1,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 1,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              },
+              {
+                "name": "Metabolism",
+                "plans": [
+                  {
+                    "cost": 1,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 1,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              },
+              {
+                "name": "NGV Unit",
+                "plans": [
+                  {
+                    "cost": 1,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 1,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              }
+            ],
+            "title": "Experiment",
+            "type": "creditSimulation"
+          }
+        ],
+        "name": "Circuit Scale"
+      },
+      {
+        "list": [
+          {
+            "items": [
+              {
+                "name": "Build AI",
+                "plans": [
+                  {
+                    "cost": 0.5,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 0.5,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              },
+              {
+                "name": "Experiment AI",
+                "plans": [
+                  {
+                    "cost": 1,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 1,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              }
+            ],
+            "title": "General",
+            "type": "creaditQuery"
+          },
+          {
+            "items": [
+              {
+                "name": "Ion Channel",
+                "plans": [
+                  {
+                    "cost": 1,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 1,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              },
+              {
+                "name": "Metabolism",
+                "plans": [
+                  {
+                    "cost": 1,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 1,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              },
+              {
+                "name": "NGV unit",
+                "plans": [
+                  {
+                    "cost": 1,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 1,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              }
+            ],
+            "title": "Build",
+            "type": "creditBuild"
+          },
+          {
+            "items": [
+              {
+                "name": "Ion channel",
+                "plans": [
+                  {
+                    "cost": 1,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 1,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              },
+              {
+                "name": "Metabolism",
+                "plans": [
+                  {
+                    "cost": 1,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 1,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              },
+              {
+                "name": "NGV Unit",
+                "plans": [
+                  {
+                    "cost": 1,
+                    "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7"
+                  },
+                  {
+                    "cost": 1,
+                    "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b"
+                  },
+                  {
+                    "cost": null,
+                    "id": "1944c35d-e546-4331-9939-3d04fb82befc"
+                  }
+                ]
+              }
+            ],
+            "title": "Experiment",
+            "type": "creditSimulation"
+          }
+        ],
+        "name": "System Scale"
+      }
+    ],
+    "plans": [
+      {
+        "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7",
+        "title": "Free"
+      },
+      {
+        "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b",
+        "title": "Pro"
+      },
+      {
+        "id": "1944c35d-e546-4331-9939-3d04fb82befc",
+        "title": "Premium"
+      }
+    ]
+  },
+  "getWidgetHero": {
+    "background": {
+      "height": 1438,
+      "url": "/static/website-media/images/e3e9279352f603e38e1f5c569496883bba2d2f4a-3024x1438.jpg",
+      "width": 3024
+    },
+    "button": {
+      "label": "Discover the platform features",
+      "link": "mission"
+    },
+    "text": [
+      {
+        "_key": "b35900d4a75f",
+        "_type": "block",
+        "children": [
+          {
+            "_key": "4b9564e660a9",
+            "_type": "span",
+            "marks": [],
+            "text": "The reconstruction strategy exploits interdependencies in the experimental data to obtain dense maps of the brain, without measuring every detail of its multiple levels of organization (molecules, cells, micro-circuits, brain regions, the whole brain).\nThis approach allows to build digital reconstructions (computer models) of the brain at an unprecedented level of biological detail.\nThese supercomputer-based simulations and reconstructions offer a groundbreaking way to understand the multi-level structure and function of the brain."
+          }
+        ],
+        "markDefs": [],
+        "style": "normal"
+      }
+    ],
+    "title": "Digital reconstructions and simulation of brain models"
+  },
+  "getRepositoriesContent": [
+    {
+      "author": null,
+      "buttons": [
+        {
+          "link": "https://www.openbraininstitute.org/doi/metabolism_shichkova_2025",
+          "title": "Open Jupyter notebook"
+        }
+      ],
+      "description": "The NGV unit model is a comprehensive, data-driven\nmolecular model of the neuro-glia-vascular system built to explore the complex relationships between the aging brain, energy metabolism, blood \ufb02ow, and neuronal activity. The model includes all key enzymes, transporters, metabolites, and circulatory factors vital for neuronal electrical activity. It is simulated using the Julia scientific computing language.",
+      "imageHeight": 378,
+      "imageURL": "/static/website-media/images/07689f040c8230a5a63da4bf3496a2a0f44d9218-1176x378.jpg",
+      "imageWidth": 1176,
+      "title": "Metabolism - Unitary model",
+      "type": null,
+      "url": null
+    },
+    {
+      "author": null,
+      "buttons": [
+        {
+          "link": "https://zenodo.org/records/6906785",
+          "title": "Download model"
+        }
+      ],
+      "description": "The model comprises 211712 neurons in the front limb and jaw subregions and the dysgranular zone of the Paxinos & Watson rat brain atlas, scaled down to juvenile size. It is available in the open SONATA standard and contains neuron locations and their properties (such as morphological types, cortical layer, etc.), their detailed morphologies, and synaptic connectivity associated with all systems described above. Modeled synapses are associated with their exact location in the dendritic tree, and additional anatomical parameters, such as spine length (where biologically plausible). Extrinsic synaptic connections from neurons in the remainder of non-barrel somatosensory cortex and thalamic inputs are also contained.",
+      "imageHeight": 378,
+      "imageURL": "/static/website-media/images/c548baff9a45a77a515d04d787caf9ff38452696-1176x378.jpg",
+      "imageWidth": 1176,
+      "title": "A detailed model of juvenile rat somatosensory cortex",
+      "type": null,
+      "url": null
+    },
+    {
+      "author": null,
+      "buttons": [
+        {
+          "link": "https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/TN3DUI",
+          "title": "Download model"
+        }
+      ],
+      "description": "A community-based, full-scale in silico model of the rat CA1 that integrates a broad range of experimental data, from synapse to network, including the reconstruction of its principal afferents, the Schaffer collaterals, and a model of the effects that acetylcholine has on the system.",
+      "imageHeight": 378,
+      "imageURL": "/static/website-media/images/afd1e112b592ff585cbcfd76c0a35e1c2d9a153a-1176x378.jpg",
+      "imageWidth": 1176,
+      "title": "A detailed model of rat hippocampus CA1",
+      "type": null,
+      "url": null
+    }
+  ],
+  "getPricingFeatures": {
+    "features": [
+      {
+        "available": true,
+        "features": [
+          {
+            "description": null,
+            "plans": [
+              {
+                "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7",
+                "label": null,
+                "tooltip": null
+              },
+              {
+                "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b",
+                "label": null,
+                "tooltip": null
+              },
+              {
+                "id": "1944c35d-e546-4331-9939-3d04fb82befc",
+                "label": null,
+                "tooltip": null
+              },
+              {
+                "id": null,
+                "label": null,
+                "tooltip": null
+              }
+            ],
+            "title": "Get a Virtual Lab"
+          },
+          {
+            "description": null,
+            "plans": [
+              {
+                "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b",
+                "label": null,
+                "tooltip": null
+              },
+              {
+                "id": "1944c35d-e546-4331-9939-3d04fb82befc",
+                "label": null,
+                "tooltip": null
+              },
+              {
+                "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7",
+                "label": null,
+                "tooltip": null
+              }
+            ],
+            "title": "Join any lab"
+          },
+          {
+            "description": null,
+            "plans": [
+              {
+                "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b",
+                "label": null,
+                "tooltip": null
+              },
+              {
+                "id": "1944c35d-e546-4331-9939-3d04fb82befc",
+                "label": null,
+                "tooltip": null
+              },
+              {
+                "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7",
+                "label": null,
+                "tooltip": null
+              }
+            ],
+            "title": "Invite lab members"
+          }
+        ],
+        "title": "General"
+      },
+      {
+        "available": true,
+        "features": [
+          {
+            "description": null,
+            "plans": [
+              {
+                "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7",
+                "label": null,
+                "tooltip": null
+              },
+              {
+                "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b",
+                "label": null,
+                "tooltip": null
+              },
+              {
+                "id": "1944c35d-e546-4331-9939-3d04fb82befc",
+                "label": null,
+                "tooltip": null
+              }
+            ],
+            "title": "Data"
+          },
+          {
+            "description": null,
+            "plans": [
+              {
+                "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7",
+                "label": "Partial build",
+                "tooltip": "You can modify existing models but cannot build new ones.  "
+              },
+              {
+                "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b",
+                "label": null,
+                "tooltip": null
+              },
+              {
+                "id": "1944c35d-e546-4331-9939-3d04fb82befc",
+                "label": null,
+                "tooltip": null
+              }
+            ],
+            "title": "Build"
+          },
+          {
+            "description": null,
+            "plans": [
+              {
+                "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7",
+                "label": null,
+                "tooltip": null
+              },
+              {
+                "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b",
+                "label": null,
+                "tooltip": null
+              },
+              {
+                "id": "1944c35d-e546-4331-9939-3d04fb82befc",
+                "label": null,
+                "tooltip": null
+              }
+            ],
+            "title": "Workflows"
+          }
+        ],
+        "title": "Cellular Lab"
+      },
+      {
+        "available": true,
+        "features": [
+          {
+            "description": null,
+            "plans": [
+              {
+                "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7",
+                "label": null,
+                "tooltip": null
+              },
+              {
+                "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b",
+                "label": null,
+                "tooltip": null
+              },
+              {
+                "id": "1944c35d-e546-4331-9939-3d04fb82befc",
+                "label": null,
+                "tooltip": null
+              }
+            ],
+            "title": "Data"
+          },
+          {
+            "description": null,
+            "plans": [
+              {
+                "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b",
+                "label": null,
+                "tooltip": null
+              },
+              {
+                "id": "1944c35d-e546-4331-9939-3d04fb82befc",
+                "label": null,
+                "tooltip": null
+              }
+            ],
+            "title": "Build"
+          },
+          {
+            "description": null,
+            "plans": [
+              {
+                "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7",
+                "label": null,
+                "tooltip": null
+              },
+              {
+                "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b",
+                "label": null,
+                "tooltip": null
+              },
+              {
+                "id": "1944c35d-e546-4331-9939-3d04fb82befc",
+                "label": null,
+                "tooltip": null
+              }
+            ],
+            "title": "Workflows"
+          }
+        ],
+        "title": "Circuit Lab"
+      },
+      {
+        "available": false,
+        "features": [
+          {
+            "description": null,
+            "plans": [
+              {
+                "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b",
+                "label": null,
+                "tooltip": null
+              },
+              {
+                "id": "1944c35d-e546-4331-9939-3d04fb82befc",
+                "label": null,
+                "tooltip": null
+              }
+            ],
+            "title": "Data AI"
+          },
+          {
+            "description": null,
+            "plans": [
+              {
+                "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b",
+                "label": null,
+                "tooltip": null
+              },
+              {
+                "id": "1944c35d-e546-4331-9939-3d04fb82befc",
+                "label": null,
+                "tooltip": null
+              }
+            ],
+            "title": "Build AI"
+          },
+          {
+            "description": null,
+            "plans": [
+              {
+                "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b",
+                "label": null,
+                "tooltip": null
+              },
+              {
+                "id": "1944c35d-e546-4331-9939-3d04fb82befc",
+                "label": null,
+                "tooltip": null
+              }
+            ],
+            "title": "Workflows AI"
+          },
+          {
+            "description": null,
+            "plans": [
+              {
+                "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b",
+                "label": null,
+                "tooltip": null
+              },
+              {
+                "id": "1944c35d-e546-4331-9939-3d04fb82befc",
+                "label": null,
+                "tooltip": null
+              }
+            ],
+            "title": "Paper generator AI"
+          },
+          {
+            "description": null,
+            "plans": [
+              {
+                "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b",
+                "label": null,
+                "tooltip": null
+              },
+              {
+                "id": "1944c35d-e546-4331-9939-3d04fb82befc",
+                "label": null,
+                "tooltip": null
+              },
+              {
+                "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7",
+                "label": null,
+                "tooltip": null
+              }
+            ],
+            "title": "Running Notebooks"
+          }
+        ],
+        "title": "Features"
+      },
+      {
+        "available": true,
+        "features": [
+          {
+            "description": null,
+            "plans": [
+              {
+                "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b",
+                "label": null,
+                "tooltip": null
+              },
+              {
+                "id": "1944c35d-e546-4331-9939-3d04fb82befc",
+                "label": null,
+                "tooltip": null
+              }
+            ],
+            "title": "Priority Support"
+          },
+          {
+            "description": null,
+            "plans": [
+              {
+                "id": "1944c35d-e546-4331-9939-3d04fb82befc",
+                "label": null,
+                "tooltip": null
+              }
+            ],
+            "title": "Onboarding"
+          },
+          {
+            "description": null,
+            "plans": [
+              {
+                "id": "1944c35d-e546-4331-9939-3d04fb82befc",
+                "label": null,
+                "tooltip": null
+              }
+            ],
+            "title": "Dedicated Account Manager"
+          }
+        ],
+        "title": "Support"
+      }
+    ],
+    "plans": [
+      {
+        "buttonLabel": null,
+        "id": "06dd229f-0a8c-4561-9b2c-4e810e0435d7",
+        "notes": ["100 initial credits*", "1 GB private free storage**", "Free public storage***"],
+        "price": {
+          "discount": [
+            {
+              "currency": "USD",
+              "value": 0
+            },
+            {
+              "currency": "EUR",
+              "value": 0
+            },
+            {
+              "currency": "CHF",
+              "value": 0
+            }
+          ],
+          "month": [
+            {
+              "currency": "USD",
+              "value": 0
+            },
+            {
+              "currency": "EUR",
+              "value": 0
+            },
+            {
+              "currency": "CHF",
+              "value": 0
+            }
+          ],
+          "yearDiscount": [
+            {
+              "currency": "USD",
+              "value": 0
+            },
+            {
+              "currency": "EUR",
+              "value": 0
+            },
+            {
+              "currency": "CHF",
+              "value": 0
+            }
+          ],
+          "yearNormal": [
+            {
+              "currency": "USD",
+              "value": 0
+            },
+            {
+              "currency": "EUR",
+              "value": 0
+            },
+            {
+              "currency": "CHF",
+              "value": 0
+            }
+          ]
+        },
+        "title": "Free"
+      },
+      {
+        "buttonLabel": null,
+        "id": "7c1fde88-36da-406f-8d2b-14b83e7c5d6b",
+        "notes": [
+          "50 free credits / month*",
+          "650 free credits / year",
+          "2 GB private free storage**",
+          "Free public storage***"
+        ],
+        "price": {
+          "discount": [
+            {
+              "currency": "USD",
+              "value": 25
+            },
+            {
+              "currency": "EUR",
+              "value": 25
+            },
+            {
+              "currency": "CHF",
+              "value": 25
+            }
+          ],
+          "month": [
+            {
+              "currency": "USD",
+              "value": 50
+            },
+            {
+              "currency": "EUR",
+              "value": 50
+            },
+            {
+              "currency": "CHF",
+              "value": 50
+            }
+          ],
+          "yearDiscount": [
+            {
+              "currency": "USD",
+              "value": 275
+            },
+            {
+              "currency": "EUR",
+              "value": 275
+            },
+            {
+              "currency": "CHF",
+              "value": 275
+            }
+          ],
+          "yearNormal": [
+            {
+              "currency": "USD",
+              "value": 550
+            },
+            {
+              "currency": "EUR",
+              "value": 550
+            },
+            {
+              "currency": "CHF",
+              "value": 550
+            }
+          ]
+        },
+        "title": "Pro"
+      },
+      {
+        "buttonLabel": "Contact us",
+        "id": "1944c35d-e546-4331-9939-3d04fb82befc",
+        "notes": [],
+        "price": {
+          "discount": null,
+          "month": [],
+          "yearDiscount": [],
+          "yearNormal": []
+        },
+        "title": "Premium"
+      }
+    ]
+  },
+  "getMilestones": [
+    {
+      "astrocytes": "14K",
+      "description": "This enhanced model of the neuro-glia-vascular system combines a microcircuit model with models of astrocytes in biological densities as well as blood vessels innervating the volume. The dynamic interactions between neurons, the astrocytes and the vascular system are also modeled and can be readily simulated to gain a deep insight into their functionalities.",
+      "imageHeight": 935,
+      "imageURL": "/static/website-media/images/c623e7de5251ca99133faf0b485c750c3b555040-733x935.png",
+      "imageWidth": 733,
+      "neurons": "88K",
+      "title": "Neuro-glia Vascular System"
+    },
+    {
+      "astrocytes": null,
+      "description": "This model of the thalamus comprises three thalamic nuclei. It is constructed in a volumetric atlas and hence takes the shape of the modeled regions into account. Neurons are placed according to experimentally measured cell densities. The entirety of the model can be simulated, or user-specified parts of it. The model can be used to study the anatomy and activity of this pivotal brain region.",
+      "imageHeight": 735,
+      "imageURL": "/static/website-media/images/f19f09d379e4a3b0993bf84d4a0b9ad381d402ca-1039x735.png",
+      "imageWidth": 1039,
+      "neurons": "331K",
+      "title": "Thalamus"
+    },
+    {
+      "astrocytes": null,
+      "description": "This version of the model of the neuro-glia-vascular system has been scaled up to encompass the whole brain.",
+      "imageHeight": 4034,
+      "imageURL": "https://cdn.sanity.io/images/fgi7eh1v/staging/283c5187ee210a895c2ed5a8c083fbfcb96c6292-3923x4034.webp",
+      "imageWidth": 3923,
+      "neurons": "71.5M",
+      "title": "Brain Vascular System"
+    },
+    {
+      "astrocytes": null,
+      "description": "Building upon the somatosensory cortex model, this extends the model to cover all regions of the mouse neocortex. It can be analyzed or simulated in its entirety, or selected regions only; as such, it can be used to study the dynamic interactions between the various regions.",
+      "imageHeight": 838,
+      "imageURL": "/static/website-media/images/3b22f153f798f7416a49e289c8f1b14cd92e823f-1200x838.png",
+      "imageWidth": 1200,
+      "neurons": "10.7M",
+      "title": "Neocortex"
+    },
+    {
+      "astrocytes": null,
+      "description": "This extremely large model combines the neocortex model with models for the various other parts of the brain. The models for the olfactory bulb and cerebellum were constructed in collaboration with experts from the community to accurately capture their specific anatomy and their physiology.",
+      "imageHeight": 841,
+      "imageURL": "/static/website-media/images/eae77aca5e3a11631bbc64582476f025bdbb5c06-1103x841.png",
+      "imageWidth": 1103,
+      "neurons": "71.5M",
+      "title": "Whole Brain with Olfactory Bulb and Cerebellum"
+    },
+    {
+      "astrocytes": null,
+      "description": "This model of the non-barrel somatosensory regions of rodent cortex is constructed in a volumetric atlas and takes the shape of the modeled regions into account. Neurons are placed according to experimentally measured cell densities. Both the entirety or user-specified parts of the model can be simulated in order to facilitate the study of both the anatomical structure and neural activity in this brain region.",
+      "imageHeight": 993,
+      "imageURL": "/static/website-media/images/e6f948dc501e1ff68634c744ec5eaeffa246df44-1087x993.png",
+      "imageWidth": 1087,
+      "neurons": "1.7M",
+      "title": "Non Barrel Somatosensory Cortex"
+    },
+    {
+      "astrocytes": null,
+      "description": "A cortical microcircuit model comprises all six cortical layers with a horizontal extent that captures the entire dendritic tree of the most central neurons. Neurons within have the same anatomical and physiological level of detail as single neuron models. All synapses between the contained neurons are included, plus more abstract models of thalamo-cortical axons that serve as user-controlled inputs. This setup can be used to study the local processing of thalamic inputs, and the roles of individual subpopulations during that process.",
+      "imageHeight": 1122,
+      "imageURL": "/static/website-media/images/829976002f433a6478063c00444f3bf1ecde82b8-713x1122.png",
+      "imageWidth": 713,
+      "neurons": "31K",
+      "title": "Microcircuits"
+    },
+    {
+      "astrocytes": null,
+      "description": "This model of the CA1 regions of the rodent hippocampus is constructed in a volumetric atlas. It takes the shape of the modeled regions into account. Neurons within are placed according to experimentally measured cell densities. The entirety of the model, or only user-specified parts, can be simulated. The hippocampal CA1 model facilitates the study of both the anatomical structure and neural activity in this brain region.",
+      "imageHeight": 1122,
+      "imageURL": "/static/website-media/images/51218ecb15cb19f30427ec3bae80075576ef1d4b-1097x1122.png",
+      "imageWidth": 1097,
+      "neurons": "460K",
+      "title": "Hippocampus"
+    }
+  ],
+  "getSwipeableList": {
+    "button": "Our plans in detail",
+    "link": "pricing",
+    "list": [
+      {
+        "imageHeight": 500,
+        "imageURL": "/static/website-media/images/51dbc0bd67db9d3cda28ea7deef316f98c11922b-434x500.png",
+        "imageWidth": 434,
+        "subtitle": "OBP Plan",
+        "text": "Create Your Virtual Lab for Free: Our entry plan for the curious, with limited free credits to kickstart your simulation neuroscience journey!",
+        "title": "Free"
+      },
+      {
+        "imageHeight": 500,
+        "imageURL": "/static/website-media/images/9255dcd896e8216b2fb7e783b2afe0e4d4c365d6-434x500.png",
+        "imageWidth": 434,
+        "subtitle": "OBP Plan",
+        "text": "Unlock the full potential: Access all platform features, invite lab members and receive additional free credits to take your neuroscience journey to the next level.",
+        "title": "Pro"
+      },
+      {
+        "imageHeight": 500,
+        "imageURL": "/static/website-media/images/f3a3abcabd1e9baacb06960bc53ee3c92d017e8f-434x500.png",
+        "imageWidth": 434,
+        "subtitle": "OBP Plan",
+        "text": "Discover limitless possibilities: Access advanced features, enjoy exclusive onboarding, and benefit from a dedicated account manager. Contact us for tailored support and solutions.",
+        "title": "Premium"
+      }
+    ],
+    "title": "From individual projects to large-scale initiatives, we offer flexible options to support your brain modeling and simulation goals."
+  },
+  "getMultipleMember": [
+    {
+      "biography": "Henry Markram is a professor of neuroscience at EPFL, known for his pioneering work in brain simulation and neural microcircuitry. ",
+      "firstName": "Henry",
+      "imageHeight": 1707,
+      "imageURL": "/static/website-media/images/c1536121cc449c19424716f1f882f142780f9a0f-2560x1707.jpg",
+      "imageWidth": 2560,
+      "lastName": "Markram"
+    }
+  ],
+  "getSpecialContributors": [],
+  "emails": {
+    "supportEmailButton": {
+      "email": "support@openbraininstitute.org",
+      "label": "Need some support?"
+    },
+    "infoEmailButton": {
+      "email": "info@openbraininstitute.org",
+      "label": "You have a general inquiry?"
+    }
+  }
+}

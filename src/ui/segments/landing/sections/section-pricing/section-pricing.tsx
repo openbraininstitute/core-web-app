@@ -1,7 +1,10 @@
 import PriceTable from '@/ui/segments/help/priceList/price-table';
+import PageSection from '@/ui/segments/landing/components/page-section';
 import { styleBlockFullWidth } from '@/ui/segments/landing/styles';
 import Plans from '@/ui/segments/plans';
 import { classNames } from '@/util/utils';
+
+import PlanSummaries from './plan-summaries';
 
 import type { CreditsPack, SinglePrice } from '@/services/sanity';
 import type { PlanV2 } from '@/types/virtual-lab/pricing';
@@ -15,24 +18,43 @@ interface SectionPricingProps {
 export default function SectionPricing({ prices, creditsPacks, plans }: SectionPricingProps) {
   return (
     <>
-      <Plans plans={plans} />
-      <div
-        className={classNames('flex w-full flex-col', styleBlockFullWidth)}
-        style={{
-          marginTop: '3rem',
-          minHeight: '200px',
-        }}
-      >
-        {prices.length === 0 && creditsPacks.length === 0 ? (
-          <div style={{ padding: '1rem', color: '#666', backgroundColor: '#f5f5f5' }}>
-            No pricing data available.
-          </div>
-        ) : (
-          <div className="px-8 lg:px-[8.7vw]">
-            <PriceTable prices={prices} creditsPacks={creditsPacks} backgroundTitle="bg-black/5" />
-          </div>
-        )}
-      </div>
+      <PageSection>
+        <div className={styleBlockFullWidth}>
+          <PlanSummaries plans={plans} />
+        </div>
+      </PageSection>
+      <PageSection>
+        <div
+          id="compare-credit-costs"
+          className={classNames(styleBlockFullWidth, 'min-w-0 scroll-mt-24')}
+        >
+          <h2 className="mx-auto max-w-7xl px-5 text-3xl text-primary-9">Compare credit costs</h2>
+          <Plans plans={plans} />
+        </div>
+      </PageSection>
+      <PageSection>
+        <div
+          className={classNames('flex w-full flex-col', styleBlockFullWidth)}
+          style={{
+            marginTop: '3rem',
+            minHeight: '200px',
+          }}
+        >
+          {prices.length === 0 && creditsPacks.length === 0 ? (
+            <div style={{ padding: '1rem', color: '#666', backgroundColor: '#f5f5f5' }}>
+              No pricing data available.
+            </div>
+          ) : (
+            <div className="px-8 lg:px-[8.7vw]">
+              <PriceTable
+                prices={prices}
+                creditsPacks={creditsPacks}
+                backgroundTitle="bg-black/5"
+              />
+            </div>
+          )}
+        </div>
+      </PageSection>
     </>
   );
 }

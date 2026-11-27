@@ -1,23 +1,24 @@
-import { getAdoptersContent } from '@/services/sanity/api/get-adopters-content';
-import { getCellToBrainContent } from '@/services/sanity/api/get-cell-to-brain';
-import { getEmailContent } from '@/services/sanity/api/get-email-content';
 import {
+  getCellToBrainContent,
+  getEmailContent,
   getFoundationsLinks,
   getFoundationsText,
-} from '@/services/sanity/api/get-foundations-content';
-import { getMembers } from '@/services/sanity/api/get-members';
-import { getMilestones } from '@/services/sanity/api/get-milestones';
-import { getMissionDownload } from '@/services/sanity/api/get-mission-download';
-import { getMultipleMember } from '@/services/sanity/api/get-multiple-member';
-import { getNewsList } from '@/services/sanity/api/get-news-list';
-import { getPortalsList, getPortalsTitle } from '@/services/sanity/api/get-portals-content';
-import { getPriceListContent } from '@/services/sanity/api/get-price-list-content';
-import { getPricingFeatures } from '@/services/sanity/api/get-pricing-features';
-import { getRepositoriesContent } from '@/services/sanity/api/get-repositories-content';
-import { getSpecialContributors } from '@/services/sanity/api/get-special-contributors';
-import { getSwipeableList } from '@/services/sanity/api/get-swipeable-list';
-import { getVirtualLabsBlocks } from '@/services/sanity/api/get-virtual-labs-content';
-import { getWidgetHero } from '@/services/sanity/api/get-widget-hero';
+  getMembers,
+  getMilestones,
+  getMissionDownload,
+  getMultipleMember,
+  getNewsList,
+  getPortalsList,
+  getPortalsTitle,
+  getPriceListContent,
+  getPricingFeatures,
+  getRepositoriesContent,
+  getSpecialContributors,
+  getSwipeableList,
+  getVirtualLabsBlocks,
+  getWidgetHero,
+} from '@/content/website/content';
+import { getAdoptersContent } from '@/content/website/shared';
 import WidgetAdoptersLogo from '@/ui/segments/landing/widgets/adopters-logo/adopters-logo';
 import { WidgetCompanyMembers } from '@/ui/segments/landing/widgets/company-members/company-members';
 import { WidgetContributorsPanel } from '@/ui/segments/landing/widgets/contributors-panel/contributors-panel';
@@ -45,9 +46,13 @@ import type { ContentForRichTextWidget } from '@/services/sanity/types/rtf-conte
 
 interface SanityContentWidgetProps {
   value: ContentForRichTextWidget;
+  sectionSlug?: string;
 }
 
-export default async function SanityContentWidget({ value }: SanityContentWidgetProps) {
+export default async function SanityContentWidget({
+  value,
+  sectionSlug,
+}: SanityContentWidgetProps) {
   switch (value.name) {
     case 'downloadButton': {
       const data = await getMissionDownload();
@@ -59,7 +64,7 @@ export default async function SanityContentWidget({ value }: SanityContentWidget
     }
     case 'tripleBloc': {
       const data = await getVirtualLabsBlocks();
-      return <WidgetVirtualLabsPanel data={data} />;
+      return <WidgetVirtualLabsPanel data={data} compact={sectionSlug === 'mission'} />;
     }
     case 'highlight': {
       const [text, links] = await Promise.all([getFoundationsText(), getFoundationsLinks()]);
@@ -71,9 +76,11 @@ export default async function SanityContentWidget({ value }: SanityContentWidget
     }
     case 'contributors':
       return <WidgetContributorsPanel />;
+    // The Team section presents the group photo without individual profiles.
+    case 'memberTeam':
+      return null;
     case 'memberBoard':
-    case 'memberExecutiveBoard':
-    case 'memberTeam': {
+    case 'memberExecutiveBoard': {
       const data = await getMembers();
       return <WidgetCompanyMembers group={value.name} data={data} />;
     }

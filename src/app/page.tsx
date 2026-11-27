@@ -1,34 +1,25 @@
-import LandingPage from '@/ui/segments/landing';
-import { generateMetadataFromSanity } from '@/ui/segments/landing/metadata/metadata';
-import { EnumSection } from '@/ui/segments/landing/sections/sections';
+import { BrainsLanding } from '@/ui/segments/landing/brains-landing';
+import { LandingFirstPaint } from '@/ui/segments/landing/landing-first-paint';
+import { generateWebsiteMetadata } from '@/ui/segments/landing/metadata/metadata';
 
 import type { Metadata } from 'next';
 
+// Runtime configuration is injected by the root layout. Build-time rendering
+// would serialize the config module's build placeholder instead of deployment values.
 export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const metadata = await generateMetadataFromSanity('/');
+  const metadata = await generateWebsiteMetadata('/');
   return metadata;
 }
 
-export default async function RootPage({
-  searchParams: promisedParams,
-}: {
-  searchParams: Promise<{
-    errorcode: string | undefined;
-    original_code: string | undefined;
-    description: string | undefined;
-  }>;
-}) {
-  const searchParams = await promisedParams;
+/** The platform's landing: the Fly brain walkthrough, in place of the marketing home page. */
+export default function RootPage() {
+  // Public marketing content has no server session or async data to wait for.
   return (
-    <LandingPage
-      section={EnumSection.Home}
-      error={{
-        errorcode: searchParams.errorcode,
-        originalCode: searchParams.original_code,
-        description: searchParams.description,
-      }}
-    />
+    <>
+      <LandingFirstPaint />
+      <BrainsLanding />
+    </>
   );
 }

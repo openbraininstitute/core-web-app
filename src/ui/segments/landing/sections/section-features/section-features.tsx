@@ -1,6 +1,6 @@
-import { getFeaturesContent } from '@/services/sanity/api/get-features-content';
+import { getFeaturesContent } from '@/content/website/content';
 
-import FeatureScroller from './feature-scroller';
+import FeatureBlock from './feature-block';
 
 export default async function SectionFeatures() {
   const blocks = await getFeaturesContent();
@@ -13,5 +13,14 @@ export default async function SectionFeatures() {
     );
   }
 
-  return <FeatureScroller blocks={blocks} />;
+  return (
+    <div className="relative w-screen">
+      {blocks.map((block) => (
+        <FeatureBlock
+          key={block.titleH1 ?? block.titleH2 ?? JSON.stringify(block)}
+          content={block}
+        />
+      ))}
+    </div>
+  );
 }

@@ -29,7 +29,14 @@ import { KeptView } from './kept-view';
 import { AO_RADIUS_CSS, Occlusion } from './occlusion-gpu';
 import { somaCloudMaterials } from './soma-cloud-gpu';
 import { SomaCulling } from './soma-culling';
-import { checkHooks, FrameTimes, gpuTexture, threeLoop, trackTimestamps } from './three-hooks';
+import {
+  checkHooks,
+  FrameTimes,
+  gpuTexture,
+  releaseTimestamps,
+  threeLoop,
+  trackTimestamps,
+} from './three-hooks';
 
 import type { GlowRowsWriter } from '../cell-table';
 import type { Lost } from '../create-view';
@@ -110,6 +117,8 @@ export class CircuitMorphologyGPU extends CircuitView {
     });
     try {
       await renderer.init();
+      // None written until a frame is timed, and then only where no other renderer writes them.
+      trackTimestamps(renderer, false);
       if (signal?.aborted) throw signal.reason;
       checkHooks(renderer);
     } catch (e) {
@@ -217,6 +226,7 @@ export class CircuitMorphologyGPU extends CircuitView {
     this.arena?.culling.dispose();
     this.somaCulling?.dispose();
     this.frameTimes.dispose();
+    releaseTimestamps(this.renderer);
     this.renderer.dispose();
     this.device.destroy();
   }

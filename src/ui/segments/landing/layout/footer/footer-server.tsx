@@ -1,4 +1,4 @@
-import { getSocialMediaLinks } from '@/services/sanity/api/get-social-media';
+import { getSocialMediaLinks } from '@/content/website/shared';
 
 import FooterPanel from './footer-panel';
 

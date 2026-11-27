@@ -1,0 +1,146 @@
+﻿WEBVTT
+
+1
+00:00:00.000 --> 00:00:04.380
+<v 0>The notebook allows the user to simulate the metabolic response to a stimulation</v>
+
+2
+00:00:04.380 --> 00:00:06.450
+Step pulse first,
+
+3
+00:00:06.480 --> 00:00:11.160
+some useful packages are read in the initial concentrations and the
+
+4
+00:00:11.160 --> 00:00:13.440
+parameters are read from JSON files.
+
+5
+00:00:17.310 --> 00:00:20.280
+If you want to modify an initial value or parameter,
+
+6
+00:00:20.370 --> 00:00:23.160
+you can do it in the code after reading the JSON file.
+
+7
+00:00:26.160 --> 00:00:29.910
+In the next section, you can configure the stimulus and age properties.
+
+8
+00:00:31.050 --> 00:00:33.900
+You can specify the stimulus, onset and duration here,
+
+9
+00:00:34.380 --> 00:00:36.660
+as well as the total time of the simulation.
+
+10
+00:00:39.510 --> 00:00:43.830
+The most important parameter is the age, which can be set in a pull-down menu.
+
+11
+00:00:46.050 --> 00:00:50.850
+Next, we choose how the sodium potassium A TP ACE is handled with CAT being the
+
+12
+00:00:50.850 --> 00:00:52.200
+default and full,
+
+13
+00:00:52.200 --> 00:00:55.830
+allowing consideration of the effect of ageing on catalytic subunits.
+
+14
+00:00:58.590 --> 00:01:02.580
+The code also contains a switch for default or custom configurations,
+
+15
+00:01:02.760 --> 00:01:03.750
+which can be set here.
+
+16
+00:01:05.700 --> 00:01:08.100
+If the user chooses a custom configuration,
+
+17
+00:01:08.610 --> 00:01:11.550
+the use of specific custom routines can be indicated.
+
+18
+00:01:14.460 --> 00:01:19.110
+The type of stimulus is set here. You can choose synaptic stimulation,
+
+19
+00:01:19.410 --> 00:01:22.110
+or both synaptic and norepinephrine stimulation,
+
+20
+00:01:22.830 --> 00:01:24.420
+or a current injection.
+
+21
+00:01:25.740 --> 00:01:28.760
+The user can also opt to save the output. The
+
+22
+00:01:32.100 --> 00:01:36.390
+next section contains the logic needed to adjust the model for the young or aged
+
+23
+00:01:36.390 --> 00:01:37.223
+states.
+
+24
+00:01:42.480 --> 00:01:45.840
+<v 1>One can also modify the model to support a custom configuration.</v>
+
+25
+00:01:50.910 --> 00:01:53.010
+The stimulus effects are imposed in.
+
+26
+00:01:53.010 --> 00:01:57.720
+<v 0>The next code block. In this section,</v>
+
+27
+00:01:57.870 --> 00:01:59.940
+the equations are set up. There are.
+
+28
+00:01:59.940 --> 00:02:01.590
+<v 1>A large number of equations</v>
+
+29
+00:02:19.830 --> 00:02:23.520
+functions to support the differential. Equation solving are defined here.
+
+30
+00:02:26.370 --> 00:02:28.290
+Then the system can be solved
+
+31
+00:02:34.230 --> 00:02:37.680
+if the user has chosen to save the output. It is then saved.
+
+32
+00:02:42.960 --> 00:02:44.160
+The variable indices.
+
+33
+00:02:44.160 --> 00:02:46.500
+<v 0>In their identities are listed for convenience.</v>
+
+34
+00:02:50.580 --> 00:02:54.960
+The user can select which variables to plot by checking or unchecking the check
+
+35
+00:02:54.960 --> 00:02:59.560
+boxes. Two different selection sets are included in the default selections.
+
+36
+00:03:03.370 --> 00:03:05.230
+<v 1>Finally, the results are plotted.</v>
+

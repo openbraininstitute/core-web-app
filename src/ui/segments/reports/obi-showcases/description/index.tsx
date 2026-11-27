@@ -24,10 +24,23 @@ const PORTABLE_TEXT_COMPONENTS: Partial<PortableTextReactComponents> = {
   },
 };
 
-export default function DescriptionSection({ content }: { content: SanityShowcaseType }) {
+export default function DescriptionSection({
+  content,
+  light = false,
+}: {
+  content: SanityShowcaseType;
+  /** Blue on a pale panel, as the public site is, rather than white on a gradient. */
+  light?: boolean;
+}) {
   return (
     <div className="relative overflow-hidden">
-      <div className="relative w-full rounded-lg bg-linear-to-r from-blue-600 to-purple-600 p-8 text-white">
+      <div
+        className={
+          light
+            ? 'text-primary-9 relative w-full rounded-lg bg-[#edf2f8] p-8'
+            : 'relative w-full rounded-lg bg-linear-to-r from-blue-600 to-purple-600 p-8 text-white'
+        }
+      >
         <h1 className="mb-4 text-4xl font-bold">{content.name}</h1>
         <p className="mb-6 text-xl opacity-90">{content.introduction}</p>
 
