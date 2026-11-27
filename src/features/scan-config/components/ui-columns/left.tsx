@@ -1,16 +1,22 @@
-import { useAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 import { useEffect } from 'react';
 
 import { RootElement } from '@/features/scan-config/components/root-element';
 import { useConfigUpdateFlashes } from '@/features/scan-config/hooks/use-config-update-flashes';
 import { type ConfigSchema, isType, type TScanConfigActivity } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
-import { pendingRestoreConfigAtom, restorePreviewActiveAtom } from '@/state/config-highlights';
+import {
+  expandedRootElementsAtom,
+  pendingRestoreConfigAtom,
+  restorePreviewActiveAtom,
+} from '@/state/config-highlights';
 
 import { EditWithChatButton } from '../edit-with-chat-button';
 import GenerateConfigButton from '../generate-config-button';
 import GenerateNewCampaignButton from '../generate-new-campaign-button';
+import { ScanModePanel } from '../scan-mode/panel';
 
+import type { TScanMode } from '@/features/scan-config/components/scan-mode/scan-dimensions';
 import type { Config } from '@/features/scan-config/types';
 
 export default function Left({
@@ -18,6 +24,8 @@ export default function Left({
   selectedRootElement,
   setSelectedRootElement,
   setConfig,
+  scanMode,
+  setScanMode,
   campaignId,
   loading,
   selectedEntry,
@@ -37,6 +45,8 @@ export default function Left({
   selectedRootElement: string;
   setSelectedRootElement: (rootElement: string) => void;
   setConfig: (newConfig: Config) => void;
+  scanMode: TScanMode;
+  setScanMode: (mode: TScanMode) => void;
   campaignId: string;
   loading: boolean;
   selectedEntry: string;
@@ -55,6 +65,7 @@ export default function Left({
   const { aiConfig, setAiConfig } = useAIConfig();
   const [pendingRestoreConfig, setPendingRestoreConfig] = useAtom(pendingRestoreConfigAtom);
   const [restorePreviewActive] = useAtom(restorePreviewActiveAtom);
+  const setExpandedRootElements = useSetAtom(expandedRootElementsAtom);
 
   // Compute flash animations from config updates (replaces per-RootElement CustomEvent listeners)
   useConfigUpdateFlashes();
@@ -140,6 +151,18 @@ export default function Left({
         // Ruled off from the blocks, with room under it for its shadow, its foot level with the
         // preview's boxes.
         <div className="mt-auto w-full border-t border-gray-200 px-2 pt-3 pb-3">
+          <ScanModePanel
+            schema={schema}
+            mode={scanMode}
+            disabled={loading || !!campaignId}
+            onModeChange={setScanMode}
+            onPick={(dimension) => {
+              setExpandedRootElements((previous) => new Set(previous).add(dimension.root));
+              setSelectedRootElement(dimension.root);
+              setSelectedEntry(dimension.entry);
+              setEditing(true);
+            }}
+          />
           <GenerateConfigButton loading={loading} campaignId={campaignId} activity={activity} />
         </div>
       )}
