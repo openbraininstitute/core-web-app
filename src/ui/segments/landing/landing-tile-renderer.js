@@ -381,9 +381,47 @@ export function createLandingTileRenderer(
     g.restore();
   }
 
+  // (whiteField, the main landing only) a shadowed hexagon (user: html_Inject/tileShadow.png) over each field tile at
+  // rest, unseen on the small tiles near the floor and stronger the bigger and nearer the tile, up to 60% on the
+  // biggest one (user: 60%). Multiplied in, so it shades the white and leaves the icons as dark as they are.
+  const TILE_SHADOW = {
+    src: '/static/landing-v1/tile-shadow.png',
+    max: 0.6,
+    // tile radius at which it starts to show (a normal tile on the floor) and reaches `max` (the central tile)
+    from: R * SMALL_K,
+    to: FEATURE_SLOTS[0].r,
+  };
+  let tileShadow = null;
+  if (whiteField) {
+    const img = new Image();
+    img.onload = () => {
+      tileShadow = img;
+      kick();
+    };
+    img.src = TILE_SHADOW.src;
+  }
+  const tileShadowAlpha = (r) =>
+    TILE_SHADOW.max *
+    Math.min(1, Math.max(0, (r - TILE_SHADOW.from) / (TILE_SHADOW.to - TILE_SHADOW.from)));
+
   // one tile: cube at (x, y) with outline radius r (slot radius rs for the picture), turn position p (0..1),
-  // pictures pic0 / pic1 on the faces seen in view 0 / view 1 (null = white), lift height h and height shine
-  function drawTile(x, y, r, rs, p, pic0, pic1, h, shineX, shineAmt, shade, shadowK = 1) {
+  // pictures pic0 / pic1 on the faces seen in view 0 / view 1 (null = white), lift height h and height shine,
+  // overlay = how much of TILE_SHADOW to lay over it at rest (0 = none)
+  function drawTile(
+    x,
+    y,
+    r,
+    rs,
+    p,
+    pic0,
+    pic1,
+    h,
+    shineX,
+    shineAmt,
+    shade,
+    shadowK = 1,
+    overlay = 0
+  ) {
     const K = r * Math.sqrt(3 / 8),
       Ks = rs * Math.sqrt(3 / 8);
     const e = E0 + p * (E1 - E0);
@@ -465,6 +503,16 @@ export function createLandingTileRenderer(
       ctx.closePath();
     };
 
+    // the shadow image over the hexagon's own box (pointy-top, 2r high), multiplied in; the caller clips it
+    const shadowOver = () => {
+      if (overlay <= 0.001 || !tileShadow) return;
+      ctx.save();
+      ctx.globalAlpha = overlay;
+      ctx.globalCompositeOperation = 'multiply';
+      ctx.drawImage(tileShadow, x - (Math.sqrt(3) * r) / 2, y - r, Math.sqrt(3) * r, 2 * r);
+      ctx.restore();
+    };
+
     if (flatTurn) {
       const slice = p < 0.5 ? pic0 : pic1;
       squeezed(() => {
@@ -504,6 +552,7 @@ export function createLandingTileRenderer(
         ctx.drawImage(slice, x - sw / 2, y - sh / 2, sw, sh);
       }
       ctx.restore();
+      shadowOver();
       // face shading at rest too (picture tiles only): each visible cube face darkened by how much it faces away
       if (shade && !FLAT_AT_REST) {
         ctx.fillStyle = 'rgb(30, 45, 80)';
@@ -600,6 +649,9 @@ export function createLandingTileRenderer(
           bandFill((u) => a * band(u, q));
         }
       }
+      // while turning, the shadow stays on every face (at rest it is drawn above), so it does not drop out and
+      // come back at the end of the flip (user)
+      if (!atRest) shadowOver();
       ctx.restore();
     }
     if (atRest) restOutline();
@@ -1226,7 +1278,7 @@ export function createLandingTileRenderer(
     // one rolling down and away; false = the other way
     down: true,
   };
-  const centralSubjects = ['Brain Models', 'Build', 'Simulate', 'Notebooks'];
+  const centralSubjects = ['Build', 'Simulate', 'Notebooks'];
   let centralWaiting = [];
   let nextCentralSwap = Infinity;
   const nextCentralSubject = (current) => {
@@ -1858,7 +1910,8 @@ export function createLandingTileRenderer(
           c.motion * (c.hoverMove ? HOVER_SHINE : 1),
           c.role === 'feature' ? SHADE_PICTURE : SHADE_WHITE,
           // lighter along the flourish, as it fades out
-          1 - 0.45 * (c.fade || 0)
+          1 - 0.45 * (c.fade || 0),
+          whiteField && !(at.big > 0) ? tileShadowAlpha(c.displayRadius) : 0
         );
       // on its way to the ring's middle its cube melts away from round the example, which is left there on its own
       const t = c.role === 'feature' && heroBeside ? at.big : 0;
