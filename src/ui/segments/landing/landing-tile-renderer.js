@@ -1,4 +1,4 @@
-import { LANDING_MODELS as FEATURES } from './landing-models';
+import { landingModelsForViewport } from './landing-models';
 import { LANDING_SUBJECTS } from './landing-tile-icons';
 import { createLandingPlayback } from './landing-video-playback';
 import { limitTileOverlap, TILE_AXES } from './tile-overlap';
@@ -51,6 +51,7 @@ export function createLandingTileRenderer(
     onError = () => {},
   } = {}
 ) {
+  const FEATURES = landingModelsForViewport(heroAbove);
   // mulberry32, from the seed given; or the browser's own
   const random =
     seed == null
@@ -1608,8 +1609,8 @@ export function createLandingTileRenderer(
           const bottomEdge = FOOT - 34 - 26 * Math.sin(across * 12 + bottomPhase);
           if (
             Math.abs(p.x - 930) + p.r > phoneSpan / 2 - rand(8, 28) ||
-            p.y - p.r < topEdge ||
-            p.y + p.r > bottomEdge
+            p.y - p.r * 1.4 < topEdge ||
+            p.y + p.r * 1.4 > bottomEdge
           )
             continue;
           const behindModel =

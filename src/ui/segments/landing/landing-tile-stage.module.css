@@ -4,7 +4,7 @@
   overflow: hidden;
   container-type: size;
   /* white on white, the tiles told apart by their shadows alone */
-  background: #fff;
+  background: transparent;
   font-family: var(--font-info-titillium), Arial, sans-serif;
   color: #13306f;
 }
@@ -322,6 +322,11 @@
     left: calc(50% - 930px * var(--stage-scale));
     width: 1920px;
     height: calc(var(--phone-stage-h) * 1px);
+  }
+  /* Dissolve the artwork at its limits; never expose a straight canvas edge. */
+  .tiles {
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 88%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, black 10%, black 88%, transparent);
   }
   .headline {
     left: 20px;

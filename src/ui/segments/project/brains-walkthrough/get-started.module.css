@@ -178,6 +178,9 @@
 
 .brainArtwork {
   overflow: hidden;
+  background: transparent;
+  /* Composite the MP4's white pixels away without costly per-frame pixel processing. */
+  mix-blend-mode: multiply;
 }
 .mosaicVideo {
   display: block;

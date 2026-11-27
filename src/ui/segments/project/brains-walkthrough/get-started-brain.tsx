@@ -11,7 +11,9 @@ export function GetStartedBrain({ near = true }: { near?: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || !near) return;
+    // Re-evaluate responsive sources when this chapter becomes active.
+    video.load();
     let visible = false;
     const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
     const update = () => {
@@ -35,20 +37,33 @@ export function GetStartedBrain({ near = true }: { near?: boolean }) {
       preference.removeEventListener('change', update);
       document.removeEventListener('visibilitychange', update);
     };
-  }, []);
+  }, [near]);
   return (
     <div data-chapter-media className={styles.brainArtwork}>
       <video
         ref={videoRef}
-        src={near ? optimizedMedia('/images/start/walkthrough/get-started-mosaic.mp4') : undefined}
         poster={optimizedMedia('/images/start/walkthrough/get-started-mosaic.jpg', 'poster')}
         muted
         loop
         playsInline
-        preload="metadata"
+        preload={near ? 'auto' : 'none'}
         className={styles.mosaicVideo}
         aria-label="An animated mosaic of platform workflows, brain models, simulation results and teaching"
-      />
+      >
+        {near && (
+          <>
+            <source
+              media="(max-width: 799px)"
+              src={optimizedMedia('/images/start/walkthrough/get-started-mosaic.mp4', 'mobile')}
+              type="video/mp4"
+            />
+            <source
+              src={optimizedMedia('/images/start/walkthrough/get-started-mosaic.mp4')}
+              type="video/mp4"
+            />
+          </>
+        )}
+      </video>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import manifest from './optimized-media.json';
 
-type Variant = 'preview' | 'full' | 'chapter' | 'poster';
+type Variant = 'preview' | 'full' | 'chapter' | 'poster' | 'mobile';
 type MediaEntry = { src: string; bytes: number; originalBytes: number };
 const media: Record<string, Partial<Record<Variant, MediaEntry>>> = manifest;
 

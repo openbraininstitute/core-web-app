@@ -142,6 +142,11 @@
       "src": "/static/website-optimized/get-started-mosaic-chapter-dabab4959666.mp4",
       "bytes": 1199558,
       "originalBytes": 2495327
+    },
+    "mobile": {
+      "src": "/static/website-optimized/get-started-globe-mobile-19a17e5fb8d5.mp4",
+      "bytes": 1106299,
+      "originalBytes": 2495327
     }
   },
   "/static/landing-v1/fly-brain.jpg": {
@@ -244,9 +249,9 @@
   },
   "/images/start/walkthrough/get-started-mosaic.jpg": {
     "poster": {
-      "src": "/static/website-optimized/get-started-mosaic-91d16e7a3057.webp",
-      "bytes": 2806,
-      "originalBytes": 9247
+      "src": "/static/website-optimized/get-started-globe-poster-97029e6b98cb.webp",
+      "bytes": 16216,
+      "originalBytes": 34895
     }
   }
 }

@@ -66,3 +66,13 @@ export const LANDING_MODELS: readonly LandingModel[] = MODELS.map((model) => ({
       : optimizedMedia(model.video, 'preview')
     : undefined,
 }));
+
+/** Phones use the smaller full-length encodes; desktop keeps the chosen master quality. */
+export function landingModelsForViewport(phone: boolean): readonly LandingModel[] {
+  if (!phone) return LANDING_MODELS;
+  return MODELS.map((model, index) => ({
+    ...LANDING_MODELS[index],
+    video: model.video ? optimizedMedia(model.video, 'full') : undefined,
+    preview: model.video ? optimizedMedia(model.video, 'preview') : undefined,
+  }));
+}
