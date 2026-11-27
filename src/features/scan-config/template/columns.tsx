@@ -55,6 +55,8 @@ export function LeftColumn({ props, state }: ColumnProps) {
       selectedRootElement={state.selectedRootElement}
       setSelectedRootElement={state.setSelectedRootElement}
       setConfig={state.setConfig}
+      scanMode={state.scanMode}
+      setScanMode={state.setScanMode}
       campaignId={state.campaignId}
       loading={state.loading}
       selectedEntry={state.selectedEntry}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useSetAtom } from 'jotai';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { diffBarDataAtom } from '@/features/ai-assistant/chat/use-last-message-diff-bar';
 import { showRestoreAtom } from '@/features/ai-assistant/message-item/collapsible-message/collapsible-message';
@@ -10,6 +10,13 @@ import { useSetScanConfigEntityPreview } from '@/features/scan-config/bridge/ent
 import { createEntry as createEntryCommand } from '@/features/scan-config/commands';
 import { useConfigStoreSetup } from '@/features/scan-config/components/hooks/schema';
 import { clearScanValueSelectionAtom } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
+import {
+  coupled,
+  ScanMode,
+  type TScanMode,
+  withCoupledEdits,
+  withoutTrailingBlanks,
+} from '@/features/scan-config/components/scan-mode/scan-dimensions';
 import { withoutEmptyRegions } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import {
   resolveScanConfigTab,
@@ -78,7 +85,7 @@ export function useScanConfigTemplate({
     () => loadedConfig && withoutEmptyRegions(loadedConfig, schema),
     [loadedConfig, schema]
   );
-  const configStore = useConfigStoreSetup({
+  const rawConfigStore = useConfigStoreSetup({
     schema,
     initialConfig,
     model: entity,
@@ -87,7 +94,25 @@ export function useScanConfigTemplate({
     resolveFromIdType: resolveSessionFromIdType,
     seed,
   });
+  const [scanMode, setScanModeState] = useState<TScanMode>(ScanMode.Grid);
+  const scanModeRef = useRef<TScanMode>(ScanMode.Grid);
+  const configStore = useMemo(
+    () => withCoupledEdits(rawConfigStore, schema, () => scanModeRef.current === ScanMode.Coupled),
+    [rawConfigStore, schema]
+  );
   const setConfig = configStore.set;
+  const setScanMode = useCallback(
+    (mode: TScanMode) => {
+      scanModeRef.current = mode;
+      setScanModeState(mode);
+      rawConfigStore.set((previous) =>
+        mode === ScanMode.Coupled
+          ? coupled(previous, schema)
+          : withoutTrailingBlanks(previous, schema)
+      );
+    },
+    [rawConfigStore, schema]
+  );
   const editingLocked = useScanConfigEditingLocked({
     campaignId,
     loading,
@@ -214,6 +239,8 @@ export function useScanConfigTemplate({
     initialConfig,
     setConfig,
     configStore,
+    scanMode,
+    setScanMode,
     editingLocked,
     createEntry,
     selectedSchema,
