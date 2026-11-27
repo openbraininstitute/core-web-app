@@ -5,9 +5,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   createContext,
+  startTransition,
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -277,13 +279,8 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   const finishIntro = useCallback(() => setIntroState('done'), []);
   // From the click, wheel or key that enters until the intro comes back: what floats over it goes then.
   const [introLeft, setIntroLeft] = useState(false);
-  // Keep the public landing mounted while it moves upward with the incoming chapter.
-  useEffect(() => {
-    if (!introContent || !introLeft || introDone) return;
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const timer = window.setTimeout(finishIntro, reduced ? 0 : INTRO.scroll);
-    return () => window.clearTimeout(timer);
-  }, [introContent, introLeft, introDone, finishIntro]);
+  const ownLanding = !!introContent;
+  const introSpace = useRef(false);
 
   // On the public landing the logo stands over its words, where the landing marks (`data-landing-logo-at`), and glides
   // up into its corner with the page as the landing goes, and back down with it.
@@ -405,15 +402,19 @@ export function Walkthrough<C extends IWalkthroughChapter>({
 
   /** The page taken to a place at the pace of the landing's scroll, which the browser's own cannot be slowed to; how long it takes, ms. */
   const glideTo = useCallback(
-    (to: number): number => {
+    (to: number, completed?: () => void): number => {
       if (!root) return 0;
       glide.current?.stop();
       glide.current = null;
       glideTarget.current = null;
       const distance = Math.abs(to - root.scrollTop);
-      if (distance < 2) return 0;
+      if (distance < 2) {
+        completed?.();
+        return 0;
+      }
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         root.scrollTop = to;
+        completed?.();
         return 0;
       }
       glideTarget.current = to;
@@ -441,6 +442,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
         onComplete: () => {
           glide.current = null;
           glideTarget.current = null;
+          completed?.();
         },
       });
       return ms;
@@ -448,6 +450,30 @@ export function Walkthrough<C extends IWalkthroughChapter>({
     [root, chapters.length]
   );
   useEffect(() => () => glide.current?.stop(), []);
+
+  // Put the public landing in the same scrolling document as the chapters. Move its actual
+  // scroll position through glideTo, then remove the temporary first screen without a jump.
+  useLayoutEffect(() => {
+    if (!ownLanding || !root) return;
+    const screen = root.clientHeight;
+    if (introDone) {
+      if (introSpace.current) {
+        root.scrollTop = Math.max(0, root.scrollTop - screen);
+        introSpace.current = false;
+      }
+      return;
+    }
+    if (!introSpace.current) {
+      introSpace.current = true;
+      if (introState === 'returning') root.scrollTop += screen;
+    }
+    if (introState === 'returning') {
+      glideTo(0);
+    } else if (introLeft) {
+      navigationUntil.current = Date.now() + INTRO.scroll + 300;
+      glideTo(screen, finishIntro);
+    }
+  }, [ownLanding, root, introDone, introState, introLeft, glideTo, finishIntro]);
 
   const placedSections = useCallback(
     () => sections.current.filter((section): section is HTMLElement => section !== null),
@@ -471,13 +497,10 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   const [floated, setFloated] = useState(0);
   const floatReady = useCallback(() => setFloated((built) => built + 1), []);
   // Back to the intro from the first screen, by the wheel, a key or its arrow.
-  const ownLanding = !!introContent;
   const backToIntro = useCallback(() => {
     setIntroState('returning');
-    // A host's own landing is drawn above the page first, where it left for, to come down with it.
-    if (ownLanding) requestAnimationFrame(() => requestAnimationFrame(() => setIntroLeft(false)));
-    else setIntroLeft(false);
-  }, [ownLanding]);
+    setIntroLeft(false);
+  }, []);
   // Entering asked for by what floats over the intro, as a click on the intro itself would.
   const [enterAsked, setEnterAsked] = useState(0);
   const askEnter = useCallback(() => setEnterAsked((asked) => asked + 1), []);
@@ -779,15 +802,17 @@ export function Walkthrough<C extends IWalkthroughChapter>({
     externalProgress: chapter.externalProgress,
   });
   // While the intro is up, the first screen waits a page below it, and scrolls up as it leaves.
-  const underIntro: CSSProperties = LANDING_PEELS
-    ? {
-        transform: intro && !introDone && !introLeft ? 'translateY(100vh)' : 'none',
-        transition: SCROLL,
-      }
-    : {
-        opacity: intro && !introDone && !introLeft ? 0 : 1,
-        transition: `opacity ${INTRO.scroll}ms ease ${INTRO.scroll / 4}ms`,
-      };
+  const underIntro: CSSProperties = introContent
+    ? {}
+    : LANDING_PEELS
+      ? {
+          transform: intro && !introDone && !introLeft ? 'translateY(100vh)' : 'none',
+          transition: SCROLL,
+        }
+      : {
+          opacity: intro && !introDone && !introLeft ? 0 : 1,
+          transition: `opacity ${INTRO.scroll}ms ease ${INTRO.scroll / 4}ms`,
+        };
 
   const page = (
     <EnteredContext.Provider value={introDone || introLeft}>
@@ -900,28 +925,37 @@ export function Walkthrough<C extends IWalkthroughChapter>({
               <div
                 className={publicTour.landingTransition}
                 data-leaving={introLeft || undefined}
-                style={{ '--landing-exit-ms': `${INTRO.scroll}ms` } as CSSProperties}
                 inert={introLeft || undefined}
               >
                 {introContent({
                   continue: () => {
                     wheelHeldUntil.current = performance.now() + INTRO.scroll + 450;
-                    root?.scrollTo({ top: 0, behavior: 'instant' });
-                    setVisualChapter(0);
-                    setIntroLeft(true);
+                    startTransition(() => {
+                      setIntroState('playing');
+                      setVisualChapter(0);
+                      setIntroLeft(true);
+                    });
                   },
                   goTo: (id) => {
                     pendingIntroChapter.current = id;
-                    setVisualChapter(
-                      Math.max(
-                        0,
-                        chapters.findIndex((chapter) => chapter.id === id)
-                      )
-                    );
-                    setIntroLeft(true);
+                    // Keep the current screen painted if mounting the first chapter suspends.
+                    // Start the scroll only when that chapter is ready to commit.
+                    startTransition(() => {
+                      setIntroState('playing');
+                      setVisualChapter(
+                        Math.max(
+                          0,
+                          chapters.findIndex((chapter) => chapter.id === id)
+                        )
+                      );
+                      setIntroLeft(true);
+                    });
                   },
                 })}
               </div>
+            )}
+            {ownLanding && !introDone && (
+              <div aria-hidden="true" data-landing-spacer className="h-(--chapter-h)" />
             )}
             {/* The stage's scenes take the pointer, unless one lets it through to what floats under it. */}
             <div

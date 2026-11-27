@@ -4,6 +4,7 @@ type LandingModel = {
   label: string;
   img: string;
   video?: string;
+  originalVideo?: boolean;
   preview?: string;
   heroBounds?: { x: number; y: number; width: number; height: number };
   zoom: number;
@@ -17,6 +18,16 @@ type LandingModel = {
 /** The landing's three films (this version: shown one at a time beside the white tile field). */
 const MODELS: readonly LandingModel[] = [
   {
+    label: 'Experiment with neural circuits',
+    img: '/static/landing-v1/microcircuits.jpg',
+    video: '/static/landing-v1/microcircuits.mp4',
+    originalVideo: true,
+    heroBounds: { x: 0.31328, y: 0.08472, width: 0.36953, height: 0.83056 },
+    zoom: 1.7,
+    hero: 640,
+    alt: 'Simulated cortical microcircuit, its neurons firing',
+  },
+  {
     label: 'Simulate whole-brain activity',
     img: '/static/landing-v1/fly-brain.jpg',
     // a turning loop: the tile shows its frames as it plays, the picture until then
@@ -25,15 +36,6 @@ const MODELS: readonly LandingModel[] = [
     zoom: 0.68,
     hero: 700,
     alt: "The male fly's brain and nerve cord, lit as its model's neurons fire",
-  },
-  {
-    label: 'Experiment with neural circuits',
-    img: '/static/landing-v1/microcircuits.jpg',
-    video: '/static/landing-v1/microcircuits.mp4',
-    heroBounds: { x: 0.31328, y: 0.08472, width: 0.36953, height: 0.83056 },
-    zoom: 1.7,
-    hero: 640,
-    alt: 'Simulated cortical microcircuit, its neurons firing',
   },
   {
     label: 'Extract skeletons and spines',
@@ -49,10 +51,18 @@ const MODELS: readonly LandingModel[] = [
   },
 ];
 
-// Automatic three-second tour uses teasers. Picking a tile plays its complete optimized movie.
+// Keep the column at original quality; the other models use their optimized media variants.
 export const LANDING_MODELS: readonly LandingModel[] = MODELS.map((model) => ({
   ...model,
   img: optimizedMedia(model.img, 'poster'),
-  video: model.video ? optimizedMedia(model.video, 'full') : undefined,
-  preview: model.video ? optimizedMedia(model.video, 'preview') : undefined,
+  video: model.video
+    ? model.originalVideo
+      ? model.video
+      : optimizedMedia(model.video, 'full')
+    : undefined,
+  preview: model.video
+    ? model.originalVideo
+      ? model.video
+      : optimizedMedia(model.video, 'preview')
+    : undefined,
 }));

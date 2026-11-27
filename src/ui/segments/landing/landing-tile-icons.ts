@@ -6,7 +6,7 @@ const SUBJECT_WORDS = [
   'Explore',
   'Build',
   'Simulate',
-  'Analyse',
+  'Analyze',
   'Brain Regions',
   'Morphologies',
   'Traces',
@@ -23,6 +23,7 @@ const SUBJECT_WORDS = [
 export const LANDING_SUBJECTS: ReadonlyArray<{ word: string; icon: string }> = SUBJECT_WORDS.map(
   (word) => ({
     word,
-    icon: `/static/landing-v1/icons/${word.toLowerCase().replace(/ /g, '-')}.png`,
+    // Retain the supplied artwork's filename while displaying the requested label.
+    icon: `/static/landing-v1/icons/${word === 'Analyze' ? 'analyse' : word.toLowerCase().replace(/ /g, '-')}.png`,
   })
 );

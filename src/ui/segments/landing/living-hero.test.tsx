@@ -63,7 +63,7 @@ afterEach(() => {
 });
 
 describe('public science opening', () => {
-  it('opens on the fly brain with the headline and working CTA', () => {
+  it('opens on the first model with the headline and working CTA', () => {
     render(<LivingHero onContinue={vi.fn()} onChapter={vi.fn()} />);
     expect(screen.getByTestId('science-caption')).toHaveTextContent(
       LANDING_MODELS[FIRST_SCENE].label
@@ -84,19 +84,21 @@ describe('public science opening', () => {
     expect(onContinue).not.toHaveBeenCalled();
   });
 
-  it('goes on to the first chapter 5 s after the landing is in, once a page load', () => {
+  it('uses the chapter selector transition after eight seconds, once per page load', () => {
     const onContinue = vi.fn();
-    const { unmount } = render(<LivingHero onContinue={onContinue} onChapter={vi.fn()} />);
+    const onChapter = vi.fn();
+    const { unmount } = render(<LivingHero onContinue={onContinue} onChapter={onChapter} />);
     act(() => window.dispatchEvent(new Event('landing-way-in')));
     act(() => vi.advanceTimersByTime(LANDING_AUTO_CONTINUE_MS - 1));
-    expect(onContinue).not.toHaveBeenCalled();
+    expect(onChapter).not.toHaveBeenCalled();
     act(() => vi.advanceTimersByTime(1));
-    expect(onContinue).toHaveBeenCalledTimes(1);
+    expect(onChapter).toHaveBeenCalledExactlyOnceWith('start');
+    expect(onContinue).not.toHaveBeenCalled();
     unmount();
-    render(<LivingHero onContinue={onContinue} onChapter={vi.fn()} />);
+    render(<LivingHero onContinue={onContinue} onChapter={onChapter} />);
     act(() => window.dispatchEvent(new Event('landing-way-in')));
     act(() => vi.advanceTimersByTime(20_000));
-    expect(onContinue).toHaveBeenCalledTimes(1);
+    expect(onChapter).toHaveBeenCalledTimes(1);
   });
 
   it('lets tile selection update the hero without advancing away during interaction', () => {

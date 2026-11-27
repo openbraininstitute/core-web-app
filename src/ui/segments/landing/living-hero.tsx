@@ -11,11 +11,11 @@ import { LANDING_WAY_IN, LandingTileStage } from './landing-tile-stage';
 
 import styles from './living-hero.module.css';
 
-/** The scene the opening shows first: the fly's brain and nerve cord turning as its model runs. */
+/** Open with the cortical column, followed by FlyWire and the skeleton neuron. */
 export const FIRST_SCENE = 0;
 /** How long the landing stands, once all of it is in, before it glides on to the first chapter by itself, ms (the
  * logo going up into its corner as it does); once a page load, not again on coming back to it. */
-export const LANDING_AUTO_CONTINUE_MS = 5000;
+export const LANDING_AUTO_CONTINUE_MS = 8000;
 let autoContinued = false;
 /** The three-second tour of every model, then on into Virtual Labs (off in this version: the films loop beside the
  * field on their own, LandingTileStage's FILM_MS, and the landing goes on after LANDING_AUTO_CONTINUE_MS). */
@@ -50,10 +50,10 @@ export function LivingHero({
     const timer = window.setTimeout(() => {
       if (interacted.current) return;
       autoContinued = true;
-      onContinue();
+      onChapter(BRAIN_THEME_LINKS['Virtual Labs']);
     }, LANDING_AUTO_CONTINUE_MS);
     return () => window.clearTimeout(timer);
-  }, [wayIn, reduced, onContinue]);
+  }, [wayIn, reduced, onChapter]);
   const lastIn = {
     opacity: wayIn ? 1 : 0,
     transition: 'opacity 700ms ease',

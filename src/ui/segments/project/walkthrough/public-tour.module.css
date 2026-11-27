@@ -1,5 +1,6 @@
 .publicTour {
   font-weight: 300;
+  overflow-anchor: none;
   --chapter-text-inset: clamp(32px, 5vw, 88px);
   --chapter-title-size: clamp(30px, 3.2vw, 50px);
   --chapter-copy-size: clamp(15px, 1.15vw, 17px);
@@ -145,7 +146,7 @@
   .publicTour .publicText,
   .publicTour .publicText[data-chapter-text="agents"] {
     width: 100%;
-    padding: calc(var(--stage-video-top) + var(--stage-video-h) + 28px) 20px 104px;
+    padding: calc(var(--stage-video-top) + var(--stage-video-h) + 48px) 20px 104px;
   }
   .publicTour .publicText h1,
   .publicTour .publicText h2 {
@@ -319,7 +320,7 @@
   }
 
   .publicTour .publicText[data-chapter-text="agents"] {
-    padding-top: 124px;
+    padding-top: 144px;
   }
 
   .publicTour :global(#walkthrough-agents) > :global([data-chapter-stage]) {
@@ -354,15 +355,12 @@
 }
 
 .landingTransition {
-  position: fixed;
-  inset: 0;
+  position: absolute;
+  inset: 0 0 auto;
+  height: var(--chapter-h, 100vh);
   z-index: 60;
-  /* it fades where it is, over the tiles that stay behind the chapters (walkthrough.tsx LANDING_PEELS) */
-  opacity: 1;
-  transition: opacity calc(var(--landing-exit-ms, 900ms) * 0.8) ease;
 }
 .landingTransition[data-leaving] {
-  opacity: 0;
   pointer-events: none;
 }
 /* The chapters' own timeline takes over in the same place, so the one line stays put as the page goes up. */
@@ -370,6 +368,9 @@
   visibility: hidden;
 }
 @media (prefers-reduced-motion: reduce) {
+  .publicTour {
+    --tour-motion: 0;
+  }
   .landingTransition {
     transition: none;
   }
@@ -377,7 +378,7 @@
 
 @media (max-width: 63.999rem) and (orientation: portrait) {
   .publicTour .publicText[data-chapter-text="join"] {
-    padding-top: calc(var(--stage-video-top) + var(--stage-video-h) + 28px);
+    padding-top: calc(var(--stage-video-top) + var(--stage-video-h) + 48px);
   }
 }
 

@@ -1,6 +1,7 @@
 import { LANDING_MODELS as FEATURES } from './landing-models';
 import { LANDING_SUBJECTS } from './landing-tile-icons';
 import { createLandingPlayback } from './landing-video-playback';
+import { limitTileOverlap, TILE_AXES } from './tile-overlap';
 
 /**
  * Canvas artwork adapted from LandingPage_V1; application UI stays in React.
@@ -126,7 +127,7 @@ export function createLandingTileRenderer(
   // edge almost touches a picture tile; a fade of lower, smaller ones round them; a few tiny ones for depth ----
   // (smaller in step with the picture tiles on a phone)
   const SMALL_K = heroAbove ? PHONE.medium / 97 : 1;
-  const SMALL_COUNT = 8,
+  const SMALL_COUNT = heroAbove ? 8 : 10,
     SMALL_R = [65 * SMALL_K, 84 * SMALL_K],
     SMALL_GAP = 6,
     SMALL_ON_BIG = 0.2;
@@ -270,6 +271,20 @@ export function createLandingTileRenderer(
         ref1: corners.map((c) => proj(c, E1)),
       });
     }
+  const restingFootprints = new Map();
+  const footprintAt = (p) => {
+    const cached = restingFootprints.get(p);
+    if (cached) return cached;
+    const points = FACES.flatMap((face) =>
+      face.corners.map((point) => proj(point, E0 + p * (E1 - E0)))
+    );
+    const supports = TILE_AXES.map(
+      ([nx, ny]) =>
+        Math.max(...points.map(([x, y]) => Math.abs(x * nx + y * ny))) * Math.sqrt(3 / 8)
+    );
+    if (p === 0 || p === 1) restingFootprints.set(p, supports);
+    return supports;
+  };
   // affine map taking the triangle s0,s1,s2 onto d0,d1,d2 (canvas transform order a,b,c,d,e,f)
   function affine(s, d) {
     const sx1 = s[1][0] - s[0][0],
@@ -1249,9 +1264,9 @@ export function createLandingTileRenderer(
     out: { reach: [120, 420], cone: 70, gain: 50, depth: 3, most: 18, two: 0.6 }, // further out: within `cone` degrees of
     // straight out, `gain` px further from the middle at least; `depth` steps out; `most` tiles in all
     across: 3, // lines across between tiles of the tree
-    fieldX1: 1290, // none reaching into the films' third
-    fieldY: [100, 820], // nor up to the top bar or down to the chapters along the foot
-    words: { x0: 0, x1: 650, y0: 200, y1: 700 }, // nothing over the logo, the slogan and the way in
+    fieldX1: heroAbove ? PHONE.x1 : 1290, // none reaching into the films' third
+    fieldY: heroAbove ? [PHONE.fieldTop, FOOT] : [100, 850], // nor up to the top bar or down to the chapters along the foot
+    words: { x0: 0, x1: heroAbove ? 0 : 650, y0: 200, y1: 700 }, // nothing over the logo, the slogan and the way in
     after: 100, // Bring the capability icons in as soon as the central tile rises.
     draw: 420, // ms for a line to run out
     gap: 60, // ms between one line and those going on from where it ends
@@ -1260,9 +1275,9 @@ export function createLandingTileRenderer(
     icon: 30, // px
     iconUp: 14, // px the icon's middle is above the tile's
     // (lines hidden) a word only on a tile big enough for it, and well apart from the next word
-    labelTile: 60, // px, the tile's size at rest (middle to corner) at least
-    labelApart: 170, // px between the middles of two tiles with words
-    labels: 9, // (lines hidden) how many tiles get one
+    labelTile: heroAbove ? 52 : 58, // px, the tile's size at rest (middle to corner) at least
+    labelApart: heroAbove ? 140 : 170, // px between the middles of two tiles with words
+    labels: heroAbove ? 4 : 14, // (lines hidden) how many tiles get one
   };
   // (with the lines) the words; without them, the subjects, more than there are tiles for them: those not shown wait
   // their turn, a few tiles at a time turning over to one of them (as the information pages' tiles turn over)
@@ -1278,7 +1293,18 @@ export function createLandingTileRenderer(
     // one rolling down and away; false = the other way
     down: true,
   };
-  const centralSubjects = ['Explore', 'Build', 'Simulate', 'Notebooks'];
+  const centralSubjects = [
+    'Explore',
+    'Build',
+    'Simulate',
+    'Analyze',
+    'Notebooks',
+    'Workflows',
+    'Flywire',
+    'Brain Regions',
+    'Multi-Species',
+    'Traces',
+  ];
   let centralWaiting = [];
   let nextCentralSwap = Infinity;
   const nextCentralSubject = (current) => {
@@ -1346,10 +1372,15 @@ export function createLandingTileRenderer(
     if (!root) return [];
     const centre = homeOf(root);
     const pool = cells.filter((c) => {
-      if (!c.role || c === heroCell || c === root || Math.max(c.base, c.lift) <= 0.05) return false;
+      if (!c.role || c.under || c === heroCell || c === root || Math.max(c.base, c.lift) <= 0.05)
+        return false;
       const p = homeOf(c);
       return (
-        p.x < LINKS.fieldX1 && p.y > LINKS.fieldY[0] && p.y < LINKS.fieldY[1] && !inWords(p.x, p.y)
+        p.x < LINKS.fieldX1 &&
+        p.y > LINKS.fieldY[0] &&
+        p.y < LINKS.fieldY[1] &&
+        !inWords(p.x, p.y) &&
+        (heroAbove || p.x - Math.max(restR(c), LINKS.labelTile) >= LINKS.words.x1)
       );
     });
     const used = new Set([root]),
@@ -1424,10 +1455,11 @@ export function createLandingTileRenderer(
     for (const { a, b } of pairs.slice(0, LINKS.across))
       made.push({ a, b, depth: deepest + 1, fromRim: false });
     // a word for each tile reached (with the lines hidden, only on those big enough and apart), each its own
+    const centralFirst = nextCentralSubject();
     const words = (
       LINKS.lines
         ? LINK_WORDS
-        : LANDING_SUBJECTS.map((s) => s.word).filter((word) => !centralSubjects.includes(word))
+        : LANDING_SUBJECTS.map((s) => s.word).filter((word) => word !== centralFirst)
     )
       .slice()
       .sort(() => random() - 0.5);
@@ -1439,19 +1471,84 @@ export function createLandingTileRenderer(
           .slice()
           .sort((u, v) => fromRoot(u) - fromRoot(v))
           .map((b) => ({ b }));
-    for (const l of reach) {
-      const c = l.b;
+    for (const link of reach) {
+      const c = link.b;
       if (!LINKS.lines && labelled.length >= LINKS.labels) break;
       if (linkWords.has(c) || labelled.includes(c)) continue;
       if (!LINKS.lines) {
-        const p = homeOf(c);
         if (restR(c) < LINKS.labelTile) continue;
+        const p = homeOf(c);
         if (
-          labelled.some((o) => Math.hypot(homeOf(o).x - p.x, homeOf(o).y - p.y) < LINKS.labelApart)
+          labelled.some(
+            (other) => Math.hypot(homeOf(other).x - p.x, homeOf(other).y - p.y) < LINKS.labelApart
+          )
         )
           continue;
       }
       labelled.push(c);
+    }
+    // Fill existing blank tiles more closely so every desktop capability stays visible.
+    // Keep the main arrangement and the surrounding decorative tiles intact.
+    if (!heroAbove && !LINKS.lines && labelled.length < LANDING_SUBJECTS.length - 1) {
+      for (const spacing of [145, 125, 105]) {
+        for (const { b: c } of reach) {
+          if (labelled.length >= LANDING_SUBJECTS.length - 1) break;
+          if (labelled.includes(c) || restR(c) < 52) continue;
+          const p = homeOf(c);
+          if (
+            labelled.some(
+              (other) => Math.hypot(homeOf(other).x - p.x, homeOf(other).y - p.y) < spacing
+            )
+          )
+            continue;
+          labelled.push(c);
+        }
+        if (labelled.length >= LANDING_SUBJECTS.length - 1) break;
+      }
+    }
+    if (!heroAbove && !LINKS.lines) {
+      // Complete the compact cluster rather than making visitors wait for missing subjects.
+      // Empty decorative tiles remain underneath; the overlap guard clears them around icons.
+      const taken = new Set(cells.filter((c) => c.role));
+      for (const radius of [60, 54, 48, 42]) {
+        const candidates = [];
+        for (let y = 120; y <= 810; y += 25)
+          for (let x = LINKS.words.x1 + radius + 14; x <= 1210; x += 25)
+            candidates.push({ x, y, r: radius });
+        candidates.sort(
+          (a, b) =>
+            Math.hypot(a.x - centre.x, a.y - centre.y) - Math.hypot(b.x - centre.x, b.y - centre.y)
+        );
+        for (const p of candidates) {
+          if (labelled.length >= LANDING_SUBJECTS.length - 1) break;
+          const occupied = [root, ...labelled].map((c) => ({ ...homeOf(c), r: restR(c) }));
+          if (!fits(p, occupied, 12)) continue;
+          const c = claimCell(p, taken);
+          c.role = 'small';
+          c.base = 0;
+          c.lift = hForRadius(radius);
+          c.order = c.lift;
+          c.start = 0;
+          c.under = false;
+          labelled.push(c);
+        }
+      }
+    }
+    if (heroAbove && !LINKS.lines) {
+      // Frame the phone model on both sides, rather than putting its icons in a row below.
+      root.home = { x: 600, y: 335, k: 1, big: 0 };
+      const positions = [
+        { x: 650, y: 110 },
+        { x: 1240, y: 110 },
+        { x: 650, y: 580 },
+        { x: 1240, y: 580 },
+      ];
+      labelled.forEach((c, i) => {
+        c.home = { ...positions[i], k: 1, big: 0 };
+        c.still = true;
+        c.iconSlot = true;
+      });
+      root.iconSlot = true;
     }
     // the central tile too, first, the others then on outwards from it (user)
     if (!LINKS.lines) labelled.unshift(root);
@@ -1459,13 +1556,20 @@ export function createLandingTileRenderer(
       linkWords.set(
         c,
         !LINKS.lines && c === root
-          ? nextCentralSubject()
+          ? centralFirst
           : words[(i - (LINKS.lines ? 0 : 1)) % words.length]
       );
       labelAt.set(c, i * LINKS.step);
     });
     waiting = words.slice(labelled.length - (LINKS.lines ? 0 : 1));
-    subjectPool = pool.filter((c) => restR(c) >= LINKS.labelTile);
+    subjectPool = heroAbove
+      ? labelled.filter((c) => c !== root)
+      : [
+          ...new Set([
+            ...labelled.filter((c) => c !== root),
+            ...pool.filter((c) => restR(c) >= LINKS.labelTile),
+          ]),
+        ];
     // one after another outwards: each line starts as the one it goes on from has run out
     const ends = new Map([[root, 0]]);
     for (const l of made.sort((u, v) => u.depth - v.depth)) {
@@ -1509,6 +1613,8 @@ export function createLandingTileRenderer(
     g.textAlign = 'center';
     g.textBaseline = 'top';
     g.fillStyle = LINKS.text;
+    const textWidth = g.measureText(word).width;
+    if (textWidth > w - 12) g.font = `600 ${size * ((w - 12) / textWidth)}px ${subjectFont}`;
     g.fillText(word, w / 2, top + icon_ + gap);
     subjectSlices.set(key, slice);
     return slice;
@@ -1555,10 +1661,28 @@ export function createLandingTileRenderer(
       }
     }
     const root = cellAt[0];
-    if (!reduceMotion && root?.introduced && root.turnStart < 0 && now >= nextCentralSwap) {
+    if (
+      allIn &&
+      !reduceMotion &&
+      root?.introduced &&
+      root.turnStart < 0 &&
+      now >= nextCentralSwap
+    ) {
       const next = nextCentralSubject(root.subject);
-      if (subjectSlice(root, next)) {
+      const partner = subjectPool.find((c) => c.subject === next);
+      if (
+        subjectSlice(root, next) &&
+        (!partner || (partner.turnStart < 0 && subjectSlice(partner, root.subject)))
+      ) {
+        const previous = root.subject;
         turnTo(root, next, now);
+        if (partner) {
+          // Exchange the two subjects so the desktop keeps all fifteen unique icons visible.
+          turnTo(partner, previous, now);
+        } else {
+          const waitingIndex = waiting.indexOf(next);
+          if (waitingIndex >= 0) waiting.splice(waitingIndex, 1, previous);
+        }
         centralWaiting.shift();
         nextCentralSwap = now + SUBJECTS.swap;
       }
@@ -1858,8 +1982,31 @@ export function createLandingTileRenderer(
       const [sx, sy] = shiftAt(c, now);
       return { c, x: at.x + dx + sx, y: at.y + dy + sy, r: radiusOf(c) * at.k };
     });
+    const phoneIcons = heroAbove ? geometry.filter((tile) => tile.c.iconSlot) : [];
     for (const tile of geometry) {
       tile.c.displayRadius = tile.r;
+      if (
+        heroAbove &&
+        whiteField &&
+        !tile.c.iconSlot &&
+        tile.c !== heroCell &&
+        phoneIcons.some((icon) => fitRadius(tile.x, tile.y, icon, 12) < tile.r)
+      ) {
+        tile.c.displayRadius = 0;
+        continue;
+      }
+      if (whiteField && !heroAbove && (tile.c.subject || linkWords.has(tile.c))) {
+        const c = tile.c;
+        const f =
+          c.turnStart < 0
+            ? 0
+            : Math.min(1, Math.max(0, (now - c.turnStart - c.turnDelay) / (c.turnDur || FLIP_DUR)));
+        const p = c.turnStart < 0 ? c.orient : c.orient === 0 ? turnEase(f) : 1 - turnEase(f);
+        tile.c.displayRadius = Math.min(
+          tile.c.displayRadius,
+          Math.max(0, (tile.x - LINKS.words.x1) / footprintAt(p)[0])
+        );
+      }
       // (whiteField) as laid out, not as they wander and grow: a tile does not come and go on its own
       if (whiteField) {
         if (tile.c.under) tile.c.displayRadius = 0;
@@ -1876,6 +2023,38 @@ export function createLandingTileRenderer(
         }
         tile.c.displayRadius = Math.min(tile.c.displayRadius, distance);
       }
+    }
+    if (whiteField) {
+      const tiles = geometry.filter((tile) => tile.c !== heroCell && tile.c.displayRadius > 0);
+      const radii = limitTileOverlap(
+        tiles.map((tile) => ({
+          x: tile.x,
+          y: tile.y,
+          r: tile.c.displayRadius,
+          priority: tile.c === cellAt[0] ? 3 : tile.c.subject || linkWords.has(tile.c) ? 2 : 0,
+          supports: (() => {
+            const c = tile.c;
+            const f =
+              c.turnStart < 0
+                ? 0
+                : Math.min(
+                    1,
+                    Math.max(0, (now - c.turnStart - c.turnDelay) / (c.turnDur || FLIP_DUR))
+                  );
+            const p = c.turnStart < 0 ? c.orient : c.orient === 0 ? turnEase(f) : 1 - turnEase(f);
+            return footprintAt(p);
+          })(),
+        }))
+      );
+      tiles.forEach((tile, index) => {
+        const icon = tile.c.subject || linkWords.has(tile.c);
+        // Preserve the original empty tile proportions instead of turning them into tiny fragments.
+        tile.c.displayRadius = icon
+          ? radii[index]
+          : radii[index] >= tile.c.displayRadius - 0.01
+            ? tile.c.displayRadius
+            : 0;
+      });
     }
     for (const c of drawn) {
       let p = c.orient;
