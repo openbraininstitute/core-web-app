@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
+import { usePrefersReducedMotion } from '@/ui/hooks/use-prefers-reduced-motion';
 import { BRAIN_THEME_LINKS } from '@/ui/segments/project/brains-walkthrough/chapters';
 import { THEME_NAV_RAIL, ThemeLine } from '@/ui/segments/project/brains-walkthrough/landing-themes';
 
@@ -28,14 +29,16 @@ export function LivingHero({
   onChapter: (id: string) => void;
 }) {
   // Set once mounted, as the tiles are drawn in the browser alone.
-  const [scene, setScene] = useState<number | null>(null);
-  const [reduced, setReduced] = useState(true);
+  const [scene, setScene] = useState(FIRST_SCENE);
+  const reduced = usePrefersReducedMotion();
   const [visible, setVisible] = useState(true);
   const touchY = useRef<number | null>(null);
   const interacted = useRef(false);
   const tourStep = useRef(0);
   const continueFromIdle = useRef(onContinue);
-  continueFromIdle.current = onContinue;
+  useLayoutEffect(() => {
+    continueFromIdle.current = onContinue;
+  }, [onContinue]);
   const heroRef = useRef<HTMLElement>(null);
   // The chapters along the foot and the arrow down come in last, with the landing's way in.
   const [wayIn, setWayIn] = useState(false);
@@ -61,19 +64,10 @@ export function LivingHero({
   } as const;
 
   useEffect(() => {
-    setScene(FIRST_SCENE);
-  }, []);
-
-  useEffect(() => {
-    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const update = () => setReduced(media.matches);
     const visibility = () => setVisible(document.visibilityState !== 'hidden');
-    update();
     visibility();
-    media.addEventListener('change', update);
     document.addEventListener('visibilitychange', visibility);
     return () => {
-      media.removeEventListener('change', update);
       document.removeEventListener('visibilitychange', visibility);
     };
   }, []);
@@ -181,9 +175,7 @@ export function LivingHero({
         touchY.current = null;
       }}
     >
-      {scene !== null && (
-        <LandingTileStage scene={scene} reduced={reduced} visible={visible} onSelect={setScene} />
-      )}
+      <LandingTileStage scene={scene} reduced={reduced} visible={visible} onSelect={setScene} />
       <nav
         className={`${THEME_NAV_RAIL} ${styles.homeChapterRail}`}
         aria-label="Platform sections"

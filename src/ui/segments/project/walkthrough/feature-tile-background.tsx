@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 
 import styles from './public-tour.module.css';
 
+const loadRenderer = () => import('./feature-tile-renderer');
+
 /** Where the chapters' films are painted on the tiles, in the 1920 x 1080 stage's px (16:9). */
 const FRAME = { x: 672, y: 190, w: 1160, h: 652.5 };
 /** Where a chapter's film is laid inside its frame, when not fitted to it. */
@@ -177,7 +179,7 @@ export function FeatureTileBackground({
     const resize = new ResizeObserver(layout);
     resize.observe(tour);
     layout();
-    void import('./feature-tile-renderer').then(({ createFeatureTileRenderer }) => {
+    void loadRenderer().then(({ createFeatureTileRenderer }) => {
       if (disposed) return;
       try {
         engine = createFeatureTileRenderer(surface, tour, {

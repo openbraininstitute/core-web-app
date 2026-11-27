@@ -1,10 +1,13 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 
 import { landingSeed, landingSmallsNow } from '@/ui/segments/landing/landing-tile-stage';
+import { logError } from '@/utils/logger';
 
 import styles from '@/ui/segments/landing/landing-tile-stage.module.css';
+
+const loadRenderer = () => import('@/ui/segments/landing/landing-tile-renderer');
 
 /**
  * Behind the public tour's chapters, the landing's own arrangement of tiles, all of them white, where they stood on
@@ -28,7 +31,9 @@ export function LandingCubeBackdrop({ active }: { active: boolean }) {
     dispose: () => void;
   } | null>(null);
   const isActive = useRef(active);
-  isActive.current = active;
+  useLayoutEffect(() => {
+    isActive.current = active;
+  }, [active]);
 
   useEffect(() => {
     const container = host.current;
@@ -55,8 +60,8 @@ export function LandingCubeBackdrop({ active }: { active: boolean }) {
     resize.observe(container);
     const phone = container.getBoundingClientRect().width < 800;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    void import('@/ui/segments/landing/landing-tile-renderer').then(
-      ({ createLandingTileRenderer }) => {
+    void loadRenderer()
+      .then(({ createLandingTileRenderer }) => {
         if (disposed) return;
         engine.current = createLandingTileRenderer(surface, controls, {
           seed: landingSeed(),
@@ -66,8 +71,10 @@ export function LandingCubeBackdrop({ active }: { active: boolean }) {
           heroBeside: !phone,
         });
         engine.current.setVisible(isActive.current && !document.hidden);
-      }
-    );
+      })
+      .catch((error: unknown) => {
+        if (!disposed) logError('Could not load the chapter tile background', error);
+      });
     return () => {
       disposed = true;
       engine.current?.dispose();

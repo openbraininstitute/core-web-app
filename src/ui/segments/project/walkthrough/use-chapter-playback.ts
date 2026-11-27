@@ -10,8 +10,24 @@ export interface ChapterPlayback {
   progress: number;
   playing: boolean;
   toggle: () => void;
-  /** The visitor took over (scrolled, swiped, picked a chapter): stop moving on until they press play. */
+  /** The visitor took over: stop moving on until they press play. */
   hold: () => void;
+}
+
+/** Video event subscriptions have one owner, released before rebinding or tearing down a chapter. */
+function subscribeToVideo(
+  video: HTMLVideoElement,
+  handlers: Record<'timeupdate' | 'ended' | 'play' | 'pause', () => void>
+) {
+  const controller = new AbortController();
+  try {
+    for (const [event, handler] of Object.entries(handlers))
+      video.addEventListener(event, handler, { signal: controller.signal });
+  } catch (error) {
+    controller.abort();
+    throw error;
+  }
+  return () => controller.abort();
 }
 
 /**
@@ -48,6 +64,7 @@ export function useChapterPlayback({
     const host = stage.current;
     if (!host) return;
     const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const listeners = new AbortController();
     let visible = document.visibilityState !== 'hidden';
     // The current chapter's video, stopped by the pause button.
     let paused = false;
@@ -124,20 +141,19 @@ export function useChapterPlayback({
         if (visible && !preference.matches && !candidate.ended) paused = true;
         update();
       };
-      candidate.addEventListener('timeupdate', update);
-      candidate.addEventListener('ended', complete);
-      candidate.addEventListener('play', play);
-      candidate.addEventListener('pause', pause);
-      if (paused || !visible || preference.matches) candidate.pause();
-      else void candidate.play().catch(() => {});
+      const unsubscribe = subscribeToVideo(candidate, {
+        timeupdate: update,
+        ended: complete,
+        play,
+        pause,
+      });
       detachVideo = () => {
-        candidate.removeEventListener('timeupdate', update);
-        candidate.removeEventListener('ended', complete);
-        candidate.removeEventListener('play', play);
-        candidate.removeEventListener('pause', pause);
+        unsubscribe();
         candidate.loop = originalLoop;
         candidate.pause();
       };
+      if (paused || !visible || preference.matches) candidate.pause();
+      else void candidate.play().catch(() => {});
       update();
     };
     const visibility = () => {
@@ -179,9 +195,10 @@ export function useChapterPlayback({
     const pointerLeave = () => {
       hovering = false;
     };
-    host.addEventListener('pointermove', pointerMove, { passive: true });
-    host.addEventListener('pointerleave', pointerLeave);
-    if (externalProgress) window.addEventListener(CHAPTER_MEDIA_PROGRESS, mediaUpdate);
+    host.addEventListener('pointermove', pointerMove, { passive: true, signal: listeners.signal });
+    host.addEventListener('pointerleave', pointerLeave, { signal: listeners.signal });
+    if (externalProgress)
+      window.addEventListener(CHAPTER_MEDIA_PROGRESS, mediaUpdate, { signal: listeners.signal });
     bind();
     update();
     const observer = new MutationObserver(bind);
@@ -192,9 +209,10 @@ export function useChapterPlayback({
       attributeFilter: ['data-stage-current', 'src'],
     });
     const timer = window.setInterval(update, 100);
-    document.addEventListener('visibilitychange', visibility);
-    preference.addEventListener('change', visibility);
+    document.addEventListener('visibilitychange', visibility, { signal: listeners.signal });
+    preference.addEventListener('change', visibility, { signal: listeners.signal });
     return () => {
+      listeners.abort();
       window.clearInterval(timer);
       window.removeEventListener(CHAPTER_MEDIA_PROGRESS, mediaUpdate);
       observer.disconnect();

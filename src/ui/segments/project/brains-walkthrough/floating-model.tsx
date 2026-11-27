@@ -1,5 +1,6 @@
 'use client';
 
+import { useQuery } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ViewOverlay } from '@/features/viewer-3d/bare';
@@ -11,6 +12,7 @@ import { cn } from '@/utils/css-class';
 import { CNS_FRAME, CNS_ON_FIRST_SCREEN, FLY_FRAME } from './brains';
 import { NeuronSkeleton } from './neuron-skeleton';
 import { FlyBody, FlyStageProvider } from './walking-fly';
+import { loadActivity, loadBodies } from './walkthrough-data';
 
 import type { CSSProperties, ReactNode } from 'react';
 import type { CircuitSpikes, ISpikeReplayBinding } from '@/features/circuit-viewer/types';
@@ -146,6 +148,7 @@ const stillView = (set: string, sizes: string, at: CSSProperties) =>
       <div className="relative size-full">
         {/* eslint-disable-next-line @next/next/no-img-element -- Made to size, and its load is what the intro waits for. */}
         <img
+          src={set.replace(/[\s,].*$/, '')}
           srcSet={set}
           sizes={sizes}
           alt=""
@@ -181,7 +184,14 @@ const CNS_STILL_PHONE = stillView(CNS_SET, '50vw', WHOLE_BOX);
 const SMALL_SCREEN =
   '(max-width: 63.999rem) and (orientation: portrait), (max-width: 63.999rem) and (pointer: coarse)';
 function useSmallScreen(): boolean {
-  const [small] = useState(() => window.matchMedia(SMALL_SCREEN).matches);
+  const [small, setSmall] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia(SMALL_SCREEN);
+    const update = () => setSmall(query.matches);
+    update();
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, []);
   return small;
 }
 
@@ -256,21 +266,25 @@ function Floating({
   view: (started: boolean, onBuilt: () => void) => ReactNode;
 }) {
   const [built, setBuilt] = useState(false);
-  const [waited, setWaited] = useState(false);
+  const mountedAt = useRef(0);
   const [sliding, setSliding] = useState(false);
   const down = useRef<{ x: number; y: number } | null>(null);
   const onBuilt = useCallback(() => setBuilt(true), []);
   useEffect(() => {
-    const timer = setTimeout(() => setWaited(true), at);
-    return () => clearTimeout(timer);
-  }, [at]);
+    mountedAt.current = performance.now();
+  }, []);
   const shown = on === 'both' || (on === 'landing' ? !entered : entered);
   // Over the landing, built is when the intro starts, for the two to come in together.
   useEffect(() => {
     if (built && on === 'landing') ready();
   }, [built, on, ready]);
   const [started, setStarted] = useState(false);
-  if (!started && built && waited && shown) setStarted(true);
+  useEffect(() => {
+    if (started || !built || !shown) return;
+    const remaining = Math.max(0, mountedAt.current + at - performance.now());
+    const timer = setTimeout(() => setStarted(true), remaining);
+    return () => clearTimeout(timer);
+  }, [at, started, built, shown]);
   useEffect(() => {
     if (!started) return;
     // Drawn off the page for a frame, then sent in from there.
@@ -335,28 +349,13 @@ function Floating({
 
 /** Activity the app serves, `{cells, times, ms}`, as spikes to replay, once it is in. */
 function useActivity(url: string): CircuitSpikes | null {
-  const [activity, setActivity] = useState<CircuitSpikes | null>(null);
-  useEffect(() => {
-    let gone = false;
-    fetch(url)
-      .then((response) => response.json())
-      .then(
-        (data: { cells: number[]; times: number[]; ms: number }) => {
-          if (gone) return;
-          setActivity({
-            cellIndices: Uint32Array.from(data.cells),
-            times: Float32Array.from(data.times),
-            timeMinInMs: 0,
-            timeMaxInMs: data.ms,
-          });
-        },
-        () => {}
-      );
-    return () => {
-      gone = true;
-    };
-  }, [url]);
-  return activity;
+  const { data } = useQuery({
+    queryKey: ['walkthrough', 'activity', url],
+    queryFn: ({ signal }) => loadActivity(url, signal),
+    staleTime: Infinity,
+    retry: false,
+  });
+  return data ?? null;
 }
 
 /** The fly's brain in one blue, which its lit groups stand out of, as the viewer lights them in cyan. */
@@ -514,24 +513,16 @@ function ViewCatcher({ view, onView }: { view: FramedView; onView: (view: Framed
 
 /** The body ids of a circuit's cells, from `url`, once they are in. */
 function useBodies(url: string | undefined): Uint32Array | null {
-  const [bodies, setBodies] = useState<Uint32Array | null>(null);
-  useEffect(() => {
-    if (!url) return;
-    let gone = false;
-    fetch(url)
-      .then((response) => response.arrayBuffer())
-      .then(
-        (data) => {
-          if (!gone) setBodies(new Uint32Array(data));
-        },
-        () => {}
-      );
-    return () => {
-      gone = true;
-    };
-  }, [url]);
-  return bodies;
+  const { data } = useQuery({
+    queryKey: ['walkthrough', 'bodies', url],
+    queryFn: ({ signal }) => (url ? loadBodies(url, signal) : null),
+    enabled: !!url,
+    staleTime: Infinity,
+    retry: false,
+  });
+  return data ?? null;
 }
+
 const FLY_VIEW = (started: boolean, onBuilt: () => void) => (
   <FlashingCircuit
     started={started}
@@ -561,7 +552,13 @@ export function CnsBackdrop({ chapter, at }: FloatingState & { at: number }) {
       )}
     >
       {/* eslint-disable-next-line @next/next/no-img-element -- Made to size. */}
-      <img srcSet={CNS_SET} sizes="62vh" alt="" className="h-[85%] w-auto object-contain" />
+      <img
+        src="/images/start/walkthrough/landing-male-cns.webp"
+        srcSet={CNS_SET}
+        sizes="62vh"
+        alt=""
+        className="h-[85%] w-auto object-contain"
+      />
     </div>
   );
 }

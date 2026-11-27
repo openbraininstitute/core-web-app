@@ -1465,6 +1465,7 @@ export function createLandingTileRenderer(
       .slice()
       .sort(() => random() - 0.5);
     const labelled = [];
+    const labelledSet = new Set();
     // (lines hidden) any of the field's tiles, the nearest the middle first, and so on outwards
     const reach = LINKS.lines
       ? made.slice().sort((u, v) => u.depth - v.depth)
@@ -1475,7 +1476,7 @@ export function createLandingTileRenderer(
     for (const link of reach) {
       const c = link.b;
       if (!LINKS.lines && labelled.length >= LINKS.labels) break;
-      if (linkWords.has(c) || labelled.includes(c)) continue;
+      if (linkWords.has(c) || labelledSet.has(c)) continue;
       if (!LINKS.lines) {
         if (restR(c) < LINKS.labelTile) continue;
         const p = homeOf(c);
@@ -1487,6 +1488,7 @@ export function createLandingTileRenderer(
           continue;
       }
       labelled.push(c);
+      labelledSet.add(c);
     }
     // Fill existing blank tiles more closely so every desktop capability stays visible.
     // Keep the main arrangement and the surrounding decorative tiles intact.
@@ -1494,7 +1496,7 @@ export function createLandingTileRenderer(
       for (const spacing of [145, 125, 105]) {
         for (const { b: c } of reach) {
           if (labelled.length >= LANDING_SUBJECTS.length - 1) break;
-          if (labelled.includes(c) || restR(c) < 52) continue;
+          if (labelledSet.has(c) || restR(c) < 52) continue;
           const p = homeOf(c);
           if (
             labelled.some(
@@ -1503,6 +1505,7 @@ export function createLandingTileRenderer(
           )
             continue;
           labelled.push(c);
+          labelledSet.add(c);
         }
         if (labelled.length >= LANDING_SUBJECTS.length - 1) break;
       }
@@ -1532,6 +1535,7 @@ export function createLandingTileRenderer(
           c.start = 0;
           c.under = false;
           labelled.push(c);
+          labelledSet.add(c);
         }
       }
     }
@@ -1541,12 +1545,20 @@ export function createLandingTileRenderer(
       const phoneSpan = Math.max(1000, phoneFieldWidth);
       const modelY = HERO_TILE.y;
       const iconRadius = Math.max(106, Math.min(165, phoneSpan * 0.103));
-      const iconOffset = Math.max(230, iconRadius * 2 + 6);
+      // Shuffle a balanced range once per layout, keeping the smallest icons as
+      // large as before. Reserve room for the largest tile before filling gaps.
+      const iconScales = [1, 1.06, 1.12, 1.18, 1.24];
+      for (let i = iconScales.length - 1; i > 0; i--) {
+        const j = Math.floor(random() * (i + 1));
+        [iconScales[i], iconScales[j]] = [iconScales[j], iconScales[i]];
+      }
+      const iconOffset = Math.max(230, iconRadius * 1.24 * 2 + 6);
+      const rootRadius = iconRadius * iconScales[0];
       root.home = { x: 930 - phoneSpan * 0.35, y: modelY, k: 1, big: 0 };
       root.r0 = R;
-      root.baseR = iconRadius;
+      root.baseR = rootRadius;
       root.base = 0;
-      root.lift = hForRadius(iconRadius);
+      root.lift = hForRadius(rootRadius);
       const positions = [
         { x: 930 - phoneSpan * 0.28, y: modelY - iconOffset },
         { x: 930 + phoneSpan * 0.28, y: modelY - iconOffset },
@@ -1554,11 +1566,12 @@ export function createLandingTileRenderer(
         { x: 930 + phoneSpan * 0.28, y: modelY + iconOffset },
       ];
       labelled.forEach((c, i) => {
+        const radius = iconRadius * iconScales[(i + 1) % iconScales.length];
         c.home = { ...positions[i], k: 1, big: 0 };
         c.r0 = R;
-        c.baseR = iconRadius;
+        c.baseR = radius;
         c.base = 0;
-        c.lift = hForRadius(iconRadius);
+        c.lift = hForRadius(radius);
         c.still = true;
         c.iconSlot = true;
       });

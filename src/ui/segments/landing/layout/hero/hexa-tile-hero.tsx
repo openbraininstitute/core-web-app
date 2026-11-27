@@ -8,6 +8,8 @@ import { randomTileImageOrder } from './tile-image-order';
 
 import styles from './hexa-tile-hero.module.css';
 
+const loadRenderer = () => import('./hexa-tile-renderer');
+
 /** The placeholder the last page without a picture of its own opened on. */
 const PLACEHOLDER_KEY = 'obi-information-first-image';
 /** How long the tiles outlive the last information page, ms: long enough for the next one to take them over. */
@@ -155,7 +157,7 @@ export default function HexaTileHero({ page }: { page: string }) {
       shared.renderer.show(picture);
     } else if (!shared.loading) {
       shared.loading = true;
-      void import('./hexa-tile-renderer')
+      void loadRenderer()
         .then(({ createHexaTileRenderer }) => {
           const surface = shared.canvas;
           if (!shared.loading || !surface) return;

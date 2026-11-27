@@ -9,6 +9,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useEffectEvent,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -20,6 +21,7 @@ import ObiLogo from '@/components/logo/obi-logo';
 import { config } from '@/config';
 import { learnFonts } from '@/features/learn/fonts';
 import { BareViewers } from '@/features/viewer-3d/bare';
+import { useHydrated } from '@/ui/hooks/use-hydrated';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { firstPaintReady, firstPaintShown } from '@/ui/segments/landing/first-paint-handoff';
 import { informationFont } from '@/ui/segments/landing/information-font';
@@ -41,6 +43,17 @@ import type { IDummyAccount } from './account-flow';
 
 import pills from '@/ui/segments/landing/cta-pill.module.css';
 import publicTour from './public-tour.module.css';
+
+/** Run a render slot without evaluating its event callbacks in the parent's render scope. */
+function RenderContent<Args extends unknown[]>({
+  render,
+  args,
+}: {
+  render: (...args: Args) => ReactNode;
+  args: Args;
+}) {
+  return render(...args);
+}
 
 /** A screen of a walkthrough: its words, and what its stage shows, which each walkthrough says. */
 export interface IWalkthroughChapter {
@@ -248,7 +261,13 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   /** The first chapter's title, where the intro's words come to rest, set apart from the others: a class, such as a face. */
   firstTitleClass?: string;
 }) {
-  const [root, setRoot] = useState<HTMLDivElement | null>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const [rootVersion, setRootVersion] = useState(0);
+  const attachRoot = useCallback((node: HTMLDivElement | null) => {
+    if (rootRef.current === node) return;
+    rootRef.current = node;
+    setRootVersion((version) => version + 1);
+  }, []);
   const stageRef = useRef<HTMLDivElement>(null);
   const sections = useRef<Array<HTMLElement | null>>([]);
   // The scroller's height, a chapter's: until it is measured, the screen less the top menu.
@@ -269,8 +288,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   const [finishing, setFinishing] = useState(false);
   const [colorSlot, setColorSlot] = useState<HTMLElement | null>(null);
   // Over the whole window, it is laid over the page's body once in the browser.
-  const [inBrowser, setInBrowser] = useState(false);
-  useEffect(() => setInBrowser(true), []);
+  const inBrowser = useHydrated();
   // The intro plays first, and comes back when the first screen is scrolled up past.
   const [introState, setIntroState] = useState<'playing' | 'returning' | 'done'>(
     intro ? 'playing' : 'done'
@@ -367,16 +385,18 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   }, [placesLogo]);
 
   const leaveIntro = useCallback(() => {
+    const root = rootVersion === 0 ? null : rootRef.current;
     const intro = root?.querySelector<HTMLElement>('[data-walkthrough-intro]');
     const first = sections.current[0];
     if (root && intro && first) flyShared(root, intro, first);
     setVisualChapter(0);
     setIntroLeft(true);
-  }, [root]);
+  }, [rootVersion]);
   // A trackpad gesture has many momentum events after its first tick. Keep those
   // from scrolling on while the page is already moving, or just after it stops.
   const holdsWheel = !!introContent || stageScrolls;
   useEffect(() => {
+    const root = rootVersion === 0 ? null : rootRef.current;
     if (!root || !holdsWheel) return;
     const holdGesture = (event: WheelEvent) => {
       const now = performance.now();
@@ -398,11 +418,12 @@ export function Walkthrough<C extends IWalkthroughChapter>({
     };
     root.addEventListener('wheel', holdGesture, { passive: false, capture: true });
     return () => root.removeEventListener('wheel', holdGesture, true);
-  }, [root, holdsWheel]);
+  }, [rootVersion, holdsWheel]);
 
   /** The page taken to a place at the pace of the landing's scroll, which the browser's own cannot be slowed to; how long it takes, ms. */
   const glideTo = useCallback(
     (to: number, completed?: () => void): number => {
+      const root = rootVersion === 0 ? null : rootRef.current;
       if (!root) return 0;
       glide.current?.stop();
       glide.current = null;
@@ -413,7 +434,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
         return 0;
       }
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        root.scrollTop = to;
+        root.scrollTo({ top: to, behavior: 'instant' });
         completed?.();
         return 0;
       }
@@ -437,7 +458,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
         duration: ms / 1000,
         ease: GLIDE_EASE,
         onUpdate: (at) => {
-          root.scrollTop = at;
+          root.scrollTo({ top: at, behavior: 'instant' });
         },
         onComplete: () => {
           glide.current = null;
@@ -447,25 +468,27 @@ export function Walkthrough<C extends IWalkthroughChapter>({
       });
       return ms;
     },
-    [root, chapters.length]
+    [rootVersion, chapters.length]
   );
   useEffect(() => () => glide.current?.stop(), []);
 
   // Put the public landing in the same scrolling document as the chapters. Move its actual
   // scroll position through glideTo, then remove the temporary first screen without a jump.
   useLayoutEffect(() => {
+    const root = rootVersion === 0 ? null : rootRef.current;
     if (!ownLanding || !root) return;
     const screen = root.clientHeight;
     if (introDone) {
       if (introSpace.current) {
-        root.scrollTop = Math.max(0, root.scrollTop - screen);
+        root.scrollTo({ top: Math.max(0, root.scrollTop - screen), behavior: 'instant' });
         introSpace.current = false;
       }
       return;
     }
     if (!introSpace.current) {
       introSpace.current = true;
-      if (introState === 'returning') root.scrollTop += screen;
+      if (introState === 'returning')
+        root.scrollTo({ top: root.scrollTop + screen, behavior: 'instant' });
     }
     if (introState === 'returning') {
       glideTo(0);
@@ -473,7 +496,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
       navigationUntil.current = Date.now() + INTRO.scroll + 300;
       glideTo(screen, finishIntro);
     }
-  }, [ownLanding, root, introDone, introState, introLeft, glideTo, finishIntro]);
+  }, [ownLanding, rootVersion, introDone, introState, introLeft, glideTo, finishIntro]);
 
   const placedSections = useCallback(
     () => sections.current.filter((section): section is HTMLElement => section !== null),
@@ -483,6 +506,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   /** On to the next place to rest, down or up; how long it takes, ms, or null if the page ends first. */
   const turnPage = useCallback(
     (way: 1 | -1): number | null => {
+      const root = rootVersion === 0 ? null : rootRef.current;
       if (!root) return null;
       const to = nextStop(root, placedSections(), way, glideTarget.current ?? root.scrollTop);
       if (to === null) return null;
@@ -490,7 +514,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
       navigationUntil.current = Date.now() + Math.max(ms, 1000);
       return ms;
     },
-    [root, placedSections, glideTo]
+    [rootVersion, placedSections, glideTo]
   );
 
   // What floats over the intro built, for the intro to start with it.
@@ -511,9 +535,10 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   useEffect(() => setAccount(readDummyAccount()), []);
 
   useEffect(() => {
+    const root = rootVersion === 0 ? null : rootRef.current;
     const scroller = fullscreen ? root : root?.closest<HTMLElement>(SCROLLER);
     if (!scroller) return;
-    scroller.scrollTop = 0;
+    scroller.scrollTo({ top: 0, behavior: 'instant' });
     const sized = new ResizeObserver(() => setHeight(scroller.clientHeight));
     sized.observe(scroller);
     // The chapter across the middle of the scroller is the one on.
@@ -530,12 +555,13 @@ export function Walkthrough<C extends IWalkthroughChapter>({
       sized.disconnect();
       crossing.disconnect();
     };
-  }, [root, fullscreen]);
+  }, [rootVersion, fullscreen]);
 
   // Up from the top of the first screen, the intro again: by the wheel once the page has rested at the
   // top a moment, so that a scroll up from the second screen does not run on into it, by ← or ↑, or by a finger
   // pulled down.
   useEffect(() => {
+    const root = rootVersion === 0 ? null : rootRef.current;
     if (!intro || !introDone || !root) return;
     let topSince = root.scrollTop <= 1 ? performance.now() : Number.POSITIVE_INFINITY;
     const onScroll = () => {
@@ -555,10 +581,11 @@ export function Walkthrough<C extends IWalkthroughChapter>({
     let pulledFrom: number | null = null;
     const onTouchStart = (e: TouchEvent) => {
       const rested = root.scrollTop <= 1 && performance.now() - topSince > AT_TOP_MS;
-      pulledFrom = rested ? e.touches[0].clientY : null;
+      pulledFrom = rested ? (e.touches[0]?.clientY ?? null) : null;
     };
     const onTouchEnd = (e: TouchEvent) => {
-      if (pulledFrom !== null && e.changedTouches[0].clientY - pulledFrom > PULL_PX) back();
+      const touch = e.changedTouches[0];
+      if (pulledFrom !== null && touch && touch.clientY - pulledFrom > PULL_PX) back();
       pulledFrom = null;
     };
     root.addEventListener('scroll', onScroll, { passive: true });
@@ -573,7 +600,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
       root.removeEventListener('touchend', onTouchEnd);
       window.removeEventListener('keydown', onKey);
     };
-  }, [intro, introDone, root, backToIntro]);
+  }, [intro, introDone, rootVersion, backToIntro]);
 
   // Finished, the walkthrough fades and the home it leads to opens.
   const router = useRouter();
@@ -581,9 +608,17 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   const endHref =
     enterHref ??
     `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}${end === HOME_DESIGNS[0] ? '' : `?design=${end}`}`;
+  const finishTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (finishTimer.current !== null) clearTimeout(finishTimer.current);
+    },
+    []
+  );
   const finish = useCallback(() => {
     setFinishing(true);
-    setTimeout(() => router.push(endHref), FINISH_MS);
+    if (finishTimer.current !== null) clearTimeout(finishTimer.current);
+    finishTimer.current = setTimeout(() => router.push(endHref), FINISH_MS);
   }, [router, endHref]);
   // For a chapter's own buttons, as the top bar's.
   const actions = useMemo(
@@ -597,6 +632,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
 
   const go = useCallback(
     (index: number) => {
+      const root = rootVersion === 0 ? null : rootRef.current;
       navigationUntil.current = Date.now() + 1000;
       if (index >= chapters.length) {
         if (introContent) return;
@@ -612,7 +648,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
       }
       section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     },
-    [finish, chapters.length, introContent, stageScrolls, root, glideTo]
+    [finish, chapters.length, introContent, stageScrolls, rootVersion, glideTo]
   );
 
   const goTo = useCallback(
@@ -623,17 +659,19 @@ export function Walkthrough<C extends IWalkthroughChapter>({
     [chapters, go]
   );
 
+  const goToFromEffect = useEffectEvent((id: string) => goTo(id));
   useEffect(() => {
     if (!introDone || !pendingIntroChapter.current) return;
     const id = pendingIntroChapter.current;
     pendingIntroChapter.current = null;
-    const frame = requestAnimationFrame(() => goTo(id));
+    const frame = requestAnimationFrame(() => goToFromEffect(id));
     return () => cancelAnimationFrame(frame);
-  }, [introDone, goTo]);
+  }, [introDone]);
 
   // The tour settles on a screen. Where the page turns by the gesture, this is only for what is left between two:
   // the scrollbar let go of, say, or a fling that ran out of a tall chapter.
   useEffect(() => {
+    const root = rootVersion === 0 ? null : rootRef.current;
     if (!fullscreen || !root) return;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const settle = () => {
@@ -662,39 +700,43 @@ export function Walkthrough<C extends IWalkthroughChapter>({
       root.removeEventListener('scroll', onScroll);
       clearTimeout(timer);
     };
-  }, [fullscreen, root, stageScrolls, introDone, placedSections, glideTo]);
+  }, [fullscreen, rootVersion, stageScrolls, introDone, placedSections, glideTo]);
 
   // ← and → go a chapter back and on, as on everyneuron; where the page turns by itself, up and down and the
   // like do too, unless a tall chapter has more to read that way.
+  const handleNavigationKey = useEffectEvent((e: KeyboardEvent) => {
+    const root = rootVersion === 0 ? null : rootRef.current;
+
+    if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    const typing = (e.target as HTMLElement | null)?.closest(
+      'input, textarea, select, [contenteditable="true"], [role="combobox"], [role="listbox"]'
+    );
+    if (typing) return;
+    if (e.key === 'ArrowRight') go(active + 1);
+    else if (e.key === 'ArrowLeft') go(active - 1);
+    else if (stageScrolls && introDone && root && e.key === 'Home') go(0);
+    else if (stageScrolls && introDone && root && e.key === 'End') go(chapters.length - 1);
+    else if (stageScrolls && introDone && root) {
+      const pressed = (e.target as HTMLElement | null)?.closest('a, button');
+      const down = e.key === 'ArrowDown' || e.key === 'PageDown' || (e.key === ' ' && !pressed);
+      const up = e.key === 'ArrowUp' || e.key === 'PageUp';
+      if (!down && !up) return;
+      const way = down ? 1 : -1;
+      if (roomInChapter(root, placedSections(), way)) return;
+      if (!e.repeat && turnPage(way) === null) return;
+    } else return;
+    e.preventDefault();
+  });
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
-      const typing = (e.target as HTMLElement | null)?.closest(
-        'input, textarea, select, [contenteditable="true"], [role="combobox"], [role="listbox"]'
-      );
-      if (typing) return;
-      if (e.key === 'ArrowRight') go(active + 1);
-      else if (e.key === 'ArrowLeft') go(active - 1);
-      else if (stageScrolls && introDone && root && e.key === 'Home') go(0);
-      else if (stageScrolls && introDone && root && e.key === 'End') go(chapters.length - 1);
-      else if (stageScrolls && introDone && root) {
-        const pressed = (e.target as HTMLElement | null)?.closest('a, button');
-        const down = e.key === 'ArrowDown' || e.key === 'PageDown' || (e.key === ' ' && !pressed);
-        const up = e.key === 'ArrowUp' || e.key === 'PageUp';
-        if (!down && !up) return;
-        const way = down ? 1 : -1;
-        if (roomInChapter(root, placedSections(), way)) return;
-        if (!e.repeat && turnPage(way) === null) return;
-      } else return;
-      e.preventDefault();
-    };
+    const onKey = (event: KeyboardEvent) => handleNavigationKey(event);
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [active, go, stageScrolls, introDone, root, chapters.length, placedSections, turnPage]);
+  }, []);
 
   // Where the media scrolls with its words, a gesture turns the page, at the same pace whatever it was: one chapter
   // for one flick of the wheel or the finger, however much momentum it has. A sign-up over the page keeps its own.
   useEffect(() => {
+    const root = rootVersion === 0 ? null : rootRef.current;
     if (!root || !stageScrolls || !introDone || accountFlow) return;
     let travelled = 0;
     let lastWheel = 0;
@@ -755,8 +797,9 @@ export function Walkthrough<C extends IWalkthroughChapter>({
       if (e.cancelable) e.preventDefault();
     };
     const onTouchEnd = (e: TouchEvent) => {
-      if (from && paging) {
-        const dy = e.changedTouches[0].clientY - from.y;
+      const touch = e.changedTouches[0];
+      if (from && paging && touch) {
+        const dy = touch.clientY - from.y;
         if (Math.abs(dy) > PULL_PX / 2) turnPage(dy < 0 ? 1 : -1);
       }
       from = null;
@@ -773,7 +816,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
       root.removeEventListener('touchmove', onTouchMove, true);
       root.removeEventListener('touchend', onTouchEnd, true);
     };
-  }, [root, stageScrolls, introDone, accountFlow, placedSections, turnPage]);
+  }, [rootVersion, stageScrolls, introDone, accountFlow, placedSections, turnPage]);
 
   // The runway past the end is no chapter: the last one stays on while it is crossed.
   const on = Math.min(active, chapters.length - 1);
@@ -782,6 +825,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
     if (!glide.current) setVisualChapter(on);
   }, [on]);
   const advanceChapter = useCallback(() => {
+    const root = rootVersion === 0 ? null : rootRef.current;
     if (Date.now() < navigationUntil.current) return;
     if (stageScrolls && root) {
       const section = sections.current[on];
@@ -792,7 +836,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
         return;
     }
     if (on < chapters.length - 1) go(on + 1);
-  }, [on, chapters.length, go, stageScrolls, root]);
+  }, [on, chapters.length, go, stageScrolls, rootVersion]);
   const playback = useChapterPlayback({
     stage: stageRef,
     chapterId: chapter.id,
@@ -816,6 +860,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
 
   // Center the real title/media/copy group on phones, accounting for wrapping and AI prompts.
   useLayoutEffect(() => {
+    const root = rootVersion === 0 ? null : rootRef.current;
     if (!ownLanding || !root) return;
     const phone = window.matchMedia('(max-width: 799px) and (orientation: portrait)');
     const place = () => {
@@ -838,12 +883,15 @@ export function Walkthrough<C extends IWalkthroughChapter>({
         const tailHeight = last - first;
         const titleHeight = title.getBoundingClientRect().height;
         const ai = text.dataset.chapterText === 'agents';
+        const closing = text.dataset.chapterText === 'join';
         const mediaHeight = ai
           ? 0
-          : Math.min((root.clientWidth - 32) * 0.5625, root.clientHeight * 0.25);
-        const groupHeight = titleHeight + 20 + (ai ? 0 : mediaHeight + 24) + tailHeight;
+          : closing
+            ? Math.min(((root.clientWidth - 32) * 1066) / 1633, root.clientHeight * 0.29)
+            : Math.min((root.clientWidth - 32) * 0.5625, root.clientHeight * 0.25);
+        const groupHeight = titleHeight + 32 + (ai ? 0 : mediaHeight + 24) + tailHeight;
         const titleTop = Math.max(104, (root.clientHeight - groupHeight) / 2);
-        const mediaTop = titleTop + titleHeight + 20;
+        const mediaTop = titleTop + titleHeight + 32;
         const copyTop = mediaTop + (ai ? 0 : mediaHeight + 24);
         section.style.setProperty('--mobile-title-top', `${titleTop}px`);
         section.style.setProperty('--mobile-media-top', `${mediaTop}px`);
@@ -862,14 +910,14 @@ export function Walkthrough<C extends IWalkthroughChapter>({
       observer.disconnect();
       phone.removeEventListener('change', place);
     };
-  }, [ownLanding, root]);
+  }, [ownLanding, rootVersion]);
 
   const page = (
     <EnteredContext.Provider value={introDone || introLeft}>
       <ActionsContext.Provider value={actions}>
         <BareViewers>
           <div
-            ref={setRoot}
+            ref={attachRoot}
             onWheelCapture={() => {
               navigationUntil.current = Date.now() + 1000;
               // Not the tail of the gesture that left the landing: that one starts the tour.
@@ -943,19 +991,26 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                 )}
               </>
             )}
-            {floating?.({
-              entered: introDone || introLeft,
-              revealed: introDone,
-              chapter: on,
-              enter: askEnter,
-              ready: floatReady,
-              // Picking a chapter by hand is taking over the tour.
-              goTo: (id) => {
-                playback.hold();
-                goTo(id);
-              },
-              playback,
-            })}
+            {floating && (
+              <RenderContent
+                render={floating}
+                args={[
+                  {
+                    entered: introDone || introLeft,
+                    revealed: introDone,
+                    chapter: on,
+                    enter: askEnter,
+                    ready: floatReady,
+                    // Picking a chapter by hand is taking over the tour.
+                    goTo: (id) => {
+                      playback.hold();
+                      goTo(id);
+                    },
+                    playback,
+                  },
+                ]}
+              />
+            )}
             {intro && !introDone && !introContent && (
               <Intro
                 key={introState}
@@ -971,37 +1026,45 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                 onDone={finishIntro}
               />
             )}
-            {intro && !introDone && introContent && (
+            {/* The canvas intro reads browser layout; the static chapter text below does not. */}
+            {inBrowser && intro && !introDone && introContent && (
               <div
                 className={publicTour.landingTransition}
                 data-leaving={introLeft || undefined}
                 inert={introLeft || undefined}
               >
-                {introContent({
-                  continue: () => {
-                    wheelHeldUntil.current = performance.now() + INTRO.scroll + 450;
-                    startTransition(() => {
-                      setIntroState('playing');
-                      setVisualChapter(0);
-                      setIntroLeft(true);
-                    });
-                  },
-                  goTo: (id) => {
-                    pendingIntroChapter.current = id;
-                    // Keep the current screen painted if mounting the first chapter suspends.
-                    // Start the scroll only when that chapter is ready to commit.
-                    startTransition(() => {
-                      setIntroState('playing');
-                      setVisualChapter(
-                        Math.max(
-                          0,
-                          chapters.findIndex((chapter) => chapter.id === id)
-                        )
-                      );
-                      setIntroLeft(true);
-                    });
-                  },
-                })}
+                {
+                  <RenderContent
+                    render={introContent}
+                    args={[
+                      {
+                        continue: () => {
+                          wheelHeldUntil.current = performance.now() + INTRO.scroll + 450;
+                          startTransition(() => {
+                            setIntroState('playing');
+                            setVisualChapter(0);
+                            setIntroLeft(true);
+                          });
+                        },
+                        goTo: (id) => {
+                          pendingIntroChapter.current = id;
+                          // Keep the current screen painted if mounting the first chapter suspends.
+                          // Start the scroll only when that chapter is ready to commit.
+                          startTransition(() => {
+                            setIntroState('playing');
+                            setVisualChapter(
+                              Math.max(
+                                0,
+                                chapters.findIndex((chapter) => chapter.id === id)
+                              )
+                            );
+                            setIntroLeft(true);
+                          });
+                        },
+                      },
+                    ]}
+                  />
+                }
               </div>
             )}
             {ownLanding && !introDone && (
@@ -1013,7 +1076,9 @@ export function Walkthrough<C extends IWalkthroughChapter>({
               className="pointer-events-none sticky top-0 h-(--chapter-h) overflow-hidden"
               style={underIntro}
             >
-              {!stageScrolls && stage(chapter, colorSlot, goTo, true, true)}
+              {!stageScrolls && (
+                <RenderContent render={stage} args={[chapter, colorSlot, goTo, true, true]} />
+              )}
               {!fullscreen && (
                 <div className="pointer-events-auto">
                   <Progress chapters={chapters} active={on} onGo={go} />
@@ -1035,6 +1100,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
             )}
             {fullscreen && (
               <AccountFlow
+                key={accountFlow ?? 'closed'}
                 mode={accountFlow}
                 onClose={closeAccountFlow}
                 onSignedIn={setAccount}
@@ -1082,6 +1148,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                         }
                   }
                   onClick={(event) => {
+                    const root = rootVersion === 0 ? null : rootRef.current;
                     if (!introContent) return;
                     event.preventDefault();
                     root?.scrollTo({ top: 0, behavior: 'instant' });
@@ -1155,15 +1222,20 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                       data-feature-media={introContent && wideScreen ? true : undefined}
                       className="pointer-events-none absolute inset-0 overflow-hidden"
                     >
-                      {stage(
-                        chapter,
-                        index === on ? colorSlot : null,
-                        goTo,
-                        index === on && (!introContent || introDone || introLeft),
-                        introContent
-                          ? index === on && (introDone || introLeft)
-                          : Math.abs(index - on) <= 1
-                      )}
+                      {
+                        <RenderContent
+                          render={stage}
+                          args={[
+                            chapter,
+                            index === on ? colorSlot : null,
+                            goTo,
+                            index === on && (!introContent || introDone || introLeft),
+                            introContent
+                              ? index === on && (introDone || introLeft)
+                              : Math.abs(index - on) <= 1,
+                          ]}
+                        />
+                      }
                     </div>
                   )}
                   <ChapterText
@@ -1194,7 +1266,9 @@ export function Walkthrough<C extends IWalkthroughChapter>({
       </ActionsContext.Provider>
     </EnteredContext.Provider>
   );
-  if (!fullscreen) return page;
+  // The public tour can render in place, including its static chapter copy in the
+  // initial HTML. Only in-platform fullscreen tours need to escape their app shell.
+  if (!fullscreen || introContent) return page;
   return (
     <>
       {finishing && endUnder}
@@ -1680,13 +1754,17 @@ function flyShared(root: HTMLElement, intro: HTMLElement, first: HTMLElement) {
   const layer = document.createElement('div');
   layer.className = 'pointer-events-none fixed inset-0 z-[66]';
   root.appendChild(layer);
-  const words = pairs.map(({ from, to }, i) => {
+  const measured = pairs.map(({ from, to }) => {
     const source = from.getBoundingClientRect();
     const target = to.getBoundingClientRect();
-    // A page below till the scroll brings it up, on the first screen; where it is already, fixed.
     const lift = first.contains(to) ? below : 0;
-    const own = getComputedStyle(to);
-    const scale = parseFloat(getComputedStyle(from).fontSize) / parseFloat(own.fontSize);
+    const style = getComputedStyle(to);
+    const own = Object.fromEntries(FLOWN_STYLE.map((property) => [property, style[property]]));
+    const fromStyle = getComputedStyle(from);
+    const scale = parseFloat(fromStyle.fontSize) / parseFloat(style.fontSize);
+    return { from, to, source, target, lift, own, scale, color: fromStyle.color };
+  });
+  const words = measured.map(({ from, to, source, target, lift, own, scale, color }, i) => {
     const word = document.createElement('span');
     word.textContent = to.textContent;
     Object.assign(word.style, {
@@ -1695,11 +1773,14 @@ function flyShared(root: HTMLElement, intro: HTMLElement, first: HTMLElement) {
       top: `${target.top - lift}px`,
       whiteSpace: 'nowrap',
       transformOrigin: '0 0',
-      color: getComputedStyle(from).color,
+      color,
       transform: `translate(${source.left - target.left}px, ${source.top - (target.top - lift)}px) scale(${scale})`,
     });
     FLOWN_STYLE.forEach((property) => {
-      word.style[property] = own[property];
+      word.style.setProperty(
+        property.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`),
+        own[property]
+      );
     });
     layer.appendChild(word);
     from.style.visibility = 'hidden';

@@ -180,9 +180,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
         <p>
           Start free with 100 credits included.
           <br />
-          Explore, build and simulate.
-          <br />
-          All in your browser.
+          Create your account, set up your Virtual Lab and begin.
         </p>
         <StartNow />
       </>

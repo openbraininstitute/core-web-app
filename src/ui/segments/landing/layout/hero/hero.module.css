@@ -322,9 +322,6 @@
   border-radius: 3px;
 }
 @media (max-width: 63.999rem) and (orientation: portrait) {
-  .immersive.contactHero .media.hexagonMedia {
-    height: clamp(150px, 23svh, 210px);
-  }
   .contactEmails {
     gap: 14px;
     margin-top: 18px;
@@ -341,7 +338,7 @@
   }
   .immersive.contactHero .media.hexagonMedia {
     flex: 0 0 auto;
-    height: clamp(90px, calc(100svh - 550px), 180px);
+    height: clamp(280px, 48svh, 440px);
   }
   .contactHero .contactEmails {
     gap: 12px;

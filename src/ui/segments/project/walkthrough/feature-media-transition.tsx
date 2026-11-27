@@ -1,6 +1,13 @@
 'use client';
 
-import { AnimatePresence, motion, useIsPresent, useReducedMotion } from 'framer-motion';
+import {
+  AnimatePresence,
+  domAnimation,
+  LazyMotion,
+  m,
+  useIsPresent,
+  useReducedMotion,
+} from 'framer-motion';
 
 import type { ReactNode } from 'react';
 
@@ -10,7 +17,7 @@ function MediaLayer({ draw }: { draw: (present: boolean) => ReactNode }) {
   const present = useIsPresent();
   const reduced = useReducedMotion();
   return (
-    <motion.div
+    <m.div
       className="absolute inset-0"
       inert={!present || undefined}
       initial={{ opacity: 0 }}
@@ -21,7 +28,7 @@ function MediaLayer({ draw }: { draw: (present: boolean) => ReactNode }) {
       exit={{ opacity: 0, transition: { duration: reduced ? 0 : 0.32 } }}
     >
       {draw(present)}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -38,9 +45,11 @@ export function FeatureMediaTransition({
       data-feature-media
       className={`pointer-events-none fixed inset-0 z-10 ${styles.chapterTextEntrance}`}
     >
-      <AnimatePresence mode="wait">
-        <MediaLayer key={chapterId} draw={draw} />
-      </AnimatePresence>
+      <LazyMotion features={domAnimation} strict>
+        <AnimatePresence mode="wait">
+          <MediaLayer key={chapterId} draw={draw} />
+        </AnimatePresence>
+      </LazyMotion>
     </div>
   );
 }

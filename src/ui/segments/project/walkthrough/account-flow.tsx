@@ -1,14 +1,14 @@
 'use client';
 
 import { RiArrowLeftLine, RiCheckLine, RiCloseLine } from '@remixicon/react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import ObiLogo from '@/components/logo/obi-logo';
 import { cn } from '@/utils/css-class';
 
-import styles from './account-flow.module.css';
-
 import type { FormEvent, ReactNode } from 'react';
+
+import styles from './account-flow.module.css';
 
 /**
  * A dummy account, for trying the sign-up and log-in flows out: nothing is sent anywhere and no one is
@@ -48,7 +48,11 @@ const TEST_ACCOUNTS = [
   { firstName: 'Alex', lastName: 'Example', email: 'alex@example.org' },
 ];
 
-const SETUP = ['Creating your Virtual Lab', 'Setting up your first project', 'Adding 100 free credits'];
+const SETUP = [
+  'Creating your Virtual Lab',
+  'Setting up your first project',
+  'Adding 100 free credits',
+];
 
 type TStep =
   | 'details'
@@ -59,6 +63,15 @@ type TStep =
   | 'creating'
   | 'welcome'
   | 'welcome-back';
+
+const CODE_DIGIT_IDS = [
+  'digit-one',
+  'digit-two',
+  'digit-three',
+  'digit-four',
+  'digit-five',
+  'digit-six',
+];
 
 /** The sign-up steps, for the count over each. */
 const SIGN_UP_STEPS: TStep[] = ['details', 'verify'];
@@ -97,7 +110,8 @@ export function AccountFlow({
   onLearn: () => void;
 }) {
   const open = mode !== null;
-  const [step, setStep] = useState<TStep>('details');
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [step, setStep] = useState<TStep>(mode === 'login' ? 'login' : 'details');
   const [account, setAccount] = useState<IDummyAccount>({
     firstName: '',
     lastName: '',
@@ -106,25 +120,17 @@ export function AccountFlow({
     projectName: 'My first project',
   });
   // Where the Google chooser and the code lead back to: the sign-up, or the log-in.
-  const [flow, setFlow] = useState<'signup' | 'login'>('signup');
+  const [flow, setFlow] = useState<'signup' | 'login'>(mode ?? 'signup');
 
-  // Opened afresh each time, at its first step.
-  useEffect(() => {
-    if (!mode) return;
-    setFlow(mode);
-    setStep(mode === 'signup' ? 'details' : 'login');
-  }, [mode]);
-
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
-      e.stopPropagation();
-      onClose();
+  useLayoutEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (open && !dialog.open) dialog.showModal();
+    else if (!open && dialog.open) dialog.close();
+    return () => {
+      if (dialog.open) dialog.close();
     };
-    window.addEventListener('keydown', onKey, { capture: true });
-    return () => window.removeEventListener('keydown', onKey, { capture: true });
-  }, [open, onClose]);
+  }, [open]);
 
   const signedIn = (next: IDummyAccount) => {
     keepDummyAccount(next);
@@ -151,14 +157,15 @@ export function AccountFlow({
   const counted = SIGN_UP_STEPS.indexOf(step);
 
   return (
-    <div
-      role="dialog"
+    <dialog
+      ref={dialogRef}
+      onCancel={onClose}
       aria-modal
       aria-label={flow === 'signup' ? 'Sign up' : 'Log in'}
       inert={!open || undefined}
       className={cn(
-        'fixed inset-0 z-[80] flex items-center justify-center overflow-y-auto bg-white px-[20px] py-[40px] transition-opacity duration-500 ease-out',
-        open ? 'opacity-100' : 'pointer-events-none opacity-0'
+        'fixed inset-0 z-[80] m-0 h-dvh max-h-none w-screen max-w-none items-center justify-center overflow-y-auto border-0 bg-white px-[20px] py-[40px]',
+        open ? 'flex' : 'hidden'
       )}
     >
       <div className="absolute top-[24px] right-[clamp(20px,3vw,40px)] left-[clamp(20px,3vw,40px)] flex items-center justify-between">
@@ -184,7 +191,10 @@ export function AccountFlow({
       </div>
 
       {open && (
-        <div key={step} className={cn(styles.step, 'flex w-full max-w-[460px] flex-col gap-[18px]')}>
+        <div
+          key={step}
+          className={cn(styles.step, 'flex w-full max-w-[460px] flex-col gap-[18px]')}
+        >
           {flow === 'signup' && counted >= 0 && (
             <div className="flex items-center gap-[10px]">
               <span className="text-[11px] font-semibold tracking-[0.14em] text-neutral-400 uppercase">
@@ -226,7 +236,9 @@ export function AccountFlow({
               }}
             />
           )}
-          {step === 'google' && <GoogleChooser onChoose={chooseTest} onOther={() => setStep(back.google!)} />}
+          {step === 'google' && (
+            <GoogleChooser onChoose={chooseTest} onOther={() => setStep(back.google!)} />
+          )}
           {step === 'signing-in' && <Working text="Signing you in…" />}
           {step === 'verify' && (
             <Verify
@@ -256,18 +268,25 @@ export function AccountFlow({
             <Welcome account={account} back={false} onEnter={onEnter} onLearn={onLearn} />
           )}
           {step === 'welcome-back' && (
-            <Welcome account={readDummyAccount() ?? account} back onEnter={onEnter} onLearn={onLearn} />
+            <Welcome
+              account={readDummyAccount() ?? account}
+              back
+              onEnter={onEnter}
+              onLearn={onLearn}
+            />
           )}
         </div>
       )}
-    </div>
+    </dialog>
   );
 }
 
 function Heading({ title, children }: { title: string; children?: ReactNode }) {
   return (
     <div className="flex flex-col gap-[6px]">
-      <h2 className="text-primary-9 text-[30px] leading-[1.15] font-bold tracking-[-0.02em]">{title}</h2>
+      <h2 className="text-primary-9 text-[30px] leading-[1.15] font-bold tracking-[-0.02em]">
+        {title}
+      </h2>
       {children && <p className="text-[14px] leading-[1.5] text-neutral-500">{children}</p>}
     </div>
   );
@@ -291,7 +310,8 @@ function GoogleButton({ onClick }: { onClick: () => void }) {
         </span>
       </button>
       <div className="flex items-center gap-[12px] text-[12px] text-neutral-400">
-        <span className="h-px flex-1 bg-neutral-200" /> or with your email <span className="h-px flex-1 bg-neutral-200" />
+        <span className="h-px flex-1 bg-neutral-200" /> or with your email{' '}
+        <span className="h-px flex-1 bg-neutral-200" />
       </div>
     </>
   );
@@ -330,7 +350,13 @@ function Details({
       <div className="grid grid-cols-2 gap-[12px]">
         <label className={LABEL}>
           First name
-          <input ref={first} name="given_name" required defaultValue={account.firstName} className={FIELD} />
+          <input
+            ref={first}
+            name="given_name"
+            required
+            defaultValue={account.firstName}
+            className={FIELD}
+          />
         </label>
         <label className={LABEL}>
           Last name
@@ -359,11 +385,17 @@ function Details({
       </button>
       <p className="text-center text-[13px] leading-[18px] text-neutral-500">
         Already have an account?{' '}
-        <button type="button" onClick={onLogin} className="text-primary-9 font-semibold hover:underline">
+        <button
+          type="button"
+          onClick={onLogin}
+          className="text-primary-9 font-semibold hover:underline"
+        >
           Log in
         </button>
       </p>
-      <p className={cn(NOTE, 'text-center')}>A prototype: nothing is sent, and no account is made.</p>
+      <p className={cn(NOTE, 'text-center')}>
+        A prototype: nothing is sent, and no account is made.
+      </p>
     </form>
   );
 }
@@ -381,10 +413,7 @@ function Login({
 }) {
   return (
     <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        onDone(String(new FormData(e.currentTarget).get('email') ?? '').trim());
-      }}
+      action={(data) => onDone(String(data.get('email') ?? '').trim())}
       className="flex flex-col gap-[18px]"
     >
       <ObiLogo className="block h-[40px] w-auto self-start text-[#002766]" />
@@ -396,7 +425,6 @@ function Login({
           name="email"
           type="email"
           required
-          autoFocus
           defaultValue={email || readDummyAccount()?.email}
           placeholder="you@institute.org"
           className={FIELD}
@@ -407,7 +435,11 @@ function Login({
       </button>
       <p className="text-center text-[13px] leading-[18px] text-neutral-500">
         New here?{' '}
-        <button type="button" onClick={onSignUp} className="text-primary-9 font-semibold hover:underline">
+        <button
+          type="button"
+          onClick={onSignUp}
+          className="text-primary-9 font-semibold hover:underline"
+        >
           Create an account
         </button>
       </p>
@@ -466,12 +498,22 @@ function GoogleChooser({
           </button>
         </li>
       </ul>
-      <p className={NOTE}>No Google sign-in happens: these are test accounts for trying the flow.</p>
+      <p className={NOTE}>
+        No Google sign-in happens: these are test accounts for trying the flow.
+      </p>
     </div>
   );
 }
 
-export function Initials({ first, last, size = 36 }: { first: string; last: string; size?: number }) {
+export function Initials({
+  first,
+  last,
+  size = 36,
+}: {
+  first: string;
+  last: string;
+  size?: number;
+}) {
   return (
     <span
       className="bg-primary-9 flex shrink-0 items-center justify-center rounded-full font-semibold text-white"
@@ -530,23 +572,23 @@ function Verify({ email, onDone }: { email: string; onDone: () => void }) {
       className="flex flex-col gap-[18px]"
     >
       <Heading title="Check your email">
-        We sent a 6-digit code to <span className="text-primary-9 font-semibold">{email || 'your email'}</span>.
+        We sent a 6-digit code to{' '}
+        <span className="text-primary-9 font-semibold">{email || 'your email'}</span>.
       </Heading>
       <div className="flex justify-between gap-[10px]">
-        {digits.map((digit, i) => (
+        {CODE_DIGIT_IDS.map((id, i) => (
           <input
-            // biome-ignore lint/suspicious/noArrayIndexKey: the boxes are fixed, six in order
-            key={i}
+            key={id}
             ref={(box) => {
               boxes.current[i] = box;
             }}
-            value={digit}
+            value={digits[i] ?? ''}
             inputMode="numeric"
             autoComplete={i === 0 ? 'one-time-code' : 'off'}
             aria-label={`Digit ${i + 1}`}
             onChange={(e) => set(i, e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Backspace' && !digit && i > 0) boxes.current[i - 1]?.focus();
+              if (e.key === 'Backspace' && !digits[i] && i > 0) boxes.current[i - 1]?.focus();
             }}
             className="text-primary-9 focus:border-primary-9 h-[58px] w-full rounded-[12px] border border-neutral-300 text-center text-[24px] font-semibold outline-none"
           />
@@ -598,7 +640,12 @@ function Creating({ onDone }: { onDone: () => void }) {
         {SETUP.map((line, i) => (
           <li key={line} className="flex items-center gap-[12px] text-[15px]">
             {i < done ? (
-              <span className={cn(styles.tick, 'bg-green-main flex size-[24px] items-center justify-center rounded-full text-white')}>
+              <span
+                className={cn(
+                  styles.tick,
+                  'bg-green-main flex size-[24px] items-center justify-center rounded-full text-white'
+                )}
+              >
                 <RiCheckLine className="size-[15px]" />
               </span>
             ) : i === done ? (
@@ -606,7 +653,9 @@ function Creating({ onDone }: { onDone: () => void }) {
             ) : (
               <span className="size-[24px] rounded-full border-[2px] border-neutral-200" />
             )}
-            <span className={i <= done ? 'text-primary-9 font-semibold' : 'text-neutral-400'}>{line}</span>
+            <span className={i <= done ? 'text-primary-9 font-semibold' : 'text-neutral-400'}>
+              {line}
+            </span>
           </li>
         ))}
       </ul>
@@ -644,7 +693,9 @@ function Welcome({
         ))}
         <Initials first={account.firstName} last={account.lastName} size={72} />
       </div>
-      <Heading title={`${back ? 'Welcome back' : 'Welcome'}, ${account.firstName || 'researcher'}!`}>
+      <Heading
+        title={`${back ? 'Welcome back' : 'Welcome'}, ${account.firstName || 'researcher'}!`}
+      >
         {back
           ? 'Your Virtual Lab is as you left it.'
           : 'Your Virtual Lab is ready, with your first project and 100 free credits.'}
@@ -656,7 +707,9 @@ function Welcome({
           ['Credits', '100'],
         ].map(([term, value]) => (
           <div key={term} className="flex min-w-0 flex-col gap-[2px]">
-            <dt className="text-[11px] font-semibold tracking-[0.12em] text-neutral-400 uppercase">{term}</dt>
+            <dt className="text-[11px] font-semibold tracking-[0.12em] text-neutral-400 uppercase">
+              {term}
+            </dt>
             <dd className="text-primary-9 truncate text-[14px] font-semibold">{value}</dd>
           </div>
         ))}

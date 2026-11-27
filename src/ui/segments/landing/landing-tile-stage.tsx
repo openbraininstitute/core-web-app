@@ -1,12 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { firstPaintReady, firstPaintShown, wordsBegan } from './first-paint-handoff';
 import { LANDING_MODELS as FEATURES } from './landing-models';
 
 import styles from './landing-tile-stage.module.css';
+
+const loadRenderer = () => import('./landing-tile-renderer');
 
 /** Sent on the window each time the landing lays itself out anew, for what is placed by it (the page's logo). */
 export const LANDING_LAID_OUT = 'landing-laid-out';
@@ -32,6 +34,7 @@ const FILM_MS = 8000;
 
 /** Reserved space above the mobile artwork for the tagline, CTA and credit message. */
 const PHONE_COPY_HEIGHT = 180;
+const NO_INTERACTION = () => {};
 
 /** The supplied landing composition, with accessible controls and a stacked phone layout. */
 export function LandingTileStage({
@@ -39,7 +42,7 @@ export function LandingTileStage({
   reduced,
   visible,
   onSelect,
-  onInteraction = () => {},
+  onInteraction = NO_INTERACTION,
 }: {
   scene: number;
   reduced: boolean;
@@ -59,7 +62,9 @@ export function LandingTileStage({
     dispose: () => void;
   } | null>(null);
   const latest = useRef({ scene, onSelect, onInteraction, visible });
-  latest.current = { scene, onSelect, onInteraction, visible };
+  useLayoutEffect(() => {
+    latest.current = { scene, onSelect, onInteraction, visible };
+  }, [scene, onSelect, onInteraction, visible]);
   // Drawn only while on screen too: the drift and the loops would otherwise go on under the chapters.
   const onScreen = useRef(true);
   const [ready, setReady] = useState(false);
@@ -76,10 +81,7 @@ export function LandingTileStage({
 
   // "Try it now" comes in with the logo and words (user), then pulses.
   useEffect(() => {
-    if (reduced) {
-      setCtaState('alive');
-      return;
-    }
+    if (reduced) return;
     const began = wordsBegan(headline.current?.querySelector('span'));
     const after = (ms: number) => Math.max(0, began + ms - performance.now());
     const entrance = window.setTimeout(
@@ -163,7 +165,7 @@ export function LandingTileStage({
       engine.current?.setVisible(latest.current.visible && onScreen.current);
     });
     seen.observe(container);
-    void import('./landing-tile-renderer')
+    void loadRenderer()
       .then(({ createLandingTileRenderer }) => {
         if (disposed) return;
         try {
@@ -254,7 +256,7 @@ export function LandingTileStage({
           <div className={styles.ctaGroup}>
             <Link
               className={styles.cta}
-              data-cta-state={ctaState}
+              data-cta-state={reduced ? 'alive' : ctaState}
               data-landing-cta
               aria-describedby="landing-free-offer"
               href="/app/virtual-lab"

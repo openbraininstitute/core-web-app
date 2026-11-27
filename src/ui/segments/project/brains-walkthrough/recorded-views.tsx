@@ -334,9 +334,6 @@ export function StartNow() {
       <button type="button" onClick={actions?.enter} className={labs.button}>
         Get Started
       </button>
-      <small className="block text-[14px] leading-relaxed">
-        Create your account, set up your Virtual Lab and begin.
-      </small>
     </div>
   );
 }

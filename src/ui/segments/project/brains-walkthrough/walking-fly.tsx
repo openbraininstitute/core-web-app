@@ -1,5 +1,6 @@
 'use client';
 
+import { useQuery } from '@tanstack/react-query';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 
@@ -57,7 +58,13 @@ interface FlyWalk {
 interface Header {
   hz: number;
   frames: number;
-  parts: Array<{ vertices: number; triangles: number; positions: number; normals: number; indices: number }>;
+  parts: Array<{
+    vertices: number;
+    triangles: number;
+    positions: number;
+    normals: number;
+    indices: number;
+  }>;
   legs: string[];
   phases: Record<'walk' | 'turn' | 'stop', [number, number]>;
   animation: number;
@@ -88,12 +95,24 @@ function readFlyWalk(buffer: ArrayBuffer): FlyWalk {
   const parts = header.parts.map((part) => {
     const geometry = new THREE.BufferGeometry();
     const um = new Int16Array(buffer, at + part.positions, part.vertices * 3);
-    geometry.setAttribute('position', new THREE.BufferAttribute(Float32Array.from(um, (v) => v / 1000), 3));
+    geometry.setAttribute(
+      'position',
+      new THREE.BufferAttribute(
+        Float32Array.from(um, (v) => v / 1000),
+        3
+      )
+    );
     geometry.setAttribute(
       'normal',
-      new THREE.BufferAttribute(new Int8Array(buffer, at + part.normals, part.vertices * 3), 3, true)
+      new THREE.BufferAttribute(
+        new Int8Array(buffer, at + part.normals, part.vertices * 3),
+        3,
+        true
+      )
     );
-    geometry.setIndex(new THREE.BufferAttribute(new Uint16Array(buffer, at + part.indices, part.triangles * 3), 1));
+    geometry.setIndex(
+      new THREE.BufferAttribute(new Uint16Array(buffer, at + part.indices, part.triangles * 3), 1)
+    );
     return geometry;
   });
   const bodies = 1 + header.legs.length;
@@ -113,7 +132,9 @@ function readFlyWalk(buffer: ArrayBuffer): FlyWalk {
     poses,
     middle,
     length: 2 * Math.max(middle.x - box.min.x, box.max.x - middle.x),
-    placement: new THREE.Matrix4().set(...(header.cns.placement as Parameters<THREE.Matrix4['set']>)),
+    placement: new THREE.Matrix4().set(
+      ...(header.cns.placement as Parameters<THREE.Matrix4['set']>)
+    ),
   };
 }
 
@@ -181,7 +202,9 @@ function blend(a: CameraPose, b: CameraPose, k: number): CameraPose {
 const samePose = (a: CameraPose | null, b: CameraPose) =>
   !!a &&
   a.umPerPx === b.umPerPx &&
-  [0, 1, 2].every((i) => a.target[i] === b.target[i] && a.from[i] === b.from[i] && a.up[i] === b.up[i]);
+  [0, 1, 2].every(
+    (i) => a.target[i] === b.target[i] && a.from[i] === b.from[i] && a.up[i] === b.up[i]
+  );
 
 /**
  * NeuroMechFly's body as glass round the Male CNS over the landing, walking in along the bottom right from past
@@ -193,23 +216,19 @@ const samePose = (a: CameraPose | null, b: CameraPose) =>
 export function FlyBody({ view }: { view: FramedView }) {
   const stage = useContext(FlyStageContext);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [walk, setWalk] = useState<FlyWalk | null>(null);
+  const { data: walk = null, error: walkError } = useQuery({
+    queryKey: ['walkthrough', 'fly-walk'],
+    queryFn: loadFlyWalk,
+    staleTime: Infinity,
+    retry: false,
+  });
   const latest = useRef({ entered: stage?.entered ?? false, started: stage?.started ?? false });
   const poke = useRef<(() => void) | null>(null);
   const walkRef = stage?.walk;
 
   useEffect(() => {
-    let gone = false;
-    loadFlyWalk().then(
-      (loaded) => {
-        if (!gone) setWalk(loaded);
-      },
-      (e: unknown) => logError('Could not load the fly to walk over the landing', e)
-    );
-    return () => {
-      gone = true;
-    };
-  }, []);
+    if (walkError) logError('Could not load the fly to walk over the landing', walkError);
+  }, [walkError]);
 
   useEffect(() => {
     latest.current = { entered: stage?.entered ?? false, started: stage?.started ?? false };
@@ -225,7 +244,12 @@ export function FlyBody({ view }: { view: FramedView }) {
     const framed = framedCamera.bind(view);
     const now = cameraNow.bind(view);
 
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, premultipliedAlpha: true });
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      alpha: true,
+      antialias: true,
+      premultipliedAlpha: true,
+    });
     renderer.setClearColor(0x000000, 0);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     const material = new THREE.ShaderMaterial({
@@ -279,19 +303,27 @@ export function FlyBody({ view }: { view: FramedView }) {
     const worldUp = new THREE.Vector3(0, 0, 1);
     poseAt(walk, last, 0, position, quaternion);
     const facing = new THREE.Vector3(1, 0, 0).applyQuaternion(quaternion).setZ(0).normalize();
-    const fromWorld = facing.multiplyScalar(Math.cos(ELEVATION)).addScaledVector(worldUp, Math.sin(ELEVATION));
+    const fromWorld = facing
+      .multiplyScalar(Math.cos(ELEVATION))
+      .addScaledVector(worldUp, Math.sin(ELEVATION));
     const across = new THREE.Vector3().crossVectors(worldUp, fromWorld).normalize();
     const upScreen = new THREE.Vector3().crossVectors(fromWorld, across);
 
     let width = 0;
-    const umPerPx = () => (1000 * walk.length) / (FLY_FILL * Math.max(1, width || carrier.clientWidth));
+    const umPerPx = () =>
+      (1000 * walk.length) / (FLY_FILL * Math.max(1, width || carrier.clientWidth));
     /** Where the camera sees the fly from at `frame`, in the pack's frame. */
     const landingPose = (frame: number): CameraPose => {
       poseAt(walk, frame, 0, position, quaternion);
       const back = quaternion.clone().invert();
       const from = fromWorld.clone().applyQuaternion(back).applyMatrix3(turnIntoCns).normalize();
       const up = worldUp.clone().applyQuaternion(back).applyMatrix3(turnIntoCns).normalize();
-      return { target: middleInCns.toArray(), from: from.toArray(), up: up.toArray(), umPerPx: umPerPx() };
+      return {
+        target: middleInCns.toArray(),
+        from: from.toArray(),
+        up: up.toArray(),
+        umPerPx: umPerPx(),
+      };
     };
     /** Where the fly's middle is across the view's plane at `frame`, CSS px of the view, from where it ends up. */
     const pointAt = (frame: number) => {
@@ -346,7 +378,8 @@ export function FlyBody({ view }: { view: FramedView }) {
     let lastTime = 0;
     // Where motion is to be kept down, or made past the landing, it is found standing.
     let walked =
-      latest.current.entered || (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
+      latest.current.entered ||
+      (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
     const pace = (at: number) => {
       const k = THREE.MathUtils.smoothstep(at, walk.turn - RAMP_FRAMES, walk.turn + RAMP_FRAMES);
       return SLOW_WALK + (SLOW_TURN - SLOW_WALK) * k;
@@ -383,7 +416,9 @@ export function FlyBody({ view }: { view: FramedView }) {
       const walking = !walked && started && !first && from !== null;
       if (walking && from !== null) {
         if (!startAt) startAt = time + WALK_AFTER_MS;
-        if (time > startAt) frame += (Math.min(time - Math.max(lastTime, startAt), 100) / 1000) * pace(frame) * walk.hz;
+        if (time > startAt)
+          frame +=
+            (Math.min(time - Math.max(lastTime, startAt), 100) / 1000) * pace(frame) * walk.hz;
         if (frame >= last) {
           frame = last;
           walked = true;
@@ -405,7 +440,10 @@ export function FlyBody({ view }: { view: FramedView }) {
       if (glide && pose) {
         k = ease(Math.min(1, (time - glide.start) / GLIDE_MS));
         pose = blend(glide.pose, pose, k);
-        to = { x: glide.shifted.x + (to.x - glide.shifted.x) * k, y: glide.shifted.y + (to.y - glide.shifted.y) * k };
+        to = {
+          x: glide.shifted.x + (to.x - glide.shifted.x) * k,
+          y: glide.shifted.y + (to.y - glide.shifted.y) * k,
+        };
         if (k >= 1) glide = null;
       } else glide = null;
       shifted = to;

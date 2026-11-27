@@ -1,5 +1,3 @@
-import { Suspense } from 'react';
-
 import { BrainsLanding } from '@/ui/segments/landing/brains-landing';
 import { LandingFirstPaint } from '@/ui/segments/landing/landing-first-paint';
 import { generateWebsiteMetadata } from '@/ui/segments/landing/metadata/metadata';
@@ -17,13 +15,11 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /** The platform's landing: the Fly brain walkthrough, in place of the marketing home page. */
 export default function RootPage() {
-  // The logo and words go out in the first HTML, not held back with the landing while it waits on the session.
+  // Public marketing content has no server session or async data to wait for.
   return (
     <>
       <LandingFirstPaint />
-      <Suspense fallback={null}>
-        <BrainsLanding />
-      </Suspense>
+      <BrainsLanding />
     </>
   );
 }

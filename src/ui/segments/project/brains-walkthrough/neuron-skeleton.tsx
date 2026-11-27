@@ -1,12 +1,15 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
 
 import { logError } from '@/utils/logger';
+
+import { loadSkeleton } from './walkthrough-data';
 
 import type { FramedView } from '@/features/viewer-3d/bare';
 import type { ViewFrame } from '@/features/viewer-3d/engine/scene-view';
@@ -47,71 +50,79 @@ export function NeuronSkeleton({
   width?: number;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [drawing, setDrawing] = useState<{ draw: (frame: ViewFrame) => void } | null>(null);
+  const { data: swc, error } = useQuery({
+    queryKey: ['walkthrough', 'skeleton', body],
+    queryFn: ({ signal }) => loadSkeleton(body, signal),
+    staleTime: Infinity,
+    retry: false,
+  });
 
   useEffect(() => {
+    if (error) {
+      logError('Could not draw the neuron picked', error);
+      return;
+    }
     const canvas = canvasRef.current;
-    if (!canvas) return;
-    let gone = false;
+    if (!canvas || !swc) return;
     let renderer: THREE.WebGLRenderer | null = null;
     let geometry: LineSegmentsGeometry | null = null;
-    const material = new LineMaterial({ color, linewidth: width, depthTest: false, transparent: true });
-    fetch(`/api/walkthrough/male-cns-skeleton/${body}`)
-      .then((response) => {
-        if (!response.ok) throw new Error(`No skeleton for body ${body}: ${response.status}`);
-        return response.text();
-      })
-      .then(
-        (swc) => {
-          if (gone) return;
-          geometry = new LineSegmentsGeometry();
-          geometry.setPositions(segmentsOf(swc));
-          renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-          renderer.setClearColor(0x000000, 0);
-          renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO));
-          const lines = new LineSegments2(geometry, material);
-          lines.matrixAutoUpdate = false;
-          lines.frustumCulled = false;
-          const scene = new THREE.Scene();
-          scene.add(lines);
-          const camera = new THREE.Camera();
-          camera.matrixAutoUpdate = false;
-          camera.matrixWorldAutoUpdate = false;
-          let size = '';
-          const draw = (seen: ViewFrame) => {
-            if (!renderer) return;
-            const at = `${seen.width}x${seen.height}`;
-            if (at !== size) {
-              size = at;
-              renderer.setSize(seen.width, seen.height, false);
-              material.resolution.set(seen.width, seen.height);
-            }
-            camera.matrixWorldInverse.copy(seen.view);
-            camera.matrixWorld.copy(seen.view).invert();
-            camera.projectionMatrix.copy(seen.projection);
-            camera.projectionMatrixInverse.copy(seen.projection).invert();
-            const [x, y, z] = seen.origin;
-            lines.matrix.makeTranslation(-x, -y, -z);
-            lines.matrixWorldNeedsUpdate = true;
-            renderer.render(scene, camera);
-          };
-          setDrawing({ draw });
-        },
-        (e: unknown) => logError('Could not draw the neuron picked', e)
-      );
-    return () => {
-      gone = true;
-      setDrawing(null);
+    let unsubscribe: (() => void) | undefined;
+    const material = new LineMaterial({
+      color,
+      linewidth: width,
+      depthTest: false,
+      transparent: true,
+    });
+    const dispose = () => {
+      unsubscribe?.();
       geometry?.dispose();
-      material.dispose();
       renderer?.dispose();
       renderer?.forceContextLoss();
     };
-  }, [body, color, width]);
-
-  useEffect(() => {
-    if (drawing) return view.onFrame(drawing.draw);
-  }, [view, drawing]);
+    try {
+      geometry = new LineSegmentsGeometry();
+      geometry.setPositions(segmentsOf(swc));
+      renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      renderer.setClearColor(0x000000, 0);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO));
+      const lines = new LineSegments2(geometry, material);
+      lines.matrixAutoUpdate = false;
+      lines.frustumCulled = false;
+      const scene = new THREE.Scene();
+      scene.add(lines);
+      const camera = new THREE.Camera();
+      camera.matrixAutoUpdate = false;
+      camera.matrixWorldAutoUpdate = false;
+      let size = '';
+      const draw = (seen: ViewFrame) => {
+        if (!renderer) return;
+        const at = `${seen.width}x${seen.height}`;
+        if (at !== size) {
+          size = at;
+          renderer.setSize(seen.width, seen.height, false);
+          material.resolution.set(seen.width, seen.height);
+        }
+        camera.matrixWorldInverse.copy(seen.view);
+        camera.matrixWorld.copy(seen.view).invert();
+        camera.projectionMatrix.copy(seen.projection);
+        camera.projectionMatrixInverse.copy(seen.projection).invert();
+        const [x, y, z] = seen.origin;
+        lines.matrix.makeTranslation(-x, -y, -z);
+        lines.matrixWorldNeedsUpdate = true;
+        renderer.render(scene, camera);
+      };
+      unsubscribe = view.onFrame(draw);
+    } catch (failure) {
+      material.dispose();
+      dispose();
+      logError('Could not draw the neuron picked', failure);
+      return;
+    }
+    return () => {
+      material.dispose();
+      dispose();
+    };
+  }, [swc, error, color, width, view]);
 
   return (
     <canvas

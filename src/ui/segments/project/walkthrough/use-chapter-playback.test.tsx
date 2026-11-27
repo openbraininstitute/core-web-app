@@ -68,6 +68,27 @@ describe('chapter playback', () => {
     expect(video.loop).toBe(true);
   });
 
+  it('releases video events and timers when unmounted before playback completes', () => {
+    const layer = document.createElement('div');
+    layer.dataset.stageCurrent = 'true';
+    const video = document.createElement('video');
+    video.loop = true;
+    layer.append(video);
+    host.append(layer);
+    const onComplete = vi.fn();
+    const stage = { current: host };
+    const { unmount } = renderHook(() =>
+      useChapterPlayback({ stage, chapterId: 'labs', enabled: true, onComplete })
+    );
+    unmount();
+    expect(video.paused).toBe(true);
+    expect(video.loop).toBe(true);
+    fireEvent.ended(video);
+    act(() => vi.advanceTimersByTime(60_000));
+    expect(onComplete).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
   it('keeps the final chapter video looping, including after pausing and resuming', () => {
     const layer = document.createElement('div');
     layer.dataset.stageCurrent = 'true';

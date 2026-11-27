@@ -74,7 +74,7 @@ export function AgentPrompts({ className }: { className?: string }) {
     typed: 0,
   });
   // Which boxes have connected once: they stay connected while the other has its turn.
-  const [connected, setConnected] = useState<boolean[]>(PROMPTS.map(() => false));
+  const [connected, setConnected] = useState<boolean[]>(() => PROMPTS.map(() => false));
 
   // From the top whenever it comes into view; still while it is not.
   useEffect(() => {

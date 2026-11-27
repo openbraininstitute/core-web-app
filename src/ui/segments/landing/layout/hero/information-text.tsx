@@ -4,18 +4,16 @@ import styles from './information-text.module.css';
 
 /** Animate once on mount without changing the page's title or its wrapping. */
 export function InformationTitle({ text }: { text: string }) {
-  let character = 0;
   return (
     <span data-information-title aria-hidden="true">
-      {text.split(/(\s+)/).map((word) => {
+      {Array.from(text.matchAll(/\s+|\S+/g), ({ 0: word, index: start }) => {
         if (/^\s+$/.test(word)) {
-          character += word.length;
-          return <span key={`${character}-space`}>{word}</span>;
+          return <span key={`${start}-space`}>{word}</span>;
         }
         return (
-          <span key={`${character}-${word}`} className={styles.word}>
-            {Array.from(word).map((letter) => {
-              const at = character++;
+          <span key={`${start}-${word}`} className={styles.word}>
+            {Array.from(word).map((letter, index) => {
+              const at = start + index;
               return (
                 <span
                   key={`${at}-${letter}`}

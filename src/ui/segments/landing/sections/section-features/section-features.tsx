@@ -15,8 +15,11 @@ export default async function SectionFeatures() {
 
   return (
     <div className="relative w-screen">
-      {blocks.map((block, index) => (
-        <FeatureBlock key={block.titleH1 ?? block.titleH2 ?? index} content={block} />
+      {blocks.map((block) => (
+        <FeatureBlock
+          key={block.titleH1 ?? block.titleH2 ?? JSON.stringify(block)}
+          content={block}
+        />
       ))}
     </div>
   );

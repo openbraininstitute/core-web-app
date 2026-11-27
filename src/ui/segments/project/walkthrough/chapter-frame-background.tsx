@@ -1,6 +1,8 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
+
+const loadRenderer = () => import('./chapter-frame-renderer');
 
 /** One stationary frame behind the entire public tour; chapters move over it. */
 export function ChapterFrameBackground({ active }: { active: boolean }) {
@@ -9,7 +11,9 @@ export function ChapterFrameBackground({ active }: { active: boolean }) {
     null
   );
   const isActive = useRef(active);
-  isActive.current = active;
+  useLayoutEffect(() => {
+    isActive.current = active;
+  }, [active]);
 
   useEffect(() => {
     const surface = canvas.current;
@@ -114,15 +118,15 @@ export function ChapterFrameBackground({ active }: { active: boolean }) {
     };
     const resize = new ResizeObserver(schedule);
     resize.observe(tour);
+    const media = tour.querySelector('#walkthrough-analysis [data-chapter-media]');
+    if (media) resize.observe(media);
     const visibility = () => renderer.current?.setVisible(isActive.current && !document.hidden);
     document.addEventListener('visibilitychange', visibility);
     preference.addEventListener('change', schedule);
-    void Promise.all([import('./chapter-frame-renderer'), document.fonts.ready])
+    void Promise.all([loadRenderer(), document.fonts.ready])
       .then(([module]) => {
         if (disposed) return;
         create = module.createChapterFrameRenderer;
-        const media = tour.querySelector('#walkthrough-analysis [data-chapter-media]');
-        if (media) resize.observe(media);
         schedule();
       })
       .catch(() => {
