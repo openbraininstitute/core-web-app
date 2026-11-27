@@ -47,12 +47,10 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 interface SelectorModalProps {
   disabled?: boolean;
   entityType: TEntityTypeDict;
-  onChange: (newState: Record<string, ConfigValue>) => void;
+  onChange: (next: ConfigValue) => void;
   filters?: Record<string, unknown>;
   value?: ConfigValue;
   valueType?: string;
-  state: Record<string, ConfigValue>;
-  fieldKey: string;
   /** json schema fragment for the field; supplies accepted types when declared */
   paramSchema?: Record<string, unknown>;
   /**
@@ -69,8 +67,6 @@ export function EntitySelectorSingle({
   disabled,
   filters = {},
   value,
-  state,
-  fieldKey,
   valueType,
   paramSchema,
   resolveAsType,
@@ -87,7 +83,7 @@ export function EntitySelectorSingle({
 
   // `openOverlay` snapshots the browse widget at open time; the confirm/remove
   // handlers must merge against the current block state, not the captured one
-  const latestWrite = useLatest({ state, onChange });
+  const latestOnChange = useLatest(onChange);
 
   const browseEntityType = entityType as unknown as TExtendedEntitiesTypeDict;
   const selectedRef = isFromIdRef(value) ? value : null;
@@ -156,13 +152,12 @@ export function EntitySelectorSingle({
         // read `state`/`onChange` through a ref: `openOverlay` snapshots this
         // widget at open time, so merging against a captured `state` would
         // clobber any sibling-field edit that landed while the picker was open
-        const { state: latestState, onChange: latestOnChange } = latestWrite.current;
-        latestOnChange({ ...latestState, [fieldKey]: nextRef });
+        latestOnChange.current(nextRef);
         previewRef(nextRef);
       }
       closeSurface();
     },
-    [closeSurface, fieldKey, latestWrite, previewRef, valueType]
+    [closeSurface, latestOnChange, previewRef, valueType]
   );
 
   // closed without confirming: keep previewing whatever is still selected
@@ -204,9 +199,8 @@ export function EntitySelectorSingle({
 
   const handleRemove = useCallback(() => {
     setEntityPreview((current) => (current?.id === selectedRef?.id_str ? null : current));
-    const { state: latestState, onChange: latestOnChange } = latestWrite.current;
-    latestOnChange({ ...latestState, [fieldKey]: null });
-  }, [fieldKey, latestWrite, selectedRef?.id_str, setEntityPreview]);
+    latestOnChange.current(null);
+  }, [latestOnChange, selectedRef?.id_str, setEntityPreview]);
 
   return (
     <div

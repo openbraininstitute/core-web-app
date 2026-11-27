@@ -2,10 +2,11 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { NeuronSetCombination } from '@/features/scan-config/components/ui-elements/neuron-set-combination';
+import { createScanConfigStore } from '@/features/scan-config/store';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
+import { ScanConfigStoreProvider } from '@/features/scan-config/use-config-store';
 
 import type {
-  Config,
   ConfigSchema,
   NeuronSetCombination as NeuronSetCombinationSchema,
 } from '@/features/scan-config/types';
@@ -28,14 +29,15 @@ describe('NeuronSetCombination', () => {
     } as NeuronSetCombinationSchema;
 
     render(
-      <NeuronSetCombination
-        paramSchema={paramSchema}
-        value={[[null, 'union']]}
-        onChange={() => {}}
-        disabled={false}
-        config={{} as Config}
-        schema={schema}
-      />
+      <ScanConfigStoreProvider store={createScanConfigStore({})}>
+        <NeuronSetCombination
+          paramSchema={paramSchema}
+          value={[[null, 'union']]}
+          onChange={() => {}}
+          disabled={false}
+          schema={schema}
+        />
+      </ScanConfigStoreProvider>
     );
 
     expect(screen.getByText('Default: All Virtual Neurons')).toBeInTheDocument();

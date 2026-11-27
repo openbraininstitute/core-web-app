@@ -8,6 +8,12 @@ import { cn } from '@/utils/css-class';
 export const BOX_CLASS =
   'rounded-3xl bg-white ring-1 ring-primary-9/5 shadow-[inset_0_1px_0_rgb(255_255_255/0.9),0_4px_12px_-6px_rgb(0_39_102/0.08),0_1px_2px_rgb(0_39_102/0.04)]';
 
+/** The scan-config page's inset from the main area's left edge, every host alike. */
+export const PAGE_INSET_CLASS = 'pl-2';
+
+/** A right-hand pane's inset: past the grid gap, top and foot level with the blocks-and-form window. */
+export const PANE_INSET_CLASS = 'pt-px pr-px pb-3 pl-3';
+
 /**
  * The hover card the results' plots show (their `TooltipCard`): near-white over what is under it,
  * a grey rule and a soft shadow.

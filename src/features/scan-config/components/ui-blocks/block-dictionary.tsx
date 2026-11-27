@@ -3,11 +3,10 @@ import { useAtomValue } from 'jotai';
 
 import { useFlag } from '@/features/feature-flags';
 import { electrodeOverlaysFlag } from '@/features/feature-flags/flags';
-import { nextEntryName } from '@/features/scan-config/components/hooks';
+import { createEntry } from '@/features/scan-config/commands';
 import { buildBlockDefaults } from '@/features/scan-config/components/hooks/block-defaults';
 import {
   getBlockUsabilityConfig,
-  isRootBlock,
   type TSchemaMappingConfiguration,
 } from '@/features/scan-config/components/hooks/schema';
 import { circuitSceneAnchorAtom } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
@@ -23,6 +22,14 @@ import { isPlainObject } from '@/features/scan-config/components/utils';
 import { resolveScanConfigEditingLocked } from '@/features/scan-config/hooks/use-config-editing-locked';
 import { useDiffPreview } from '@/features/scan-config/hooks/use-diff-preview-atom';
 import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
+import { isRootBlock } from '@/features/scan-config/types';
+import {
+  BlockScopeProvider,
+  useBlockProperty,
+  useGetConfig,
+  useHasBlock,
+  useSetConfig,
+} from '@/features/scan-config/use-config-store';
 import { useAIConfig } from '@/services/ai-agent';
 import { configDiffsAtom } from '@/state/config-highlights';
 import { MarkdownDescription } from '@/ui/molecules/markdown-description';
@@ -30,7 +37,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip'
 import { cn } from '@/utils/css-class';
 
 import type {
-  Config,
   ConfigSchema,
   ConfigValue,
   IBlockDictionary,
@@ -47,11 +53,8 @@ type Props = {
   setSelectedEntry: (entry: string) => void;
   campaignId: string;
   loading: boolean;
-  config: Config;
-  setConfig: (newConfig: Config) => void;
   selectedBlockSchema?: TBlock;
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
-  allEntries: Set<string>;
   onNewBlockClick?: () => void;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
   errorPathPrefix?: string;
@@ -65,10 +68,7 @@ export default function BlockDictionary({
   setSelectedEntry,
   campaignId,
   loading,
-  config,
-  setConfig,
   entity,
-  allEntries,
   onNewBlockClick,
   schemaMappingConfig,
   errorPathPrefix,
@@ -78,13 +78,11 @@ export default function BlockDictionary({
   const circuitSceneAnchor = useAtomValue(circuitSceneAnchorAtom);
   const showingDiffs = useShowingDiffs();
   const previewData = useDiffPreview(selectedRootElement, selectedEntry);
+  const hasEntry = useHasBlock(selectedRootElement, selectedEntry);
+  const selectedBlockLocal = useBlockProperty(selectedRootElement, selectedEntry, 'type');
   const electrodeOverlaysEnabled = useFlag(electrodeOverlaysFlag.key);
-
-  const selectedBlockLocal =
-    isPlainObject(config[selectedRootElement]) &&
-    isPlainObject(config[selectedRootElement][selectedEntry])
-      ? config[selectedRootElement][selectedEntry]?.type
-      : undefined;
+  const getConfig = useGetConfig();
+  const setConfig = useSetConfig();
 
   const selectedBlockAI =
     aiConfig &&
@@ -109,52 +107,36 @@ export default function BlockDictionary({
       d.path[1] === selectedEntry
   );
 
-  if (
-    selectedBlockSchema &&
-    isPlainObject(config[selectedRootElement]) &&
-    isPlainObject(config[selectedRootElement][selectedEntry])
-  ) {
-    const liveState = config[selectedRootElement]?.[selectedEntry];
-    // Preview atom takes priority when showing diffs so the Block displays
-    // the new/restored values instead of the current live values.
-    const state = previewData ?? liveState ?? {};
-
+  if (selectedBlockSchema && hasEntry) {
     // Electrode sweeps drive a 3D preview that can only draw one coordinate, so
     // their values get per-value eyes; other workflows render sweeps unchanged.
     const offersScanValueSelection =
       electrodeOverlaysEnabled && selectedRootElement === ELECTRODE_LOCATIONS_CONFIG_KEY;
 
     const block = (
-      <Block
-        schema={schema}
+      <BlockScopeProvider
         key={`${selectedRootElement}_${selectedEntry}`}
-        disabled={resolveScanConfigEditingLocked({
-          campaignId,
-          loading,
-          aiConfig,
-          isChatReady,
-          showingDiffs,
-        })}
-        config={config}
-        blockSchema={selectedBlockSchema}
-        state={state}
-        setState={(newState: Record<string, ConfigValue>) => {
-          if (!isPlainObject(config[selectedRootElement])) return;
-
-          setConfig({
-            ...config,
-            [selectedRootElement]: {
-              ...config[selectedRootElement],
-              [selectedEntry]: newState,
-            },
-          });
-        }}
-        entity={entity}
-        schemaMappingConfig={schemaMappingConfig}
         rootElement={selectedRootElement}
-        selectedEntry={selectedEntry}
-        errorPathPrefix={errorPathPrefix}
-      />
+        entry={selectedEntry}
+        preview={previewData}
+      >
+        <Block
+          schema={schema}
+          disabled={resolveScanConfigEditingLocked({
+            campaignId,
+            loading,
+            aiConfig,
+            isChatReady,
+            showingDiffs,
+          })}
+          blockSchema={selectedBlockSchema}
+          entity={entity}
+          schemaMappingConfig={schemaMappingConfig}
+          rootElement={selectedRootElement}
+          selectedEntry={selectedEntry}
+          errorPathPrefix={errorPathPrefix}
+        />
+      </BlockScopeProvider>
     );
 
     return offersScanValueSelection ? (
@@ -236,20 +218,16 @@ export default function BlockDictionary({
                         >)
                       : initial;
 
-                  const newEntry = nextEntryName(schema, selectedRootElement, allEntries, o);
+                  const latest = getConfig();
+                  if (!isPlainObject(latest[selectedRootElement])) return;
 
-                  setSelectedEntry(newEntry);
-                  allEntries.add(newEntry);
-
-                  if (!isPlainObject(config) || !isPlainObject(config[selectedRootElement])) return;
-
-                  setConfig({
-                    ...config,
-                    [selectedRootElement]: {
-                      ...config[selectedRootElement],
-                      [newEntry]: seededInitial,
-                    },
+                  const created = createEntry(latest, schema, {
+                    dictionary: selectedRootElement,
+                    block: seededInitial,
+                    variant: o,
                   });
+                  setSelectedEntry(created.name);
+                  setConfig(created.config);
                 }}
                 data-scan-config-block-element-item={`${blockDictionarySchema.ui_element}_item`}
               >

@@ -11,9 +11,8 @@ import type { ConfigValue } from '@/features/scan-config/types';
 /** Props for the MEModel full-neuron variable modification UI. */
 export type MeModelGlobalProps = TUseMeModelManipulationDataParams & {
   disabled: boolean;
-  state: Record<string, ConfigValue>;
-  setState: (newState: Record<string, ConfigValue>) => void;
-  fieldKey: string;
+  value: ConfigValue | undefined;
+  onChange: (next: ConfigValue) => void;
   modificationType: string;
   errorPathPrefix?: string;
 };
@@ -29,9 +28,8 @@ export function Global({
   endpoint,
   entityId,
   disabled,
-  state,
-  setState,
-  fieldKey,
+  value,
+  onChange,
   modificationType,
   errorPathPrefix,
 }: MeModelGlobalProps) {
@@ -43,9 +41,8 @@ export function Global({
       loading={loading}
       reason={reason}
       disabled={disabled}
-      state={state}
-      setState={setState}
-      fieldKey={fieldKey}
+      value={value}
+      onChange={onChange}
       modificationType={modificationType}
       errorPathPrefix={errorPathPrefix}
     />

@@ -4,14 +4,13 @@ import { match } from 'ts-pattern';
 import { CountBadge, LeftMenuTab } from '@/features/scan-config/components/components';
 import { GLOBAL_PARAMETER_KEYS } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/global-parameters-selection';
 import {
-  errorsUnder,
-  hasErrorAt,
   nonParameterErrors,
   parameterErrors,
   selectedModelCount,
   totalAssignedModelCount,
   totalAssignedParameterCount,
 } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
+import { errorsUnder, hasErrorAt } from '@/features/scan-config/store';
 import {
   EMODEL_OPTIMISATION_MECHANISMS_TABS,
   EModelOptimisationMechanismsTabs,

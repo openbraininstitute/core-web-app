@@ -11,25 +11,23 @@ import { kebabCase } from 'es-toolkit/compat';
 import { AnimatePresence, motion } from 'motion/react';
 import { Fragment, memo, useEffect, useMemo, useRef } from 'react';
 
-import { useFieldErrors } from '@/features/scan-config/components/hooks/field-errors';
+import { deleteEntry, renameEntry } from '@/features/scan-config/commands';
 import { DESCRIPTION_TOOLTIP_CLASS } from '@/features/scan-config/components/shared/box-class';
-import {
-  DISTANCE_DISTRIBUTIONS_KEY,
-  remapParameterDistributions,
-} from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
-import { clearDeletedBlockReferences } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/state';
 import { useEntryDiff } from '@/features/scan-config/hooks/use-entry-diff';
+import {
+  useEntryNames,
+  useEntrySummaries,
+  useGetConfig,
+  useHasIssues,
+  useSetConfig,
+} from '@/features/scan-config/use-config-store';
 import { MarkdownDescription } from '@/ui/molecules/markdown-description';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
-import { RewriteBlockReferencesModeDict, rewriteBlockReferences } from './rewrite-block-references';
-import { isPlainObject } from './utils';
-
-import type { ErrorObject } from 'ajv';
 import type { InputRef } from 'antd';
 import type React from 'react';
-import type { Config, ConfigSchema, IBlockDictionary, TBlock } from '@/features/scan-config/types';
+import type { ConfigSchema, IBlockDictionary, TBlock } from '@/features/scan-config/types';
 import type { ConfigHighlight } from '@/state/config-highlights';
 
 import styles from './block-dictionary-entries.module.css';
@@ -99,9 +97,14 @@ function EntryTab({
   );
 }
 
+/** The warning sign of one entry: shown while the entry has an issue. */
+function EntryWarning({ rootElement, entry }: { rootElement: string; entry: string }) {
+  const hasIssues = useHasIssues(`/${rootElement}/${entry}`);
+
+  return hasIssues ? <WarningFilled className="text-yellow-400!" /> : null;
+}
+
 export default function BlockDictionaryEntries({
-  config,
-  setConfig,
   rootElement,
   selectedEntry,
   selectedRootElement,
@@ -114,19 +117,15 @@ export default function BlockDictionaryEntries({
   setSelectedEntry,
   setSelectedRootElement,
   singularName,
-  allEntries,
   newKey,
   setNewKey,
   isEditingKey,
   setIsEditingKey,
-  errors,
   highlights = [],
   visible,
   rootElementSchema,
   schema,
 }: {
-  config: Config;
-  setConfig: (newConfig: Config) => void;
   schema: ConfigSchema;
   rootElementSchema: IBlockDictionary;
   rootElement: string;
@@ -141,17 +140,18 @@ export default function BlockDictionaryEntries({
   setSelectedEntry: (entry: string) => void;
   setSelectedRootElement: (rootElement: string) => void;
   singularName: string;
-  allEntries: Set<string>;
   newKey: string;
   setNewKey: (k: string) => void;
   isEditingKey: boolean;
   setIsEditingKey: (k: boolean) => void;
-  errors: ErrorObject<string, Record<string, any>, unknown>[] | null | undefined;
   highlights?: ConfigHighlight[];
   visible: boolean;
 }) {
+  const entries = useEntrySummaries(rootElement);
+  const allEntries = useEntryNames(schema);
+  const getConfig = useGetConfig();
+  const setConfig = useSetConfig();
   const newKeyError = allEntries.has(newKey) || !newKey || newKey === selectedEntry;
-  const fieldErrors = useFieldErrors();
 
   const renameInputRef = useRef<InputRef>(null);
   // Keying the focus effect off the renamed entry (not `isEditingKey`) refocuses only
@@ -164,10 +164,7 @@ export default function BlockDictionaryEntries({
     renameInputRef.current?.focus();
   }, [renamingEntryKey]);
 
-  const configKeys = useMemo(
-    () => new Set(Object.keys(config[rootElement] ?? {})),
-    [config, rootElement]
-  );
+  const configKeys = useMemo(() => new Set(entries.map((entry) => entry.name)), [entries]);
   const {
     getEntryDiffClass,
     deletedEntries: deletedEntriesFromHighlights,
@@ -180,37 +177,16 @@ export default function BlockDictionaryEntries({
     e.stopPropagation();
 
     if (newKeyError) return;
-    if (newKey === selectedEntry) return;
-    if (!isPlainObject(config[selectedRootElement])) return;
 
-    const newConfig = structuredClone(config);
-    const targetSection = newConfig[selectedRootElement];
+    const config = getConfig();
+    const renamed = renameEntry(config, schema, {
+      dictionary: selectedRootElement,
+      from: selectedEntry,
+      to: newKey,
+    });
+    if (renamed === config) return;
 
-    allEntries.delete(selectedEntry);
-    allEntries.add(newKey);
-
-    if (!isPlainObject(targetSection)) return;
-
-    const targetSectionRenamed = Object.fromEntries(
-      Object.entries(targetSection).map(([k, v]) => (k === selectedEntry ? [newKey, v] : [k, v]))
-    );
-
-    newConfig[selectedRootElement] = targetSectionRenamed;
-
-    rewriteBlockReferences(
-      newConfig,
-      { dictionary: selectedRootElement, name: selectedEntry },
-      { type: RewriteBlockReferencesModeDict.Rename, to: newKey }
-    );
-
-    // Distributions are referenced by plain string in each parameter's `distribution`, not via
-    // block references, so cascade the rename into every parameter that uses the old name.
-    const afterRename =
-      selectedRootElement === DISTANCE_DISTRIBUTIONS_KEY
-        ? remapParameterDistributions(newConfig, schema, selectedEntry, newKey)
-        : newConfig;
-
-    setConfig(afterRename);
+    setConfig(renamed);
 
     setIsEditingKey(false);
     setSelectedEntry(newKey);
@@ -269,12 +245,9 @@ export default function BlockDictionaryEntries({
               {/* Render added entries from highlights (restore flow, aiConfig may be null) */}
               {addedEntriesFromHighlights.map((entry) => renderBlockTab(entry))}
 
-              {Object.entries(config[rootElement] ?? {})
-                .filter(([block_key]) => {
-                  if (deletedConfigKeys.has(block_key)) return false;
-                  return true;
-                })
-                .map(([subkey, subValue]) => {
+              {entries
+                .filter((entry) => !deletedConfigKeys.has(entry.name))
+                .map(({ name: subkey, type: blockType }) => {
                   const isSelected =
                     selectedRootElement === rootElement && subkey === selectedEntry;
                   const entryDiffClass = getEntryDiffClass(subkey, isSelected);
@@ -373,63 +346,20 @@ export default function BlockDictionaryEntries({
                                       setEditing(false);
                                       setSelectedRootElement(rootElement);
 
-                                      if (!isPlainObject(config[rootElement])) return;
-
-                                      const newConfig = structuredClone(config);
-                                      const targetSection = newConfig[rootElement];
-
-                                      if (!isPlainObject(targetSection)) return;
-
-                                      delete targetSection[subkey];
-
-                                      // Schema-aware cleanup: clear refs + dependent manipulation fields
-                                      const cleaned = clearDeletedBlockReferences(
-                                        newConfig,
-                                        schema,
-                                        rootElement,
-                                        subkey
-                                      );
-
-                                      // Also clear nested refs (e.g. combination tuples)
-                                      Object.entries(cleaned).forEach(([configK, configV]) => {
-                                        if (configK === 'initialize' || !isPlainObject(configV))
-                                          return;
-
-                                        Object.values(configV).forEach((entryV) => {
-                                          rewriteBlockReferences(
-                                            entryV,
-                                            { dictionary: rootElement, name: subkey },
-                                            { type: RewriteBlockReferencesModeDict.Clear }
-                                          );
-                                        });
+                                      const config = getConfig();
+                                      const next = deleteEntry(config, schema, {
+                                        dictionary: rootElement,
+                                        name: subkey,
                                       });
+                                      if (next === config) return;
 
-                                      // Distributions are referenced by plain string, so reset any
-                                      // parameter using the deleted distribution back to uniform.
-                                      const afterDelete =
-                                        rootElement === DISTANCE_DISTRIBUTIONS_KEY
-                                          ? remapParameterDistributions(
-                                              cleaned,
-                                              schema,
-                                              subkey,
-                                              null
-                                            )
-                                          : cleaned;
-
-                                      setConfig(afterDelete);
-
+                                      setConfig(next);
                                       setSelectedEntry('');
-                                      allEntries.delete(subkey);
                                     }}
                                   />
                                 )}
 
-                              {(errors?.some((error) =>
-                                error.instancePath.startsWith(`/${rootElement}/${subkey}`)
-                              ) ||
-                                Array.from(fieldErrors.keys()).some((key) =>
-                                  key.startsWith(`${rootElement}/${subkey}`)
-                                )) && <WarningFilled className="text-yellow-400!" />}
+                              <EntryWarning rootElement={rootElement} entry={subkey} />
                             </div>
                           </EntryTab>
                         </TooltipTrigger>
@@ -443,12 +373,10 @@ export default function BlockDictionaryEntries({
                         >
                           <div className="text-base">
                             <BlockDictionaryEntryTooltip
-                              blockType={rootElementSchema.additionalProperties.oneOf.find((v) => {
-                                if (!isPlainObject(subValue)) return null;
-                                if (typeof subValue.type !== 'string') return null;
-
-                                return v.properties.type.const === subValue.type;
-                              })}
+                              blockType={rootElementSchema.additionalProperties.oneOf.find(
+                                (v) =>
+                                  blockType !== undefined && v.properties.type.const === blockType
+                              )}
                             />
                           </div>
                         </TooltipContent>

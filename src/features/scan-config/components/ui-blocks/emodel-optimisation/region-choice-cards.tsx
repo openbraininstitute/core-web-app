@@ -7,11 +7,11 @@ import { DESCRIPTION_TOOLTIP_CLASS } from '@/features/scan-config/components/sha
 import { IonChannelIcon } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/ion-channel-icon';
 import {
   assignedModelIds,
-  hasErrorAt,
   readMechanisms,
   regionParameterCounts,
   regionPath,
 } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
+import { hasErrorAt } from '@/features/scan-config/store';
 import { MarkdownDescription } from '@/ui/molecules/markdown-description';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';

@@ -1,14 +1,15 @@
 'use client';
 
 import { Alert, Checkbox, Empty } from 'antd';
+import { isEqual } from 'es-toolkit';
 import { useMemo, useState } from 'react';
 
 import {
   extractRecordingIds,
   useElectricalCellRecordingProperties,
 } from '@/features/scan-config/components/hooks/electrical-cell-recording-properties';
-import { useFieldError } from '@/features/scan-config/components/hooks/field-errors';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
+import { useConfigValue, useReportIssue } from '@/features/scan-config/use-config-store';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Skeleton } from '@/ui/molecules/skeleton';
 
@@ -23,17 +24,17 @@ import {
 } from './helpers';
 import { ProtocolCard, type TRenderField } from './protocol-card';
 
-import type { Config, ConfigSchema, ConfigValue, ParamSchema } from '@/features/scan-config/types';
+import type { ConfigSchema, ConfigValue, ParamSchema } from '@/features/scan-config/types';
 import type { TFeatureDef, TProtocolDef, TProtocolValue } from './types';
 
 /**
- * Publishes one validation error into the shared field-errors atom.
+ * Reports one validation error as an issue of the form.
  *
- * A component per error rather than one call for all of them, because `useFieldError` keys on a
+ * A component per error rather than one call for all of them, because `useReportIssue` keys on a
  * single path — and because unmounting one is what clears it once that error is resolved.
  */
-function FieldErrorRegistrar({ path, message }: { path: string; message: string }) {
-  useFieldError(path, message);
+function IssueReporter({ path, message }: { path: string; message: string }) {
+  useReportIssue(path, message);
   return null;
 }
 
@@ -74,24 +75,18 @@ function ProtocolCardSkeletons() {
  * recordings rather than from the schema alone.
  */
 export function SelectEFeaturesByProtocol({
-  fieldKey,
   value,
-  state,
-  setState,
+  onChange,
   paramSchema,
   schema,
-  config,
   disabled,
   renderField,
   errorPathPrefix,
 }: {
-  fieldKey: string;
   value: ConfigValue;
-  state: Record<string, ConfigValue>;
-  setState: (next: Record<string, ConfigValue>) => void;
+  onChange: (next: ConfigValue) => void;
   paramSchema: ParamSchema;
   schema: ConfigSchema;
-  config: Config;
   disabled: boolean;
   renderField: TRenderField;
   errorPathPrefix?: string;
@@ -110,15 +105,19 @@ export function SelectEFeaturesByProtocol({
     [catalogueDefs]
   );
 
+  // recordings are chosen in this editor, not on a browse page before it, so the selection lives
+  // in the config rather than in the route's session entity
+  const selectedRecordingIds = useConfigValue(extractRecordingIds, isEqual);
+
   const {
     data: recordingProperties,
     isLoading,
     isError,
-  } = useElectricalCellRecordingProperties({ config, schema, workspace });
-
-  // recordings are chosen in this editor, not on a browse page before it, so the selection lives
-  // in the config rather than in the route's session entity
-  const selectedRecordingIds = useMemo(() => extractRecordingIds(config), [config]);
+  } = useElectricalCellRecordingProperties({
+    recordingIds: selectedRecordingIds,
+    schema,
+    workspace,
+  });
   const hasSelectedRecordings = selectedRecordingIds.length > 0;
 
   const discoveredProtocols = recordingProperties?.Protocols;
@@ -163,10 +162,7 @@ export function SelectEFeaturesByProtocol({
   // the widget holds one merged feature list per protocol; obi-one wants a protocol's own
   // features and the catalogue extras in two separate fields, so every write goes through the split
   const commit = (protocols: TProtocolValue[]) => {
-    setState({
-      ...state,
-      [fieldKey]: serializeSelectionValue(selection, protocols, defsByType) as ConfigValue,
-    });
+    onChange(serializeSelectionValue(selection, protocols, defsByType) as ConfigValue);
   };
 
   const replaceProtocol = (typeName: string, next: TProtocolValue) => {
@@ -214,7 +210,7 @@ export function SelectEFeaturesByProtocol({
       data-scan-config-block-element={ScanConfigUIElementDict.SelectEFeaturesByProtocol}
     >
       {selectionErrors.map(({ key, message }) => (
-        <FieldErrorRegistrar key={key} path={`${errorPrefix}/${key}`} message={message} />
+        <IssueReporter key={key} path={`${errorPrefix}/${key}`} message={message} />
       ))}
 
       <Checkbox

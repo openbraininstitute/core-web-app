@@ -26,7 +26,6 @@ export const buildCircuitSynapticPhysiologyWorkflow = defineScanConfigWorkflow({
     config: TaskConfigType.CircuitSynapticPhysiologyConfig,
   },
   editor: {
-    className: 'px-4',
     campaignOriginAction: ScanConfigCampaignOriginActionDict.Task,
     defaultTab: {
       __activity: ScanConfigActivity.Build,

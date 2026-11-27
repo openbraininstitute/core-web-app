@@ -73,10 +73,10 @@ export function MechanismSelection({ rootSchema, value, onChange, disabled }: Pr
         description="Ion channel model entities available for assignment to morphology section lists."
       />
       <ModelIdentifierMultiple
-        fieldKey={ION_CHANNEL_MODELS_KEY}
         value={mechanisms[ION_CHANNEL_MODELS_KEY]}
-        state={mechanisms}
-        setState={setMechanismsState}
+        onChange={(models) =>
+          setMechanismsState({ ...mechanisms, [ION_CHANNEL_MODELS_KEY]: models })
+        }
         paramSchema={ionChannelModelsSchema}
         disabled={disabled}
         // standalone in this tab: show many rows before scrolling instead of the compact default

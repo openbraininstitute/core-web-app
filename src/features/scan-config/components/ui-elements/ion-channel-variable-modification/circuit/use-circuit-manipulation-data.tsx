@@ -6,10 +6,12 @@ import { type ReactNode, useEffect, useRef } from 'react';
 import { getObiOneErrorReason, toObiOneErrorBody } from '@/api/one/utils';
 import { useNeuronalManipulationProperties } from '@/features/scan-config/components/hooks/use-neuronal-manipulation-properties';
 import { resolveNeuronSet } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/state';
+import { isPlainObject } from '@/features/scan-config/components/utils';
+import { useConfigValue } from '@/features/scan-config/use-config-store';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 import type { MechanismVariablesRoot } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
-import type { Config, ConfigValue } from '@/features/scan-config/types';
+import type { ConfigValue } from '@/features/scan-config/types';
 
 const NO_VARIABLES_MESSAGE = 'No ion-channel variables are available for the selected neuron set.';
 const ERROR_MESSAGE = 'Could not load variables for the selected neuron set.';
@@ -35,13 +37,11 @@ function WarningsNote({ warnings }: { warnings: string[] }) {
 
 /** Parameters for {@link useCircuitManipulationData}. */
 export type TUseCircuitManipulationDataParams = {
-  config: Config;
-  state: Record<string, ConfigValue>;
-  setState: (newState: Record<string, ConfigValue>) => void;
-  /** Sibling field holding the neuron-set reference (`property_source_field`). */
-  sourceField: string;
-  /** Modification field key being edited. */
-  fieldKey: string;
+  /** The neuron-set reference held by the sibling field (`property_source_field`). */
+  reference: ConfigValue | undefined;
+  /** The modification being edited. */
+  value: ConfigValue | undefined;
+  onChange: (next: ConfigValue) => void;
   /** Schema `property_endpoints.NeuronalManipulation` path. */
   endpoint: string | undefined;
   /** Target Circuit entity id. */
@@ -60,35 +60,44 @@ export type TCircuitManipulationData = {
  * Resolves the sibling neuron set, fetches Circuit mechanism variables, and clears
  * the modification when the targeted neuron set changes.
  *
- * @param params - Form config/state, source field, endpoint, and Circuit entity id.
+ * @param params - The neuron-set reference, the modification, endpoint, and Circuit entity id.
  * @returns Mechanism variables, loading flag, and optional status reason.
  */
 export function useCircuitManipulationData({
-  config,
-  state,
-  setState,
-  sourceField,
-  fieldKey,
+  reference,
+  value,
+  onChange,
   endpoint,
   entityId,
 }: TUseCircuitManipulationDataParams): TCircuitManipulationData {
   const workspace = useWorkspace();
+  const dictionaryName =
+    isPlainObject(reference) && typeof reference.block_dict_name === 'string'
+      ? reference.block_dict_name
+      : undefined;
+  const dictionary = useConfigValue((config) =>
+    dictionaryName === undefined ? undefined : config[dictionaryName]
+  );
   const {
     signature: neuronSetSignature,
     value: neuronSet,
     referencedSets: neuronSets,
-  } = resolveNeuronSet(config, state[sourceField]);
+  } = resolveNeuronSet(
+    dictionaryName === undefined || dictionary === undefined
+      ? {}
+      : { [dictionaryName]: dictionary },
+    reference
+  );
 
-  const latestRef = useRef({ state, setState, fieldKey });
-  latestRef.current = { state, setState, fieldKey };
+  const latestRef = useRef({ value, onChange });
+  latestRef.current = { value, onChange };
   const previousTargetRef = useRef(neuronSetSignature);
   useEffect(() => {
     if (previousTargetRef.current === neuronSetSignature) return;
     previousTargetRef.current = neuronSetSignature;
 
-    const { state: latestState, setState: applyState, fieldKey: key } = latestRef.current;
-    if (latestState[key] == null) return;
-    applyState({ ...latestState, [key]: null });
+    if (latestRef.current.value == null) return;
+    latestRef.current.onChange(null);
   }, [neuronSetSignature]);
 
   const { data, isLoading, isError, error } = useNeuronalManipulationProperties({

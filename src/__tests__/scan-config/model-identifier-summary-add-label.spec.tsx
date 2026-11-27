@@ -1,10 +1,12 @@
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { ModelIdentifierSummaryView } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/summary-view';
 
+import { renderInForm } from './form-providers';
+
 function renderSummary(storageMode: 'list' | 'tuple', isScan?: boolean) {
-  render(
+  renderInForm(
     <ModelIdentifierSummaryView
       parsedValue={{ storageMode, items: [] }}
       fieldSchema={{}}

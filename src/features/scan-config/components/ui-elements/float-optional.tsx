@@ -5,6 +5,8 @@ import { useCallback } from 'react';
 
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 
+import type { TControlAria } from '@/features/scan-config/components/ui-elements/registry';
+
 const UNSET_PLACEHOLDER = 'Not set';
 
 /**
@@ -23,6 +25,8 @@ export function FloatOptional({
   exclusiveMax,
   onChange,
   disabled,
+  id,
+  aria,
 }: {
   value: number | null;
   min: number | undefined;
@@ -31,6 +35,8 @@ export function FloatOptional({
   exclusiveMax: number | undefined;
   onChange: (value: number | null) => void;
   disabled: boolean;
+  id?: string;
+  aria?: TControlAria;
 }) {
   const errorMessage = (() => {
     if (isNil(value)) return undefined;
@@ -52,6 +58,8 @@ export function FloatOptional({
       data-scan-config-block-element={ScanConfigUIElementDict.FloatOptional}
     >
       <InputNumber
+        id={id}
+        {...aria}
         data-testid="scan-config-optional-value"
         controls={false}
         disabled={disabled}

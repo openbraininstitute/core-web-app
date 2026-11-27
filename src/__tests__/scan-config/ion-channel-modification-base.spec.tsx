@@ -1,8 +1,10 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { GlobalModificationBase } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/global-base';
 import { RangeModificationBase } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/range-base';
+
+import { renderInForm } from './form-providers';
 
 import type { MechanismVariablesRoot } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
 import type { ConfigValue } from '@/features/scan-config/types';
@@ -26,23 +28,23 @@ describe('GlobalModificationBase', () => {
   const baseProps = {
     data: DATA,
     disabled: false,
-    setState: vi.fn(),
+    onChange: vi.fn(),
     fieldKey: 'modification',
     modificationType: 'GlobalModification',
   };
 
   it('shows the loading note while circuit variables are being fetched', () => {
-    render(<GlobalModificationBase {...baseProps} state={{}} loading reason={null} />);
+    renderInForm(<GlobalModificationBase {...baseProps} value={undefined} loading reason={null} />);
 
     expect(screen.getByText(/Loading variables/)).toBeInTheDocument();
     expect(screen.queryByText('Select a variable…')).not.toBeInTheDocument();
   });
 
   it('shows the reason note instead of the picker when one is provided', () => {
-    render(
+    renderInForm(
       <GlobalModificationBase
         {...baseProps}
-        state={{}}
+        value={undefined}
         loading={false}
         reason={<span>Could not load variables for the selected neuron set.</span>}
       />
@@ -55,22 +57,20 @@ describe('GlobalModificationBase', () => {
   });
 
   it('renders the empty picker (placeholder) when data is available but nothing is selected', () => {
-    render(<GlobalModificationBase {...baseProps} state={{}} />);
+    renderInForm(<GlobalModificationBase {...baseProps} value={undefined} />);
 
     expect(screen.getByText('Select a variable…')).toBeInTheDocument();
   });
 
   it('reflects an existing selection in the trigger and links to the ion-channel entity', () => {
-    const state: Record<string, ConfigValue> = {
-      modification: {
-        type: 'GlobalModification',
-        ion_channel_id: 'ic-natg',
-        channel_name: 'NaTg',
-        variable_name: 'gbar',
-        new_value: 0.05,
-      },
+    const value: ConfigValue = {
+      type: 'GlobalModification',
+      ion_channel_id: 'ic-natg',
+      channel_name: 'NaTg',
+      variable_name: 'gbar',
+      new_value: 0.05,
     };
-    render(<GlobalModificationBase {...baseProps} state={state} />);
+    renderInForm(<GlobalModificationBase {...baseProps} value={value} />);
 
     expect(screen.getByText('NaTg')).toBeInTheDocument();
     expect(screen.getByText('gbar')).toBeInTheDocument();
@@ -78,17 +78,15 @@ describe('GlobalModificationBase', () => {
   });
 
   it('shows a scan saved as a list of values, one field per value', () => {
-    const state: Record<string, ConfigValue> = {
-      modification: {
-        type: 'GlobalModification',
-        ion_channel_id: 'ic-natg',
-        channel_name: 'NaTg',
-        variable_name: 'gbar',
-        variable_type: 'RANGE',
-        new_value: [0.05, 0.1, 0.2],
-      },
+    const value: ConfigValue = {
+      type: 'GlobalModification',
+      ion_channel_id: 'ic-natg',
+      channel_name: 'NaTg',
+      variable_name: 'gbar',
+      variable_type: 'RANGE',
+      new_value: [0.05, 0.1, 0.2],
     };
-    render(<GlobalModificationBase {...baseProps} state={state} />);
+    renderInForm(<GlobalModificationBase {...baseProps} value={value} />);
 
     const fields = screen.getAllByTestId('scan-config-sweep-value');
     expect(fields.map((f) => (f.querySelector('input') ?? f).getAttribute('value'))).toEqual([
@@ -99,7 +97,7 @@ describe('GlobalModificationBase', () => {
   });
 
   it('turns a single value into a scan', () => {
-    const setState = vi.fn();
+    const onChange = vi.fn();
     const modification = {
       type: 'GlobalModification',
       ion_channel_id: 'ic-natg',
@@ -108,17 +106,17 @@ describe('GlobalModificationBase', () => {
       variable_type: 'RANGE',
       new_value: 0.05,
     };
-    render(<GlobalModificationBase {...baseProps} setState={setState} state={{ modification }} />);
+    renderInForm(
+      <GlobalModificationBase {...baseProps} onChange={onChange} value={modification} />
+    );
 
     fireEvent.click(screen.getByTestId('scan-config-sweep-expand'));
 
-    expect(setState).toHaveBeenCalledWith({
-      modification: { ...modification, new_value: [0.05, null] },
-    });
+    expect(onChange).toHaveBeenCalledWith({ ...modification, new_value: [0.05, null] });
   });
 
   it('saves null when the full-neuron value is cleared', () => {
-    const setState = vi.fn();
+    const onChange = vi.fn();
     const modification = {
       type: 'GlobalModification',
       ion_channel_id: 'ic-natg',
@@ -127,28 +125,26 @@ describe('GlobalModificationBase', () => {
       variable_type: 'RANGE',
       new_value: 0.05,
     };
-    render(<GlobalModificationBase {...baseProps} setState={setState} state={{ modification }} />);
+    renderInForm(
+      <GlobalModificationBase {...baseProps} onChange={onChange} value={modification} />
+    );
 
     const field = screen.getByTestId('scan-config-sweep-value');
     fireEvent.change(field.querySelector('input') ?? field, { target: { value: '' } });
 
-    expect(setState).toHaveBeenLastCalledWith({
-      modification: { ...modification, new_value: null },
-    });
+    expect(onChange).toHaveBeenLastCalledWith({ ...modification, new_value: null });
   });
 
   it('treats an empty scan list as no value, so the field and + button stay', () => {
-    const state: Record<string, ConfigValue> = {
-      modification: {
-        type: 'GlobalModification',
-        ion_channel_id: 'ic-natg',
-        channel_name: 'NaTg',
-        variable_name: 'gbar',
-        variable_type: 'RANGE',
-        new_value: [],
-      },
+    const value: ConfigValue = {
+      type: 'GlobalModification',
+      ion_channel_id: 'ic-natg',
+      channel_name: 'NaTg',
+      variable_name: 'gbar',
+      variable_type: 'RANGE',
+      new_value: [],
     };
-    render(<GlobalModificationBase {...baseProps} state={state} />);
+    renderInForm(<GlobalModificationBase {...baseProps} value={value} />);
 
     expect(screen.getAllByTestId('scan-config-sweep-value')).toHaveLength(1);
     expect(screen.getByTestId('scan-config-sweep-expand')).toBeInTheDocument();
@@ -159,27 +155,25 @@ describe('RangeModificationBase', () => {
   const baseProps = {
     data: DATA,
     disabled: false,
-    setState: vi.fn(),
+    onChange: vi.fn(),
     fieldKey: 'modification',
     modificationType: 'RangeModification',
   };
 
   it('renders the empty picker when nothing is selected yet', () => {
-    render(<RangeModificationBase {...baseProps} state={{}} />);
+    renderInForm(<RangeModificationBase {...baseProps} value={undefined} />);
 
     expect(screen.getByText('Select a variable…')).toBeInTheDocument();
   });
 
   it('resolves the channel from ion_channel_id and shows the section-list editor', () => {
-    const state: Record<string, ConfigValue> = {
-      modification: {
-        type: 'RangeModification',
-        ion_channel_id: 'ic-natg',
-        variable_name: 'gbar',
-        section_list_modifications: { somatic: 0.05 },
-      },
+    const value: ConfigValue = {
+      type: 'RangeModification',
+      ion_channel_id: 'ic-natg',
+      variable_name: 'gbar',
+      section_list_modifications: { somatic: 0.05 },
     };
-    render(<RangeModificationBase {...baseProps} state={state} />);
+    renderInForm(<RangeModificationBase {...baseProps} value={value} />);
 
     expect(screen.getByText('NaTg')).toBeInTheDocument();
     expect(screen.getByText('gbar')).toBeInTheDocument();
@@ -190,15 +184,13 @@ describe('RangeModificationBase', () => {
   });
 
   it('shows a section-list scan as one field per value', () => {
-    const state: Record<string, ConfigValue> = {
-      modification: {
-        type: 'RangeModification',
-        ion_channel_id: 'ic-natg',
-        variable_name: 'gbar',
-        section_list_modifications: { somatic: [0.1, 0.3], axonal: 0.2 },
-      },
+    const value: ConfigValue = {
+      type: 'RangeModification',
+      ion_channel_id: 'ic-natg',
+      variable_name: 'gbar',
+      section_list_modifications: { somatic: [0.1, 0.3], axonal: 0.2 },
     };
-    render(<RangeModificationBase {...baseProps} state={state} />);
+    renderInForm(<RangeModificationBase {...baseProps} value={value} />);
 
     const fields = screen.getAllByTestId('scan-config-sweep-value');
     expect(fields.map((f) => (f.querySelector('input') ?? f).getAttribute('value'))).toEqual([
@@ -209,28 +201,29 @@ describe('RangeModificationBase', () => {
   });
 
   it('drops a cleared section list instead of saving null', () => {
-    const setState = vi.fn();
+    const onChange = vi.fn();
     const modification = {
       type: 'RangeModification',
       ion_channel_id: 'ic-natg',
       variable_name: 'gbar',
       section_list_modifications: { somatic: [0.1, 0.3], axonal: 0.2 },
     };
-    render(<RangeModificationBase {...baseProps} setState={setState} state={{ modification }} />);
+    renderInForm(<RangeModificationBase {...baseProps} onChange={onChange} value={modification} />);
 
     const axonal = screen.getAllByTestId('scan-config-sweep-value')[2];
     fireEvent.change(axonal.querySelector('input') ?? axonal, { target: { value: '' } });
 
-    expect(setState).toHaveBeenLastCalledWith({
-      modification: { ...modification, section_list_modifications: { somatic: [0.1, 0.3] } },
+    expect(onChange).toHaveBeenLastCalledWith({
+      ...modification,
+      section_list_modifications: { somatic: [0.1, 0.3] },
     });
   });
 
   it('honours the gating reason over the picker', () => {
-    render(
+    renderInForm(
       <RangeModificationBase
         {...baseProps}
-        state={{}}
+        value={undefined}
         reason={<span>No ion-channel variables are available for the selected neuron set.</span>}
       />
     );

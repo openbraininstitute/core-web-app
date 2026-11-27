@@ -491,7 +491,7 @@ export function LogsViewer({
   return (
     <div
       id="job-logs"
-      className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl bg-neutral-50 pb-4"
+      className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl bg-neutral-50"
     >
       <div className="sticky top-0 z-10 bg-neutral-50">
         <LogsActions

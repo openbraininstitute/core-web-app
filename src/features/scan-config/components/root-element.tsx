@@ -1,11 +1,10 @@
 import { WarningFilled } from '@ant-design/icons';
 import { useSetAtom } from 'jotai';
+import { useCallback } from 'react';
 
 import BlockDictionaryEntries from '@/features/scan-config/components/block-dictionary-entries';
 import { Chevron, CountBadge, LeftMenuTab } from '@/features/scan-config/components/components';
 import { EModelOptimisationMechanismsTabList } from '@/features/scan-config/components/emodel-optimisation-mechanisms-tabs';
-import { useFieldErrorsForPath } from '@/features/scan-config/components/hooks/field-errors';
-import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
 import { DESCRIPTION_TOOLTIP_CLASS } from '@/features/scan-config/components/shared/box-class';
 import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import { isPlainObject } from '@/features/scan-config/components/utils';
@@ -17,17 +16,24 @@ import {
   type IBlockSingle,
   type IEModelOptimisationParameters,
   type IRootBlockUnion,
+  isRootBlock,
   isType,
   ScanConfigUIElementDict,
   type TBlock,
 } from '@/features/scan-config/types';
+import {
+  useBlockState,
+  useConfigErrors,
+  useConfigValue,
+  useEntrySummaries,
+  useHasIssues,
+} from '@/features/scan-config/use-config-store';
 import { useAIConfig } from '@/services/ai-agent';
 import { expandedRootElementsAtom } from '@/state/config-highlights';
 import { MarkdownDescription } from '@/ui/molecules/markdown-description';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
-import type { ErrorObject } from 'ajv';
 import type React from 'react';
 
 import styles from './root-element.module.css';
@@ -38,16 +44,12 @@ export function RootElement({
   rootElementSchema,
   selectedRootElement,
   setSelectedRootElement,
-  config,
-  setConfig,
   campaignId,
   loading,
-  errors,
   selectedEntry,
   setSelectedEntry,
   setEditing,
   readOnly,
-  allEntries,
   newKey,
   setNewKey,
   isEditingKey,
@@ -64,16 +66,12 @@ export function RootElement({
     | IEModelOptimisationParameters;
   selectedRootElement: string;
   setSelectedRootElement: (configTab: string) => void;
-  config: Config;
-  setConfig: (newConfig: Config) => void;
   campaignId: string;
   loading: boolean;
-  errors: ErrorObject<string, Record<string, any>, unknown>[] | null | undefined;
   selectedEntry: string;
   setSelectedEntry: (selectedEntry: string) => void;
   setEditing: React.Dispatch<React.SetStateAction<boolean>>;
   readOnly?: boolean;
-  allEntries: Set<string>;
   newKey: string;
   setNewKey: (k: string) => void;
   isEditingKey: boolean;
@@ -84,15 +82,19 @@ export function RootElement({
   const { isChatReady } = useAIConfig();
   const setExpandedRootElements = useSetAtom(expandedRootElementsAtom);
   const { highlights, hasHighlights, isExpanded, diffClass } = useRootElementDiff(rootElement);
-  const hasFieldErrors = useFieldErrorsForPath(rootElement);
   const isSelected = selectedRootElement === rootElement;
   const isBlockDictionary =
     rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary;
-  const entries = isPlainObject(config[rootElement]) ? (config[rootElement] as object) : {};
+  const entries = useEntrySummaries(rootElement);
+  const hasSection = useConfigValue(
+    useCallback((config: Config) => Boolean(config[rootElement]), [rootElement])
+  );
+  const hasIssues = useHasIssues(`/${rootElement}`);
   // only a dictionary holds sub-entries; the count is what it currently holds
-  const entryCount = isBlockDictionary ? Object.keys(entries).length : null;
+  const entryCount = isBlockDictionary ? entries.length : null;
   // The block picked is one of this dictionary's own.
-  const holdsSelected = isSelected && !!selectedEntry && selectedEntry in entries;
+  const holdsSelected =
+    isSelected && !!selectedEntry && entries.some((entry) => entry.name === selectedEntry);
   // A dictionary is lit only while shut on the block picked: open, that block is lit instead.
   const lit = isBlockDictionary ? holdsSelected && !isExpanded : isSelected;
 
@@ -185,7 +187,6 @@ export function RootElement({
               <span className="flex items-center gap-2 wrap-break-word min-w-0">
                 <SelectedUnionVariantLabel
                   rootElementSchema={rootElementSchema}
-                  config={config}
                   rootElement={rootElement}
                   fallbackTitle={schema.properties?.[rootElement]?.title}
                 />
@@ -194,8 +195,7 @@ export function RootElement({
                 {entryCount ? <CountBadge count={entryCount} selected={lit} /> : null}
 
                 {/* A warning where the block has a problem; one that is fine needs no tick. */}
-                {(errors?.some((error) => error.instancePath.startsWith(`/${rootElement}`)) ||
-                  hasFieldErrors) && <WarningFilled className="text-yellow-400!" />}
+                {hasIssues && <WarningFilled className="text-yellow-400!" />}
 
                 <Chevron
                   // A dictionary's points down while open; the e-model's is never shut.
@@ -224,7 +224,7 @@ export function RootElement({
       </Tooltip>
 
       {rootElementSchema.ui_element === ScanConfigUIElementDict.EModelOptimisationParameters && (
-        <EModelOptimisationMechanismsTabList
+        <EModelMechanismsTabs
           rootElement={rootElement}
           selectedRootElement={selectedRootElement}
           selectedMechanismsTab={selectedMechanismsTab}
@@ -233,17 +233,13 @@ export function RootElement({
             setSelectedMechanismsTab(key);
             setEditing(true);
           }}
-          value={config[rootElement]}
-          errors={errors}
         />
       )}
 
       {rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary &&
-        (config[rootElement] || hasHighlights) && (
+        (hasSection || hasHighlights) && (
           <BlockDictionaryEntries
             schema={schema}
-            config={config}
-            setConfig={setConfig}
             rootElement={rootElement}
             selectedEntry={selectedEntry}
             selectedRootElement={selectedRootElement}
@@ -256,12 +252,10 @@ export function RootElement({
             setSelectedEntry={setSelectedEntry}
             setSelectedRootElement={setSelectedRootElement}
             singularName={rootElementSchema.singular_name}
-            allEntries={allEntries}
             newKey={newKey}
             setNewKey={setNewKey}
             isEditingKey={isEditingKey}
             setIsEditingKey={setIsEditingKey}
-            errors={errors}
             highlights={highlights}
             visible={isExpanded}
             rootElementSchema={rootElementSchema}
@@ -271,9 +265,20 @@ export function RootElement({
   );
 }
 
+type TEModelTabsProps = Omit<
+  React.ComponentProps<typeof EModelOptimisationMechanismsTabList>,
+  'value' | 'errors'
+>;
+
+function EModelMechanismsTabs(props: TEModelTabsProps) {
+  const [value] = useBlockState(props.rootElement);
+  const errors = useConfigErrors();
+
+  return <EModelOptimisationMechanismsTabList {...props} value={value ?? null} errors={errors} />;
+}
+
 function SelectedUnionVariantLabel({
   rootElementSchema,
-  config,
   rootElement,
   fallbackTitle,
 }: {
@@ -282,24 +287,29 @@ function SelectedUnionVariantLabel({
     | IBlockDictionary
     | IRootBlockUnion
     | IEModelOptimisationParameters;
-  config: Config;
   rootElement: string;
   fallbackTitle?: string;
 }) {
-  if (rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion)
-    return fallbackTitle && renderMathInText(fallbackTitle);
-
-  const unionSchema = rootElementSchema as IRootBlockUnion;
-  const discriminatorProp = unionSchema.discriminator
-    ? typeof unionSchema.discriminator === 'string'
-      ? unionSchema.discriminator
-      : (unionSchema.discriminator.propertyName ?? 'type')
-    : 'type';
-  const currentConfig = config[rootElement];
-  const selectedType =
-    isPlainObject(currentConfig) && typeof currentConfig[discriminatorProp] === 'string'
-      ? currentConfig[discriminatorProp]
+  const unionSchema =
+    rootElementSchema.ui_element === ScanConfigUIElementDict.BlockUnion
+      ? (rootElementSchema as IRootBlockUnion)
       : undefined;
+  const discriminator = unionSchema?.discriminator;
+  const discriminatorProp =
+    (typeof discriminator === 'string' ? discriminator : discriminator?.propertyName) ?? 'type';
+  const selectedType = useConfigValue(
+    useCallback(
+      (config: Config) => {
+        const block = config[rootElement];
+        const type = isPlainObject(block) ? block[discriminatorProp] : undefined;
+        return typeof type === 'string' ? type : undefined;
+      },
+      [rootElement, discriminatorProp]
+    )
+  );
+
+  if (!unionSchema) return fallbackTitle && renderMathInText(fallbackTitle);
+
   const selectedVariant = selectedType
     ? unionSchema.oneOf.find((o: TBlock) => {
         const typeProp = o.properties?.[discriminatorProp];

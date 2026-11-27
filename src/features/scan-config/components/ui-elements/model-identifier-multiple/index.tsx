@@ -35,10 +35,8 @@ import type { TModelIdentifierParsedValue } from '@/features/scan-config/compone
 import type { TFromIdRef } from '@/features/scan-config/helpers';
 
 type Props = {
-  fieldKey: string;
   value: ConfigValue;
-  state: Record<string, ConfigValue>;
-  setState: (nextState: Record<string, ConfigValue>) => void;
+  onChange: (next: ConfigValue) => void;
   paramSchema: TModelIdentifierMultiple | TModelIdentifierGrouped;
   disabled?: boolean;
   /** root-element-scoped path (e.g. `initialize/neurons`) for left-menu field-error matching */
@@ -71,10 +69,8 @@ function updateParsedValue(
  * right options; the grouped vs flat rendering itself is driven by `parsedValue.storageMode`.
  */
 function ModelIdentifierField({
-  fieldKey,
   value,
-  state,
-  setState,
+  onChange,
   paramSchema,
   disabled = false,
   errorPathPrefix,
@@ -121,12 +117,7 @@ function ModelIdentifierField({
     });
   }, [allRefs, entities]);
 
-  const writeValue = useCallback(
-    (nextValue: ConfigValue) => {
-      setState({ ...state, [fieldKey]: nextValue });
-    },
-    [fieldKey, setState, state]
-  );
+  const writeValue = onChange;
 
   const handleRemoveEntity = useCallback(
     (ref: TFromIdRef, groupIndex?: number) => {

@@ -10,6 +10,8 @@ import {
   type StringSelectionEnhanced as TStringSelectionEnhanced,
 } from '@/features/scan-config/types';
 
+import { renderInBlock } from './form-providers';
+
 const BLOCK_SCHEMA = {
   title: 'Ion channel model',
   description: '',
@@ -28,25 +30,26 @@ const BLOCK_SCHEMA = {
 const SCHEMA = { properties: {}, default_block_reference_labels: {} } as unknown as ConfigSchema;
 
 function renderBlock() {
-  return render(
+  return renderInBlock(
     <Block
       schema={SCHEMA}
       disabled={false}
-      config={{}}
       blockSchema={BLOCK_SCHEMA}
       entity={null}
-      state={{ duration: '1000', minf_eq: '' }}
-      setState={vi.fn()}
       schemaMappingConfig={undefined}
       rootElement="ion_channel_model"
-    />
+    />,
+    'ion_channel_model',
+    { duration: '1000', minf_eq: '' }
   );
 }
 
 describe('form titles', () => {
   it('renders a title without math as plain text', () => {
     const { container } = renderBlock();
-    const label = container.querySelector('label[for="duration"]');
+    const label = container.querySelector(
+      '[data-testid="scan-config-field-duration"] :is(label, span)'
+    );
     expect(label?.innerHTML).toBe('Duration');
   });
 
@@ -71,7 +74,9 @@ describe('form titles', () => {
 
   it('renders inline math in a title with KaTeX', () => {
     const { container } = renderBlock();
-    const label = container.querySelector('label[for="minf_eq"]');
+    const label = container.querySelector(
+      '[data-testid="scan-config-field-minf_eq"] :is(label, span)'
+    );
     expect(label?.querySelector('.katex')).not.toBeNull();
     expect(label?.textContent).not.toContain('$');
     expect(label?.textContent).toContain(' equation');

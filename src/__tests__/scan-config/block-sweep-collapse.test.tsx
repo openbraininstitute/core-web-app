@@ -1,5 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { fireEvent, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
 
 import Block from '@/features/scan-config/components/ui-blocks/block';
 import {
@@ -8,6 +8,8 @@ import {
   ScanConfigUIElementDict,
   type TBlock,
 } from '@/features/scan-config/types';
+
+import { renderInBlock } from './form-providers';
 
 const BLOCK_SCHEMA = {
   title: 'Stimulus',
@@ -20,21 +22,18 @@ const BLOCK_SCHEMA = {
 const SCHEMA = { properties: {}, default_block_reference_labels: {} } as unknown as ConfigSchema;
 
 function renderBlock(amplitude: ConfigValue, disabled = false) {
-  const setState = vi.fn();
-  render(
+  return renderInBlock(
     <Block
       schema={SCHEMA}
       disabled={disabled}
-      config={{}}
       blockSchema={BLOCK_SCHEMA}
       entity={null}
-      state={{ amplitude }}
-      setState={setState}
       schemaMappingConfig={undefined}
       rootElement="stimulus"
-    />
+    />,
+    'stimulus',
+    { amplitude }
   );
-  return { setState };
 }
 
 const collapseButton = () => screen.queryByRole('button', { name: 'Use a single value' });
@@ -51,9 +50,9 @@ describe('Block single value control', () => {
   });
 
   it('writes the first value back as a single number', () => {
-    const { setState } = renderBlock([null, 3, 4]);
+    const { store } = renderBlock([null, 3, 4]);
     fireEvent.click(collapseButton() as HTMLElement);
-    expect(setState).toHaveBeenCalledWith({ amplitude: 3 });
+    expect(store.getSnapshot().stimulus).toEqual({ amplitude: 3 });
   });
 
   it('is hidden when the form is read-only', () => {

@@ -3,6 +3,7 @@
 import {
   BLOCKS_AND_FORM_COLUMNS_CLASS,
   BOX_CLASS,
+  PANE_INSET_CLASS,
 } from '@/features/scan-config/components/shared/box-class';
 import ScanConfigTabsPanel, { toScanConfigTab } from '@/features/scan-config/components/tabs';
 import {
@@ -86,13 +87,13 @@ function MiddleColumnSkeleton() {
 }
 
 function ModelPreviewSkeleton() {
-  return <div className="h-full rounded-lg bg-gray-100 animate-pulse mr-3" />;
+  return <div className="h-full rounded-lg bg-gray-100 animate-pulse" />;
 }
 
 /** The Simulate page's preview: the 3D view's box over the nodes table's, as `StackedPanes` lays them. */
 function BoxedPreviewSkeleton() {
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3 pt-px pr-px pb-3 pl-3">
+    <div className={cn('flex h-full min-h-0 flex-col gap-3', PANE_INSET_CLASS)}>
       <div className={cn(BOX_CLASS, 'min-h-0 flex-[3] p-3')}>
         <div className="h-full animate-pulse rounded-2xl bg-gray-100" />
       </div>
@@ -132,7 +133,7 @@ export function ScanConfigSkeleton({
         configuration={
           // As the configuration lays out: the blocks and their form in one window, the preview
           // beside it, edge to edge with the toolbar's ends.
-          <div className="flex min-h-0 flex-1 flex-col pt-2 pb-2">
+          <div className="flex min-h-0 flex-1 flex-col pt-2">
             <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-1.25 overflow-hidden *:min-w-0">
               <div
                 className={cn(
@@ -147,7 +148,12 @@ export function ScanConfigSkeleton({
               {activity === ScanConfigActivity.Simulate ? (
                 <BoxedPreviewSkeleton />
               ) : (
-                <div className="h-full min-w-0 overflow-auto secondary-scrollbar">
+                <div
+                  className={cn(
+                    'h-full min-w-0 overflow-auto secondary-scrollbar',
+                    PANE_INSET_CLASS
+                  )}
+                >
                   <ModelPreviewSkeleton />
                 </div>
               )}

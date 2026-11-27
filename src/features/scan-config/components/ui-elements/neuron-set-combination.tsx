@@ -6,7 +6,6 @@ import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
 import type {
-  Config,
   ConfigSchema,
   NeuronSetCombination as NeuronSetCombinationSchema,
   Reference as ReferenceSchema,
@@ -35,7 +34,6 @@ export function NeuronSetCombination({
   value,
   onChange,
   disabled,
-  config,
   schema,
   selfName,
 }: {
@@ -43,7 +41,6 @@ export function NeuronSetCombination({
   value: NeuronSetCombinationEntry[];
   onChange: (newValue: NeuronSetCombinationEntry[]) => void;
   disabled: boolean;
-  config: Config;
   schema: ConfigSchema;
   /** name of this combined set's own entry, excluded from each row's dropdown */
   selfName?: string;
@@ -104,7 +101,6 @@ export function NeuronSetCombination({
 
               <div className="text-gray-400 text-base mt-2">NEURON SET</div>
               <Reference
-                config={config}
                 schema={schema}
                 referenceSchema={referenceSchema}
                 value={refName}
