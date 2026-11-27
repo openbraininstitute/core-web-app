@@ -139,9 +139,9 @@
   },
   "/images/start/walkthrough/get-started-mosaic.mp4": {
     "chapter": {
-      "src": "/static/website-optimized/get-started-mosaic-chapter-7ffe9d06d0f8.mp4",
-      "bytes": 1314089,
-      "originalBytes": 9169475
+      "src": "/static/website-optimized/get-started-mosaic-chapter-dabab4959666.mp4",
+      "bytes": 1199558,
+      "originalBytes": 2495327
     }
   },
   "/static/landing-v1/fly-brain.jpg": {
@@ -244,9 +244,9 @@
   },
   "/images/start/walkthrough/get-started-mosaic.jpg": {
     "poster": {
-      "src": "/static/website-optimized/get-started-mosaic-f45e737b5ee3.webp",
-      "bytes": 143342,
-      "originalBytes": 224377
+      "src": "/static/website-optimized/get-started-mosaic-91d16e7a3057.webp",
+      "bytes": 2806,
+      "originalBytes": 9247
     }
   }
 }

@@ -16,7 +16,11 @@ export function GetStartedBrain({ near = true }: { near?: boolean }) {
     const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
     const update = () => {
       if (visible && !document.hidden && !preference.matches) void video.play().catch(() => {});
-      else video.pause();
+      else {
+        video.pause();
+        // Off screen it waits at its (white) start, so coming back never shows the globe it was left on.
+        if (!visible && video.currentTime > 0) video.currentTime = 0;
+      }
     };
     const observer = new IntersectionObserver(([entry]) => {
       visible = entry.isIntersecting;

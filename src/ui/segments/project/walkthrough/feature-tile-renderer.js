@@ -579,10 +579,17 @@ void main() { outColor = vec4(mix(vec3(1.0), GLOW_COL, glow(gl_FragCoord.xy)), 1
       if (iw && ih) {
         const k = 1 - 2 * VIDEO_INSET;
         const F = v.frame ?? FRAME;
-        const sc = Math.min(F.w / (iw * k), F.h / (ih * k));
-        const w = iw * sc,
-          h = ih * sc;
-        v.rect = { x: F.x + (F.w - w) / 2, y: F.y + (F.h - h) / 2, w, h };
+        if (F.video) {
+          // a frame may place the film itself (`video`: its left, top and width), the tiles being laid over the
+          // frame's own, larger room: beyond the film they show its edge pixels
+          const sc = F.video.w / (iw * k);
+          v.rect = { x: F.video.x, y: F.video.y, w: iw * sc, h: ih * sc };
+        } else {
+          const sc = Math.min(F.w / (iw * k), F.h / (ih * k));
+          const w = iw * sc,
+            h = ih * sc;
+          v.rect = { x: F.x + (F.w - w) / 2, y: F.y + (F.h - h) / 2, w, h };
+        }
       }
     }
     v.stamp = source.stamp;

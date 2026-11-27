@@ -6,10 +6,25 @@ import styles from './public-tour.module.css';
 
 /** Where the chapters' films are painted on the tiles, in the 1920 x 1080 stage's px (16:9). */
 const FRAME = { x: 672, y: 190, w: 1160, h: 652.5 };
-/** Chapters whose film is drawn larger: Get Started's mosaic, a little further left into the space beside its
- * words, its right edge and its middle where the others' are. */
-const CHAPTER_FRAMES: Record<string, typeof FRAME> = {
-  join: FRAME,
+/** Where a chapter's film is laid inside its frame, when not fitted to it. */
+type TFrame = typeof FRAME & { video?: { x: number; y: number; w: number } };
+/** Chapters whose film is drawn larger: Get Started's globe. Its tiles are the room between the words (their right
+ * end, x 590) and the page's right edge, under the header's button and above the logos. The film is laid with its
+ * globe in the middle of that room (the globe's middle is at 0.567 and 0.467 of the film's width and height), as
+ * large as lets everything the film ever shows, its opening sparks included, stay inside the room: that reaches
+ * 0.117-0.903 of its width and 0.10-0.83 of its height (measured over every frame). */
+const JOIN_ROOM = { x: 590, y: 84, w: 1330, h: 771 };
+const JOIN_FILM_W = 1350;
+const JOIN_FILM_H = (JOIN_FILM_W * 1066) / 1440;
+const CHAPTER_FRAMES: Record<string, TFrame> = {
+  join: {
+    ...JOIN_ROOM,
+    video: {
+      x: JOIN_ROOM.x + JOIN_ROOM.w / 2 - 0.567 * JOIN_FILM_W,
+      y: JOIN_ROOM.y + JOIN_ROOM.h / 2 - 0.467 * JOIN_FILM_H,
+      w: JOIN_FILM_W,
+    },
+  },
 };
 
 /** How long a chapter's media layer may be up without a video before its tiles rise white, ms. */
@@ -128,13 +143,23 @@ export function FeatureTileBackground({
         surface.dataset.featureChapter = selected;
         const source = chapterVideoSource(tour, after);
         const closing = selected === 'join';
+        // the globe film begins again each time its chapter comes up: until it has gone back to its start, nothing
+        // is read from it, so the tiles never show a frame it was left on (user)
+        let restarted = false;
         engine.setSource(
           closing
             ? () => {
                 const video = tour.querySelector<HTMLVideoElement>(
                   '#walkthrough-join [data-stage-current="true"] video'
                 );
-                return video && video.readyState >= 2 && !video.seeking
+                if (!video || video.readyState < 1) return null;
+                if (!restarted) {
+                  restarted = true;
+                  video.currentTime = 0;
+                  void video.play().catch(() => {});
+                  return null;
+                }
+                return video.readyState >= 2 && !video.seeking
                   ? { image: video, stamp: video.currentTime }
                   : null;
               }
