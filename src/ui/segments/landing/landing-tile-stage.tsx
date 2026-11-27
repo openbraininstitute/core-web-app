@@ -113,30 +113,22 @@ export function LandingTileStage({
       return;
     }
     const phone = phoneLayout;
-    const cssFits =
-      typeof CSS !== 'undefined' &&
-      CSS.supports?.('zoom', 'min(tan(atan2(100vw, 1920px)), tan(atan2(100vh, 1080px)))');
-    if (phone) {
-      composition.style.left = '0px';
-      composition.style.top = '0px';
-    } else if (cssFits) {
-      composition.style.removeProperty('--stage-scale');
-      composition.style.removeProperty('left');
-      composition.style.removeProperty('top');
-    }
     const stageH = 1080;
     composition.style.setProperty('--phone-stage-h', String(stageH));
-    const resize = new ResizeObserver(() => {
+    const fitStage = () => {
       const { width, height } = container.getBoundingClientRect();
       if (width < 800 !== phone) {
         setPhoneLayout(width < 800);
         return;
       }
-      // Modern browsers fit before first paint; Safari has a measured fallback.
+      // Keep CSS first-paint sizing, then resolve the scale to a number. Safari can
+      // accept the trig expression in CSS.supports while miscomputing container units.
       if (phone) {
+        composition.style.left = '0px';
+        composition.style.top = '0px';
         const scale = Math.min(width / 1000, (height - PHONE_COPY_HEIGHT - 48) / stageH);
         composition.style.setProperty('--stage-scale', String(Math.max(0.01, scale)));
-      } else if (!cssFits) {
+      } else {
         const scale = Math.max(0.01, Math.min(width / 1920, height / stageH));
         composition.style.setProperty('--stage-scale', String(scale));
         composition.style.left = `${(width / scale - 1920) / 2}px`;
@@ -144,7 +136,7 @@ export function LandingTileStage({
       }
       window.dispatchEvent(new Event(LANDING_LAID_OUT));
       placeLabel();
-    });
+    };
     // the films' name level with the chapters' along the foot (fixed to the window's foot, the stage scaled):
     // in the stage's own px
     const placeLabel = () => {
@@ -163,6 +155,8 @@ export function LandingTileStage({
       );
     };
     window.addEventListener(LANDING_WAY_IN, placeLabel);
+    fitStage();
+    const resize = new ResizeObserver(fitStage);
     resize.observe(container);
     const seen = new IntersectionObserver(([entry]) => {
       onScreen.current = entry?.isIntersecting ?? true;

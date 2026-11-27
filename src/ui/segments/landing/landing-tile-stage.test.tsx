@@ -127,3 +127,24 @@ it('rebuilds the artwork layout when a phone rotates across the desktop breakpoi
   expect(renderer.layouts.at(-1)).toBe(false);
   vi.restoreAllMocks();
 });
+
+it('uses a measured desktop scale even when the browser accepts CSS trig syntax', async () => {
+  vi.stubGlobal('CSS', { supports: () => true });
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+    width: 1440,
+    height: 900,
+    x: 0,
+    y: 0,
+    left: 0,
+    top: 0,
+    right: 1440,
+    bottom: 900,
+    toJSON() {},
+  });
+  const { container } = await act(async () => render(stage()));
+  const composition = container.querySelector('canvas')?.parentElement;
+  expect(composition?.style.getPropertyValue('--stage-scale')).toBe('0.75');
+  expect(composition?.style.left).toBe('0px');
+  expect(composition?.style.top).toBe('60px');
+  vi.restoreAllMocks();
+});
