@@ -144,7 +144,11 @@ describe('public science opening', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Explore$/ }));
     expect(onChapter).toHaveBeenCalledWith('analysis');
     expect(screen.queryByRole('button', { name: /Discover Virtual Labs/ })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'See what you can do' }));
+    const continueButton = screen
+      .getAllByRole('button', { name: 'See what you can do' })
+      .find((button) => !button.hasAttribute('aria-haspopup'));
+    if (!continueButton) throw new Error('Missing desktop tour invitation');
+    fireEvent.click(continueButton);
     expect(onContinue).toHaveBeenCalledTimes(1);
     fireEvent.wheel(screen.getByRole('region', { name: 'Discover the Open Brain Platform' }), {
       deltaY: 30,

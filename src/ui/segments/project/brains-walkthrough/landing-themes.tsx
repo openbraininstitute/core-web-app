@@ -38,12 +38,14 @@ export function ThemeLine({
   goTo,
   playback,
   publicAppearance = false,
+  mobileLabel = 'Chapters',
 }: {
   underlined?: string;
   links?: Record<string, string>;
   goTo?: (id: string) => void;
   playback?: ChapterPlayback;
   publicAppearance?: boolean;
+  mobileLabel?: string;
 }) {
   const timeline = useRef<HTMLDivElement>(null);
   if (publicAppearance) {
@@ -52,7 +54,8 @@ export function ThemeLine({
         <div className="pointer-events-auto relative flex min-w-0 items-center gap-3 lg:hidden">
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger className="flex min-h-11 shrink-0 items-center gap-1 rounded-full border border-neutral-200 bg-white px-4 font-semibold text-primary-9">
-              Chapters <RiArrowDownSLine aria-hidden="true" className="size-4" />
+              {underlined ?? mobileLabel}
+              <RiArrowDownSLine aria-hidden="true" className="size-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent
               side="top"
@@ -64,8 +67,8 @@ export function ThemeLine({
                   key={theme}
                   aria-current={theme === underlined ? 'location' : undefined}
                   className={cn(
-                    'min-h-11 cursor-pointer',
-                    theme === underlined && 'bg-primary-1 font-semibold text-primary-9'
+                    'min-h-11 cursor-pointer focus:bg-neutral-100 data-[highlighted]:bg-neutral-100',
+                    theme === underlined && 'bg-neutral-100 font-semibold text-primary-9'
                   )}
                   onSelect={() => {
                     const to = links?.[theme];
@@ -82,9 +85,6 @@ export function ThemeLine({
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          {underlined && (
-            <span className="truncate font-semibold text-primary-9">{underlined}</span>
-          )}
         </div>
         <div
           ref={timeline}
@@ -317,6 +317,7 @@ export function ThemeNav({
   return (
     <div
       ref={rail}
+      data-public-chapter-nav={playback ? true : undefined}
       aria-hidden={!entered}
       inert={!entered || undefined}
       className={THEME_NAV_RAIL}

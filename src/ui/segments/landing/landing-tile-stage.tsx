@@ -64,6 +64,7 @@ export function LandingTileStage({
   const onScreen = useRef(true);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [phoneLayout, setPhoneLayout] = useState<boolean | null>(null);
   // already in when the page's first HTML brought it in with the words (landing-first-paint.tsx)
   const [ctaState, setCtaState] = useState(() => (firstPaintShown() ? 'enter' : 'waiting'));
   // The chosen one beside the field comes last in the opening, after the words and the tiles.
@@ -107,15 +108,39 @@ export function LandingTileStage({
     let disposed = false;
     // (laid out once, when the renderer is made)
     const opened = container.getBoundingClientRect();
-    const phone = opened.width < 800;
+    if (phoneLayout === null) {
+      setPhoneLayout(opened.width < 800);
+      return;
+    }
+    const phone = phoneLayout;
+    const cssFits =
+      typeof CSS !== 'undefined' &&
+      CSS.supports?.('zoom', 'min(tan(atan2(100vw, 1920px)), tan(atan2(100vh, 1080px)))');
+    if (phone) {
+      composition.style.left = '0px';
+      composition.style.top = '0px';
+    } else if (cssFits) {
+      composition.style.removeProperty('--stage-scale');
+      composition.style.removeProperty('left');
+      composition.style.removeProperty('top');
+    }
     const stageH = 1080;
     composition.style.setProperty('--phone-stage-h', String(stageH));
     const resize = new ResizeObserver(() => {
       const { width, height } = container.getBoundingClientRect();
-      // Desktop fitting is CSS-only so the first painted composition never jumps.
+      if (width < 800 !== phone) {
+        setPhoneLayout(width < 800);
+        return;
+      }
+      // Modern browsers fit before first paint; Safari has a measured fallback.
       if (phone) {
-        const scale = Math.min(width / 1000, (height - PHONE_COPY_HEIGHT) / stageH);
+        const scale = Math.min(width / 1000, (height - PHONE_COPY_HEIGHT - 48) / stageH);
+        composition.style.setProperty('--stage-scale', String(Math.max(0.01, scale)));
+      } else if (!cssFits) {
+        const scale = Math.max(0.01, Math.min(width / 1920, height / stageH));
         composition.style.setProperty('--stage-scale', String(scale));
+        composition.style.left = `${(width / scale - 1920) / 2}px`;
+        composition.style.top = `${(height / scale - stageH) / 2}px`;
       }
       window.dispatchEvent(new Event(LANDING_LAID_OUT));
       placeLabel();
@@ -192,7 +217,7 @@ export function LandingTileStage({
       seen.disconnect();
       window.removeEventListener(LANDING_WAY_IN, placeLabel);
     };
-  }, [reduced]);
+  }, [reduced, phoneLayout]);
 
   useEffect(() => engine.current?.setVisible(visible && onScreen.current), [visible]);
   useEffect(() => engine.current?.selectFeature(scene), [scene]);
@@ -219,8 +244,8 @@ export function LandingTileStage({
           className={styles.headline}
           data-first-painted={firstPainted || undefined}
         >
-          <span>Neuroscience at the</span>
-          <span>Speed of Thought</span>
+          <span>Explore, Build and Simulate</span>
+          <span>Digital Brain Models.</span>
         </h1>
         <div className={styles.actionRow}>
           <span className={styles.line} aria-hidden="true" />
@@ -245,34 +270,8 @@ export function LandingTileStage({
         </div>
         {/* Under the field, over the chapters along the foot. */}
         <p className={styles.tagline} data-shown={chosenShown}>
-          Explore - Build - Simulate Brains
+          Neuroscience at the speed of thought
         </p>
-        {/* What the chosen one is, under its big cube: the one going fading as the next comes. */}
-        <div
-          className={styles.heroLabels}
-          role="status"
-          aria-live="polite"
-          aria-label={FEATURES[scene].alt}
-          data-shown={chosenShown}
-        >
-          {FEATURES.map((feature, index) => (
-            <p
-              key={feature.label}
-              className={styles.heroLabel}
-              data-active={index === scene}
-              aria-hidden={index !== scene}
-            >
-              {feature.caption ? (
-                <>
-                  <strong>{feature.caption.kicker}</strong>
-                  {feature.caption.text}
-                </>
-              ) : (
-                feature.label
-              )}
-            </p>
-          ))}
-        </div>
       </div>
     </div>
   );

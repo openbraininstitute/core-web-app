@@ -94,3 +94,13 @@
   outline: 2px solid var(--ink);
   outline-offset: -2px;
 }
+
+/* The phone's chapter selector is the single invitation to browse the tour. */
+@media (max-width: 1023px) {
+  .tourLink {
+    display: none;
+  }
+  .hero .homeChapterRail {
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+}

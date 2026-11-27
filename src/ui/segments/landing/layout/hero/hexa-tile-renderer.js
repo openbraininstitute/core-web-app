@@ -60,8 +60,7 @@ export function createHexaTileRenderer(
   const HOVER_RADIUS = 260,
     HOVER_BOOST = 0.9,
     EASE = 0.12;
-  const IMG_WHITE = 240,
-    IMG_HITS = 3;
+  const IMG_WHITE = 240;
   const IMG_MIN_LO = 0.08,
     IMG_MIN_HI = 0.3,
     IMG_MAX_H = 0.45;
@@ -160,6 +159,7 @@ in float iFade;
 in vec2 iShine;      // x: height-shine position, y: height-shine strength
 in float iSeq;       // shine sequence frame (fractional), < 0 = not playing
 out float vSeq;
+out float vFlat;
 out vec2 vLocal;     // position from the tile center, resting-size px, y down
 out vec2 vRef0;
 out vec2 vRef1;
@@ -186,7 +186,8 @@ vec2 toScr(vec3 v, float e) {
 
 void main() {
   vRest = iRest;
-  vLayers = iLayers;
+  vLayers = vec2(max(0.0, iLayers.x), iLayers.y);
+  vFlat = iLayers.x < -0.5 && iH < 0.0001 ? 1.0 : 0.0;
   vInst = vec3(iP, iFade, iH);
   vShine = iShine;
   vSeq = iSeq;
@@ -209,7 +210,7 @@ void main() {
     vFlags = vec3(0.0, 0.0, 1.0);
     scr = iCenter + lp;
   } else {
-    float e = uE0 + iP * (uE1 - uE0);
+    float e = uE0 + (vFlat > 0.5 ? 0.0 : iP) * (uE1 - uE0);
     vec3 nv = rotv(aNormal, e);
     if (nv.z <= 0.000001 || iFade < 0.002) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
     vec3 c = aPos * uK;
@@ -248,6 +249,7 @@ in vec2 vLayers;
 in vec3 vInst;
 in vec2 vShine;
 in float vSeq;
+in float vFlat;
 in float vScale;
 out vec4 outColor;
 
@@ -297,6 +299,16 @@ void main() {
   bool has0 = vFlags.x > 0.5;
   bool has1 = vFlags.y > 0.5;
   vec3 col = vec3(1.0);
+
+  // Resting artwork changes pictures without rotating, shading or flashing its flat surface.
+  if (vFlat > 0.5) {
+    float blend = clamp(p, 0.0, 1.0);
+    blend = blend * blend * (3.0 - 2.0 * blend);
+    vec2 position = vRest + vRef0;
+    col = mix(pic(int(vLayers.x + 0.5), position), pic(int(vLayers.y + 0.5), position), blend);
+    outColor = vec4(col * fade, fade);
+    return;
+  }
 
   // pictures: view 0 / view 1 of the cube. A face seen in both views (the old top) cross-fades.
   float w = clamp((p - 0.38) / 0.24, 0.0, 1.0);
@@ -543,7 +555,7 @@ void main() {
   let instData = null;
 
   // which tiles sit over non-white picture pixels (read with a hidden 2D canvas)
-  function buildImageMap(l, need0 = IMG_HITS) {
+  function buildImageMap(l, need0 = 1) {
     const off = document.createElement('canvas');
     off.width = view.width;
     off.height = view.height;
@@ -554,9 +566,14 @@ void main() {
     const data = octx.getImageData(0, 0, view.width, view.height).data;
     return (cx, cy, need = need0) => {
       let hits = 0;
-      for (let oy = -R; oy <= R; oy += 3) {
-        for (let ox = -R; ox <= R; ox += 3) {
-          if (Math.abs(ox) > R * 0.866 || Math.abs(oy) * 0.866 + Math.abs(ox) * 0.5 > R * 0.866)
+      // Include a buffer for raised neighbours, so white cubes never cover fine artwork lines.
+      const sampleRadius = R * 1.45;
+      for (let oy = -sampleRadius; oy <= sampleRadius; oy += 3) {
+        for (let ox = -sampleRadius; ox <= sampleRadius; ox += 3) {
+          if (
+            Math.abs(ox) > sampleRadius * 0.866 ||
+            Math.abs(oy) * 0.866 + Math.abs(ox) * 0.5 > sampleRadius * 0.866
+          )
             continue;
           const px = Math.round(cx + ox + view.x),
             py = Math.round(cy + oy + view.y);
@@ -663,6 +680,10 @@ void main() {
   const mouse = { x: -9999, y: -9999 };
   function onMouseMove(event) {
     if (reduced) return;
+    if (event.pointerType === 'touch') {
+      onMouseLeave();
+      return;
+    }
     const box = canvas.getBoundingClientRect();
     mouse.x = ((event.clientX - box.left) * W) / box.width;
     mouse.y = ((event.clientY - box.top) * H) / box.height;
@@ -670,8 +691,9 @@ void main() {
   function onMouseLeave() {
     mouse.x = mouse.y = -9999;
   }
-  canvas.addEventListener('mousemove', onMouseMove);
-  canvas.addEventListener('mouseleave', onMouseLeave);
+  canvas.addEventListener('pointermove', onMouseMove);
+  canvas.addEventListener('pointerleave', onMouseLeave);
+  canvas.addEventListener('pointercancel', onMouseLeave);
 
   let forceDraw = true;
 
@@ -761,8 +783,11 @@ void main() {
         }
       }
 
+      // New artwork must not inherit a raised white tile's resting height.
+      if (flatArtwork && !t.wasArtwork && hover === 0) t.h = t.prevH = 0;
+      t.wasArtwork = flatArtwork;
       // Artwork rests at zero height, rising only around the pointer. White tiles keep their layered base.
-      if (!turning) {
+      if (!turning || flatArtwork) {
         const restingHeight = flatArtwork ? 0 : t.base;
         t.h += (restingHeight + hover * HOVER_BOOST * t.edgeFactor - t.h) * EASE;
         if (flatArtwork && hover === 0 && t.h < 0.0001) t.h = 0;
@@ -811,7 +836,7 @@ void main() {
       if (fe < 1e-4) fe = 0;
       // view 0 / view 1 of the cube: the two pictures of this moment, in texture slots 0 and 1
       const p = parity === 0 ? fe : 1 - fe,
-        L0 = 0,
+        L0 = flatArtwork ? -1 : 0,
         L1 = 1;
       const o = count * FLOATS;
       instData[o] = cx + (t.x - cx) * par;
@@ -969,8 +994,9 @@ void main() {
     dispose() {
       disposed = true;
       cancelAnimationFrame(request);
-      canvas.removeEventListener('mousemove', onMouseMove);
-      canvas.removeEventListener('mouseleave', onMouseLeave);
+      canvas.removeEventListener('pointermove', onMouseMove);
+      canvas.removeEventListener('pointerleave', onMouseLeave);
+      canvas.removeEventListener('pointercancel', onMouseLeave);
       layers.forEach((layer) => {
         if (layer.tex) gl.deleteTexture(layer.tex);
       });

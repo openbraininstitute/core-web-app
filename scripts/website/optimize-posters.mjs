@@ -14,6 +14,12 @@ for (const source of Object.keys(manifest)) {
   );
   const input = await fs.readFile(`public${poster}`);
   const buffer = await sharp(input).webp({ quality: 90 }).toBuffer();
+  if (buffer.length >= input.length) {
+    manifest[poster] = {
+      poster: { src: poster, bytes: input.length, originalBytes: input.length },
+    };
+    continue;
+  }
   const digest = crypto.createHash('sha256').update(buffer).digest('hex').slice(0, 12);
   const name = poster
     .split('/')

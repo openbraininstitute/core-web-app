@@ -190,14 +190,19 @@ export function LivingHero({
         style={lastIn}
       >
         <div className={styles.chapterNavigation}>
-          <ThemeLine links={BRAIN_THEME_LINKS} goTo={onChapter} publicAppearance />
+          <ThemeLine
+            links={BRAIN_THEME_LINKS}
+            goTo={onChapter}
+            publicAppearance
+            mobileLabel="See what you can do"
+          />
           <button type="button" className={styles.tourLink} onClick={onContinue}>
             See what you can do
             <svg
               aria-hidden="true"
               viewBox="0 0 24 24"
-              width="16"
-              height="16"
+              width="26"
+              height="26"
               fill="none"
               stroke="currentColor"
               strokeWidth="2"

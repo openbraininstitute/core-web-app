@@ -297,7 +297,7 @@
   /* Leave room for the top bar and the chapter picker. */
   .host {
     position: relative;
-    min-height: 480px;
+    min-height: min(480px, calc(100svh - 72px - 100px));
     height: calc(100svh - 72px - clamp(64px, 9.5vh, 88px) - 56px);
     overflow: visible;
   }
@@ -306,7 +306,7 @@
     --canvas-top: 180px;
     left: 0;
     top: 0;
-    --mobile-title-size: 28px;
+    --mobile-title-size: clamp(23px, 6.2vw, 28px);
     --words-at: 12px;
     position: relative;
     width: 100%;
@@ -334,6 +334,7 @@
   .headline span:nth-child(n) {
     position: static;
     display: block;
+    width: 100%;
     white-space: normal;
   }
   .actionRow {
@@ -511,6 +512,12 @@
 }
 @media (max-width: 799px) {
   .tagline {
-    display: none;
+    display: block;
+    left: 20px;
+    top: auto;
+    bottom: 0;
+    width: calc(100% - 40px);
+    font-size: 20px;
+    line-height: 1.2;
   }
 }

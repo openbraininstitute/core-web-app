@@ -96,8 +96,9 @@ export function createLandingTileRenderer(
   const STAGE_H = heroAbove ? Math.max(1080, phoneStageH) : 1080,
     FOOT = STAGE_H - 40;
   const PHONE = { x0: 450, x1: 1410, fieldTop: FOOT - 440, big: 112, medium: 69 };
-  // the chosen one's box on a phone: from the top down to its name, which is over the field's top
-  const PHONE_HERO_H = PHONE.fieldTop - 120;
+  // Enlarge the phone model into the spare space before the capability tile field.
+  // The CTA and the smaller capability tiles keep their positions.
+  const PHONE_HERO_H = PHONE.fieldTop + 20;
   const FEATURE_SLOTS = [
     heroAbove ? { x: 930, y: FOOT - 240, r: PHONE.big } : { x: 960, y: 540, r: 174 },
     ...Array.from({ length: Math.max(1, FIELD_TILES - (heroBeside ? 2 : 1)) }, () => ({
@@ -114,12 +115,12 @@ export function createLandingTileRenderer(
   const HERO_TILE = heroAbove
       ? { x: 930, y: 10 + PHONE_HERO_H / 2, r: (210 * PHONE_HERO_H) / 480 }
       : whiteField
-        ? { x: 1595, y: 500, r: 330 }
+        ? { x: 1550, y: 530, r: 330 }
         : { x: 1590, y: 480, r: 330 },
     BOW = 0;
   // the chosen one itself, out of its cube: as wide as the example says (smaller in step on a phone), within this box
-  const BIG_W = heroAbove ? 960 : whiteField ? 620 : 720,
-    BIG_H = heroAbove ? PHONE_HERO_H : whiteField ? 800 : 620,
+  const BIG_W = heroAbove ? 960 : whiteField ? 760 : 720,
+    BIG_H = heroAbove ? PHONE_HERO_H : whiteField ? 860 : 620,
     HERO_K = HERO_TILE.r / 330;
   // ---- small white tiles round them, a new set on every pick, as on the first landing: each grown until its straight
   // edge almost touches a picture tile; a fade of lower, smaller ones round them; a few tiny ones for depth ----
@@ -220,7 +221,7 @@ export function createLandingTileRenderer(
   // (a let: a tile fading in or out is drawn into a layer of its own, `ctx` pointed at it meanwhile)
   let ctx = cv.getContext('2d');
   if (!ctx) throw new Error('Canvas rendering is unavailable');
-  const DPR = Math.min(1.5, window.devicePixelRatio || 1);
+  const DPR = Math.min(whiteField && !heroAbove ? 2 : 1.5, window.devicePixelRatio || 1);
   cv.width = 1920 * DPR;
   cv.height = STAGE_H * DPR;
 
@@ -1094,10 +1095,13 @@ export function createLandingTileRenderer(
     const sourceW = nw * (1 + ((bounds?.width ?? 1) - 1) * progress);
     const sourceH = nh * (1 + ((bounds?.height ?? 1) - 1) * progress);
     const aspect = bounds ? (nw * bounds.width) / (nh * bounds.height) : nw / nh;
-    const maximumWidth = bounds && !heroAbove && !whiteField ? 600 : BIG_W;
+    const maximumWidth =
+      heroAbove && bounds ? BIG_W * bounds.width : bounds && !whiteField ? 600 : BIG_W;
+    // On phones, fit the complete source rather than letting framing bounds crop its branches.
+    const maximumHeight = BIG_H * (heroAbove && bounds ? bounds.height : 1);
     // (whiteField) as big as the right third lets it be, whatever the film's own size
     const full =
-      Math.min(whiteField ? Infinity : f.hero * HERO_K, maximumWidth, BIG_H * aspect) /
+      Math.min(whiteField ? Infinity : f.hero * HERO_K, maximumWidth, maximumHeight * aspect) /
       (bounds ? 1.8 : 1);
     const rs = c.baseR;
     const inCube = Math.sqrt(3) * rs * at.k * f.zoom,
@@ -1117,7 +1121,18 @@ export function createLandingTileRenderer(
     ctx.save();
     ctx.globalAlpha = alpha * (c.appear ?? 1);
     ctx.globalCompositeOperation = 'multiply';
-    if (bounds) {
+    if (whiteField && bounds) {
+      // Use the framing bounds only to position/size the model. Draw the complete source
+      // so fine branches outside those bounds remain visible, including over the navigation.
+      const pixels = w / sourceW;
+      ctx.drawImage(
+        src,
+        x - (sourceX + sourceW / 2) * pixels,
+        y - (sourceY + sourceH / 2) * pixels,
+        nw * pixels,
+        nh * pixels
+      );
+    } else if (bounds) {
       ctx.drawImage(src, sourceX, sourceY, sourceW, sourceH, x - w / 2, y - h / 2, w, h);
     } else {
       ctx.drawImage(f.feather ? feathered(src, w, h) : src, x - w / 2, y - h / 2, w, h);
@@ -1192,11 +1207,11 @@ export function createLandingTileRenderer(
     fieldX1: 1290, // none reaching into the films' third
     fieldY: [100, 820], // nor up to the top bar or down to the chapters along the foot
     words: { x0: 0, x1: 650, y0: 200, y1: 700 }, // nothing over the logo, the slogan and the way in
-    after: 700, // ms after the central tile comes in that the first line starts
+    after: 100, // Bring the capability icons in as soon as the central tile rises.
     draw: 420, // ms for a line to run out
     gap: 60, // ms between one line and those going on from where it ends
     fade: 350, // ms for a tile's icon and word to come in
-    step: 260, // (lines hidden) ms between one tile's icon and word and the next one out
+    step: 120, // (lines hidden) ms between one tile's icon and word and the next one out
     icon: 30, // px
     iconUp: 14, // px the icon's middle is above the tile's
     // (lines hidden) a word only on a tile big enough for it, and well apart from the next word
@@ -1217,6 +1232,20 @@ export function createLandingTileRenderer(
     // which way every turn goes (user: always the same way): true = the new subject comes in from the top, the old
     // one rolling down and away; false = the other way
     down: true,
+  };
+  const centralSubjects = ['Brain Models', 'Build', 'Simulate', 'Notebooks'];
+  let centralWaiting = [];
+  let nextCentralSwap = Infinity;
+  const nextCentralSubject = (current) => {
+    if (!centralWaiting.length) {
+      centralWaiting = centralSubjects.slice();
+      for (let i = centralWaiting.length - 1; i > 0; i--) {
+        const j = Math.floor(random() * (i + 1));
+        [centralWaiting[i], centralWaiting[j]] = [centralWaiting[j], centralWaiting[i]];
+      }
+      if (centralWaiting[0] === current) centralWaiting.push(centralWaiting.shift());
+    }
+    return centralWaiting[0];
   };
   let waiting = []; // subjects not on a tile now, in the order they come
   let nextSwap = Infinity;
@@ -1350,7 +1379,11 @@ export function createLandingTileRenderer(
     for (const { a, b } of pairs.slice(0, LINKS.across))
       made.push({ a, b, depth: deepest + 1, fromRim: false });
     // a word for each tile reached (with the lines hidden, only on those big enough and apart), each its own
-    const words = (LINKS.lines ? LINK_WORDS : LANDING_SUBJECTS.map((s) => s.word))
+    const words = (
+      LINKS.lines
+        ? LINK_WORDS
+        : LANDING_SUBJECTS.map((s) => s.word).filter((word) => !centralSubjects.includes(word))
+    )
       .slice()
       .sort(() => random() - 0.5);
     const labelled = [];
@@ -1378,10 +1411,15 @@ export function createLandingTileRenderer(
     // the central tile too, first, the others then on outwards from it (user)
     if (!LINKS.lines) labelled.unshift(root);
     labelled.forEach((c, i) => {
-      linkWords.set(c, words[i % words.length]);
+      linkWords.set(
+        c,
+        !LINKS.lines && c === root
+          ? nextCentralSubject()
+          : words[(i - (LINKS.lines ? 0 : 1)) % words.length]
+      );
       labelAt.set(c, i * LINKS.step);
     });
-    waiting = words.slice(labelled.length);
+    waiting = words.slice(labelled.length - (LINKS.lines ? 0 : 1));
     subjectPool = pool.filter((c) => restR(c) >= LINKS.labelTile);
     // one after another outwards: each line starts as the one it goes on from has run out
     const ends = new Map([[root, 0]]);
@@ -1466,6 +1504,19 @@ export function createLandingTileRenderer(
         continue;
       }
       turnTo(c, linkWords.get(c), now);
+      if (c === cellAt[0] && c.introduced) {
+        centralWaiting.shift();
+        nextCentralSwap = now + SUBJECTS.swap;
+      }
+    }
+    const root = cellAt[0];
+    if (!reduceMotion && root?.introduced && root.turnStart < 0 && now >= nextCentralSwap) {
+      const next = nextCentralSubject(root.subject);
+      if (subjectSlice(root, next)) {
+        turnTo(root, next, now);
+        centralWaiting.shift();
+        nextCentralSwap = now + SUBJECTS.swap;
+      }
     }
     if (allIn && !reduceMotion && waiting.length) {
       if (nextSwap === Infinity) nextSwap = now + SUBJECTS.swap;
@@ -1485,6 +1536,7 @@ export function createLandingTileRenderer(
     const idle = (c) => c.turnStart < 0 && risen(c) >= 0.9;
     const shown = subjectPool.filter((c) => c.subject);
     if (root?.subject) shown.push(root);
+    // The centre has its own capability-only rotation, never the general subject pool.
     const apart = (c, others) => {
       const p = homeOf(c);
       return others.every(
@@ -1494,7 +1546,7 @@ export function createLandingTileRenderer(
     const pick = (list) => list[Math.floor(random() * list.length)];
     let k = 0;
     for (let n = 0; n < SUBJECTS.count; n++) {
-      const on = shown.filter(idle);
+      const on = shown.filter((c) => c !== root && idle(c));
       const hideable = on.filter((c) => c !== root);
       // white tiles clear of the others showing one (the one going white aside)
       const out = random() < 0.5 && hideable.length ? pick(hideable) : null;

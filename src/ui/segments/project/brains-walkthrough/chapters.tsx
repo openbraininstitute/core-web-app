@@ -42,9 +42,7 @@ const VIDEO_CHAPTER = `${labs.chapter} ${UNDER_VIDEO}`;
 /** A word on the platform, on its first screen. */
 const VIRTUAL_LABS_WORDS = (
   <>
-    <p>
-      Bring data, models and experiments together. Collaborate with your team in one Virtual Lab.
-    </p>
+    <p>Organize data, models and experiments in one workspace. Invite collaborators to join you.</p>
     <ChapterAction label="Get Started" destination="platform" />
   </>
 );
@@ -56,7 +54,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     theme: 'Virtual Labs',
     label: 'Start',
     scene: 'opening',
-    title: 'Your neuroscience workspace',
+    title: 'Bring your research together',
     hero: true,
     titleClass: SERIF_TITLE,
     ...(CNS_ON_FIRST_SCREEN
@@ -83,13 +81,13 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     theme: 'Explore',
     label: 'Analysis',
     scene: 'analysis',
-    title: 'Explore across species and scales',
+    title: 'Find data for your next discovery',
     hero: true,
     column: VIDEO_CHAPTER,
     body: (
       <p>
-        Discover morphologies, electrophysiological recordings, ion channels, brain models and
-        simulation results.
+        Explore morphologies, electrophysiological recordings and brain models across species and
+        scales.
       </p>
     ),
     after: <ChapterAction label="Get Started" destination="data" />,
@@ -105,8 +103,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     column: `${VIDEO_CHAPTER} ${mosaic.chapter}`,
     body: (
       <p>
-        Build and customize models, from neurons to circuits. Skeletonize EM meshes from MICrONS,
-        H01 or your own data.
+        Build neurons and circuits, or skeletonize EM meshes from MICrONS, H01 and your own data.
       </p>
     ),
     after: <ChapterAction label="Get Started" destination="workflows" />,
@@ -119,11 +116,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     title: 'Put your hypotheses to the test',
     hero: true,
     column: VIDEO_CHAPTER,
-    body: (
-      <p>
-        Choose stimuli, recordings and neuron sets. Scan parameters and launch simulation campaigns.
-      </p>
-    ),
+    body: <p>Configure stimuli and recordings, vary parameters and run simulation campaigns.</p>,
     after: <ChapterAction label="Get Started" destination="workflows" />,
   },
   {
@@ -131,15 +124,10 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     theme: 'Notebooks',
     label: 'Notebooks',
     scene: 'notebooks',
-    title: 'Go further with Python',
+    title: 'Turn results into insights',
     hero: true,
     column: VIDEO_CHAPTER,
-    body: (
-      <p>
-        Query, analyse and visualize your data in cloud Jupyter notebooks. Start with ours or share
-        your own.
-      </p>
-    ),
+    body: <p>Analyse and visualize your data in cloud notebooks. Run ours or upload your own.</p>,
     after: <ChapterAction label="Get Started" destination="notebooks" />,
   },
   {
@@ -150,7 +138,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     scene: 'agents',
     title: (
       <>
-        Neuroscience at the speed of thought
+        From prompts to experiments
         <AiSparkles className="ml-[0.18em] inline-block size-[0.8em] -translate-y-[0.06em] align-baseline" />
       </>
     ),
@@ -161,8 +149,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     body: (
       <>
         <p>
-          Build models, run simulations and analyse results through Claude, ChatGPT or the OBI
-          Assistant.
+          Build models, run simulations and analyse results with your AI agent or the OBI Assistant.
         </p>
         <AgentPrompts className="beside:hidden" />
       </>
@@ -177,12 +164,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     title: 'Learn by doing. Teach with ease.',
     hero: true,
     column: VIDEO_CHAPTER,
-    body: (
-      <p>
-        Explore brain models through hands-on courses and OBI Summer Camps. Connect your teaching to
-        Moodle.
-      </p>
-    ),
+    body: <p>Teach through courses connected to Moodle and learn by joining OBI Summer Camps.</p>,
     after: <ChapterAction label="Get Started" destination="learn" />,
   },
   {
@@ -190,7 +172,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     theme: 'Get Started',
     label: 'Get Started',
     scene: 'join',
-    title: 'Your next experiment starts here',
+    title: 'Start your next discovery',
     hero: true,
     column: getStarted.words,
     body: (
@@ -198,7 +180,9 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
         <p>
           Start free with 100 credits included.
           <br />
-          Explore, build and simulate—all in your browser.
+          Explore, build and simulate.
+          <br />
+          All in your browser.
         </p>
         <StartNow />
       </>

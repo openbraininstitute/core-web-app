@@ -14,11 +14,11 @@
     --chapter-frame-unit: min(calc(100vw / 1920), calc(var(--chapter-h) / 1080));
     --chapter-frame-x: calc((100vw - var(--chapter-frame-unit) * 1920) / 2);
     --chapter-frame-y: calc((var(--chapter-h) - var(--chapter-frame-unit) * 1080) / 2);
-    --chapter-media-width: calc(var(--chapter-frame-unit) * 1040);
-    --chapter-media-height: calc(var(--chapter-frame-unit) * 585);
+    --chapter-media-width: calc(var(--chapter-frame-unit) * 1160);
+    --chapter-media-height: calc(var(--chapter-frame-unit) * 652.5);
   }
   .publicTour [data-chapter-media] {
-    top: calc(var(--chapter-frame-y) + var(--chapter-frame-unit) * 209);
+    top: calc(var(--chapter-frame-y) + var(--chapter-frame-unit) * 190);
     right: calc(
       100vw -
       var(--chapter-frame-x) -
@@ -60,7 +60,7 @@
 .publicTour .publicText {
   background: transparent;
   align-self: flex-start;
-  width: 38%;
+  width: 32%;
   max-width: none;
   margin: 0;
   padding: var(--chapter-content-top) 0 96px var(--chapter-text-inset);
@@ -165,7 +165,7 @@
   font-family: var(--font-info-titillium, var(--font-gabarito)), sans-serif;
   font-size: clamp(13px, 1.05vw, 16px);
   line-height: 1.4;
-  color: #737373;
+  color: #566173;
 }
 .timelineChapters {
   position: relative;
@@ -227,7 +227,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #c6cdd8;
+  background: #aeb9c9;
   transition:
     background-color 200ms,
     transform 200ms;
@@ -414,6 +414,7 @@
     transform: none;
   }
   .publicTour [data-chapter-media] > figure,
+  .publicTour [data-chapter-media] > div:only-child,
   .publicTour [data-chapter-media] video {
     width: 100%;
     height: 100%;
@@ -439,7 +440,18 @@
   translate: 0 calc(-1 * var(--public-footer-extra, 0px));
 }
 
-/* Rounded films sit directly on the tile field without a rectangular backplate shadow. */
+/* A restrained downward shadow separates chapter films from the white tile field. */
+.publicTour [data-chapter-media]:has(video) {
+  border-radius: clamp(12px, 1.4vw, 20px);
+  box-shadow:
+    0 16px 32px -20px rgb(8 45 99 / 0.22),
+    0 6px 16px -12px rgb(8 45 99 / 0.12);
+}
+/* The closing mosaic blends into the background without a rectangular shadow. */
+.publicTour :global(#walkthrough-join) [data-chapter-media] {
+  box-shadow: none;
+}
+/* Keep the shadow outside the rounded media wrapper rather than clipping it on the video. */
 .publicTour [data-chapter-media] video {
   border-radius: clamp(12px, 1.4vw, 20px);
   box-shadow: none;
@@ -512,7 +524,7 @@
 }
 
 /* Shared fixed scene frame: every scene has the same fade, placement and rounded corners. */
-@media (min-width: 800px) {
+@media (min-width: 64rem), (orientation: landscape) {
   .publicTour [data-feature-media] [data-stage-scene] {
     position: absolute;
     inset: 0;
@@ -521,7 +533,7 @@
   }
   .publicTour [data-feature-media] [data-chapter-media] {
     position: absolute;
-    top: calc(var(--chapter-frame-y) + var(--chapter-frame-unit) * 209);
+    top: calc(var(--chapter-frame-y) + var(--chapter-frame-unit) * 190);
     right: calc(100vw - var(--chapter-frame-x) - var(--chapter-frame-unit) * 1832);
     left: auto;
     bottom: auto;
@@ -552,7 +564,7 @@
     margin: 0;
   }
   .publicTour .publicText {
-    padding-top: calc(var(--chapter-frame-y) + var(--chapter-frame-unit) * 209);
+    padding-top: calc(var(--chapter-frame-y) + var(--chapter-frame-unit) * 190);
   }
   /* With the tiles drawn, the film is painted on them (as on the supplied features page): the video itself plays on
      unseen, for its clock and its label. Its titles over it stay. */
@@ -577,4 +589,13 @@
     flex-shrink: 0;
     transform: none;
   }
+}
+
+/* Keep the public chapter rail level with the homepage rail, with the next arrow below it. */
+.publicTour [data-public-chapter-nav] {
+  bottom: calc(max(10px, env(safe-area-inset-bottom)) + 56px);
+  padding-block: 0;
+}
+.publicTour [data-slide-arrows] {
+  bottom: max(0px, env(safe-area-inset-bottom));
 }

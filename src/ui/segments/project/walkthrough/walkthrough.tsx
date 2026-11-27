@@ -1684,6 +1684,7 @@ function SlideArrows({
   );
   return (
     <div
+      data-slide-arrows
       inert={!shown || undefined}
       className={cn(
         'pointer-events-none fixed inset-x-0 top-[clamp(84px,12vh,100px)] bottom-[var(--arrows-foot,clamp(16px,2.6vh,26px))] z-[66] flex flex-col items-center justify-between transition-opacity duration-500 stacked:bottom-[36px] max-sm:top-[70px] squat:top-[58px]',

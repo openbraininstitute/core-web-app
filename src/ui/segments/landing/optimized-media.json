@@ -132,9 +132,9 @@
   },
   "/images/start/walkthrough/education.mp4": {
     "chapter": {
-      "src": "/static/website-optimized/education-chapter-a1c0897741f5.mp4",
-      "bytes": 1187605,
-      "originalBytes": 26961598
+      "src": "/static/website-optimized/education-chapter-7d430fd3045e.mp4",
+      "bytes": 1098699,
+      "originalBytes": 1586513
     }
   },
   "/images/start/walkthrough/get-started-mosaic.mp4": {
@@ -237,9 +237,9 @@
   },
   "/images/start/walkthrough/education-poster.jpg": {
     "poster": {
-      "src": "/static/website-optimized/education-poster-f450ba814922.webp",
-      "bytes": 105310,
-      "originalBytes": 125082
+      "src": "/images/start/walkthrough/education-poster.jpg",
+      "bytes": 77431,
+      "originalBytes": 77431
     }
   },
   "/images/start/walkthrough/get-started-mosaic.jpg": {

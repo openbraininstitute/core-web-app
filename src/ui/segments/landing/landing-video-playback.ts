@@ -47,6 +47,8 @@ export function createLandingPlayback(
         source = url;
         video = document.createElement('video');
         video.muted = true;
+        video.defaultMuted = true;
+        video.setAttribute('muted', '');
         video.loop = true;
         video.playsInline = true;
         video.preload = 'none';

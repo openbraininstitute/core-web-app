@@ -1,14 +1,18 @@
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 
-const renderer = vi.hoisted(() => ({ showChosen: null as null | (() => void) }));
+const renderer = vi.hoisted(() => ({
+  showChosen: null as null | (() => void),
+  layouts: [] as boolean[],
+}));
 
 vi.mock('./landing-tile-renderer', () => ({
   createLandingTileRenderer: (
     _canvas: unknown,
     _picks: unknown,
-    options: { reduced: boolean; onReady: () => void; onShowChosen: () => void }
+    options: { reduced: boolean; heroAbove: boolean; onReady: () => void; onShowChosen: () => void }
   ) => {
+    renderer.layouts.push(options.heroAbove);
     options.onReady();
     renderer.showChosen = options.onShowChosen;
     // with reduced motion the renderer shows the chosen example at once
@@ -27,6 +31,7 @@ class NoObserver {
 beforeEach(() => {
   vi.useFakeTimers();
   renderer.showChosen = null;
+  renderer.layouts = [];
   vi.stubGlobal('ResizeObserver', NoObserver);
   vi.stubGlobal('IntersectionObserver', NoObserver);
 });
@@ -80,4 +85,45 @@ it('shows the CTA immediately for reduced motion', async () => {
     );
   });
   expect(screen.getByText('Try it now')).toHaveAttribute('data-cta-state', 'alive');
+});
+
+it('rebuilds the artwork layout when a phone rotates across the desktop breakpoint', async () => {
+  let width = 1440;
+  let resize: () => void = () => {};
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(() => ({
+    width,
+    height: 900,
+    x: 0,
+    y: 0,
+    top: 0,
+    left: 0,
+    right: width,
+    bottom: 900,
+    toJSON() {},
+  }));
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      constructor(callback: () => void) {
+        resize = callback;
+      }
+      observe() {}
+      disconnect() {}
+    }
+  );
+  await act(async () => {
+    render(stage());
+  });
+  expect(renderer.layouts.at(-1)).toBe(false);
+  width = 390;
+  await act(async () => {
+    resize();
+  });
+  expect(renderer.layouts.at(-1)).toBe(true);
+  width = 1440;
+  await act(async () => {
+    resize();
+  });
+  expect(renderer.layouts.at(-1)).toBe(false);
+  vi.restoreAllMocks();
 });
