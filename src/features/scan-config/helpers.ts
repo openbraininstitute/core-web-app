@@ -196,14 +196,20 @@ export const ScanConfigConfigurationTab = {
 } as const satisfies Record<TScanConfigActivity, TScanConfigTabs>;
 
 /**
- * The tab to actually render, given the campaign the editor holds.
+ * The tab to actually render, given the campaign the editor holds. A campaign whose configuration
+ * cannot be shown opens on its results instead.
  */
 export function resolveScanConfigTab(
   tab: TScanConfigTabs,
   activity: TScanConfigActivity,
-  hasCampaign: boolean
+  hasCampaign: boolean,
+  configurationUnavailable = false
 ): TScanConfigTabs {
-  return hasCampaign ? tab : ScanConfigConfigurationTab[activity];
+  if (!hasCampaign) return ScanConfigConfigurationTab[activity];
+  if (configurationUnavailable && tab.id === ScanConfigConfigurationTab[activity].id) {
+    return ScanConfigResultsTab[activity];
+  }
+  return tab;
 }
 
 export function parseScanConfigMode(

@@ -17,6 +17,7 @@ import {
 } from '@/features/scan-config/components/memodel-compatibility';
 import { ScanConfigTabsPanel } from '@/features/scan-config/components/tabs';
 import { IonChannelModelPropertiesChecks } from '@/features/scan-config/components/ui-elements/ion-channel-model-properties';
+import { INVALID_CONFIGURATION_ERROR_CODE } from '@/features/scan-config/components/utils';
 import { DefaultConfigColumns } from '@/features/scan-config/template/default-columns';
 import {
   EMODEL_OPTIMISATION_COLUMNS_GRID,
@@ -159,8 +160,14 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
         tab={state.tab}
         setTab={state.setTab}
         disableResultsTab={!state.campaignId || state.loading || Boolean(props.hideTabs)}
-        disableConfigurationTab={Boolean(!props.initialConfig && props.readOnly)}
-        configuration={configurationContent}
+        disableConfigurationTab={state.configurationUnavailableReason !== null}
+        configurationErrorCode={state.configurationUnavailableReason ?? undefined}
+        // an invalid config never reaches the editor, even hidden
+        configuration={
+          state.configurationUnavailableReason === INVALID_CONFIGURATION_ERROR_CODE
+            ? null
+            : configurationContent
+        }
         results={resultsContent}
         // the centre copy button exists only once a campaign has been generated (its id is known)
         railCenter={

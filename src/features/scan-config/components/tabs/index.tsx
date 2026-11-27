@@ -7,6 +7,7 @@ import { useScanConfigTopBarSlots } from '@/features/scan-config/components/top-
 import {
   LEGACY_SIMULATION_ERROR_CODE,
   SCAN_CONFIG_ERRORS,
+  type TScanConfigErrorCode,
 } from '@/features/scan-config/components/utils';
 import {
   BaseScanConfigTabs,
@@ -33,6 +34,8 @@ type ScanConfigTabsPanelProps = {
   activity: TScanConfigActivity;
   disableResultsTab: boolean;
   disableConfigurationTab: boolean;
+  /** why the configuration tab is disabled, shown in its tooltip */
+  configurationErrorCode?: TScanConfigErrorCode;
   configuration: ReactNode;
   results: ReactNode;
   /** Rail-level content centred on the panel edge (e.g. the selection's copy action). */
@@ -83,8 +86,8 @@ export function toScanConfigTab(activity: TScanConfigActivity, id: string): TSca
   }
 }
 
-function LegacyConfigurationTooltip() {
-  const { title, message } = SCAN_CONFIG_ERRORS[LEGACY_SIMULATION_ERROR_CODE];
+function UnavailableConfigurationTooltip({ code }: { code: TScanConfigErrorCode }) {
+  const { title, message } = SCAN_CONFIG_ERRORS[code];
 
   return (
     <div className="flex max-w-xs flex-col items-start justify-start gap-2">
@@ -106,6 +109,7 @@ export function ScanConfigTabsPanel({
   activity,
   disableResultsTab,
   disableConfigurationTab,
+  configurationErrorCode = LEGACY_SIMULATION_ERROR_CODE,
   configuration,
   results,
   railCenter,
@@ -127,7 +131,9 @@ export function ScanConfigTabsPanel({
       testId: `scan-config-tab-${id}`,
       icon: <Icon className="size-5" />,
       disabled,
-      tooltip: disableConfiguration ? <LegacyConfigurationTooltip /> : undefined,
+      tooltip: disableConfiguration ? (
+        <UnavailableConfigurationTooltip code={configurationErrorCode} />
+      ) : undefined,
       content: isConfiguration ? configuration : results,
     };
   });

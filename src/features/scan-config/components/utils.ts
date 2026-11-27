@@ -75,10 +75,17 @@ export function getLatestSimExecStatus(remoteStatus: ActivityStatus, localStatus
   return simExecStatusListOrdered[latestStatus];
 }
 
-export const LEGACY_SIMULATION_ERROR_CODE = 'LEGACY_SIMULATION_ERROR';
+export const LEGACY_SIMULATION_ERROR_CODE = 'LEGACY_SIMULATION_ERROR' as const;
+export const INVALID_CONFIGURATION_ERROR_CODE = 'INVALID_CONFIGURATION_ERROR' as const;
 export const SCAN_CONFIG_ERRORS = {
   [LEGACY_SIMULATION_ERROR_CODE]: {
     title: 'Configuration is not available',
     message: 'Configuration currently not viewable for historic simulations',
   },
+  [INVALID_CONFIGURATION_ERROR_CODE]: {
+    title: 'Configuration is not available',
+    message:
+      'This configuration uses blocks the platform no longer supports, so it cannot be shown. Its results are still available.',
+  },
 };
+export type TScanConfigErrorCode = keyof typeof SCAN_CONFIG_ERRORS;
